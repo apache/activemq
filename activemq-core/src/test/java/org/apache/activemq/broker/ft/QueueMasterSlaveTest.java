@@ -21,11 +21,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -131,5 +133,15 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         javax.jms.Message message = qConsumer.receive(4000);
         assertNotNull("Get message after failover", message);
         assertEquals("correct message", text, ((TextMessage)message).getText());
+    }
+
+    public void testAdvisory() throws Exception {
+        MessageConsumer advConsumer = session.createConsumer(AdvisorySupport.getMasterBrokerAdvisoryTopic());
+
+        master.stop();
+        assertTrue("slave started", slaveStarted.await(15, TimeUnit.SECONDS));
+        Message advisoryMessage = advConsumer.receive(5000);
+        assertNotNull("Didn't received advisory", advisoryMessage);
+
     }
 }

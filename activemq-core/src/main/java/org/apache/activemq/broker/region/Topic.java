@@ -27,10 +27,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
+import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
@@ -84,7 +86,12 @@ public class Topic extends BaseDestination implements Task {
         super(brokerService, store, destination, parentStats);
         this.topicStore = store;
         // set default subscription recovery policy
-        subscriptionRecoveryPolicy = new NoSubscriptionRecoveryPolicy();
+        if (AdvisorySupport.isMasterBrokerAdvisoryTopic(destination)) {
+            subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
+            setAlwaysRetroactive(true);
+        } else {
+            subscriptionRecoveryPolicy = new NoSubscriptionRecoveryPolicy();
+        }
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
     }
 
