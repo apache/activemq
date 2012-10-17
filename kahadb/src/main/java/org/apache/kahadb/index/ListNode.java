@@ -309,19 +309,14 @@ public final class ListNode<Key, Value> {
     }
 
     public void storeUpdate(Transaction tx) throws IOException {
-        getContainingList().storeNode(tx, this, true);
+        store(tx, ADD_LAST);
     }
 
     private void store(Transaction tx, boolean addFirst) throws IOException {
         try {
-            // When we split to a node of one element we can span multiple pages for that
-            // entry, otherwise we keep the entries on one page to avoid fragmented reads
-            // and segment the list traversal.
-            if (this.entries.size() == 1) {
-                getContainingList().storeNode(tx, this, true);
-            } else {
-                getContainingList().storeNode(tx, this, false);
-            }
+            // keeping splitting till we get down to a single entry
+            // then we need to overflow the value
+            getContainingList().storeNode(tx, this, entries.size() == 1);
 
             if (this.next == -1) {
                 getContainingList().setTailPageId(getPageId());
@@ -347,6 +342,7 @@ public final class ListNode<Key, Value> {
             this.setNext(extension.getPageId());
         } else {
             extension.setEntries(entries.getTail().getPrevious().splitAfter());
+            extension.setNext(this.getNext());
             extension.store(tx, isAddFirst);
             getContainingList().setTailPageId(extension.getPageId());
             this.setNext(extension.getPageId());

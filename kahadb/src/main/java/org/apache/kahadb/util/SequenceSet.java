@@ -107,7 +107,14 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
             return true;
         }
 
-        Sequence sequence = getHead();
+        // check for append
+        Sequence sequence = getTail();
+        if (sequence.isAdjacentToLast(value)) {
+            sequence.last = value;
+            return true;
+        }
+
+        sequence = getHead();
         while (sequence != null) {
 
             if (sequence.isAdjacentToLast(value)) {

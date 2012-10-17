@@ -516,7 +516,7 @@ public class ListIndexTest extends IndexTestSupport {
         int expectedListEntries = 0;
         int nextSequenceId = 0;
 
-        LOG.info("Loading up the ListIndex with "+NUM_ITERATIONS+" entires and sparsely populating the sequences.");
+        LOG.info("Loading up the ListIndex with "+NUM_ITERATIONS+" entries and sparsely populating the sequences.");
 
         for (int i = 0; i < NUM_ITERATIONS; ++i) {
             test.add(tx, String.valueOf(expectedListEntries++), new SequenceSet());

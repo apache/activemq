@@ -167,6 +167,12 @@ public class DurableSubsOfflineSelectorIndexUseTest extends org.apache.activemq.
         assertEquals(messageCount / 2, listenerT.count);
         assertEquals(messageCount / 2, listenerF.count);
 
+        consumerTrue.close();
+        session.unsubscribe("true");
+
+        consumerFalse.close();
+        session.unsubscribe("false");
+
         session.close();
         con.close();
 
@@ -192,14 +198,6 @@ public class DurableSubsOfflineSelectorIndexUseTest extends org.apache.activemq.
                 return listener.count == count;
             }
         }, TimeUnit.MINUTES.toMillis(10)));
-
-    }
-
-    private void dumpstats() throws Exception {
-        //TimeUnit.SECONDS.sleep(2);
-        //ThreadTracker.result();
-        TimeUnit.SECONDS.sleep(4);
-
 
     }
 
