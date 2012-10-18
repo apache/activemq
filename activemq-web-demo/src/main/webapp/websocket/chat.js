@@ -29,7 +29,7 @@ $(document).ready(function(){
 
     // this allows to display debug logs directly on the web page
     client.debug = function(str) {
-      $("#debug").append(str + "\n");
+      $("#debug").append(document.createTextNode(str + "\n"));
     };
     // the client is notified when it is connected to the server.
     var onconnect = function(frame) {
@@ -39,7 +39,7 @@ $(document).ready(function(){
       $('#send_form_input').removeAttr('disabled');
 
       client.subscribe(destination, function(message) {
-        $("#messages").append("<p>" + message.body + "</p>\n");
+        $("#messages").append(document.createTextNode("<p>" + message.body + "</p>\n"));
       });
     };
     client.connect(login, passcode, onconnect);

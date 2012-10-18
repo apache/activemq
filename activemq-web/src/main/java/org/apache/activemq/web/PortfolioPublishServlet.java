@@ -70,7 +70,8 @@ public class PortfolioPublishServlet extends MessageServletSupport {
                 }
                 out.print(refreshRate);
                 out.println("'/></head>");
-                out.println("<body>Published <b>" + count + "</b> of " + total + " price messages.  Refresh = " + refreshRate + "s");
+                out.println("<body>Published <b>" + escape(Integer.toString(count)) + "</b> of " + escape(Integer.toString(total))
+                        + " price messages.  Refresh = " + escape(refreshRate) + "s");
                 out.println("</body></html>");
 
             } catch (JMSException e) {
@@ -128,5 +129,9 @@ public class PortfolioPublishServlet extends MessageServletSupport {
             return Integer.parseInt(name);
         }
         return 1;
+    }
+
+    protected String escape(String text) throws IOException {
+        return java.net.URLEncoder.encode(text, "UTF-8");
     }
 }
