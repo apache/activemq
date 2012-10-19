@@ -32,6 +32,7 @@ import java.util.Random;
 
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.util.LongMarshaller;
+import org.apache.kahadb.util.Sequence;
 import org.apache.kahadb.util.SequenceSet;
 import org.apache.kahadb.util.StringMarshaller;
 import org.apache.kahadb.util.VariableMarshaller;
@@ -428,7 +429,7 @@ public class ListIndexTest extends IndexTestSupport {
         return "key:" + nf.format(i);
     }
 
-    public void testListIndexConsistancyOverTime() throws Exception {
+    public void testListIndexConsistencyOverTime() throws Exception {
 
         final int NUM_ITERATIONS = 100;
 
@@ -560,6 +561,42 @@ public class ListIndexTest extends IndexTestSupport {
 
             assertEquals(--expectedListEntries, test.size());
         }
+    }
+
+    public void x_testSplitPerformance() throws Exception {
+
+        final int NUM_ITERATIONS = 200;
+        final int RANGE = 200000;
+
+        pf = new PageFile(directory, getClass().getName());
+        pf.setPageSize(4*1024);
+        pf.load();
+        tx = pf.tx();
+        long id = tx.allocate().getPageId();
+
+        ListIndex<String, SequenceSet> test = new ListIndex<String, SequenceSet>(pf, id);
+        test.setKeyMarshaller(StringMarshaller.INSTANCE);
+        test.setValueMarshaller(SequenceSet.Marshaller.INSTANCE);
+        test.load(tx);
+        tx.commit();
+
+        for (int i = 0; i < NUM_ITERATIONS; ++i) {
+            Sequence sequence = new Sequence(0);
+            sequence.setLast(RANGE);
+            SequenceSet sequenceSet  = new SequenceSet();
+            sequenceSet.add(sequence);
+            test.add(tx, String.valueOf(i), sequenceSet);
+        }
+
+        long start = System.currentTimeMillis();
+
+        // overflow the value in the last sequence
+        SequenceSet sequenceSet = test.get(tx, String.valueOf(NUM_ITERATIONS - 10));
+        for (int i=0; i<RANGE; i+=2) {
+            sequenceSet.remove(i);
+            test.put(tx, String.valueOf(NUM_ITERATIONS -1), sequenceSet);
+        }
+        LOG.info("duration: " + (System.currentTimeMillis() - start));
     }
 
     public void testListLargeDataAddAndNonSequentialRemove() throws Exception {
