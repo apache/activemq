@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
@@ -42,29 +42,25 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTInactivityMonitor.class);
 
+    private static final long DEFAULT_CHECK_TIME_MILLS = 30000;
+
     private static ThreadPoolExecutor ASYNC_TASKS;
     private static int CHECKER_COUNTER;
-    private static long DEFAULT_CHECK_TIME_MILLS = 30000;
     private static Timer READ_CHECK_TIMER;
 
     private final AtomicBoolean monitorStarted = new AtomicBoolean(false);
-
-    private final AtomicBoolean commandSent = new AtomicBoolean(false);
-    private final AtomicBoolean inSend = new AtomicBoolean(false);
     private final AtomicBoolean failed = new AtomicBoolean(false);
-
     private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
     private final AtomicInteger lastReceiveCounter = new AtomicInteger(0);
 
-    private final ReentrantReadWriteLock sendLock = new ReentrantReadWriteLock();
+    private final ReentrantLock sendLock = new ReentrantLock();
     private SchedulerTimerTask readCheckerTask;
 
     private long readCheckTime = DEFAULT_CHECK_TIME_MILLS;
     private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
     private boolean keepAliveResponseRequired;
     private MQTTProtocolConverter protocolConverter;
-
 
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
@@ -96,7 +92,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
         return elapsed > (readCheckTime * 9 / 10);
     }
 
-
     public MQTTInactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next);
     }
@@ -110,7 +105,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
         stopMonitorThread();
         next.stop();
     }
-
 
     final void readCheck() {
         int currentCounter = next.getReceiveCounter();
@@ -132,8 +126,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
                     }
                     onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
                 }
-
-                ;
             });
         } else {
             if (LOG.isTraceEnabled()) {
@@ -143,7 +135,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
         commandReceived.set(false);
     }
 
-
     public void onCommand(Object command) {
         commandReceived.set(true);
         inReceive.set(true);
@@ -151,14 +142,14 @@ public class MQTTInactivityMonitor extends TransportFilter {
             if (command.getClass() == KeepAliveInfo.class) {
                 KeepAliveInfo info = (KeepAliveInfo) command;
                 if (info.isResponseRequired()) {
-                    sendLock.readLock().lock();
+                    sendLock.lock();
                     try {
                         info.setResponseRequired(false);
                         oneway(info);
                     } catch (IOException e) {
                         onException(e);
                     } finally {
-                        sendLock.readLock().unlock();
+                        sendLock.unlock();
                     }
                 }
             } else {
@@ -171,17 +162,12 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     public void oneway(Object o) throws IOException {
         // To prevent the inactivity monitor from sending a message while we
-        // are performing a send we take a read lock.  The inactivity monitor
-        // sends its Heart-beat commands under a write lock.  This means that
-        // the MutexTransport is still responsible for synchronizing sends
-        this.sendLock.readLock().lock();
-        inSend.set(true);
+        // are performing a send we take the lock.
+        this.sendLock.lock();
         try {
             doOnewaySend(o);
         } finally {
-            commandSent.set(true);
-            inSend.set(false);
-            this.sendLock.readLock().unlock();
+            this.sendLock.unlock();
         }
     }
 
@@ -200,7 +186,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
         }
     }
 
-
     public long getReadCheckTime() {
         return readCheckTime;
     }
@@ -208,7 +193,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
     public void setReadCheckTime(long readCheckTime) {
         this.readCheckTime = readCheckTime;
     }
-
 
     public long getInitialDelayTime() {
         return initialDelayTime;
@@ -239,15 +223,19 @@ public class MQTTInactivityMonitor extends TransportFilter {
     }
 
     synchronized void startMonitorThread() {
+
+        // Not yet configured if this isn't set yet.
+        if (protocolConverter == null) {
+            return;
+        }
+
         if (monitorStarted.get()) {
             return;
         }
 
-
         if (readCheckTime > 0) {
             readCheckerTask = new SchedulerTimerTask(readChecker);
         }
-
 
         if (readCheckTime > 0) {
             monitorStarted.set(true);
@@ -263,7 +251,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
             }
         }
     }
-
 
     synchronized void stopMonitorThread() {
         if (monitorStarted.compareAndSet(true, false)) {
@@ -293,9 +280,8 @@ public class MQTTInactivityMonitor extends TransportFilter {
     };
 
     private ThreadPoolExecutor createExecutor() {
-        ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
+        ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
         exec.allowCoreThreadTimeOut(true);
         return exec;
     }
 }
-

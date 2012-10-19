@@ -35,10 +35,8 @@ import org.fusesource.mqtt.codec.MQTTFrame;
  */
 public class MQTTWireFormat implements WireFormat {
 
-
     static final int MAX_MESSAGE_LENGTH = 1024 * 1024 * 256;
 
-    private boolean encodingEnabled = false;
     private int version = 1;
 
     public ByteSequence marshal(Object command) throws IOException {
@@ -119,6 +117,4 @@ public class MQTTWireFormat implements WireFormat {
     public int getVersion() {
         return this.version;
     }
-
-
 }
