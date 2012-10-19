@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.junit.Test;
@@ -30,59 +31,114 @@ import static org.junit.Assert.assertEquals;
 public class JMSClientTest extends AmqpTestSupport {
 
     @Test
-    public void testSendReceive() throws Exception {
+    public void testTransactions() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
 
-        QueueImpl queue = new QueueImpl("queue://testqueue");
-        int nMsgs = 100;
-        final String dataFormat = "%010240d";
+        Connection connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer p = session.createProducer(queue);
+            p.send(session.createTextMessage("Hello World"));
+//            session.commit();
 
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, null, null);
+            MessageConsumer c = session.createConsumer(queue);
+            Message msg = c.receive();
+            System.out.println("first:"+msg);
+            System.out.println(msg.getJMSRedelivered());
 
-        try {
-            final Connection connection = factory.createConnection();
-            connection.setExceptionListener(new ExceptionListener() {
-                @Override
-                public void onException(JMSException exception) {
-                    exception.printStackTrace();
-                }
-            });
-            connection.start();
-            {
-                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                MessageProducer p = session.createProducer(queue);
-                for (int i = 0; i < nMsgs; i++) {
-                    System.out.println("Sending " + i);
-                    p.send(session.createTextMessage(String.format(dataFormat, i)));
-                }
-                p.close();
-                session.close();
-            }
-            System.out.println("=======================================================================================");
-            System.out.println(" receiving ");
-            System.out.println("=======================================================================================");
-            {
-                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                MessageConsumer c = session.createConsumer(queue);
-
-                // Receive messages non-transacted
-                int i = 0;
-                while ( i < nMsgs) {
-                    TextMessage msg = (TextMessage) c.receive();
-                    if( msg!=null ) {
-                        String s = msg.getText();
-                        assertEquals(String.format(dataFormat, i), s);
-                        System.out.println("Received: " + i);
-                        i++;
-                    }
-                }
-                c.close();
-                session.close();
-            }
-            connection.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+//            session.rollback();
+//
+//            msg = c.receive();
+//            System.out.println("second:"+msg);
+//            System.out.println(msg.getJMSRedelivered());
         }
+        connection.close();
 
+    }
+
+//    @Test
+//    public void testSendReceive() throws Exception {
+//        ActiveMQAdmin.enableJMSFrameTracing();
+//        QueueImpl queue = new QueueImpl("queue://testqueue");
+//        int nMsgs = 1;
+//        final String dataFormat = "%01024d";
+//
+//
+//        try {
+//            Connection connection = createConnection();
+//            {
+//                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//                MessageProducer p = session.createProducer(queue);
+//                for (int i = 0; i < nMsgs; i++) {
+//                    System.out.println("Sending " + i);
+//                    p.send(session.createTextMessage(String.format(dataFormat, i)));
+//                }
+//            }
+//            connection.close();
+//
+//            System.out.println("=======================================================================================");
+//            System.out.println(" failing a receive ");
+//            System.out.println("=======================================================================================");
+//            connection = createConnection();
+//            {
+//                Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+//                MessageConsumer c = session.createConsumer(queue);
+//
+//                // Receive messages non-transacted
+//                int i = 0;
+//                while ( i < 1) {
+//                    TextMessage msg = (TextMessage) c.receive();
+//                    if( msg!=null ) {
+//                        String s = msg.getText();
+//                        assertEquals(String.format(dataFormat, i), s);
+//                        System.out.println("Received: " + i);
+//                        i++;
+//                    }
+//                }
+//            }
+//            connection.close();
+//
+//
+//            System.out.println("=======================================================================================");
+//            System.out.println(" receiving ");
+//            System.out.println("=======================================================================================");
+//            connection = createConnection();
+//            {
+//                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//                MessageConsumer c = session.createConsumer(queue);
+//
+//                // Receive messages non-transacted
+//                int i = 0;
+//                while ( i < nMsgs) {
+//                    TextMessage msg = (TextMessage) c.receive();
+//                    if( msg!=null ) {
+//                        String s = msg.getText();
+//                        assertEquals(String.format(dataFormat, i), s);
+//                        System.out.println("Received: " + i);
+//                        i++;
+//                    }
+//                }
+//            }
+//            connection.close();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
+
+    private Connection createConnection() throws JMSException {
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, null, null);
+        final Connection connection = factory.createConnection();
+        connection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                exception.printStackTrace();
+            }
+        });
+        connection.start();
+        return connection;
     }
 
 }

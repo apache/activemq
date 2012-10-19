@@ -19,12 +19,15 @@ package org.apache.activemq.transport.amqp;
 import junit.framework.TestCase;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.spring.SpringSslContext;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Vector;
 
 import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
@@ -40,21 +43,51 @@ public class AmqpTestSupport {
     protected int numberOfMessages;
     AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
     protected int port;
+    protected int sslPort;
+
+
+    public static void main(String[] args) throws Exception {
+        final AmqpTestSupport s = new AmqpTestSupport();
+        s.sslPort = 5671;
+        s.port = 5672;
+        s.startBroker();
+        while(true) {
+            Thread.sleep(100000);
+        }
+    }
 
     @Before
-    public void startBroker() throws Exception {
+    public void setUp() throws Exception {
         autoFailTestSupport.startAutoFailThread();
         exceptions.clear();
+        startBroker();
+    }
+
+    public void startBroker() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
+
+        // Setup SSL context...
+        final File classesDir = new File(AmqpProtocolConverter.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+        File keystore = new File(classesDir, "../../src/test/resources/keystore");
+        final SpringSslContext sslContext = new SpringSslContext();
+        sslContext.setKeyStore(keystore.getCanonicalPath());
+        sslContext.setKeyStorePassword("password");
+        sslContext.setTrustStore(keystore.getCanonicalPath());
+        sslContext.setTrustStorePassword("password");
+        sslContext.afterPropertiesSet();
+        brokerService.setSslContext(sslContext);
+
         addAMQPConnector();
         brokerService.start();
         this.numberOfMessages = 2000;
     }
 
     protected void addAMQPConnector() throws Exception {
-        final TransportConnector connector = brokerService.addConnector("amqp://localhost:0");
+        TransportConnector connector =brokerService.addConnector("amqp+ssl://0.0.0.0:"+sslPort);
+        sslPort = connector.getConnectUri().getPort();
+        connector = brokerService.addConnector("amqp://0.0.0.0:"+port);
         port = connector.getConnectUri().getPort();
     }
 

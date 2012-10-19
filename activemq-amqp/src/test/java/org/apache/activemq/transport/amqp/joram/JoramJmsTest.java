@@ -47,6 +47,8 @@ public class JoramJmsTest extends TestCase {
         TestSuite suite = new TestSuite();
 
         // Passing tests
+        suite.addTestSuite(ConnectionTest.class);
+        suite.addTestSuite(SessionTest.class);
         suite.addTestSuite(JMSXPropertyTest.class);
         suite.addTestSuite(MessageBodyTest.class);
         suite.addTestSuite(MessageDefaultTest.class);
@@ -54,13 +56,7 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(MessagePropertyTest.class);
 
         if (false ) {
-// TODO: Fails due to JMS client impl error.
-        suite.addTestSuite(UnifiedSessionTest.class);
-// TODO: Fails due to https://issues.apache.org/jira/browse/PROTON-62: ClassCastException when processing an Attach frame
-        suite.addTestSuite(QueueSessionTest.class);
-        suite.addTestSuite(SessionTest.class);
-// TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
-        suite.addTestSuite(MessageTypeTest.class);
+
 // TODO: Fails due to temp destinations not being supported yet.
         suite.addTestSuite(MessageHeaderTest.class);
         suite.addTestSuite(TemporaryQueueTest.class);
@@ -68,13 +64,17 @@ public class JoramJmsTest extends TestCase {
 // TODO: Fails due to selectors not being implemented yet.
         suite.addTestSuite(SelectorSyntaxTest.class);
         suite.addTestSuite(SelectorTest.class);
+        suite.addTestSuite(QueueSessionTest.class);
+// TODO: Browsers not yet supported.
+        suite.addTestSuite(QueueBrowserTest.class);
+// TODO: Fails due to JMS client impl error.
+        suite.addTestSuite(UnifiedSessionTest.class);
+// TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
+        suite.addTestSuite(MessageTypeTest.class);
 // TODO: Fails due to: javax.jms.IllegalStateException: Cannot set client-id to "publisherConnection"; client-id must be set on connection creation
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(TopicSessionTest.class);
-// TODO: figure out why the following tests fail..
-// TODO: figure out why the following tests hang..
-        suite.addTestSuite(ConnectionTest.class);
-        suite.addTestSuite(QueueBrowserTest.class);
+
 
         }
         return suite;

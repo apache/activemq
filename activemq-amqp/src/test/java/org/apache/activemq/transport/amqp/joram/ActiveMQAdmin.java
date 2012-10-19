@@ -29,6 +29,9 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.Hashtable;
 import java.util.logging.*;
@@ -53,17 +56,18 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
-    private void enableJMSFrameTracing() {
+    static public void enableJMSFrameTracing() throws FileNotFoundException {
         final SimpleFormatter formatter = new SimpleFormatter();
+        final PrintStream out = new PrintStream(new FileOutputStream(new File("/tmp/amqp-trace.txt")));
         Handler handler = new Handler() {
             @Override
             public void publish(LogRecord r) {
-                System.out.println(String.format("%s:%s", r.getLoggerName(), r.getMessage()));
+                out.println(String.format("%s:%s", r.getLoggerName(), r.getMessage()));
             }
 
             @Override
             public void flush() {
-                System.out.flush();
+                out.flush();
             }
 
             @Override
@@ -71,7 +75,7 @@ public class ActiveMQAdmin implements Admin {
             }
         };
 
-        Logger log = Logger.getLogger("RAW");
+        Logger log = Logger.getLogger("FRM");
         log.addHandler(handler);
         log.setLevel(Level.FINEST);
     }

@@ -70,6 +70,20 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         }
     }
 
+    @Override
+    public void onException(IOException error) {
+        try {
+            protocolConverter.lock.lock();
+            try {
+                protocolConverter.onAMQPException(error);
+            } finally {
+                protocolConverter.lock.unlock();
+            }
+        } finally {
+            super.onException(error);
+        }
+    }
+
     public void onCommand(Object command) {
         try {
             if (trace) {
@@ -139,6 +153,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public AmqpWireFormat getWireFormat() {
         return this.wireFormat;
     }
+
+
 
     public void handleException(IOException e) {
         super.onException(e);

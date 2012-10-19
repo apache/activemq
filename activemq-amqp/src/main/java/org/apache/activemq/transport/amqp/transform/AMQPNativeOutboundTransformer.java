@@ -16,10 +16,15 @@
  */
 package org.apache.activemq.transport.amqp.transform;
 
+import org.apache.qpid.proton.codec.CompositeWritableBuffer;
+import org.apache.qpid.proton.codec.WritableBuffer;
+import org.apache.qpid.proton.type.UnsignedInteger;
+
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageFormatException;
+import java.nio.ByteBuffer;
 
 /**
 * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -54,8 +59,43 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
             return null;
         }
         byte data[] = new byte[(int) msg.getBodyLength()];
+        int dataSize = data.length;
         msg.readBytes(data);
-        return new EncodedMessage(messageFormat, data, 0, data.length);
+        msg.reset();
+
+        try {
+            int count = msg.getIntProperty("JMSXDeliveryCount");
+            if( count > 1 ) {
+
+                // decode...
+                org.apache.qpid.proton.message.Message amqp = new org.apache.qpid.proton.message.Message();
+                int offset = 0;
+                int len = data.length;
+                while( len > 0 ) {
+                    final int decoded = amqp.decode(data, offset, len);
+                    assert decoded > 0: "Make progress decoding the message";
+                    offset += decoded;
+                    len -= decoded;
+                }
+
+                // Update the DeliveryCount header...
+                amqp.getHeader().setDeliveryCount(new UnsignedInteger(count));
+
+                // Re-encode...
+                ByteBuffer buffer = ByteBuffer.wrap(new byte[1024*4]);
+                final DroppingWritableBuffer overflow = new DroppingWritableBuffer();
+                int c = amqp.encode(new CompositeWritableBuffer(new WritableBuffer.ByteBufferWrapper(buffer), overflow));
+                if( overflow.position() > 0 ) {
+                    buffer = ByteBuffer.wrap(new byte[1024*4+overflow.position()]);
+                    c = amqp.encode(new WritableBuffer.ByteBufferWrapper(buffer));
+                }
+                data = buffer.array();
+                dataSize = c;
+            }
+        } catch (JMSException e) {
+        }
+
+        return new EncodedMessage(messageFormat, data, 0, dataSize);
     }
 
 }
