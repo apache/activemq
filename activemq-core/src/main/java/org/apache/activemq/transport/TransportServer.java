@@ -25,15 +25,15 @@ import org.apache.activemq.command.BrokerInfo;
 /**
  * A TransportServer asynchronously accepts {@see Transport} objects and then
  * delivers those objects to a {@see TransportAcceptListener}.
- * 
- * 
+ *
+ *
  */
 public interface TransportServer extends Service {
 
     /**
      * Registers an {@see TransportAcceptListener} which is notified of accepted
      * channels.
-     * 
+     *
      * @param acceptListener
      */
     void setAcceptListener(TransportAcceptListener acceptListener);
@@ -41,7 +41,7 @@ public interface TransportServer extends Service {
     /**
      * Associates a broker info with the transport server so that the transport
      * can do discovery advertisements of the broker.
-     * 
+     *
      * @param brokerInfo
      */
     void setBrokerInfo(BrokerInfo brokerInfo);
@@ -55,4 +55,14 @@ public interface TransportServer extends Service {
      */
     InetSocketAddress getSocketAddress();
 
+    /**
+     * For TransportServers that provide SSL connections to their connected peers they should
+     * return true here if and only if they populate the ConnectionInfo command presented to
+     * the Broker with the peers certificate chain so that the broker knows it can use that
+     * information to authenticate the connected peer.
+     *
+     * @return true if this transport server provides SSL level security over its
+     *          connections.
+     */
+    boolean isSslServer();
 }

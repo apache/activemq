@@ -54,9 +54,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A TCP based implementation of {@link TransportServer}
- * 
+ *
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * 
+ *
  */
 
 public class TcpTransportServer extends TransportServerThreadSupport implements ServiceListener{
@@ -70,7 +70,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected long maxInactivityDurationInitalDelay = 10000;
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept=true;
-       
+
     /**
      * trace=true -> the Transport stack where this TcpTransport
      * object will be, will have a TransportLogger layer
@@ -114,12 +114,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      */
     protected int maximumConnections = Integer.MAX_VALUE;
     protected int currentTransportCount=0;
-  
+
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
         this.transportFactory = transportFactory;
         this.serverSocketFactory = serverSocketFactory;
-        
     }
 
     public void bind() throws IOException {
@@ -130,10 +129,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         InetAddress addr = InetAddress.getByName(host);
 
         try {
-
             this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
             configureServerSocket(this.serverSocket);
-            
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to bind to server socket: " + bind + " due to: " + e, e);
         }
@@ -177,7 +174,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     /**
      * Associates a broker info with the transport server so that the transport
      * can do discovery advertisements of the broker.
-     * 
+     *
      * @param brokerInfo
      */
     public void setBrokerInfo(BrokerInfo brokerInfo) {
@@ -190,7 +187,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     public void setMaxInactivityDuration(long maxInactivityDuration) {
         this.maxInactivityDuration = maxInactivityDuration;
     }
-    
+
     public long getMaxInactivityDurationInitalDelay() {
         return this.maxInactivityDurationInitalDelay;
     }
@@ -214,14 +211,14 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     public void setTrace(boolean trace) {
         this.trace = trace;
     }
-    
+
     public String getLogWriterName() {
         return logWriterName;
     }
 
     public void setLogWriterName(String logFormat) {
         this.logWriterName = logFormat;
-    }        
+    }
 
     public boolean isDynamicManagement() {
         return dynamicManagement;
@@ -235,11 +232,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return startLogging;
     }
 
-
     public void setStartLogging(boolean startLogging) {
         this.startLogging = startLogging;
     }
-    
+
     /**
      * @return the backlog
      */
@@ -267,7 +263,6 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     public void setUseQueueForAccept(boolean useQueueForAccept) {
         this.useQueueForAccept = useQueueForAccept;
     }
-    
 
     /**
      * pull Sockets from the ServerSocket
@@ -304,7 +299,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     /**
      * Allow derived classes to override the Transport implementation that this
      * transport server creates.
-     * 
+     *
      * @param socket
      * @param format
      * @return
@@ -322,7 +317,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     }
 
     /**
-     * @param socket 
+     * @param socket
      * @param inetAddress
      * @return real hostName
      * @throws UnknownHostException
@@ -341,7 +336,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         }
         return result;
     }
-    
+
     protected void doStart() throws Exception {
         if(useQueueForAccept) {
             Runnable run = new Runnable() {
@@ -353,16 +348,16 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                                 handleSocket(sock);
                             }
                         }
-    
+
                     } catch (InterruptedException e) {
                         LOG.info("socketQueue interuppted - stopping");
                         if (!isStopping()) {
                             onAcceptError(e);
                         }
                     }
-    
+
                 }
-    
+
             };
             socketHandlerThread = new Thread(null, run,
                     "ActiveMQ Transport Server Thread Handler: " + toString(),
@@ -372,7 +367,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             socketHandlerThread.start();
         }
         super.doStart();
-        
+
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
@@ -389,17 +384,17 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected final void handleSocket(Socket socket) {
         try {
             if (this.currentTransportCount >= this.maximumConnections) {
-                throw new ExceededMaximumConnectionsException("Exceeded the maximum " + 
-                    "number of allowed client connections. See the 'maximumConnections' " + 
-                    "property on the TCP transport configuration URI in the ActiveMQ " + 
-                    "configuration file (e.g., activemq.xml)"); 
-                
+                throw new ExceededMaximumConnectionsException("Exceeded the maximum " +
+                    "number of allowed client connections. See the 'maximumConnections' " +
+                    "property on the TCP transport configuration URI in the ActiveMQ " +
+                    "configuration file (e.g., activemq.xml)");
+
             } else {
                 HashMap<String, Object> options = new HashMap<String, Object>();
                 options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
-                options.put("maxInactivityDurationInitalDelay", 
+                options.put("maxInactivityDurationInitalDelay",
                     Long.valueOf(maxInactivityDurationInitalDelay));
-                options.put("minmumWireFormatVersion", 
+                options.put("minmumWireFormatVersion",
                     Integer.valueOf(minmumWireFormatVersion));
                 options.put("trace", Boolean.valueOf(trace));
                 options.put("soTimeout", Integer.valueOf(soTimeout));
@@ -417,7 +412,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     ((ServiceSupport) transport).addServiceListener(this);
                 }
 
-                Transport configuredTransport = 
+                Transport configuredTransport =
                     transportFactory.serverConfigure( transport, format, options);
 
                 getAcceptListener().onAccept(configuredTransport);
@@ -432,32 +427,32 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 onAcceptError(e);
             }
         }
-        
-    }    
 
-	public int getSoTimeout() {
-		return soTimeout;
-	}
+    }
 
-	public void setSoTimeout(int soTimeout) {
-		this.soTimeout = soTimeout;
-	}
+    public int getSoTimeout() {
+        return soTimeout;
+    }
 
-	public int getSocketBufferSize() {
-		return socketBufferSize;
-	}
+    public void setSoTimeout(int soTimeout) {
+        this.soTimeout = soTimeout;
+    }
 
-	public void setSocketBufferSize(int socketBufferSize) {
-		this.socketBufferSize = socketBufferSize;
-	}
+    public int getSocketBufferSize() {
+        return socketBufferSize;
+    }
 
-	public int getConnectionTimeout() {
-		return connectionTimeout;
-	}
+    public void setSocketBufferSize(int socketBufferSize) {
+        this.socketBufferSize = socketBufferSize;
+    }
 
-	public void setConnectionTimeout(int connectionTimeout) {
-		this.connectionTimeout = connectionTimeout;
-	}
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public void setConnectionTimeout(int connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+    }
 
     /**
      * @return the maximumConnections
@@ -473,12 +468,16 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         this.maximumConnections = maximumConnections;
     }
 
-    
     public void started(Service service) {
        this.currentTransportCount++;
     }
 
     public void stopped(Service service) {
         this.currentTransportCount--;
+    }
+
+    @Override
+    public boolean isSslServer() {
+        return false;
     }
 }

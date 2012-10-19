@@ -31,38 +31,34 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  *  An SSL TransportServer.
- * 
+ *
  *  Allows for client certificate authentication (refer to setNeedClientAuth for
  *      details).
- *  NOTE: Client certificate authentication is disabled by default. 
+ *  NOTE: Client certificate authentication is disabled by default.
  *
  */
 public class SslTransportServer extends TcpTransportServer {
-    
+
     // Specifies if sockets created from this server should needClientAuth.
     private boolean needClientAuth;
-    
+
     // Specifies if sockets created from this server should wantClientAuth.
     private boolean wantClientAuth;
-    
-    
+
     /**
      * Creates a ssl transport server for the specified url using the provided
      * serverSocketFactory
-     * 
+     *
      * @param transportFactory The factory used to create transports when connections arrive.
      * @param location The location of the broker to bind to.
      * @param serverSocketFactory The factory used to create this server.
      * @throws IOException passed up from TcpTransportFactory.
      * @throws URISyntaxException passed up from TcpTransportFactory.
      */
-    public SslTransportServer(
-            SslTransportFactory transportFactory,
-            URI location,
-            SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+    public SslTransportServer(SslTransportFactory transportFactory, URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(transportFactory, location, serverSocketFactory);
     }
-    
+
     /**
      * Sets whether client authentication should be required
      * Must be called before {@link #bind()}
@@ -72,21 +68,21 @@ public class SslTransportServer extends TcpTransportServer {
     public void setNeedClientAuth(boolean needAuth) {
         this.needClientAuth = needAuth;
     }
-    
+
     /**
      * Returns whether client authentication should be required.
      */
     public boolean getNeedClientAuth() {
         return this.needClientAuth;
     }
-    
+
     /**
      * Returns whether client authentication should be requested.
      */
     public boolean getWantClientAuth() {
         return this.wantClientAuth;
     }
-    
+
     /**
      * Sets whether client authentication should be requested.
      * Must be called before {@link #bind()}
@@ -96,13 +92,13 @@ public class SslTransportServer extends TcpTransportServer {
     public void setWantClientAuth(boolean wantAuth) {
         this.wantClientAuth = wantAuth;
     }
-    
+
     /**
      * Binds this socket to the previously specified URI.
-     * 
+     *
      * Overridden to allow for proper handling of needClientAuth.
-     * 
-     * @throws IOException passed up from TcpTransportServer. 
+     *
+     * @throws IOException passed up from TcpTransportServer.
      */
     public void bind() throws IOException {
         super.bind();
@@ -112,13 +108,13 @@ public class SslTransportServer extends TcpTransportServer {
             ((SSLServerSocket)this.serverSocket).setWantClientAuth(true);
         }
     }
-    
+
     /**
      * Used to create Transports for this server.
-     * 
+     *
      * Overridden to allow the use of SslTransports (instead of TcpTransports).
-     * 
-     * @param socket The incoming socket that will be wrapped into the new Transport. 
+     *
+     * @param socket The incoming socket that will be wrapped into the new Transport.
      * @param format The WireFormat being used.
      * @return The newly return (SSL) Transport.
      * @throws IOException
@@ -126,4 +122,10 @@ public class SslTransportServer extends TcpTransportServer {
     protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
         return new SslTransport(format, (SSLSocket)socket);
     }
+
+    @Override
+    public boolean isSslServer() {
+        return true;
+    }
+
 }

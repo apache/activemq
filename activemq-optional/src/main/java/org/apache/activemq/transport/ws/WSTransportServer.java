@@ -100,4 +100,9 @@ public class WSTransportServer extends WebTransportServerSupport {
         super.setTransportOption(transportOptions);
     }
 
+    @Override
+    public boolean isSslServer() {
+        return false;
+    }
+
 }

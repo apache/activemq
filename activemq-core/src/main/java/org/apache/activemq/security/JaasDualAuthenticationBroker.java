@@ -17,10 +17,13 @@
 
 package org.apache.activemq.security;
 
-import org.apache.activemq.broker.*;
-import org.apache.activemq.broker.jmx.ManagedTransportConnector;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.Connector;
+import org.apache.activemq.broker.EmptyBroker;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionInfo;
-
 import org.apache.activemq.transport.tcp.SslTransportServer;
 
 /**
@@ -86,7 +89,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
             Connector connector = context.getConnector();
             if (connector instanceof TransportConnector) {
                 TransportConnector transportConnector = (TransportConnector) connector;
-                isSSL = (transportConnector.getServer() instanceof SslTransportServer);
+                isSSL = transportConnector.getServer().isSslServer();
             } else {
                 isSSL = false;
             }

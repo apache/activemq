@@ -17,29 +17,28 @@
 
 package org.apache.activemq.transport.nio;
 
-import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.tcp.SslTransport;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
-import org.apache.activemq.transport.tcp.TcpTransport;
-import org.apache.activemq.transport.tcp.TcpTransportServer;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.net.ServerSocketFactory;
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Map;
+
+import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+
+import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.tcp.SslTransport;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.wireformat.WireFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NIOSSLTransportFactory extends NIOTransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(NIOSSLTransportFactory.class);
@@ -53,6 +52,11 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
                     transport.setSslContext(context);
                 }
                 return transport;
+            }
+
+            @Override
+            public boolean isSslServer() {
+                return true;
             }
         };
     }

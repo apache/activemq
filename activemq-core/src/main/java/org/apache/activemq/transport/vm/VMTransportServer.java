@@ -137,4 +137,9 @@ public class VMTransportServer implements TransportServer {
     public int getConnectionCount() {
         return connectionCount.intValue();
     }
+
+    @Override
+    public boolean isSslServer() {
+        return false;
+    }
 }

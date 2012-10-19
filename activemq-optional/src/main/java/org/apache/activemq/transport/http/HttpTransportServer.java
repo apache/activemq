@@ -114,4 +114,9 @@ public class HttpTransportServer extends WebTransportServerSupport {
         socketConnectorFactory.setTransportOptions(transportOptions);
         super.setTransportOption(transportOptions);
     }
+
+    @Override
+    public boolean isSslServer() {
+        return false;
+    }
 }

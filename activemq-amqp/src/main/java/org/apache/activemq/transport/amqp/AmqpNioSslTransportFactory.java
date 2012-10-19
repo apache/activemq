@@ -16,21 +16,22 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+
+import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.WireFormat;
-
-import javax.net.ServerSocketFactory;
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 
 public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
 
@@ -45,6 +46,11 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
                     transport.setSslContext(context);
                 }
                 return transport;
+            }
+
+            @Override
+            public boolean isSslServer() {
+                return true;
             }
         };
     }

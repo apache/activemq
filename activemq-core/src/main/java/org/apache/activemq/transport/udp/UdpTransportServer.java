@@ -34,15 +34,14 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.reliable.ReliableTransport;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
-import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A UDP based implementation of {@link TransportServer}
- * 
- * 
+ *
+ *
  */
 
 public class UdpTransportServer extends TransportServerSupport {
@@ -174,5 +173,10 @@ public class UdpTransportServer extends TransportServerSupport {
 
     public InetSocketAddress getSocketAddress() {
         return serverTransport.getLocalSocketAddress();
+    }
+
+    @Override
+    public boolean isSslServer() {
+        return false;
     }
 }

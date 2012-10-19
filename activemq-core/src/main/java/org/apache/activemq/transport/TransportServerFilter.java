@@ -24,7 +24,7 @@ import org.apache.activemq.command.BrokerInfo;
 public class TransportServerFilter implements TransportServer {
 
     protected final TransportServer next;
-    
+
     /**
      * @param next
      */
@@ -55,5 +55,8 @@ public class TransportServerFilter implements TransportServer {
     public InetSocketAddress getSocketAddress() {
         return next.getSocketAddress();
     }
-    
+
+    public boolean isSslServer() {
+        return next.isSslServer();
+    }
 }
