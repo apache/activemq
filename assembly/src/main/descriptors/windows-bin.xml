@@ -64,7 +64,6 @@
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
-        <include>bin/wrapper.jar</include>
         <include>bin/win32/*.exe</include>
         <include>bin/win32/*.dll</include>
         <include>bin/win64/*.exe</include>
