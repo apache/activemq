@@ -338,6 +338,9 @@ public class Transaction implements Iterable<Page> {
 
                 current.makePageEnd(pos, getWriteTransactionId());
 
+                // make visible as end page
+                pageFile.addToCache(current);
+
                 // Write the header..
                 pos = 0;
                 current.write(this);
