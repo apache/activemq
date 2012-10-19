@@ -28,14 +28,12 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.Wait;
-import org.apache.kahadb.page.ThreadTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +75,6 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
     }
 
     protected void tearDown() throws Exception {
-        ThreadTracker.result();
         super.tearDown();
         destroyBroker();
     }
