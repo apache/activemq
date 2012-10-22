@@ -59,7 +59,8 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     private ActiveMQConnection connection;
     private BrokerService broker;
 
-    protected void tearDown() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         // Try our best to close any previously opend connection.
         try {
             connection.close();
@@ -436,7 +437,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         URI temp = new URI(uri);
         // URI connectURI = connector.getServer().getConnectURI();
         // TODO this sometimes fails when using the actual local host name
-        URI currentURI = connector.getServer().getConnectURI();
+        URI currentURI = new URI(connector.getPublishableConnectString());
 
         // sometimes the actual host name doesn't work in this test case
         // e.g. on OS X so lets use the original details but just use the actual
@@ -460,9 +461,6 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         assertXAConnection(connection);
 
         assertNotNull(connection);
-        connection.close();
-
-        broker.stop();
     }
 
     private void assertXAConnection(Connection connection) {

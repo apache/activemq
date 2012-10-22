@@ -54,7 +54,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertTrue("should start with Cheese! but was: " + clientID, clientID.startsWith("Cheese"));
     }
 
-    protected void tearDown() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         // Try our best to close any previously opend connection.
         try {
             connection.close();
@@ -149,6 +150,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
 
+        connection.close();
+
         broker.stop();
     }
 
@@ -231,7 +234,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         URI temp = new URI(uri);
         // URI connectURI = connector.getServer().getConnectURI();
         // TODO this sometimes fails when using the actual local host name
-        URI currentURI = connector.getServer().getConnectURI();
+        URI currentURI = new URI(connector.getPublishableConnectString());
 
         // sometimes the actual host name doesn't work in this test case
         // e.g. on OS X so lets use the original details but just use the actual
@@ -245,8 +248,6 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectURI);
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
-
-        broker.stop();
     }
 
 }
