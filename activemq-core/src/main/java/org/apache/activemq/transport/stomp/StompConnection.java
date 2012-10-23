@@ -241,6 +241,12 @@ public class StompConnection {
         sendFrame(frame.format());
     }
 
+    public void keepAlive() throws Exception {
+        OutputStream outputStream = stompSocket.getOutputStream();
+        outputStream.write('\n');
+        outputStream.flush();
+    }
+
     protected String appendHeaders(HashMap<String, Object> headers) {
         StringBuilder result = new StringBuilder();
         for (String key : headers.keySet()) {
