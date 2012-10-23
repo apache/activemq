@@ -27,6 +27,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 import javax.net.SocketFactory;
+
 import org.apache.activemq.transport.nio.NIOOutputStream;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
@@ -103,9 +104,10 @@ public class MQTTNIOTransport extends TcpTransport {
                 DataByteArrayInputStream dis = new DataByteArrayInputStream(inputBuffer.array());
                 codec.parse(dis, readSize);
 
+                receiveCounter += readSize;
+
                 // clear the buffer
                 inputBuffer.clear();
-
             }
         } catch (IOException e) {
             onException(e);
