@@ -39,6 +39,7 @@ public class StompCodec {
     int contentLength = -1;
     int readLength = 0;
     int previousByte = -1;
+    boolean awaitingCommandStart = true;
     String version = Stomp.DEFAULT_VERSION;
 
     public StompCodec(TcpTransport transport) {
@@ -56,6 +57,14 @@ public class StompCodec {
            }
 
            if (!processedHeaders) {
+
+               // skip heart beat commands.
+               if (awaitingCommandStart && b == '\n') {
+                   continue;
+               } else {
+                   awaitingCommandStart = false;   // non-newline indicates next frame.
+               }
+
                currentCommand.write(b);
                // end of headers section, parse action and header
                if (b == '\n' && (previousByte == '\n' || currentCommand.endsWith(crlfcrlf))) {
@@ -74,6 +83,7 @@ public class StompCodec {
                    processedHeaders = true;
                    currentCommand.reset();
                }
+
            } else {
 
                if (contentLength == -1) {
@@ -102,6 +112,7 @@ public class StompCodec {
         StompFrame frame = new StompFrame(action, headers, currentCommand.toByteArray());
         transport.doConsume(frame);
         processedHeaders = false;
+        awaitingCommandStart = true;
         currentCommand.reset();
         contentLength = -1;
     }

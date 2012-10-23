@@ -128,13 +128,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
     protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
+    protected volatile int receiveCounter;
 
     private Map<String, Object> socketOptions;
     private int soLinger = Integer.MIN_VALUE;
     private Boolean keepAlive;
     private Boolean tcpNoDelay;
     private Thread runnerThread;
-    private volatile int receiveCounter;
 
     /**
      * Connect to a remote Node - e.g. a Broker

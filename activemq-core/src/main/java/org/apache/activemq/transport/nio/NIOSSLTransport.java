@@ -178,8 +178,9 @@ public class NIOSSLTransport extends NIOTransport {
                     }
                     int readCount = secureRead(plain);
 
-                    if (readCount == 0)
+                    if (readCount == 0) {
                         break;
+                    }
 
                     // channel is closed, cleanup
                     if (readCount == -1) {
@@ -187,6 +188,8 @@ public class NIOSSLTransport extends NIOTransport {
                         selection.close();
                         break;
                     }
+
+                    receiveCounter += readCount;
                 }
 
                 if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {

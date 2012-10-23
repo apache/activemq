@@ -97,10 +97,13 @@ public class StompNIOTransport extends TcpTransport {
                    selection.close();
                    break;
                }
+
                // nothing more to read, break
                if (readSize == 0) {
                    break;
                }
+
+               receiveCounter += readSize;
 
                inputBuffer.flip();
 
@@ -109,7 +112,6 @@ public class StompNIOTransport extends TcpTransport {
 
                // clear the buffer
                inputBuffer.clear();
-
            }
         } catch (IOException e) {
             onException(e);
