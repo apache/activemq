@@ -19,9 +19,9 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- * 
+ *
  * @openwire:marshaller code="3"
- * 
+ *
  */
 public class ConnectionInfo extends BaseCommand {
 
@@ -124,7 +124,7 @@ public class ConnectionInfo extends BaseCommand {
 
     /**
      * The route of brokers the command has moved through.
-     * 
+     *
      * @openwire:property version=1 cache=true
      */
     public BrokerId[] getBrokerPath() {
@@ -170,8 +170,8 @@ public class ConnectionInfo extends BaseCommand {
     /**
      * Transports may wish to associate additional data with the connection. For
      * example, an SSL transport may use this field to attach the client
-     * certificates used when the conection was established.
-     * 
+     * certificates used when the connection was established.
+     *
      * @return the transport context.
      */
     public Object getTransportContext() {
@@ -181,8 +181,8 @@ public class ConnectionInfo extends BaseCommand {
     /**
      * Transports may wish to associate additional data with the connection. For
      * example, an SSL transport may use this field to attach the client
-     * certificates used when the conection was established.
-     * 
+     * certificates used when the connection was established.
+     *
      * @param transportContext value used to set the transport context
      */
     public void setTransportContext(Object transportContext) {
