@@ -16,15 +16,25 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
+import org.apache.activemq.transport.tcp.SslTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -39,6 +49,29 @@ public class StompSslTransportFactory extends SslTransportFactory implements Bro
 
     protected String getDefaultWireFormatType() {
         return "stomp";
+    }
+
+    protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return new SslTransportServer(this, location, serverSocketFactory) {
+
+            @Override
+            protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
+                return new SslTransport(format, (SSLSocket)socket) {
+
+                    private X509Certificate[] cachedPeerCerts;
+
+                    @Override
+                    public void doConsume(Object command) {
+                        StompFrame frame = (StompFrame) command;
+                        if (cachedPeerCerts == null) {
+                            cachedPeerCerts = getPeerCertificates();
+                        }
+                        frame.setTransportContext(cachedPeerCerts);
+                        super.doConsume(command);
+                    }
+                };
+            }
+        };
     }
 
     @SuppressWarnings("rawtypes")

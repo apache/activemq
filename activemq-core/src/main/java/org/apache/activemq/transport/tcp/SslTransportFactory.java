@@ -55,7 +55,7 @@ public class SslTransportFactory extends TcpTransportFactory {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            SslTransportServer server = new SslTransportServer(this, location, (SSLServerSocketFactory)serverSocketFactory);
+            SslTransportServer server = createSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -66,6 +66,20 @@ public class SslTransportFactory extends TcpTransportFactory {
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
+    }
+
+    /**
+     * Allows subclasses of SslTransportFactory to create custom instances of
+     * SslTransportServer.
+     *
+     * @param location
+     * @param serverSocketFactory
+     * @return
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return new SslTransportServer(this, location, serverSocketFactory);
     }
 
     /**

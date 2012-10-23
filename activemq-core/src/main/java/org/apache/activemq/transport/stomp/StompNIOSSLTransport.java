@@ -16,20 +16,24 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.transport.nio.NIOSSLTransport;
-import org.apache.activemq.wireformat.WireFormat;
-
-import javax.net.SocketFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.security.cert.X509Certificate;
+
+import javax.net.SocketFactory;
+
+import org.apache.activemq.transport.nio.NIOSSLTransport;
+import org.apache.activemq.wireformat.WireFormat;
 
 public class StompNIOSSLTransport extends NIOSSLTransport {
 
     StompCodec codec;
+
+    private X509Certificate[] cachedPeerCerts;
 
     public StompNIOSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -56,4 +60,15 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
         codec.parse(input, fill.length);
     }
 
+    @Override
+    public void doConsume(Object command) {
+        StompFrame frame = (StompFrame) command;
+
+        if (cachedPeerCerts == null) {
+            cachedPeerCerts = getPeerCertificates();
+        }
+        frame.setTransportContext(cachedPeerCerts);
+
+        super.doConsume(command);
+    }
 }

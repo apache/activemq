@@ -17,11 +17,9 @@
 package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
-import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.stomp.Stomp;
@@ -111,11 +109,6 @@ class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, S
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }
-    }
-
-    @Override
-    public X509Certificate[] getPeerCertificates() {
-        return null;
     }
 
     @Override

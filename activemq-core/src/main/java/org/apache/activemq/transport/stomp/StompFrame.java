@@ -41,6 +41,8 @@ public class StompFrame implements Command {
     private Map<String, String> headers = new HashMap<String, String>();
     private byte[] content = NO_DATA;
 
+    private transient Object transportContext = null;
+
     public StompFrame(String command) {
         this(command, null, null);
     }
@@ -209,5 +211,27 @@ public class StompFrame implements Command {
         // terminate the frame
         buffer.append('\u0000');
         return buffer.toString();
+    }
+
+    /**
+     * Transports may wish to associate additional data with the connection. For
+     * example, an SSL transport may use this field to attach the client
+     * certificates used when the connection was established.
+     *
+     * @return the transport context.
+     */
+    public Object getTransportContext() {
+        return transportContext;
+    }
+
+    /**
+     * Transports may wish to associate additional data with the connection. For
+     * example, an SSL transport may use this field to attach the client
+     * certificates used when the connection was established.
+     *
+     * @param transportContext value used to set the transport context
+     */
+    public void setTransportContext(Object transportContext) {
+        this.transportContext = transportContext;
     }
 }

@@ -50,7 +50,7 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
             @Override
             public boolean isSslServer() {
-                return false;
+                return true;
             }
         };
     }

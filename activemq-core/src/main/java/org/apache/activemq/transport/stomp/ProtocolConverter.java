@@ -673,7 +673,7 @@ public class ProtocolConverter {
         connectionInfo.setResponseRequired(true);
         connectionInfo.setUserName(login);
         connectionInfo.setPassword(passcode);
-        connectionInfo.setTransportContext(stompTransport.getPeerCertificates());
+        connectionInfo.setTransportContext(command.getTransportContext());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             public void onResponse(ProtocolConverter converter, Response response) throws IOException {
