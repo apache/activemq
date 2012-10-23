@@ -19,6 +19,7 @@ package org.apache.activemq;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
+import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -199,6 +200,32 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         assertEquals(outbound[2], consumer.receive(1000));
         consumer.close();
 
+        commitTx();
+    }
+
+    public void testCloseConsumer() throws Exception {
+        Destination dest = session.createQueue(getSubject() + "?consumer.prefetchSize=0");
+        producer = session.createProducer(dest);
+        beginTx();
+        producer.send(session.createTextMessage("message 1"));
+        producer.send(session.createTextMessage("message 2"));
+        commitTx();
+
+        beginTx();
+        consumer = session.createConsumer(dest);
+        Message message1 = consumer.receive(1000);
+        String text1 = ((TextMessage)message1).getText();
+        assertNotNull(message1);
+        assertEquals("message 1", text1);
+
+        consumer.close();
+
+        consumer = session.createConsumer(dest);
+
+        Message message2 = consumer.receive(1000);
+        String text2 = ((TextMessage)message2).getText();
+        assertNotNull(message2);
+        assertEquals("message 2", text2);
         commitTx();
     }
 
