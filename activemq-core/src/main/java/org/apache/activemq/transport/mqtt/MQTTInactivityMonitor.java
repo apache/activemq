@@ -109,6 +109,11 @@ public class MQTTInactivityMonitor extends TransportFilter {
     final void readCheck() {
         int currentCounter = next.getReceiveCounter();
         int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
+
+        // for the PINGREQ/RESP frames, the currentCounter will be different from previousCounter, and that
+        // should be sufficient to indicate the connection is still alive. If there were random data, or something
+        // outside the scope of the spec, the wire format unrmarshalling would fail, so we don't need to handle
+        // PINGREQ/RESP explicitly here
         if (inReceive.get() || currentCounter != previousCounter) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("A receive is in progress");
@@ -139,22 +144,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
         commandReceived.set(true);
         inReceive.set(true);
         try {
-            if (command.getClass() == KeepAliveInfo.class) {
-                KeepAliveInfo info = (KeepAliveInfo) command;
-                if (info.isResponseRequired()) {
-                    sendLock.lock();
-                    try {
-                        info.setResponseRequired(false);
-                        oneway(info);
-                    } catch (IOException e) {
-                        onException(e);
-                    } finally {
-                        sendLock.unlock();
-                    }
-                }
-            } else {
-                transportListener.onCommand(command);
-            }
+            transportListener.onCommand(command);
         } finally {
             inReceive.set(false);
         }

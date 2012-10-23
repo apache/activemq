@@ -84,6 +84,7 @@ class MQTTProtocolConverter {
 
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
+    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 1.5;
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
@@ -106,10 +107,12 @@ class MQTTProtocolConverter {
     private ConnectionInfo connectionInfo = new ConnectionInfo();
     private CONNECT connect;
     private String clientId;
+    private long defaultKeepAlive;
     private final String QOS_PROPERTY_NAME = "QoSPropertyName";
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerContext brokerContext) {
         this.mqttTransport = mqttTransport;
+        this.defaultKeepAlive = 0;
     }
 
     int generateCommandId() {
@@ -142,6 +145,7 @@ class MQTTProtocolConverter {
 
         switch (frame.messageType()) {
             case PINGREQ.TYPE: {
+                LOG.debug("Received a ping from client: " + getClientId());
                 mqttTransport.sendToMQTT(PING_RESP_FRAME);
                 LOG.debug("Sent Ping Response to " + getClientId());
                 break;
@@ -538,19 +542,49 @@ class MQTTProtocolConverter {
         }
     }
 
-    void configureInactivityMonitor(short heartBeat) {
+    void configureInactivityMonitor(short keepAliveSeconds) {
+        MQTTInactivityMonitor monitor = getMQTTTransport().getInactivityMonitor();
+
+        // If the user specifically shuts off the InactivityMonitor with transport.useInactivityMonitor=false,
+        // then ignore configuring it because it won't exist
+        if (monitor == null) {
+            return;
+        }
+
+
+        long keepAliveMS = keepAliveSeconds * 1000;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("MQTT Client " + getClientId() + " requests heart beat of  " + keepAliveMS + " ms");
+        }
+
         try {
-            int heartBeatMS = heartBeat * 1000;
-            MQTTInactivityMonitor monitor = getMQTTTransport().getInactivityMonitor();
+
+            long keepAliveMSWithGracePeriod = (long) (keepAliveMS * MQTT_KEEP_ALIVE_GRACE_PERIOD);
+
+            // if we have a default keep-alive value, and the client is trying to turn off keep-alive,
+            // we'll observe the server-side configured default value (note, no grace period)
+            if (keepAliveMSWithGracePeriod == 0 && defaultKeepAlive > 0) {
+                keepAliveMSWithGracePeriod = defaultKeepAlive;
+            }
+
             monitor.setProtocolConverter(this);
-            monitor.setReadCheckTime(heartBeatMS);
-            monitor.setInitialDelayTime(heartBeatMS);
+            monitor.setReadCheckTime(keepAliveMSWithGracePeriod);
+            monitor.setInitialDelayTime(keepAliveMS);
             monitor.startMonitorThread();
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("MQTT Client " + getClientId() +
+                        " established heart beat of  " + keepAliveMSWithGracePeriod +
+                        " ms (" + keepAliveMS + "ms + " + (keepAliveMSWithGracePeriod - keepAliveMS) +
+                        "ms grace period)");
+            }
         } catch (Exception ex) {
             LOG.warn("Failed to start MQTT InactivityMonitor ", ex);
         }
 
-        LOG.debug(getClientId() + " MQTT Connection using heart beat of  " + heartBeat + " secs");
+
+
     }
 
     void handleException(Throwable exception, MQTTFrame command) {
@@ -577,8 +611,9 @@ class MQTTProtocolConverter {
             if (connect != null && connect.clientId() != null) {
                 clientId = connect.clientId().toString();
             }
-        } else {
-            clientId = "";
+            else {
+                clientId = "";
+            }
         }
         return clientId;
     }
@@ -634,5 +669,19 @@ class MQTTProtocolConverter {
         result = result.replace('+', '*');
         result = result.replace('/', '.');
         return result;
+    }
+
+    public long getDefaultKeepAlive() {
+        return defaultKeepAlive;
+    }
+
+    /**
+     * Set the default keep alive time (in milliseconds) that would be used if configured on server side
+     * and the client sends a keep-alive value of 0 (zero) on a CONNECT frame
+     *
+     * @param defaultKeepAlive
+     */
+    public void setDefaultKeepAlive(long defaultKeepAlive) {
+        this.defaultKeepAlive = defaultKeepAlive;
     }
 }

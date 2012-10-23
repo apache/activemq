@@ -134,5 +134,13 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         super.onException(e);
     }
 
+    public long getDefaultKeepAlive() {
+        return protocolConverter != null ? protocolConverter.getDefaultKeepAlive() : -1;
+    }
+
+    public void setDefaultKeepAlive(long defaultHeartBeat) {
+        protocolConverter.setDefaultKeepAlive(defaultHeartBeat);
+    }
+
 
 }
