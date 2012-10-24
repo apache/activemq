@@ -431,6 +431,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         // Start up a broker with a tcp connector.
         broker = new BrokerService();
         broker.setPersistent(false);
+        broker.setUseJmx(false);
         TransportConnector connector = broker.addConnector(uri);
         broker.start();
 
