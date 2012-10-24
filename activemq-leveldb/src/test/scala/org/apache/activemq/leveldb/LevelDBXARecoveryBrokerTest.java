@@ -27,21 +27,15 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
         broker.setPersistenceAdapter(store);
     }
 
-    // TODO: The following test cases are failing...
-
-    @Override
-    public void testQueuePersistentPreparedAcksNotLostOnRestart() throws Exception {
-    }
-
-    @Override
-    public void testQueuePersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
-    }
 
     @Override
     public void testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
+//        XA Durable Subs not yet implemented
+//        super.testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback();
     }
-
     @Override
     public void testTopicPersistentPreparedAcksAvailableAfterRollback() throws Exception {
+//        XA Durable Subs not yet implemented
+//        super.testTopicPersistentPreparedAcksAvailableAfterRollback();
     }
 }

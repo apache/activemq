@@ -944,13 +944,21 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  def transactionCursor(collectionKey: Long)(func: (DataStructure)=>Boolean) = {
+  def transactionCursor(collectionKey: Long)(func: (AnyRef)=>Boolean) = {
     collectionCursor(collectionKey, encodeLong(0)) { (key, value) =>
       val seq = decodeLong(key)
       if( value.getMeta != null ) {
-        val data = value.getMeta
-        val ack = store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[MessageAck].asInstanceOf[MessageAck]
-        func(ack)
+
+        val is = new DataByteArrayInputStream(value.getMeta);
+        val log = is.readLong()
+        val offset = is.readInt()
+        val qid = is.readLong()
+        val seq = is.readLong()
+        val ack = store.wireFormat.unmarshal(is).asInstanceOf[MessageAck]
+        ack.getLastMessageId.setDataLocator((log, offset))
+        ack.getLastMessageId.setEntryLocator((qid, seq))
+
+        func(XaAckRecord(collectionKey, seq, ack))
       } else {
         var locator = (value.getValueLocation, value.getValueLength)
         val msg = getMessage(locator)
@@ -1068,7 +1076,7 @@ class LevelDBClient(store: LevelDBStore) {
                   dataLocator = entry.id.getDataLocator match {
                     case x:(Long, Int) => x
                     case x:MessageRecord => x.locator
-                    case _ => throw new RuntimeException("Unexpected locator type")
+                    case _ => throw new RuntimeException("Unexpected locator type: "+dataLocator)
                   }
                 }
 
@@ -1126,18 +1134,37 @@ class LevelDBClient(store: LevelDBStore) {
                 write_enqueue_total += System.nanoTime() - start
               }
 
-            }
+              action.xaAcks.foreach { entry =>
+                val ack = entry.ack
+                if( dataLocator==null ) {
+                  dataLocator = ack.getLastMessageId.getDataLocator match {
+                    case x:(Long, Int) => x
+                    case x:MessageRecord => x.locator
+                    case _ =>
+                      throw new RuntimeException("Unexpected locator type")
+                  }
+                }
 
-            uow.xaAcks.foreach { entry =>
-              val key = encodeEntryKey(ENTRY_PREFIX, entry.container, entry.seq)
-              val log_record = new EntryRecord.Bean()
-              log_record.setCollectionKey(entry.container)
-              log_record.setEntryKey(new Buffer(key, 9, 8))
-              log_record.setMeta(entry.ack)
-              appender.append(LOG_ADD_ENTRY, encodeEntryRecord(log_record.freeze()))
-              val index_record = new EntryRecord.Bean()
-              index_record.setValue(entry.ack)
-              batch.put(key, encodeEntryRecord(log_record.freeze()).toByteArray)
+                val (qid, seq) = ack.getLastMessageId.getEntryLocator.asInstanceOf[(Long, Long)];
+                val os = new DataByteArrayOutputStream()
+                os.writeLong(dataLocator._1)
+                os.writeInt(dataLocator._2)
+                os.writeLong(qid)
+                os.writeLong(seq)
+                store.wireFormat.marshal(ack, os)
+                var ack_encoded = os.toBuffer
+
+                val key = encodeEntryKey(ENTRY_PREFIX, entry.container, entry.seq)
+                val log_record = new EntryRecord.Bean()
+                log_record.setCollectionKey(entry.container)
+                log_record.setEntryKey(new Buffer(key, 9, 8))
+                log_record.setMeta(ack_encoded)
+                appender.append(LOG_ADD_ENTRY, encodeEntryRecord(log_record.freeze()))
+                val index_record = new EntryRecord.Bean()
+                index_record.setMeta(ack_encoded)
+                batch.put(key, encodeEntryRecord(log_record.freeze()).toByteArray)
+              }
+
             }
 
             uow.subAcks.foreach { entry =>

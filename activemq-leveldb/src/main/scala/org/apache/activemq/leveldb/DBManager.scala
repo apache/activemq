@@ -21,7 +21,7 @@ import org.fusesource.hawtdispatch._
 import org.fusesource.hawtdispatch.BaseRetained
 import java.util.concurrent._
 import atomic._
-import org.fusesource.hawtbuf.Buffer
+import org.fusesource.hawtbuf.{DataByteArrayOutputStream, DataByteArrayInputStream, ByteArrayOutputStream, Buffer}
 import org.apache.activemq.store.MessageRecoveryListener
 import java.lang.ref.WeakReference
 import scala.Option._
@@ -41,7 +41,7 @@ case class QueueEntryRecord(id:MessageId, queueKey:Long, queueSeq:Long)
 case class QueueRecord(id:ActiveMQDestination, queue_key:Long)
 case class QueueEntryRange()
 case class SubAckRecord(subKey:Long, ackPosition:Long)
-case class XaAckRecord(container:Long, seq:Long, ack:Buffer)
+case class XaAckRecord(container:Long, seq:Long, ack:MessageAck)
 
 sealed trait UowState {
   def stage:Int
@@ -130,7 +130,6 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   val uowId:Int = manager.lastUowId.incrementAndGet()
   var actions = Map[MessageId, MessageAction]()
   var subAcks = ListBuffer[SubAckRecord]()
-  var xaAcks = ListBuffer[XaAckRecord]()
   var completed = false
   var disableDelay = false
   var delayableActions = 0
@@ -147,25 +146,26 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   def syncNeeded = syncFlag || actions.find( _._2.syncNeeded ).isDefined
   def size = 100+actions.foldLeft(0L){ case (sum, entry) =>
     sum + (entry._2.size+100)
-  } + (subAcks.size * 100) + xaAcks.foldLeft(0L){ case (sum, entry) =>
-    sum + entry.ack.length
-  }
+  } + (subAcks.size * 100)
 
   class MessageAction {
     var id:MessageId = _
     var messageRecord: MessageRecord = null
     var enqueues = ListBuffer[QueueEntryRecord]()
     var dequeues = ListBuffer[QueueEntryRecord]()
+    var xaAcks = ListBuffer[XaAckRecord]()
 
     def uow = DelayableUOW.this
-    def isEmpty() = messageRecord==null && enqueues==Nil && dequeues==Nil
+    def isEmpty() = messageRecord==null && enqueues.isEmpty && dequeues.isEmpty && xaAcks.isEmpty
 
     def cancel() = {
       uow.rm(id)
     }
 
     def syncNeeded = messageRecord!=null && messageRecord.syncNeeded
-    def size = (if(messageRecord!=null) messageRecord.data.length+20 else 0) + ((enqueues.size+dequeues.size)*50)
+    def size = (if(messageRecord!=null) messageRecord.data.length+20 else 0) + ((enqueues.size+dequeues.size)*50) + xaAcks.foldLeft(0L){ case (sum, entry) =>
+      sum + 100
+    }
     
     def addToPendingStore() = {
       var set = manager.pendingStores.get(id)
@@ -222,8 +222,10 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   }
 
   def xaAck(container:Long, seq:Long, ack:MessageAck) = {
-    var packet = manager.parent.wireFormat.marshal(ack)
-    xaAcks += XaAckRecord(container, seq, new Buffer(packet.data, packet.offset, packet.length))
+    this.synchronized {
+      getAction(ack.getLastMessageId).xaAcks+=(XaAckRecord(container, seq, ack))
+    }
+    countDownFuture
   }
 
   def enqueue(queueKey:Long, queueSeq:Long, message:Message, delay_enqueue:Boolean)  = {
@@ -641,12 +643,10 @@ class DBManager(val parent:LevelDBStore) {
   def getXAActions(key:Long) = {
     val msgs = ListBuffer[Message]()
     val acks = ListBuffer[MessageAck]()
-    println("transactionCursor")
     client.transactionCursor(key) { command =>
-      println("recovered command: "+command)
       command match {
         case message:Message => msgs += message
-        case ack:MessageAck => acks += ack
+        case record:XaAckRecord => acks += record.ack
       }
       true
     }

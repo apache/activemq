@@ -229,7 +229,9 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
       for ( ack <- acks ) {
         // think we might have store design issue /w XA transactions and durable sub acks.
         // does it even work for the other stores?
-        transaction.remove(createMessageStore(ack.getDestination), ack);
+        var store = createMessageStore(ack.getDestination)
+        store.preparedAcks.add(ack.getLastMessageId)
+        transaction.remove(store, ack);
       }
     }
     debug("started")
@@ -322,16 +324,25 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
     def remove(store:LevelDBStore#LevelDBMessageStore, ack:MessageAck) = {
       commitActions += new TransactionAction() {
+
         def commit(uow:DelayableUOW) = {
           store.doRemove(uow, ack.getLastMessageId)
+          if( prepared ) {
+            store.preparedAcks.remove(ack.getLastMessageId)
+          }
         }
+
         def prepare(uow:DelayableUOW) = {
           // add it to the xa container instead of the actual store container.
           uow.xaAck(xacontainer_id, xaseqcounter.incrementAndGet, ack)
           xarecovery._2 += ack
+          store.preparedAcks.add(ack.getLastMessageId)
         }
 
         def rollback(uow: DelayableUOW) {
+          if( prepared ) {
+            store.preparedAcks.remove(ack.getLastMessageId)
+          }
         }
       }
     }
@@ -380,6 +391,15 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
         println("The transaction does not exist")
       case Some(tx)=>
         if( tx.prepared ) {
+          val done = new CountDownLatch(1)
+          withUow { uow =>
+            for( action <- tx.commitActions ) {
+              action.rollback(uow)
+            }
+            uow.syncFlag = true
+            uow.addCompleteListener { done.countDown() }
+          }
+          done.await()
           db.removeTransactionContainer(tx.xacontainer_id)
         }
     }
@@ -394,12 +414,18 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     }
   }
 
+  var doingRecover = false
   def recover(listener: TransactionRecoveryListener) = {
-    for ( (txid, transaction) <- transactions ) {
-      if( transaction.prepared ) {
-        val (msgs, acks) = transaction.xarecovery
-        listener.recover(txid.asInstanceOf[XATransactionId], msgs.toArray, acks.toArray);
+    this.doingRecover = true
+    try {
+      for ( (txid, transaction) <- transactions ) {
+        if( transaction.prepared ) {
+          val (msgs, acks) = transaction.xarecovery
+          listener.recover(txid.asInstanceOf[XATransactionId], msgs.toArray, acks.toArray);
+        }
       }
+    } finally {
+      this.doingRecover = false
     }
   }
 
@@ -490,6 +516,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
     protected val lastSeq: AtomicLong = new AtomicLong(0)
     protected var cursorPosition: Long = 0
+    val preparedAcks = new HashSet[MessageId]()
 
     lastSeq.set(db.getLastQueueEntrySeq(key))
 
@@ -556,7 +583,25 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     }
 
     def recover(listener: MessageRecoveryListener): Unit = {
-      cursorPosition = db.cursorMessages(key, listener, 0)
+      cursorPosition = db.cursorMessages(key, preparedExcluding(listener), 0)
+    }
+
+    def preparedExcluding(listener: MessageRecoveryListener) = new MessageRecoveryListener {
+      def isDuplicate(ref: MessageId) = listener.isDuplicate(ref)
+      def hasSpace = listener.hasSpace
+      def recoverMessageReference(ref: MessageId) = {
+        if (!preparedAcks.contains(ref)) {
+          listener.recoverMessageReference(ref)
+        }
+        true
+      }
+
+      def recoverMessage(message: Message) = {
+        if (!preparedAcks.contains(message.getMessageId)) {
+          listener.recoverMessage(message)
+        }
+        true
+      }
     }
 
     def resetBatching: Unit = {
@@ -564,7 +609,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     }
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
-      cursorPosition = db.cursorMessages(key, LimitingRecoveryListener(maxReturned, listener), cursorPosition)
+      cursorPosition = db.cursorMessages(key, preparedExcluding(LimitingRecoveryListener(maxReturned, listener)), cursorPosition)
     }
 
     override def setBatch(id: MessageId): Unit = {
@@ -697,7 +742,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     
     def recoverNextMessages(clientId: String, subscriptionName: String, maxReturned: Int, listener: MessageRecoveryListener): Unit = {
       lookup(clientId, subscriptionName).foreach { sub =>
-        sub.cursorPosition = db.cursorMessages(key,  LimitingRecoveryListener(maxReturned, listener), sub.cursorPosition.max(sub.lastAckPosition+1))
+        sub.cursorPosition = db.cursorMessages(key,  preparedExcluding(LimitingRecoveryListener(maxReturned, listener)), sub.cursorPosition.max(sub.lastAckPosition+1))
       }
     }
     
