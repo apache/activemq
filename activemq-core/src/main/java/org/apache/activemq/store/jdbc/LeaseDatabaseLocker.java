@@ -94,7 +94,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
                 reportLeasOwnerShipAndDuration(connection);
 
             } catch (Exception e) {
-                LOG.debug(getLeaseHolderId() + " lease aquire failure: "+ e, e);
+                LOG.debug(getLeaseHolderId() + " lease acquire failure: "+ e, e);
             } finally {
                 close(statement);
                 close(connection);
@@ -104,7 +104,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
             TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
         }
         if (stopping) {
-            throw new RuntimeException(getLeaseHolderId() + " failing lease aquire due to stop");
+            throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
         }
 
         LOG.info(getLeaseHolderId() + ", becoming the master on dataSource: " + dataSource);

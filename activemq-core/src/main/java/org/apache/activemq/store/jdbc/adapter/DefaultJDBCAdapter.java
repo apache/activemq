@@ -17,6 +17,7 @@
 package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -1090,7 +1091,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-/*    public static void dumpTables(Connection c, String destinationName, String clientId, String
+    public static void dumpTables(Connection c, String destinationName, String clientId, String
       subscriptionName) throws SQLException { 
         printQuery(c, "Select * from ACTIVEMQ_MSGS", System.out); 
         printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out); 
@@ -1107,12 +1108,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
     }
 
-    private static void printQuery(java.sql.Connection c, String query, java.io.PrintStream out)
+    public static void printQuery(java.sql.Connection c, String query, java.io.PrintStream out)
             throws SQLException {
         printQuery(c.prepareStatement(query), out);
     }
 
-    private static void printQuery(java.sql.PreparedStatement s, java.io.PrintStream out)
+    public static void printQuery(java.sql.PreparedStatement s, java.io.PrintStream out)
             throws SQLException {
 
         ResultSet set = null;
@@ -1143,6 +1144,6 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } catch (Throwable ignore) {
             }
         }
-    }  */
+    }
 
 }
