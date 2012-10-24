@@ -182,7 +182,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         }
 
         final ApplicationProperties ap = amqp.getApplicationProperties();
-        if( da!=null ) {
+        if( ap !=null ) {
             for (Map.Entry entry : (Set<Map.Entry>)ap.getValue().entrySet()) {
                 String key = entry.getKey().toString();
                 setProperty(rc, key, entry.getValue());
@@ -190,7 +190,7 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         }
 
         final Footer fp = amqp.getFooter();
-        if( da!=null ) {
+        if( fp !=null ) {
             for (Map.Entry entry : (Set<Map.Entry>)fp.getValue().entrySet()) {
                 String key = entry.getKey().toString();
                 setProperty(rc, prefixVendor + prefixFooter + key, entry.getValue());
@@ -203,12 +203,13 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
     }
 
     private void setProperty(Message msg, String key, Object value) throws JMSException {
+        //TODO support all types
         if( value instanceof String ) {
             msg.setStringProperty(key, (String) value);
-//        } else if( value instanceof Integer ) {
-//            msg.setIntProperty(key, ((Integer) value).intValue());
-//        } else if( value instanceof Long ) {
-//            msg.setLongProperty(key, ((Long) value).longValue());
+        } else if( value instanceof Integer ) {
+            msg.setIntProperty(key, ((Integer) value).intValue());
+        } else if( value instanceof Long ) {
+            msg.setLongProperty(key, ((Long) value).longValue());
         } else {
             throw new RuntimeException("Unexpected value type: "+value.getClass());
         }

@@ -22,12 +22,16 @@ import org.apache.activemq.transport.amqp.transform.*;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.qpid.proton.codec.Decoder;
+import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.engine.impl.ConnectionImpl;
 import org.apache.qpid.proton.engine.impl.ProtocolTracer;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
 import org.apache.qpid.proton.framing.TransportFrame;
 import org.apache.qpid.proton.type.Binary;
+import org.apache.qpid.proton.type.DescribedType;
+import org.apache.qpid.proton.type.Symbol;
 import org.apache.qpid.proton.type.messaging.*;
 import org.apache.qpid.proton.type.messaging.Modified;
 import org.apache.qpid.proton.type.messaging.Rejected;
@@ -359,7 +363,8 @@ class AmqpProtocolConverter {
         }
     }
 
-    InboundTransformer inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    //InboundTransformer inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    InboundTransformer inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
 
     abstract class BaseProducerContext extends AmqpDeliveryListener {
 
@@ -776,7 +781,6 @@ class AmqpProtocolConverter {
     private final ConcurrentHashMap<ConsumerId, ConsumerContext> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, ConsumerContext>();
 
     void onSenderOpen(final Sender sender, AmqpSessionContext sessionContext) {
-
         // sender.get
         ConsumerId id = new ConsumerId(sessionContext.sessionId, sessionContext.nextConsumerId++);
         ConsumerContext consumerContext = new ConsumerContext(id, sender);
@@ -810,6 +814,11 @@ class AmqpProtocolConverter {
         consumerInfo.setDestination(dest);
         consumerInfo.setPrefetchSize(100);
         consumerInfo.setDispatchAsync(true);
+        Map filter = ((org.apache.qpid.proton.type.messaging.Source)remoteSource).getFilter();
+        if (filter != null) {
+            DescribedType type = (DescribedType)filter.get(Symbol.valueOf("jms-selector"));
+            consumerInfo.setSelector(type.getDescribed().toString());
+        }
 
         sendToActiveMQ(consumerInfo, new ResponseHandler() {
             public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {

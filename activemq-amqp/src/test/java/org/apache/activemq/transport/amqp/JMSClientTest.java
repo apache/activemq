@@ -24,6 +24,7 @@ import org.junit.Test;
 import javax.jms.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -39,13 +40,15 @@ public class JMSClientTest extends AmqpTestSupport {
         {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer p = session.createProducer(queue);
-            p.send(session.createTextMessage("Hello World"));
+            Message msg = session.createTextMessage("Hello World");
+            msg.setObjectProperty("x", 1);
+            p.send(msg);
 //            session.commit();
-
-            MessageConsumer c = session.createConsumer(queue);
-            Message msg = c.receive();
-            System.out.println("first:"+msg);
-            System.out.println(msg.getJMSRedelivered());
+            MessageConsumer c = session.createConsumer(queue, "x = 1");
+            Message received = c.receive(2000);
+            assertNotNull(received);
+            System.out.println("first: " + ((TextMessage)received).getText());
+            System.out.println(received.getJMSRedelivered());
 
 //            session.rollback();
 //
