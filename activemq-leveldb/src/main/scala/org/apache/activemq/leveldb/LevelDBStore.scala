@@ -25,13 +25,13 @@ import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Future
+import java.util.concurrent.{CountDownLatch, ExecutionException, Future}
 import java.util.concurrent.atomic.AtomicLong
 import reflect.BeanProperty
 import org.apache.activemq.store._
 import java.util._
-import scala.collection.mutable.ListBuffer
+import collection.mutable.ListBuffer
+import concurrent.CountDownLatch
 import javax.management.ObjectName
 import org.apache.activemq.broker.jmx.AnnotatedMBean
 import org.apache.activemq.util._
@@ -217,6 +217,21 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
     db.start
     db.loadCollections
+
+    // Finish recovering the prepared XA transactions.
+    for( (txid, transaction) <- transactions ) {
+      assert( transaction.xacontainer_id != -1 )
+      val (msgs, acks) = db.getXAActions(transaction.xacontainer_id)
+      transaction.xarecovery = (msgs, acks)
+      for ( msg <- msgs ) {
+        transaction.add(createMessageStore(msg.getDestination), msg, false);
+      }
+      for ( ack <- acks ) {
+        // think we might have store design issue /w XA transactions and durable sub acks.
+        // does it even work for the other stores?
+        transaction.remove(createMessageStore(ack.getDestination), ack);
+      }
+    }
     debug("started")
   }
 
@@ -252,29 +267,83 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
   val transactions = collection.mutable.HashMap[TransactionId, Transaction]()
   
   trait TransactionAction {
-    def apply(uow:DelayableUOW):Unit
+    def commit(uow:DelayableUOW):Unit
+    def prepare(uow:DelayableUOW):Unit
+    def rollback(uow:DelayableUOW):Unit
   }
   
   case class Transaction(id:TransactionId) {
-    val commitActions = ListBuffer[TransactionAction]() 
-    def add(store:LevelDBMessageStore, message: Message, delay:Boolean) = {
+    val commitActions = ListBuffer[TransactionAction]()
+
+    val xaseqcounter: AtomicLong = new AtomicLong(0)
+    var xarecovery:(ListBuffer[Message], ListBuffer[MessageAck]) = null
+    var xacontainer_id = -1L
+
+    def prepared = xarecovery!=null
+    def prepare = {
+      if( !prepared ) {
+        val done = new CountDownLatch(1)
+        withUow { uow =>
+          xarecovery = (ListBuffer[Message](), ListBuffer[MessageAck]())
+          xacontainer_id = db.createTransactionContainer(id.asInstanceOf[XATransactionId])
+          for ( action <- commitActions ) {
+            action.prepare(uow)
+          }
+          uow.syncFlag = true
+          uow.addCompleteListener(done.countDown())
+        }
+        done.await()
+      }
+    }
+
+    def add(store:LevelDBStore#LevelDBMessageStore, message: Message, delay:Boolean) = {
       commitActions += new TransactionAction() {
-        def apply(uow:DelayableUOW) = {
+        def commit(uow:DelayableUOW) = {
+          if( prepared ) {
+            uow.dequeue(xacontainer_id, message.getMessageId)
+          }
           store.doAdd(uow, message, delay)
         }
+
+        def prepare(uow:DelayableUOW) = {
+          // add it to the xa container instead of the actual store container.
+          uow.enqueue(xacontainer_id, xaseqcounter.incrementAndGet, message, delay)
+          xarecovery._1 += message
+        }
+
+        def rollback(uow:DelayableUOW) = {
+          if( prepared ) {
+            uow.dequeue(xacontainer_id, message.getMessageId)
+          }
+        }
+
       }
     }
-    def remove(store:LevelDBMessageStore, msgid:MessageId) = {
+
+    def remove(store:LevelDBStore#LevelDBMessageStore, ack:MessageAck) = {
       commitActions += new TransactionAction() {
-        def apply(uow:DelayableUOW) = {
-          store.doRemove(uow, msgid)
+        def commit(uow:DelayableUOW) = {
+          store.doRemove(uow, ack.getLastMessageId)
+        }
+        def prepare(uow:DelayableUOW) = {
+          // add it to the xa container instead of the actual store container.
+          uow.xaAck(xacontainer_id, xaseqcounter.incrementAndGet, ack)
+          xarecovery._2 += ack
+        }
+
+        def rollback(uow: DelayableUOW) {
         }
       }
     }
-    def updateAckPosition(store:LevelDBTopicMessageStore, sub: DurableSubscription, position: Long) = {
+
+    def updateAckPosition(store:LevelDBStore#LevelDBTopicMessageStore, sub: DurableSubscription, position: Long) = {
       commitActions += new TransactionAction() {
-        def apply(uow:DelayableUOW) = {
+        def commit(uow:DelayableUOW) = {
           store.doUpdateAckPosition(uow, sub, position)
+        }
+        def prepare(uow:DelayableUOW) = {
+        }
+        def rollback(uow: DelayableUOW) {
         }
       }
     }
@@ -289,12 +358,19 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
         println("The transaction does not exist")
         postCommit.run()
       case Some(tx)=>
+        val done = new CountDownLatch(1)
         withUow { uow =>
           for( action <- tx.commitActions ) {
-            action(uow)
+            action.commit(uow)
           }
-          uow.addCompleteListener( postCommit.run() )
+          uow.syncFlag = true
+          uow.addCompleteListener { done.countDown() }
         }
+        done.await()
+        if( tx.prepared ) {
+          db.removeTransactionContainer(tx.xacontainer_id)
+        }
+        postCommit.run()
     }
   }
 
@@ -303,20 +379,44 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
       case None=>
         println("The transaction does not exist")
       case Some(tx)=>
+        if( tx.prepared ) {
+          db.removeTransactionContainer(tx.xacontainer_id)
+        }
     }
   }
 
   def prepare(tx: TransactionId) = {
-    sys.error("XA transactions not yet supported.")
-  }
-  def recover(listener: TransactionRecoveryListener) = {
+    transactions.get(tx) match {
+      case None=>
+        println("The transaction does not exist")
+      case Some(tx)=>
+        tx.prepare
+    }
   }
 
-  def createQueueMessageStore(destination: ActiveMQQueue) = {
+  def recover(listener: TransactionRecoveryListener) = {
+    for ( (txid, transaction) <- transactions ) {
+      if( transaction.prepared ) {
+        val (msgs, acks) = transaction.xarecovery
+        listener.recover(txid.asInstanceOf[XATransactionId], msgs.toArray, acks.toArray);
+      }
+    }
+  }
+
+  def createMessageStore(destination: ActiveMQDestination):LevelDBStore#LevelDBMessageStore = {
+    destination match {
+      case destination:ActiveMQQueue =>
+        createQueueMessageStore(destination)
+      case destination:ActiveMQTopic =>
+        createTopicMessageStore(destination)
+    }
+  }
+
+  def createQueueMessageStore(destination: ActiveMQQueue):LevelDBStore#LevelDBMessageStore = {
     this.synchronized(queues.get(destination)).getOrElse(db.createQueueStore(destination))
   }
 
-  def createQueueMessageStore(destination: ActiveMQQueue, key: Long):LevelDBMessageStore = {
+  def createQueueMessageStore(destination: ActiveMQQueue, key: Long):LevelDBStore#LevelDBMessageStore = {
     var rc = new LevelDBMessageStore(destination, key)
     this.synchronized {
       queues.put(destination, rc)
@@ -330,11 +430,11 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     }
   }
 
-  def createTopicMessageStore(destination: ActiveMQTopic): TopicMessageStore = {
+  def createTopicMessageStore(destination: ActiveMQTopic):LevelDBStore#LevelDBTopicMessageStore = {
     this.synchronized(topics.get(destination)).getOrElse(db.createTopicStore(destination))
   }
 
-  def createTopicMessageStore(destination: ActiveMQTopic, key: Long):LevelDBTopicMessageStore = {
+  def createTopicMessageStore(destination: ActiveMQTopic, key: Long):LevelDBStore#LevelDBTopicMessageStore = {
     var rc = new LevelDBTopicMessageStore(destination, key)
     this synchronized {
       topics.put(destination, rc)
@@ -421,7 +521,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
     override def removeAsyncMessage(context: ConnectionContext, ack: MessageAck): Unit = {
       if(  ack.getTransactionId!=null ) {
-        transaction(ack.getTransactionId).remove(this, ack.getLastMessageId)
+        transaction(ack.getTransactionId).remove(this, ack)
         DONE
       } else {
         waitOn(withUow{uow=>

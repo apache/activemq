@@ -31,6 +31,7 @@ import org.apache.activemq.leveldb.record.{SubscriptionRecord, CollectionRecord}
 import util.TimeMetric
 import java.util.HashMap
 import collection.mutable.{HashSet, ListBuffer}
+import org.apache.activemq.util.ByteSequence
 
 case class MessageRecord(id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:(Long, Int) = _
@@ -40,6 +41,7 @@ case class QueueEntryRecord(id:MessageId, queueKey:Long, queueSeq:Long)
 case class QueueRecord(id:ActiveMQDestination, queue_key:Long)
 case class QueueEntryRange()
 case class SubAckRecord(subKey:Long, ackPosition:Long)
+case class XaAckRecord(container:Long, seq:Long, ack:Buffer)
 
 sealed trait UowState {
   def stage:Int
@@ -128,6 +130,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   val uowId:Int = manager.lastUowId.incrementAndGet()
   var actions = Map[MessageId, MessageAction]()
   var subAcks = ListBuffer[SubAckRecord]()
+  var xaAcks = ListBuffer[XaAckRecord]()
   var completed = false
   var disableDelay = false
   var delayableActions = 0
@@ -140,10 +143,13 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     this._state = next
   }
 
-  def syncNeeded = actions.find( _._2.syncNeeded ).isDefined
+  var syncFlag = false
+  def syncNeeded = syncFlag || actions.find( _._2.syncNeeded ).isDefined
   def size = 100+actions.foldLeft(0L){ case (sum, entry) =>
     sum + (entry._2.size+100)
-  } + (subAcks.size * 100)
+  } + (subAcks.size * 100) + xaAcks.foldLeft(0L){ case (sum, entry) =>
+    sum + entry.ack.length
+  }
 
   class MessageAction {
     var id:MessageId = _
@@ -215,6 +221,11 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     subAcks += SubAckRecord(sub.subKey, sub.lastAckPosition)
   }
 
+  def xaAck(container:Long, seq:Long, ack:MessageAck) = {
+    var packet = manager.parent.wireFormat.marshal(ack)
+    xaAcks += XaAckRecord(container, seq, new Buffer(packet.data, packet.offset, packet.length))
+  }
+
   def enqueue(queueKey:Long, queueSeq:Long, message:Message, delay_enqueue:Boolean)  = {
     var delay = delay_enqueue && message.getTransactionId==null
     if(delay ) {
@@ -264,8 +275,9 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     countDownFuture
   }
 
-  def dequeue(queueKey:Long, id:MessageId) = {
+  def dequeue(expectedQueueKey:Long, id:MessageId) = {
     val (queueKey, queueSeq) = id.getEntryLocator.asInstanceOf[(Long, Long)];
+    assert(queueKey == expectedQueueKey)
     val entry = QueueEntryRecord(id, queueKey, queueSeq)
     this.synchronized {
       getAction(id).dequeues += entry
@@ -626,11 +638,26 @@ class DBManager(val parent:LevelDBStore) {
     nextPos
   }
 
+  def getXAActions(key:Long) = {
+    val msgs = ListBuffer[Message]()
+    val acks = ListBuffer[MessageAck]()
+    println("transactionCursor")
+    client.transactionCursor(key) { command =>
+      println("recovered command: "+command)
+      command match {
+        case message:Message => msgs += message
+        case ack:MessageAck => acks += ack
+      }
+      true
+    }
+    (msgs, acks)
+  }
+
   def queuePosition(id: MessageId):Long = {
     id.getEntryLocator.asInstanceOf[(Long, Long)]._2
   }
 
-  def createQueueStore(dest:ActiveMQQueue):parent.LevelDBMessageStore = {
+  def createQueueStore(dest:ActiveMQQueue):LevelDBStore#LevelDBMessageStore = {
     parent.createQueueMessageStore(dest, createStore(dest, QUEUE_COLLECTION_TYPE))
   }
   def destroyQueueStore(key:Long) = writeExecutor.sync {
@@ -665,7 +692,7 @@ class DBManager(val parent:LevelDBStore) {
     DurableSubscription(collection.getKey, topic_key, info)
   }
 
-  def removeSubscription(sub:DurableSubscription) = {
+  def removeSubscription(sub:DurableSubscription) {
     client.removeCollection(sub.subKey)
   }
 
@@ -686,7 +713,26 @@ class DBManager(val parent:LevelDBStore) {
     }
     collection.getKey
   }
-  
+
+  def createTransactionContainer(name:XATransactionId) = {
+    val collection = new CollectionRecord.Bean()
+    collection.setType(TRANSACTION_COLLECTION_TYPE)
+    var packet = parent.wireFormat.marshal(name)
+    collection.setMeta(new Buffer(packet.data, packet.offset, packet.length))
+    collection.setKey(lastCollectionKey.incrementAndGet())
+    val buffer = collection.freeze()
+    buffer.toFramedBuffer // eager encode the record.
+    writeExecutor.sync {
+      client.addCollection(buffer)
+    }
+    collection.getKey
+  }
+
+  def removeTransactionContainer(key:Long) = { // writeExecutor.sync {
+    client.removeCollection(key)
+  }
+
+
   def loadCollections = {
     val collections = writeExecutor.sync {
       client.listCollections
@@ -716,6 +762,11 @@ class DBManager(val parent:LevelDBStore) {
           var sub = DurableSubscription(key, sr.getTopicKey, info)
           sub.lastAckPosition = client.getAckPosition(key);
           parent.createSubscription(sub)
+        case TRANSACTION_COLLECTION_TYPE =>
+          val meta = record.getMeta
+          val txid = parent.wireFormat.unmarshal(new ByteSequence(meta.data, meta.offset, meta.length)).asInstanceOf[XATransactionId]
+          val transaction = parent.transaction(txid)
+          transaction.xacontainer_id = key
         case _ =>
       }
     }

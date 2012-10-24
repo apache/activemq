@@ -32,7 +32,7 @@ import java.util.concurrent._
 import org.fusesource.hawtbuf._
 import java.io.{ObjectInputStream, ObjectOutputStream, File}
 import scala.Option._
-import org.apache.activemq.command.Message
+import org.apache.activemq.command.{MessageAck, DataStructure, Message}
 import org.apache.activemq.util.ByteSequence
 import org.apache.activemq.leveldb.RecordLog.LogInfo
 import java.text.SimpleDateFormat
@@ -944,6 +944,23 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
+  def transactionCursor(collectionKey: Long)(func: (DataStructure)=>Boolean) = {
+    collectionCursor(collectionKey, encodeLong(0)) { (key, value) =>
+      val seq = decodeLong(key)
+      if( value.getMeta != null ) {
+        val data = value.getMeta
+        val ack = store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[MessageAck].asInstanceOf[MessageAck]
+        func(ack)
+      } else {
+        var locator = (value.getValueLocation, value.getValueLength)
+        val msg = getMessage(locator)
+        msg.getMessageId().setEntryLocator((collectionKey, seq))
+        msg.getMessageId().setDataLocator(locator)
+        func(msg)
+      }
+    }
+  }
+
   def getAckPosition(subKey: Long): Long = {
     retryUsingIndex {
       index.get(encodeEntryKey(ENTRY_PREFIX, subKey, ACK_POSITION)).map{ value=>
@@ -1110,6 +1127,19 @@ class LevelDBClient(store: LevelDBStore) {
               }
 
             }
+
+            uow.xaAcks.foreach { entry =>
+              val key = encodeEntryKey(ENTRY_PREFIX, entry.container, entry.seq)
+              val log_record = new EntryRecord.Bean()
+              log_record.setCollectionKey(entry.container)
+              log_record.setEntryKey(new Buffer(key, 9, 8))
+              log_record.setMeta(entry.ack)
+              appender.append(LOG_ADD_ENTRY, encodeEntryRecord(log_record.freeze()))
+              val index_record = new EntryRecord.Bean()
+              index_record.setValue(entry.ack)
+              batch.put(key, encodeEntryRecord(log_record.freeze()).toByteArray)
+            }
+
             uow.subAcks.foreach { entry =>
               val key = encodeEntryKey(ENTRY_PREFIX, entry.subKey, ACK_POSITION)
               val log_record = new EntryRecord.Bean()
