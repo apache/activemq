@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +45,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.Wait;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
@@ -51,8 +58,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
-import static org.junit.Assert.*;
 
 
 public class MQTTTest {
@@ -296,7 +301,7 @@ public class MQTTTest {
 
         addMQTTConnector(brokerService);
         brokerService.start();
-        TransportConnector mqttConnector = brokerService.getTransportConnectorByScheme("mqtt");
+        final TransportConnector mqttConnector = brokerService.getTransportConnectorByScheme("mqtt");
 
         // manually need to create the client so we don't send keep alive (PINGREQ) frames to keep the conn
         // from timing out
@@ -306,18 +311,27 @@ public class MQTTTest {
         clientTransport.oneway(connectFrame.encode());
 
         // wait for broker to register the MQTT connection
-        TimeUnit.SECONDS.sleep(1);
-        assertTrue(mqttConnector.getConnections().size() > 0);
+        assertTrue("MQTT Connection should be registered.", Wait.waitFor(new Wait.Condition() {
 
-        // wait for the inactivity monitor to remove the connection due to inactivity
-        TimeUnit.SECONDS.sleep(10);
-        assertTrue(mqttConnector.getConnections().size() == 0);
+            @Override
+            public boolean isSatisified() throws Exception {
+                return mqttConnector.getConnections().size() > 0;
+            }
+        }));
+
+        // wait for broker to time out the MQTT connection due to inactivity
+        assertTrue("MQTT Connection should be timed out.", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return mqttConnector.getConnections().size() == 0;
+            }
+        }));
+
         assertTrue("Should have seen client transport exception", exceptions.size() > 0);
 
         clientTransport.stop();
-
     }
-
 
     private Transport createManualMQTTClient() throws IOException, URISyntaxException {
         Transport clientTransport = new TcpTransport(new MQTTWireFormat(), SocketFactory.getDefault(),
@@ -352,9 +366,13 @@ public class MQTTTest {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
-        TimeUnit.SECONDS.sleep(10);
+        assertTrue("KeepAlive didn't work properly", Wait.waitFor(new Wait.Condition() {
 
-        assertTrue("KeepAlive didn't work properly", connection.isConnected());
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection.isConnected();
+            }
+        }));
 
         connection.disconnect();
     }
@@ -368,10 +386,13 @@ public class MQTTTest {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
-        TimeUnit.SECONDS.sleep(10);
+        assertTrue("KeepAlive didn't work properly", Wait.waitFor(new Wait.Condition() {
 
-
-        assertTrue("KeepAlive didn't work properly", connection.isConnected());
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection.isConnected();
+            }
+        }));
 
         connection.disconnect();
     }
@@ -385,9 +406,13 @@ public class MQTTTest {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
-        TimeUnit.SECONDS.sleep(10);
+        assertTrue("KeepAlive didn't work properly", Wait.waitFor(new Wait.Condition() {
 
-        assertTrue("KeepAlive didn't work properly", connection.isConnected());
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection.isConnected();
+            }
+        }));
 
         connection.disconnect();
     }
@@ -402,12 +427,14 @@ public class MQTTTest {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
-        TimeUnit.SECONDS.sleep(10);
+        assertTrue("KeepAlive didn't work properly", Wait.waitFor(new Wait.Condition() {
 
-        assertFalse("KeepAlive didn't work properly", connection.isConnected());
-
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection.isConnected();
+            }
+        }));
     }
-
 
     protected void addMQTTConnector(BrokerService brokerService) throws Exception {
         brokerService.addConnector("mqtt://localhost:1883");
@@ -425,6 +452,4 @@ public class MQTTTest {
         mqtt.setReconnectAttemptsMax(0);
         return mqtt;
     }
-
-
 }
