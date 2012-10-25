@@ -222,16 +222,24 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     for( (txid, transaction) <- transactions ) {
       assert( transaction.xacontainer_id != -1 )
       val (msgs, acks) = db.getXAActions(transaction.xacontainer_id)
-      transaction.xarecovery = (msgs, acks)
+      transaction.xarecovery = (msgs, acks.map(_.ack))
       for ( msg <- msgs ) {
         transaction.add(createMessageStore(msg.getDestination), msg, false);
       }
-      for ( ack <- acks ) {
-        // think we might have store design issue /w XA transactions and durable sub acks.
-        // does it even work for the other stores?
+      for ( record <- acks ) {
+        var ack = record.ack
         var store = createMessageStore(ack.getDestination)
-        store.preparedAcks.add(ack.getLastMessageId)
-        transaction.remove(store, ack);
+        if( record.sub == -1 ) {
+          store.preparedAcks.add(ack.getLastMessageId)
+          transaction.remove(store, ack);
+        } else {
+          val topic = store.asInstanceOf[LevelDBTopicMessageStore];
+          for ( sub <- topic.subscription_with_key(record.sub) ) {
+            val position = db.queuePosition(ack.getLastMessageId)
+            transaction.updateAckPosition( topic, sub, position, ack);
+            sub.lastAckPosition = position
+          }
+        }
       }
     }
     debug("started")
@@ -334,7 +342,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
         def prepare(uow:DelayableUOW) = {
           // add it to the xa container instead of the actual store container.
-          uow.xaAck(xacontainer_id, xaseqcounter.incrementAndGet, ack)
+          uow.xaAck(XaAckRecord(xacontainer_id, xaseqcounter.incrementAndGet, ack))
           xarecovery._2 += ack
           store.preparedAcks.add(ack.getLastMessageId)
         }
@@ -347,14 +355,22 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
       }
     }
 
-    def updateAckPosition(store:LevelDBStore#LevelDBTopicMessageStore, sub: DurableSubscription, position: Long) = {
+    def updateAckPosition(store:LevelDBStore#LevelDBTopicMessageStore, sub: DurableSubscription, position: Long, ack:MessageAck) = {
       commitActions += new TransactionAction() {
+        var prev_position = sub.lastAckPosition
+
         def commit(uow:DelayableUOW) = {
           store.doUpdateAckPosition(uow, sub, position)
         }
         def prepare(uow:DelayableUOW) = {
+          prev_position = sub.lastAckPosition
+          sub.lastAckPosition = position
+          uow.xaAck(XaAckRecord(xacontainer_id, xaseqcounter.incrementAndGet, ack, sub.subKey))
         }
         def rollback(uow: DelayableUOW) {
+          if ( prepared ) {
+            sub.lastAckPosition = prev_position
+          }
         }
       }
     }
@@ -393,7 +409,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
         if( tx.prepared ) {
           val done = new CountDownLatch(1)
           withUow { uow =>
-            for( action <- tx.commitActions ) {
+            for( action <- tx.commitActions.reverse ) {
               action.rollback(uow)
             }
             uow.syncFlag = true
@@ -661,6 +677,12 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     val subscriptions = collection.mutable.HashMap[(String, String), DurableSubscription]()
     var firstSeq = 0L
 
+    def subscription_with_key(key:Long) = subscriptions.find(_._2.subKey == key).map(_._2)
+
+    override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): Future[AnyRef] = {
+      super.asyncAddQueueMessage(context, message, false)
+    }
+
     def gcPosition:Option[(Long, Long)] = {
       var pos = lastSeq.get()
       subscriptions.synchronized {
@@ -685,7 +707,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
       }
       sub.lastAckPosition = if (retroactive) 0 else lastSeq.get()
       waitOn(withUow{ uow=>
-        uow.updateAckPosition(sub)
+        uow.updateAckPosition(sub.subKey, sub.lastAckPosition)
         uow.countDownFuture
       })
     }
@@ -710,14 +732,14 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
     def doUpdateAckPosition(uow: DelayableUOW, sub: DurableSubscription, position: Long) = {
       sub.lastAckPosition = position
-      uow.updateAckPosition(sub)
+      uow.updateAckPosition(sub.subKey, sub.lastAckPosition)
     }
 
     def acknowledge(context: ConnectionContext, clientId: String, subscriptionName: String, messageId: MessageId, ack: MessageAck): Unit = {
       lookup(clientId, subscriptionName).foreach { sub =>
         var position = db.queuePosition(messageId)
         if(  ack.getTransactionId!=null ) {
-          transaction(ack.getTransactionId).updateAckPosition(this, sub, position)
+          transaction(ack.getTransactionId).updateAckPosition(this, sub, position, ack)
           DONE
         } else {
           waitOn(withUow{ uow=>
@@ -748,7 +770,8 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
     
     def getMessageCount(clientId: String, subscriptionName: String): Int = {
       lookup(clientId, subscriptionName) match {
-        case Some(sub) => (lastSeq.get - sub.lastAckPosition).toInt
+        case Some(sub) =>
+          (lastSeq.get - sub.lastAckPosition).toInt
         case None => 0
       }
     }

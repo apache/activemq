@@ -954,11 +954,12 @@ class LevelDBClient(store: LevelDBStore) {
         val offset = is.readInt()
         val qid = is.readLong()
         val seq = is.readLong()
+        val sub = is.readLong()
         val ack = store.wireFormat.unmarshal(is).asInstanceOf[MessageAck]
         ack.getLastMessageId.setDataLocator((log, offset))
         ack.getLastMessageId.setEntryLocator((qid, seq))
 
-        func(XaAckRecord(collectionKey, seq, ack))
+        func(XaAckRecord(collectionKey, seq, ack, sub))
       } else {
         var locator = (value.getValueLocation, value.getValueLength)
         val msg = getMessage(locator)
@@ -1134,7 +1135,7 @@ class LevelDBClient(store: LevelDBStore) {
                 write_enqueue_total += System.nanoTime() - start
               }
 
-              action.xaAcks.foreach { entry =>
+              action.xaAcks.foreach { entry:XaAckRecord =>
                 val ack = entry.ack
                 if( dataLocator==null ) {
                   dataLocator = ack.getLastMessageId.getDataLocator match {
@@ -1144,6 +1145,7 @@ class LevelDBClient(store: LevelDBStore) {
                       throw new RuntimeException("Unexpected locator type")
                   }
                 }
+                println(dataLocator)
 
                 val (qid, seq) = ack.getLastMessageId.getEntryLocator.asInstanceOf[(Long, Long)];
                 val os = new DataByteArrayOutputStream()
@@ -1151,6 +1153,7 @@ class LevelDBClient(store: LevelDBStore) {
                 os.writeInt(dataLocator._2)
                 os.writeLong(qid)
                 os.writeLong(seq)
+                os.writeLong(entry.sub)
                 store.wireFormat.marshal(ack, os)
                 var ack_encoded = os.toBuffer
 

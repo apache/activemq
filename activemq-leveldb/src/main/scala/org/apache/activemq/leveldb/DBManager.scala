@@ -41,7 +41,7 @@ case class QueueEntryRecord(id:MessageId, queueKey:Long, queueSeq:Long)
 case class QueueRecord(id:ActiveMQDestination, queue_key:Long)
 case class QueueEntryRange()
 case class SubAckRecord(subKey:Long, ackPosition:Long)
-case class XaAckRecord(container:Long, seq:Long, ack:MessageAck)
+case class XaAckRecord(container:Long, seq:Long, ack:MessageAck, sub:Long = -1)
 
 sealed trait UowState {
   def stage:Int
@@ -217,13 +217,13 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     }
   }
 
-  def updateAckPosition(sub:DurableSubscription) = {
-    subAcks += SubAckRecord(sub.subKey, sub.lastAckPosition)
+  def updateAckPosition(sub_key:Long, ack_seq:Long) = {
+    subAcks += SubAckRecord(sub_key, ack_seq)
   }
 
-  def xaAck(container:Long, seq:Long, ack:MessageAck) = {
+  def xaAck(record:XaAckRecord) = {
     this.synchronized {
-      getAction(ack.getLastMessageId).xaAcks+=(XaAckRecord(container, seq, ack))
+      getAction(record.ack.getLastMessageId).xaAcks+=record
     }
     countDownFuture
   }
@@ -642,11 +642,11 @@ class DBManager(val parent:LevelDBStore) {
 
   def getXAActions(key:Long) = {
     val msgs = ListBuffer[Message]()
-    val acks = ListBuffer[MessageAck]()
+    val acks = ListBuffer[XaAckRecord]()
     client.transactionCursor(key) { command =>
       command match {
         case message:Message => msgs += message
-        case record:XaAckRecord => acks += record.ack
+        case record:XaAckRecord => acks += record
       }
       true
     }

@@ -27,15 +27,4 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
         broker.setPersistenceAdapter(store);
     }
 
-
-    @Override
-    public void testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() throws Exception {
-//        XA Durable Subs not yet implemented
-//        super.testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback();
-    }
-    @Override
-    public void testTopicPersistentPreparedAcksAvailableAfterRollback() throws Exception {
-//        XA Durable Subs not yet implemented
-//        super.testTopicPersistentPreparedAcksAvailableAfterRollback();
-    }
 }
