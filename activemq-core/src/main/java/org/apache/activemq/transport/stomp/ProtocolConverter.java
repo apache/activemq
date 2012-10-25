@@ -510,7 +510,7 @@ public class ProtocolConverter {
         IntrospectionSupport.setProperties(consumerInfo, headers, "activemq.");
 
         if (actualDest.isQueue() && consumerInfo.getSubscriptionName() != null) {
-            throw new ProtocolException("Invliad Subscription: cannot durably subscribe to a Queue destination!");
+            throw new ProtocolException("Invalid Subscription: cannot durably subscribe to a Queue destination!");
         }
 
         consumerInfo.setDestination(translator.convertDestination(this, destination, true));
