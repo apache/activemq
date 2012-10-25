@@ -43,7 +43,6 @@ configuration example:
 
 ## Known Limitations
 
-* XA Transactions not supported yet
 * The store does not do any dup detection of messages.
 
 ## Built in High Availability Support
