@@ -18,7 +18,6 @@
 package org.apache.activemq.transport.nio;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -42,48 +41,35 @@ import org.slf4j.LoggerFactory;
 
 public class NIOSSLTransportFactory extends NIOTransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(NIOSSLTransportFactory.class);
-     SSLContext context;
+
+    protected SSLContext context;
 
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        return new TcpTransportServer(this, location, serverSocketFactory) {
-            protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
-                NIOSSLTransport transport = new NIOSSLTransport(format, socket);
-                if (context != null) {
-                    transport.setSslContext(context);
-                }
-                return transport;
-            }
-
-            @Override
-            public boolean isSslServer() {
-                return true;
-            }
-        };
+        return new NIOSSLTransportServer(context, this, location, serverSocketFactory);
     }
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
-         if (SslContext.getCurrentSslContext() != null) {
-             try {
-                 context = SslContext.getCurrentSslContext().getSSLContext();
-             } catch (Exception e) {
-                 throw new IOException(e);
-             }
-         }
+        if (SslContext.getCurrentSslContext() != null) {
+            try {
+                context = SslContext.getCurrentSslContext().getSSLContext();
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        }
         return super.doBind(location);
     }
 
-
     /**
-     * Overriding to allow for proper configuration through reflection but delegate to get common
-     * configuration
+     * Overriding to allow for proper configuration through reflection but
+     * delegate to get common configuration
      */
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        if (transport instanceof SslTransport)  {
-            SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
+        if (transport instanceof SslTransport) {
+            SslTransport sslTransport = (SslTransport) transport.narrow(SslTransport.class);
             IntrospectionSupport.setProperties(sslTransport, options);
         } else if (transport instanceof NIOSSLTransport) {
-            NIOSSLTransport sslTransport = (NIOSSLTransport)transport.narrow(NIOSSLTransport.class);
+            NIOSSLTransport sslTransport = (NIOSSLTransport) transport.narrow(NIOSSLTransport.class);
             IntrospectionSupport.setProperties(sslTransport, options);
         }
 
@@ -109,7 +95,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
             }
         }
         SocketFactory socketFactory = createSocketFactory();
-        return new SslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation, false);
+        return new SslTransport(wf, (SSLSocketFactory) socketFactory, location, localLocation, false);
     }
 
     /**
@@ -120,7 +106,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
      * @throws IOException
      */
     protected SocketFactory createSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
+        if (SslContext.getCurrentSslContext() != null) {
             SslContext ctx = SslContext.getCurrentSslContext();
             try {
                 return ctx.getSSLContext().getSocketFactory();

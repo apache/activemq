@@ -29,28 +29,30 @@ import javax.net.ssl.SSLContext;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.nio.NIOSSLTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.WireFormat;
 
 public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
-    SSLContext context;
+    protected SSLContext context;
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        return new TcpTransportServer(this, location, serverSocketFactory) {
+        return new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
+
+            @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 StompNIOSSLTransport transport = new StompNIOSSLTransport(format, socket);
                 if (context != null) {
                     transport.setSslContext(context);
                 }
-                return transport;
-            }
 
-            @Override
-            public boolean isSslServer() {
-                return true;
+                transport.setNeedClientAuth(isNeedClientAuth());
+                transport.setWantClientAuth(isWantClientAuth());
+
+                return transport;
             }
         };
     }
@@ -62,7 +64,7 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
-       if (SslContext.getCurrentSslContext() != null) {
+        if (SslContext.getCurrentSslContext() != null) {
             try {
                 context = SslContext.getCurrentSslContext().getSSLContext();
             } catch (Exception e) {
@@ -71,5 +73,4 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
         }
         return super.doBind(location);
     }
-
 }
