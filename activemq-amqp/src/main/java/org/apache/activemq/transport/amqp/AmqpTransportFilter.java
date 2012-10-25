@@ -21,6 +21,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.amqp.transform.InboundTransformer;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -46,6 +47,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     private AmqpWireFormat wireFormat;
 
     private boolean trace;
+    private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
 
     public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
         super(next);
@@ -161,4 +163,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
 
+    public String getTransformer() {
+        return transformer;
+    }
+
+    public void setTransformer(String transformer) {
+        this.transformer = transformer;
+    }
 }

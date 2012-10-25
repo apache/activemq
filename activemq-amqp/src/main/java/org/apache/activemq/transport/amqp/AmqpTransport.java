@@ -40,4 +40,6 @@ public interface AmqpTransport {
     public AmqpWireFormat getWireFormat();
 
     public void stop() throws Exception;
+
+    public String getTransformer();
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.transform;
 
+import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.type.Binary;
 
 /**
@@ -32,5 +33,20 @@ public class EncodedMessage extends Binary {
 
     public long getMessageFormat() {
         return messageFormat;
+    }
+
+    public Message decode() throws Exception {
+        Message amqp = new Message();
+
+        int offset = getArrayOffset();
+        int len = getLength();
+        while( len > 0 ) {
+            final int decoded = amqp.decode(getArray(), offset, len);
+            assert decoded > 0: "Make progress decoding the message";
+            offset += decoded;
+            len -= decoded;
+        }
+
+        return amqp;
     }
 }

@@ -363,8 +363,24 @@ class AmqpProtocolConverter {
         }
     }
 
-    //InboundTransformer inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
-    InboundTransformer inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+    InboundTransformer inboundTransformer;
+
+    protected InboundTransformer getInboundTransformer()  {
+        if (inboundTransformer == null) {
+            String transformer = amqpTransport.getTransformer();
+            if (transformer.equals(InboundTransformer.TRANSFORMER_JMS)) {
+                inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+            } else if (transformer.equals(InboundTransformer.TRANSFORMER_NATIVE)) {
+                inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+            } else if (transformer.equals(InboundTransformer.TRANSFORMER_RAW)) {
+                inboundTransformer = new AMQPRawInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+            } else {
+                LOG.warn("Unknown transformer type " + transformer + ", using native one instead");
+                inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
+            }
+        }
+        return inboundTransformer;
+    }
 
     abstract class BaseProducerContext extends AmqpDeliveryListener {
 
@@ -419,7 +435,7 @@ class AmqpProtocolConverter {
         @Override
         protected void onMessage(Receiver receiver, Delivery delivery, Buffer buffer) throws Exception {
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
-            final ActiveMQMessage message = (ActiveMQMessage) inboundTransformer.transform(em);
+            final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
             current = null;
 
             if( message.getDestination()==null ) {
@@ -587,7 +603,7 @@ class AmqpProtocolConverter {
 
     private Source createSource(ActiveMQDestination dest) {
         org.apache.qpid.proton.type.messaging.Source rc = new org.apache.qpid.proton.type.messaging.Source();
-        rc.setAddress(inboundTransformer.getVendor().toAddress(dest));
+        rc.setAddress(getInboundTransformer().getVendor().toAddress(dest));
         return rc;
     }
 

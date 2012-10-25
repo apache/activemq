@@ -19,23 +19,29 @@ package org.apache.activemq.transport.amqp.transform;
 import javax.jms.BytesMessage;
 import javax.jms.Message;
 
-/**
-* @author <a href="http://hiramchirino.com">Hiram Chirino</a>
-*/
-public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
+public class AMQPRawInboundTransformer extends InboundTransformer {
 
-
-    public AMQPNativeInboundTransformer(JMSVendor vendor) {
+    public AMQPRawInboundTransformer(JMSVendor vendor) {
         super(vendor);
     }
 
     @Override
     public Message transform(EncodedMessage amqpMessage) throws Exception {
-        org.apache.qpid.proton.message.Message amqp = amqpMessage.decode();
+        BytesMessage rc = vendor.createBytesMessage();
+        rc.writeBytes(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());
 
-        Message rc = super.transform(amqpMessage);
+        rc.setJMSDeliveryMode(defaultDeliveryMode);
+        rc.setJMSPriority(defaultPriority);
 
-        populateMessage(rc, amqp);
+        final long now = System.currentTimeMillis();
+        rc.setJMSTimestamp(now);
+        if( defaultTtl > 0 ) {
+            rc.setJMSExpiration(now + defaultTtl);
+        }
+
+        rc.setLongProperty(prefixVendor + "MESSAGE_FORMAT", amqpMessage.getMessageFormat());
+        rc.setBooleanProperty(prefixVendor + "NATIVE", true);
+
         return rc;
     }
 }
