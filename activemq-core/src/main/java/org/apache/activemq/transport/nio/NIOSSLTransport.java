@@ -118,7 +118,6 @@ public class NIOSSLTransport extends NIOTransport {
 
             inputBuffer = ByteBuffer.allocate(sslSession.getPacketBufferSize());
             inputBuffer.clear();
-            currentBuffer = ByteBuffer.allocate(sslSession.getApplicationBufferSize());
 
             NIOOutputStream outputStream = new NIOOutputStream(channel);
             outputStream.setEngine(sslEngine);
@@ -171,11 +170,6 @@ public class NIOSSLTransport extends NIOTransport {
             while (true) {
                 if (!plain.hasRemaining()) {
 
-                    if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
-                        plain.clear();
-                    } else {
-                        plain.compact();
-                    }
                     int readCount = secureRead(plain);
 
                     if (readCount == 0) {
@@ -204,17 +198,66 @@ public class NIOSSLTransport extends NIOTransport {
     }
 
     protected void processCommand(ByteBuffer plain) throws Exception {
-        nextFrameSize = plain.getInt();
-        if (wireFormat instanceof OpenWireFormat) {
-            long maxFrameSize = ((OpenWireFormat) wireFormat).getMaxFrameSize();
-            if (nextFrameSize > maxFrameSize) {
-                throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) +
-                                       " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+
+        // Are we waiting for the next Command or are we building on the current one
+        if (nextFrameSize == -1) {
+
+            // We can get small packets that don't give us enough for the frame size
+            // so allocate enough for the initial size value and
+            if (plain.remaining() < Integer.SIZE) {
+                if (currentBuffer == null) {
+                    currentBuffer = ByteBuffer.allocate(4);
+                }
+
+                // Go until we fill the integer sized current buffer.
+                while (currentBuffer.hasRemaining() && plain.hasRemaining()) {
+                    currentBuffer.put(plain.get());
+                }
+
+                // Didn't we get enough yet to figure out next frame size.
+                if (currentBuffer.hasRemaining()) {
+                    return;
+                } else {
+                    currentBuffer.flip();
+                    nextFrameSize = currentBuffer.getInt();
+                }
+
+            } else {
+
+                // Either we are completing a previous read of the next frame size or its
+                // fully contained in plain already.
+                if (currentBuffer != null) {
+
+                    // Finish the frame size integer read and get from the current buffer.
+                    while (currentBuffer.hasRemaining()) {
+                        currentBuffer.put(plain.get());
+                    }
+
+                    currentBuffer.flip();
+                    nextFrameSize = currentBuffer.getInt();
+
+                } else {
+                    nextFrameSize = plain.getInt();
+                }
             }
-        }
-        currentBuffer = ByteBuffer.allocate(nextFrameSize + 4);
-        currentBuffer.putInt(nextFrameSize);
-        if (currentBuffer.hasRemaining()) {
+
+            if (wireFormat instanceof OpenWireFormat) {
+                long maxFrameSize = ((OpenWireFormat) wireFormat).getMaxFrameSize();
+                if (nextFrameSize > maxFrameSize) {
+                    throw new IOException("Frame size of " + (nextFrameSize / (1024 * 1024)) +
+                                          " MB larger than max allowed " + (maxFrameSize / (1024 * 1024)) + " MB");
+                }
+            }
+
+            // now we got the data, lets reallocate and store the size for the marshaler.
+            // if there's more data in plain, then the next call will start processing it.
+            currentBuffer = ByteBuffer.allocate(nextFrameSize + 4);
+            currentBuffer.putInt(nextFrameSize);
+
+        } else {
+
+            // If its all in one read then we can just take it all, otherwise take only
+            // the current frame size and the next iteration starts a new command.
             if (currentBuffer.remaining() >= plain.remaining()) {
                 currentBuffer.put(plain);
             } else {
@@ -222,15 +265,17 @@ public class NIOSSLTransport extends NIOTransport {
                 plain.get(fill);
                 currentBuffer.put(fill);
             }
-        }
 
-        if (currentBuffer.hasRemaining()) {
-            return;
-        } else {
-            currentBuffer.flip();
-            Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
-            doConsume((Command) command);
-            nextFrameSize = -1;
+            // Either we have enough data for a new command or we have to wait for some more.
+            if (currentBuffer.hasRemaining()) {
+                return;
+            } else {
+                currentBuffer.flip();
+                Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
+                doConsume((Command) command);
+                nextFrameSize = -1;
+                currentBuffer = null;
+            }
         }
     }
 
@@ -238,6 +283,10 @@ public class NIOSSLTransport extends NIOTransport {
 
         if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             int bytesRead = channel.read(inputBuffer);
+
+            if (bytesRead == 0) {
+                return 0;
+            }
 
             if (bytesRead == -1) {
                 sslEngine.closeInbound();
