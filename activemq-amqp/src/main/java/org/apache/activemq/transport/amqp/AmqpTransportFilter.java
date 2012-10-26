@@ -93,13 +93,13 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
             }
             protocolConverter.lock.lock();
             try {
-                protocolConverter.onAMQPData((Buffer) command);
+                protocolConverter.onAMQPData(command);
             } finally {
                 protocolConverter.lock.unlock();
             }
         } catch (IOException e) {
             handleException(e);
-        } catch (JMSException e) {
+        } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }
     }
@@ -112,7 +112,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         }
     }
 
-    public void sendToAmqp(Buffer command) throws IOException {
+    public void sendToAmqp(Object command) throws IOException {
         assert protocolConverter.lock.isHeldByCurrentThread();
         if (trace) {
             TRACE.trace("Sending: \n" + command);

@@ -57,7 +57,7 @@ public class AmqpWireFormat implements WireFormat {
             Buffer magic = new Buffer(8);
             magic.readFrom(dataIn);
             magicRead = true;
-            return magic;
+            return new AmqpHeader(magic);
         } else {
             int size = dataIn.readInt();
             if( size > maxFrameLength ) {

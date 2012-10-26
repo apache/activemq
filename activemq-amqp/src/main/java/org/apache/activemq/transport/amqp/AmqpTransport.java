@@ -29,7 +29,7 @@ public interface AmqpTransport {
 
     public void sendToActiveMQ(Command command);
 
-    public void sendToAmqp(Buffer command) throws IOException;
+    public void sendToAmqp(Object command) throws IOException;
 
     public X509Certificate[] getPeerCertificates();
 

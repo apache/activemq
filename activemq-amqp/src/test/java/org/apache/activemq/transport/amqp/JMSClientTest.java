@@ -132,7 +132,7 @@ public class JMSClientTest extends AmqpTestSupport {
 //    }
 
     private Connection createConnection() throws JMSException {
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, null, null);
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
         final Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override

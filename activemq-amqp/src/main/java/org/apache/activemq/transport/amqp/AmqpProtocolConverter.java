@@ -22,12 +22,8 @@ import org.apache.activemq.transport.amqp.transform.*;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.qpid.proton.codec.Decoder;
-import org.apache.qpid.proton.codec.DecoderImpl;
 import org.apache.qpid.proton.engine.*;
-import org.apache.qpid.proton.engine.impl.ConnectionImpl;
-import org.apache.qpid.proton.engine.impl.ProtocolTracer;
-import org.apache.qpid.proton.engine.impl.TransportImpl;
+import org.apache.qpid.proton.engine.impl.*;
 import org.apache.qpid.proton.framing.TransportFrame;
 import org.apache.qpid.proton.type.Binary;
 import org.apache.qpid.proton.type.DescribedType;
@@ -45,7 +41,6 @@ import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
@@ -141,79 +136,128 @@ class AmqpProtocolConverter {
         }
     }
 
+    Sasl sasl;
+
     /**
      * Convert a AMQP command
      */
-    public void onAMQPData(Buffer frame) throws IOException, JMSException {
-
-
-        try {
-//            System.out.println("reading: " + frame.toString().substring(5).replaceAll("(..)", "$1 "));
-            protonTransport.input(frame.data, frame.offset, frame.length);
-        } catch (Throwable e) {
-            handleException(new AmqpProtocolException("Could not decode AMQP frame: " + frame, true, e));
+    public void onAMQPData(Object command) throws Exception {
+        Buffer frame;
+        if( command.getClass() == AmqpHeader.class ) {
+            AmqpHeader header = (AmqpHeader)command;
+            switch( header.getProtocolId() ) {
+                case 0:
+                    // amqpTransport.sendToAmqp(new AmqpHeader());
+                    break; // nothing to do..
+                case 3: // Client will be using SASL for auth..
+                    sasl = protonTransport.sasl();
+                    sasl.setMechanisms(new String[]{"ANONYMOUS", "PLAIN"});
+                    sasl.server();
+                    break;
+                default:
+            }
+            frame = header.getBuffer();
+        } else {
+            frame = (Buffer)command;
         }
+        onFrame(frame);
+    }
 
-        try {
-
-            // Handle the amqp open..
-            if (protonConnection.getLocalState() == EndpointState.UNINITIALIZED && protonConnection.getRemoteState() != EndpointState.UNINITIALIZED) {
-                onConnectionOpen();
+    public void onFrame(Buffer frame) throws Exception {
+//        System.out.println("read: " + frame.toString().substring(5).replaceAll("(..)", "$1 "));
+        while( frame.length > 0 ) {
+            try {
+                int count = protonTransport.input(frame.data, frame.offset, frame.length);
+                frame.moveHead(count);
+            } catch (Throwable e) {
+                handleException(new AmqpProtocolException("Could not decode AMQP frame: " + frame, true, e));
             }
+            try {
 
-            // Lets map amqp sessions to openwire sessions..
-            Session session = protonConnection.sessionHead(UNINITIALIZED_SET, INITIALIZED_SET);
-            while (session != null) {
-
-                onSessionOpen(session);
-                session = protonConnection.sessionHead(UNINITIALIZED_SET, INITIALIZED_SET);
-            }
-
-
-            Link link = protonConnection.linkHead(UNINITIALIZED_SET, INITIALIZED_SET);
-            while (link != null) {
-                onLinkOpen(link);
-                link = protonConnection.linkHead(UNINITIALIZED_SET, INITIALIZED_SET);
-            }
-
-            Delivery delivery = protonConnection.getWorkHead();
-            while (delivery != null) {
-                AmqpDeliveryListener listener = (AmqpDeliveryListener) delivery.getLink().getContext();
-                if (listener != null) {
-                    listener.onDelivery(delivery);
+                if( sasl!=null ) {
+                    // Lets try to complete the sasl handshake.
+                    if( sasl.getRemoteMechanisms().length > 0 ) {
+                        if( "PLAIN".equals(sasl.getRemoteMechanisms()[0]) ) {
+                            byte[] data = new byte[sasl.pending()];
+                            sasl.recv(data, 0, data.length);
+                            Buffer[] parts = new Buffer(data).split((byte) 0);
+                            if( parts.length > 0 ) {
+                                connectionInfo.setUserName(parts[0].utf8().toString());
+                            }
+                            if( parts.length > 1 ) {
+                                connectionInfo.setPassword(parts[1].utf8().toString());
+                            }
+                            // We can't really auth at this point since we don't know the client id yet.. :(
+                            sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+                            amqpTransport.getWireFormat().magicRead = false;
+                            sasl = null;
+                        } else if( "ANONYMOUS".equals(sasl.getRemoteMechanisms()[0]) ) {
+                            sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+                            amqpTransport.getWireFormat().magicRead = false;
+                            sasl = null;
+                        }
+                    }
                 }
-                delivery = delivery.getWorkNext();
-            }
 
-            link = protonConnection.linkHead(ACTIVE_STATE, CLOSED_STATE);
-            while (link != null) {
-                ((AmqpDeliveryListener)link.getContext()).onClose();
-                link.close();
-                link = link.next(ACTIVE_STATE, CLOSED_STATE);
-            }
+                // Handle the amqp open..
+                if (protonConnection.getLocalState() == EndpointState.UNINITIALIZED && protonConnection.getRemoteState() != EndpointState.UNINITIALIZED) {
+                    onConnectionOpen();
+                }
 
-            link = protonConnection.linkHead(ACTIVE_STATE, ALL_STATES);
-            while (link != null) {
-                ((AmqpDeliveryListener)link.getContext()).drainCheck();
-                link = link.next(ACTIVE_STATE, CLOSED_STATE);
-            }
+                // Lets map amqp sessions to openwire sessions..
+                Session session = protonConnection.sessionHead(UNINITIALIZED_SET, INITIALIZED_SET);
+                while (session != null) {
+
+                    onSessionOpen(session);
+                    session = protonConnection.sessionHead(UNINITIALIZED_SET, INITIALIZED_SET);
+                }
 
 
-            session = protonConnection.sessionHead(ACTIVE_STATE, CLOSED_STATE);
-            while (session != null) {
-                //TODO - close links?
-                onSessionClose(session);
-                session = session.next(ACTIVE_STATE, CLOSED_STATE);
-            }
-            if (protonConnection.getLocalState() == EndpointState.ACTIVE && protonConnection.getRemoteState() == EndpointState.CLOSED) {
-                doClose();
+                Link link = protonConnection.linkHead(UNINITIALIZED_SET, INITIALIZED_SET);
+                while (link != null) {
+                    onLinkOpen(link);
+                    link = protonConnection.linkHead(UNINITIALIZED_SET, INITIALIZED_SET);
+                }
+
+                Delivery delivery = protonConnection.getWorkHead();
+                while (delivery != null) {
+                    AmqpDeliveryListener listener = (AmqpDeliveryListener) delivery.getLink().getContext();
+                    if (listener != null) {
+                        listener.onDelivery(delivery);
+                    }
+                    delivery = delivery.getWorkNext();
+                }
+
+                link = protonConnection.linkHead(ACTIVE_STATE, CLOSED_STATE);
+                while (link != null) {
+                    ((AmqpDeliveryListener)link.getContext()).onClose();
+                    link.close();
+                    link = link.next(ACTIVE_STATE, CLOSED_STATE);
+                }
+
+                link = protonConnection.linkHead(ACTIVE_STATE, ALL_STATES);
+                while (link != null) {
+                    ((AmqpDeliveryListener)link.getContext()).drainCheck();
+                    link = link.next(ACTIVE_STATE, CLOSED_STATE);
+                }
+
+
+                session = protonConnection.sessionHead(ACTIVE_STATE, CLOSED_STATE);
+                while (session != null) {
+                    //TODO - close links?
+                    onSessionClose(session);
+                    session = session.next(ACTIVE_STATE, CLOSED_STATE);
+                }
+                if (protonConnection.getLocalState() == EndpointState.ACTIVE && protonConnection.getRemoteState() == EndpointState.CLOSED) {
+                    doClose();
+                }
+
+            } catch (Throwable e) {
+                handleException(new AmqpProtocolException("Could not process AMQP commands", true, e));
             }
 
-        } catch (Throwable e) {
-            handleException(new AmqpProtocolException("Could not process AMQP commands", true, e));
+            pumpProtonToSocket();
         }
-
-        pumpProtonToSocket();
     }
 
     boolean closing = false;
