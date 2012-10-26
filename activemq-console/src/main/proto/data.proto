@@ -1,0 +1,60 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+package org.apache.activemq.console.command.store.proto;
+
+option java_multiple_files = true;
+
+///////////////////////////////////////////////////////////////
+// Message related operations.
+///////////////////////////////////////////////////////////////
+
+message MessagePB {
+  required int64 messageKey=1;
+  required bytes codec = 2 [java_override_type = "AsciiBuffer"];
+  optional int32 size = 3;
+  optional bytes value = 4;
+  optional sint64 expiration = 5;
+  optional int32 compression = 6;
+  
+  optional bytes direct_data = 10;
+  optional bytes direct_file = 12;
+  optional int64 direct_offset = 13;
+  optional int32 direct_size = 14;
+}
+
+message QueuePB {
+  required int64 key=1;
+  optional bytes binding_kind = 2 [java_override_type = "AsciiBuffer"];
+  optional bytes binding_data = 3;
+}
+
+message QueueEntryPB {
+  required int64 queueKey=1;
+  required int64 queueSeq=2;
+  required int64 messageKey=3;
+  optional int32 size=4;
+  optional bytes attachment=5;
+  optional int32 redeliveries = 6;
+  optional sint64 expiration=7;
+  optional bytes messageLocator=8;
+  repeated bytes sender=9;
+}
+
+message MapEntryPB {
+  required bytes key = 1;
+  optional bytes value = 2;
+}

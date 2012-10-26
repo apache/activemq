@@ -48,6 +48,7 @@ public class ShellCommand extends AbstractCommand {
             "    query           - Display selected broker component's attributes and statistics.",
             "    browse          - Display selected messages in a specified destination.",
             "    journal-audit   - Allows you to view records stored in the persistent journal.",
+            "    export          - Exports a stopped brokers data files to an archive file",
             "    purge           - Delete selected destination's messages that matches the message selector",
             "    encrypt         - Encrypts given text",
             "    decrypt         - Decrypts given text",
@@ -137,6 +138,8 @@ public class ShellCommand extends AbstractCommand {
                 command = new EncryptCommand();
             } else if (taskToken.equals("decrypt")) {
                 command = new DecryptCommand();
+            } else if (taskToken.equals("export")) {
+                command = new StoreExportCommand();
             } else if (taskToken.equals("help")) {
                 printHelp();
             } else {
