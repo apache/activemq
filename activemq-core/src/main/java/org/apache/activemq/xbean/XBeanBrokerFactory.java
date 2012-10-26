@@ -41,6 +41,7 @@ import org.springframework.core.io.Resource;
  */
 public class XBeanBrokerFactory implements BrokerFactoryHandler {
     private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerFactory.class);
+    private static final ThreadLocal<Boolean> START_DEFAULT = new ThreadLocal<Boolean>();
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
@@ -56,7 +57,6 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     }
 
     public BrokerService createBroker(URI config) throws Exception {
-
         String uri = config.getSchemeSpecificPart();
         if (uri.lastIndexOf('?') != -1) {
             IntrospectionSupport.setProperties(this, URISupport.parseQuery(uri));
@@ -110,4 +110,20 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             throw errorToLog;
         }
     }
+
+    public static void setStartDefault(boolean startDefault) {
+        START_DEFAULT.set(startDefault);
+    }
+    public static void resetStartDefault() {
+        START_DEFAULT.remove();
+    }
+
+    public static boolean getStartDefault() {
+        Boolean value = START_DEFAULT.get();
+        if( value==null ) {
+            return true;
+        }
+        return value.booleanValue();
+    }
+
 }

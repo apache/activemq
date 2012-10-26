@@ -41,9 +41,10 @@ import org.springframework.beans.CachedIntrospectionResults;
  */
 public class XBeanBrokerService extends BrokerService {
 
-    private boolean start = true;
+    private boolean start;
 
     public XBeanBrokerService() {
+        start = XBeanBrokerFactory.getStartDefault();
     }
 
     /**
