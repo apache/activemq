@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import javax.net.ssl.SSLServerSocket;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -55,13 +56,12 @@ public final class IntrospectionSupport {
             optionPrefix = "";
         }
 
-        Class clazz = target.getClass();
+        Class<?> clazz = target.getClass();
         Method[] methods = clazz.getMethods();
-        for (int i = 0; i < methods.length; i++) {
-            Method method = methods[i];
+        for (Method method : methods) {
             String name = method.getName();
-            Class type = method.getReturnType();
-            Class params[] = method.getParameterTypes();
+            Class<?> type = method.getReturnType();
+            Class<?> params[] = method.getParameterTypes();
             if ((name.startsWith("is") || name.startsWith("get")) && params.length == 0 && type != null) {
 
                 try {
@@ -87,7 +87,6 @@ public final class IntrospectionSupport {
 
                 } catch (Throwable ignore) {
                 }
-
             }
         }
 
@@ -124,7 +123,7 @@ public final class IntrospectionSupport {
 
         HashMap<String, Object> rc = new HashMap<String, Object>(props.size());
 
-        for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
+        for (Iterator<?> iter = props.keySet().iterator(); iter.hasNext();) {
             String name = (String)iter.next();
             if (name.startsWith(optionPrefix)) {
                 Object value = props.get(name);
@@ -147,8 +146,8 @@ public final class IntrospectionSupport {
             throw new IllegalArgumentException("props was null.");
         }
 
-        for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Entry)iter.next();
+        for (Iterator<?> iter = props.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<?,?> entry = (Entry<?,?>)iter.next();
             if (setProperty(target, (String)entry.getKey(), entry.getValue())) {
                 iter.remove();
                 rc = true;
@@ -160,7 +159,7 @@ public final class IntrospectionSupport {
 
     public static boolean setProperty(Object target, String name, Object value) {
         try {
-            Class clazz = target.getClass();
+            Class<?> clazz = target.getClass();
             if (target instanceof SSLServerSocket) {
                 // overcome illegal access issues with internal implementation class
                 clazz = SSLServerSocket.class;
@@ -259,9 +258,8 @@ public final class IntrospectionSupport {
         // Build the method name.
         name = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         Method[] methods = clazz.getMethods();
-        for (int i = 0; i < methods.length; i++) {
-            Method method = methods[i];
-            Class params[] = method.getParameterTypes();
+        for (Method method : methods) {
+            Class<?> params[] = method.getParameterTypes();
             if (method.getName().equals(name) && params.length == 1 ) {
                 return method;
             }
@@ -272,27 +270,26 @@ public final class IntrospectionSupport {
     public static String toString(Object target) {
         return toString(target, Object.class, null);
     }
-    
+
     public static String toString(Object target, Class stopClass) {
-    	return toString(target, stopClass, null);
+        return toString(target, stopClass, null);
     }
 
     public static String toString(Object target, Class stopClass, Map<String, Object> overrideFields) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
         addFields(target, target.getClass(), stopClass, map);
         if (overrideFields != null) {
-        	for(String key : overrideFields.keySet()) {
-        	    Object value = overrideFields.get(key);
-        	    map.put(key, value);
-        	}
+            for(String key : overrideFields.keySet()) {
+                Object value = overrideFields.get(key);
+                map.put(key, value);
+            }
 
         }
         StringBuffer buffer = new StringBuffer(simpleName(target.getClass()));
         buffer.append(" {");
-        Set entrySet = map.entrySet();
+        Set<Entry<String, Object>> entrySet = map.entrySet();
         boolean first = true;
-        for (Iterator iter = entrySet.iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        for (Map.Entry<String,Object> entry : entrySet) {
             Object value = entry.getValue();
             Object key = entry.getKey();
             if (first) {
@@ -302,7 +299,7 @@ public final class IntrospectionSupport {
             }
             buffer.append(key);
             buffer.append(" = ");
-            
+
             appendToString(buffer, key, value);
         }
         buffer.append("}");
@@ -314,7 +311,7 @@ public final class IntrospectionSupport {
             ActiveMQDestination destination = (ActiveMQDestination)value;
             buffer.append(destination.getQualifiedName());
         } else if (key.toString().toLowerCase(Locale.ENGLISH).contains("password")){
-            buffer.append("*****");           
+            buffer.append("*****");
         } else {
             buffer.append(value);
         }
@@ -336,8 +333,7 @@ public final class IntrospectionSupport {
         }
 
         Field[] fields = startClass.getDeclaredFields();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
+        for (Field field : fields) {
             if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())
                 || Modifier.isPrivate(field.getModifiers())) {
                 continue;
@@ -357,7 +353,5 @@ public final class IntrospectionSupport {
                 LOG.debug("Error getting field " + field + " on class " + startClass + ". This exception is ignored.", e);
             }
         }
-
     }
-
 }
