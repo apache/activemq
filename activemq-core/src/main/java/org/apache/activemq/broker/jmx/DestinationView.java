@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.jms.Connection;
 import javax.jms.InvalidSelectorException;
 import javax.jms.MessageProducer;
@@ -35,6 +36,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
@@ -107,6 +109,10 @@ public class DestinationView implements DestinationViewMBean {
 
     public int getMemoryPercentUsage() {
         return destination.getMemoryUsage().getPercentUsage();
+    }
+
+    public long getMemoryUsageByteCount() {
+        return destination.getMemoryUsage().getUsage();
     }
 
     public long getMemoryLimit() {

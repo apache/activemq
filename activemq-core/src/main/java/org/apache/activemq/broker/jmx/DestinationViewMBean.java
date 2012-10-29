@@ -19,6 +19,7 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import javax.jms.InvalidSelectorException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -42,7 +43,7 @@ public interface DestinationViewMBean {
 
     /**
      * Returns the number of messages that have been sent to the destination.
-     * 
+     *
      * @return The number of messages that have been sent to the destination.
      */
     @MBeanInfo("Number of messages that have been sent to the destination.")
@@ -51,7 +52,7 @@ public interface DestinationViewMBean {
     /**
      * Returns the number of messages that have been delivered (potentially not
      * acknowledged) to consumers.
-     * 
+     *
      * @return The number of messages that have been delivered (potentially not
      *         acknowledged) to consumers.
      */
@@ -61,17 +62,17 @@ public interface DestinationViewMBean {
     /**
      * Returns the number of messages that have been acknowledged from the
      * destination.
-     * 
+     *
      * @return The number of messages that have been acknowledged from the
      *         destination.
      */
     @MBeanInfo("Number of messages that have been acknowledged (and removed from) from the destination.")
     long getDequeueCount();
-    
+
     /**
      * Returns the number of messages that have been dispatched but not
      * acknowledged
-     * 
+     *
      * @return The number of messages that have been dispatched but not
      * acknowledged
      */
@@ -80,20 +81,20 @@ public interface DestinationViewMBean {
 
     /**
      * Returns the number of messages that have expired
-     * 
+     *
      * @return The number of messages that have expired
      */
     @MBeanInfo("Number of messages that have been expired.")
     long getExpiredCount();
-    
+
     /**
      * Returns the number of consumers subscribed this destination.
-     * 
+     *
      * @return The number of consumers subscribed this destination.
      */
     @MBeanInfo("Number of consumers subscribed to this destination.")
     long getConsumerCount();
-    
+
     /**
      * @return the number of producers publishing to the destination
      */
@@ -103,7 +104,7 @@ public interface DestinationViewMBean {
     /**
      * Returns the number of messages in this destination which are yet to be
      * consumed
-     * 
+     *
      * @return Returns the number of messages in this destination which are yet
      *         to be consumed
      */
@@ -138,7 +139,7 @@ public interface DestinationViewMBean {
 
     /**
      * Sends a TextMesage to the destination.
-     * 
+     *
      * @param body the text to send
      * @return the message id of the message sent.
      * @throws Exception
@@ -148,7 +149,7 @@ public interface DestinationViewMBean {
 
     /**
      * Sends a TextMesage to the destination.
-     * 
+     *
      * @param headers the message headers and properties to set. Can only
      *                container Strings maped to primitive types.
      * @param body the text to send
@@ -168,9 +169,9 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Sends a TextMessage to a password-protected destination.")
     String sendTextMessage(@MBeanInfo("body") String body, @MBeanInfo("user") String user, @MBeanInfo("password") String password) throws Exception;
-    
+
     /**
-     * 
+     *
      * @param headers the message headers and properties to set. Can only
      *                container Strings maped to primitive types.
      * @param body the text to send
@@ -188,6 +189,12 @@ public interface DestinationViewMBean {
     int getMemoryPercentUsage();
 
     /**
+     * @return the amount of memory currently used by this destination
+     */
+    @MBeanInfo("Memory usage, in bytes, used by undelivered messages")
+    long getMemoryUsageByteCount();
+
+    /**
      * @return the amount of memory allocated to this destination
      */
     @MBeanInfo("Memory limit, in bytes, used for holding undelivered messages before paging to temporary storage.")
@@ -198,13 +205,13 @@ public interface DestinationViewMBean {
      * @param limit
      */
     void setMemoryLimit(long limit);
-    
+
     /**
      * @return the portion of memory from the broker memory limit for this destination
      */
     @MBeanInfo("Portion of memory from the broker memory limit for this destination")
     float getMemoryUsagePortion();
-    
+
     /**
      * set the portion of memory from the broker memory limit for this destination
      * @param value
@@ -241,94 +248,94 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Average time a message has been held this destination.")
     double getAverageEnqueueTime();
-    
+
     /**
      * @return the producerFlowControl
      */
     @MBeanInfo("Producers are flow controlled")
     boolean isProducerFlowControl();
-    
+
     /**
      * @param producerFlowControl the producerFlowControl to set
      */
     public void setProducerFlowControl(@MBeanInfo("producerFlowControl") boolean producerFlowControl);
-    
+
     /**
      * @return if we treat consumers as alwaysRetroactive
      */
     @MBeanInfo("Always treat consumers as retroActive")
     boolean isAlwaysRetroactive();
-    
+
     /**
      * @param alwaysRetroactive set as always retroActive
      */
-    public void setAlwaysRetroactive(@MBeanInfo("alwaysRetroactive") boolean alwaysRetroactive);    
-    
+    public void setAlwaysRetroactive(@MBeanInfo("alwaysRetroactive") boolean alwaysRetroactive);
+
     /**
      * Set's the interval at which warnings about producers being blocked by
      * resource usage will be triggered. Values of 0 or less will disable
      * warnings
-     * 
+     *
      * @param blockedProducerWarningInterval the interval at which warning about
      *            blocked producers will be triggered.
      */
     public void setBlockedProducerWarningInterval(@MBeanInfo("blockedProducerWarningInterval")  long blockedProducerWarningInterval);
 
     /**
-     * 
+     *
      * @return the interval at which warning about blocked producers will be
      *         triggered.
      */
     @MBeanInfo("Blocked Producer Warning Interval")
     public long getBlockedProducerWarningInterval();
-    
+
     /**
      * @return the maxProducersToAudit
      */
-    @MBeanInfo("Maximum number of producers to audit") 
+    @MBeanInfo("Maximum number of producers to audit")
     public int getMaxProducersToAudit();
-    
+
     /**
      * @param maxProducersToAudit the maxProducersToAudit to set
      */
     public void setMaxProducersToAudit(@MBeanInfo("maxProducersToAudit") int maxProducersToAudit);
-    
+
     /**
      * @return the maxAuditDepth
      */
     @MBeanInfo("Max audit depth")
     public int getMaxAuditDepth();
-    
+
     /**
      * @param maxAuditDepth the maxAuditDepth to set
      */
     public void setMaxAuditDepth(@MBeanInfo("maxAuditDepth") int maxAuditDepth);
-    
+
     /**
-     * @return the maximum number of message to be paged into the 
+     * @return the maximum number of message to be paged into the
      * destination
      */
     @MBeanInfo("Maximum number of messages to be paged in")
     public int getMaxPageSize();
-    
+
     /**
      * @param pageSize
      * Set the maximum number of messages to page into the destination
      */
     public void setMaxPageSize(@MBeanInfo("pageSize") int pageSize);
-    
+
     /**
      * @return true if caching is allowed of for the destination
      */
     @MBeanInfo("Caching is allowed")
     public boolean isUseCache();
-    
+
     /**
      * @return true if prioritized messages are enabled for the destination
      */
     @MBeanInfo("Prioritized messages is enabled")
     public boolean isPrioritizedMessages();
-    
+
     /**
      * @param value
      * enable/disable caching on the destination
@@ -337,7 +344,7 @@ public interface DestinationViewMBean {
 
     /**
      * Returns all the current subscription MBeans matching this destination
-     * 
+     *
      * @return the names of the subscriptions for this destination
      */
     @MBeanInfo("returns all the current subscription MBeans matching this destination")
