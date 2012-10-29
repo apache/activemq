@@ -21,7 +21,6 @@ import java.net.URI;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TemporaryTopic;
 import javax.management.ObjectName;
@@ -45,6 +44,12 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         return suite(SimpleAuthenticationPluginTest.class);
     }
 
+    @Override
+    protected void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
@@ -57,7 +62,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
-    
+
     /**
      * @see {@link CombinationTestSupport}
      */
@@ -66,13 +71,13 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         addCombinationValues("password", new Object[] {"password"});
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST.Q")});
     }
-    
+
     public void testPredefinedDestinations() throws JMSException {
-    	Message sent = doSend(false);
+        Message sent = doSend(false);
         assertEquals("guest", ((ActiveMQMessage)sent).getUserID());
         assertEquals("guest", sent.getStringProperty("JMSXUserID"));
     }
-    
+
     public void testTempDestinations() throws Exception {
         Connection conn = factory.createConnection("guest", "password");
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -83,7 +88,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
             name += ",Destination=" + temp.getTopicName().replaceAll(":", "_");
             fail("Should have failed creating a temp topic");
         } catch (Exception ignore) {}
-        
+
         ObjectName objName = new ObjectName(name);
         TopicViewMBean mbean = (TopicViewMBean)broker.getManagementContext().newProxyInstance(objName, TopicViewMBean.class, true);
         try {
