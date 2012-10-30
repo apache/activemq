@@ -32,11 +32,12 @@ public interface Stomp {
     String COMMA = ",";
     String V1_0 = "1.0";
     String V1_1 = "1.1";
+    String V1_2 = "1.2";
     String DEFAULT_HEART_BEAT = "0,0";
     String DEFAULT_VERSION = "1.0";
     String EMPTY = "";
 
-    String[] SUPPORTED_PROTOCOL_VERSIONS = {"1.1", "1.0"};
+    String[] SUPPORTED_PROTOCOL_VERSIONS = {"1.2", "1.1", "1.0"};
 
     String TEXT_PLAIN = "text/plain";
     String TRUE = "true";
@@ -100,6 +101,7 @@ public interface Stomp {
 
         public interface Message {
             String MESSAGE_ID = "message-id";
+            String ACK_ID = "ack";
             String DESTINATION = "destination";
             String CORRELATION_ID = "correlation-id";
             String EXPIRATION_TIME = "expires";
@@ -159,6 +161,7 @@ public interface Stomp {
         public interface Ack {
             String MESSAGE_ID = "message-id";
             String SUBSCRIPTION = "subscription";
+            String ACK_ID = "id";
         }
     }
 

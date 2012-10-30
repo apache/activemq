@@ -154,12 +154,23 @@ public class StompWireFormat implements WireFormat {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(maxLength);
         while ((b = in.readByte()) != '\n') {
             if (baos.size() > maxLength) {
+                baos.close();
                 throw new ProtocolException(errorMessage, true);
             }
             baos.write(b);
         }
+
         baos.close();
-        return baos.toByteSequence();
+        ByteSequence line = baos.toByteSequence();
+
+        if (stompVersion.equals(Stomp.V1_0) || stompVersion.equals(Stomp.V1_2)) {
+            int lineLength = line.getLength();
+            if (lineLength > 0 && line.data[lineLength-1] == '\r') {
+                line.setLength(lineLength-1);
+            }
+        }
+
+        return line;
     }
 
     protected String parseAction(DataInput in) throws IOException {
@@ -177,6 +188,7 @@ public class StompWireFormat implements WireFormat {
                 }
             }
         }
+
         return action;
     }
 
@@ -206,6 +218,7 @@ public class StompWireFormat implements WireFormat {
                     }
 
                     ByteSequence nameSeq = stream.toByteSequence();
+
                     String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8");
                     String value = decodeHeader(headerLine);
                     if (stompVersion.equals(Stomp.V1_0)) {
@@ -213,8 +226,11 @@ public class StompWireFormat implements WireFormat {
                     }
 
                     if (!headers.containsKey(name)) {
-                    	headers.put(name, value);
+                        headers.put(name, value);
                     }
+
+                    stream.close();
+
                 } catch (Exception e) {
                     throw new ProtocolException("Unable to parser header line [" + line + "]", true);
                 }

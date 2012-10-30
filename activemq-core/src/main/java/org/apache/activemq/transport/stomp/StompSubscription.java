@@ -16,15 +16,23 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.command.*;
-
-import javax.jms.JMSException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.TransactionId;
 
 /**
  * Keeps track of the STOMP subscription so that acking is correctly done.
@@ -55,7 +63,7 @@ public class StompSubscription {
         this.transformation = transformation;
     }
 
-    void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
+    void onMessageDispatch(MessageDispatch md, String ackId) throws IOException, JMSException {
         ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
         if (ackMode == CLIENT_ACK) {
             synchronized (this) {
@@ -73,7 +81,7 @@ public class StompSubscription {
         boolean ignoreTransformation = false;
 
         if (transformation != null && !( message instanceof ActiveMQBytesMessage ) ) {
-               message.setReadOnlyProperties(false);
+            message.setReadOnlyProperties(false);
             message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
         } else {
             if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
@@ -86,6 +94,10 @@ public class StompSubscription {
         command.setAction(Stomp.Responses.MESSAGE);
         if (subscriptionId != null) {
             command.getHeaders().put(Stomp.Headers.Message.SUBSCRIPTION, subscriptionId);
+        }
+
+        if (ackId != null) {
+            command.getHeaders().put(Stomp.Headers.Message.ACK_ID, ackId);
         }
 
         protocolConverter.getStompTransport().sendToStomp(command);

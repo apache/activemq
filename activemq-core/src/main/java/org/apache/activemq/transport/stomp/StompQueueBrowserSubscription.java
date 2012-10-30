@@ -32,10 +32,10 @@ public class StompQueueBrowserSubscription extends StompSubscription {
     }
 
     @Override
-    void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
+    void onMessageDispatch(MessageDispatch md, String ackId) throws IOException, JMSException {
 
         if (md.getMessage() != null) {
-            super.onMessageDispatch(md);
+            super.onMessageDispatch(md, ackId);
         } else {
             StompFrame browseDone = new StompFrame(Stomp.Responses.MESSAGE);
             browseDone.getHeaders().put(Stomp.Headers.Message.SUBSCRIPTION, this.getSubscriptionId());

@@ -41,7 +41,6 @@ import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
  */
 public class LegacyFrameTranslator implements FrameTranslator {
 
-
     public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         final Map<?, ?> headers = command.getHeaders();
         final ActiveMQMessage msg;
@@ -59,6 +58,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
                     data.writeInt(command.getContent().length);
                     data.write(command.getContent());
                     text.setContent(bytes.toByteSequence());
+                    data.close();
                 } catch (Throwable e) {
                     throw new ProtocolException("Text could not bet set: " + e, false, e);
                 }
@@ -83,6 +83,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
                 data.writeInt(command.getContent().length);
                 data.write(command.getContent());
                 text.setContent(bytes.toByteSequence());
+                data.close();
             } catch (Throwable e) {
                 throw new ProtocolException("Text could not bet set: " + e, false, e);
             }
