@@ -47,6 +47,7 @@ public class JoramJmsTest extends TestCase {
         TestSuite suite = new TestSuite();
 
         // Passing tests
+        suite.addTestSuite(TemporaryQueueTest.class);
         suite.addTestSuite(ConnectionTest.class);
         suite.addTestSuite(SessionTest.class);
         suite.addTestSuite(JMSXPropertyTest.class);
@@ -57,21 +58,20 @@ public class JoramJmsTest extends TestCase {
 
         if (false ) {
 
-// TODO: Fails due to temp destinations not being supported yet.
-        suite.addTestSuite(MessageHeaderTest.class);
-        suite.addTestSuite(TemporaryQueueTest.class);
-        suite.addTestSuite(TemporaryTopicTest.class);
 // TODO: Fails due to selectors not being implemented yet.
         suite.addTestSuite(SelectorSyntaxTest.class);
         suite.addTestSuite(SelectorTest.class);
         suite.addTestSuite(QueueSessionTest.class);
-// TODO: Browsers not yet supported.
+// TODO: Fails due to https://issues.apache.org/jira/browse/PROTON-110 and DestinationImpl vs QueueImpl mapping issues
+        suite.addTestSuite(MessageHeaderTest.class);
+// TODO: Fails due to JMS client setup browser before getEnumeration() gets called.
         suite.addTestSuite(QueueBrowserTest.class);
 // TODO: Fails due to JMS client impl error.
         suite.addTestSuite(UnifiedSessionTest.class);
 // TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
         suite.addTestSuite(MessageTypeTest.class);
 // TODO: Fails due to: javax.jms.IllegalStateException: Cannot set client-id to "publisherConnection"; client-id must be set on connection creation
+        suite.addTestSuite(TemporaryTopicTest.class);
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(TopicSessionTest.class);
 

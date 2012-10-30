@@ -57,6 +57,7 @@ class AmqpProtocolConverter {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpProtocolConverter.class);
     static final public byte[] EMPTY_BYTE_ARRAY = new byte[]{};
     private final AmqpTransport amqpTransport;
+    private static final Symbol COPY = Symbol.getSymbol("copy");
 
     public AmqpProtocolConverter(AmqpTransport amqpTransport, BrokerContext brokerContext) {
         this.amqpTransport = amqpTransport;
@@ -883,7 +884,10 @@ class AmqpProtocolConverter {
         consumerInfo.setDestination(dest);
         consumerInfo.setPrefetchSize(100);
         consumerInfo.setDispatchAsync(true);
-        Map filter = ((org.apache.qpid.proton.type.messaging.Source)remoteSource).getFilter();
+        if( source.getDistributionMode() == COPY) {
+            consumerInfo.setBrowser(true);
+        }
+        Map filter = ((org.apache.qpid.proton.type.messaging.Source)source).getFilter();
         if (filter != null) {
             DescribedType type = (DescribedType)filter.get(Symbol.valueOf("jms-selector"));
             consumerInfo.setSelector(type.getDescribed().toString());
