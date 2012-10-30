@@ -32,6 +32,7 @@ import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyTest;
 import org.objectweb.jtests.jms.conform.queue.QueueBrowserTest;
 import org.objectweb.jtests.jms.conform.queue.TemporaryQueueTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
+import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
 import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
@@ -45,6 +46,7 @@ public class JoramJmsTest extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
+        suite.addTestSuite(SelectorTest.class);
         suite.addTestSuite(ConnectionTest.class);
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(MessageHeaderTest.class);
@@ -62,8 +64,6 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(UnifiedSessionTest.class);
         suite.addTestSuite(QueueBrowserTest.class);
         suite.addTestSuite(MessagePropertyTest.class);
-// TODO: figure out why the following tests are failing..
-//        suite.addTestSuite(SelectorTest.class);
         return suite;
     }
 

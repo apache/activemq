@@ -30,6 +30,9 @@ import javax.jms.JMSException;
  */
 public abstract class ComparisonExpression extends BinaryExpression implements BooleanExpression {
 
+    public static final ThreadLocal<Boolean> CONVERT_STRING_EXPRESSIONS = new ThreadLocal<Boolean>();
+
+    boolean convertStringExpressions = false;
     private static final Set<Character> REGEXP_CONTROL_CHARS = new HashSet<Character>();
 
     /**
@@ -38,6 +41,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
      */
     public ComparisonExpression(Expression left, Expression right) {
         super(left, right);
+        convertStringExpressions = CONVERT_STRING_EXPRESSIONS.get()!=null;
     }
 
     public static BooleanExpression createBetween(Expression value, Expression left, Expression right) {
@@ -76,7 +80,6 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         Pattern likePattern;
 
         /**
-         * @param left
          */
         public LikeExpression(Expression right, String like, int escape) {
             super(right);
@@ -358,7 +361,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         if (lc != rc) {
             try {
                 if (lc == Boolean.class) {
-                    if (rc == String.class) {
+                    if (convertStringExpressions && rc == String.class) {
                         lv = Boolean.valueOf((String)lv).booleanValue();
                     } else {
                         return Boolean.FALSE;
@@ -374,7 +377,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
-                    } else if (rc == String.class) {
+                    } else if (convertStringExpressions && rc == String.class) {
                         rv = Byte.valueOf((String)rv);
                     } else {
                         return Boolean.FALSE;
@@ -388,7 +391,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
-                    } else if (rc == String.class) {
+                    } else if (convertStringExpressions && rc == String.class) {
                         rv = Short.valueOf((String)rv);
                     } else {
                         return Boolean.FALSE;
@@ -400,7 +403,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
-                    } else if (rc == String.class) {
+                    } else if (convertStringExpressions && rc == String.class) {
                         rv = Integer.valueOf((String)rv);
                     } else {
                         return Boolean.FALSE;
@@ -412,7 +415,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         lv = new Float(((Number)lv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
-                    } else if (rc == String.class) {
+                    } else if (convertStringExpressions && rc == String.class) {
                         rv = Long.valueOf((String)rv);
                     } else {
                         return Boolean.FALSE;
@@ -424,7 +427,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         rv = new Float(((Number)rv).floatValue());
                     } else if (rc == Double.class) {
                         lv = new Double(((Number)lv).doubleValue());
-                    } else if (rc == String.class) {
+                    } else if (convertStringExpressions && rc == String.class) {
                         rv = Float.valueOf((String)rv);
                     } else {
                         return Boolean.FALSE;
@@ -436,12 +439,12 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                         rv = new Double(((Number)rv).doubleValue());
                     } else if (rc == Float.class) {
                         rv = new Float(((Number)rv).doubleValue());
-                    } else if (rc == String.class) {
+                    } else if (convertStringExpressions && rc == String.class) {
                         rv = Double.valueOf((String)rv);
                     } else {
                         return Boolean.FALSE;
                     }
-                } else if (lc == String.class) {
+                } else if (convertStringExpressions && lc == String.class) {
                     if (rc == Boolean.class) {
                         lv = Boolean.valueOf((String)lv);
                     } else if (rc == Byte.class) {

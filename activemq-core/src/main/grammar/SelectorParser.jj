@@ -67,6 +67,7 @@ import org.apache.activemq.util.LRUCache;
 public class SelectorParser {
 
     private static final Map cache = Collections.synchronizedMap(new LRUCache(100));
+    private static final String CONVERT_STRING_EXPRESSIONS_PREFIX = "convert_string_expressions:";
 
     public static BooleanExpression parse(String sql) throws InvalidSelectorException {
         Object result = cache.get(sql);
@@ -75,6 +76,16 @@ public class SelectorParser {
         } else if (result instanceof BooleanExpression) {
             return (BooleanExpression) result;
         } else {
+
+            boolean convertStringExpressions = false;
+            if( sql.startsWith(CONVERT_STRING_EXPRESSIONS_PREFIX)) {
+                convertStringExpressions = true;
+                sql = sql.substring(CONVERT_STRING_EXPRESSIONS_PREFIX.length());
+            }
+
+            if( convertStringExpressions ) {
+                ComparisonExpression.CONVERT_STRING_EXPRESSIONS.set(true);
+            }
             try {
                 BooleanExpression e = new SelectorParser(sql).parse();
                 cache.put(sql, e);
@@ -82,6 +93,10 @@ public class SelectorParser {
             } catch (InvalidSelectorException t) {
                 cache.put(sql, t);
                 throw t;
+            } finally {
+                if( convertStringExpressions ) {
+                    ComparisonExpression.CONVERT_STRING_EXPRESSIONS.remove();
+                }
             }
         }
     }

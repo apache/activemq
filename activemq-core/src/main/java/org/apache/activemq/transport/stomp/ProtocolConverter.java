@@ -505,7 +505,9 @@ public class ProtocolConverter {
         }
 
         String selector = headers.remove(Stomp.Headers.Subscribe.SELECTOR);
-        consumerInfo.setSelector(selector);
+        if( selector!=null ) {
+            consumerInfo.setSelector("convert_string_expressions:"+selector);
+        }
 
         IntrospectionSupport.setProperties(consumerInfo, headers, "activemq.");
 
