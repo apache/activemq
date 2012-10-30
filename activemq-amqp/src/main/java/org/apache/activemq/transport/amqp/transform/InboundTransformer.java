@@ -99,23 +99,31 @@ public abstract class InboundTransformer {
     }
 
     protected void populateMessage(Message jms, org.apache.qpid.proton.message.Message amqp) throws Exception {
-        final Header header = amqp.getHeader();
-        if( header!=null ) {
-            if( header.getDurable()!=null ) {
-                jms.setJMSDeliveryMode(header.getDurable().booleanValue() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
-            }
-            if( header.getPriority()!=null ) {
-                jms.setJMSPriority(header.getPriority().intValue());
-            }
-            if( header.getTtl()!=null ) {
-                jms.setJMSExpiration(header.getTtl().longValue());
-            }
-            if( header.getFirstAcquirer() !=null ) {
-                jms.setBooleanProperty(prefixVendor + "FirstAcquirer", header.getFirstAcquirer());
-            }
-            if( header.getDeliveryCount()!=null ) {
-                vendor.setJMSXDeliveryCount(jms, header.getDeliveryCount().longValue());
-            }
+        Header header = amqp.getHeader();
+        if( header==null ) {
+            header = new Header();
+        }
+
+        if( header.getDurable()!=null ) {
+            jms.setJMSDeliveryMode(header.getDurable().booleanValue() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
+        } else {
+            jms.setJMSDeliveryMode(defaultDeliveryMode);
+        }
+        if( header.getPriority()!=null ) {
+            jms.setJMSPriority(header.getPriority().intValue());
+        } else {
+            jms.setJMSPriority(defaultPriority);
+        }
+        if( header.getTtl()!=null ) {
+            jms.setJMSExpiration(header.getTtl().longValue());
+        } else {
+            jms.setJMSExpiration(defaultTtl);
+        }
+        if( header.getFirstAcquirer() !=null ) {
+            jms.setBooleanProperty(prefixVendor + "FirstAcquirer", header.getFirstAcquirer());
+        }
+        if( header.getDeliveryCount()!=null ) {
+            vendor.setJMSXDeliveryCount(jms, header.getDeliveryCount().longValue());
         }
 
         final DeliveryAnnotations da = amqp.getDeliveryAnnotations();
