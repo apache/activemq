@@ -74,7 +74,7 @@ public class PropertyExpression implements Expression {
         JMS_PROPERTY_EXPRESSIONS.put("JMSDeliveryMode", new SubExpression() {
 
             public Object evaluate(Message message) {
-                return Integer.valueOf(message.isPersistent() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
+                return message.isPersistent() ? "PERSISTENT" : "NON_PERSISTENT";
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSPriority", new SubExpression() {
