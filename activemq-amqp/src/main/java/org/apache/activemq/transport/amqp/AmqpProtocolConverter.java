@@ -324,7 +324,6 @@ class AmqpProtocolConverter {
     private ConnectionInfo connectionInfo = new ConnectionInfo();
     private long nextSessionId = 0;
     private long nextTempDestinationId = 0;
-    HashMap<Sender, ActiveMQDestination> tempDestinations = new HashMap<Sender, ActiveMQDestination>();
 
     static abstract class AmqpDeliveryListener {
         abstract public void onDelivery(Delivery delivery) throws Exception;
@@ -604,8 +603,19 @@ class AmqpProtocolConverter {
             receiver.open();
             pumpProtonToSocket();
         } else {
+            org.apache.qpid.proton.type.messaging.Target target = (Target) remoteTarget;
             ProducerId producerId = new ProducerId(sessionContext.sessionId, sessionContext.nextProducerId++);
-            ActiveMQDestination dest = createDestination(remoteTarget);
+            ActiveMQDestination dest;
+            if( target.getDynamic() ) {
+                dest = createTempQueue();
+                org.apache.qpid.proton.type.messaging.Target actualTarget = new org.apache.qpid.proton.type.messaging.Target();
+                actualTarget.setAddress(dest.getQualifiedName());
+                actualTarget.setDynamic(true);
+                receiver.setTarget(actualTarget);
+            } else {
+                dest = createDestination(remoteTarget);
+            }
+
             ProducerContext producerContext = new ProducerContext(producerId, dest);
 
             receiver.setContext(producerContext);
@@ -643,12 +653,6 @@ class AmqpProtocolConverter {
         } else {
             throw new RuntimeException("Unexpected terminus type: "+terminus);
         }
-    }
-
-    private Source createSource(ActiveMQDestination dest) {
-        org.apache.qpid.proton.type.messaging.Source rc = new org.apache.qpid.proton.type.messaging.Source();
-        rc.setAddress(getInboundTransformer().getVendor().toAddress(dest));
-        return rc;
     }
 
     OutboundTransformer outboundTransformer = new AutoOutboundTransformer(ActiveMQJMSVendor.INSTANCE);
@@ -736,22 +740,27 @@ class AmqpProtocolConverter {
                 final MessageDispatch md = outbound.removeFirst();
                 try {
                     final ActiveMQMessage jms = (ActiveMQMessage) md.getMessage();
-                    jms.setRedeliveryCounter(md.getRedeliveryCounter());
-                    final EncodedMessage amqp = outboundTransformer.transform(jms);
-                    if( amqp!=null && amqp.getLength() > 0 ) {
-
-                        currentBuffer = new Buffer(amqp.getArray(), amqp.getArrayOffset(), amqp.getLength());
-                        if( presettle ) {
-                            currentDelivery = sender.delivery(EMPTY_BYTE_ARRAY, 0, 0);
-                        } else {
-                            final byte[] tag = nextTag();
-                            currentDelivery = sender.delivery(tag, 0, tag.length);
-                        }
-                        currentDelivery.setContext(md);
-
+                    if( jms==null ) {
+                        // It's the end of browse signal.
+                        sender.drained();
                     } else {
-                        // TODO: message could not be generated what now?
+                        jms.setRedeliveryCounter(md.getRedeliveryCounter());
+                        final EncodedMessage amqp = outboundTransformer.transform(jms);
+                        if( amqp!=null && amqp.getLength() > 0 ) {
 
+                            currentBuffer = new Buffer(amqp.getArray(), amqp.getArrayOffset(), amqp.getLength());
+                            if( presettle ) {
+                                currentDelivery = sender.delivery(EMPTY_BYTE_ARRAY, 0, 0);
+                            } else {
+                                final byte[] tag = nextTag();
+                                currentDelivery = sender.delivery(tag, 0, tag.length);
+                            }
+                            currentDelivery.setContext(md);
+
+                        } else {
+                            // TODO: message could not be generated what now?
+
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -857,26 +866,17 @@ class AmqpProtocolConverter {
         subscriptionsByConsumerId.put(id, consumerContext);
 
         ActiveMQDestination dest;
-        final Source remoteSource = sender.getRemoteSource();
-        if( remoteSource != null ) {
-            dest = createDestination(remoteSource);
+        org.apache.qpid.proton.type.messaging.Source source = (org.apache.qpid.proton.type.messaging.Source)sender.getRemoteSource();
+        if( source != null && !source.getDynamic() ) {
+            dest = createDestination(source);
         } else {
             // lets create a temp dest.
-//            if (topic) {
-//                dest = new ActiveMQTempTopic(info.getConnectionId(), tempDestinationIdGenerator.getNextSequenceId());
-//            } else {
-                dest = new ActiveMQTempQueue(connectionId, nextTempDestinationId++);
-//            }
-
-            DestinationInfo info = new DestinationInfo();
-            info.setConnectionId(connectionId);
-            info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
-            info.setDestination(dest);
-            sendToActiveMQ(info, null);
-            tempDestinations.put(sender, dest);
-            sender.setSource(createSource(dest));
+            dest = createTempQueue();
+            source = new org.apache.qpid.proton.type.messaging.Source();
+            source.setAddress(dest.getQualifiedName());
+            source.setDynamic(true);
+            sender.setSource(source);
         }
-
 
         sender.setContext(consumerContext);
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
@@ -901,6 +901,17 @@ class AmqpProtocolConverter {
             }
         });
 
+    }
+
+    private ActiveMQDestination createTempQueue() {
+        ActiveMQDestination rc;
+        rc = new ActiveMQTempQueue(connectionId, nextTempDestinationId++);
+        DestinationInfo info = new DestinationInfo();
+        info.setConnectionId(connectionId);
+        info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
+        info.setDestination(rc);
+        sendToActiveMQ(info, null);
+        return rc;
     }
 
 //    void onUnSubscribe(UNSUBSCRIBE command) {

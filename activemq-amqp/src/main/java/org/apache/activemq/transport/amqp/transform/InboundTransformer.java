@@ -194,14 +194,17 @@ public abstract class InboundTransformer {
 
     private void setProperty(Message msg, String key, Object value) throws JMSException {
         //TODO support all types
-        if( value instanceof String ) {
-            msg.setStringProperty(key, (String) value);
-        } else if( value instanceof Integer ) {
-            msg.setIntProperty(key, ((Integer) value).intValue());
-        } else if( value instanceof Long ) {
-            msg.setLongProperty(key, ((Long) value).longValue());
-        } else {
-            throw new RuntimeException("Unexpected value type: "+value.getClass());
-        }
+        msg.setObjectProperty(key, value);
+//        if( value instanceof String ) {
+//            msg.setStringProperty(key, (String) value);
+//        } else if( value instanceof Double ) {
+//            msg.setDoubleProperty(key, ((Double) value).doubleValue());
+//        } else if( value instanceof Integer ) {
+//            msg.setIntProperty(key, ((Integer) value).intValue());
+//        } else if( value instanceof Long ) {
+//            msg.setLongProperty(key, ((Long) value).longValue());
+//        } else {
+//            throw new RuntimeException("Unexpected value type: "+value.getClass());
+//        }
     }
 }
