@@ -46,7 +46,7 @@ public final class JmDNSFactory {
         return tracker.jmDNS;
     }
 
-    static synchronized boolean onClose(InetAddress address, JmDNS dns) {
+    static synchronized boolean onClose(InetAddress address) {
         UsageTracker tracker = registry.get(address);
         if (tracker != null) {
             if (tracker.count.decrementAndGet() == 0) {

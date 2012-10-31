@@ -92,7 +92,9 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
             Thread thread = new Thread() {
                 public void run() {
                     try {
-                        JmDNSFactory.onClose(getLocalAddress(), closeTarget);
+                        if (JmDNSFactory.onClose(getLocalAddress())) {
+                            closeTarget.close();
+                        };
                     } catch (IOException e) {
                         LOG.debug("Error closing JmDNS " + getLocalhost() + ". This exception will be ignored.", e);
                     }
