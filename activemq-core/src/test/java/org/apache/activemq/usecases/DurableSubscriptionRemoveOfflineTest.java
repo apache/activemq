@@ -16,15 +16,16 @@
  */
 package org.apache.activemq.usecases;
 
-import junit.framework.Test;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.Wait;
-
 import javax.jms.Connection;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
+
+import junit.framework.Test;
+
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
 
 public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupport {
 
@@ -46,6 +47,21 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
         return answer;
     }
 
+    protected BrokerService restartBroker() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+        broker = null;
+
+        broker = super.createBroker();
+        broker.setOfflineDurableSubscriberTaskSchedule(3 * 1000);
+        broker.setOfflineDurableSubscriberTimeout(5 * 1000);
+
+        broker.start();
+        broker.waitUntilStarted();
+
+        return broker;
+    }
+
     public void testRemove() throws Exception {
         Connection connection = createConnection();
         connection.setClientID("cliID");
@@ -60,10 +76,29 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
             public boolean isSatisified() throws Exception {
                  return broker.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
             }
-        }, 10000);
-
+        }, 15000);
     }
 
+    public void testRemoveAfterRestart() throws Exception {
+        Connection connection = createConnection();
+        connection.setClientID("cliID");
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicSubscriber subscriber = session.createDurableSubscriber((Topic) createDestination(), "subName");
+        subscriber.close();
+        connection.close();
+
+        restartBroker();
+
+        assertTrue(broker.getAdminView().getInactiveDurableTopicSubscribers().length == 1);
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                 return broker.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
+            }
+        }, 20000);
+    }
 
     protected boolean isPersistent() {
         return true;
