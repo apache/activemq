@@ -41,6 +41,7 @@ import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.InvalidSelectorException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
@@ -626,11 +627,13 @@ class AmqpProtocolConverter {
             producerInfo.setDestination(dest);
             sendToActiveMQ(producerInfo, new ResponseHandler() {
                 public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
-                    receiver.open();
                     if (response.isException()) {
-                        // If the connection attempt fails we close the socket.
+                        receiver.setTarget(null);
                         Throwable exception = ((ExceptionResponse) response).getException();
+                        ((LinkImpl)receiver).setLocalError(new EndpointError(exception.getClass().getName(), exception.getMessage()));
                         receiver.close();
+                    } else {
+                        receiver.open();
                     }
                     pumpProtonToSocket();
                 }
@@ -899,11 +902,17 @@ class AmqpProtocolConverter {
 
         sendToActiveMQ(consumerInfo, new ResponseHandler() {
             public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
-                sender.open();
                 if (response.isException()) {
+                    sender.setSource(null);
                     Throwable exception = ((ExceptionResponse) response).getException();
-                    exception.printStackTrace();
+                    String name = exception.getClass().getName();
+                    if( exception instanceof InvalidSelectorException ) {
+                        name = "amqp:invalid-field";
+                    }
+                    ((LinkImpl)sender).setLocalError(new EndpointError(name, exception.getMessage()));
                     sender.close();
+                } else {
+                    sender.open();
                 }
                 pumpProtonToSocket();
             }

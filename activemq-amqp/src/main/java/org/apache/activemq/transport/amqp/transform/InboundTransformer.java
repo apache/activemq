@@ -138,7 +138,11 @@ public abstract class InboundTransformer {
         if( ma!=null ) {
             for (Map.Entry entry : (Set<Map.Entry>)ma.getValue().entrySet()) {
                 String key = entry.getKey().toString();
-                setProperty(jms, prefixVendor + prefixMessageAnnotations + key, entry.getValue());
+                if( "x-opt-jms-type".equals(key) ) {
+                    jms.setJMSType(entry.getValue().toString());
+                } else {
+                    setProperty(jms, prefixVendor + prefixMessageAnnotations + key, entry.getValue());
+                }
             }
         }
 

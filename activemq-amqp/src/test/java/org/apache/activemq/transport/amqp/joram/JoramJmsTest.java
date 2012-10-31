@@ -47,6 +47,9 @@ public class JoramJmsTest extends TestCase {
         TestSuite suite = new TestSuite();
 
         // Passing tests
+        suite.addTestSuite(SelectorSyntaxTest.class);
+        suite.addTestSuite(QueueSessionTest.class);
+        suite.addTestSuite(SelectorTest.class);
         suite.addTestSuite(TemporaryQueueTest.class);
         suite.addTestSuite(ConnectionTest.class);
         suite.addTestSuite(SessionTest.class);
@@ -58,10 +61,6 @@ public class JoramJmsTest extends TestCase {
 
         if (false ) {
 
-// TODO: Fails due to selectors not being implemented yet.
-        suite.addTestSuite(SelectorSyntaxTest.class);
-        suite.addTestSuite(SelectorTest.class);
-        suite.addTestSuite(QueueSessionTest.class);
 // TODO: Fails due to https://issues.apache.org/jira/browse/PROTON-110 and DestinationImpl vs QueueImpl mapping issues
         suite.addTestSuite(MessageHeaderTest.class);
 // TODO: Fails due to JMS client setup browser before getEnumeration() gets called.
