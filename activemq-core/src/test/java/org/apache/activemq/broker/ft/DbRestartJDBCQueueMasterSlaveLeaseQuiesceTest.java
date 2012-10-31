@@ -64,4 +64,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBC
         restartDelay = 3000;
         testSendReceive();
     }
+
+    // ignore this test case
+    public void testAdvisory() throws Exception {}
 }

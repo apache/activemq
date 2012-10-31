@@ -40,7 +40,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     long lockKeepAlivePeriod = 0;
     private ScheduledFuture<?> keepAliveTicket;
     private ScheduledThreadPoolExecutor clockDaemon;
-    private BrokerService brokerService;
+    protected BrokerService brokerService;
 
     /**
      * Initialize resources before locking

@@ -83,7 +83,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public static final long DEFAULT_LOCK_KEEP_ALIVE_PERIOD = 30 * 1000;
 
     private WireFormat wireFormat = new OpenWireFormat();
-    private BrokerService brokerService;
     private Statements statements;
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
@@ -314,7 +313,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 }
             }, 0, cleanupPeriod, TimeUnit.MILLISECONDS);
         }
-        
         createMessageAudit();
     }
 
