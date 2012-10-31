@@ -82,10 +82,28 @@ public class BrokerMojo extends AbstractMojo {
      */
     private Properties systemProperties;
 
+    /**
+     * Skip execution of the ActiveMQ Broker plugin if set to true
+     * 
+     * @parameter expression="${skip}"
+     */
+    private boolean skip;
+
     public void execute() throws MojoExecutionException {
         try {
+            if (skip) {
+                getLog().info("Skipped execution of ActiveMQ Broker");
+                return;
+            }
+
             setSystemProperties();
+
             getLog().info("Loading broker configUri: " + configUri);
+            if (XBeanFileResolver.isXBeanFile(configUri)) {
+                getLog().debug("configUri before transformation: " + configUri);
+                configUri = XBeanFileResolver.toUrlCompliantAbsolutePath(configUri);
+                getLog().debug("configUri after transformation: " + configUri);
+            }
 
             final BrokerService broker = BrokerFactory.createBroker(configUri);
             if (fork) {
