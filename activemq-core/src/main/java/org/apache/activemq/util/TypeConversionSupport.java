@@ -29,6 +29,13 @@ import org.apache.activemq.command.ActiveMQDestination;
  */
 public final class TypeConversionSupport {
 
+    private static final Converter IDENTITY_CONVERTER = new Converter() {
+        @Override
+        public Object convert(Object value) {
+            return value;
+        }
+    };
+
     private static class ConversionKey {
         final Class from;
         final Class to;
@@ -189,6 +196,10 @@ public final class TypeConversionSupport {
         }
         if (to.isPrimitive()) {
             to = convertPrimitiveTypeToWrapperType(to);
+        }
+
+        if (from.equals(to)) {
+            return IDENTITY_CONVERTER;
         }
 
         return CONVERSION_MAP.get(new ConversionKey(from, to));
