@@ -75,12 +75,12 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
         subscriber.close();
         connection.close();
 
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                  return broker.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
             }
-        }, 15000);
+        }, 15000));
     }
 
     public void testRemoveAfterRestart() throws Exception {
