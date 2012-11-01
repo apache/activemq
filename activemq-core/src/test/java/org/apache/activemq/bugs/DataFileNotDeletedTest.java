@@ -24,26 +24,32 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
-import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+
+import org.junit.*;
+import org.junit.rules.TestName;
+import static org.junit.Assert.assertEquals;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*
  * see https://issues.apache.org/activemq/browse/AMQ-1926
  */
-public class DataFileNotDeletedTest extends TestCase {
-
+public class DataFileNotDeletedTest {
+    @Rule
+    public TestName testName = new TestName();
     private static final Logger LOG = LoggerFactory.getLogger(DataFileNotDeletedTest.class);
 
     private final CountDownLatch latch = new CountDownLatch(max_messages);
     private final static int max_messages = 600;
     private static int messageCounter;
-    private final String destinationName = getName()+"_Queue";
+    private final String destinationName = testName.getMethodName()+"_Queue";
     private BrokerService broker;
     private Connection receiverConnection;
     private Connection producerConnection;
@@ -53,7 +59,7 @@ public class DataFileNotDeletedTest extends TestCase {
     AMQPersistenceAdapter persistentAdapter;
     protected static final String payload = new String(new byte[512]);
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         messageCounter = 0;
         startBroker();
@@ -63,17 +69,20 @@ public class DataFileNotDeletedTest extends TestCase {
         producerConnection.start();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         receiverConnection.close();
         producerConnection.close();
         broker.stop();
     }
 
+    @Test
     public void testForDataFileNotDeleted() throws Exception {
         doTestForDataFileNotDeleted(false);
     }
 
+    @Ignore(value="See AMQ-3930")
+    @Test
     public void testForDataFileNotDeletedTransacted() throws Exception {
         doTestForDataFileNotDeleted(true);
     }
