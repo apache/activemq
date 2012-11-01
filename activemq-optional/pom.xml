@@ -36,15 +36,15 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
-	<dependency>
-	  <groupId>org.slf4j</groupId>
-	  <artifactId>slf4j-api</artifactId>
-	</dependency>
-	<dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
-	  <scope>test</scope>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -89,11 +89,6 @@
         <version>${jetty-version}</version>
     </dependency>
     <dependency>
-      <groupId>axis</groupId>
-      <artifactId>axis</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
     </dependency>
@@ -110,19 +105,19 @@
       <artifactId>commons-logging</artifactId>
       <scope>test</scope>
     </dependency>
-	<!-- log4j jms appender and test tool needs this -->
-	<dependency>
+    <!-- log4j jms appender and test tool needs this -->
+    <dependency>
       <groupId>log4j</groupId>
-	  <artifactId>log4j</artifactId>
-	  <scope>compile</scope>
-	  <optional>true</optional>
-	</dependency>
-	<dependency>
+      <artifactId>log4j</artifactId>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>compile</scope>
       <optional>true</optional>
-	</dependency>
+    </dependency>
     <dependency>
       <groupId>org.apache.xmlbeans</groupId>
       <artifactId>xmlbeans</artifactId>
