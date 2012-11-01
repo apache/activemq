@@ -191,7 +191,7 @@ ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 # You only have to configure the first four settings if you run a ibm jvm, caused by the
 # fact that IBM's jvm does not support VirtualMachine.attach(PID)
 # (see also com.sun.management.jmxremote.port, .jmx.password.file and .jmx.access.file )
-#ACTIVEMQ_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
+#ACTIVEMQ_SUNJMX_CONTROL="--jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:1099/jmxrmi --jmxuser controlRole --jmxpassword abcd1234"
 ACTIVEMQ_SUNJMX_CONTROL=""
 
 # Specify the queue manager URL for using "browse" option of sysv initscript
