@@ -69,9 +69,9 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(UnifiedSessionTest.class);
 // TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
         suite.addTestSuite(MessageTypeTest.class);
-// TODO: Fails due to: javax.jms.IllegalStateException: Cannot set client-id to "publisherConnection"; client-id must be set on connection creation
+//TODO: Should work with qpid 0.19-SNAPSHOT
         suite.addTestSuite(TemporaryTopicTest.class);
-//TODO: Should work with qpid 0.19-SNAPSHOT when patch for https://issues.apache.org/jira/browse/QPID-4408 is applied
+// TODO: Should work with qpid 0.19-SNAPSHOT when patch for https://issues.apache.org/jira/browse/QPID-4408 is applied
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(TopicSessionTest.class);
 
