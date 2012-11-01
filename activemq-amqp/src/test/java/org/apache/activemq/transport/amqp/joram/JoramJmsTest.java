@@ -71,6 +71,7 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(MessageTypeTest.class);
 // TODO: Fails due to: javax.jms.IllegalStateException: Cannot set client-id to "publisherConnection"; client-id must be set on connection creation
         suite.addTestSuite(TemporaryTopicTest.class);
+//TODO: Should work with qpid 0.19-SNAPSHOT when patch for https://issues.apache.org/jira/browse/QPID-4408 is applied
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(TopicSessionTest.class);
 
