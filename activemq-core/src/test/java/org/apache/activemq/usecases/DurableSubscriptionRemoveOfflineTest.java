@@ -26,8 +26,12 @@ import junit.framework.Test;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionRemoveOfflineTest.class);
 
     protected void setUp() throws Exception {
         useTopic = true;
@@ -88,16 +92,20 @@ public class DurableSubscriptionRemoveOfflineTest extends EmbeddedBrokerTestSupp
         subscriber.close();
         connection.close();
 
+        LOG.info("Broker restarting, wait for inactive cleanup afterwards.");
+
         restartBroker();
+
+        LOG.info("Broker restarted, wait for inactive cleanup now.");
 
         assertTrue(broker.getAdminView().getInactiveDurableTopicSubscribers().length == 1);
 
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                  return broker.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
             }
-        }, 20000);
+        }, 20000));
     }
 
     protected boolean isPersistent() {

@@ -72,6 +72,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return offlineTimestamp.get();
     }
 
+    public void setOfflineTimestamp(long timestamp) {
+        offlineTimestamp.set(timestamp);
+    }
+
     public boolean isFull() {
         return !active.get() || super.isFull();
     }
@@ -139,7 +143,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 }
             }
 
-            LOG.debug("Activating " + this);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Activating " + this);
+            }
             if (!keepDurableSubsActive) {
                 for (Destination destination : durableDestinations.values()) {
                     Topic topic = (Topic) destination;
@@ -170,7 +176,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
-        LOG.debug("Deactivating keepActive=" + keepDurableSubsActive + ", " + this);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Deactivating keepActive=" + keepDurableSubsActive + ", " + this);
+        }
         active.set(false);
         offlineTimestamp.set(System.currentTimeMillis());
         this.usageManager.getMemoryUsage().removeUsageListener(this);

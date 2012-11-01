@@ -86,7 +86,7 @@ public class TopicRegion extends AbstractRegion {
         for (Map.Entry<SubscriptionKey, DurableTopicSubscription> entry : durableSubscriptions.entrySet()) {
             DurableTopicSubscription sub = entry.getValue();
             if (!sub.isActive()) {
-               long offline = sub.getOfflineTimestamp();
+                long offline = sub.getOfflineTimestamp();
                 if (offline != -1 && now - offline >= broker.getBrokerService().getOfflineDurableSubscriberTimeout()) {
                     LOG.info("Destroying durable subscriber due to inactivity: " + sub);
                     try {
@@ -243,6 +243,7 @@ public class TopicRegion extends AbstractRegion {
                     c.setClientId(key.getClientId());
                     c.setConnectionId(consumerInfo.getConsumerId().getParentId().getParentId());
                     sub = (DurableTopicSubscription)createSubscription(c, consumerInfo);
+                    sub.setOfflineTimestamp(System.currentTimeMillis());
                 }
 
                 if (dupChecker.contains(sub)) {
@@ -258,7 +259,7 @@ public class TopicRegion extends AbstractRegion {
             // that would match this destination..
             durableSubscriptions.values();
             for (DurableTopicSubscription sub : durableSubscriptions.values()) {
-                // Skip over subscriptions that we allready added..
+                // Skip over subscriptions that we already added..
                 if (dupChecker.contains(sub)) {
                     continue;
                 }
