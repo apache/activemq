@@ -46,7 +46,6 @@
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>0.3</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <axis-version>1.4</axis-version>
     <camel-version>2.10.2</camel-version>
     <camel-version-range>[2.10,3)</camel-version-range>
     <cglib-version>2.0</cglib-version>
@@ -815,12 +814,6 @@
         <groupId>org.eclipse.jetty.aggregate</groupId>
         <artifactId>jetty-all-server</artifactId>
         <version>${jetty-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>axis</groupId>
-        <artifactId>axis</artifactId>
-        <version>${axis-version}</version>
       </dependency>
 
       <dependency>
