@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
 import org.apache.kahadb.util.IOHelper;
@@ -42,7 +43,7 @@ public abstract class IndexTestSupport extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        directory = new File(IOHelper.getDefaultDataDirectory());
+        directory = new File(IOHelper.getDefaultDataDirectory() + System.currentTimeMillis());
         IOHelper.delete(directory);
     }
 
@@ -50,6 +51,9 @@ public abstract class IndexTestSupport extends TestCase {
         if( pf!=null ) {
             pf.unload();
             pf.delete();
+        }
+        if (directory != null) {
+            IOHelper.delete(directory);
         }
     }
 
@@ -148,5 +152,4 @@ public abstract class IndexTestSupport extends TestCase {
             assertNull(item);
         }
     }
-
 }
