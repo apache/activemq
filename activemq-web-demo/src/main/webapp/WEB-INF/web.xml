@@ -26,7 +26,7 @@
     <!-- context config -->
     <context-param>
         <param-name>org.apache.activemq.brokerURL</param-name>
-        <param-value>vm://localhost</param-value>
+        <param-value>vm://amq-broker</param-value>
         <description>The URL of the Message Broker to connect to</description>
     </context-param>
     <context-param>

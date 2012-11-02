@@ -125,7 +125,7 @@
     -->
 
     <!--
-        Enable web consoles, REST and Ajax APIs and demos
+        Enable web consoles, REST and Ajax APIs 
         Take a look at activemq-jetty.xml for more details
     -->
     <import resource="jetty.xml"/>

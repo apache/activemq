@@ -37,6 +37,7 @@
       <outputDirectory>conf/</outputDirectory>
       <includes>
         <include>activemq-*.xml</include>
+        <include>jetty-*.xml</include>
       </includes>
     </fileSet>
 
@@ -60,7 +61,7 @@
     <!-- the web demo -->
     <fileSet>
       <directory>../activemq-web-demo/src/main/webapp</directory>
-      <outputDirectory>/webapps/demo</outputDirectory>
+      <outputDirectory>/webapps-demo/demo</outputDirectory>
       <excludes>
         <exclude>**/activemq.xml</exclude>
         <exclude>**/webconsole-embedded.xml</exclude>

@@ -29,15 +29,11 @@
 <beans
    xmlns="http://www.springframework.org/schema/beans"  
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+   xsi:schemaLocation="
+     http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
   
-  	<camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
-
-        <!-- You can use a <packages> element for each root package to search for Java routes -->
-        <packageScan>
-           <package>org.foo.bar</package>
-        </packageScan>
+    <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 
         <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
         <route>
@@ -57,10 +53,11 @@
     <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
         <property name="connectionFactory">
           <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-            <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
+            <property name="brokerURL" value="vm://amq-broker?create=false"/>
             <property name="userName" value="${activemq.username}"/>
             <property name="password" value="${activemq.password}"/>
           </bean>
         </property>
     </bean>
+
 </beans>

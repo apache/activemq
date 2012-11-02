@@ -227,7 +227,7 @@
 
           http://activemq.apache.org/web-console.html
     -->
-    <import resource="jetty.xml"/>
+    <import resource="jetty-demo.xml"/>
 
 
     <!--
