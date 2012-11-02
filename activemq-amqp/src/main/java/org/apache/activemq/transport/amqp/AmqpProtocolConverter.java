@@ -241,7 +241,7 @@ class AmqpProtocolConverter {
                 link = protonConnection.linkHead(ACTIVE_STATE, ALL_STATES);
                 while (link != null) {
                     ((AmqpDeliveryListener)link.getContext()).drainCheck();
-                    link = link.next(ACTIVE_STATE, CLOSED_STATE);
+                    link = link.next(ACTIVE_STATE, ALL_STATES);
                 }
 
 
