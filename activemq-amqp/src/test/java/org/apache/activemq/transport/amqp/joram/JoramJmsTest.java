@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.joram;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
@@ -38,6 +39,10 @@ import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
 import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
@@ -45,6 +50,25 @@ public class JoramJmsTest extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
+
+        // TODO: Fix these tests..
+        if (false) {
+            // Fails due to durable subs not being implemented.
+            suite.addTestSuite(TopicSessionTest.class);
+            // Fails due to https://issues.apache.org/jira/browse/PROTON-110 and DestinationImpl vs QueueImpl mapping issues
+            suite.addTestSuite(MessageHeaderTest.class);
+            // Fails due to inconsistent Message mapping in the JMS client.
+            suite.addTestSuite(MessageTypeTest.class);
+            suite.addTestSuite(QueueBrowserTest.class);
+
+        }
+
+        // TODO: enable once QPID 0.19 is released
+        if(false) {
+            suite.addTestSuite(UnifiedSessionTest.class);
+            suite.addTestSuite(TemporaryTopicTest.class);
+            suite.addTestSuite(TopicConnectionTest.class);
+        }
 
         // Passing tests
         suite.addTestSuite(SelectorSyntaxTest.class);
@@ -59,24 +83,6 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(MessagePropertyConversionTest.class);
         suite.addTestSuite(MessagePropertyTest.class);
 
-        if (false ) {
-
-// TODO: Fails due to https://issues.apache.org/jira/browse/PROTON-110 and DestinationImpl vs QueueImpl mapping issues
-        suite.addTestSuite(MessageHeaderTest.class);
-// TODO: Fails due to JMS client setup browser before getEnumeration() gets called.
-        suite.addTestSuite(QueueBrowserTest.class);
-// TODO: Should work with qpid 0.19-SNAPSHOT when patch for https://issues.apache.org/jira/browse/QPID-4409
-        suite.addTestSuite(UnifiedSessionTest.class);
-// TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
-        suite.addTestSuite(MessageTypeTest.class);
-//TODO: Should work with qpid 0.19-SNAPSHOT
-        suite.addTestSuite(TemporaryTopicTest.class);
-// TODO: Should work with qpid 0.19-SNAPSHOT when patch for https://issues.apache.org/jira/browse/QPID-4408 is applied
-        suite.addTestSuite(TopicConnectionTest.class);
-        suite.addTestSuite(TopicSessionTest.class);
-
-
-        }
         return suite;
     }
 

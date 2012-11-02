@@ -888,7 +888,7 @@ class AmqpProtocolConverter {
         consumerInfo.setDestination(dest);
         consumerInfo.setPrefetchSize(100);
         consumerInfo.setDispatchAsync(true);
-        if( source.getDistributionMode() == COPY) {
+        if( source.getDistributionMode() == COPY && dest.isQueue() ) {
             consumerInfo.setBrowser(true);
         }
 
