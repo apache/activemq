@@ -28,13 +28,10 @@ import javax.naming.NamingException;
  * when ActiveMQ is used as WebSphere Generic JMS Provider. It is proved that it
  * works on WebSphere 5.1. The reason for using this class is that custom
  * property defined for Generic JMS Provider are passed to InitialContextFactory
- * only if it begins with java.naming or javax.naming prefix. Additionaly
+ * only if it begins with java.naming or javax.naming prefix. Additionally
  * provider url for the JMS provider can not contain ',' character that is
  * necessary when the list of nodes is provided. So the role of this class is to
- * transform properties before passing it to
- * <CODE>ActiveMQInitialContextFactory</CODE>.
- *
- * @author Pawel Tucholski
+ * transform properties before passing it to <tt>ActiveMQInitialContextFactory</tt>.
  */
 public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFactory {
 
@@ -42,7 +39,6 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
      * @see javax.naming.spi.InitialContextFactory#getInitialContext(java.util.Hashtable)
      */
     public Context getInitialContext(Hashtable environment) throws NamingException {
-
         return super.getInitialContext(transformEnvironment(environment));
     }
 
@@ -58,6 +54,7 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
      * @param environment properties for transformation
      * @return environment after transformation
      */
+    @SuppressWarnings("unchecked")
     protected Hashtable transformEnvironment(Hashtable environment) {
 
         Hashtable environment1 = new Hashtable();
@@ -70,11 +67,11 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
                 String key = (String)entry.getKey();
                 String value = (String)entry.getValue();
 
-                if (key.startsWith("java.naming.queue")) {
+                if (key.startsWith("java.naming.queue.")) {
                     String key1 = key.substring("java.naming.queue.".length());
                     key1 = key1.replace('.', '/');
                     environment1.put("queue." + key1, value);
-                } else if (key.startsWith("java.naming.topic")) {
+                } else if (key.startsWith("java.naming.topic.")) {
                     String key1 = key.substring("java.naming.topic.".length());
                     key1 = key1.replace('.', '/');
                     environment1.put("topic." + key1, value);
@@ -85,9 +82,8 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
                     String key1 = key.substring("java.naming.".length());
                     environment1.put(key1, value);
                 } else if (key.startsWith(Context.PROVIDER_URL)) {
-                    // websphere administration console does not accept the , character
-                    // in provider url, so ; must be used
-                    // all ; to ,
+                    // Websphere administration console does not accept the , character
+                    // in provider url, so ; must be used all ; to ,
                     value = value.replace(';', ',');
                     environment1.put(Context.PROVIDER_URL, value);
                 } else {
