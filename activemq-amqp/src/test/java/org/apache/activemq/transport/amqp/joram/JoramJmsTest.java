@@ -65,7 +65,7 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(MessageHeaderTest.class);
 // TODO: Fails due to JMS client setup browser before getEnumeration() gets called.
         suite.addTestSuite(QueueBrowserTest.class);
-// TODO: Fails due to JMS client impl error.
+// TODO: Should work with qpid 0.19-SNAPSHOT when patch for https://issues.apache.org/jira/browse/QPID-4409
         suite.addTestSuite(UnifiedSessionTest.class);
 // TODO: Fails due to inconsistent ObjectMessage mapping in the JMS client.
         suite.addTestSuite(MessageTypeTest.class);
