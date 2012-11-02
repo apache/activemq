@@ -28,7 +28,7 @@
         <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
         <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
         <bundle dependency="true">mvn:commons-codec/commons-codec/1.4</bundle>
-        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_4</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_5</bundle>
         <!-- TODO: oro is not really needed, but we need a new velocity bundle to fix this: https://issues.apache.org/jira/browse/SMX4-1244 -->
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
