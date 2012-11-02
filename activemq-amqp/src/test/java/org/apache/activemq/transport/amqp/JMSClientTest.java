@@ -23,6 +23,8 @@ import org.junit.Test;
 
 import javax.jms.*;
 
+import java.util.Enumeration;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -44,11 +46,20 @@ public class JMSClientTest extends AmqpTestSupport {
             msg.setObjectProperty("x", 1);
             p.send(msg);
 //            session.commit();
-            MessageConsumer c = session.createConsumer(queue, "x = 1");
+/*            MessageConsumer c = session.createConsumer(queue, "x = 1");
             Message received = c.receive(2000);
             assertNotNull(received);
             System.out.println("first: " + ((TextMessage)received).getText());
-            System.out.println(received.getJMSRedelivered());
+            System.out.println(received.getJMSRedelivered());*/
+
+
+            QueueBrowser browser = session.createBrowser(queue);
+            Enumeration enumeration = browser.getEnumeration();
+            while (enumeration.hasMoreElements()) {
+
+                System.out.println("BROWSE " + enumeration.nextElement());
+            }
+
 
 //            session.rollback();
 //
