@@ -29,8 +29,6 @@
         <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
         <bundle dependency="true">mvn:commons-codec/commons-codec/1.4</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_5</bundle>
-        <!-- TODO: oro is not really needed, but we need a new velocity bundle to fix this: https://issues.apache.org/jira/browse/SMX4-1244 -->
-        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_3</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${servicemix.specs.version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
@@ -39,6 +37,11 @@
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/${dom4j-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
+        <!-- the following 4 bundles is needed by activemq-console -->
+        <bundle dependency="true">mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
+        <bundle dependency="true">mvn:org.fusesource.hawtbuf/hawtbuf-proto/${hawtbuf-version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson-version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-core/${project.version}</bundle>
         <bundle>mvn:org.apache.activemq/kahadb/${project.version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-console/${project.version}</bundle>

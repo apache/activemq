@@ -78,13 +78,15 @@
     </dependency>
 
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- import/export command -->
+    <dependency>
       <groupId>org.fusesource.hawtbuf</groupId>
       <artifactId>hawtbuf-proto</artifactId>
       <version>${hawtbuf-version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
