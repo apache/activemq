@@ -34,8 +34,8 @@
         <exclude>conf/*.ks</exclude>
         <exclude>conf/*.cert</exclude>
         <exclude>example/**/*.sh</exclude>
-		<exclude>example/**/*.rb</exclude>
-	  </excludes>
+        <exclude>example/**/*.rb</exclude>
+      </excludes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
       <lineEnding>unix</lineEnding>
@@ -80,7 +80,7 @@
       <directoryMode>0755</directoryMode>
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
-	</fileSet>
+    </fileSet>
 
     <!-- Copy over example scripts that need unix line endings and also chmod to 755 -->
     <fileSet>
@@ -93,9 +93,9 @@
       <directoryMode>0755</directoryMode>
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
-	  <!-- need to filter to ensure script files have AMQ version number included -->
+      <!-- need to filter to ensure script files have AMQ version number included -->
       <filtered>true</filtered>
-	</fileSet>
+    </fileSet>
 
   </fileSets>
 
