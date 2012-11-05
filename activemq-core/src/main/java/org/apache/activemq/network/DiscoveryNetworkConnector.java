@@ -21,6 +21,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.management.ObjectName;
 
@@ -51,7 +53,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     private DiscoveryAgent discoveryAgent;
     private Map<String, String> parameters;
-
+    private ConcurrentMap<URI, DiscoveryEvent> activeEvents = new ConcurrentHashMap<URI, DiscoveryEvent>();
     public DiscoveryNetworkConnector() {
     }
 
@@ -85,15 +87,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            // Should we try to connect to that URI?
-            synchronized (bridges) {
-                if( bridges.containsKey(uri) ) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
-                    }
-                    return;
-                }
-            }
             if (localURI.equals(uri)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("not connecting loopback: " + uri);
@@ -106,6 +99,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     LOG.debug("connectionFilter disallows connection to: " + uri);
                 }
                 return;
+            }
+
+            // Should we try to connect to that URI?
+            if (activeEvents.putIfAbsent(uri, event) != null) {
+                LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
             }
 
             URI connectUri = uri;
@@ -131,6 +129,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Connection failure exception: " + e, e);
                     }
+                    activeEvents.remove(url);
                     return;
                 }
                 try {
@@ -141,6 +140,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Connection failure exception: " + e, e);
                     }
+                    activeEvents.remove(url);
                     return;
                 }
             } finally {
@@ -148,10 +148,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
             try {
-                bridge.start();
                 synchronized (bridges) {
                     bridges.put(uri, bridge);
                 }
+                bridge.start();
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
@@ -160,6 +160,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     LOG.debug("Start failure exception: " + e, e);
                 }
                 try {
+                    // Will remove bridge and active event.
                     discoveryAgent.serviceFailed(event);
                 } catch (IOException e1) {
                     if (LOG.isDebugEnabled()) {
@@ -181,8 +182,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            synchronized (bridges) {
-                bridges.remove(uri);
+            // Only remove bridge if this is the active discovery event for the URL.
+            if (activeEvents.remove(url, event)) {
+                synchronized (bridges) {
+                    bridges.remove(uri);
+                }
             }
         }
     }
