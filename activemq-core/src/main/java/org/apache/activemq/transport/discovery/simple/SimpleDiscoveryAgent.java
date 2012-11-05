@@ -59,6 +59,14 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
             super(service);
         }
 
+		public SimpleDiscoveryEvent(SimpleDiscoveryEvent copy) {
+			super(copy);
+			connectFailures = copy.connectFailures;
+			reconnectDelay = copy.reconnectDelay;
+			connectTime = copy.connectTime;
+			failed.set(copy.failed.get());
+		}
+        
         @Override
         public String toString() {
             return "[" + serviceName + ", failed:" + failed + ", connectionFailures:" + connectFailures + "]";
@@ -115,16 +123,16 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
     public void serviceFailed(DiscoveryEvent devent) throws IOException {
 
-        final SimpleDiscoveryEvent event = (SimpleDiscoveryEvent)devent;
-        if (event.failed.compareAndSet(false, true)) {
+        final SimpleDiscoveryEvent sevent = (SimpleDiscoveryEvent)devent;
+        if (sevent.failed.compareAndSet(false, true)) {
 
-            listener.onServiceRemove(event);
+            listener.onServiceRemove(sevent);
             taskRunner.execute(new Runnable() {
                 public void run() {
-
+                    SimpleDiscoveryEvent event = new SimpleDiscoveryEvent(sevent);
+                	
                     // We detect a failed connection attempt because the service
-                    // fails right
-                    // away.
+                    // fails right away.
                     if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
                         LOG.debug("Failure occurred soon after the discovery event was generated.  It will be classified as a connection failure: "+event);
 

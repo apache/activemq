@@ -36,6 +36,11 @@ public class DiscoveryEvent implements DataStructure {
         this.serviceName = serviceName;
     }
 
+    protected DiscoveryEvent(DiscoveryEvent copy) {
+    	serviceName = copy.serviceName;
+    	brokerName = copy.brokerName;
+    }
+    
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
