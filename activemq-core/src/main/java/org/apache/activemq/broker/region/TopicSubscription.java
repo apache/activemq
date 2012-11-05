@@ -77,7 +77,7 @@ public class TopicSubscription extends AbstractSubscription {
         super(broker, context, info);
         this.usageManager = usageManager;
         String matchedName = "TopicSubscription:" + CURSOR_NAME_COUNTER.getAndIncrement() + "[" + info.getConsumerId().toString() + "]";
-        if (info.getDestination().isTemporary() || broker == null || broker.getTempDataStore()==null ) {
+        if (info.getDestination().isTemporary() || broker.getTempDataStore()==null ) {
             this.matched = new VMPendingMessageCursor(false);
         } else {
             this.matched = new FilePendingMessageCursor(broker,matchedName,false);
