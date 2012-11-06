@@ -356,7 +356,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         public void run() {
                             try {
                                 localBroker.oneway(new ShutdownInfo());
-                                sendShutdown.countDown();
                                 remoteBroker.oneway(new ShutdownInfo());
                             } catch (Throwable e) {
                                 LOG.debug("Caught exception sending shutdown", e);
