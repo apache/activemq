@@ -14,11 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.scheduler;
+package org.apache.activemq.store.kahadb.scheduler;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import org.apache.activemq.broker.scheduler.Job;
+import org.apache.activemq.broker.scheduler.JobSupport;
 import org.apache.activemq.util.ByteSequence;
 
 
@@ -63,27 +66,12 @@ public class JobImpl implements Job {
     
 
     public String getNextExecutionTime() {
-        return JobImpl.getDateTime(this.jobLocation.getNextTime());
+        return JobSupport.getDateTime(this.jobLocation.getNextTime());
     }
 
     public String getStartTime() {
-        return JobImpl.getDateTime(getStart());
-    }
-    
-   public static long getDataTime(String value) throws Exception {
-        DateFormat dfm = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-     
-        Date date = dfm.parse(value);
-        return date.getTime();
-    }
-    
-    public static String getDateTime(long value) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = new Date(value);
-        return dateFormat.format(date);
+        return JobSupport.getDateTime(getStart());
     }
 
-    
-    
 
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.scheduler;
+package org.apache.activemq.store.kahadb.scheduler;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -28,6 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.MessageFormatException;
 
+import org.apache.activemq.broker.scheduler.CronParser;
+import org.apache.activemq.broker.scheduler.Job;
+import org.apache.activemq.broker.scheduler.JobListener;
+import org.apache.activemq.broker.scheduler.JobScheduler;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -42,7 +46,7 @@ import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
 
 class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerImpl.class);
-    final JobSchedulerStore store;
+    final JobSchedulerStoreImpl store;
     private final AtomicBoolean running = new AtomicBoolean();
     private String name;
     BTreeIndex<Long, List<JobLocation>> index;
@@ -51,7 +55,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private final ScheduleTime scheduleTime = new ScheduleTime();
 
-    JobSchedulerImpl(JobSchedulerStore store) {
+    JobSchedulerImpl(JobSchedulerStoreImpl store) {
 
         this.store = store;
     }

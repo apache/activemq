@@ -1136,11 +1136,11 @@
                                 <exclude>org/apache/activemq/xbean/JDBCPersistenceXBeanConfigTest.*</exclude>
                                 <exclude>org/apache/activemq/xbean/XBeanXmlTest.*</exclude>
                                 <exclude>org/apache/bugs/AMQ1730Test.*</exclude>
-                                <exclude>org/apache/bugs/LoadBalanceTest.*</exclude>
-                                <exclude>org/apache/kahadb/index/BTreeIndexTest.*</exclude>
-                                <exclude>org/apache/kahadb/index/HashIndexTest.*</exclude>
-                                <exclude>org/apache/kahadb/index/ListIndexTest.*</exclude>
-                                <exclude>org/apache/kahadb/util/DataByteArrayInputStreamTest.*</exclude>
+                                <exclude>org/apache/activemq/store/kahadb/bugs/LoadBalanceTest.*</exclude>
+                                <exclude>org/apache/activemq/store/kahadb/disk/index/BTreeIndexTest.*</exclude>
+                                <exclude>org/apache/activemq/store/kahadb/disk/index/HashIndexTest.*</exclude>
+                                <exclude>org/apache/activemq/store/kahadb/disk/index/ListIndexTest.*</exclude>
+                                <exclude>org/apache/activemq/store/kahadb/disk/util/DataByteArrayInputStreamTest.*</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

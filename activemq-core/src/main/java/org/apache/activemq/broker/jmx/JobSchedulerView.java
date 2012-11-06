@@ -16,17 +16,14 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.io.IOException;
-import java.util.List;
-import javax.management.openmbean.CompositeDataSupport;
-import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
-import javax.management.openmbean.TabularType;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.scheduler.Job;
-import org.apache.activemq.broker.scheduler.JobImpl;
 import org.apache.activemq.broker.scheduler.JobScheduler;
+import org.apache.activemq.broker.scheduler.JobSupport;
+
+import javax.management.openmbean.*;
+import java.io.IOException;
+import java.util.List;
 
 public class JobSchedulerView implements JobSchedulerViewMBean {
 
@@ -53,8 +50,8 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Scheduled Jobs", "Scheduled Jobs", ct, new String[] { "jobId" });
         TabularDataSupport rc = new TabularDataSupport(tt);
-        long start = JobImpl.getDataTime(startTime);
-        long finish = JobImpl.getDataTime(finishTime);
+        long start = JobSupport.getDataTime(startTime);
+        long finish = JobSupport.getDataTime(finishTime);
         List<Job> jobs = this.jobScheduler.getAllJobs(start, finish);
         for (Job job : jobs) {
             rc.put(new CompositeDataSupport(ct, factory.getFields(job)));
@@ -76,7 +73,7 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
 
     public String getNextScheduleTime() throws Exception {
         long time = this.jobScheduler.getNextScheduleTime();
-        return JobImpl.getDateTime(time);
+        return JobSupport.getDateTime(time);
     }
 
     public void removeAllJobs() throws Exception {
@@ -85,8 +82,8 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
     }
 
     public void removeAllJobs(String startTime, String finishTime) throws Exception {
-        long start = JobImpl.getDataTime(startTime);
-        long finish = JobImpl.getDataTime(finishTime);
+        long start = JobSupport.getDataTime(startTime);
+        long finish = JobSupport.getDataTime(finishTime);
         this.jobScheduler.removeAllJobs(start, finish);
 
     }

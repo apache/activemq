@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ByteSequence;
 import org.junit.After;
@@ -240,7 +241,7 @@ public class JobSchedulerTest {
     }
 
     protected void startStore(File directory) throws Exception {
-        store = new JobSchedulerStore();
+        store = new JobSchedulerStoreImpl();
         store.setDirectory(directory);
         store.start();
         scheduler = store.getJobScheduler("test");

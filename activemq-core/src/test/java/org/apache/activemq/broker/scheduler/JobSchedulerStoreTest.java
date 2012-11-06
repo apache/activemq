@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.scheduler;
 
 import junit.framework.TestCase;
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ByteSequence;
 
@@ -27,7 +28,7 @@ import java.util.List;
 public class JobSchedulerStoreTest extends TestCase {
 
 	public void testRestart() throws Exception {
-		JobSchedulerStore store = new JobSchedulerStore();
+		JobSchedulerStore store = new JobSchedulerStoreImpl();
 		File directory = new File("target/test/ScheduledDB");
 		  IOHelper.mkdirs(directory);
 	      IOHelper.deleteChildren(directory);

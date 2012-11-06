@@ -268,7 +268,8 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private JobSchedulerStore getStore() throws Exception {
         if (started.get()) {
             if (this.store == null) {
-                this.store = new JobSchedulerStore();
+                String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
+                this.store = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
                 this.store.setDirectory(directory);
                 this.store.start();
             }
