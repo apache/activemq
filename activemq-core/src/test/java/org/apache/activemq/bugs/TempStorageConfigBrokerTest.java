@@ -38,6 +38,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.plist.PListStoreImpl;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -164,7 +165,7 @@ public class TempStorageConfigBrokerTest {
         broker.getSystemUsage().setSendFailIfNoSpace(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(1048576);
         broker.getSystemUsage().getTempUsage().setLimit(2*1048576);
-        broker.getSystemUsage().getTempUsage().getStore().setJournalMaxFileLength(2*1048576);
+        ((PListStoreImpl)broker.getSystemUsage().getTempUsage().getStore()).setJournalMaxFileLength(2 * 1048576);
         broker.getSystemUsage().getStoreUsage().setLimit(20*1048576);
 
         PolicyEntry defaultPolicy = new PolicyEntry();

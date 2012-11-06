@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadb.plist;
+package org.apache.activemq.store;
 
 import org.apache.activemq.util.ByteSequence;
 
@@ -23,7 +23,7 @@ public class PListEntry {
     private final ByteSequence byteSequence;
     private final String entry;
 
-    PListEntry(String entry, ByteSequence bs) {
+    public PListEntry(String entry, ByteSequence bs) {
         this.entry = entry;
         this.byteSequence = bs;
     }

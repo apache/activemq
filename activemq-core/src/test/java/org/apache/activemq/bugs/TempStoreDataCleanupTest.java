@@ -41,7 +41,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.kahadb.plist.PListStore;
+import org.apache.activemq.store.kahadb.plist.PListStoreImpl;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -148,7 +148,7 @@ public class TempStoreDataCleanupTest {
 
         LOG.info("MemoryUseage before awaiting temp store cleanup = " + broker.getAdminView().getMemoryPercentUsage());
 
-        final PListStore pa = broker.getTempDataStore();
+        final PListStoreImpl pa = (PListStoreImpl) broker.getTempDataStore();
         assertTrue("only one journal file should be left: " + pa.getJournal().getFileMap().size(),
             Wait.waitFor(new Wait.Condition() {
 

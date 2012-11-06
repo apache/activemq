@@ -31,6 +31,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.activemq.store.PList;
+import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ByteSequence;
 import org.junit.After;
@@ -41,8 +43,8 @@ import org.slf4j.LoggerFactory;
 
 public class PListTest {
     static final Logger LOG = LoggerFactory.getLogger(PListTest.class);
-    private PListStore store;
-    private PList plist;
+    private PListStoreImpl store;
+    private PListImpl plist;
     final ByteSequence payload = new ByteSequence(new byte[400]);
     final String idSeed = new String("Seed" + new byte[1024]);
     final Vector<Throwable> exceptions = new Vector<Throwable>();
@@ -173,7 +175,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setCleanupInterval(400);
         store.setDirectory(directory);
         store.setJournalMaxFileLength(1024*5);
@@ -263,7 +265,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setDirectory(directory);
         store.start();
 
@@ -294,7 +296,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setDirectory(directory);
         store.start();
 
@@ -312,7 +314,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setDirectory(directory);
         store.setJournalMaxFileLength(1024*5);
         store.setCleanupInterval(5000);
@@ -394,7 +396,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setIndexEnablePageCaching(enablePageCache);
         store.setIndexPageSize(2*1024);
         store.setDirectory(directory);
@@ -443,7 +445,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setIndexPageSize(2*1024);
         store.setJournalMaxFileLength(1024*1024);
         store.setDirectory(directory);
@@ -502,7 +504,7 @@ public class PListTest {
         public void run() {
             final String threadName = Thread.currentThread().getName();
             try {
-                PList plist = null;
+                PListImpl plist = null;
                 switch (task) {
                     case CREATE:
                         Thread.currentThread().setName("C:"+id);
@@ -625,7 +627,7 @@ public class PListTest {
     }
 
     protected void startStore(File directory) throws Exception {
-        store = new PListStore();
+        store = new PListStoreImpl();
         store.setDirectory(directory);
         store.start();
         plist = store.getPList("main");

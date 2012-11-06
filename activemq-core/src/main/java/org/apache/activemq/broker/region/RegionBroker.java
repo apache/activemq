@@ -28,7 +28,7 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.*;
 import org.apache.activemq.state.ConnectionState;
-import org.apache.activemq.store.kahadb.plist.PListStore;
+import org.apache.activemq.store.PListStore;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;

@@ -37,6 +37,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.store.kahadb.plist.PListStoreImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.StoreUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -157,7 +158,7 @@ public class TempStorageBlockedBrokerTest extends TestSupport {
                 + broker.getSystemUsage().getTempUsage().getUsage());
 
         // do a cleanup
-        broker.getTempDataStore().run();
+        ((PListStoreImpl)broker.getTempDataStore()).run();
         LOG.info("Subscrition Usage: " + tempUsageBySubscription + ", endUsage: "
                         + broker.getSystemUsage().getTempUsage().getUsage());
 

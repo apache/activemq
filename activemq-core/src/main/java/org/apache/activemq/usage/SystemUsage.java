@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.activemq.Service;
+import org.apache.activemq.store.PListStore;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.kahadb.plist.PListStore;
 
 /**
  * Holder for Usage instances for memory, store and temp files Main use case is

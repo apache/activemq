@@ -16,42 +16,36 @@
  */
 package org.apache.activemq.store.kahadb.plist;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.thread.Scheduler;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.store.JournaledStore;
+import org.apache.activemq.store.PList;
+import org.apache.activemq.store.PListStore;
 import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Page;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.LockFile;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
+import org.apache.activemq.thread.Scheduler;
+import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @org.apache.xbean.XBean
  */
-public class PListStore extends ServiceSupport implements BrokerServiceAware, Runnable {
-    static final Logger LOG = LoggerFactory.getLogger(PListStore.class);
+public class PListStoreImpl extends ServiceSupport implements BrokerServiceAware, Runnable, PListStore, JournaledStore {
+    static final Logger LOG = LoggerFactory.getLogger(PListStoreImpl.class);
     private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
     static final int CLOSED_STATE = 1;
@@ -70,7 +64,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     // private int indexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
     MetaData metaData = new MetaData(this);
     final MetaDataMarshaller metaDataMarshaller = new MetaDataMarshaller(this);
-    Map<String, PList> persistentLists = new HashMap<String, PList>();
+    Map<String, PListImpl> persistentLists = new HashMap<String, PListImpl>();
     final Object indexLock = new Object();
     private Scheduler scheduler;
     private long cleanupInterval = 30000;
@@ -122,16 +116,16 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     }
 
     protected class MetaData {
-        protected MetaData(PListStore store) {
+        protected MetaData(PListStoreImpl store) {
             this.store = store;
         }
 
-        private final PListStore store;
+        private final PListStoreImpl store;
         Page<MetaData> page;
-        BTreeIndex<String, PList> lists;
+        BTreeIndex<String, PListImpl> lists;
 
         void createIndexes(Transaction tx) throws IOException {
-            this.lists = new BTreeIndex<String, PList>(pageFile, tx.allocate().getPageId());
+            this.lists = new BTreeIndex<String, PListImpl>(pageFile, tx.allocate().getPageId());
         }
 
         void load(Transaction tx) throws IOException {
@@ -140,16 +134,16 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
             this.lists.load(tx);
         }
 
-        void loadLists(Transaction tx, Map<String, PList> lists) throws IOException {
-            for (Iterator<Entry<String, PList>> i = this.lists.iterator(tx); i.hasNext();) {
-                Entry<String, PList> entry = i.next();
+        void loadLists(Transaction tx, Map<String, PListImpl> lists) throws IOException {
+            for (Iterator<Entry<String, PListImpl>> i = this.lists.iterator(tx); i.hasNext();) {
+                Entry<String, PListImpl> entry = i.next();
                 entry.getValue().load(tx);
                 lists.put(entry.getKey(), entry.getValue());
             }
         }
 
         public void read(DataInput is) throws IOException {
-            this.lists = new BTreeIndex<String, PList>(pageFile, is.readLong());
+            this.lists = new BTreeIndex<String, PListImpl>(pageFile, is.readLong());
             this.lists.setKeyMarshaller(StringMarshaller.INSTANCE);
             this.lists.setValueMarshaller(new PListMarshaller(this.store));
         }
@@ -160,9 +154,9 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     }
 
     class MetaDataMarshaller extends VariableMarshaller<MetaData> {
-        private final PListStore store;
+        private final PListStoreImpl store;
 
-        MetaDataMarshaller(PListStore store) {
+        MetaDataMarshaller(PListStoreImpl store) {
             this.store = store;
         }
         public MetaData readPayload(DataInput dataIn) throws IOException {
@@ -176,18 +170,18 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         }
     }
 
-    class PListMarshaller extends VariableMarshaller<PList> {
-        private final PListStore store;
-        PListMarshaller(PListStore store) {
+    class PListMarshaller extends VariableMarshaller<PListImpl> {
+        private final PListStoreImpl store;
+        PListMarshaller(PListStoreImpl store) {
             this.store = store;
         }
-        public PList readPayload(DataInput dataIn) throws IOException {
-            PList result = new PList(this.store);
+        public PListImpl readPayload(DataInput dataIn) throws IOException {
+            PListImpl result = new PListImpl(this.store);
             result.read(dataIn);
             return result;
         }
 
-        public void writePayload(PList list, DataOutput dataOut) throws IOException {
+        public void writePayload(PListImpl list, DataOutput dataOut) throws IOException {
             list.write(dataOut);
         }
     }
@@ -196,10 +190,12 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         return this.journal;
     }
 
+    @Override
     public File getDirectory() {
         return directory;
     }
 
+    @Override
     public void setDirectory(File directory) {
         this.directory = directory;
     }
@@ -217,16 +213,17 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         }
     }
 
-    public PList getPList(final String name) throws Exception {
+    @Override
+    public PListImpl getPList(final String name) throws Exception {
         if (!isStarted()) {
             throw new IllegalStateException("Not started");
         }
         intialize();
         synchronized (indexLock) {
             synchronized (this) {
-                PList result = this.persistentLists.get(name);
+                PListImpl result = this.persistentLists.get(name);
                 if (result == null) {
-                    final PList pl = new PList(this);
+                    final PListImpl pl = new PListImpl(this);
                     pl.setName(name);
                     getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                         public void execute(Transaction tx) throws IOException {
@@ -238,7 +235,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                     result = pl;
                     this.persistentLists.put(name, pl);
                 }
-                final PList toLoad = result;
+                final PListImpl toLoad = result;
                 getPageFile().tx().execute(new Transaction.Closure<IOException>() {
                     public void execute(Transaction tx) throws IOException {
                         toLoad.load(tx);
@@ -250,6 +247,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
         }
     }
 
+    @Override
     public boolean removePList(final String name) throws Exception {
         boolean result = false;
         synchronized (indexLock) {
@@ -312,7 +310,7 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
 
                 if (cleanupInterval > 0) {
                     if (scheduler == null) {
-                        scheduler = new Scheduler(PListStore.class.getSimpleName());
+                        scheduler = new Scheduler(PListStoreImpl.class.getSimpleName());
                         scheduler.start();
                     }
                     scheduler.executePeriodically(this, cleanupInterval);
@@ -334,12 +332,12 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
     @Override
     protected synchronized void doStop(ServiceStopper stopper) throws Exception {
         if (scheduler != null) {
-            if (PListStore.class.getSimpleName().equals(scheduler.getName())) {
+            if (PListStoreImpl.class.getSimpleName().equals(scheduler.getName())) {
                 scheduler.stop();
                 scheduler = null;
             }
         }
-        for (PList pl : this.persistentLists.values()) {
+        for (PListImpl pl : this.persistentLists.values()) {
             pl.unload(null);
         }
         if (this.pageFile != null) {
@@ -372,13 +370,13 @@ public class PListStore extends ServiceSupport implements BrokerServiceAware, Ru
                         iterator.remove();
                     }
                 }
-                List<PList> plists = null;
+                List<PListImpl> plists = null;
                 synchronized (indexLock) {
                     synchronized (this) {
-                        plists = new ArrayList<PList>(persistentLists.values());
+                        plists = new ArrayList<PListImpl>(persistentLists.values());
                     }
                 }
-                for (PList list : plists) {
+                for (PListImpl list : plists) {
                     list.claimFileLocations(candidates);
                     if (isStopping()) {
                         return;

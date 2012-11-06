@@ -51,13 +51,7 @@ import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.Location;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.ReferenceStore;
-import org.apache.activemq.store.ReferenceStoreAdapter;
-import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.store.TopicReferenceStore;
-import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.*;
 import org.apache.activemq.store.kahadaptor.KahaReferenceStoreAdapter;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
@@ -82,7 +76,7 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean element="amqPersistenceAdapter"
  * 
  */
-public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware {
+public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware, JournaledStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQPersistenceAdapter.class);
     private Scheduler scheduler;
@@ -1116,5 +1110,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public long getLastProducerSequenceId(ProducerId id) {
         // reference store send has adequate duplicate suppression
         return -1;
+    }
+
+    @Override
+    public int getJournalMaxFileLength() {
+        return getMaxFileLength();
     }
 }

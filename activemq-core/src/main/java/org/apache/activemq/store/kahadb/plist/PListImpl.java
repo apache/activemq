@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.activemq.store.PList;
+import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.store.kahadb.disk.index.ListIndex;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
@@ -35,13 +37,13 @@ import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PList extends ListIndex<String, Location> {
-    static final Logger LOG = LoggerFactory.getLogger(PList.class);
-    final PListStore store;
+public class PListImpl extends ListIndex<String, Location> implements PList {
+    static final Logger LOG = LoggerFactory.getLogger(PListImpl.class);
+    final PListStoreImpl store;
     private String name;
     Object indexLock;
 
-    PList(PListStore store) {
+    PListImpl(PListStoreImpl store) {
         this.store = store;
         this.indexLock = store.getIndexLock();
         setPageFile(store.getPageFile());
@@ -49,10 +51,12 @@ public class PList extends ListIndex<String, Location> {
         setValueMarshaller(LocationMarshaller.INSTANCE);
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }
 
+    @Override
     public String getName() {
         return this.name;
     }
@@ -65,6 +69,7 @@ public class PList extends ListIndex<String, Location> {
         out.writeLong(getHeadPageId());
     }
 
+    @Override
     public synchronized void destroy() throws IOException {
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -76,6 +81,7 @@ public class PList extends ListIndex<String, Location> {
         }
     }
 
+    @Override
     public void addLast(final String id, final ByteSequence bs) throws IOException {
         final Location location = this.store.write(bs, false);
         synchronized (indexLock) {
@@ -87,6 +93,7 @@ public class PList extends ListIndex<String, Location> {
         }
     }
 
+    @Override
     public void addFirst(final String id, final ByteSequence bs) throws IOException {
         final Location location = this.store.write(bs, false);
         synchronized (indexLock) {
@@ -98,6 +105,7 @@ public class PList extends ListIndex<String, Location> {
         }
     }
 
+    @Override
     public boolean remove(final String id) throws IOException {
         final AtomicBoolean result = new AtomicBoolean();
         synchronized (indexLock) {
@@ -110,6 +118,7 @@ public class PList extends ListIndex<String, Location> {
         return result.get();
     }
 
+    @Override
     public boolean remove(final long position) throws IOException {
         final AtomicBoolean result = new AtomicBoolean();
         synchronized (indexLock) {
@@ -129,6 +138,7 @@ public class PList extends ListIndex<String, Location> {
         return result.get();
     }
 
+    @Override
     public PListEntry get(final long position) throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
@@ -147,6 +157,7 @@ public class PList extends ListIndex<String, Location> {
         return result;
     }
 
+    @Override
     public PListEntry getFirst() throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
@@ -164,6 +175,7 @@ public class PList extends ListIndex<String, Location> {
         return result;
     }
 
+    @Override
     public PListEntry getLast() throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
@@ -181,19 +193,21 @@ public class PList extends ListIndex<String, Location> {
         return result;
     }
 
+    @Override
     public boolean isEmpty() {
         return size() == 0;
     }
 
+    @Override
     public PListIterator iterator() throws IOException {
-        return new PListIterator();
+        return new PListIteratorImpl();
     }
 
-    public final class PListIterator implements Iterator<PListEntry> {
+    final class PListIteratorImpl implements PListIterator {
         final Iterator<Map.Entry<String, Location>> iterator;
         final Transaction tx;
 
-        PListIterator() throws IOException {
+        PListIteratorImpl() throws IOException {
             tx = store.pageFile.tx();
             synchronized (indexLock) {
                 this.iterator = iterator(tx);

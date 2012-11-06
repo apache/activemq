@@ -30,9 +30,9 @@ import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.store.kahadb.plist.PList;
-import org.apache.activemq.store.kahadb.plist.PListEntry;
-import org.apache.activemq.store.kahadb.plist.PListStore;
+import org.apache.activemq.store.PList;
+import org.apache.activemq.store.PListStore;
+import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
@@ -454,7 +454,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return diskList == null || diskList.isEmpty();
     }
 
-    protected PList getDiskList() {
+    public PList getDiskList() {
         if (diskList == null) {
             try {
                 diskList = store.getPList(name);

@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.usage;
 
-import org.apache.activemq.store.kahadb.plist.PListStore;
 
+import org.apache.activemq.store.PListStore;
 
 /**
  * Used to keep track of how much of something is being used so that a

@@ -16,64 +16,14 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
-import org.apache.activemq.broker.jmx.AnnotatedMBean;
-import org.apache.activemq.broker.jmx.BrokerView;
-import org.apache.activemq.broker.jmx.ConnectorView;
-import org.apache.activemq.broker.jmx.ConnectorViewMBean;
-import org.apache.activemq.broker.jmx.FTConnectorView;
-import org.apache.activemq.broker.jmx.JmsConnectorView;
-import org.apache.activemq.broker.jmx.JobSchedulerView;
-import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
-import org.apache.activemq.broker.jmx.ManagedRegionBroker;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.jmx.NetworkConnectorView;
-import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
-import org.apache.activemq.broker.jmx.ProxyConnectorView;
-import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationFactory;
-import org.apache.activemq.broker.region.DestinationFactoryImpl;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.jmx.*;
+import org.apache.activemq.broker.region.*;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.MirroredQueue;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
@@ -91,11 +41,10 @@ import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.store.JournaledStore;
+import org.apache.activemq.store.PListStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.store.kahadb.plist.PListStore;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -104,20 +53,22 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.BrokerSupport;
-import org.apache.activemq.util.DefaultIOExceptionHandler;
-import org.apache.activemq.util.IOExceptionHandler;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.InetAddressUtil;
-import org.apache.activemq.util.JMXSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.ThreadPoolUtils;
-import org.apache.activemq.util.TimeUtils;
-import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
@@ -133,6 +84,8 @@ public class BrokerService implements Service {
     public static final String LOCAL_HOST_NAME;
     public static final String BROKER_VERSION;
     public static final String DEFAULT_BROKER_NAME = "localhost";
+    public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
+
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
     private boolean useJmx = true;
@@ -1660,7 +1613,9 @@ public class BrokerService implements Service {
                     String str = result ? "Successfully deleted" : "Failed to delete";
                     LOG.info(str + " temporary storage");
                 }
-                this.tempDataStore = new PListStore();
+
+                String clazz = "org.apache.activemq.store.kahadb.plist.PListStoreImpl";
+                this.tempDataStore = (PListStore) getClass().getClassLoader().loadClass(clazz).newInstance();
                 this.tempDataStore.setDirectory(getTmpDataDirectory());
                 configureService(tempDataStore);
                 this.tempDataStore.start();
@@ -1892,12 +1847,8 @@ public class BrokerService implements Service {
             long maxJournalFileSize = 0;
             long storeLimit = usage.getStoreUsage().getLimit();
 
-            if (adapter instanceof KahaDBPersistenceAdapter) {
-                KahaDBPersistenceAdapter kahaDB = (KahaDBPersistenceAdapter) adapter;
-                maxJournalFileSize = kahaDB.getJournalMaxFileLength();
-            } else if (adapter instanceof AMQPersistenceAdapter) {
-                AMQPersistenceAdapter amqAdapter = (AMQPersistenceAdapter) adapter;
-                maxJournalFileSize = amqAdapter.getMaxFileLength();
+            if (adapter instanceof JournaledStore) {
+                maxJournalFileSize = ((JournaledStore) adapter).getJournalMaxFileLength();
             }
 
             if (storeLimit < maxJournalFileSize) {
@@ -1930,10 +1881,11 @@ public class BrokerService implements Service {
             if (isPersistent()) {
                 long maxJournalFileSize;
 
-                if (usage.getTempUsage().getStore() != null) {
-                    maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
+                PListStore store = usage.getTempUsage().getStore();
+                if (store != null && store instanceof JournaledStore) {
+                    maxJournalFileSize = ((JournaledStore) store).getJournalMaxFileLength();
                 } else {
-                    maxJournalFileSize = org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
+                    maxJournalFileSize = DEFAULT_MAX_FILE_LENGTH;
                 }
 
                 if (storeLimit < maxJournalFileSize) {
@@ -2225,11 +2177,16 @@ public class BrokerService implements Service {
             PersistenceAdapterFactory fac = getPersistenceFactory();
             if (fac != null) {
                 return fac.createPersistenceAdapter();
-            }else {
-                KahaDBPersistenceAdapter adaptor = new KahaDBPersistenceAdapter();
-                File dir = new File(getBrokerDataDirectory(),"KahaDB");
-                adaptor.setDirectory(dir);
-                return adaptor;
+            } else {
+                try {
+                    String clazz = "org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter";
+                    PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).newInstance();
+                    File dir = new File(getBrokerDataDirectory(),"KahaDB");
+                    adaptor.setDirectory(dir);
+                    return adaptor;
+                } catch (Throwable e) {
+                    throw IOExceptionSupport.create(e);
+                }
             }
         } else {
             return new MemoryPersistenceAdapter();
