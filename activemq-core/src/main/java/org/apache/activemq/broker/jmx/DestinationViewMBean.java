@@ -359,4 +359,10 @@ public interface DestinationViewMBean {
     @MBeanInfo("returns the optional slowConsumer handler MBeans for this destination")
     ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException;
 
+    /**
+     * @return A string of destination options, name value pairs as URL queryString.
+     */
+    @MBeanInfo("returns the destination options, name value pairs as URL queryString")
+    String getOptions();
+
 }

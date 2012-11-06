@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -50,6 +51,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -411,6 +413,17 @@ public class DestinationView implements DestinationViewMBean {
             result = broker.registerSlowConsumerStrategy((AbortSlowConsumerStrategy)strategy);
         }
         return result;
+    }
+
+    public String getOptions() {
+        Map<String, String> options = destination.getActiveMQDestination().getOptions();
+        String optionsString = "";
+        try {
+            if (options != null) {
+                optionsString = URISupport.createQueryString(options);
+            }
+        } catch (URISyntaxException ignored) {}
+        return optionsString;
     }
 
 }

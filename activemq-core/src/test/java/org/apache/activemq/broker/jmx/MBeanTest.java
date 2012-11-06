@@ -55,6 +55,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.util.JMXSupport;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +77,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected boolean transacted;
     protected int authMode = Session.AUTO_ACKNOWLEDGE;
     protected static final int MESSAGE_COUNT = 2*BaseDestination.MAX_PAGE_SIZE;
+    final static String QUEUE_WITH_OPTIONS = "QueueWithOptions";
 
     /**
      * When you run this test case from the command line it will pause before
@@ -719,6 +721,9 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         policyMap.setDefaultEntry(defaultEntry);
         answer.setDestinationPolicy(policyMap);
 
+        // allow options to be visible via jmx
+        answer.setDestinations(new ActiveMQDestination[]{new ActiveMQQueue(QUEUE_WITH_OPTIONS + "?topQueue=true&hasOptions=2")});
+
         answer.addConnector(bindAddress);
         return answer;
     }
@@ -893,6 +898,25 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         assertTrue("dest has some memory usage", queue.getMemoryPercentUsage() > 0);
+    }
+
+    public void testDestinationOptionsAreVisible() throws Exception {
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + QUEUE_WITH_OPTIONS + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        assertEquals("name match", QUEUE_WITH_OPTIONS, queue.getName());
+
+        String options = queue.getOptions();
+        LOG.info("Got options: " + options);
+
+        Map<String, String> optionsMap = URISupport.parseQuery(options);
+        assertEquals("got a map", 2, optionsMap.size());
+        assertTrue("matches our options", optionsMap.containsKey("hasOptions"));
+        assertTrue("matches our options", optionsMap.containsKey("topQueue"));
+
+        assertTrue("matches our options", optionsMap.containsValue("true"));
+        assertTrue("matches our options", optionsMap.containsValue("2"));
     }
 
     public void testSubscriptionViewToConnectionMBean() throws Exception {
