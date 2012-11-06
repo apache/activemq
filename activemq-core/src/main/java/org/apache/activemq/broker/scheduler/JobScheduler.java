@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.scheduler;
 
 import java.util.List;
-import org.apache.kahadb.util.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 public interface JobScheduler {
 

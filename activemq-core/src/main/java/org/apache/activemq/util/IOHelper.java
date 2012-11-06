@@ -16,16 +16,10 @@
  */
 package org.apache.activemq.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * 
@@ -107,7 +101,44 @@ public final class IOHelper {
         }
         return result;
     }
-    
+
+    public static boolean delete(File top) {
+        boolean result = true;
+        Stack<File> files = new Stack<File>();
+        // Add file to the stack to be processed...
+        files.push(top);
+        // Process all files until none remain...
+        while (!files.isEmpty()) {
+            File file = files.pop();
+            if (file.isDirectory()) {
+                File list[] = file.listFiles();
+                if (list == null || list.length == 0) {
+                    // The current directory contains no entries...
+                    // delete directory and continue...
+                    result &= file.delete();
+                } else {
+                    // Add back the directory since it is not empty....
+                    // and when we process it again it will be empty and can be
+                    // deleted safely...
+                    files.push(file);
+                    for (File dirFile : list) {
+                        if (dirFile.isDirectory()) {
+                            // Place the directory on the stack...
+                            files.push(dirFile);
+                        } else {
+                            // This is a simple file, delete it...
+                            result &= dirFile.delete();
+                        }
+                    }
+                }
+            } else {
+                // This is a simple file, delete it...
+                result &= file.delete();
+            }
+        }
+        return result;
+    }
+
     public static boolean deleteFile(File fileToDelete) {
         if (fileToDelete == null || !fileToDelete.exists()) {
             return true;
@@ -153,7 +184,7 @@ public final class IOHelper {
     }
     
     public static void copyFile(File src, File dest) throws IOException {
-        copyFile(src,dest,null);
+        copyFile(src, dest, null);
     }
     
     public static void copyFile(File src, File dest, FilenameFilter filter) throws IOException {
@@ -234,8 +265,8 @@ public final class IOHelper {
     }
     
     static {
-        MAX_DIR_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumDirNameLength","200")).intValue();  
-        MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","64")).intValue();             
+        MAX_DIR_NAME_LENGTH = Integer.getInteger("MaximumDirNameLength",200);
+        MAX_FILE_NAME_LENGTH = Integer.getInteger("MaximumFileNameLength",64);
     }
 
     

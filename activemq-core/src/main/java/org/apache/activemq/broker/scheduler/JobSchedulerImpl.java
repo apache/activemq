@@ -33,12 +33,12 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.kahadb.index.BTreeIndex;
-import org.apache.kahadb.journal.Location;
-import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.LongMarshaller;
-import org.apache.kahadb.util.VariableMarshaller;
+import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.store.kahadb.disk.util.LongMarshaller;
+import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
 
 class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerImpl.class);

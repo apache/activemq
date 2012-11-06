@@ -17,11 +17,9 @@
 package org.apache.activemq.usecases;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.HashSet;
-import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -46,8 +44,8 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
-import org.apache.kahadb.journal.Journal;
-import org.apache.kahadb.page.PageFile;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

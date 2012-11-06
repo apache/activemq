@@ -18,7 +18,7 @@ package org.apache.activemq.broker.scheduler;
 
 import junit.framework.TestCase;
 import org.apache.activemq.util.IOHelper;
-import org.apache.kahadb.util.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 import java.io.File;
 import java.util.ArrayList;

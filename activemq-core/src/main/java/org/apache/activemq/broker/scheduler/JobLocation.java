@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.kahadb.journal.Location;
-import org.apache.kahadb.util.VariableMarshaller;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
 
 class JobLocation {
    

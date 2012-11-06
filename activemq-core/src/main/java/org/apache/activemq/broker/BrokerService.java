@@ -1933,7 +1933,7 @@ public class BrokerService implements Service {
                 if (usage.getTempUsage().getStore() != null) {
                     maxJournalFileSize = usage.getTempUsage().getStore().getJournalMaxFileLength();
                 } else {
-                    maxJournalFileSize = org.apache.kahadb.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
+                    maxJournalFileSize = org.apache.activemq.store.kahadb.disk.journal.Journal.DEFAULT_MAX_FILE_LENGTH;
                 }
 
                 if (storeLimit < maxJournalFileSize) {

@@ -26,12 +26,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.kahadb.index.ListIndex;
-import org.apache.kahadb.journal.Location;
-import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.LocationMarshaller;
-import org.apache.kahadb.util.StringMarshaller;
+import org.apache.activemq.store.kahadb.disk.index.ListIndex;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.store.kahadb.disk.util.LocationMarshaller;
+import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

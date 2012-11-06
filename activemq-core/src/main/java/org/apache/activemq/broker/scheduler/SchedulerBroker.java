@@ -39,7 +39,7 @@ import org.apache.activemq.util.TypeConversionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.kahadb.util.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 public class SchedulerBroker extends BrokerFilter implements JobListener {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerBroker.class);

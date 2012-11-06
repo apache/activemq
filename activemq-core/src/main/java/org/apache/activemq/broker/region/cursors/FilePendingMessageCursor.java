@@ -39,7 +39,7 @@ import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.kahadb.util.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 /**
  * persist pending messages pending message (messages awaiting dispatch to a

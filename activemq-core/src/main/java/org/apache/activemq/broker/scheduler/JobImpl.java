@@ -19,7 +19,7 @@ package org.apache.activemq.broker.scheduler;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import org.apache.kahadb.util.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 
 public class JobImpl implements Job {

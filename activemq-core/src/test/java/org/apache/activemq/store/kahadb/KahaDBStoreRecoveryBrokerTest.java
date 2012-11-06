@@ -21,7 +21,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.RecoveryBrokerTest;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.*;
-import org.apache.kahadb.page.PageFile;
 
 import java.io.File;
 import java.io.RandomAccessFile;

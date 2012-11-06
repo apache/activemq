@@ -57,8 +57,8 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.kahadb.journal.Location;
-import org.apache.kahadb.page.Transaction;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
 
 public class TempKahaDBStore extends TempMessageDatabase implements PersistenceAdapter {
 

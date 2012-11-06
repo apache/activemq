@@ -35,7 +35,6 @@ import concurrent.CountDownLatch
 import javax.management.ObjectName
 import org.apache.activemq.broker.jmx.AnnotatedMBean
 import org.apache.activemq.util._
-import org.apache.kahadb.util.LockFile
 import org.apache.activemq.leveldb.util.{RetrySupport, FileSupport, Log}
 
 object LevelDBStore extends Log {

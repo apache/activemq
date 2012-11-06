@@ -19,7 +19,7 @@ package org.apache.activemq.store;
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.store.kahadb.MessageDatabase;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.kahadb.util.LockFile;
+import org.apache.activemq.util.LockFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

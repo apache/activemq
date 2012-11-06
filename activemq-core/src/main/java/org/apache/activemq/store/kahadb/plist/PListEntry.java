@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.store.kahadb.plist;
 
-import org.apache.kahadb.util.ByteSequence;
+import org.apache.activemq.util.ByteSequence;
 
 public class PListEntry {
 
