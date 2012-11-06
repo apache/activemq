@@ -111,10 +111,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-run</artifactId>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>kahadb</artifactId>
-    </dependency>
 
     <!-- camel -->
     <dependency>

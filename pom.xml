@@ -218,7 +218,6 @@
     <module>activemq-xmpp</module>
     <module>tests</module>
     <module>assembly</module>
-    <module>kahadb</module>
   </modules>
 
   <scm>
@@ -350,11 +349,6 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-openwire-generator</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>kahadb</artifactId>
         <version>${project.version}</version>
       </dependency>
      <dependency>
