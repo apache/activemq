@@ -69,7 +69,11 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-amq-store</artifactId>
     </dependency>
 
     <!-- to use AMQ with Camel efficient we would need to use pooling -->
@@ -101,7 +105,7 @@
       <artifactId>camel-test</artifactId>
       <scope>test</scope>
     </dependency>
-		<dependency>
+    <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-test-spring</artifactId>
       <scope>test</scope>
@@ -157,12 +161,6 @@
       <groupId>org.jencks</groupId>
       <artifactId>jencks</artifactId>
       <version>2.2</version>
-      <optional>true</optional>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-spring</artifactId>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>

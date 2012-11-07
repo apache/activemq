@@ -38,6 +38,7 @@
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
+      org.apache.activemq.spring*;version=${project.version};-noimport:=;-split-package:=merge-last,
       org.apache.activemq.pool*;version=${project.version};-noimport:=;-split-package:=merge-last,
       org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last,
       org.apache.activemq.hooks*;version=${project.version};-noimport:=;-split-package:=merge-last
