@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.activemq.command.ActiveMQDestination;
-import org.springframework.util.StringUtils;
 
 /**
  * Special converter for String -> List<ActiveMQDestination> to be used instead of a
@@ -41,7 +40,7 @@ public class StringToListOfActiveMQDestinationConverter {
         String text = value.toString();
         if (text.startsWith("[") && text.endsWith("]")) {
             text = text.substring(1, text.length() - 1);
-            String[] array = StringUtils.delimitedListToStringArray(text, ",", null);
+            String[] array = text.split(",");
 
             List<ActiveMQDestination> list = new ArrayList<ActiveMQDestination>();
             for (String item : array) {
