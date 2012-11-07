@@ -17,18 +17,10 @@
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 
 import org.apache.activemq.util.ServiceListener;
-import org.apache.activemq.transport.tcp.TcpTransportServer;
 
 import javax.net.ServerSocketFactory;
 

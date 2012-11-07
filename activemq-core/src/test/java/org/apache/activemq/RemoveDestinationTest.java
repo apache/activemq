@@ -28,7 +28,6 @@ import javax.jms.Topic;
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;

@@ -23,6 +23,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
@@ -33,7 +34,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.AnyDestination;
 import org.apache.activemq.state.ProducerState;
-import org.apache.activemq.util.BrokerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,7 +132,8 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
             super.sendToDeadLetterQueue(context, messageReference, subscription);
         } else {
             try {
-                final RedeliveryPolicy redeliveryPolicy = redeliveryPolicyMap.getEntryFor(messageReference.getRegionDestination().getActiveMQDestination());
+                Destination regionDestination = (Destination) messageReference.getRegionDestination();
+                final RedeliveryPolicy redeliveryPolicy = redeliveryPolicyMap.getEntryFor(regionDestination.getActiveMQDestination());
                 if (redeliveryPolicy != null) {
                     int redeliveryCount = messageReference.getRedeliveryCounter();
                     if (redeliveryCount < redeliveryPolicy.getMaximumRedeliveries()) {
@@ -150,7 +151,7 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
                 } else if (isFallbackToDeadLetter()) {
                     super.sendToDeadLetterQueue(context, messageReference, subscription);
                 } else {
-                    LOG.debug("Ignoring dlq request for:" + messageReference.getMessageId()  + ", RedeliveryPolicy not found (and no fallback) for: " + messageReference.getRegionDestination().getActiveMQDestination());
+                    LOG.debug("Ignoring dlq request for:" + messageReference.getMessageId() + ", RedeliveryPolicy not found (and no fallback) for: " + regionDestination.getActiveMQDestination());
                 }
             } catch (Exception exception) {
                 // abort the ack, will be effective if client use transactions or individual ack with sync send
@@ -163,8 +164,9 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
     private void scheduleRedelivery(ConnectionContext context, MessageReference messageReference, long delay, int redeliveryCount) throws Exception {
         if (LOG.isTraceEnabled()) {
+            Destination regionDestination = (Destination) messageReference.getRegionDestination();
             LOG.trace("redelivery #" + redeliveryCount + " of: " + messageReference.getMessageId() + " with delay: "
-                    + delay + ", dest: " + messageReference.getRegionDestination().getActiveMQDestination());
+                    + delay + ", dest: " + regionDestination.getActiveMQDestination());
         }
         final Message old = messageReference.getMessage();
         Message message = old.copy();

@@ -18,9 +18,6 @@ package org.apache.activemq.advisory;
 
 import java.util.EventObject;
 
-import javax.jms.Destination;
-
-import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ActiveMQDestination;
 

@@ -35,10 +35,10 @@ import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.ThreadPriorities;
+import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -90,7 +90,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * Names are mapped to classes in the resources/META-INF/services/org/apache/activemq/transport/logwriters directory.
      * This parameter is most probably set in Connection or TransportConnector URIs.
      */
-    protected String logWriterName = TransportLoggerFactory.defaultLogWriterName;
+    protected String logWriterName = TransportLoggerSupport.defaultLogWriterName;
     /**
      * Specifies if the TransportLogger will be manageable by JMX or not.
      * Also, as long as there is at least 1 TransportLogger which is manageable,

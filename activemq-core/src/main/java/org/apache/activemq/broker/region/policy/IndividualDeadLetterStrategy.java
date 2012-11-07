@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -142,11 +143,12 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
                                                     Subscription subscription ) {
         String name = null;
 
-        if (message.getRegionDestination() != null
-                && message.getRegionDestination().getActiveMQDestination() != null
-                && message.getRegionDestination().getActiveMQDestination().getPhysicalName() != null
-                && !message.getRegionDestination().getActiveMQDestination().getPhysicalName().isEmpty()){
-            name = prefix + message.getRegionDestination().getActiveMQDestination().getPhysicalName();
+        Destination regionDestination = (Destination) message.getRegionDestination();
+        if (regionDestination != null
+                && regionDestination.getActiveMQDestination() != null
+                && regionDestination.getActiveMQDestination().getPhysicalName() != null
+                && !regionDestination.getActiveMQDestination().getPhysicalName().isEmpty()){
+            name = prefix + regionDestination.getActiveMQDestination().getPhysicalName();
         } else {
             name = prefix + message.getDestination().getPhysicalName();
         }

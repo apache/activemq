@@ -220,7 +220,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // Don't remove the nodes until we are committed.
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
-                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            ((Destination)node.getRegionDestination()).getDestinationStatistics().getInflight().decrement();
                             removeList.add(node);
                         } else {
                             registerRemoveSync(context, node);
@@ -248,7 +248,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     }
                                 }
                             }
-                            destination = node.getRegionDestination();
+                            destination = (Destination) node.getRegionDestination();
                             callDispatchMatched = true;
                             break;
                         }
@@ -272,7 +272,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // Don't remove the nodes until we are committed - immediateAck option
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
-                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            ((Destination)node.getRegionDestination()).getDestinationStatistics().getInflight().decrement();
                             dispatched.remove(node);
                         } else {
                             registerRemoveSync(context, node);
@@ -287,7 +287,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             }
                         }
                         acknowledge(context, ack, node);
-                        destination = node.getRegionDestination();
+                        destination = (Destination) node.getRegionDestination();
                         callDispatchMatched = true;
                         break;
                     }
@@ -298,12 +298,14 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 int index = 0;
                 for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();
+                    Destination nodeDest = (Destination) node.getRegionDestination();
                     if (node.isExpired()) {
                         if (broker.isExpired(node)) {
-                            node.getRegionDestination().messageExpired(context, this, node);
+                            Destination regionDestination = (Destination) nodeDest;
+                            regionDestination.messageExpired(context, this, node);
                         }
                         iter.remove();
-                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                        nodeDest.getDestinationStatistics().getInflight().decrement();
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
                         if (usePrefetchExtension) {
@@ -315,7 +317,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 }
                             }
                         }
-                        destination = node.getRegionDestination();
+                        destination = nodeDest;
                         callDispatchMatched = true;
                         break;
                     }
@@ -337,7 +339,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                     if (inAckRange) {
                         if (ack.getLastMessageId().equals(messageId)) {
-                            destination = node.getRegionDestination();
+                            destination = (Destination) node.getRegionDestination();
                             callDispatchMatched = true;
                             break;
                         }
@@ -371,7 +373,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     ack.getPoisonCause().toString());
                         }
                         sendToDLQ(context, node);
-                        node.getRegionDestination().getDestinationStatistics()
+                        Destination nodeDest = (Destination) node.getRegionDestination();
+                        nodeDest.getDestinationStatistics()
                                 .getInflight().decrement();
                         removeList.add(node);
                         dequeueCounter++;
@@ -385,7 +388,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     break;
                                 }
                             }
-                            destination = node.getRegionDestination();
+                            destination = nodeDest;
                             callDispatchMatched = true;
                             break;
                         }
@@ -426,12 +429,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     @Override
                     public void afterCommit()
                             throws Exception {
+                        Destination nodeDest = (Destination) node.getRegionDestination();
                         synchronized(dispatchLock) {
                             dequeueCounter++;
                             dispatched.remove(node);
-                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            nodeDest.getDestinationStatistics().getInflight().decrement();
                         }
-                        node.getRegionDestination().wakeup();
+                        nodeDest.wakeup();
                         dispatchPending();
                     }
 
@@ -439,7 +443,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     public void afterRollback() throws Exception {
                         synchronized(dispatchLock) {
                             if (isSlave()) {
-                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                                ((Destination)node.getRegionDestination()).getDestinationStatistics().getInflight().decrement();
                             } else {
                                 // poisionAck will decrement - otherwise still inflight on client
                             }
@@ -637,7 +641,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                         //increment number to dispatch
                                         numberToDispatch++;
                                         if (broker.isExpired(node)) {
-                                            node.getRegionDestination().messageExpired(context, this, node);
+                                            ((Destination)node.getRegionDestination()).messageExpired(context, this, node);
                                         }
                                         continue;
                                     }
@@ -712,10 +716,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     protected void onDispatch(final MessageReference node, final Message message) {
-        if (node.getRegionDestination() != null) {
+        Destination nodeDest = (Destination) node.getRegionDestination();
+        if (nodeDest != null) {
             if (node != QueueMessageReference.NULL_MESSAGE) {
-                node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
-                node.getRegionDestination().getDestinationStatistics().getInflight().increment();
+                nodeDest.getDestinationStatistics().getDispatched().increment();
+                nodeDest.getDestinationStatistics().getInflight().increment();
                 if (LOG.isTraceEnabled()) {
                     LOG.trace(info.getConsumerId() + " dispatched: " + message.getMessageId() + " - "
                             + message.getDestination()  + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
@@ -759,7 +764,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             md.setMessage(null);
             md.setDestination(null);
         } else {
-            md.setDestination(node.getRegionDestination().getActiveMQDestination());
+            Destination regionDestination = (Destination) node.getRegionDestination();
+            md.setDestination(regionDestination.getActiveMQDestination());
             md.setMessage(message);
             md.setRedeliveryCounter(node.getRedeliveryCounter());
         }

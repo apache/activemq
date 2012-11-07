@@ -35,7 +35,6 @@ import org.apache.qpid.proton.type.messaging.Released;
 import org.apache.qpid.proton.type.transaction.*;
 import org.apache.qpid.proton.type.transport.DeliveryState;
 import org.apache.qpid.proton.type.transport.SenderSettleMode;
-import org.apache.qpid.proton.type.transport.Source;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;

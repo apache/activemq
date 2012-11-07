@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import org.apache.activemq.broker.Locker;
 import org.apache.activemq.util.ServiceSupport;
 
 import java.io.IOException;

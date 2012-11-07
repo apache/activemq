@@ -18,6 +18,7 @@ package org.apache.activemq.broker.util;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -136,13 +137,14 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
         DeadLetterStrategy deadLetterStrategy;
         Message tmp;
 
-        if (message != null && message.getRegionDestination() != null) {
-            deadLetterStrategy = message.getRegionDestination().getDeadLetterStrategy();
+        Destination regionDestination = (Destination) message.getRegionDestination();
+        if (message != null && regionDestination != null) {
+            deadLetterStrategy = regionDestination.getDeadLetterStrategy();
             if (deadLetterStrategy != null) {
                 // Cheap copy, since we only need two fields
                 tmp = new ActiveMQMessage();
                 tmp.setDestination(message.getOriginalDestination());
-                tmp.setRegionDestination(message.getRegionDestination());
+                tmp.setRegionDestination(regionDestination);
 
                 // Determine if we are headed for a DLQ
                 ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(tmp, null);

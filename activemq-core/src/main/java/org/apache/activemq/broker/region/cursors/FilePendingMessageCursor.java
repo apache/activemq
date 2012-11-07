@@ -206,7 +206,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public synchronized boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
         if (!node.isExpired()) {
             try {
-                regionDestination = node.getMessage().getRegionDestination();
+                regionDestination = (Destination) node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
                     if (hasSpace() || this.store == null) {
                         memoryList.addMessageLast(node);
@@ -254,7 +254,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public synchronized void addMessageFirst(MessageReference node) {
         if (!node.isExpired()) {
             try {
-                regionDestination = node.getMessage().getRegionDestination();
+                regionDestination = (Destination) node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
                     if (hasSpace()) {
                         memoryList.addMessageFirst(node);
@@ -473,7 +473,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         if (broker.isExpired(reference)) {
             ConnectionContext context = new ConnectionContext(new NonCachedMessageEvaluationContext());
             context.setBroker(broker);
-            reference.getRegionDestination().messageExpired(context, null, new IndirectMessageReference(reference.getMessage()));
+            ((Destination)reference.getRegionDestination()).messageExpired(context, null, new IndirectMessageReference(reference.getMessage()));
         }
     }
 

@@ -26,7 +26,6 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.transport.discovery.multicast.MulticastDiscoveryAgentFactory;
 import org.apache.activemq.util.SocketProxy;

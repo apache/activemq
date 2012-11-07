@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
  *  
- * @see TransportLoggerViewMBean.
+ * @see TransportLoggerViewMBean
  */
 public class TransportLoggerView implements TransportLoggerViewMBean {
 

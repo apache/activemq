@@ -198,6 +198,7 @@
     <module>activemq-all</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
+    <module>activemq-client</module>
     <module>activemq-core</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
@@ -231,6 +232,11 @@
       <!-- =============================== -->
       <!-- Internal ActiveMQ Dependencies -->
       <!-- =============================== -->
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-all</artifactId>

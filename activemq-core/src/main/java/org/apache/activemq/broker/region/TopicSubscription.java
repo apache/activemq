@@ -223,7 +223,7 @@ public class TopicSubscription extends AbstractSubscription {
                     matched.remove();
                     dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
-                    node.getRegionDestination().getDestinationStatistics().getExpired().increment();
+                    ((Destination)node.getRegionDestination()).getDestinationStatistics().getExpired().increment();
                     broker.messageExpired(getContext(), node, this);
                     break;
                 }
@@ -549,12 +549,12 @@ public class TopicSubscription extends AbstractSubscription {
         md.setMessage(message);
         md.setConsumerId(info.getConsumerId());
         if (node != null) {
-            md.setDestination(node.getRegionDestination().getActiveMQDestination());
+            md.setDestination(((Destination)node.getRegionDestination()).getActiveMQDestination());
             dispatchedCounter.incrementAndGet();
             // Keep track if this subscription is receiving messages from a single destination.
             if (singleDestination) {
                 if (destination == null) {
-                    destination = node.getRegionDestination();
+                    destination = (Destination)node.getRegionDestination();
                 } else {
                     if (destination != node.getRegionDestination()) {
                         singleDestination = false;
@@ -567,8 +567,9 @@ public class TopicSubscription extends AbstractSubscription {
                 md.setTransmitCallback(new Runnable() {
                     @Override
                     public void run() {
-                        node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
-                        node.getRegionDestination().getDestinationStatistics().getInflight().increment();
+                        Destination regionDestination = (Destination) node.getRegionDestination();
+                        regionDestination.getDestinationStatistics().getDispatched().increment();
+                        regionDestination.getDestinationStatistics().getInflight().increment();
                         node.decrementReferenceCount();
                     }
                 });
@@ -577,8 +578,9 @@ public class TopicSubscription extends AbstractSubscription {
         } else {
             context.getConnection().dispatchSync(md);
             if (node != null) {
-                node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
-                node.getRegionDestination().getDestinationStatistics().getInflight().increment();
+                Destination regionDestination = (Destination) node.getRegionDestination();
+                regionDestination.getDestinationStatistics().getDispatched().increment();
+                regionDestination.getDestinationStatistics().getInflight().increment();
                 node.decrementReferenceCount();
             }
         }
@@ -594,7 +596,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (LOG.isDebugEnabled()) {
             LOG.debug(this + ", discarding message " + message);
         }
-        Destination dest = message.getRegionDestination();
+        Destination dest = (Destination) message.getRegionDestination();
         if (dest != null) {
             dest.messageDiscarded(getContext(), this, message);
         }

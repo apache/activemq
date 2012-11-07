@@ -47,7 +47,6 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.thread.TaskRunnerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

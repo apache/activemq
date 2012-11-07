@@ -37,7 +37,7 @@ import org.apache.activemq.usage.Usage;
 /**
  *
  */
-public interface Destination extends Service, Task {
+public interface Destination extends Service, Task, Message.MessageDestination {
 
     public static final DeadLetterStrategy DEFAULT_DEAD_LETTER_STRATEGY = new SharedDeadLetterStrategy();
     public static final long DEFAULT_BLOCKED_PRODUCER_WARNING_INTERVAL = 30000;

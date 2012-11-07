@@ -17,7 +17,6 @@
 package org.apache.activemq.console.command.store.amq.reader;
 
 import java.util.Iterator;
-import javax.jms.InvalidSelectorException;
 import javax.jms.Message;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.filter.BooleanExpression;

@@ -17,18 +17,9 @@
 package org.apache.activemq.broker.region.cursors;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationStatistics;
-import org.apache.activemq.broker.region.IndirectMessageReference;
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueMessageReference;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.PList;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.apache.activemq.util.ByteSequence;
 import org.junit.After;
 import org.junit.Test;

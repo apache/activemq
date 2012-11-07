@@ -34,7 +34,7 @@ public interface MessageReference {
     Message getMessage();
     boolean isPersistent();
     
-    Destination getRegionDestination();
+    Message.MessageDestination getRegionDestination();
     
     int getRedeliveryCounter();
     void incrementRedeliveryCounter();

@@ -48,7 +48,7 @@ import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.vm.VMTransportFactory;
@@ -2203,7 +2203,7 @@ public class BrokerService implements Service {
     }
 
     protected TransportConnector createTransportConnector(URI brokerURI) throws Exception {
-        TransportServer transport = TransportFactory.bind(this, brokerURI);
+        TransportServer transport = TransportFactorySupport.bind(this, brokerURI);
         return new TransportConnector(transport);
     }
 

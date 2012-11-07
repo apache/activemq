@@ -39,8 +39,6 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import ietf.params.xml.ns.xmpp_sasl.Mechanisms;
-
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.tcp.TcpBufferedInputStream;

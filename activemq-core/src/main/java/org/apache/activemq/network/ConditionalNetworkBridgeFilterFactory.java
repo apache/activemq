@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.util.List;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -131,7 +132,8 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
         }
 
         private boolean hasNoLocalConsumers(final Message message, final MessageEvaluationContext mec) {
-            List<Subscription> consumers = mec.getMessageReference().getRegionDestination().getConsumers();
+            Destination regionDestination = (Destination) mec.getMessageReference().getRegionDestination();
+            List<Subscription> consumers = regionDestination.getConsumers();
             for (Subscription sub : consumers) {
                 if (!sub.getConsumerInfo().isNetworkSubscription() && !sub.getConsumerInfo().isBrowser()) {
                     if (LOG.isTraceEnabled()) {

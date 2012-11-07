@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.transport;
 
+import org.apache.activemq.util.FactoryFinder;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.activemq.wireformat.WireFormatFactory;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -25,16 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.util.FactoryFinder;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-import org.apache.activemq.wireformat.WireFormat;
-import org.apache.activemq.wireformat.WireFormatFactory;
 
 public abstract class TransportFactory {
 
@@ -112,21 +109,6 @@ public abstract class TransportFactory {
         return tf.doBind(location);
     }
 
-    public static TransportServer bind(BrokerService brokerService, URI location) throws IOException {
-        TransportFactory tf = findTransportFactory(location);
-        if( brokerService!=null && tf instanceof BrokerServiceAware ) {
-            ((BrokerServiceAware)tf).setBrokerService(brokerService);
-        }
-        try {
-            if( brokerService!=null ) {
-                SslContext.setCurrentSslContext(brokerService.getSslContext());
-            }
-            return tf.doBind(location);
-        } finally {
-            SslContext.setCurrentSslContext(null);
-        }
-    }
-
     public Transport doConnect(URI location) throws Exception {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
@@ -181,7 +163,7 @@ public abstract class TransportFactory {
      * @return
      * @throws IOException
      */
-    private static TransportFactory findTransportFactory(URI location) throws IOException {
+    public static TransportFactory findTransportFactory(URI location) throws IOException {
         String scheme = location.getScheme();
         if (scheme == null) {
             throw new IOException("Transport not scheme specified: [" + location + "]");

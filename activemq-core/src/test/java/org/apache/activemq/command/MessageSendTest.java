@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import junit.framework.Test;
 
-import org.apache.activemq.JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest;
 import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

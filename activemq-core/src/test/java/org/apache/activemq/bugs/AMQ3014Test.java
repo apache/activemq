@@ -30,10 +30,7 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.*;
 import org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgent;
 import org.junit.After;
 import org.junit.Assert;
@@ -61,7 +58,7 @@ public class AMQ3014Test {
         @Override
         protected TransportConnector createTransportConnector(URI brokerURI)
                 throws Exception {
-            TransportServer transport = TransportFactory.bind(this, brokerURI);
+            TransportServer transport = TransportFactorySupport.bind(this, brokerURI);
             return new TransportConnector(transport) {
                 @Override
                 protected Connection createConnection(Transport transport)

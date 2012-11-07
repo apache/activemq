@@ -16,17 +16,8 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-import java.util.List;
-
-import javax.jms.JMSException;
-
-import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.policy.SimpleDispatchSelector;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

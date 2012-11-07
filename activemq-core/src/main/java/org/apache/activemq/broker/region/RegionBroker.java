@@ -665,7 +665,7 @@ public class RegionBroker extends EmptyBroker {
             message.setBrokerOutTime(endTime);
             if (getBrokerService().isEnableStatistics()) {
                 long totalTime = endTime - message.getBrokerInTime();
-                message.getRegionDestination().getDestinationStatistics().getProcessTime().addTime(totalTime);
+                ((Destination)message.getRegionDestination()).getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
         }
     }
@@ -805,8 +805,8 @@ public class RegionBroker extends EmptyBroker {
             if(node!=null){
                 Message message=node.getMessage();
                 if(message!=null && node.getRegionDestination()!=null){
-                    DeadLetterStrategy deadLetterStrategy=node
-                            .getRegionDestination().getDeadLetterStrategy();
+                    DeadLetterStrategy deadLetterStrategy=((Destination)node
+                            .getRegionDestination()).getDeadLetterStrategy();
                     if(deadLetterStrategy!=null){
                         if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
                             // message may be inflight to other subscriptions so do not modify

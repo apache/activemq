@@ -28,7 +28,6 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.ReconnectWithSameClientIDTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

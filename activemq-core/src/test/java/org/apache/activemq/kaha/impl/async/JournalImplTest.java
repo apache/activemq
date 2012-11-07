@@ -27,7 +27,6 @@ import org.apache.activeio.journal.RecordLocation;
 import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
 import org.apache.activemq.kaha.impl.async.JournalFacade.RecordLocationFacade;
-import org.apache.activemq.kaha.impl.async.ReadOnlyAsyncDataManager;
 import org.apache.activemq.util.ByteSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -40,7 +40,6 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.MemoryUsage;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.TransactionTemplate;
 import org.slf4j.Logger;

@@ -1135,7 +1135,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * Sets the amount of time between scheduled sends of any outstanding Message Acks for consumers that
      * have been configured with optimizeAcknowledge enabled.
      *
-     * @param scheduledOptimizedAckInterval the scheduledOptimizedAckInterval to set
+     * @param optimizedAckScheduledAckInterval the scheduledOptimizedAckInterval to set
      */
     public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
         this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;

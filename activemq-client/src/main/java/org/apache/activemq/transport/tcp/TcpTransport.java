@@ -16,30 +16,10 @@ gxfdgvdfg * Licensed to the Apache Software Foundation (ASF) under one or more
  */
 package org.apache.activemq.transport.tcp;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.net.SocketFactory;
-
 import org.apache.activemq.Service;
+import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -47,6 +27,18 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.net.SocketFactory;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
@@ -99,7 +91,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * Names are mapped to classes in the resources/META-INF/services/org/apache/activemq/transport/logwriters directory.
      * This parameter is most probably set in Connection or TransportConnector URIs.
      */
-    protected String logWriterName = TransportLoggerFactory.defaultLogWriterName;
+    protected String logWriterName = TransportLoggerSupport.defaultLogWriterName;
     /**
      * Specifies if the TransportLogger will be manageable by JMX or not.
      * Also, as long as there is at least 1 TransportLogger which is manageable,

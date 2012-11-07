@@ -176,7 +176,8 @@ public abstract class AbstractSubscription implements Subscription {
         boolean result = false;
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
-            msgContext.setDestination(message.getRegionDestination().getActiveMQDestination());
+            Destination regionDestination = (Destination) message.getRegionDestination();
+            msgContext.setDestination(regionDestination.getActiveMQDestination());
             msgContext.setMessageReference(message);
             result = matches(message, msgContext);
             if (result) {

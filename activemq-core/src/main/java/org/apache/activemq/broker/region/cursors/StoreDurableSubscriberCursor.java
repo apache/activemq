@@ -192,7 +192,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 }
             }
             if (msg.isPersistent()) {
-                Destination dest = msg.getRegionDestination();
+                Destination dest = (Destination) msg.getRegionDestination();
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
                     tsp.addMessageLast(node);
@@ -225,7 +225,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             if (!msg.isPersistent()) {
                 nonPersistent.addMessageFirst(node);
             } else {
-                Destination dest = msg.getRegionDestination();
+                Destination dest = (Destination) msg.getRegionDestination();
                 TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
                     tsp.addMessageFirst(node);

@@ -33,10 +33,7 @@ import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportAcceptListener;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.*;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.ServiceStopper;
@@ -307,7 +304,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             throw new IllegalArgumentException(
                     "You must specify the brokerService property. Maybe this connector should be added to a broker?");
         }
-        return TransportFactory.bind(brokerService, uri);
+        return TransportFactorySupport.bind(brokerService, uri);
     }
 
     public DiscoveryAgent getDiscoveryAgent() throws IOException {

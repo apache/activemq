@@ -16,10 +16,8 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import junit.framework.TestCase;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.spring.SpringSslContext;
 import org.junit.After;

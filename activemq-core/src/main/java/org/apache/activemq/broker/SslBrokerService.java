@@ -26,6 +26,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 
@@ -101,7 +102,7 @@ public class SslBrokerService extends BrokerService {
             
         } else {
             // Else, business as usual.
-            return TransportFactory.bind(this, brokerURI);
+            return TransportFactorySupport.bind(this, brokerURI);
         }
     }
 }

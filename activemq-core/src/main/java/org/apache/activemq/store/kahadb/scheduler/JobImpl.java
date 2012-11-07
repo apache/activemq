@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.store.kahadb.scheduler;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobSupport;
 import org.apache.activemq.util.ByteSequence;

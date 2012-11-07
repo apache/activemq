@@ -91,7 +91,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.UNMATCHED_ACK_TYPE);
         ack.setMessageID(node.getMessageId());
-        node.getRegionDestination().acknowledge(this.getContext(), this, ack, node);
+        Destination regionDestination = (Destination) node.getRegionDestination();
+        regionDestination.acknowledge(this.getContext(), this, ack, node);
     }
 
     @Override
@@ -284,7 +285,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
-        node.getRegionDestination().acknowledge(context, this, ack, node);
+        Destination regionDestination = (Destination) node.getRegionDestination();
+        regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
     }

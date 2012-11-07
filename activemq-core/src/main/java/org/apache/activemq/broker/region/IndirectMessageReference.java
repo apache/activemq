@@ -114,7 +114,7 @@ public class IndirectMessageReference implements QueueMessageReference {
         return message.getMessageId();
     }
 
-    public Destination getRegionDestination() {
+    public Message.MessageDestination getRegionDestination() {
         return message.getRegionDestination();
     }
 

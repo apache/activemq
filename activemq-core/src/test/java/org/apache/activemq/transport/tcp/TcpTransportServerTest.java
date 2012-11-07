@@ -19,7 +19,6 @@ package org.apache.activemq.transport.tcp;
 import junit.framework.TestCase;
 import org.apache.activemq.transport.*;
 
-import javax.net.ServerSocketFactory;
 import java.net.Socket;
 import java.net.URI;
 import java.util.HashMap;

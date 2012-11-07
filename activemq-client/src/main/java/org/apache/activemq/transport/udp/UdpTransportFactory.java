@@ -16,33 +16,24 @@
  */
 package org.apache.activemq.transport.udp;
 
+import org.apache.activemq.TransportLoggerSupport;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.*;
+import org.apache.activemq.transport.reliable.*;
+import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.CommandJoiner;
-import org.apache.activemq.transport.InactivityMonitor;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportLoggerFactory;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.reliable.DefaultReplayStrategy;
-import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
-import org.apache.activemq.transport.reliable.ReliableTransport;
-import org.apache.activemq.transport.reliable.ReplayStrategy;
-import org.apache.activemq.transport.reliable.Replayer;
-import org.apache.activemq.transport.tcp.TcpTransportFactory;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntSequenceGenerator;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
@@ -86,9 +77,9 @@ public class UdpTransportFactory extends TransportFactory {
 
         if (udpTransport.isTrace()) {
             try {
-                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
+                transport = TransportLoggerSupport.createTransportLogger(transport);
             } catch (Throwable e) {
-                log.error("Could not create TransportLogger object for: " + TransportLoggerFactory.defaultLogWriterName + ", reason: " + e, e);
+                log.error("Could not create TransportLogger, reason: " + e, e);
             }
         }
 
@@ -126,7 +117,7 @@ public class UdpTransportFactory extends TransportFactory {
         OpenWireFormat openWireFormat = asOpenWireFormat(format);
 
         if (udpTransport.isTrace()) {
-            transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
+            transport = TransportLoggerSupport.createTransportLogger(transport);
         }
 
         transport = new InactivityMonitor(transport, format);
@@ -156,6 +147,7 @@ public class UdpTransportFactory extends TransportFactory {
             return new CommandJoiner(reliableTransport, openWireFormat);
         }
     }
+
 
     protected ReplayStrategy createReplayStrategy(Replayer replayer) {
         if (replayer != null) {

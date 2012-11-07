@@ -29,9 +29,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -46,6 +44,7 @@ import org.apache.activemq.wireformat.WireFormat;
  *
  */
 public abstract class Message extends BaseCommand implements MarshallAware, MessageReference {
+    public static final String ORIGINAL_EXPIRATION = "originalExpiration";
 
     /**
      * The default minimum amount of memory a message is assumed to use
@@ -90,11 +89,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     private transient short referenceCount;
     private transient ActiveMQConnection connection;
-    private transient org.apache.activemq.broker.region.Destination regionDestination;
-    private transient MemoryUsage memoryUsage;
+    transient MessageDestination regionDestination;
+    transient MemoryUsage memoryUsage;
 
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
+
+    public static interface MessageDestination {
+        int getMinimumMessageSize();
+        MemoryUsage getMemoryUsage();
+    }
 
     public abstract Message copy();
     public abstract void clearBody() throws JMSException;
@@ -130,7 +134,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             copy.properties = new HashMap<String, Object>(properties);
 
             // The new message hasn't expired, so remove this feild.
-            copy.properties.remove(RegionBroker.ORIGINAL_EXPIRATION);
+            copy.properties.remove(ORIGINAL_EXPIRATION);
         } else {
             copy.properties = properties;
         }
@@ -588,15 +592,15 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return this;
     }
 
-    public org.apache.activemq.broker.region.Destination getRegionDestination() {
-        return regionDestination;
-    }
-
-    public void setRegionDestination(org.apache.activemq.broker.region.Destination destination) {
+    public void setRegionDestination(MessageDestination destination) {
         this.regionDestination = destination;
         if(this.memoryUsage==null) {
-            this.memoryUsage=regionDestination.getMemoryUsage();
+            this.memoryUsage=destination.getMemoryUsage();
         }
+    }
+
+    public MessageDestination getRegionDestination() {
+        return regionDestination;
     }
 
     public MemoryUsage getMemoryUsage() {
@@ -666,7 +670,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected int getMinimumMessageSize() {
         int result = DEFAULT_MINIMUM_MESSAGE_SIZE;
         //let destination override
-        Destination dest = regionDestination;
+        MessageDestination dest = regionDestination;
         if (dest != null) {
             result=dest.getMinimumMessageSize();
         }

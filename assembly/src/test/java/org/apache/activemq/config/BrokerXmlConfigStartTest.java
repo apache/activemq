@@ -24,14 +24,11 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
-import javax.jms.JMSException;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.URISupport;

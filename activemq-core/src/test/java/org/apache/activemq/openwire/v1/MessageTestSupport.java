@@ -17,7 +17,6 @@
 package org.apache.activemq.openwire.v1;
 
 import java.io.DataOutputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 

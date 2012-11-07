@@ -24,7 +24,6 @@ import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.traversal.NodeIterator;
