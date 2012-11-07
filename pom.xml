@@ -195,7 +195,9 @@
   </distributionManagement>
 
   <modules>
+    
     <module>activemq-client</module>
+    <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
 
     <module>activemq-stomp</module>
@@ -228,6 +230,7 @@
     <module>activemq-xmpp</module>
     <module>activemq-itests-spring31</module>
     <module>assembly</module>
+
     
   </modules>
 
@@ -277,6 +280,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-openwire-legacy</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
