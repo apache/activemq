@@ -437,7 +437,7 @@
             <phase>generate-sources</phase>
             <configuration>
               <sourceDirectory>${basedir}/src/main/grammar</sourceDirectory>
-              <outputDirectory>${basedir}/target/generated-javacc</outputDirectory>
+              <outputDirectory>${basedir}/target/generated-sources/javacc</outputDirectory>
               <packageName>org.apache.activemq.selector</packageName>
             </configuration>
             <goals>

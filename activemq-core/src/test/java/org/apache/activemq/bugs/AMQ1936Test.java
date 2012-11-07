@@ -22,8 +22,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.apache.log4j.Logger;
 
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;

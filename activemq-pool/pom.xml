@@ -53,7 +53,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-client</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -80,7 +80,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-broker</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

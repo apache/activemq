@@ -23,7 +23,6 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerRegistry;
-import org.apache.activemq.broker.policy.IndividualDeadLetterViaXmlTest;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.util.Wait;

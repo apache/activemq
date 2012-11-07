@@ -34,8 +34,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 
 public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSupport {

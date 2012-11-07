@@ -18,6 +18,8 @@
 package org.apache.activemq.leveldb
 
 import org.apache.activemq.console.Main
+import scala.Array
+import scala.Predef._
 
 object IDERunner {
   def main(args:Array[String]) ={

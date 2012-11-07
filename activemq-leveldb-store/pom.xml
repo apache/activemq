@@ -25,11 +25,11 @@
     <version>5.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>activemq-leveldb</artifactId>
+  <artifactId>activemq-leveldb-store</artifactId>
   <packaging>jar</packaging>
 
-  <name>ActiveMQ :: LevelDB</name>
-  <description>ActiveMQ LevelDB based store</description>
+  <name>ActiveMQ :: LevelDB Store</name>
+  <description>ActiveMQ LevelDB Store Implementation</description>
 
   <dependencies>
 
@@ -43,7 +43,7 @@
 
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-broker</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -194,13 +194,14 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-broker</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-console</artifactId>
+      <artifactId>activemq-kahadb-store</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -334,6 +335,7 @@
           <failIfNoTests>false</failIfNoTests>
           <excludes>
             <exclude>**/EnqueueRateScenariosTest.*</exclude>
+            <exclude>**/HALevelDB*.*</exclude>
           </excludes>
         </configuration>
       </plugin>

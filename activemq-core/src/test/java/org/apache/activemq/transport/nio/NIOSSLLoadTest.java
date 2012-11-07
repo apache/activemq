@@ -20,11 +20,9 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
-import org.omg.CORBA.PUBLIC_MEMBER;
 
 import javax.jms.Connection;
 import javax.jms.Queue;

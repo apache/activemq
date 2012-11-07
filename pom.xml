@@ -204,6 +204,7 @@
     <module>activemq-kahadb-store</module>
     <module>activemq-amq-store</module>
     <module>activemq-jdbc-store</module>
+    <module>activemq-leveldb-store</module>
 
     <module>activemq-core</module>
     <module>activemq-all</module>
@@ -213,7 +214,6 @@
     <module>activemq-jaas</module>
     <module>activemq-blueprint</module>
     <module>activemq-karaf</module>
-    <module>activemq-leveldb</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
     <module>activemq-pool</module>
@@ -255,6 +255,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jdbc-store</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-leveldb-store</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -303,6 +308,13 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-broker</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jaas</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -319,11 +331,6 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-web</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-leveldb</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
