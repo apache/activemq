@@ -19,6 +19,7 @@ package org.apache.activemq.bugs;
 
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
@@ -139,7 +140,7 @@ public class AMQ4159Test extends JmsMultipleBrokersTestSupport {
 
         // Wait for several attempts and verify that only a single thread was
         // used to (attempt) to establish the bridge.
-        attemptLatch.await();
+        attemptLatch.await(4, TimeUnit.MINUTES);
         Assert.assertEquals(-1, concurrencyAttempt.get());
     }
 }
