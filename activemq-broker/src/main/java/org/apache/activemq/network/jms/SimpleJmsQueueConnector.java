@@ -31,12 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Bridge to other JMS Queue providers
- *
- * @org.apache.xbean.XBean
  */
-public class JmsQueueConnector extends JmsConnector {
-    private static final Logger LOG = LoggerFactory.getLogger(JmsQueueConnector.class);
+public class SimpleJmsQueueConnector extends JmsConnector {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleJmsQueueConnector.class);
     private String outboundQueueConnectionFactoryName;
     private String localConnectionFactoryName;
     private QueueConnectionFactory outboundQueueConnectionFactory;

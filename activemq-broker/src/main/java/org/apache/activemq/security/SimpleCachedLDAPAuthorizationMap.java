@@ -24,30 +24,19 @@ import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 
-import javax.naming.Binding;
-import javax.naming.Context;
-import javax.naming.InvalidNameException;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
+import javax.naming.*;
 import javax.naming.directory.*;
 import javax.naming.event.*;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
-
 import java.util.*;
 
 /**
- * A {@link DefaultAuthorizationMap} implementation which uses LDAP to initialize and update authorization
- * policy.
- *
- * @org.apache.xbean.XBean
  */
-public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implements InitializingBean, DisposableBean {
+public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CachedLDAPAuthorizationMap.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleCachedLDAPAuthorizationMap.class);
 
     // Configuration Options
     private String initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
@@ -876,21 +865,18 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
         context = null;
         LOG.error("Caught unexpected exception.", namingExceptionEvent.getException());
     }
-    
+
     // Init / Destroy
-    
-    @Override
     public void afterPropertiesSet() throws Exception {
         query();
     }
-    
-    @Override
+
     public void destroy() throws Exception {
         if (eventContext != null) {
             eventContext.close();
             eventContext = null;
         }
-        
+
         if (context != null) {
             context.close();
             context = null;
@@ -1112,7 +1098,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
 
         @Override
         public void namingExceptionThrown(NamingExceptionEvent evt) {
-            CachedLDAPAuthorizationMap.this.namingExceptionThrown(evt);
+            SimpleCachedLDAPAuthorizationMap.this.namingExceptionThrown(evt);
         }
 
         @Override
@@ -1120,7 +1106,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
             // This test is a hack to work around the fact that Apache DS 2.0 seems to trigger notifications
             // for the entire sub-tree even when one-level is the selected search scope.
             if (permissionType != null) {
-                CachedLDAPAuthorizationMap.this.objectAdded(evt, destinationType, permissionType);
+                SimpleCachedLDAPAuthorizationMap.this.objectAdded(evt, destinationType, permissionType);
             }
         }
 
@@ -1129,13 +1115,13 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
             // This test is a hack to work around the fact that Apache DS 2.0 seems to trigger notifications
             // for the entire sub-tree even when one-level is the selected search scope.
             if (permissionType != null) {
-                CachedLDAPAuthorizationMap.this.objectRemoved(evt, destinationType, permissionType);
+                SimpleCachedLDAPAuthorizationMap.this.objectRemoved(evt, destinationType, permissionType);
             }
         }
 
         @Override
         public void objectRenamed(NamingEvent evt) {
-            CachedLDAPAuthorizationMap.this.objectRenamed(evt, destinationType, permissionType);
+            SimpleCachedLDAPAuthorizationMap.this.objectRenamed(evt, destinationType, permissionType);
         }
 
         @Override
@@ -1143,7 +1129,7 @@ public class CachedLDAPAuthorizationMap extends DefaultAuthorizationMap implemen
             // This test is a hack to work around the fact that Apache DS 2.0 seems to trigger notifications
             // for the entire sub-tree even when one-level is the selected search scope.
             if (permissionType != null) {
-                CachedLDAPAuthorizationMap.this.objectChanged(evt, destinationType, permissionType);
+                SimpleCachedLDAPAuthorizationMap.this.objectChanged(evt, destinationType, permissionType);
             }
         }
     }

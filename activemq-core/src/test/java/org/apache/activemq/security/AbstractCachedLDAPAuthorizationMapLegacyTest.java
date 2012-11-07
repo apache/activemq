@@ -57,7 +57,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
     
     protected LdapConnection connection;
-    protected CachedLDAPAuthorizationMap map;
+    protected SimpleCachedLDAPAuthorizationMap map;
     
     @Before
     public void setup() throws Exception {
@@ -334,8 +334,8 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         assertEquals("set size: " + failedACLs, 2, failedACLs.size());
     }
     
-    protected CachedLDAPAuthorizationMap createMap() {
-        return new CachedLDAPAuthorizationMap();
+    protected SimpleCachedLDAPAuthorizationMap createMap() {
+        return new SimpleCachedLDAPAuthorizationMap();
     }
     
     protected abstract InputStream getAddLdif();

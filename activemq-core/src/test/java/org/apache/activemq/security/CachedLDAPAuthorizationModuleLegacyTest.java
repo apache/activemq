@@ -38,8 +38,8 @@ import java.io.InputStream;
 public class CachedLDAPAuthorizationModuleLegacyTest extends AbstractCachedLDAPAuthorizationMapLegacyTest {
 
     @Override
-    protected CachedLDAPAuthorizationMap createMap() {
-        CachedLDAPAuthorizationMap map = super.createMap();
+    protected SimpleCachedLDAPAuthorizationMap createMap() {
+        SimpleCachedLDAPAuthorizationMap map = super.createMap();
         map.setConnectionURL("ldap://localhost:" + getLdapServer().getPort());
         return map;
     }

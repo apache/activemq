@@ -28,7 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Test of the {@link CachedLDAPAuthorizationMap} that tests against a basic OpenLDAP instance.
+ * Test of the {@link SimpleCachedLDAPAuthorizationMap} that tests against a basic OpenLDAP instance.
  * Disabled by default because it requires external setup to provide the OpenLDAP instance.
  * 
  * To enable, you need an OpenLDAP with a minimum of the following in the slapd.conf file: 
@@ -64,8 +64,8 @@ public class CachedLDAPAuthorizationModuleLegacyOpenLDAPTest extends
         // Subtree rename not implemented by OpenLDAP.
     }
     
-    protected CachedLDAPAuthorizationMap createMap() {
-        CachedLDAPAuthorizationMap newMap = super.createMap();
+    protected SimpleCachedLDAPAuthorizationMap createMap() {
+        SimpleCachedLDAPAuthorizationMap newMap = super.createMap();
         newMap.setConnectionURL("ldap://" + LDAP_HOST + ":" + String.valueOf(LDAP_PORT));
         newMap.setConnectionUsername(LDAP_USER);
         newMap.setConnectionPassword(LDAP_PASS);

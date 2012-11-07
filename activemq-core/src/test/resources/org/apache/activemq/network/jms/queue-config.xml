@@ -65,7 +65,7 @@
   
   <!--JmsQueueConnector - the Jms bridge -->
   <bean id="jmsConnector"
-  	class="org.apache.activemq.network.jms.JmsQueueConnector">
+  	class="org.apache.activemq.network.jms.SimpleJmsQueueConnector">
   	<property name = "outboundQueueConnectionFactory" ref = "remoteFactory"/>
   	
   	<property name = "inboundQueueBridges">

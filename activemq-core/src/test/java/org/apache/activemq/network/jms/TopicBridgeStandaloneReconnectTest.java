@@ -36,7 +36,7 @@ public class TopicBridgeStandaloneReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TopicBridgeStandaloneReconnectTest.class);
 
-    private JmsTopicConnector jmsTopicConnector;
+    private SimpleJmsTopicConnector jmsTopicConnector;
 
     private BrokerService localBroker;
     private BrokerService foreignBroker;
@@ -203,7 +203,7 @@ public class TopicBridgeStandaloneReconnectTest {
         outbound = new ActiveMQTopic("RECONNECT.TEST.OUT.TOPIC");
         inbound = new ActiveMQTopic("RECONNECT.TEST.IN.TOPIC");
 
-        jmsTopicConnector = new JmsTopicConnector();
+        jmsTopicConnector = new SimpleJmsTopicConnector();
 
         // Wire the bridges.
         jmsTopicConnector.setOutboundTopicBridges(

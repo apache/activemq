@@ -65,7 +65,7 @@
   
   <!--JmsTopicConnector - the Jms bridge -->
   <bean id="jmsConnector"
-  	class="org.apache.activemq.network.jms.JmsTopicConnector">
+  	class="org.apache.activemq.network.jms.SimpleJmsTopicConnector">
   	<property name = "outboundTopicConnectionFactory" ref = "remoteFactory"/>
   	
   	<property name = "inboundTopicBridges">

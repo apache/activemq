@@ -38,6 +38,9 @@
       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
+      org.apache.activemq.store*;version=${project.version};-noimport:=;-split-package:=merge-last,
+      org.apache.activemq.security*;version=${project.version};-noimport:=;-split-package:=merge-last,
+      org.apache.activemq.network*;version=${project.version};-noimport:=;-split-package:=merge-last,
       org.apache.activemq.spring*;version=${project.version};-noimport:=;-split-package:=merge-last,
       org.apache.activemq.pool*;version=${project.version};-noimport:=;-split-package:=merge-last,
       org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last,
@@ -53,6 +56,11 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -133,11 +141,6 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-    	<groupId>org.apache.xbean</groupId>
-    	<artifactId>xbean-spring</artifactId>
-    	<scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>log4j</groupId>

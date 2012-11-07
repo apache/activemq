@@ -268,7 +268,7 @@ public class TopicOutboundBridgeReconnectTest {
         broker.addConnector("tcp://localhost:61616");
         broker.addConnector("vm://broker1");
 
-        JmsTopicConnector jmsTopicConnector = new JmsTopicConnector();
+        SimpleJmsTopicConnector jmsTopicConnector = new SimpleJmsTopicConnector();
         jmsTopicConnector.setOutboundTopicBridges(
             new OutboundTopicBridge[] {new OutboundTopicBridge("RECONNECT.TEST.TOPIC")});
         jmsTopicConnector.setOutboundTopicConnectionFactory(

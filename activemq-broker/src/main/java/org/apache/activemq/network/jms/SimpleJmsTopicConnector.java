@@ -32,11 +32,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A Bridge to other JMS Topic providers
- *
- * @org.apache.xbean.XBean
  */
-public class JmsTopicConnector extends JmsConnector {
-    private static final Logger LOG = LoggerFactory.getLogger(JmsTopicConnector.class);
+public class SimpleJmsTopicConnector extends JmsConnector {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleJmsTopicConnector.class);
     private String outboundTopicConnectionFactoryName;
     private String localConnectionFactoryName;
     private TopicConnectionFactory outboundTopicConnectionFactory;

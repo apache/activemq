@@ -38,7 +38,6 @@ import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jndi.JndiTemplate;
 
 /**
  * This bridge joins the gap between foreign JMS providers and ActiveMQ As some
@@ -51,8 +50,8 @@ public abstract class JmsConnector implements Service {
     private static final Logger LOG = LoggerFactory.getLogger(JmsConnector.class);
 
     protected boolean preferJndiDestinationLookup = false;
-    protected JndiTemplate jndiLocalTemplate;
-    protected JndiTemplate jndiOutboundTemplate;
+    protected JndiLookupFactory jndiLocalTemplate;
+    protected JndiLookupFactory jndiOutboundTemplate;
     protected JmsMesageConvertor inboundMessageConvertor;
     protected JmsMesageConvertor outboundMessageConvertor;
     protected AtomicBoolean initialized = new AtomicBoolean(false);
@@ -104,10 +103,10 @@ public abstract class JmsConnector implements Service {
         boolean result = initialized.compareAndSet(false, true);
         if (result) {
             if (jndiLocalTemplate == null) {
-                jndiLocalTemplate = new JndiTemplate();
+                jndiLocalTemplate = new JndiLookupFactory();
             }
             if (jndiOutboundTemplate == null) {
-                jndiOutboundTemplate = new JndiTemplate();
+                jndiOutboundTemplate = new JndiLookupFactory();
             }
             if (inboundMessageConvertor == null) {
                 inboundMessageConvertor = new SimpleJmsMessageConvertor();
@@ -210,28 +209,28 @@ public abstract class JmsConnector implements Service {
     /**
      * @return Returns the jndiTemplate.
      */
-    public JndiTemplate getJndiLocalTemplate() {
+    public JndiLookupFactory getJndiLocalTemplate() {
         return jndiLocalTemplate;
     }
 
     /**
      * @param jndiTemplate The jndiTemplate to set.
      */
-    public void setJndiLocalTemplate(JndiTemplate jndiTemplate) {
+    public void setJndiLocalTemplate(JndiLookupFactory jndiTemplate) {
         this.jndiLocalTemplate = jndiTemplate;
     }
 
     /**
      * @return Returns the jndiOutboundTemplate.
      */
-    public JndiTemplate getJndiOutboundTemplate() {
+    public JndiLookupFactory getJndiOutboundTemplate() {
         return jndiOutboundTemplate;
     }
 
     /**
      * @param jndiOutboundTemplate The jndiOutboundTemplate to set.
      */
-    public void setJndiOutboundTemplate(JndiTemplate jndiOutboundTemplate) {
+    public void setJndiOutboundTemplate(JndiLookupFactory jndiOutboundTemplate) {
         this.jndiOutboundTemplate = jndiOutboundTemplate;
     }
 

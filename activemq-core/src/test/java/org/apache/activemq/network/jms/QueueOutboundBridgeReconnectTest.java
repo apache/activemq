@@ -279,7 +279,7 @@ public class QueueOutboundBridgeReconnectTest {
         broker.addConnector("tcp://localhost:61616");
         broker.addConnector("vm://broker1");
 
-        JmsQueueConnector jmsQueueConnector = new JmsQueueConnector();
+        SimpleJmsQueueConnector jmsQueueConnector = new SimpleJmsQueueConnector();
         jmsQueueConnector.setOutboundQueueBridges(
             new OutboundQueueBridge[] {new OutboundQueueBridge("RECONNECT.TEST.QUEUE")});
         jmsQueueConnector.setOutboundQueueConnectionFactory(

@@ -54,8 +54,8 @@ public abstract class AbstractCachedLDAPAuthorizationModuleTest
     protected abstract String getMemberAttributeValueForModifyRequest();
 
     @Override
-    protected CachedLDAPAuthorizationMap createMap() {
-        CachedLDAPAuthorizationMap map = super.createMap();
+    protected SimpleCachedLDAPAuthorizationMap createMap() {
+        SimpleCachedLDAPAuthorizationMap map = super.createMap();
         map.setLegacyGroupMapping(false);
         return map;
     }

@@ -36,7 +36,7 @@ public class QueueBridgeStandaloneReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueBridgeStandaloneReconnectTest.class);
 
-    private JmsQueueConnector jmsQueueConnector;
+    private SimpleJmsQueueConnector jmsQueueConnector;
 
     private BrokerService localBroker;
     private BrokerService foreignBroker;
@@ -206,7 +206,7 @@ public class QueueBridgeStandaloneReconnectTest {
         outbound = new ActiveMQQueue("RECONNECT.TEST.OUT.QUEUE");
         inbound = new ActiveMQQueue("RECONNECT.TEST.IN.QUEUE");
 
-        jmsQueueConnector = new JmsQueueConnector();
+        jmsQueueConnector = new SimpleJmsQueueConnector();
 
         // Wire the bridges.
         jmsQueueConnector.setOutboundQueueBridges(
