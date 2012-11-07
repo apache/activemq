@@ -25,155 +25,24 @@
     <version>5.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>activemq-core</artifactId>
-  <packaging>bundle</packaging>
-  <name>ActiveMQ :: Core</name>
-  <description>The ActiveMQ Message Broker and Client implementations</description>
+  <artifactId>activemq-jdbc-store</artifactId>
+  <packaging>jar</packaging>
+  <name>ActiveMQ :: JDBC Store</name>
+  <description>The ActiveMQ JDBC Store Implementation</description>
 
   <properties>
-    <activemq.osgi.import.pkg>
-      com.thoughtworks.xstream*;resolution:=optional,
-      org.xmlpull*;resolution:=optional,
-      javax.xml.stream*;resolution:=optional,
-      javax.annotation*;resolution:=optional,
-      javax.transaction*;resolution:=optional,
-      javax.security*;resolution:=optional,
-      javax.jmdns*;resolution:=optional,
-      org.codehaus.jettison*;resolution:=optional,
-      org.apache.activeio*;resolution:=optional,
-      org.apache.camel*;resolution:=optional,
-      org.apache.commons.net*;resolution:=optional,
-      org.apache.derby*;resolution:=optional,
-      org.apache.tools.ant*;resolution:=optional,
-      org.apache.maven*;resolution:=optional,
-      org.apache.xbean*;resolution:=optional,
-      '=org.apache.xbean.spring.context.v2;resolution:=optional',
-      org.apache.xpath*;resolution:=optional,
-      org.codehaus.jam*;resolution:=optional,
-      org.springframework*;resolution:=optional,
-      org.springframework.beans.factory.xml;resolution:=optional,
-      org.w3c.dom.traversal*;resolution:=optional,
-      org.fusesource.hawtbuf*;resolution:=optional,
-      org.apache.activemq.store.leveldb*;resolution:=optional,
-      org.apache.activemq.leveldb*;resolution:=optional,
-      org.fusesource.mqtt.client*;resolution:=optional,
-      org.fusesource.mqtt.codec*;resolution:=optional,
-      *
-    </activemq.osgi.import.pkg>
-    <activemq.osgi.export>
-      org.apache.activemq*;version=${project.version};-noimport:=true,
-      org.apache.kahadb*;version=${project.version};-noimport:=true,
-      '=META-INF.services.org.apache.xbean.spring.http.activemq.apache.org.schema';-noimport:=true
-    </activemq.osgi.export>
-    <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
     <surefire.argLine>-Xmx512M</surefire.argLine>
   </properties>
 
   <dependencies>
-    
-    <!-- =============================== -->
-    <!-- Required Dependencies -->
-    <!-- =============================== -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-broker</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-jdbc-store</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-kahadb-store</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-amq-store</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-mqtt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-stomp</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jms_1.1_spec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-
-    <dependency>
+    <!-- <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.fusesource.mqtt-client</groupId>
-      <artifactId>mqtt-client</artifactId>
-    </dependency>
-
-    <!-- =============================== -->
-    <!-- Optional Dependencies           -->
-    <!-- =============================== -->
-
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-jaas</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-annotation_1.0_spec</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jacc_1.1_spec</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-        <groupId>org.codehaus.jettison</groupId>
-        <artifactId>jettison</artifactId>
-        <optional>true</optional>
-    </dependency>
-
-    <!-- for XML parsing -->
-    <dependency>
-      <groupId>org.apache.xbean</groupId>
-      <artifactId>xbean-spring</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-context</artifactId>
+      <artifactId>activemq-broker</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.derby</groupId>
@@ -181,21 +50,14 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
     </dependency>
 
-    <!-- not really a dependency at all - just added optionally to get the generator working -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
-    </dependency>
+    <!-- =============================== -->
+    <!-- Optional Dependencies           -->
+    <!-- =============================== -->
 
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
@@ -206,11 +68,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-all</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
@@ -218,42 +75,6 @@
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jms</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>javax.jmdns</groupId>
-      <artifactId>jmdns</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring3</artifactId>
-      <version>${jasypt-version}</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-      <version>6.1.26</version>
       <scope>test</scope>
     </dependency>
     
@@ -279,49 +100,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!--  Joram JMS conformance tests -->
-    <dependency>
-      <groupId>org.fusesource.joram-jms-tests</groupId>
-      <artifactId>joram-jms-tests</artifactId>
-      <version>1.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <!-- using it for Jetty's JNDI context to work /w Joram tests. -->
-      <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <!--  LDAP tests -->
-    <dependency>
-      <groupId>org.apache.directory.server</groupId>
-      <artifactId>apacheds-core-integ</artifactId>
-      <version>${directory-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.directory.server</groupId>
-      <artifactId>apacheds-server-integ</artifactId>
-      <version>${directory-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock-junit4</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock-legacy</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.ftpserver</groupId>
-      <artifactId>ftpserver-core</artifactId>
-      <version>${ftpserver-version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 
   <reporting>
@@ -437,6 +215,14 @@
             <lifecycleMappingMetadata>
               <pluginExecutions>
                 <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.activemq.protobuf</groupId>
+                    <artifactId>activemq-protobuf</artifactId>
+                    <versionRange>[0.0.0,)</versionRange>
+                    <goals>
+                      <goal>compile</goal>
+                    </goals>
+                  </pluginExecutionFilter>
                   <action>
                     <ignore />
                   </action>
@@ -488,6 +274,17 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.activemq.protobuf</groupId>
+        <artifactId>activemq-protobuf</artifactId>
+         <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>

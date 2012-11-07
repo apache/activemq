@@ -195,12 +195,20 @@
   </distributionManagement>
 
   <modules>
-    <module>activemq-all</module>
+    <module>activemq-client</module>
     <module>activemq-broker</module>
+
+    <module>activemq-stomp</module>
+    <module>activemq-mqtt</module>
+
+    <module>activemq-kahadb-store</module>
+    <module>activemq-amq-store</module>
+    <module>activemq-jdbc-store</module>
+
+    <module>activemq-core</module>
+    <module>activemq-all</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
-    <module>activemq-client</module>
-    <module>activemq-core</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
     <module>activemq-blueprint</module>
@@ -220,6 +228,7 @@
     <module>activemq-xmpp</module>
     <module>activemq-itests-spring31</module>
     <module>assembly</module>
+    
   </modules>
 
   <scm>
@@ -233,6 +242,33 @@
       <!-- =============================== -->
       <!-- Internal ActiveMQ Dependencies -->
       <!-- =============================== -->
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-amq-store</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-kahadb-store</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jdbc-store</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-mqtt</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-stomp</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>

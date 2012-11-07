@@ -20,3 +20,5 @@ activemq-core/networkedBroker
 activemq-core/shared
 activemq-data
 data/
+dependency-reduced-pom.xml
+velocity.log
