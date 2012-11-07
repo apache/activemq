@@ -25,7 +25,7 @@
     <version>5.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>activemq-itest-spring31</artifactId>
+  <artifactId>activemq-itests-spring31</artifactId>
   <packaging>jar</packaging>
   <name>ActiveMQ :: Integration Test :: Spring 3.1</name>
   <description>ActiveMQ integration test with Spring 3.1</description>

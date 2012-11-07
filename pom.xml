@@ -216,7 +216,7 @@
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
     <module>activemq-xmpp</module>
-    <module>tests</module>
+    <module>activemq-itests-spring31</module>
     <module>assembly</module>
   </modules>
 
