@@ -49,6 +49,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory {
         this.transactionManager = transactionManager;
     }
 
+    @Override
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
         return new XaConnectionPool(connection, getTransactionManager());
     }

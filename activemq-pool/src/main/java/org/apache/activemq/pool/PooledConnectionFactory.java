@@ -130,7 +130,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
                 public ConnectionPool makeObject(ConnectionKey key) throws Exception {
                     ActiveMQConnection delegate = createConnection(key);
 
-                    ConnectionPool connection = new ConnectionPool(delegate);
+                    ConnectionPool connection = createConnectionPool(delegate);
                     connection.setIdleTimeout(getIdleTimeout());
                     connection.setExpiryTimeout(getExpiryTimeout());
                     connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
@@ -483,5 +483,17 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      * @deprecated
      */
     public void setPoolFactory(ObjectPoolFactory<?> factory) {
+    }
+
+    /**
+     * Delegate that creates each instance of an ConnectionPool object.  Subclasses can override
+     * this method to customize the type of connection pool returned.
+     *
+     * @param connection
+     *
+     * @return instance of a new ConnectionPool.
+     */
+    protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
+        return new ConnectionPool(connection);
     }
 }

@@ -33,6 +33,7 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
+import org.apache.activemq.ActiveMQXASession;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.test.TestSupport;
 
@@ -122,6 +123,11 @@ public class XAConnectionPoolTest extends TestSupport {
 
         TopicConnection connection = (TopicConnection) pcf.createConnection();
         TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        assertTrue(session instanceof PooledSession);
+        PooledSession pooledSession = (PooledSession) session;
+        assertTrue(pooledSession.getInternalSession() instanceof ActiveMQXASession);
+
         TopicPublisher publisher = session.createPublisher(topic);
         publisher.publish(session.createMessage());
 
