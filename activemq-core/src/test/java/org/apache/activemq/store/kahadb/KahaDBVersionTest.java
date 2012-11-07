@@ -19,16 +19,12 @@ package org.apache.activemq.store.kahadb;
 import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.IOHelper;
 
 import javax.jms.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.FileNotFoundException;
 
 /**
  * @author chirino

@@ -18,29 +18,13 @@ package org.apache.activemq.broker;
 
 import java.util.LinkedList;
 import java.util.List;
-import javax.jms.JMSException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
+
 import junit.framework.Test;
-import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DataArrayResponse;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.command.TransactionInfo;
-import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.kahadb.FilteredKahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
-import org.apache.activemq.util.JMXSupport;
 
 public class mKahaDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
 

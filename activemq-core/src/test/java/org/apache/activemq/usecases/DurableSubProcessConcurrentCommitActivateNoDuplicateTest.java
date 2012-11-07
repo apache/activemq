@@ -17,7 +17,6 @@
 package org.apache.activemq.usecases;
 
 import java.io.File;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;

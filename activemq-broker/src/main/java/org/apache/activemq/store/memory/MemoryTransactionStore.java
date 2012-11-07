@@ -30,7 +30,6 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.jdbc.JDBCMessageStore;
 
 import java.io.IOException;
 import java.util.ArrayList;

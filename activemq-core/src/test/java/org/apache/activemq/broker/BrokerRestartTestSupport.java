@@ -19,9 +19,7 @@ package org.apache.activemq.broker;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.store.PersistenceAdapter;
+
 import org.apache.activemq.util.IOHelper;
 
 public class BrokerRestartTestSupport extends BrokerTestSupport {

@@ -18,8 +18,6 @@ package org.apache.activemq.kaha.impl.index;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;

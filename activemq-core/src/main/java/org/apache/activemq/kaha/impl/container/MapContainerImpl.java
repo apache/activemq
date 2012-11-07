@@ -39,7 +39,6 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.kaha.impl.index.VMIndex;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
-import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

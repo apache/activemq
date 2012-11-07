@@ -50,7 +50,6 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.*;
@@ -200,7 +199,7 @@ public class BrokerService implements Service {
 
         InputStream in = null;
         String version = null;
-        if ((in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
+        if ((in = BrokerService.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             try {
                 version = reader.readLine();

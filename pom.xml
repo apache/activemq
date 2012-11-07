@@ -196,6 +196,7 @@
 
   <modules>
     <module>activemq-all</module>
+    <module>activemq-broker</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
     <module>activemq-client</module>
@@ -235,6 +236,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-broker</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
