@@ -137,13 +137,20 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
         return getSession().createProducer(null);
     }
 
+    private static final ThreadLocal<Object> APPENDING = new ThreadLocal<Object>();
+
     protected void append(LoggingEvent event) {
-        try {
-            Message message = createMessage(event);
-            Destination destination = getDestination(event);
-            getProducer().send(destination, message);
-        } catch (Exception e) {
-            getErrorHandler().error("Could not send message due to: " + e, e, JMS_PUBLISH_ERROR_CODE, event);
+        if( APPENDING.get()==null ) {
+            APPENDING.set(true);
+            try {
+                Message message = createMessage(event);
+                Destination destination = getDestination(event);
+                getProducer().send(destination, message);
+            } catch (Exception e) {
+                getErrorHandler().error("Could not send message due to: " + e, e, JMS_PUBLISH_ERROR_CODE, event);
+            } finally {
+                APPENDING.remove();
+            }
         }
     }
 
