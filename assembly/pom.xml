@@ -96,6 +96,15 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-log4j-appender</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-http</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>

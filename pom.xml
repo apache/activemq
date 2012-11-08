@@ -230,7 +230,8 @@
     <module>activemq-xmpp</module>
     <module>activemq-itests-spring31</module>
     <module>assembly</module>
-
+    <module>activemq-log4j-appender</module>
+    <module>activemq-http</module>
     
   </modules>
 
@@ -245,6 +246,17 @@
       <!-- =============================== -->
       <!-- Internal ActiveMQ Dependencies -->
       <!-- =============================== -->
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-http</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-log4j-appender</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-amq-store</artifactId>
