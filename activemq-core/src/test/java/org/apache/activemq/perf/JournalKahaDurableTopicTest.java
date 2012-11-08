@@ -27,6 +27,13 @@ import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
  */
 public class JournalKahaDurableTopicTest extends SimpleDurableTopicTest {
 
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        sampleCount = 3;
+        sampleInternal = 10000;
+    }
+
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
 
         File dataFileDir = new File("target/test-amq-data/perfTest");
