@@ -66,7 +66,7 @@ public class InactiveQueueTest extends TestCase {
          * factory.setTaskRunnerFactory(broker.getTaskRunnerFactory());
          * factory.setUseJournal(false); broker.setPersistenceFactory(factory);
          */
-        broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
+        broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
         broker.start();
         connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
         /*
