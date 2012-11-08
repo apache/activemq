@@ -36,6 +36,16 @@ public class StoreExportCommand implements Command {
     }
 
     @Override
+    public String getName() {
+        return "export";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Exports a stopped brokers data files to an archive file";
+    }
+
+    @Override
     public void execute(List<String> tokens) throws Exception {
         StoreExporter exporter = new StoreExporter();
         String[] remaining = CommandLineSupport.setOptions(exporter, tokens.toArray(new String[tokens.size()]));

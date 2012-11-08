@@ -79,6 +79,16 @@ public class BrowseCommand extends AbstractJmxCommand {
     private final Set<String> groupViews = new HashSet<String>(10);
     private final Set queryViews = new HashSet(10);
 
+    @Override
+    public String getName() {
+        return "browse";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Used to browse a destination";
+    }
+
     /**
      * Execute the browse command, which allows you to browse the messages in a
      * given JMS destination

@@ -16,15 +16,12 @@
  */
 package org.apache.activemq.console.command;
 
+import org.apache.activemq.console.CommandContext;
+import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
+
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.activemq.console.CommandContext;
-import org.apache.activemq.console.command.store.amq.AMQJournalToolCommand;
-import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
+import java.util.*;
 
 public class ShellCommand extends AbstractCommand {
 
@@ -37,36 +34,52 @@ public class ShellCommand extends AbstractCommand {
 
     public ShellCommand(boolean interactive) {
         this.interactive = interactive;
-        this.helpFile = new String[] {
-            interactive ? "Usage: [task] [task-options] [task data]" : "Usage: Main [--extdir <dir>] [task] [task-options] [task data]", 
-            "",
-            "Tasks:",
-            "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
-            "    create          - Creates a runnable broker instance in the specified path",
-            "    stop            - Stops a running broker specified by the broker name.",
-            "    list            - Lists all available brokers in the specified JMX context.",
-            "    query           - Display selected broker component's attributes and statistics.",
-            "    browse          - Display selected messages in a specified destination.",
-            "    journal-audit   - Allows you to view records stored in the persistent journal.",
-            "    export          - Exports a stopped brokers data files to an archive file",
-            "    purge           - Delete selected destination's messages that matches the message selector",
-            "    encrypt         - Encrypts given text",
-            "    decrypt         - Decrypts given text",
-            "",
-            "Task Options (Options specific to each task):",
-            "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
-            "    --version       - Display the version information.",
-            "    -h,-?,--help    - Display this help information. To display task specific help, use " + (interactive ? "" : "Main ") + "[task] -h,-?,--help", 
-            "",
-            "Task Data:",
-            "    - Information needed by each specific task.",
-            "",
-            "JMX system property options:",
-            "    -Dactivemq.jmx.url=<jmx service uri> (default is: 'service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi')",
-            "    -Dactivemq.jmx.user=<user name>",
-            "    -Dactivemq.jmx.password=<password>",
-            ""
-        };
+        ArrayList<String> help = new ArrayList<String>();
+        help.addAll(Arrays.asList(new String[] {
+                    interactive ? "Usage: [task] [task-options] [task data]" : "Usage: Main [--extdir <dir>] [task] [task-options] [task data]",
+                    "",
+                    "Tasks:"}));
+
+        ArrayList<Command> commands = getCommands();
+        Collections.sort(commands, new Comparator<Command>() {
+            @Override
+            public int compare(Command command, Command command1) {
+                return command.getName().compareTo(command1.getName());
+            }
+        });
+
+        for( Command command: commands) {
+            help.add(String.format("    %-24s - %s", command.getName(), command.getOneLineDescription()));
+        }
+
+        help.addAll(Arrays.asList(new String[] {
+                    "",
+                    "Task Options (Options specific to each task):",
+                    "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
+                    "    --version       - Display the version information.",
+                    "    -h,-?,--help    - Display this help information. To display task specific help, use " + (interactive ? "" : "Main ") + "[task] -h,-?,--help",
+                    "",
+                    "Task Data:",
+                    "    - Information needed by each specific task.",
+                    "",
+                    "JMX system property options:",
+                    "    -Dactivemq.jmx.url=<jmx service uri> (default is: 'service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi')",
+                    "    -Dactivemq.jmx.user=<user name>",
+                    "    -Dactivemq.jmx.password=<password>",
+                    ""
+                }));
+
+        this.helpFile = help.toArray(new String[help.size()]);
+    }
+
+    @Override
+    public String getName() {
+        return "shell";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Runs the activemq sub shell";
     }
 
     /**
@@ -116,36 +129,22 @@ public class ShellCommand extends AbstractCommand {
         if (tokens.size() > 0) {
             Command command=null;
             String taskToken = (String)tokens.remove(0);
-            if (taskToken.equals("start")) {
-                command = new StartCommand();
-            } else if (taskToken.equals("create")) {
-                command = new CreateCommand();
-            } else if (taskToken.equals("stop")) {
-                command = new ShutdownCommand();
-            } else if (taskToken.equals("list")) {
-                command = new ListCommand();
-            } else if (taskToken.equals("query")) {
-                command = new QueryCommand();
-            } else if (taskToken.equals("bstat")) {
-                command = new BstatCommand();
-            } else if (taskToken.equals("browse")) {
-                command = new AmqBrowseCommand();
-            } else if (taskToken.equals("purge")) {
-                command = new PurgeCommand();
-            } else if (taskToken.equals("journal-audit")) {
-                command = new AMQJournalToolCommand();
-            } else if (taskToken.equals("encrypt")) {
-                command = new EncryptCommand();
-            } else if (taskToken.equals("decrypt")) {
-                command = new DecryptCommand();
-            } else if (taskToken.equals("export")) {
-                command = new StoreExportCommand();
-            } else if (taskToken.equals("help")) {
-                printHelp();
-            } else {
-                printHelp();
+
+
+            for( Command c: getCommands() ) {
+                if( taskToken.equals(c.getName()) ) {
+                    command = c;
+                    break;
+                }
             }
-            
+            if( command == null ) {
+                if (taskToken.equals("help")) {
+                    printHelp();
+                } else {
+                    printHelp();
+                }
+            }
+
             if( command!=null ) {
                 command.setCommandContext(context);
                 command.execute(tokens);
@@ -154,6 +153,15 @@ public class ShellCommand extends AbstractCommand {
             printHelp();
         }
 
+    }
+
+    ArrayList<Command> getCommands() {
+        ServiceLoader<Command> loader = ServiceLoader.load(Command.class);
+        ArrayList<Command> rc = new ArrayList<Command>();
+        for( Command command: loader ) {
+            rc.add(command);
+        }
+        return rc;
     }
 
 	/**

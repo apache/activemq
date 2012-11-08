@@ -67,6 +67,16 @@ public class CreateCommand extends AbstractCommand {
     protected File amqHome;
     protected File targetAmqBase;
 
+    @Override
+    public String getName() {
+        return "create";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Creates a runnable broker instance in the specified path.";
+    }
+
     protected void runTask(List<String> tokens) throws Exception {
         context.print("Running create broker task...");
         amqHome = new File(System.getProperty("activemq.home"));

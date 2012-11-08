@@ -24,7 +24,6 @@ import org.apache.activemq.console.command.store.proto.QueueEntryPB;
 import org.apache.activemq.console.command.store.proto.QueuePB;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.*;
-import org.apache.activemq.xbean.XBeanBrokerFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fusesource.hawtbuf.AsciiBuffer;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
@@ -70,9 +69,9 @@ public class StoreExporter {
             throw new Exception("required --file option missing");
         }
         System.out.println("Loading: " + config);
-        XBeanBrokerFactory.setStartDefault(false); // to avoid the broker auto-starting..
+        BrokerFactory.setStartDefault(false); // to avoid the broker auto-starting..
         BrokerService broker = BrokerFactory.createBroker(config);
-        XBeanBrokerFactory.resetStartDefault();
+        BrokerFactory.resetStartDefault();
         PersistenceAdapter store = broker.getPersistenceAdapter();
         System.out.println("Starting: " + store);
         store.start();

@@ -35,6 +35,16 @@ public class DecryptCommand extends EncryptCommand {
         };    
     
     @Override
+    public String getName() {
+        return "decrypt";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Decrypts given text";
+    }
+
+    @Override
     protected void runTask(List<String> tokens) throws Exception {
         if (password == null || input == null) {
             context.printException(new IllegalArgumentException("input and password parameters are mandatory"));

@@ -52,6 +52,16 @@ public class ShutdownCommand extends AbstractJmxCommand {
 
     private boolean isStopAllBrokers;
 
+    @Override
+    public String getName() {
+        return "stop";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Stops a running broker specified by the broker name.";
+    }
+
     /**
      * Shuts down the specified broker or brokers
      * 

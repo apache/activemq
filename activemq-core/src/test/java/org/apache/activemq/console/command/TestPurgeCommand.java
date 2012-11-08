@@ -118,7 +118,7 @@ public class TestPurgeCommand extends TestCase {
 	}
 
 	protected AbstractApplicationContext createApplicationContext() {
-		return new ClassPathXmlApplicationContext("activemq.xml");
+		return new ClassPathXmlApplicationContext("org/apache/activemq/console/command/activemq.xml");
 	}
 
 	protected void tearDown() throws Exception {

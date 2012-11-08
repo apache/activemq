@@ -61,6 +61,16 @@ public class StartCommand extends AbstractCommand {
     private URI configURI;
     private List<BrokerService> brokers = new ArrayList<BrokerService>(5);
 
+    @Override
+    public String getName() {
+        return "start";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Creates and starts a broker using a configuration file, or a broker URI.";
+    }
+
     /**
      * The default task to start a broker or a group of brokers
      * 

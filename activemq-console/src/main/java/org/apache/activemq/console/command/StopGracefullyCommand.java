@@ -32,6 +32,16 @@ import javax.management.ObjectName;
  */
 public class StopGracefullyCommand extends ShutdownCommand {
     
+    @Override
+    public String getName() {
+        return "stop-gracefully";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Stops a running broker gracefully.";
+    }
+
         protected String connectorName, queueName;
         protected long timeout;
         protected long pollInterval;

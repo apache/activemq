@@ -70,6 +70,16 @@ public class PurgeCommand extends AbstractJmxCommand {
     private final List<String> queryAddObjects = new ArrayList<String>(10);
     private final List<String> querySubObjects = new ArrayList<String>(10);
 
+    @Override
+    public String getName() {
+        return "purge";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Delete selected destination's messages that matches the message selector";
+    }
+
     /**
      * Execute the purge command, which allows you to purge the messages in a
      * given JMS destination

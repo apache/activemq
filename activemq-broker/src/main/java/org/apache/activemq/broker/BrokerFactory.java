@@ -98,4 +98,20 @@ public final class BrokerFactory {
         return createBroker(new URI(brokerURI), startBroker);
     }
 
+    private static final ThreadLocal<Boolean> START_DEFAULT = new ThreadLocal<Boolean>();
+
+    public static void setStartDefault(boolean startDefault) {
+        START_DEFAULT.set(startDefault);
+    }
+    public static void resetStartDefault() {
+        START_DEFAULT.remove();
+    }
+
+    public static boolean getStartDefault() {
+        Boolean value = START_DEFAULT.get();
+        if( value==null ) {
+            return true;
+        }
+        return value.booleanValue();
+    }
 }

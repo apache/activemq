@@ -30,6 +30,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.console.util.AmqMessagesUtil;
 
 public class AmqBrowseCommand extends AbstractAmqCommand {
+
     public static final String QUEUE_PREFIX = "queue:";
     public static final String TOPIC_PREFIX = "topic:";
 
@@ -87,6 +88,16 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
     private final List<String> querySubObjects = new ArrayList<String>(10);
     private final Set<String> groupViews = new HashSet<String>(10);
     private final Set queryViews = new HashSet(10);
+
+    @Override
+    public String getName() {
+        return "browse";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Display selected messages in a specified destination.";
+    }
 
     /**
      * Execute the browse command, which allows you to browse the messages in a

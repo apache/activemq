@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.console.command.store.amq;
+package org.apache.activemq.store.amq;
 
 import java.io.File;
 import java.util.List;
@@ -25,6 +25,16 @@ import org.apache.activemq.console.command.Command;
 public class AMQJournalToolCommand implements Command {
 
 	private CommandContext context;
+
+    @Override
+    public String getName() {
+        return "journal-audit";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Allows you to view records stored in the persistent journal.";
+    }
 
 	public void execute(List<String> tokens) throws Exception {
 		AMQJournalTool consumerTool = new AMQJournalTool();

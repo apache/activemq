@@ -39,6 +39,16 @@ public class ListCommand extends AbstractJmxCommand {
         ""
     };
 
+    @Override
+    public String getName() {
+        return "list";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Lists all available brokers in the specified JMX context";
+    }
+
     /**
      * List all running brokers registered in the specified JMX context
      * @param tokens - command arguments

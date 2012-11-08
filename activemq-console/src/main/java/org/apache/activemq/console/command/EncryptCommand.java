@@ -39,6 +39,16 @@ public class EncryptCommand extends AbstractCommand {
     String password;
     
     @Override
+    public String getName() {
+        return "encrypt";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Encrypts given text";
+    }
+
+    @Override
     protected void printHelp() {
         context.printHelp(helpFile);
     }

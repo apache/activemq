@@ -98,6 +98,16 @@ public class QueryCommand extends AbstractJmxCommand {
     private final List<String> querySubObjects = new ArrayList<String>(10);
     private final Set queryViews = new HashSet(10);
 
+    @Override
+    public String getName() {
+        return "query";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Display selected broker component's attributes and statistics.";
+    }
+
     /**
      * Queries the mbeans registered in the specified JMX context
      * 

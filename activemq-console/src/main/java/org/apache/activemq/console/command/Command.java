@@ -22,7 +22,11 @@ import java.util.List;
 import org.apache.activemq.console.CommandContext;
 
 public interface Command {
-    
+
+    String getName();
+
+    String getOneLineDescription();
+
     void setCommandContext( CommandContext context );
     
     /**

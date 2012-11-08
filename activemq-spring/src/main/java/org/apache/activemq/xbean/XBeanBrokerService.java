@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.usage.SystemUsage;
 import org.springframework.beans.CachedIntrospectionResults;
@@ -44,7 +45,7 @@ public class XBeanBrokerService extends BrokerService {
     private boolean start;
 
     public XBeanBrokerService() {
-        start = XBeanBrokerFactory.getStartDefault();
+        start = BrokerFactory.getStartDefault();
     }
 
     /**

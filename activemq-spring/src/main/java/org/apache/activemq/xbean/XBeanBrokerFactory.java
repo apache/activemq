@@ -41,7 +41,6 @@ import org.springframework.core.io.Resource;
  */
 public class XBeanBrokerFactory implements BrokerFactoryHandler {
     private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerFactory.class);
-    private static final ThreadLocal<Boolean> START_DEFAULT = new ThreadLocal<Boolean>();
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
@@ -109,21 +108,6 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             LOG.error("Failed to load: " + resource + ", reason: " + errorToLog.getLocalizedMessage(), errorToLog);
             throw errorToLog;
         }
-    }
-
-    public static void setStartDefault(boolean startDefault) {
-        START_DEFAULT.set(startDefault);
-    }
-    public static void resetStartDefault() {
-        START_DEFAULT.remove();
-    }
-
-    public static boolean getStartDefault() {
-        Boolean value = START_DEFAULT.get();
-        if( value==null ) {
-            return true;
-        }
-        return value.booleanValue();
     }
 
 }

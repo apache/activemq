@@ -40,7 +40,17 @@ public class BstatCommand extends QueryCommand {
         "    activemq-admin bstat localhost",
         "        - Display a summary of statistics for the broker 'localhost'"
     };
-    
+
+    @Override
+    public String getName() {
+        return "bstat";
+    }
+
+    @Override
+    public String getOneLineDescription() {
+        return "Performs a predefined query that displays useful statistics regarding the specified broker";
+    }
+
     /**
      * Performs a predefiend query option
      * @param tokens - command arguments
