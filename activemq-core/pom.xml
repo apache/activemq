@@ -597,7 +597,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <excludes combine.children="append">
-                                <exclude>none</exclude>
+                                <!-- These are performance tests so take too long to run -->
+                                <exclude>**/perf/*</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
