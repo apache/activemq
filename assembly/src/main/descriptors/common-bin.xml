@@ -110,7 +110,10 @@
       <includes>
         <include>org.slf4j:slf4j-api</include>
         <include>org.slf4j:jcl-over-slf4j</include>
-        <include>${pom.groupId}:activemq-core</include>
+        <include>${pom.groupId}:activemq-client</include>
+        <include>${pom.groupId}:activemq-broker</include>
+        <include>${pom.groupId}:activemq-kahadb-store</include>
+        <include>${pom.groupId}:activemq-spring</include>
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
         <include>${pom.groupId}:kahadb</include>
@@ -137,7 +140,12 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-        <include>${pom.groupId}:activemq-optional</include>
+        <include>${pom.groupId}:activemq-mqtt</include>
+        <include>${pom.groupId}:activemq-stomp</include>
+        <include>${pom.groupId}:activemq-http</include>
+        <include>${pom.groupId}:activemq-jdbc-store</include>
+        <include>${pom.groupId}:activemq-leveldb-store</include>
+        <include>${pom.groupId}:activemq-log4j-appender</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-xmpp</include>
         <include>${pom.groupId}:activemq-spring</include>

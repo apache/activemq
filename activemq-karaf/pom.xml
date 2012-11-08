@@ -121,7 +121,11 @@
     </dependency>
     <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-optional</artifactId>
+        <artifactId>activemq-http</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-log4j-appender</artifactId>
     </dependency>
     <dependency>
         <groupId>org.apache.activemq</groupId>

@@ -217,7 +217,6 @@
     <module>activemq-blueprint</module>
     <module>activemq-karaf</module>
     <module>activemq-openwire-generator</module>
-    <module>activemq-optional</module>
     <module>activemq-pool</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
@@ -380,11 +379,6 @@
         <artifactId>activemq-fileserver</artifactId>
         <version>${project.version}</version>
         <type>war</type>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-optional</artifactId>
-        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>

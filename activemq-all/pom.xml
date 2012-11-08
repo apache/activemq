@@ -42,10 +42,6 @@
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-optional</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-annotation_1.0_spec</artifactId>
     </dependency>
@@ -73,12 +69,24 @@
 
               <artifactSet>
                 <includes>
+                  <include>${project.groupId}:activemq-client</include>
+                  <include>${project.groupId}:activemq-openwire-legacy</include>
                   <include>${project.groupId}:activemq-camel</include>
-                  <include>${project.groupId}:activemq-core</include>
-                  <include>${project.groupId}:activemq-console</include>
+
                   <include>${project.groupId}:activemq-jaas</include>
-                  <include>${project.groupId}:activemq-optional</include>
-                  <include>${project.groupId}:kahadb</include>
+                  <include>${project.groupId}:activemq-broker</include>
+                  <include>${project.groupId}:activemq-console</include>
+                  <include>${project.groupId}:activemq-spring</include>
+
+                  <include>${project.groupId}:activemq-http</include>
+                  <include>${project.groupId}:activemq-mqtt</include>
+                  <include>${project.groupId}:activemq-stomp</include>
+
+                  <include>${project.groupId}:activemq-amqp-store</include>
+                  <include>${project.groupId}:activemq-kahadb-store</include>
+                  <include>${project.groupId}:activemq-leveldb-store</include>
+                  <include>${project.groupId}:activemq-jdbc-store</include>
+                  
                   <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
