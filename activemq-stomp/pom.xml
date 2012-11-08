@@ -34,7 +34,7 @@
   </properties>
 
   <dependencies>
-    
+
     <!-- =============================== -->
     <!-- Required Dependencies -->
     <!-- =============================== -->
@@ -126,13 +126,6 @@
     <dependency>
       <groupId>commons-net</groupId>
       <artifactId>commons-net</artifactId>
-    </dependency>
-
-    <!-- not really a dependency at all - just added optionally to get the generator working -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
     </dependency>
 
     <!-- =============================== -->
