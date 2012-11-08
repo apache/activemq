@@ -1,5 +1,6 @@
 package org.apache.activemq.leveldb;
 
+import junit.framework.Test;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTest;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -12,13 +13,13 @@ import java.io.IOException;
  */
 public class LevelDBStoreBrokerTest extends BrokerTest {
 
-//    def suite: Test = {
-//      return new TestSuite(classOf[LevelDBStoreBrokerTest])
-//    }
-//
-//    def main(args: Array[String]): Unit = {
-//      junit.textui.TestRunner.run(suite)
-//    }
+    public static Test suite() {
+        return suite(LevelDBStoreBrokerTest.class);
+    }
+
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
+    }
 
     @Override
     protected BrokerService createBroker() throws Exception {

@@ -311,6 +311,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
           if( prepared ) {
             uow.dequeue(xacontainer_id, message.getMessageId)
           }
+          message.setMessageId(message.getMessageId.copy())
           store.doAdd(uow, message, delay)
         }
 
