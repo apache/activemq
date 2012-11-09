@@ -17,22 +17,15 @@
 package org.apache.activemq.store.jdbc;
 
 import org.apache.activemq.broker.AbstractLocker;
-import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 
-public class LeaseDatabaseLockerConfigTest {
-
-    LeaseDatabaseLocker underTest;
-
-    @Before
-    public void setUpStore() throws Exception {
-        underTest = new LeaseDatabaseLocker();
-    }
+public class DatabaseLockerConfigTest {
 
     @Test
     public void testSleepConfig() throws Exception {
+        LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
         underTest.setLockAcquireSleepInterval(50);
         underTest.configure(null);
         assertEquals("configured sleep value retained", 50, underTest.getLockAcquireSleepInterval());
@@ -40,6 +33,22 @@ public class LeaseDatabaseLockerConfigTest {
 
     @Test
     public void testDefaultSleepConfig() throws Exception {
+        LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
+        underTest.configure(null);
+        assertEquals("configured sleep value retained", AbstractLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL, underTest.getLockAcquireSleepInterval());
+    }
+
+        @Test
+    public void testSleepConfigOrig() throws Exception {
+        DefaultDatabaseLocker underTest = new DefaultDatabaseLocker();
+        underTest.setLockAcquireSleepInterval(50);
+        underTest.configure(null);
+        assertEquals("configured sleep value retained", 50, underTest.getLockAcquireSleepInterval());
+    }
+
+    @Test
+    public void testDefaultSleepConfigOrig() throws Exception {
+        DefaultDatabaseLocker underTest = new DefaultDatabaseLocker();
         underTest.configure(null);
         assertEquals("configured sleep value retained", AbstractLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL, underTest.getLockAcquireSleepInterval());
     }

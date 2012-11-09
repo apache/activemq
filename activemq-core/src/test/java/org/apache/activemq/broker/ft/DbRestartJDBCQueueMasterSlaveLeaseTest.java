@@ -31,9 +31,9 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     @Override
     protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         super.configureJdbcPersistenceAdapter(persistenceAdapter);
+        persistenceAdapter.setLocker(new LeaseDatabaseLocker());
         persistenceAdapter.getLocker().setLockAcquireSleepInterval(getLockAcquireSleepInterval());
         persistenceAdapter.setLockKeepAlivePeriod(getLockKeepAlivePeriod());
-        persistenceAdapter.setLocker(new LeaseDatabaseLocker());
     }
 
     private long getLockKeepAlivePeriod() {
