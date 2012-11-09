@@ -127,7 +127,7 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
     @Override
     public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription) {
-        if (next.get().isExpired(messageReference)) {
+        if (messageReference.isExpired()) {
             // there are two uses of  sendToDeadLetterQueue, we are only interested in valid messages
             super.sendToDeadLetterQueue(context, messageReference, subscription);
         } else {
