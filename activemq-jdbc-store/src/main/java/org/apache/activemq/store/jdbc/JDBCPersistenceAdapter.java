@@ -71,8 +71,7 @@ import org.slf4j.LoggerFactory;
  * 
  * 
  */
-public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements PersistenceAdapter,
-    BrokerServiceAware {
+public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements PersistenceAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersistenceAdapter.class);
     private static FactoryFinder adapterFactoryFinder = new FactoryFinder(
@@ -408,10 +407,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     public BrokerService getBrokerService() {
         return brokerService;
-    }
-
-    public void setBrokerService(BrokerService brokerService) {
-        this.brokerService = brokerService;
     }
 
     /**
