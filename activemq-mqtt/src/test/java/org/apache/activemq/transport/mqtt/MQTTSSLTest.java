@@ -28,25 +28,27 @@ import org.apache.activemq.broker.BrokerService;
 import org.fusesource.mqtt.client.MQTT;
 import org.junit.Ignore;
 
-@Ignore("hangs atm, needs investigation")
 public class MQTTSSLTest extends MQTTTest {
+
     public void startBroker() throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
+        String basedir = basedir().getPath();
+        System.setProperty("javax.net.ssl.trustStore", basedir+"/src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
+        System.setProperty("javax.net.ssl.keyStore", basedir+"/src/test/resources/server.keystore");
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
         super.startBroker();
     }
 
-    protected void addMQTTConnector(BrokerService brokerService) throws Exception {
-        brokerService.addConnector("mqtt+ssl://localhost:8883");
+    @Override
+    protected String getProtocolScheme() {
+        return "mqtt+ssl";
     }
 
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
-        mqtt.setHost("ssl://localhost:8883");
+        mqtt.setHost("ssl://localhost:"+mqttConnector.getConnectUri().getPort());
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
         mqtt.setSslContext(ctx);
@@ -65,5 +67,4 @@ public class MQTTSSLTest extends MQTTTest {
             return new X509Certificate[0];
         }
     }
-
 }

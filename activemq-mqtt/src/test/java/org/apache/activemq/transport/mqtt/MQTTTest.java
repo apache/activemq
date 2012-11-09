@@ -22,9 +22,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.ProtectionDomain;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -55,12 +58,19 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.codec.CONNECT;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class MQTTTest {
+
+    public File basedir() throws IOException {
+        ProtectionDomain protectionDomain = getClass().getProtectionDomain();
+        return new File(new File(protectionDomain.getCodeSource().getLocation().getPath()), "../..").getCanonicalFile();
+    }
+
     protected static final Logger LOG = LoggerFactory.getLogger(MQTTTest.class);
     protected BrokerService brokerService;
     protected LinkedList<Throwable> exceptions = new LinkedList<Throwable>();
@@ -88,9 +98,9 @@ public class MQTTTest {
 
     @Test
     public void testSendAndReceiveMQTT() throws Exception {
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
-        MQTT mqtt = new MQTT();
+        MQTT mqtt = createMQTTConnection();
         final BlockingConnection subscribeConnection = mqtt.blockingConnection();
         subscribeConnection.connect();
         Topic topic = new Topic("foo/bah",QoS.AT_MOST_ONCE);
@@ -131,7 +141,7 @@ public class MQTTTest {
 
     @Test
     public void testSendAndReceiveAtMostOnce() throws Exception {
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive(Short.MAX_VALUE);
@@ -153,7 +163,7 @@ public class MQTTTest {
 
     @Test
     public void testSendAndReceiveAtLeastOnce() throws Exception {
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive(Short.MAX_VALUE);
@@ -176,7 +186,7 @@ public class MQTTTest {
 
     @Test
     public void testSendAndReceiveExactlyOnce() throws Exception {
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
         MQTT publisher = createMQTTConnection();
         BlockingConnection pubConnection = publisher.blockingConnection();
@@ -209,7 +219,7 @@ public class MQTTTest {
         for (int i = 0; i < payload.length; i++){
             payload[i] = '2';
         }
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
 
         MQTT publisher = createMQTTConnection();
@@ -238,15 +248,15 @@ public class MQTTTest {
 
     @Test
     public void testSendMQTTReceiveJMS() throws Exception {
-        addMQTTConnector(brokerService);
-        brokerService.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
+        addMQTTConnector();
+        TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         BlockingConnection connection = mqtt.blockingConnection();
         final String DESTINATION_NAME = "foo.*";
         connection.connect();
 
-        ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory().createConnection();
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory(openwireTransport.getConnectUri()).createConnection();
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         javax.jms.Topic jmsTopic = s.createTopic(DESTINATION_NAME);
@@ -268,15 +278,15 @@ public class MQTTTest {
 
     @Test
     public void testSendJMSReceiveMQTT() throws Exception {
-        addMQTTConnector(brokerService);
-        brokerService.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
+        addMQTTConnector();
+        TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive(Short.MAX_VALUE);
         BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
-        ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory().createConnection();
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory(openwireTransport.getConnectUri()).createConnection();
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         javax.jms.Topic jmsTopic = s.createTopic("foo.far");
@@ -296,12 +306,10 @@ public class MQTTTest {
         connection.disconnect();
     }
 
-    @Test
     public void testInactivityTimeoutDisconnectsClient() throws Exception{
 
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
-        final TransportConnector mqttConnector = brokerService.getTransportConnectorByScheme("mqtt");
 
         // manually need to create the client so we don't send keep alive (PINGREQ) frames to keep the conn
         // from timing out
@@ -335,7 +343,7 @@ public class MQTTTest {
 
     private Transport createManualMQTTClient() throws IOException, URISyntaxException {
         Transport clientTransport = new TcpTransport(new MQTTWireFormat(), SocketFactory.getDefault(),
-                new URI("tcp://localhost:1883"), null);
+                new URI("tcp://localhost:"+mqttConnector.getConnectUri().getPort()), null);
         clientTransport.setTransportListener(new TransportListener() {
             @Override
             public void onCommand(Object command) {
@@ -359,7 +367,7 @@ public class MQTTTest {
 
     @Test
     public void testPingKeepsInactivityMonitorAlive() throws Exception {
-        addMQTTConnector(brokerService);
+        addMQTTConnector();
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short)2);
@@ -379,7 +387,7 @@ public class MQTTTest {
 
     @Test
     public void testTurnOffInactivityMonitor()throws Exception{
-        addMQTTConnector(brokerService, "?transport.useInactivityMonitor=false");
+        addMQTTConnector("?transport.useInactivityMonitor=false");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short)2);
@@ -397,30 +405,11 @@ public class MQTTTest {
         connection.disconnect();
     }
 
-    @Test
-    public void testPingOnMQTTNIO() throws Exception {
-        brokerService.addConnector("mqtt+nio://localhost:1883");
-        brokerService.start();
-        MQTT mqtt = createMQTTConnection();
-        mqtt.setKeepAlive((short)2);
-        final BlockingConnection connection = mqtt.blockingConnection();
-        connection.connect();
-
-        assertTrue("KeepAlive didn't work properly", Wait.waitFor(new Wait.Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return connection.isConnected();
-            }
-        }));
-
-        connection.disconnect();
-    }
 
     @Test
     public void testDefaultKeepAliveWhenClientSpecifiesZero() throws Exception {
         // default keep alive in milliseconds
-        brokerService.addConnector("mqtt://localhost:1883?transport.defaultKeepAlive=2000");
+        addMQTTConnector("?transport.defaultKeepAlive=2000");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short)0);
@@ -436,17 +425,23 @@ public class MQTTTest {
         }));
     }
 
-    protected void addMQTTConnector(BrokerService brokerService) throws Exception {
-        brokerService.addConnector("mqtt://localhost:1883");
+    TransportConnector mqttConnector;
+
+    protected String getProtocolScheme() {
+        return "mqtt";
     }
 
-    protected void addMQTTConnector(BrokerService brokerService, String config) throws Exception {
-        brokerService.addConnector("mqtt://localhost:1883" + config);
+    protected void addMQTTConnector() throws Exception {
+        addMQTTConnector("");
+    }
+
+    protected void addMQTTConnector(String config) throws Exception {
+        mqttConnector= brokerService.addConnector(getProtocolScheme()+"://localhost:0" + config);
     }
 
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
-        mqtt.setHost("localhost", 1883);
+        mqtt.setHost("localhost", mqttConnector.getConnectUri().getPort());
         // shut off connect retry
         mqtt.setConnectAttemptsMax(0);
         mqtt.setReconnectAttemptsMax(0);
