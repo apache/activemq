@@ -38,7 +38,8 @@ import org.apache.activemq.util._
 import org.apache.activemq.leveldb.util.{RetrySupport, FileSupport, Log}
 
 object LevelDBStore extends Log {
-  
+  val DEFAULT_DIRECTORY = new File("LevelDB");
+
   val DONE = new CountDownFuture();
   DONE.countDown
   
@@ -118,7 +119,7 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
   final val db = new DBManager(this)
 
   @BeanProperty
-  var directory: File = null
+  var directory = DEFAULT_DIRECTORY
   @BeanProperty
   var logDirectory: File = null
   
