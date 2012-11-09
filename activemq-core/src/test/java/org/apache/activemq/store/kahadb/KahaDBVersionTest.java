@@ -25,16 +25,27 @@ import javax.jms.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
+import java.io.IOException;
+import java.security.ProtectionDomain;
 
 /**
  * @author chirino
  */
 public class KahaDBVersionTest extends TestCase {
+    static String basedir;
+    static {
+        try {
+            ProtectionDomain protectionDomain = KahaDBVersionTest.class.getProtectionDomain();
+            basedir = new File(new File(protectionDomain.getCodeSource().getLocation().getPath()), "../..").getCanonicalPath();
+        } catch (IOException e) {
+            basedir = ".";
+        }
+    }
 
     static final Logger LOG = LoggerFactory.getLogger(KahaDBVersionTest.class);
-    final static File VERSION_1_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
-    final static File VERSION_2_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
-    final static File VERSION_3_DB= new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion3");
+    final static File VERSION_1_DB= new File(basedir+"/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion1");
+    final static File VERSION_2_DB= new File(basedir+"/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
+    final static File VERSION_3_DB= new File(basedir+"/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion3");
 
     BrokerService broker = null;
 
