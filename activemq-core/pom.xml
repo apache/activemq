@@ -603,18 +603,22 @@
                             <excludes combine.children="append">
                                 <!-- These are performance tests so take too long to run -->
                                 <exclude>**/perf/*</exclude>
+                                <!-- These are load tests so take too long to run -->
+                                <exclude>**/load/*</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
+        <!-- Apache CI builds enable this profile to avoid testing known failing cases -->
         <profile>
-            <id>activemq.exclude-broken-tests</id>
+            <id>activemq.tests-exclude-broken</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
                     <name>activemq.tests</name>
+                    <value>exclude-broken</value>
                 </property>
             </activation>
             <build>
@@ -623,58 +627,63 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <excludes combine.children="append">
-                                <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
-                                <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
-                                <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>
-                                <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
+                                <!-- These are performance tests so take too long to run -->
+                                <exclude>**/perf/*</exclude>
+                                <!-- These are load tests so take too long to run -->
+                                <exclude>**/load/*</exclude>
 
-                                <!-- Multicast and UDP based tests fail on GBuild -->
-                                <exclude>**/PeerTransportTest.*</exclude>
-                                <exclude>**/MulticastTransportTest.*</exclude>
-                                <exclude>**/MulticastNetworkTest.*</exclude>
-                                <exclude>**/UnreliableUdpTransportTest.*</exclude>
-                                <exclude>**/SslTransportBrokerTest.*</exclude>
+                                <!--&lt;!&ndash; http://jira.activemq.org/jira/browse/AMQ-626 &ndash;&gt;-->
+                                <!--<exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>-->
+                                <!--<exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>-->
+                                <!--<exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>-->
 
-                                <!-- this one is a little flaky and can fail on some platforms randomly -->
-                                <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
-                                <exclude>**/QuickJournalXARecoveryBrokerTest.*</exclude>
-                                <exclude>**/ZeroconfDiscoverTransportTest.*</exclude>
+                                <!--&lt;!&ndash; Multicast and UDP based tests fail on GBuild &ndash;&gt;-->
+                                <!--<exclude>**/PeerTransportTest.*</exclude>-->
+                                <!--<exclude>**/MulticastTransportTest.*</exclude>-->
+                                <!--<exclude>**/MulticastNetworkTest.*</exclude>-->
+                                <!--<exclude>**/UnreliableUdpTransportTest.*</exclude>-->
+                                <!--<exclude>**/SslTransportBrokerTest.*</exclude>-->
 
-                                <!-- m2 tests failing since move from assembly  -->
-                                <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
-                                <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
+                                <!--&lt;!&ndash; this one is a little flaky and can fail on some platforms randomly &ndash;&gt;-->
+                                <!--<exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>-->
+                                <!--<exclude>**/QuickJournalXARecoveryBrokerTest.*</exclude>-->
+                                <!--<exclude>**/ZeroconfDiscoverTransportTest.*</exclude>-->
 
-                                <!-- This test only works on machines which have ssh propertly configured -->
-                                <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
+                                <!--&lt;!&ndash; m2 tests failing since move from assembly  &ndash;&gt;-->
+                                <!--<exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>-->
+                                <!--<exclude>**/TwoBrokerMulticastQueueTest.*</exclude>-->
 
-                                <!-- http://issues.apache.org/activemq/browse/AMQ-1027 -->
-                                <exclude>**/FailoverConsumerTest.*</exclude>
+                                <!--&lt;!&ndash; This test only works on machines which have ssh propertly configured &ndash;&gt;-->
+                                <!--<exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>-->
 
-                                <!-- The NIO implemenation is not working properly on OS X.. -->
-                                <exclude>**/nio/**</exclude>
-                                <exclude>**/NioQueueSubscriptionTest.*/</exclude>
+                                <!--&lt;!&ndash; http://issues.apache.org/activemq/browse/AMQ-1027 &ndash;&gt;-->
+                                <!--<exclude>**/FailoverConsumerTest.*</exclude>-->
 
-                                <!-- A test used for memory profiling only. -->
-                                <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
+                                <!--&lt;!&ndash; The NIO implemenation is not working properly on OS X.. &ndash;&gt;-->
+                                <!--<exclude>**/nio/**</exclude>-->
+                                <!--<exclude>**/NioQueueSubscriptionTest.*/</exclude>-->
 
-                                <!-- used just to test potential memory leaks manually -->
-                                <exclude>**/JDBCTestMemory.*</exclude>
+                                <!--&lt;!&ndash; A test used for memory profiling only. &ndash;&gt;-->
+                                <!--<exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>-->
 
-                                <exclude>**/amq1490/*</exclude>
-                                <exclude>**/archive/*</exclude>
-                                <exclude>**/NetworkFailoverTest.*/**</exclude>
+                                <!--&lt;!&ndash; used just to test potential memory leaks manually &ndash;&gt;-->
+                                <!--<exclude>**/JDBCTestMemory.*</exclude>-->
 
-                                <exclude>**/vm/VMTransportBrokerTest.*</exclude>
-                                <exclude>**/broker/MarshallingBrokerTest.*</exclude>
+                                <!--<exclude>**/amq1490/*</exclude>-->
+                                <!--<exclude>**/archive/*</exclude>-->
+                                <!--<exclude>**/NetworkFailoverTest.*/**</exclude>-->
 
-                                <exclude>**/AMQDeadlockTest3.*</exclude>
+                                <!--<exclude>**/vm/VMTransportBrokerTest.*</exclude>-->
+                                <!--<exclude>**/broker/MarshallingBrokerTest.*</exclude>-->
 
-                                <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->
-                                <exclude>**/ProxyConnectorTest.*</exclude>
+                                <!--<exclude>**/AMQDeadlockTest3.*</exclude>-->
 
-                                <!-- breaks hudson: disable till we get a chance to give it the time that it needs - http://hudson.zones.apache.org/hudson/job/ActiveMQ/org.apache.activemq$activemq-core/199/testReport/org.apache.activemq.network/BrokerNetworkWithStuckMessagesTest/testBrokerNetworkWithStuckMessages/ -->
-                                <exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>
-                                <exclude>**/DoSTest.*</exclude>
+                                <!--&lt;!&ndash; https://issues.apache.org/activemq/browse/AMQ-2050 &ndash;&gt;-->
+                                <!--<exclude>**/ProxyConnectorTest.*</exclude>-->
+
+                                <!--&lt;!&ndash; breaks hudson: disable till we get a chance to give it the time that it needs - http://hudson.zones.apache.org/hudson/job/ActiveMQ/org.apache.activemq$activemq-core/199/testReport/org.apache.activemq.network/BrokerNetworkWithStuckMessagesTest/testBrokerNetworkWithStuckMessages/ &ndash;&gt;-->
+                                <!--<exclude>**/BrokerNetworkWithStuckMessagesTest.*</exclude>-->
+                                <!--<exclude>**/DoSTest.*</exclude>-->
 
                             </excludes>
                         </configuration>
