@@ -57,7 +57,7 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
      * {@link DiscoveryNetworkConnector#activeBridges()} that represents the
      * successful first bridge creation attempt.
      */
-    public void testLostActiveBridge() throws Exception {
+    public void x_testLostActiveBridge() throws Exception {
         // Start two brokers with a bridge from broker1 to broker2.
         BrokerService broker1 = createBroker(new URI(
                 "broker:(vm://broker1)/broker1?persistent=false"));

@@ -53,7 +53,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     private DiscoveryAgent discoveryAgent;
     private Map<String, String> parameters;
-    private ConcurrentMap<URI, DiscoveryEvent> activeEvents = new ConcurrentHashMap<URI, DiscoveryEvent>();
+    private final ConcurrentMap<URI, DiscoveryEvent> activeEvents = new ConcurrentHashMap<URI, DiscoveryEvent>();
     public DiscoveryNetworkConnector() {
     }
 
@@ -72,6 +72,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         }
     }
 
+    @Override
     public void onServiceAdd(DiscoveryEvent event) {
         // Ignore events once we start stopping.
         if (serviceSupport.isStopped() || serviceSupport.isStopping()) {
@@ -103,7 +104,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             // Should we try to connect to that URI?
             if (activeEvents.putIfAbsent(uri, event) != null) {
-                LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: " + uri);
+                }
+                return;
             }
 
             URI connectUri = uri;
@@ -129,7 +133,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Connection failure exception: " + e, e);
                     }
-                    activeEvents.remove(url);
+                    activeEvents.remove(uri);
                     return;
                 }
                 try {
@@ -140,7 +144,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Connection failure exception: " + e, e);
                     }
-                    activeEvents.remove(url);
+                    activeEvents.remove(uri);
                     return;
                 }
             } finally {
@@ -171,6 +175,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         }
     }
 
+    @Override
     public void onServiceRemove(DiscoveryEvent event) {
         String url = event.getServiceName();
         if (url != null) {
@@ -183,7 +188,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
 
             // Only remove bridge if this is the active discovery event for the URL.
-            if (activeEvents.remove(url, event)) {
+            if (activeEvents.remove(uri, event)) {
                 synchronized (bridges) {
                     bridges.remove(uri);
                 }
@@ -202,6 +207,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         }
     }
 
+    @Override
     protected void handleStart() throws Exception {
         if (discoveryAgent == null) {
             throw new IllegalStateException("You must configure the 'discoveryAgent' property");
@@ -210,6 +216,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         super.handleStart();
     }
 
+    @Override
     protected void handleStop(ServiceStopper stopper) throws Exception {
         for (Iterator<NetworkBridge> i = bridges.values().iterator(); i.hasNext();) {
             NetworkBridge bridge = i.next();
@@ -236,6 +243,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 super(brokerService, connectorName);
             }
 
+            @Override
             public void bridgeFailed() {
                 if (!serviceSupport.isStopped()) {
                     try {
