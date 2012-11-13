@@ -84,7 +84,7 @@ class AmqpProtocolConverter {
 //    private CONNECT connect;
 //    private String clientId;
 //    private final String QOS_PROPERTY_NAME = "QoSPropertyName";
-
+    int prefetch = 100;
 
     TransportImpl protonTransport = new TransportImpl();
     ConnectionImpl protonConnection = new ConnectionImpl();
@@ -615,7 +615,7 @@ class AmqpProtocolConverter {
         if( remoteTarget instanceof Coordinator ) {
             pumpProtonToSocket();
             receiver.setContext(coordinatorContext);
-            receiver.flow(1024 * 64);
+            receiver.flow(prefetch);
             receiver.open();
             pumpProtonToSocket();
         } else {
@@ -635,7 +635,7 @@ class AmqpProtocolConverter {
             ProducerContext producerContext = new ProducerContext(producerId, dest);
 
             receiver.setContext(producerContext);
-            receiver.flow(1024 * 64);
+            receiver.flow(prefetch);
             ProducerInfo producerInfo = new ProducerInfo(producerId);
             producerInfo.setDestination(dest);
             sendToActiveMQ(producerInfo, new ResponseHandler() {
