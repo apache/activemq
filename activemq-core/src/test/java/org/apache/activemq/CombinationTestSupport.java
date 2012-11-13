@@ -16,9 +16,12 @@
  */
 package org.apache.activemq;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,6 +68,16 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
     private HashMap<String, ComboOption> comboOptions = new HashMap<String, ComboOption>();
     private boolean combosEvaluated;
     private Map<String, Object> options;
+    protected File basedir;
+
+    static protected File basedir(Class clazz) {
+        try {
+            ProtectionDomain protectionDomain = clazz.getProtectionDomain();
+            return new File(new File(protectionDomain.getCodeSource().getLocation().getPath()), "../..").getCanonicalFile();
+        } catch (IOException e) {
+            return new File(".");
+        }
+    }
 
     static class ComboOption {
         final String attribute;
@@ -76,6 +89,9 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         }
     }
 
+    public CombinationTestSupport() {
+        basedir = basedir(getClass());
+    }
     public void addCombinationValues(String attribute, Object[] options) {
         ComboOption co = this.comboOptions.get(attribute);
         if (co == null) {

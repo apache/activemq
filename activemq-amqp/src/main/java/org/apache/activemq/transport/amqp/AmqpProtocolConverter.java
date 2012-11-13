@@ -436,8 +436,6 @@ class AmqpProtocolConverter {
             Receiver receiver = ((Receiver)delivery.getLink());
             if( !delivery.isReadable() ) {
                 System.out.println("it was not readable!");
-//                delivery.settle();
-//                receiver.advance();
                 return;
             }
 
@@ -457,8 +455,6 @@ class AmqpProtocolConverter {
             }
 
             receiver.advance();
-            delivery.settle();
-
             Buffer buffer = current.toBuffer();
             current = null;
             onMessage(receiver, delivery, buffer);
@@ -478,7 +474,7 @@ class AmqpProtocolConverter {
         }
 
         @Override
-        protected void onMessage(Receiver receiver, Delivery delivery, Buffer buffer) throws Exception {
+        protected void onMessage(Receiver receiver, final Delivery delivery, Buffer buffer) throws Exception {
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
             final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
             current = null;
@@ -498,9 +494,29 @@ class AmqpProtocolConverter {
                 message.setTransactionId(new LocalTransactionId(connectionId, txid));
             }
 
+            ResponseHandler handler = null;
+            if( delivery.remotelySettled() ) {
+                delivery.settle();
+            } else {
+                handler = new ResponseHandler() {
+                    @Override
+                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                        if( response.isException() ) {
+                            ExceptionResponse er = (ExceptionResponse)response;
+                            Rejected rejected = new Rejected();
+                            ArrayList errors = new ArrayList();
+                            errors.add(er.getException().getMessage());
+                            rejected.setError(errors);
+                            delivery.disposition(rejected);
+                        }
+                        delivery.settle();
+                        pumpProtonToSocket();
+                    }
+                };
+            }
+
             message.onSend();
-//            sendToActiveMQ(message, createResponseHandler(command));
-            sendToActiveMQ(message, null);
+            sendToActiveMQ(message, handler);
         }
 
     }
@@ -584,12 +600,10 @@ class AmqpProtocolConverter {
                         pumpProtonToSocket();
                     }
                 });
-                receiver.advance();
 
             } else {
                 throw new Exception("Expected coordinator message type: "+action.getClass());
             }
-
         }
 
     };

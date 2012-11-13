@@ -1194,5 +1194,14 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>unstable</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-amqp</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
 </project>
