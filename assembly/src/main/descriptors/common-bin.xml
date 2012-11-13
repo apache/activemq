@@ -112,11 +112,11 @@
         <include>org.slf4j:jcl-over-slf4j</include>
         <include>${pom.groupId}:activemq-client</include>
         <include>${pom.groupId}:activemq-broker</include>
+        <include>${pom.groupId}:activemq-openwire-legacy</include>
         <include>${pom.groupId}:activemq-kahadb-store</include>
         <include>${pom.groupId}:activemq-spring</include>
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
-        <include>${pom.groupId}:kahadb</include>
         <include>org.apache.activemq.protobuf:activemq-protobuf</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
@@ -140,6 +140,7 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
+        <include>${pom.groupId}:activemq-amqp</include>
         <include>${pom.groupId}:activemq-mqtt</include>
         <include>${pom.groupId}:activemq-stomp</include>
         <include>${pom.groupId}:activemq-http</include>
@@ -182,6 +183,7 @@
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring3</include>
         <include>javax.jmdns:jmdns</include>
+        <include>org.apache.qpid:qpid-proton</include>
       </includes>
     </dependencySet>
     <dependencySet>

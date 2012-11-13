@@ -30,7 +30,7 @@ public class AmqpWireFormat implements WireFormat {
 
 
     private int version = 1;
-    private long maxFrameLength = 1024*1024*100;
+    private long maxFrameSize = 1024*1024*100;
 
     public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -60,7 +60,7 @@ public class AmqpWireFormat implements WireFormat {
             return new AmqpHeader(magic);
         } else {
             int size = dataIn.readInt();
-            if( size > maxFrameLength ) {
+            if( size > maxFrameSize) {
                 throw new AmqpProtocolException("Frame size exceeded max frame length.");
             }
             Buffer frame = new Buffer(size);
@@ -85,4 +85,11 @@ public class AmqpWireFormat implements WireFormat {
     }
 
 
+    public long getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
+    }
 }

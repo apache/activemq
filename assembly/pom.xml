@@ -93,6 +93,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-stomp</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-amqp</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>

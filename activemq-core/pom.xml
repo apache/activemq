@@ -108,6 +108,10 @@
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-stomp</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-amqp</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -1197,10 +1201,6 @@
     <profile>
       <id>unstable</id>
       <dependencies>
-        <dependency>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-amqp</artifactId>
-        </dependency>
       </dependencies>
     </profile>
   </profiles>
