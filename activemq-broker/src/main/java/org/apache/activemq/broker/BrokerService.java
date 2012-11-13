@@ -21,7 +21,6 @@ import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
-import org.apache.activemq.broker.ft.MasterConnector;
 import org.apache.activemq.broker.jmx.*;
 import org.apache.activemq.broker.region.*;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -78,7 +77,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @org.apache.xbean.XBean
  */
 public class BrokerService implements Service {
-    protected CountDownLatch slaveStartSignal = new CountDownLatch(1);
     public static final String DEFAULT_PORT = "61616";
     public static final String LOCAL_HOST_NAME;
     public static final String BROKER_VERSION;
@@ -123,8 +121,6 @@ public class BrokerService implements Service {
     private final List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
     private final List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
     private final List<Service> services = new ArrayList<Service>();
-    private MasterConnector masterConnector;
-    private String masterConnectorURI;
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
@@ -397,27 +393,10 @@ public class BrokerService implements Service {
     }
 
     /**
-     * @return Returns the masterConnectorURI.
-     */
-    public String getMasterConnectorURI() {
-        return masterConnectorURI;
-    }
-
-    /**
-     * @param masterConnectorURI
-     *            The masterConnectorURI to set.
-     */
-    public void setMasterConnectorURI(String masterConnectorURI) {
-        this.masterConnectorURI = masterConnectorURI;
-    }
-
-    /**
      * @return true if this Broker is a slave to a Master
      */
     public boolean isSlave() {
-        return (masterConnector != null && masterConnector.isSlave()) ||
-            (masterConnector != null && masterConnector.isStoppedBeforeStart()) ||
-            (masterConnector == null && slave);
+        return slave;
     }
 
     public void masterFailed() {
@@ -624,22 +603,11 @@ public class BrokerService implements Service {
             managedBroker.setContextBroker(broker);
             adminView.setBroker(managedBroker);
         }
-        // see if there is a MasterBroker service and if so, configure
-        // it and start it.
-        for (Service service : services) {
-            if (service instanceof MasterConnector) {
-                configureService(service);
-                service.start();
-            }
-        }
-        if (!isSlave() && (masterConnector == null || isShutdownOnMasterFailure() == false)) {
+
+        if (!isSlave()) {
             startAllConnectors();
         }
-        if (!stopped.get()) {
-            if (isUseJmx() && masterConnector != null) {
-                registerFTConnectorMBean(masterConnector);
-            }
-        }
+
         if (ioExceptionHandler == null) {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
@@ -723,24 +691,7 @@ public class BrokerService implements Service {
             stopped.set(true);
             stoppedLatch.countDown();
         }
-        if (masterConnectorURI == null) {
-            // master start has not finished yet
-            if (slaveStartSignal.getCount() == 1) {
-                started.set(false);
-                slaveStartSignal.countDown();
-            }
-        } else {
-            for (Service service : services) {
-                if (service instanceof MasterConnector) {
-                    MasterConnector mConnector = (MasterConnector) service;
-                    if (!mConnector.isSlave()) {
-                        // means should be slave but not connected to master yet
-                        started.set(false);
-                        mConnector.stopBeforeConnected();
-                    }
-                }
-            }
-        }
+
         if (this.taskRunnerFactory != null) {
             this.taskRunnerFactory.shutdown();
             this.taskRunnerFactory = null;
@@ -1794,20 +1745,6 @@ public class BrokerService implements Service {
                 addJmsConnector(jmsBridgeConnectors[i]);
             }
         }
-        for (Service service : services) {
-            if (service instanceof MasterConnector) {
-                masterServiceExists = true;
-                break;
-            }
-        }
-        if (masterConnectorURI != null) {
-            if (masterServiceExists) {
-                throw new IllegalStateException(
-                        "Cannot specify masterConnectorURI when a masterConnector is already registered via the services property");
-            } else {
-                addService(new MasterConnector(masterConnectorURI));
-            }
-        }
     }
 
     protected void checkSystemUsageLimits() throws IOException {
@@ -2005,16 +1942,7 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void registerFTConnectorMBean(MasterConnector connector) throws IOException {
-        FTConnectorView view = new FTConnectorView(connector);
-        try {
-            ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":" + "BrokerName="
-                    + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=MasterConnector");
-            AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
-        } catch (Throwable e) {
-            throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
-        }
-    }
+
 
     protected void registerJmsConnectorMBean(JmsConnector connector) throws IOException {
         JmsConnectorView view = new JmsConnectorView(connector);
@@ -2304,20 +2232,6 @@ public class BrokerService implements Service {
         return BrokerSupport.getConnectionContext(getBroker());
     }
 
-    protected void waitForSlave() {
-        try {
-            if (!slaveStartSignal.await(waitForSlaveTimeout, TimeUnit.MILLISECONDS)) {
-                throw new IllegalStateException("Gave up waiting for slave to start after " + waitForSlaveTimeout + " milliseconds.");
-            }
-        } catch (InterruptedException e) {
-            LOG.error("Exception waiting for slave:" + e);
-        }
-    }
-
-    protected void slaveConnectionEstablished() {
-        slaveStartSignal.countDown();
-    }
-
     protected void startManagementContext() throws Exception {
         getManagementContext().setBrokerName(brokerName);
         getManagementContext().start();
@@ -2351,9 +2265,7 @@ public class BrokerService implements Service {
             map.put("network", "true");
             map.put("async", "false");
             uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-            if (isWaitForSlave()) {
-                waitForSlave();
-            }
+
             if (!stopped.get()) {
                 ThreadPoolExecutor networkConnectorStartExecutor = null;
                 if (isNetworkConnectorStartAsync()) {
@@ -2444,12 +2356,6 @@ public class BrokerService implements Service {
         if (service instanceof BrokerServiceAware) {
             BrokerServiceAware serviceAware = (BrokerServiceAware) service;
             serviceAware.setBrokerService(this);
-        }
-        if (masterConnector == null) {
-            if (service instanceof MasterConnector) {
-                masterConnector = (MasterConnector) service;
-                supportFailOver = true;
-            }
         }
     }
 
@@ -2619,10 +2525,6 @@ public class BrokerService implements Service {
 
     public void setWaitForSlaveTimeout(long waitForSlaveTimeout) {
         this.waitForSlaveTimeout = waitForSlaveTimeout;
-    }
-
-    public CountDownLatch getSlaveStartSignal() {
-        return slaveStartSignal;
     }
 
     /**

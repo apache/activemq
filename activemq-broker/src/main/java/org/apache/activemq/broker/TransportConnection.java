@@ -37,7 +37,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.transaction.xa.XAResource;
 import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.*;
@@ -86,7 +85,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     protected TaskRunner taskRunner;
     protected final AtomicReference<IOException> transportException = new AtomicReference<IOException>();
     protected AtomicBoolean dispatchStopped = new AtomicBoolean(false);
-    private MasterBroker masterBroker;
     private final Transport transport;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private WireFormatInfo wireFormatInfo;
@@ -645,13 +643,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {
-        // if the broker service has slave attached, wait for the slave to be
-        // attached to allow client connection. slave connection is fine
-        if (!info.isBrokerMasterConnector() && connector.getBrokerService().isWaitForSlave()
-                && connector.getBrokerService().getSlaveStartSignal().getCount() == 1) {
-            ServiceSupport.dispose(transport);
-            return new ExceptionResponse(new Exception("Master's slave not attached yet."));
-        }
         // Older clients should have been defaulting this field to true.. but
         // they were not.
         if (wireFormatInfo != null && wireFormatInfo.getVersion() <= 2) {
@@ -1023,9 +1014,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         connector.onStopped(this);
         try {
             synchronized (this) {
-                if (masterBroker != null) {
-                    masterBroker.stop();
-                }
                 if (duplexBridge != null) {
                     duplexBridge.stop();
                 }
@@ -1216,19 +1204,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public Response processBrokerInfo(BrokerInfo info) {
         if (info.isSlaveBroker()) {
             BrokerService bService = connector.getBrokerService();
-            // Do we only support passive slaves - or does the slave want to be
-            // passive ?
-            boolean passive = bService.isPassiveSlave() || info.isPassiveSlave();
-            if (passive == false) {
-
-                // stream messages from this broker (the master) to
-                // the slave
-                MutableBrokerFilter parent = (MutableBrokerFilter) broker.getAdaptor(MutableBrokerFilter.class);
-                masterBroker = new MasterBroker(parent, transport);
-                masterBroker.startProcessing();
-            }
-            LOG.info((passive ? "Passive" : "Active") + " Slave Broker " + info.getBrokerName() + " is attached");
-            bService.slaveConnectionEstablished();
+            LOG.error(" Slave Brokers are no longer supported - slave trying to attach is: " + info.getBrokerName());
         } else if (info.isNetworkConnection() && info.isDuplexConnection()) {
             // so this TransportConnection is the rear end of a network bridge
             // We have been requested to create a two way pipe ...
