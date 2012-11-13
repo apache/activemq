@@ -42,4 +42,7 @@ public interface AmqpTransport {
     public void stop() throws Exception;
 
     public String getTransformer();
+
+    public String getRemoteAddress();
+
 }
