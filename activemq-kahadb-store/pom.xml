@@ -30,11 +30,8 @@
   <name>ActiveMQ :: KahaDB Store</name>
   <description>The ActiveMQ KahaDB Store Implementation</description>
 
-  <properties>
-  </properties>
-
   <dependencies>
-    
+
     <!-- =============================== -->
     <!-- Required Dependencies -->
     <!-- =============================== -->
@@ -42,7 +39,6 @@
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
@@ -52,10 +48,6 @@
       <groupId>org.apache.activemq.protobuf</groupId>
       <artifactId>activemq-protobuf</artifactId>
       <optional>false</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.fusesource.mqtt-client</groupId>
-      <artifactId>mqtt-client</artifactId>
     </dependency>
 
     <!-- =============================== -->
@@ -126,13 +118,6 @@
     <dependency>
       <groupId>commons-net</groupId>
       <artifactId>commons-net</artifactId>
-    </dependency>
-
-    <!-- not really a dependency at all - just added optionally to get the generator working -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
     </dependency>
 
     <!-- =============================== -->
