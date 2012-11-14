@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
@@ -53,6 +54,7 @@ import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkConnector;
@@ -202,6 +204,68 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }));
     }
 
+    /**
+     * Timed wait for {@link #hasBridge(String, String)}.
+     * 
+     * @see #hasBridge(String, String)
+     * 
+     * @param localBrokerName
+     *            - the name of the broker on the "local" side of the bridge
+     * @param remoteBrokerName
+     *            - the name of the broker on the "remote" side of the bridge
+     * @param time
+     *            - the maximum time to wait for the bridge to be established
+     * @param units
+     *            - the units for <param>time</param>
+     * @throws InterruptedException
+     *             - if the calling thread is interrupted
+     * @throws TimeoutException
+     *             - if the bridge is not established within the time limit
+     * @throws Exception
+     *             - some other unknown error occurs
+     */
+    protected void waitForBridge(final String localBrokerName,
+            final String remoteBrokerName, long time, TimeUnit units)
+            throws InterruptedException, TimeoutException, Exception {
+        if (!Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() {
+                return hasBridge(localBrokerName, remoteBrokerName);
+            }
+        }, units.toMillis(time))) {
+            throw new TimeoutException("Bridge not established from broker "
+                    + localBrokerName + " to " + remoteBrokerName + " within "
+                    + units.toMillis(time) + " milliseconds.");
+        }
+    }
+
+    /**
+     * Determines whether a bridge has been established between the specified
+     * brokers.Establishment means that connections have been created and broker
+     * info has been exchanged. Due to the asynchronous nature of the
+     * connections, there is still a possibility that the bridge may fail
+     * shortly after establishment.
+     * 
+     * @param localBrokerName
+     *            - the name of the broker on the "local" side of the bridge
+     * @param remoteBrokerName
+     *            - the name of the broker on the "remote" side of the bridge
+     */
+    protected boolean hasBridge(String localBrokerName, String remoteBrokerName) {
+        final BrokerItem fromBroker = brokers.get(localBrokerName);
+        if (fromBroker == null) {
+            throw new IllegalArgumentException("Unknown broker: "
+                    + localBrokerName);
+        }
+
+        for (BrokerInfo peerInfo : fromBroker.broker.getRegionBroker()
+                .getPeerBrokerInfos()) {
+            if (peerInfo.getBrokerName().equals(remoteBrokerName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     protected void waitForBridgeFormation() throws Exception {
         waitForBridgeFormation(1);
     }
