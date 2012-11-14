@@ -85,24 +85,26 @@ class AmqpProtocolConverter {
 //    private String clientId;
 //    private final String QOS_PROPERTY_NAME = "QoSPropertyName";
     int prefetch = 100;
+    boolean trace = false;
 
     TransportImpl protonTransport = new TransportImpl();
     ConnectionImpl protonConnection = new ConnectionImpl();
 
     {
         this.protonTransport.bind(this.protonConnection);
-        this.protonTransport.setProtocolTracer(new ProtocolTracer() {
-            @Override
-            public void receivedFrame(TransportFrame transportFrame) {
-                System.out.println(String.format("%s | RECV: %s", amqpTransport.getRemoteAddress(), transportFrame.getBody()));
-            }
+        if( trace ) {
+            this.protonTransport.setProtocolTracer(new ProtocolTracer() {
+                @Override
+                public void receivedFrame(TransportFrame transportFrame) {
+                    System.out.println(String.format("%s | RECV: %s", amqpTransport.getRemoteAddress(), transportFrame.getBody()));
+                }
 
-            @Override
-            public void sentFrame(TransportFrame transportFrame) {
-                System.out.println(String.format("%s | SENT: %s", amqpTransport.getRemoteAddress(), transportFrame.getBody()));
-            }
-        });
-
+                @Override
+                public void sentFrame(TransportFrame transportFrame) {
+                    System.out.println(String.format("%s | SENT: %s", amqpTransport.getRemoteAddress(), transportFrame.getBody()));
+                }
+            });
+        }
     }
 
     void pumpProtonToSocket() {
