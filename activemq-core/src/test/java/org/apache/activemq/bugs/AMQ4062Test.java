@@ -96,6 +96,7 @@ public class AMQ4062Test {
         service=new BrokerService();
         service.setPersistent(true);
         service.setUseJmx(false);
+        service.setKeepDurableSubsActive(false);
 
         KahaDBPersistenceAdapter pa=new KahaDBPersistenceAdapter();
         File dataFile=new File("createData");
