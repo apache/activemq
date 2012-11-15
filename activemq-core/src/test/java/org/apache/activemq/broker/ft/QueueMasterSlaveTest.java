@@ -47,7 +47,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected CountDownLatch slaveStarted = new CountDownLatch(1);
     protected int inflightMessageCount;
     protected int failureCount = 50;
-    protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
+    protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false&useExponentialBackOff=false";
 
     protected void setUp() throws Exception {
         setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
@@ -140,7 +140,9 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
 
         master.stop();
         assertTrue("slave started", slaveStarted.await(15, TimeUnit.SECONDS));
+        LOG.info("slave started");
         Message advisoryMessage = advConsumer.receive(5000);
+        LOG.info("received " + advisoryMessage);
         assertNotNull("Didn't received advisory", advisoryMessage);
 
     }
