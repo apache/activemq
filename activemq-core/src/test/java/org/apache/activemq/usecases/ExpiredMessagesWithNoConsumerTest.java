@@ -330,17 +330,15 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                // consumer ackLater(delivery ack for expired messages) is based on half the prefetch value
-                // which will leave half of the prefetch pending till consumer close
-                return (queuePrefetch/2) -1 == view.getInFlightCount();
+                return 0 == view.getInFlightCount();
             }
         });
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                 + ", size= " + view.getQueueSize());
 
-        assertEquals("inflight didn't reduce to half prefetch minus single delivered message",
-                     (queuePrefetch/2) -1, view.getInFlightCount());
+        assertEquals("inflight reduced to duck",
+                     0, view.getInFlightCount());
         assertEquals("size didn't get back to 0 ", 0, view.getQueueSize());
         assertEquals("dequeues didn't match sent/expired ", sendCount, view.getDequeueCount());
 
@@ -351,7 +349,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                 return 0 == view.getInFlightCount();
             }
         });
-        assertEquals("inflight goes to zeor on close", 0, view.getInFlightCount());
+        assertEquals("inflight goes to zero on close", 0, view.getInFlightCount());
 
         LOG.info("done: " + getName());
     }
@@ -445,17 +443,15 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         Wait.waitFor(new Wait.Condition() {
             public boolean isSatisified() throws Exception {
-                // consumer ackLater(delivery ack for expired messages) is based on half the prefetch value
-                // which will leave half of the prefetch pending till consumer close
-                return (queuePrefetch/2) -1 == view.getInFlightCount();
+                return 0 == view.getInFlightCount();
             }
         });
         LOG.info("enqueue=" + view.getEnqueueCount() + ", dequeue=" + view.getDequeueCount()
                 + ", inflight=" + view.getInFlightCount() + ", expired= " + view.getExpiredCount()
                 + ", size= " + view.getQueueSize());
 
-        assertEquals("inflight didn't reduce to half prefetch minus single delivered message",
-                     (queuePrefetch/2) -1, view.getInFlightCount());
+        assertEquals("inflight didn't reduce to duck",
+                     0, view.getInFlightCount());
         assertEquals("size doesn't get back to 0 ", 0, view.getQueueSize());
         assertEquals("dequeues don't match sent/expired ", sendCount, view.getDequeueCount());
 
@@ -483,7 +479,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
                 return 0 == view.getInFlightCount();
             }
         });
-        assertEquals("inflight did not go to zeor on close", 0, view.getInFlightCount());
+        assertEquals("inflight did not go to zero on close", 0, view.getInFlightCount());
 
         LOG.info("done: " + getName());
     }
