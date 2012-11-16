@@ -96,7 +96,6 @@ public final class MarshallingSupport {
             }
             return rc;
         }
-
     }
 
     public static void marshalPrimitiveList(List list, DataOutputStream out) throws IOException {
@@ -183,25 +182,17 @@ public final class MarshallingSupport {
             in.readFully((byte[])value);
             break;
         case STRING_TYPE: {
-            if (true) {
-                int length = in.readUnsignedShort();
-                byte data[] = new byte[length];
-                in.readFully(data);
-                value = new UTF8Buffer(data);
-            } else {
-                value = in.readUTF();
-            }
+            int length = in.readUnsignedShort();
+            byte data[] = new byte[length];
+            in.readFully(data);
+            value = new UTF8Buffer(data);
             break;
         }
         case BIG_STRING_TYPE: {
-            if (true) {
-                int length = in.readInt();
-                byte data[] = new byte[length];
-                in.readFully(data);
-                value = new UTF8Buffer(data);
-            } else {
-                value = readUTF8(in);
-            }
+            int length = in.readInt();
+            byte data[] = new byte[length];
+            in.readFully(data);
+            value = new UTF8Buffer(data);
             break;
         }
         case MAP_TYPE:
