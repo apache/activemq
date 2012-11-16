@@ -26,12 +26,15 @@ import org.codehaus.jam.JamServiceFactory;
 import org.codehaus.jam.JamServiceParams;
 
 /**
- * 
+ *
  */
 public class JavaGeneratorTask extends Task {
 
     int version = 2;
     File basedir = new File(".");
+    File outputdir = null;
+    boolean generateMarshalers = true;
+    boolean generateTests = true;
 
     public static void main(String[] args) {
 
@@ -51,6 +54,7 @@ public class JavaGeneratorTask extends Task {
         generator.execute();
     }
 
+    @Override
     public void execute() throws BuildException {
         try {
 
@@ -66,17 +70,20 @@ public class JavaGeneratorTask extends Task {
             params.includeSourcePattern(dirs, "**/*.java");
             JamService jam = jamServiceFactory.createService(params);
 
-            {
+            File outputBase = outputdir != null ? outputdir : basedir;
+
+            if (generateMarshalers) {
                 JavaMarshallingGenerator script = new JavaMarshallingGenerator();
                 script.setJam(jam);
-                script.setTargetDir(basedir + "/src/main/java");
+                script.setTargetDir(outputBase + "/src/main/java");
                 script.setOpenwireVersion(version);
                 script.run();
             }
-            {
+
+            if (generateTests) {
                 JavaTestsGenerator script = new JavaTestsGenerator();
                 script.setJam(jam);
-                script.setTargetDir(basedir + "/src/test/java");
+                script.setTargetDir(outputBase + "/src/test/java");
                 script.setOpenwireVersion(version);
                 script.run();
             }
@@ -102,4 +109,27 @@ public class JavaGeneratorTask extends Task {
         this.basedir = basedir;
     }
 
+    public File getOutputdir() {
+        return outputdir;
+    }
+
+    public void setOutputdir(File outputdir) {
+        this.outputdir = outputdir;
+    }
+
+    public boolean isGenerateMarshalers() {
+        return generateMarshalers;
+    }
+
+    public void setGenerateMarshalers(boolean generateMarshalers) {
+        this.generateMarshalers = generateMarshalers;
+    }
+
+    public boolean isGenerateTests() {
+        return generateTests;
+    }
+
+    public void setGenerateTests(boolean generateTests) {
+        this.generateTests = generateTests;
+    }
 }
