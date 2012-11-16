@@ -29,11 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.fusesource.hawtbuf.UTF8Buffer;
+
 /**
  * The fixed version of the UTF8 encoding function. Some older JVM's UTF8
  * encoding function breaks when handling large strings.
- * 
- * 
+ *
+ *
  */
 public final class MarshallingSupport {
 
@@ -54,7 +56,7 @@ public final class MarshallingSupport {
 
     private MarshallingSupport() {
     }
-    
+
     public static void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
         if (map == null) {
             out.writeInt(-1);
@@ -100,7 +102,7 @@ public final class MarshallingSupport {
     public static void marshalPrimitiveList(List list, DataOutputStream out) throws IOException {
         out.writeInt(list.size());
         for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Object element = (Object)iter.next();
+            Object element = iter.next();
             marshalPrimitive(out, element);
         }
     }
@@ -180,12 +182,28 @@ public final class MarshallingSupport {
             value = new byte[in.readInt()];
             in.readFully((byte[])value);
             break;
-        case STRING_TYPE:
-            value = in.readUTF();
+        case STRING_TYPE: {
+            if (true) {
+                int length = in.readUnsignedShort();
+                byte data[] = new byte[length];
+                in.readFully(data);
+                value = new UTF8Buffer(data);
+            } else {
+                value = in.readUTF();
+            }
             break;
-        case BIG_STRING_TYPE:
-            value = readUTF8(in);
+        }
+        case BIG_STRING_TYPE: {
+            if (true) {
+                int length = in.readInt();
+                byte data[] = new byte[length];
+                in.readFully(data);
+                value = new UTF8Buffer(data);
+            } else {
+                value = readUTF8(in);
+            }
             break;
+        }
         case MAP_TYPE:
             value = unmarshalPrimitiveMap(in);
             break;

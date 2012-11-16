@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 /**
  * Type conversion support for ActiveMQ.
@@ -37,21 +38,23 @@ public final class TypeConversionSupport {
     };
 
     private static class ConversionKey {
-        final Class from;
-        final Class to;
+        final Class<?> from;
+        final Class<?> to;
         final int hashCode;
 
-        public ConversionKey(Class from, Class to) {
+        public ConversionKey(Class<?> from, Class<?> to) {
             this.from = from;
             this.to = to;
             this.hashCode = from.hashCode() ^ (to.hashCode() << 1);
         }
 
+        @Override
         public boolean equals(Object o) {
             ConversionKey x = (ConversionKey)o;
             return x.from == from && x.to == to;
         }
 
+        @Override
         public int hashCode() {
             return hashCode;
         }
@@ -64,6 +67,7 @@ public final class TypeConversionSupport {
     private static final Map<ConversionKey, Converter> CONVERSION_MAP = new HashMap<ConversionKey, Converter>();
     static {
         Converter toStringConverter = new Converter() {
+            @Override
             public Object convert(Object value) {
                 return value.toString();
             }
@@ -75,44 +79,53 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Long.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(Float.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(Double.class, String.class), toStringConverter);
+        CONVERSION_MAP.put(new ConversionKey(UTF8Buffer.class, String.class), toStringConverter);
 
         CONVERSION_MAP.put(new ConversionKey(String.class, Boolean.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Boolean.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Byte.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Byte.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Short.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Short.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Integer.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Integer.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Long.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Long.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Float.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Float.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Double.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Double.valueOf((String)value);
             }
         });
 
         Converter longConverter = new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Long.valueOf(((Number)value).longValue());
             }
@@ -121,12 +134,14 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Short.class, Long.class), longConverter);
         CONVERSION_MAP.put(new ConversionKey(Integer.class, Long.class), longConverter);
         CONVERSION_MAP.put(new ConversionKey(Date.class, Long.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Long.valueOf(((Date)value).getTime());
             }
         });
 
         Converter intConverter = new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Integer.valueOf(((Number)value).intValue());
             }
@@ -135,22 +150,26 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Short.class, Integer.class), intConverter);
 
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Short.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return Short.valueOf(((Number)value).shortValue());
             }
         });
 
         CONVERSION_MAP.put(new ConversionKey(Float.class, Double.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return new Double(((Number)value).doubleValue());
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, ActiveMQDestination.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 return ActiveMQDestination.createDestination((String)value, ActiveMQDestination.QUEUE_TYPE);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, URI.class), new Converter() {
+            @Override
             public Object convert(Object value) {
                 String text = value.toString();
                 try {
@@ -165,7 +184,7 @@ public final class TypeConversionSupport {
     private TypeConversionSupport() {
     }
 
-    public static Object convert(Object value, Class to) {
+    public static Object convert(Object value, Class<?> to) {
         if (value == null) {
             // lets avoid NullPointerException when converting to boolean for null values
             if (boolean.class.isAssignableFrom(to)) {
@@ -189,7 +208,7 @@ public final class TypeConversionSupport {
         }
     }
 
-    public static Converter lookupConverter(Class from, Class to) {
+    public static Converter lookupConverter(Class<?> from, Class<?> to) {
         // use wrapped type for primitives
         if (from.isPrimitive()) {
             from = convertPrimitiveTypeToWrapperType(from);
@@ -230,5 +249,4 @@ public final class TypeConversionSupport {
         }
         return rc;
     }
-
 }
