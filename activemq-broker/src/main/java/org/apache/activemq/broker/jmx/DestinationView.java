@@ -206,6 +206,7 @@ public class DestinationView implements DestinationViewMBean {
         for (int i = 0; i < messages.length; i++) {
             try {
                 Message message = messages[i];
+                message.setReadOnlyBody(true);
                 if (selectorExpression == null) {
                     answer.add(message);
                 } else {
