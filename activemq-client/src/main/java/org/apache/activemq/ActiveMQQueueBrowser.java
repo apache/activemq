@@ -202,6 +202,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
     }
 
     public synchronized void close() throws JMSException {
+        browseDone.set(true);
         destroyConsumer();
         closed = true;
     }

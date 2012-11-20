@@ -69,14 +69,19 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected final Object dispatchLock = new Object();
     private final CountDownLatch okForAckAsDispatchDone = new CountDownLatch(1);
 
-    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
+    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws JMSException {
         super(broker,context, info);
         this.usageManager=usageManager;
         pending = cursor;
+        try {
+            pending.start();
+        } catch (Exception e) {
+            throw new JMSException(e.getMessage());
+        }
         this.scheduler = broker.getScheduler();
     }
 
-    public PrefetchSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+    public PrefetchSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
         this(broker,usageManager,context, info, new VMPendingMessageCursor(false));
     }
 

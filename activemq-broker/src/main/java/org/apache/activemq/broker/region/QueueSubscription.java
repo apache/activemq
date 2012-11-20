@@ -34,7 +34,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueSubscription.class);
 
-    public QueueSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+    public QueueSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
         super(broker,usageManager, context, info);
     }
 

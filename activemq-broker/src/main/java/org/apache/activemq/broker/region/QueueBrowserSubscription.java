@@ -20,8 +20,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -34,7 +37,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
     boolean destinationsAdded;
 
     public QueueBrowserSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info)
-        throws InvalidSelectorException {
+        throws JMSException {
         super(broker,usageManager, context, info);
     }
 

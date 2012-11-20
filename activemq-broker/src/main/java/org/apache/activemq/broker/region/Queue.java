@@ -568,6 +568,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     }
                     redeliveredWaitingDispatch.addMessageLast(qmr);
                 }
+                if (sub instanceof QueueBrowserSubscription) {
+                    ((QueueBrowserSubscription)sub).decrementQueueRef();
+                    browserDispatches.remove(sub);
+                }
                 if (!redeliveredWaitingDispatch.isEmpty()) {
                     doDispatch(new OrderedPendingList());
                 }
@@ -1460,7 +1464,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
             }
 
-            BrowserDispatch pendingBrowserDispatch = browserDispatches.poll();
 
             messagesLock.readLock().lock();
             try{
@@ -1481,16 +1484,18 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // !messages.isEmpty(), and then if
             // !pagedInPendingDispatch.isEmpty()
             // then we do a dispatch.
-            if (pageInMoreMessages || pendingBrowserDispatch != null || !redeliveredWaitingDispatch.isEmpty()) {
+            boolean hasBrowsers = browserDispatches.size() > 0;
+
+            if (pageInMoreMessages || hasBrowsers || !redeliveredWaitingDispatch.isEmpty()) {
                 try {
-                    pageInMessages(pendingBrowserDispatch != null);
+                    pageInMessages(hasBrowsers);
 
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
             }
 
-            if (pendingBrowserDispatch != null) {
+            if (hasBrowsers) {
                 ArrayList<QueueMessageReference> alreadyDispatchedMessages = null;
                 pagedInMessagesLock.readLock().lock();
                 try{
@@ -1498,30 +1503,38 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }finally {
                     pagedInMessagesLock.readLock().unlock();
                 }
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("dispatch to browser: " + pendingBrowserDispatch.getBrowser()
-                            + ", already dispatched/paged count: " + alreadyDispatchedMessages.size());
-                }
-                do {
+
+                Iterator<BrowserDispatch> browsers = browserDispatches.iterator();
+                while (browsers.hasNext()) {
+                    BrowserDispatch browserDispatch = browsers.next();
                     try {
                         MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
                         msgContext.setDestination(destination);
 
-                        QueueBrowserSubscription browser = pendingBrowserDispatch.getBrowser();
+                        QueueBrowserSubscription browser = browserDispatch.getBrowser();
+
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("dispatch to browser: " + browser
+                                    + ", already dispatched/paged count: " + alreadyDispatchedMessages.size());
+                        }
+                        boolean added = false;
                         for (QueueMessageReference node : alreadyDispatchedMessages) {
-                            if (!node.isAcked()) {
+                            if (!node.isAcked() && !browser.getPending().getMessageAudit().isDuplicate(node.getMessageId())) {
                                 msgContext.setMessageReference(node);
                                 if (browser.matches(node, msgContext)) {
                                     browser.add(node);
+                                    added = true;
                                 }
                             }
                         }
-                        pendingBrowserDispatch.done();
+                        // are we done browsing? no new messages paged
+                        if (!added) {
+                            browser.decrementQueueRef();
+                        }
                     } catch (Exception e) {
-                        LOG.warn("exception on dispatch to browser: " + pendingBrowserDispatch.getBrowser(), e);
+                        LOG.warn("exception on dispatch to browser: " + browserDispatch.getBrowser(), e);
                     }
-
-                } while ((pendingBrowserDispatch = browserDispatches.poll()) != null);
+                }
             }
 
             if (pendingWakeups.get() > 0) {
