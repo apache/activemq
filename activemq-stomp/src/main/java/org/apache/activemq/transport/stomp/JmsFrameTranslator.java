@@ -34,8 +34,10 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.DataStructure;
 import org.codehaus.jettison.mapped.Configuration;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.basic.AbstractSingleValueConverter;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
@@ -55,11 +57,12 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     XStream xStream = null;
     BrokerContext brokerContext;
 
+    @Override
     public ActiveMQMessage convertFrame(ProtocolConverter converter,
             StompFrame command) throws JMSException, ProtocolException {
         Map<String, String> headers = command.getHeaders();
         ActiveMQMessage msg;
-        String transformation = (String) headers.get(Stomp.Headers.TRANSFORMATION);
+        String transformation = headers.get(Stomp.Headers.TRANSFORMATION);
         if (headers.containsKey(Stomp.Headers.CONTENT_LENGTH) || transformation.equals(Stomp.Transformations.JMS_BYTE.toString())) {
             msg = super.convertFrame(converter, command);
         } else {
@@ -96,6 +99,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
         return msg;
     }
 
+    @Override
     public StompFrame convertMessage(ProtocolConverter converter,
             ActiveMQMessage message) throws IOException, JMSException {
         if (message.getDataStructureType() == ActiveMQObjectMessage.DATA_STRUCTURE_TYPE) {
@@ -136,8 +140,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 
             ActiveMQMapMessage msg = (ActiveMQMapMessage) message.copy();
             command.setContent(marshall((Serializable)msg.getContentMap(),
-                    headers.get(Stomp.Headers.TRANSFORMATION))
-                    .getBytes("UTF-8"));
+                    headers.get(Stomp.Headers.TRANSFORMATION)).getBytes("UTF-8"));
             return command;
         } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
                 AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
@@ -168,8 +171,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     /**
      * Marshalls the Object to a string using XML or JSON encoding
      */
-    protected String marshall(Serializable object, String transformation)
-            throws JMSException {
+    protected String marshall(Serializable object, String transformation) throws JMSException {
         StringWriter buffer = new StringWriter();
         HierarchicalStreamWriter out;
         if (transformation.toLowerCase(Locale.ENGLISH).endsWith("json")) {
@@ -246,12 +248,30 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
         if (xstream == null) {
             xstream = new XStream();
         }
-        return xstream;
 
+        // For any object whose elements contains an UTF8Buffer instance instead of a String
+        // type we map it to String both in and out such that we don't marshal UTF8Buffers out
+        xstream.registerConverter(new AbstractSingleValueConverter() {
+
+            @Override
+            public Object fromString(String str) {
+                return str;
+            }
+
+            @SuppressWarnings("rawtypes")
+            @Override
+            public boolean canConvert(Class type) {
+                return type.equals(UTF8Buffer.class);
+            }
+        });
+
+        xstream.alias("string", UTF8Buffer.class);
+
+        return xstream;
     }
 
+    @Override
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
     }
-
 }

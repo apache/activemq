@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,12 +56,20 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import com.thoughtworks.xstream.io.xml.XppReader;
+import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
+
 public class StompTest extends StompTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
 
     protected Connection connection;
     protected Session session;
     protected ActiveMQQueue queue;
+    protected XStream xstream;
+
     private final String xmlObject = "<pojo>\n"
             + "  <name>Dejan</name>\n"
             + "  <city>Belgrade</city>\n"
@@ -120,6 +129,8 @@ public class StompTest extends StompTestSupport {
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
         connection.start();
+        xstream = new XStream();
+        xstream.processAnnotations(SamplePojo.class);
     }
 
     @Override
@@ -134,7 +145,7 @@ public class StompTest extends StompTestSupport {
     }
 
     @Override
-	protected void addStompConnector() throws Exception {
+    protected void addStompConnector() throws Exception {
         TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
         port = connector.getConnectUri().getPort();
     }
@@ -1173,9 +1184,15 @@ public class StompTest extends StompTestSupport {
 
         assertTrue(frame.trim().endsWith(xmlObject));
 
-        frame = stompConnection.receiveFrame();
+        StompFrame xmlFrame = stompConnection.receive();
 
-        assertTrue(frame.trim().endsWith(xmlMap.trim()));
+        Map<String, String> map = createMapFromXml(xmlFrame.getBody());
+
+        assertTrue(map.containsKey("name"));
+        assertTrue(map.containsKey("city"));
+
+        assertTrue(map.get("name").equals("Dejan"));
+        assertTrue(map.get("city").equals("Belgrade"));
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1201,13 +1218,23 @@ public class StompTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_JSON + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        frame = stompConnection.receiveFrame();
+        StompFrame json = stompConnection.receive();
+        LOG.info("Transformed frame: {}", json);
 
-        assertTrue(frame.trim().endsWith(jsonObject));
+        SamplePojo pojo = createObjectFromJson(json.getBody());
+        assertTrue(pojo.getCity().equals("Belgrade"));
+        assertTrue(pojo.getName().equals("Dejan"));
 
-        frame = stompConnection.receiveFrame();
+        json = stompConnection.receive();
+        LOG.info("Transformed frame: {}", json);
 
-        assertTrue(frame.trim().endsWith(jsonMap.trim()));
+        Map<String, String> map = createMapFromJson(json.getBody());
+
+        assertTrue(map.containsKey("name"));
+        assertTrue(map.containsKey("city"));
+
+        assertTrue(map.get("name").equals("Dejan"));
+        assertTrue(map.get("city").equals("Belgrade"));
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1229,11 +1256,18 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        frame = stompConnection.receiveFrame();
+        StompFrame xmlFrame = stompConnection.receive();
+        LOG.info("Received Frame: {}", xmlFrame.getBody());
 
-        assertNotNull(frame);
-        assertTrue(frame.trim().endsWith(xmlMap.trim()));
-        assertTrue(frame.contains("jms-map-xml"));
+        Map<String, String> map = createMapFromXml(xmlFrame.getBody());
+
+        assertTrue(map.containsKey("name"));
+        assertTrue(map.containsKey("city"));
+
+        assertEquals("Dejan", map.get("name"));
+        assertEquals("Belgrade", map.get("city"));
+
+        assertTrue(xmlFrame.getHeaders().containsValue("jms-map-xml"));
     }
 
     @Test
@@ -1252,11 +1286,19 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        frame = stompConnection.receiveFrame();
+        StompFrame json = stompConnection.receive();
+        LOG.info("Received Frame: {}", json.getBody());
 
-        assertNotNull(frame);
-        assertTrue(frame.trim().endsWith(jsonMap.trim()));
-        assertTrue(frame.contains("jms-map-json"));
+        assertNotNull(json);
+        assertTrue(json.getHeaders().containsValue("jms-map-json"));
+
+        Map<String, String> map = createMapFromJson(json.getBody());
+
+        assertTrue(map.containsKey("name"));
+        assertTrue(map.containsKey("city"));
+
+        assertEquals("Dejan", map.get("name"));
+        assertEquals("Belgrade", map.get("city"));
     }
 
     @Test
@@ -1394,9 +1436,16 @@ public class StompTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n" + "transformation:" + Stomp.Transformations.JMS_MAP_XML + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        frame = stompConnection.receiveFrame();
+        StompFrame xmlFrame = stompConnection.receive();
+        LOG.info("Received Frame: {}", xmlFrame.getBody());
 
-        assertTrue(frame.trim().endsWith(xmlMap.trim()));
+        Map<String, String> map = createMapFromXml(xmlFrame.getBody());
+
+        assertTrue(map.containsKey("name"));
+        assertTrue(map.containsKey("city"));
+
+        assertEquals("Dejan", map.get("name"));
+        assertEquals("Belgrade", map.get("city"));
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1420,9 +1469,16 @@ public class StompTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n" + "transformation:" + Stomp.Transformations.JMS_MAP_JSON + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        frame = stompConnection.receiveFrame();
+        StompFrame json = stompConnection.receive();
+        LOG.info("Received Frame: {}", json.getBody());
+        assertNotNull(json);
+        Map<String, String> map = createMapFromJson(json.getBody());
 
-        assertTrue(frame.trim().endsWith(jsonMap.trim()));
+        assertTrue(map.containsKey("name"));
+        assertTrue(map.containsKey("city"));
+
+        assertEquals("Dejan", map.get("name"));
+        assertEquals("Belgrade", map.get("city"));
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -2261,5 +2317,36 @@ public class StompTest extends StompTestSupport {
         assertNotNull(sframe);
         assertEquals("MESSAGE", sframe.getAction());
         assertEquals(bigBody, sframe.getBody());
+    }
+
+    protected SamplePojo createObjectFromJson(String data) throws Exception {
+        HierarchicalStreamReader in = new JettisonMappedXmlDriver().createReader(new StringReader(data));
+        return createObject(in);
+    }
+
+    protected SamplePojo createObjectFromXml(String data) throws Exception {
+        HierarchicalStreamReader in = new XppReader(new StringReader(data), XppFactory.createDefaultParser());
+        return createObject(in);
+    }
+
+    private SamplePojo createObject(HierarchicalStreamReader in) throws Exception {
+        SamplePojo pojo = (SamplePojo) xstream.unmarshal(in);
+        return pojo;
+    }
+
+    protected Map<String, String> createMapFromJson(String data) throws Exception {
+        HierarchicalStreamReader in = new JettisonMappedXmlDriver().createReader(new StringReader(data));
+        return createMapObject(in);
+    }
+
+    protected Map<String, String> createMapFromXml(String data) throws Exception {
+        HierarchicalStreamReader in = new XppReader(new StringReader(data), XppFactory.createDefaultParser());
+        return createMapObject(in);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> createMapObject(HierarchicalStreamReader in) throws Exception {
+        Map<String, String> map = (Map<String, String>)xstream.unmarshal(in);
+        return map;
     }
 }
