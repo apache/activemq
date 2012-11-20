@@ -310,7 +310,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       if( manager.asyncCapacityRemaining.addAndGet(-s) > 0 ) {
         asyncCapacityUsed = s
         countDownFuture.countDown
-        manager.parent.brokerService.getTaskRunnerFactory.execute(^{
+        manager.parent.broker_service.getTaskRunnerFactory.execute(^{
           complete_listeners.foreach(_())
         })
       } else {
@@ -332,7 +332,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       } else {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
         countDownFuture.countDown
-        manager.parent.brokerService.getTaskRunnerFactory.execute(^{
+        manager.parent.broker_service.getTaskRunnerFactory.execute(^{
           complete_listeners.foreach(_())
         })
       }

@@ -17,9 +17,7 @@
 
 package org.apache.activemq.leveldb
 
-import org.apache.activemq.broker.BrokerService
-import org.apache.activemq.broker.BrokerServiceAware
-import org.apache.activemq.broker.ConnectionContext
+import org.apache.activemq.broker.{LockableServiceSupport, BrokerService, BrokerServiceAware, ConnectionContext}
 import org.apache.activemq.command._
 import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
@@ -113,7 +111,7 @@ class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
 
 import LevelDBStore._
 
-class LevelDBStore extends ServiceSupport with BrokerServiceAware with PersistenceAdapter with TransactionStore {
+class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with PersistenceAdapter with TransactionStore {
 
   final val wireFormat = new OpenWireFormat
   final val db = new DBManager(this)
@@ -153,15 +151,20 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
   var asyncBufferSize = 1024*1024*4
   @BeanProperty
   var monitorStats = false
-  @BeanProperty
-  var failIfLocked = false
 
   var purgeOnStatup: Boolean = false
-  var brokerService: BrokerService = null
 
   val queues = collection.mutable.HashMap[ActiveMQQueue, LevelDBStore#LevelDBMessageStore]()
   val topics = collection.mutable.HashMap[ActiveMQTopic, LevelDBStore#LevelDBTopicMessageStore]()
   val topicsById = collection.mutable.HashMap[Long, LevelDBStore#LevelDBTopicMessageStore]()
+
+  def init() = {}
+
+  def createDefaultLocker() = {
+    var locker = new SharedFileLocker();
+    locker.configure(this);
+    locker
+  }
 
   override def toString: String = {
     return "LevelDB:[" + directory.getAbsolutePath + "]"
@@ -177,8 +180,6 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
   def retry[T](func : =>T):T = RetrySupport.retry(LevelDBStore, isStarted, func _)
 
-  var lock_file: LockFile = _
-
   var snappyCompressLogs = false
 
   def doStart: Unit = {
@@ -186,9 +187,6 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
     snappyCompressLogs = logCompression.toLowerCase == "snappy" && Snappy != null
     debug("starting")
-    if ( lock_file==null ) {
-      lock_file = new LockFile(directory / "lock", true)
-    }
 
     // Expose a JMX bean to expose the status of the store.
     if(brokerService!=null){
@@ -198,14 +196,6 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
         case e: Throwable => {
           warn(e, "LevelDB Store could not be registered in JMX: " + e.getMessage)
         }
-      }
-    }
-
-    if (failIfLocked) {
-      lock_file.lock()
-    } else {
-      retry {
-        lock_file.lock()
       }
     }
 
@@ -247,16 +237,13 @@ class LevelDBStore extends ServiceSupport with BrokerServiceAware with Persisten
 
   def doStop(stopper: ServiceStopper): Unit = {
     db.stop
-    lock_file.unlock()
     if(brokerService!=null){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
     info("Stopped "+this)
   }
 
-  def setBrokerService(brokerService: BrokerService): Unit = {
-    this.brokerService = brokerService
-  }
+  def broker_service = brokerService
 
   def setBrokerName(brokerName: String): Unit = {
   }

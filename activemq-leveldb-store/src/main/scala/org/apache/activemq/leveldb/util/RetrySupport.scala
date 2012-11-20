@@ -38,7 +38,6 @@ object RetrySupport {
         rc = Some(func())
       } catch {
         case e:Throwable =>
-          e.printStackTrace()
           if( error==null ) {
             warn(e, "DB operation failed. (entering recovery mode)")
           }
