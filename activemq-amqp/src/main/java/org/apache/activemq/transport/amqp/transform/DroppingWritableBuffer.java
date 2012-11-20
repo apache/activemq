@@ -88,4 +88,9 @@ public class DroppingWritableBuffer implements WritableBuffer
         pos += payload.remaining();
         payload.position(payload.limit());
     }
+
+    @Override
+    public int limit() {
+        return Integer.MAX_VALUE;
+    }
 }
