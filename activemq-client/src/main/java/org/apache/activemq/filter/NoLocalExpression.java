@@ -35,7 +35,8 @@ public class NoLocalExpression implements BooleanExpression {
             if (message.isDropped()) {
                 return false;
             }
-            return !connectionId.equals(message.getMessage().getMessageId().getProducerId().getConnectionId());
+            String messageConnectionId = message.getMessage().getProducerId().getConnectionId();
+            return !connectionId.equals(messageConnectionId);
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }

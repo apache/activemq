@@ -59,6 +59,7 @@ class AmqpProtocolConverter {
     private final AmqpTransport amqpTransport;
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
+    private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
 
     public AmqpProtocolConverter(AmqpTransport amqpTransport, BrokerContext brokerContext) {
         this.amqpTransport = amqpTransport;
@@ -908,6 +909,10 @@ class AmqpProtocolConverter {
             DescribedType value = (DescribedType)filter.get(JMS_SELECTOR);
             if( value!=null ) {
                 consumerInfo.setSelector(value.getDescribed().toString());
+            }
+            value = (DescribedType)filter.get(NO_LOCAL);
+            if( value!=null ) {
+                consumerInfo.setNoLocal(true);
             }
         }
 
