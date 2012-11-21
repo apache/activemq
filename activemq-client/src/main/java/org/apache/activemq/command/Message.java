@@ -36,6 +36,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 /**
  * Represents an ActiveMQ message
@@ -167,7 +168,12 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             }
             properties = unmarsallProperties(marshalledProperties);
         }
-        return properties.get(name);
+        Object result = properties.get(name);
+        if (result instanceof UTF8Buffer) {
+            result = result.toString();
+        }
+
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -211,7 +217,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)));
     }
 
-    public void beforeMarshall(WireFormat wireFormat) throws IOException {
+    @Override
+	public void beforeMarshall(WireFormat wireFormat) throws IOException {
         // Need to marshal the properties.
         if (marshalledProperties == null && properties != null) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -222,13 +229,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
     }
 
-    public void afterMarshall(WireFormat wireFormat) throws IOException {
+    @Override
+	public void afterMarshall(WireFormat wireFormat) throws IOException {
     }
 
-    public void beforeUnmarshall(WireFormat wireFormat) throws IOException {
+    @Override
+	public void beforeUnmarshall(WireFormat wireFormat) throws IOException {
     }
 
-    public void afterUnmarshall(WireFormat wireFormat) throws IOException {
+    @Override
+	public void afterUnmarshall(WireFormat wireFormat) throws IOException {
     }
 
     // /////////////////////////////////////////////////////////////////
@@ -288,7 +298,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     /**
      * @openwire:property version=1
      */
-    public MessageId getMessageId() {
+    @Override
+	public MessageId getMessageId() {
         return messageId;
     }
 
@@ -310,7 +321,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     /**
      * @openwire:property version=1
      */
-    public String getGroupID() {
+    @Override
+	public String getGroupID() {
         return groupID;
     }
 
@@ -321,7 +333,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     /**
      * @openwire:property version=1
      */
-    public int getGroupSequence() {
+    @Override
+	public int getGroupSequence() {
         return groupSequence;
     }
 
@@ -343,7 +356,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     /**
      * @openwire:property version=1
      */
-    public boolean isPersistent() {
+    @Override
+	public boolean isPersistent() {
         return persistent;
     }
 
@@ -354,7 +368,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     /**
      * @openwire:property version=1
      */
-    public long getExpiration() {
+    @Override
+	public long getExpiration() {
         return expiration;
     }
 
@@ -454,7 +469,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
      *
      * @openwire:property version=1 cache=true
      */
-    public ConsumerId getTargetConsumerId() {
+    @Override
+	public ConsumerId getTargetConsumerId() {
         return targetConsumerId;
     }
 
@@ -462,12 +478,14 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         this.targetConsumerId = targetConsumerId;
     }
 
-    public boolean isExpired() {
+    @Override
+	public boolean isExpired() {
         long expireTime = getExpiration();
         return expireTime > 0 && System.currentTimeMillis() > expireTime;
     }
 
-    public boolean isAdvisory() {
+    @Override
+	public boolean isAdvisory() {
         return type != null && type.equals(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
     }
 
@@ -498,14 +516,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
     }
 
-    public void incrementRedeliveryCounter() {
+    @Override
+	public void incrementRedeliveryCounter() {
         redeliveryCounter++;
     }
 
     /**
      * @openwire:property version=1
      */
-    public int getRedeliveryCounter() {
+    @Override
+	public int getRedeliveryCounter() {
         return redeliveryCounter;
     }
 
@@ -580,15 +600,18 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         this.userID = jmsxUserID;
     }
 
-    public int getReferenceCount() {
+    @Override
+	public int getReferenceCount() {
         return referenceCount;
     }
 
-    public Message getMessageHardRef() {
+    @Override
+	public Message getMessageHardRef() {
         return this;
     }
 
-    public Message getMessage() {
+    @Override
+	public Message getMessage() {
         return this;
     }
 
@@ -599,7 +622,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
     }
 
-    public MessageDestination getRegionDestination() {
+    @Override
+	public MessageDestination getRegionDestination() {
         return regionDestination;
     }
 
@@ -616,7 +640,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return true;
     }
 
-    public int incrementReferenceCount() {
+    @Override
+	public int incrementReferenceCount() {
         int rc;
         int size;
         synchronized (this) {
@@ -634,7 +659,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return rc;
     }
 
-    public int decrementReferenceCount() {
+    @Override
+	public int decrementReferenceCount() {
         int rc;
         int size;
         synchronized (this) {
@@ -653,7 +679,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return rc;
     }
 
-    public int getSize() {
+    @Override
+	public int getSize() {
         int minimumMessageSize = getMinimumMessageSize();
         if (size < minimumMessageSize || size == 0) {
             size = minimumMessageSize;
@@ -748,7 +775,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         this.brokerOutTime = brokerOutTime;
     }
 
-    public boolean isDropped() {
+    @Override
+	public boolean isDropped() {
         return false;
     }
 
