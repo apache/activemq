@@ -18,6 +18,7 @@ package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import org.apache.activemq.broker.BrokerContext;
@@ -44,6 +45,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     private final MQTTProtocolConverter protocolConverter;
     private MQTTInactivityMonitor monitor;
     private MQTTWireFormat wireFormat;
+    private final AtomicBoolean stopped = new AtomicBoolean();
 
     private boolean trace;
 
@@ -87,12 +89,21 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     }
 
     public void sendToMQTT(MQTTFrame command) throws IOException {
-        if (trace) {
-            TRACE.trace("Sending: \n" + command);
+        if( !stopped.get() ) {
+            if (trace) {
+                TRACE.trace("Sending: \n" + command);
+            }
+            Transport n = next;
+            if (n != null) {
+                n.oneway(command);
+            }
         }
-        Transport n = next;
-        if (n != null) {
-            n.oneway(command);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if( stopped.compareAndSet(false, true) ) {
+            super.stop();
         }
     }
 
