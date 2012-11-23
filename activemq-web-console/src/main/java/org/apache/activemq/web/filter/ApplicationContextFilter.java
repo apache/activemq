@@ -33,6 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.web.BrokerFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -58,6 +60,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * 
  */
 public class ApplicationContextFilter implements Filter {
+    private static final transient Logger LOG = LoggerFactory.getLogger(ApplicationContextFilter.class);
 
     private ServletContext servletContext;
     private String applicationContextName = "applicationContext";
@@ -83,12 +86,16 @@ public class ApplicationContextFilter implements Filter {
         String path = ((HttpServletRequest)request).getRequestURI();
         // handle slave brokers
         try {
-            if (((BrokerFacade)requestContextWrapper.get("brokerQuery")).isSlave()
-                    && (!(path.endsWith("css") || path.endsWith("png")) && !path.endsWith(slavePage))) {
+            if ( !(path.endsWith("css") || path.endsWith("png") || path.endsWith("ico") || path.endsWith(slavePage))
+                    && ((BrokerFacade)requestContextWrapper.get("brokerQuery")).isSlave()) {
                 ((HttpServletResponse)response).sendRedirect(slavePage);
                 return;
             }
         } catch (Exception e) {
+            LOG.warn(path + ", failed to access BrokerFacade: reason: " + e.getLocalizedMessage());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(request.toString(), e);
+            }
             throw new IOException(e);
         }
         request.setAttribute(requestContextName, requestContextWrapper);

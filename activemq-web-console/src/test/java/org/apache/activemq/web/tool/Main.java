@@ -51,6 +51,11 @@ public final class Main {
         SelectChannelConnector connector = new SelectChannelConnector();
         connector.setPort(port);
         connector.setServer(server);
+
+        //System.setProperty("webconsole.type","properties");
+        //System.setProperty("webconsole.jms.url","tcp://localhost:61616");
+        //System.setProperty("webconsole.jmx.url","service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root");
+
         WebAppContext context = new WebAppContext();
 
         context.setResourceBase(WEBAPP_DIR);
