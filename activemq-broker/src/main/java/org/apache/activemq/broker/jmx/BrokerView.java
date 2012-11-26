@@ -186,10 +186,6 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.isPersistent();
     }
 
-    public boolean isSlave() {
-        return brokerService.isSlave();
-    }
-
     public void terminateJVM(int exitCode) {
         System.exit(exitCode);
     }

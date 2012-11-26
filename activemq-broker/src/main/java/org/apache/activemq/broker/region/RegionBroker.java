@@ -695,10 +695,6 @@ public class RegionBroker extends EmptyBroker {
         }
     }
 
-    public boolean isSlaveBroker() {
-        return brokerService.isSlave();
-    }
-
     @Override
     public boolean isStopped() {
         return !started;

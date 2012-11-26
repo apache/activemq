@@ -168,7 +168,6 @@ public class BrokerService implements Service {
     private File schedulerDirectoryFile;
     private Scheduler scheduler;
     private ThreadPoolExecutor executor;
-    private boolean slave = true;
     private int schedulePeriodForDestinationPurge= 0;
     private int maxPurgedDestinationsPerSweep = 0;
     private BrokerContext brokerContext;
@@ -392,13 +391,6 @@ public class BrokerService implements Service {
         return null;
     }
 
-    /**
-     * @return true if this Broker is a slave to a Master
-     */
-    public boolean isSlave() {
-        return slave;
-    }
-
     public void masterFailed() {
         if (shutdownOnMasterFailure) {
             LOG.error("The Master has failed ... shutting down");
@@ -578,7 +570,6 @@ public class BrokerService implements Service {
         if (startException != null) {
             return;
         }
-        slave = false;
         startDestinations();
         addShutdownHook();
 
@@ -604,9 +595,7 @@ public class BrokerService implements Service {
             adminView.setBroker(managedBroker);
         }
 
-        if (!isSlave()) {
-            startAllConnectors();
-        }
+        startAllConnectors();
 
         if (ioExceptionHandler == null) {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
@@ -680,7 +669,6 @@ public class BrokerService implements Service {
         try {
             stopper.stop(persistenceAdapter);
             persistenceAdapter = null;
-            slave = true;
             if (isUseJmx()) {
                 stopper.stop(getManagementContext());
                 managementContext = null;
@@ -1227,8 +1215,7 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Sets the services associated with this broker such as a
-     * {@link MasterConnector}
+     * Sets the services associated with this broker.
      */
     public void setServices(Service[] services) {
         this.services.clear();
@@ -2246,82 +2233,80 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public void startAllConnectors() throws Exception {
-        if (!isSlave()) {
-            Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
-            List<TransportConnector> al = new ArrayList<TransportConnector>();
-            for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
-                TransportConnector connector = iter.next();
-                connector.setBrokerService(this);
-                al.add(startTransportConnector(connector));
-            }
-            if (al.size() > 0) {
-                // let's clear the transportConnectors list and replace it with
-                // the started transportConnector instances
-                this.transportConnectors.clear();
-                setTransportConnectors(al);
-            }
-            URI uri = getVmConnectorURI();
-            Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-            map.put("network", "true");
-            map.put("async", "false");
-            uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
+        Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
+        List<TransportConnector> al = new ArrayList<TransportConnector>();
+        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
+            TransportConnector connector = iter.next();
+            connector.setBrokerService(this);
+            al.add(startTransportConnector(connector));
+        }
+        if (al.size() > 0) {
+            // let's clear the transportConnectors list and replace it with
+            // the started transportConnector instances
+            this.transportConnectors.clear();
+            setTransportConnectors(al);
+        }
+        URI uri = getVmConnectorURI();
+        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
+        map.put("network", "true");
+        map.put("async", "false");
+        uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
 
-            if (!stopped.get()) {
-                ThreadPoolExecutor networkConnectorStartExecutor = null;
-                if (isNetworkConnectorStartAsync()) {
-                    // spin up as many threads as needed
-                    networkConnectorStartExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                            10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-                            new ThreadFactory() {
-                                int count=0;
-                                public Thread newThread(Runnable runnable) {
-                                    Thread thread = new Thread(runnable, "NetworkConnector Start Thread-" +(count++));
-                                    thread.setDaemon(true);
-                                    return thread;
-                                }
-                            });
-                }
-
-                for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                    final NetworkConnector connector = iter.next();
-                    connector.setLocalUri(uri);
-                    connector.setBrokerName(getBrokerName());
-                    connector.setDurableDestinations(durableDestinations);
-                    if (getDefaultSocketURIString() != null) {
-                        connector.setBrokerURL(getDefaultSocketURIString());
-                    }
-                    if (networkConnectorStartExecutor != null) {
-                        networkConnectorStartExecutor.execute(new Runnable() {
-                            public void run() {
-                                try {
-                                    LOG.info("Async start of " + connector);
-                                    connector.start();
-                                } catch(Exception e) {
-                                    LOG.error("Async start of network connector: " + connector + " failed", e);
-                                }
+        if (!stopped.get()) {
+            ThreadPoolExecutor networkConnectorStartExecutor = null;
+            if (isNetworkConnectorStartAsync()) {
+                // spin up as many threads as needed
+                networkConnectorStartExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                        10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+                        new ThreadFactory() {
+                            int count=0;
+                            public Thread newThread(Runnable runnable) {
+                                Thread thread = new Thread(runnable, "NetworkConnector Start Thread-" +(count++));
+                                thread.setDaemon(true);
+                                return thread;
                             }
                         });
-                    } else {
-                        connector.start();
-                    }
+            }
+
+            for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+                final NetworkConnector connector = iter.next();
+                connector.setLocalUri(uri);
+                connector.setBrokerName(getBrokerName());
+                connector.setDurableDestinations(durableDestinations);
+                if (getDefaultSocketURIString() != null) {
+                    connector.setBrokerURL(getDefaultSocketURIString());
                 }
                 if (networkConnectorStartExecutor != null) {
-                    // executor done when enqueued tasks are complete
-                    ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
+                    networkConnectorStartExecutor.execute(new Runnable() {
+                        public void run() {
+                            try {
+                                LOG.info("Async start of " + connector);
+                                connector.start();
+                            } catch(Exception e) {
+                                LOG.error("Async start of network connector: " + connector + " failed", e);
+                            }
+                        }
+                    });
+                } else {
+                    connector.start();
                 }
+            }
+            if (networkConnectorStartExecutor != null) {
+                // executor done when enqueued tasks are complete
+                ThreadPoolUtils.shutdown(networkConnectorStartExecutor);
+            }
 
-                for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                    ProxyConnector connector = iter.next();
-                    connector.start();
-                }
-                for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
-                    JmsConnector connector = iter.next();
-                    connector.start();
-                }
-                for (Service service : services) {
-                    configureService(service);
-                    service.start();
-                }
+            for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
+                ProxyConnector connector = iter.next();
+                connector.start();
+            }
+            for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
+                JmsConnector connector = iter.next();
+                connector.start();
+            }
+            for (Service service : services) {
+                configureService(service);
+                service.start();
             }
         }
     }

@@ -92,7 +92,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         // The slave should not deliver pull messages.
         // TODO: when the slave becomes a master, He should send a NULL message to all the
         // consumers to 'wake them up' in case they were waiting for a message.
-        if (getPrefetchSize() == 0 && !isSlave()) {
+        if (getPrefetchSize() == 0) {
 
             prefetchExtension.incrementAndGet();
             final long dispatchCounterBeforePull = dispatchCounter;
@@ -194,13 +194,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         boolean callDispatchMatched = false;
         Destination destination = null;
 
-        if (!isSlave()) {
-            if (!okForAckAsDispatchDone.await(0l, TimeUnit.MILLISECONDS)) {
-                // suppress unexpected ack exception in this expected case
-                LOG.warn("Ignoring ack received before dispatch; result of failover with an outstanding ack. Acked messages will be replayed if present on this broker. Ignored ack: " + ack);
-                return;
-            }
+        if (!okForAckAsDispatchDone.await(0l, TimeUnit.MILLISECONDS)) {
+            // suppress unexpected ack exception in this expected case
+            LOG.warn("Ignoring ack received before dispatch; result of failover with an outstanding ack. Acked messages will be replayed if present on this broker. Ignored ack: " + ack);
+            return;
         }
+
         if (LOG.isTraceEnabled()) {
             LOG.trace("ack:" + ack);
         }
@@ -413,15 +412,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             destination.wakeup();
             dispatchPending();
         } else {
-            if (isSlave()) {
-                throw new JMSException(
-                        "Slave broker out of sync with master: Acknowledgment ("
-                                + ack + ") was not in the dispatch list: "
-                                + dispatched);
-            } else {
-                LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
-                        + ack);
-            }
+            LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
+                    + ack);
         }
     }
 
@@ -447,11 +439,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     @Override
                     public void afterRollback() throws Exception {
                         synchronized(dispatchLock) {
-                            if (isSlave()) {
-                                ((Destination)node.getRegionDestination()).getDestinationStatistics().getInflight().decrement();
-                            } else {
-                                // poisionAck will decrement - otherwise still inflight on client
-                            }
+                            // poisionAck will decrement - otherwise still inflight on client
                         }
                     }
                 });
@@ -617,53 +605,51 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     protected void dispatchPending() throws IOException {
-        if (!isSlave()) {
-           synchronized(pendingLock) {
-                try {
-                    int numberToDispatch = countBeforeFull();
-                    if (numberToDispatch > 0) {
-                        setSlowConsumer(false);
-                        setPendingBatchSize(pending, numberToDispatch);
-                        int count = 0;
-                        pending.reset();
-                        while (pending.hasNext() && !isFull()
-                                && count < numberToDispatch) {
-                            MessageReference node = pending.next();
-                            if (node == null) {
-                                break;
-                            }
-
-                            // Synchronize between dispatched list and remove of message from pending list
-                            // related to remove subscription action
-                            synchronized(dispatchLock) {
-                                pending.remove();
-                                node.decrementReferenceCount();
-                                if( !isDropped(node) && canDispatch(node)) {
-
-                                    // Message may have been sitting in the pending
-                                    // list a while waiting for the consumer to ak the message.
-                                    if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
-                                        //increment number to dispatch
-                                        numberToDispatch++;
-                                        if (broker.isExpired(node)) {
-                                            ((Destination)node.getRegionDestination()).messageExpired(context, this, node);
-                                        }
-                                        continue;
-                                    }
-                                    dispatch(node);
-                                    count++;
-                                }
-                            }
+       synchronized(pendingLock) {
+            try {
+                int numberToDispatch = countBeforeFull();
+                if (numberToDispatch > 0) {
+                    setSlowConsumer(false);
+                    setPendingBatchSize(pending, numberToDispatch);
+                    int count = 0;
+                    pending.reset();
+                    while (pending.hasNext() && !isFull()
+                            && count < numberToDispatch) {
+                        MessageReference node = pending.next();
+                        if (node == null) {
+                            break;
                         }
-                    } else if (!isSlowConsumer()) {
-                        setSlowConsumer(true);
-                        for (Destination dest :destinations) {
-                            dest.slowConsumer(context, this);
+
+                        // Synchronize between dispatched list and remove of message from pending list
+                        // related to remove subscription action
+                        synchronized(dispatchLock) {
+                            pending.remove();
+                            node.decrementReferenceCount();
+                            if( !isDropped(node) && canDispatch(node)) {
+
+                                // Message may have been sitting in the pending
+                                // list a while waiting for the consumer to ak the message.
+                                if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
+                                    //increment number to dispatch
+                                    numberToDispatch++;
+                                    if (broker.isExpired(node)) {
+                                        ((Destination)node.getRegionDestination()).messageExpired(context, this, node);
+                                    }
+                                    continue;
+                                }
+                                dispatch(node);
+                                count++;
+                            }
                         }
                     }
-                } finally {
-                    pending.release();
+                } else if (!isSlowConsumer()) {
+                    setSlowConsumer(true);
+                    for (Destination dest :destinations) {
+                        dest.slowConsumer(context, this);
+                    }
                 }
+            } finally {
+                pending.release();
             }
         }
     }
@@ -682,42 +668,37 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         okForAckAsDispatchDone.countDown();
 
         // No reentrant lock - Patch needed to IndirectMessageReference on method lock
-        if (!isSlave()) {
-
-            MessageDispatch md = createMessageDispatch(node, message);
-            // NULL messages don't count... they don't get Acked.
-            if (node != QueueMessageReference.NULL_MESSAGE) {
-                dispatchCounter++;
-                dispatched.add(node);
-            } else {
-                while (true) {
-                    int currentExtension = prefetchExtension.get();
-                    int newExtension = Math.max(0, currentExtension - 1);
-                    if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                        break;
-                    }
+        MessageDispatch md = createMessageDispatch(node, message);
+        // NULL messages don't count... they don't get Acked.
+        if (node != QueueMessageReference.NULL_MESSAGE) {
+            dispatchCounter++;
+            dispatched.add(node);
+        } else {
+            while (true) {
+                int currentExtension = prefetchExtension.get();
+                int newExtension = Math.max(0, currentExtension - 1);
+                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                    break;
                 }
             }
-            if (info.isDispatchAsync()) {
-                md.setTransmitCallback(new Runnable() {
-
-                    public void run() {
-                        // Since the message gets queued up in async dispatch,
-                        // we don't want to
-                        // decrease the reference count until it gets put on the
-                        // wire.
-                        onDispatch(node, message);
-                    }
-                });
-                context.getConnection().dispatchAsync(md);
-            } else {
-                context.getConnection().dispatchSync(md);
-                onDispatch(node, message);
-            }
-            return true;
-        } else {
-            return false;
         }
+        if (info.isDispatchAsync()) {
+            md.setTransmitCallback(new Runnable() {
+
+                public void run() {
+                    // Since the message gets queued up in async dispatch,
+                    // we don't want to
+                    // decrease the reference count until it gets put on the
+                    // wire.
+                    onDispatch(node, message);
+                }
+            });
+            context.getConnection().dispatchAsync(md);
+        } else {
+            context.getConnection().dispatchSync(md);
+            onDispatch(node, message);
+        }
+        return true;
     }
 
     protected void onDispatch(final MessageReference node, final Message message) {

@@ -209,6 +209,4 @@ public interface BrokerFacade {
 
     boolean isJobSchedulerStarted();
 
-    boolean isSlave() throws Exception;
-
 }

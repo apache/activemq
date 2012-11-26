@@ -296,13 +296,6 @@ public class ConnectionContext {
     }
 
     /**
-     * @return the slave
-     */
-    public boolean isSlave() {
-        return (this.broker != null && this.broker.getBrokerService().isSlave()) || !this.clientMaster;
-    }
-
-    /**
      * @return the clientMaster
      */
     public boolean isClientMaster() {

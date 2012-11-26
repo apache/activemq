@@ -234,10 +234,6 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                 return false;
             }
 
-            public boolean isSlave() {
-                return false;
-            }
-
             public boolean matches(MessageReference node,
                     MessageEvaluationContext context) throws IOException {
                 return true;

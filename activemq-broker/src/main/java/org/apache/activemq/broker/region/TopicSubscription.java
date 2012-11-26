@@ -101,7 +101,7 @@ public class TopicSubscription extends AbstractSubscription {
             return;
         }
         enqueueCounter.incrementAndGet();
-        if (!isFull() && matched.isEmpty() && !isSlave()) {
+        if (!isFull() && matched.isEmpty()) {
             // if maximumPendingMessages is set we will only discard messages which
             // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
             dispatch(node);
@@ -299,7 +299,7 @@ public class TopicSubscription extends AbstractSubscription {
     public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
 
         // The slave should not deliver pull messages.
-        if (getPrefetchSize() == 0 && !isSlave()) {
+        if (getPrefetchSize() == 0 ) {
 
             prefetchWindowOpen.set(true);
             dispatchMatched();

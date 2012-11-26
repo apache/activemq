@@ -338,7 +338,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
-        assertTrue("broker is not a slave", !broker.isSlave());
         // create 2 topics
         broker.addTopic(getDestinationString() + "1 ");
         broker.addTopic(" " + getDestinationString() + "2");
@@ -536,7 +535,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
-        assertTrue("broker is not a slave", !broker.isSlave());
         // create 2 topics
         broker.addTopic(getDestinationString() + "1");
         broker.addTopic(getDestinationString() + "2");
@@ -588,7 +586,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
-        assertTrue("broker is not a slave", !broker.isSlave());
         // create 2 topics
         broker.addTopic(getDestinationString() + "1");
         broker.addTopic(getDestinationString() + "2");
@@ -797,7 +794,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
         BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
-        assertTrue("broker is not a slave", !broker.isSlave());
         assertEquals(0, broker.getDynamicDestinationProducers().length);
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

@@ -115,9 +115,6 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Messages are synchronized to disk.")
     boolean isPersistent();
 
-    @MBeanInfo("Slave broker.")
-    boolean isSlave();
-
     /**
      * Shuts down the JVM.
      *

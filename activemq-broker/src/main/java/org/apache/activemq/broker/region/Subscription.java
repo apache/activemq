@@ -109,12 +109,7 @@ public interface Subscription extends SubscriptionRecovery {
      * @throws Exception 
      */
     void processMessageDispatchNotification(MessageDispatchNotification  mdn) throws Exception;
-    
-    /**
-     * @return true if the broker is currently in slave mode
-     */
-    boolean isSlave();
-    
+
     /**
      * @return number of messages pending delivery
      */

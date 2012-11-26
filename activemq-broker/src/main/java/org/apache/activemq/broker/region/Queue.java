@@ -471,13 +471,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 browserDispatches.add(browserDispatch);
             }
 
-            if (!(this.optimizedDispatch || isSlave())) {
+            if (!this.optimizedDispatch) {
                 wakeup();
             }
         }finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
-        if (this.optimizedDispatch || isSlave()) {
+        if (this.optimizedDispatch) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
             // iteratingMutex -> dispatchLock. - see
             // https://issues.apache.org/activemq/browse/AMQ-1878
@@ -578,13 +578,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }finally {
                 consumersLock.writeLock().unlock();
             }
-            if (!(this.optimizedDispatch || isSlave())) {
+            if (!this.optimizedDispatch) {
                 wakeup();
             }
         }finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
-        if (this.optimizedDispatch || isSlave()) {
+        if (this.optimizedDispatch) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
             // iteratingMutex -> dispatchLock. - see
             // https://issues.apache.org/activemq/browse/AMQ-1878
@@ -1704,7 +1704,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     public void wakeup() {
-        if ((optimizedDispatch || isSlave()) && !iterationRunning) {
+        if (optimizedDispatch && !iterationRunning) {
             iterate();
             pendingWakeups.incrementAndGet();
         } else {
@@ -1719,10 +1719,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } catch (InterruptedException e) {
             LOG.warn("Async task runner failed to wakeup ", e);
         }
-    }
-
-    private boolean isSlave() {
-        return broker.getBrokerService().isSlave();
     }
 
     private void doPageIn(boolean force) throws Exception {
@@ -1875,7 +1871,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         consumersLock.writeLock().lock();
 
         try {
-            if (this.consumers.isEmpty() || isSlave()) {
+            if (this.consumers.isEmpty()) {
                 // slave dispatch happens in processDispatchNotification
                 return list;
             }

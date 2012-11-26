@@ -226,8 +226,4 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
             return false;
         }
     }
-
-    public boolean isSlave() throws Exception {
-        return getBrokerAdmin().isSlave();
-    }
 }
