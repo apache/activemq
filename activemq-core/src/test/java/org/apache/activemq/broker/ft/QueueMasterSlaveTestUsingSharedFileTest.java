@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.ft;
 
 public class QueueMasterSlaveTestUsingSharedFileTest extends
-        QueueMasterSlaveTest {
+        QueueMasterSlaveTestSupport {
     
     protected String getSlaveXml() {
         return "org/apache/activemq/broker/ft/sharedFileSlave.xml";

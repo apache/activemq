@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -26,7 +25,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 
 
-public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTest {
+public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
     private final String brokerUrl = "tcp://localhost:62001";
     private final String singleUriString = "failover://(" + brokerUrl +")?randomize=false";
 

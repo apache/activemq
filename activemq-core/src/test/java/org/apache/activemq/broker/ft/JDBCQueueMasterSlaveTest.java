@@ -33,7 +33,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
-public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
+public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
     protected DataSource sharedDs;
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";

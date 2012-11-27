@@ -39,8 +39,8 @@ import org.springframework.core.io.ClassPathResource;
 /**
  * Test failover for Queues
  */
-public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
-    private static final transient Logger LOG = LoggerFactory.getLogger(QueueMasterSlaveTest.class);
+abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWithTwoConnectionsTest {
+    private static final transient Logger LOG = LoggerFactory.getLogger(QueueMasterSlaveTestSupport.class);
 
     protected BrokerService master;
     protected AtomicReference<BrokerService> slave = new AtomicReference<BrokerService>();
