@@ -75,12 +75,13 @@ public class BstatCommand extends QueryCommand {
         queryTokens.add("--objname");
         queryTokens.add("Type=*,BrokerName=" + brokerName);
         queryTokens.add("-xQTopic=ActiveMQ.Advisory.*");
-        queryTokens.add("--vuew");
+        queryTokens.add("--view");
         queryTokens.add("Type,BrokerName,Destination,ConnectorName,EnqueueCount,"
                         + "DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,"
                         + "TotalMessages,ConsumerCount,TotalConsumerCount,DispatchQueueSize");
 
         // Call the query command
+        super.parseOptions(queryTokens);
         super.runTask(queryTokens);
     }
 
