@@ -16,15 +16,8 @@
  */
 package org.apache.activemq.camel.component;
 
-import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
 import javax.jms.Destination;
 
 import org.apache.camel.CamelContext;
@@ -33,12 +26,14 @@ import org.apache.camel.Headers;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mock.AssertionClause;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
 
 /**
  * 
@@ -52,28 +47,13 @@ public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends CamelTestSuppor
 
     @Test
     public void testPerformRequestReplyOverJms() throws Exception {
-        MockEndpoint resultEndpoint = getMockEndpoint("mock:result");
-
-        resultEndpoint.expectedBodiesReceived("Hello James");
-        AssertionClause firstMessage = resultEndpoint.message(0);
-        firstMessage.header("JMSCorrelationID").isEqualTo(correlationID);
-/*
-        TODO - allow JMS headers to be copied?
-
-        firstMessage.header("cheese").isEqualTo(123);
-        firstMessage.header("JMSXGroupID").isEqualTo(groupID);
-        firstMessage.header("JMSReplyTo").isEqualTo(ActiveMQConverter.toDestination(replyQueueName));
-*/
-        
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("cheese", 123);
         headers.put("JMSReplyTo", replyQueueName);
         headers.put("JMSCorrelationID", correlationID);
         headers.put("JMSXGroupID", groupID);
-        
-        
-        // Camel 2.0 ignores JMSReplyTo, so we're using replyTo MEP property
-        template.request("activemq:test.server?replyTo=queue:test.reply", new Processor() {
+
+        Exchange reply = template.request("activemq:test.server?replyTo=queue:test.reply", new Processor() {
             public void process(Exchange exchange) {
                 exchange.getIn().setBody("James");
                 Map<String, Object> headers = new HashMap<String, Object>();
@@ -85,29 +65,15 @@ public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends CamelTestSuppor
             }
         });
 
-        resultEndpoint.assertIsSatisfied();
-
-        List<Exchange> list = resultEndpoint.getReceivedExchanges();
-        Exchange exchange = list.get(0);
-        Message in = exchange.getIn();
+        Message in = reply.getIn();
         Object replyTo = in.getHeader("JMSReplyTo");
         LOG.info("Reply to is: " + replyTo);
-
         LOG.info("Received headers: " + in.getHeaders());
         LOG.info("Received body: " + in.getBody());
 
         assertMessageHeader(in, "JMSCorrelationID", correlationID);
 
-        /*
-        TODO
-        Destination destination = assertIsInstanceOf(Destination.class, replyTo);
-        assertEquals("ReplyTo", replyQueueName, destination.toString());
-        assertMessageHeader(in, "cheese", 123);
-        assertMessageHeader(in, "JMSXGroupID", groupID);
-        */
-
         Map<String,Object> receivedHeaders = myBean.getHeaders();
-
         assertThat(receivedHeaders, hasKey("JMSReplyTo"));
         assertThat(receivedHeaders, hasEntry("JMSXGroupID", groupID));
         assertThat(receivedHeaders, hasEntry("JMSCorrelationID", correlationID));
@@ -116,8 +82,6 @@ public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends CamelTestSuppor
         LOG.info("Reply to is: " + replyTo);
         Destination destination = assertIsInstanceOf(Destination.class, replyTo);
         assertEquals("ReplyTo", replyQueueName, destination.toString());
-
-        
     }
 
     protected CamelContext createCamelContext() throws Exception {
@@ -134,8 +98,6 @@ public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends CamelTestSuppor
         return new RouteBuilder() {
             public void configure() throws Exception {
                 from("activemq:test.server").bean(myBean);
-
-                from("activemq:test.reply").to("mock:result");
             }
         };
     }
