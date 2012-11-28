@@ -183,7 +183,8 @@
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring3</include>
         <include>javax.jmdns:jmdns</include>
-        <include>org.apache.qpid:qpid-proton</include>
+        <include>org.apache.qpid:proton</include>
+        <include>org.apache.qpid:proton-jms</include>
       </includes>
     </dependencySet>
     <dependencySet>

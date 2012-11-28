@@ -18,16 +18,18 @@ package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.*;
-import org.apache.activemq.transport.amqp.transform.*;
+import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.engine.impl.*;
 import org.apache.qpid.proton.framing.TransportFrame;
+import org.apache.qpid.proton.jms.*;
 import org.apache.qpid.proton.type.Binary;
 import org.apache.qpid.proton.type.DescribedType;
 import org.apache.qpid.proton.type.Symbol;
+import org.apache.qpid.proton.type.UnsignedInteger;
 import org.apache.qpid.proton.type.messaging.*;
 import org.apache.qpid.proton.type.messaging.Modified;
 import org.apache.qpid.proton.type.messaging.Rejected;
@@ -60,6 +62,8 @@ class AmqpProtocolConverter {
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
+    private static final UnsignedInteger DURABLE = new UnsignedInteger(2);
+    private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
     public AmqpProtocolConverter(AmqpTransport amqpTransport, BrokerContext brokerContext) {
         this.amqpTransport = amqpTransport;
@@ -86,7 +90,7 @@ class AmqpProtocolConverter {
 //    private String clientId;
 //    private final String QOS_PROPERTY_NAME = "QoSPropertyName";
     int prefetch = 100;
-    boolean trace = false;
+    boolean trace = true;
 
     TransportImpl protonTransport = new TransportImpl();
     ConnectionImpl protonConnection = new ConnectionImpl();
@@ -345,8 +349,6 @@ class AmqpProtocolConverter {
         String clientId = protonConnection.getRemoteContainer();
         if (clientId != null && !clientId.isEmpty()) {
             connectionInfo.setClientId(clientId);
-        } else {
-            connectionInfo.setClientId("" + connectionInfo.getConnectionId().toString());
         }
 
 
@@ -679,6 +681,7 @@ class AmqpProtocolConverter {
         private final ConsumerId consumerId;
         private final Sender sender;
         private boolean presettle;
+        private boolean closed;
 
         public ConsumerContext(ConsumerId consumerId, Sender sender) {
             this.consumerId = consumerId;
@@ -714,23 +717,28 @@ class AmqpProtocolConverter {
 
         @Override
         public void onClose() throws Exception {
-            sendToActiveMQ(new RemoveInfo(consumerId), null);
+            if( !closed ) {
+                closed = true;
+                sendToActiveMQ(new RemoveInfo(consumerId), null);
+            }
         }
 
         LinkedList<MessageDispatch> outbound = new LinkedList<MessageDispatch>();
 
         // called when the connection receives a JMS message from ActiveMQ
         public void onMessageDispatch(MessageDispatch md) throws Exception {
-            outbound.addLast(md);
-            pumpOutbound();
-            pumpProtonToSocket();
+            if( !closed ) {
+                outbound.addLast(md);
+                pumpOutbound();
+                pumpProtonToSocket();
+            }
         }
 
         Buffer currentBuffer;
         Delivery currentDelivery;
 
         public void pumpOutbound() throws Exception {
-            while(true) {
+            while(!closed) {
 
                 while( currentBuffer !=null ) {
                     int sent = sender.send(currentBuffer.data, currentBuffer.offset, currentBuffer.length);
@@ -876,41 +884,94 @@ class AmqpProtocolConverter {
     private final ConcurrentHashMap<ConsumerId, ConsumerContext> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, ConsumerContext>();
 
     void onSenderOpen(final Sender sender, AmqpSessionContext sessionContext) {
-        // sender.get
-        ConsumerId id = new ConsumerId(sessionContext.sessionId, sessionContext.nextConsumerId++);
-        ConsumerContext consumerContext = new ConsumerContext(id, sender);
+        org.apache.qpid.proton.type.messaging.Source source = (org.apache.qpid.proton.type.messaging.Source)sender.getRemoteSource();
 
-        subscriptionsByConsumerId.put(id, consumerContext);
+        final ConsumerId id = new ConsumerId(sessionContext.sessionId, sessionContext.nextConsumerId++);
+        ConsumerContext consumerContext = new ConsumerContext(id, sender);
+        sender.setContext(consumerContext);
+
+        String selector = null;
+        if( source!=null ) {
+            Map filter = source.getFilter();
+            if (filter != null) {
+                DescribedType value = (DescribedType)filter.get(JMS_SELECTOR);
+                if( value!=null ) {
+                    selector = value.getDescribed().toString();
+                    // Validate the Selector.
+                    try {
+                        SelectorParser.parse(selector);
+                    } catch (InvalidSelectorException e) {
+                        sender.setSource(null);
+                        ((LinkImpl)sender).setLocalError(new EndpointError("amqp:invalid-field", e.getMessage()));
+                        sender.close();
+                        consumerContext.closed = true;
+                        return;
+                    }
+                }
+            }
+        }
 
         ActiveMQDestination dest;
-        org.apache.qpid.proton.type.messaging.Source source = (org.apache.qpid.proton.type.messaging.Source)sender.getRemoteSource();
-        if( source != null && !source.getDynamic() ) {
-            dest = createDestination(source);
-        } else {
+        if( source == null ) {
+
+            source = new org.apache.qpid.proton.type.messaging.Source();
+            source.setAddress("");
+            source.setCapabilities(DURABLE_SUBSCRIPTION_ENDED);
+            sender.setSource(source);
+
+            // Looks like durable sub removal.
+            RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+            rsi.setConnectionId(connectionId);
+            rsi.setSubscriptionName(sender.getName());
+            rsi.setClientId(connectionInfo.getClientId());
+
+            consumerContext.closed=true;
+            sendToActiveMQ(rsi, new ResponseHandler() {
+                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    if (response.isException()) {
+                        sender.setSource(null);
+                        Throwable exception = ((ExceptionResponse) response).getException();
+                        String name = exception.getClass().getName();
+                        ((LinkImpl)sender).setLocalError(new EndpointError(name, exception.getMessage()));
+                    }
+                    sender.open();
+                    pumpProtonToSocket();
+                }
+            });
+            return;
+        } else if( contains(source.getCapabilities(), DURABLE_SUBSCRIPTION_ENDED) ) {
+            consumerContext.closed=true;
+            sender.close();
+            pumpProtonToSocket();
+            return;
+        } else if( source.getDynamic() ) {
             // lets create a temp dest.
             dest = createTempQueue();
             source = new org.apache.qpid.proton.type.messaging.Source();
             source.setAddress(dest.getQualifiedName());
             source.setDynamic(true);
             sender.setSource(source);
+        } else {
+            dest = createDestination(source);
         }
 
-        sender.setContext(consumerContext);
+        subscriptionsByConsumerId.put(id, consumerContext);
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
+        consumerInfo.setSelector(selector);
+        consumerInfo.setNoRangeAcks(true);
         consumerInfo.setDestination(dest);
         consumerInfo.setPrefetchSize(100);
         consumerInfo.setDispatchAsync(true);
         if( source.getDistributionMode() == COPY && dest.isQueue() ) {
             consumerInfo.setBrowser(true);
         }
+        if( DURABLE.equals(source.getDurable()) && dest.isTopic() ) {
+            consumerInfo.setSubscriptionName(sender.getName());
+        }
 
         Map filter = source.getFilter();
         if (filter != null) {
-            DescribedType value = (DescribedType)filter.get(JMS_SELECTOR);
-            if( value!=null ) {
-                consumerInfo.setSelector(value.getDescribed().toString());
-            }
-            value = (DescribedType)filter.get(NO_LOCAL);
+            DescribedType value = (DescribedType)filter.get(NO_LOCAL);
             if( value!=null ) {
                 consumerInfo.setNoLocal(true);
             }
@@ -926,6 +987,7 @@ class AmqpProtocolConverter {
                         name = "amqp:invalid-field";
                     }
                     ((LinkImpl)sender).setLocalError(new EndpointError(name, exception.getMessage()));
+                    subscriptionsByConsumerId.remove(id);
                     sender.close();
                 } else {
                     sender.open();
@@ -934,6 +996,17 @@ class AmqpProtocolConverter {
             }
         });
 
+    }
+
+    static private boolean contains(Symbol[] haystack, Symbol needle) {
+        if( haystack!=null ) {
+            for (Symbol capability : haystack) {
+                if( capability == needle) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private ActiveMQDestination createTempQueue() {

@@ -1,7 +1,7 @@
 package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.command.*;
-import org.apache.activemq.transport.amqp.transform.JMSVendor;
+import org.apache.qpid.proton.jms.JMSVendor;
 
 import javax.jms.*;
 import javax.jms.Message;

@@ -20,6 +20,7 @@ import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.junit.Test;
+import org.objectweb.jtests.jms.framework.TestConfig;
 
 import javax.jms.*;
 
@@ -27,6 +28,7 @@ import java.util.Enumeration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -42,30 +44,21 @@ public class JMSClientTest extends AmqpTestSupport {
         {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer p = session.createProducer(queue);
-            Message msg = session.createTextMessage("Hello World");
-            msg.setObjectProperty("x", 1);
-            p.send(msg);
-//            session.commit();
-/*            MessageConsumer c = session.createConsumer(queue, "x = 1");
-            Message received = c.receive(2000);
-            assertNotNull(received);
-            System.out.println("first: " + ((TextMessage)received).getText());
-            System.out.println(received.getJMSRedelivered());*/
 
+            TextMessage message = session.createTextMessage();
+            message.setText("hello");
+            p.send(message);
 
             QueueBrowser browser = session.createBrowser(queue);
             Enumeration enumeration = browser.getEnumeration();
             while (enumeration.hasMoreElements()) {
-
-                System.out.println("BROWSE " + enumeration.nextElement());
+                Message m = (Message) enumeration.nextElement();
+                assertTrue(m instanceof TextMessage);
             }
 
-
-//            session.rollback();
-//
-//            msg = c.receive();
-//            System.out.println("second:"+msg);
-//            System.out.println(msg.getJMSRedelivered());
+            MessageConsumer consumer = session.createConsumer(queue);
+            Message msg = consumer.receive(TestConfig.TIMEOUT);
+            assertTrue(message instanceof TextMessage);
         }
         connection.close();
 
