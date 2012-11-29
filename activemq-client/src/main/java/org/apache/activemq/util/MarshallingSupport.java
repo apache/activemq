@@ -138,6 +138,8 @@ public final class MarshallingSupport {
             marshalByteArray(out, (byte[])value);
         } else if (value.getClass() == String.class) {
             marshalString(out, (String)value);
+        } else  if (value.getClass() == UTF8Buffer.class) {
+            marshalString(out, value.toString());
         } else if (value instanceof Map) {
             out.writeByte(MAP_TYPE);
             marshalPrimitiveMap((Map)value, out);
