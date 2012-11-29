@@ -478,6 +478,29 @@ public final class OpenTypeSupport {
         }
     }
 
+    static class StatusEventOpenTypeFactory extends AbstractOpenTypeFactory {
+        @Override
+        protected String getTypeName() {
+            return StatusEvent.class.getName();
+        }
+
+        @Override
+        protected void init() throws OpenDataException {
+            super.init();
+            addItem("id", "event id", SimpleType.STRING);
+            addItem("resource", "event resource", SimpleType.STRING);
+        }
+
+        @Override
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            StatusEvent event = (StatusEvent) o;
+            Map<String, Object> rc = super.getFields(o);
+            rc.put("id", event.getId());
+            rc.put("resource", event.getResource());
+            return rc;
+        }
+    }
+
     static {
         OPEN_TYPE_FACTORIES.put(ActiveMQMessage.class, new MessageOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQBytesMessage.class, new ByteMessageOpenTypeFactory());
@@ -488,6 +511,7 @@ public final class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(Job.class, new JobOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(SlowConsumerEntry.class, new SlowConsumerEntryOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQBlobMessage.class, new ActiveMQBlobMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(StatusEvent.class, new StatusEventOpenTypeFactory());
     }
 
     private OpenTypeSupport() {

@@ -2064,6 +2064,19 @@ public class BrokerService implements Service {
             }
             broker = sb;
         }
+        if (isUseJmx()) {
+            StatusViewMBean statusView = new StatusView((ManagedRegionBroker)getRegionBroker());
+            try {
+                ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":"
+                        + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
+                        + "Type=Status");
+
+                AnnotatedMBean.registerMBean(getManagementContext(), statusView, objectName);
+            } catch (Throwable e) {
+                throw IOExceptionSupport.create("Status MBean could not be registered in JMX: "
+                        + e.getMessage(), e);
+            }
+        }
         if (isAdvisorySupport()) {
             broker = new AdvisoryBroker(broker);
         }

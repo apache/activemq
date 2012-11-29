@@ -809,4 +809,8 @@ public class ManagedRegionBroker extends RegionBroker {
         }
         return sub;
     }
+
+    public Map<ObjectName, DestinationView> getQueueViews() {
+        return queues;
+    }
 }
