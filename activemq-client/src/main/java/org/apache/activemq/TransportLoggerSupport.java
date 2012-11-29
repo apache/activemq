@@ -39,7 +39,6 @@ public class TransportLoggerSupport {
             temp = (SPI) TransportLoggerSupport.class.getClassLoader().loadClass("org.apache.activemq.transport.TransportLoggerFactorySPI").newInstance();
         } catch (Throwable e) {
             temp = null;
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
         spi = temp;
     }
