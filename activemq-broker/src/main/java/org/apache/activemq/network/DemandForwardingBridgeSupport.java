@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -137,6 +140,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private TransportConnection duplexInitiatingConnection;
     private BrokerService brokerService = null;
     private ObjectName mbeanObjectName;
+    private ExecutorService serialExecutor = Executors.newSingleThreadExecutor();
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -355,6 +359,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     brokerService.getTaskRunnerFactory().execute(new Runnable() {
                         public void run() {
                             try {
+                                serialExecutor.shutdown();
+                                if (!serialExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                                    List<Runnable> pendingTasks = serialExecutor.shutdownNow();
+                                    LOG.info("pending tasks on stop" + pendingTasks);
+                                }
                                 localBroker.oneway(new ShutdownInfo());
                                 remoteBroker.oneway(new ShutdownInfo());
                             } catch (Throwable e) {
@@ -594,7 +603,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
         } else if (data.getClass() == DestinationInfo.class) {
             // It's a destination info - we want to pass up information about temporary destinations
-            DestinationInfo destInfo = (DestinationInfo) data;
+            final DestinationInfo destInfo = (DestinationInfo) data;
             BrokerId[] path = destInfo.getBrokerPath();
             if (path != null && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
@@ -619,7 +628,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (LOG.isTraceEnabled()) {
                 LOG.trace(configuration.getBrokerName() + " bridging " + (destInfo.isAddOperation() ? "add" : "remove") + " destination on " + localBroker + " from " + remoteBrokerName + ", destination: " + destInfo);
             }
-            localBroker.oneway(destInfo);
+            if (destInfo.isRemoveOperation()) {
+                // serialise with removeSub operations such that all removeSub advisories are generated
+                serialExecutor.execute(new Runnable() {
+                    public void run() {
+                        try {
+                            localBroker.oneway(destInfo);
+                        } catch (IOException e) {
+                            LOG.warn("failed to deliver remove command for destination:" + destInfo.getDestination(), e);
+                        }
+                    }
+                });
+            } else {
+                localBroker.oneway(destInfo);
+            }
         } else if (data.getClass() == RemoveInfo.class) {
             ConsumerId id = (ConsumerId) ((RemoveInfo) data).getObjectId();
             removeDemandSubscription(id);
@@ -658,7 +680,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
 
             // continue removal in separate thread to free up this thread for outstanding responses
-            brokerService.getTaskRunnerFactory().execute(new Runnable() {
+            // serialise with removeDestination operations so that removeSubs are serialised with removeDestinations
+            // such that all removeSub advisories are generated
+            serialExecutor.execute(new Runnable() {
                 public void run() {
                     sub.waitForCompletion();
                     try {

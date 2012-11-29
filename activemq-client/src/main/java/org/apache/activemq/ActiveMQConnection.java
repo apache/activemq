@@ -662,10 +662,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         c.dispose();
                     }
 
-                    // As TemporaryQueue and TemporaryTopic instances are bound
-                    // to a connection we should just delete them after the connection
-                    // is closed to free up memory
-                    cleanUpTempDestinations();
+                    this.activeTempDestinations.clear();
 
                     if (isConnectionInfoSentToBroker) {
                         // If we announced ourselves to the broker.. Try to let the broker
@@ -2527,6 +2524,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Removes any TempDestinations that this connection has cached, ignoring
      * any exceptions generated because the destination is in use as they should
      * not be removed.
+     * Used from a pooled connection, b/c it will not be explicitly closed.
      */
     public void cleanUpTempDestinations() {
 
@@ -2612,7 +2610,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Sets the amount of time between scheduled sends of any outstanding Message Acks for consumers that
      * have been configured with optimizeAcknowledge enabled.
      *
-     * @param scheduledOptimizedAckInterval the scheduledOptimizedAckInterval to set
+     * @param optimizedAckScheduledAckInterval the scheduledOptimizedAckInterval to set
      */
     public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
         this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
