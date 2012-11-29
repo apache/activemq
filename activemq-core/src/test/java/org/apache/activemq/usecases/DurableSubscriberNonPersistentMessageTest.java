@@ -45,6 +45,7 @@ import junit.framework.TestSuite;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
@@ -53,8 +54,8 @@ import org.slf4j.LoggerFactory;
 public class DurableSubscriberNonPersistentMessageTest extends TestCase {
 
     private final Logger LOG = LoggerFactory.getLogger(DurableSubscriberNonPersistentMessageTest.class);
-    private String brokerURL = "failover:(tcp://localhost:61616)";
-    private String consumerBrokerURL = brokerURL + "?jms.prefetchPolicy.all=100";
+    private String brokerURL;
+    private String consumerBrokerURL;
 
     int initialMaxMsgs = 10;
     int cleanupMsgCount = 10;
@@ -79,11 +80,14 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         broker = new BrokerService();
-        broker.addConnector("tcp://localhost:61616");
+        TransportConnector transportConnector = broker.addConnector("tcp://localhost:0");
         KahaDBStore store = new KahaDBStore();
         store.setDirectory(new File("data"));
         broker.setPersistenceAdapter(store);
         broker.start();
+
+        brokerURL = "failover:(" + transportConnector.getPublishableConnectString() + ")";
+        consumerBrokerURL = brokerURL + "?jms.prefetchPolicy.all=100";
 
         mbeanServer = ManagementFactory.getPlatformMBeanServer();
     }
@@ -137,15 +141,7 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
             String brokerVersion = (String) mbeanServer.getAttribute(new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker"), "BrokerVersion");
 
             LOG.info("Test run on: " + brokerVersion);
-            // Fuse and Apache 5.6 use different object strings if the consumer
-            // is offline, maybe this has something to do with the difference in
-            // behavior?
-            String jmxObject = "org.apache.activemq:BrokerName=localhost,Type=Subscription,active=false,name=Jason_MyDurableTopic";
-            if (brokerVersion == null || brokerVersion.contains("fuse") || brokerVersion.contains("5.6")) {
-                jmxObject = "org.apache.activemq:BrokerName=localhost,Type=Subscription,persistentMode=Durable,subscriptionID=MyDurableTopic,destinationType=Topic,destinationName=TEST,clientId=Jason";
-            }
-
-            final String theJmxObject = jmxObject;
+            final String theJmxObject = "org.apache.activemq:BrokerName=localhost,Type=Subscription,persistentMode=Durable,subscriptionID=MyDurableTopic,destinationType=Topic,destinationName=TEST,clientId=Jason";
 
             assertTrue("pendingQueueSize should be zero", Wait.waitFor(new Wait.Condition() {
                 @Override
