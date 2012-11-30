@@ -72,18 +72,6 @@ public abstract class DestinationMapEntry<T> implements Comparable<T> {
         this.destination = destination;
     }
 
-    /**
-     *
-     * @throws Exception
-     * @org.apache.xbean.InitMethod
-     */
-    @PostConstruct
-    public void afterPropertiesSet() throws Exception {
-        if (destination == null) {
-            throw new IllegalArgumentException("You must specify the 'destination' property");
-        }
-    }
-
     public Comparable<T> getValue() {
         return this;
     }
