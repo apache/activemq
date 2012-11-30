@@ -24,6 +24,8 @@ import junit.framework.TestCase;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.util.IOHelper;
+import org.junit.After;
+import org.junit.Test;
 
 /**
  * Test a HashIndex
@@ -37,28 +39,26 @@ public abstract class IndexTestSupport extends TestCase {
     protected PageFile pf;
     protected Transaction tx;
 
-    /**
-     * @throws java.lang.Exception
-     * @see junit.framework.TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-        directory = new File(IOHelper.getDefaultDataDirectory() + System.currentTimeMillis());
-        IOHelper.delete(directory);
-    }
-
-    protected void tearDown() throws Exception {
+    @Override
+	@After
+    public void tearDown() throws Exception {
         if( pf!=null ) {
             pf.unload();
             pf.delete();
         }
+    }
+
+    public File getDirectory() {
         if (directory != null) {
             IOHelper.delete(directory);
         }
+        directory = new File(IOHelper.getDefaultDataDirectory() + System.currentTimeMillis());
+        IOHelper.delete(directory);
+        return directory;
     }
 
     protected void createPageFileAndIndex(int pageSize) throws Exception {
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(pageSize);
         pf.load();
         tx = pf.tx();
@@ -67,6 +67,7 @@ public abstract class IndexTestSupport extends TestCase {
 
     abstract protected Index<String, Long> createIndex() throws Exception;
 
+    @Test(timeout=60000)
     public void testIndex() throws Exception {
         createPageFileAndIndex(500);
         this.index.load(tx);

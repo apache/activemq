@@ -37,6 +37,7 @@ import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.store.kahadb.disk.util.LongMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,24 +52,24 @@ public class BTreeIndexTest extends IndexTestSupport {
         nf.setMinimumIntegerDigits(6);
         nf.setGroupingUsed(false);
     }
-    
+
     @Override
     protected Index<String, Long> createIndex() throws Exception {
-        
+
         long id = tx.allocate().getPageId();
         tx.commit();
 
         BTreeIndex<String, Long> index = new BTreeIndex<String,Long>(pf, id);
         index.setKeyMarshaller(StringMarshaller.INSTANCE);
         index.setValueMarshaller(LongMarshaller.INSTANCE);
-        
+
         return index;
     }
 
     /**
-     * Yeah, the current implementation does NOT try to balance the tree.  Here is 
-     * a test case showing that it gets out of balance.  
-     * 
+     * Yeah, the current implementation does NOT try to balance the tree.  Here is
+     * a test case showing that it gets out of balance.
+     *
      * @throws Exception
      */
     public void disabled_testTreeBalancing() throws Exception {
@@ -77,9 +78,9 @@ public class BTreeIndexTest extends IndexTestSupport {
         BTreeIndex index = ((BTreeIndex)this.index);
         this.index.load(tx);
         tx.commit();
-        
+
         doInsert(50);
-        
+
         int minLeafDepth = index.getMinLeafDepth(tx);
         int maxLeafDepth = index.getMaxLeafDepth(tx);
         assertTrue("Tree is balanced", maxLeafDepth-minLeafDepth <= 1);
@@ -97,7 +98,8 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         this.index.unload(tx);
     }
-    
+
+    @Test(timeout=60000)
     public void testPruning() throws Exception {
         createPageFileAndIndex(100);
 
@@ -105,14 +107,14 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         this.index.load(tx);
         tx.commit();
-     
+
         int minLeafDepth = index.getMinLeafDepth(tx);
         int maxLeafDepth = index.getMaxLeafDepth(tx);
         assertEquals(1, minLeafDepth);
         assertEquals(1, maxLeafDepth);
-        
+
         doInsert(1000);
-        
+
         minLeafDepth = index.getMinLeafDepth(tx);
         maxLeafDepth = index.getMaxLeafDepth(tx);
         assertTrue("Depth of tree grew", minLeafDepth > 1);
@@ -130,15 +132,16 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testIteration() throws Exception {
         createPageFileAndIndex(500);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
         this.index.load(tx);
         tx.commit();
-          
+
         // Insert in reverse order..
         doInsertReverse(1000);
-        
+
         this.index.unload(tx);
         tx.commit();
         this.index.load(tx);
@@ -149,7 +152,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         // BTree should iterate it in sorted order.
         int counter=0;
         for (Iterator<Map.Entry<String,Long>> i = index.iterator(tx); i.hasNext();) {
-            Map.Entry<String,Long> entry = (Map.Entry<String,Long>)i.next();
+            Map.Entry<String,Long> entry = i.next();
             assertEquals(key(counter),entry.getKey());
             assertEquals(counter,(long)entry.getValue());
             counter++;
@@ -158,38 +161,40 @@ public class BTreeIndexTest extends IndexTestSupport {
         this.index.unload(tx);
         tx.commit();
     }
-    
-    
+
+    @Test(timeout=60000)
     public void testVisitor() throws Exception {
         createPageFileAndIndex(100);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
         this.index.load(tx);
         tx.commit();
-          
+
         // Insert in reverse order..
         doInsert(1000);
-        
+
         this.index.unload(tx);
         tx.commit();
         this.index.load(tx);
         tx.commit();
 
         // BTree should iterate it in sorted order.
-        
+
         index.visit(tx, new BTreeVisitor<String, Long>(){
-            public boolean isInterestedInKeysBetween(String first, String second) {
+            @Override
+			public boolean isInterestedInKeysBetween(String first, String second) {
                 return true;
             }
-            public void visit(List<String> keys, List<Long> values) {
+            @Override
+			public void visit(List<String> keys, List<Long> values) {
             }
         });
-        
+
 
         this.index.unload(tx);
         tx.commit();
     }
 
-
+    @Test(timeout=60000)
     public void testRandomRemove() throws Exception {
 
         createPageFileAndIndex(100);
@@ -231,6 +236,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
     }
 
+    @Test(timeout=300000)
     public void testRandomAddRemove() throws Exception {
 
         createPageFileAndIndex(1024);
@@ -273,6 +279,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
     }
 
+    @Test(timeout=60000)
     public void testRemovePattern() throws Exception {
         createPageFileAndIndex(100);
         BTreeIndex<String,Long> index = ((BTreeIndex<String,Long>)this.index);
@@ -319,9 +326,10 @@ public class BTreeIndexTest extends IndexTestSupport {
         assertNull(index.getLast(tx));
     }
 
+    @Test(timeout=60000)
     public void testLargeValue() throws Exception {
         //System.setProperty("maxKahaDBTxSize", "" + (1024*1024*1024));
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         //pf.setEnablePageCaching(false);
         pf.load();
@@ -366,8 +374,9 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testLargeValueOverflow() throws Exception {
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.setWriteBatchSize(1);
         pf.load();
@@ -422,8 +431,9 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testIndexRepeatFillClearIncrementingPageReuse() throws Exception {
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.load();
 
@@ -467,11 +477,12 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
     }
 
+    @Test(timeout=60000)
     public void testListIndexConsistancyOverTime() throws Exception {
 
         final int NUM_ITERATIONS = 50;
 
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         //pf.setEnablePageCaching(false);
         pf.setWriteBatchSize(1);
@@ -543,7 +554,7 @@ public class BTreeIndexTest extends IndexTestSupport {
     }
     /**
      * Overriding so that this generates keys that are the worst case for the BTree. Keys that
-     * always insert to the end of the BTree.  
+     * always insert to the end of the BTree.
      */
     @Override
     protected String key(int i) {
@@ -553,7 +564,8 @@ public class BTreeIndexTest extends IndexTestSupport {
     static class HashSetStringMarshaller extends VariableMarshaller<HashSet<String>> {
         final static HashSetStringMarshaller INSTANCE = new HashSetStringMarshaller();
 
-        public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
+        @Override
+		public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oout = new ObjectOutputStream(baos);
             oout.writeObject(object);
@@ -564,7 +576,8 @@ public class BTreeIndexTest extends IndexTestSupport {
             dataOut.write(data);
         }
 
-        public HashSet<String> readPayload(DataInput dataIn) throws IOException {
+        @Override
+		public HashSet<String> readPayload(DataInput dataIn) throws IOException {
             int dataLen = dataIn.readInt();
             byte[] data = new byte[dataLen];
             dataIn.readFully(data);

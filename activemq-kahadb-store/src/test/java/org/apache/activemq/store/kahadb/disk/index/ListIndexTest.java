@@ -36,6 +36,7 @@ import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +65,7 @@ public class ListIndexTest extends IndexTestSupport {
         return index;
     }
 
+    @Test(timeout=60000)
     public void testSize() throws Exception {
         createPageFileAndIndex(100);
 
@@ -98,6 +100,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testPut() throws Exception {
         createPageFileAndIndex(100);
 
@@ -130,6 +133,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testAddFirst() throws Exception {
         createPageFileAndIndex(100);
 
@@ -155,7 +159,7 @@ public class ListIndexTest extends IndexTestSupport {
         counter--;
         int count = 0;
         while (iterator.hasNext() && count < counter) {
-            Map.Entry<String, Long> entry = (Map.Entry<String, Long>) iterator.next();
+            Map.Entry<String, Long> entry = iterator.next();
             assertEquals(key(count), entry.getKey());
             assertEquals(count, (long) entry.getValue());
             count++;
@@ -163,6 +167,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testPruning() throws Exception {
         createPageFileAndIndex(100);
 
@@ -212,6 +217,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testIterationAddFirst() throws Exception {
         createPageFileAndIndex(100);
         ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
@@ -229,7 +235,7 @@ public class ListIndexTest extends IndexTestSupport {
 
         int counter = 0;
         for (Iterator<Map.Entry<String, Long>> i = index.iterator(tx); i.hasNext(); ) {
-            Map.Entry<String, Long> entry = (Map.Entry<String, Long>) i.next();
+            Map.Entry<String, Long> entry = i.next();
             assertEquals(key(counter), entry.getKey());
             assertEquals(counter, (long) entry.getValue());
             counter++;
@@ -245,7 +251,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
-
+    @Test(timeout=60000)
     public void testIteration() throws Exception {
         createPageFileAndIndex(100);
         ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
@@ -263,7 +269,7 @@ public class ListIndexTest extends IndexTestSupport {
 
         int counter = 0;
         for (Iterator<Map.Entry<String, Long>> i = index.iterator(tx); i.hasNext(); ) {
-            Map.Entry<String, Long> entry = (Map.Entry<String, Long>) i.next();
+            Map.Entry<String, Long> entry = i.next();
             assertEquals(key(counter), entry.getKey());
             assertEquals(counter, (long) entry.getValue());
             counter++;
@@ -274,6 +280,7 @@ public class ListIndexTest extends IndexTestSupport {
         tx.commit();
     }
 
+    @Test(timeout=60000)
     public void testRandomRemove() throws Exception {
 
         createPageFileAndIndex(4*1024);
@@ -298,6 +305,7 @@ public class ListIndexTest extends IndexTestSupport {
         }
     }
 
+    @Test(timeout=60000)
     public void testRemovePattern() throws Exception {
         createPageFileAndIndex(100);
         ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
@@ -311,6 +319,7 @@ public class ListIndexTest extends IndexTestSupport {
         index.remove(tx, key(1566));
     }
 
+    @Test(timeout=60000)
     public void testLargeAppendRemoveTimed() throws Exception {
         createPageFileAndIndex(1024*4);
         ListIndex<String, Long> listIndex = ((ListIndex<String, Long>) this.index);
@@ -345,8 +354,9 @@ public class ListIndexTest extends IndexTestSupport {
         return min + (int)(Math.random() * ((max - min) + 1));
     }
 
+    @Test(timeout=60000)
     public void testLargeValueOverflow() throws Exception {
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.setEnablePageCaching(false);
         pf.setWriteBatchSize(1);
@@ -429,11 +439,12 @@ public class ListIndexTest extends IndexTestSupport {
         return "key:" + nf.format(i);
     }
 
+    @Test(timeout=60000)
     public void testListIndexConsistencyOverTime() throws Exception {
 
         final int NUM_ITERATIONS = 100;
 
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.setEnablePageCaching(false);
         pf.setWriteBatchSize(1);
@@ -496,11 +507,12 @@ public class ListIndexTest extends IndexTestSupport {
         }
     }
 
+    @Test(timeout=60000)
     public void testListLargeDataAddWithReverseRemove() throws Exception {
 
         final int NUM_ITERATIONS = 100;
 
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.setEnablePageCaching(false);
         pf.setWriteBatchSize(1);
@@ -568,7 +580,7 @@ public class ListIndexTest extends IndexTestSupport {
         final int NUM_ITERATIONS = 200;
         final int RANGE = 200000;
 
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.load();
         tx = pf.tx();
@@ -599,11 +611,12 @@ public class ListIndexTest extends IndexTestSupport {
         LOG.info("duration: " + (System.currentTimeMillis() - start));
     }
 
+    @Test(timeout=60000)
     public void testListLargeDataAddAndNonSequentialRemove() throws Exception {
 
         final int NUM_ITERATIONS = 100;
 
-        pf = new PageFile(directory, getClass().getName());
+        pf = new PageFile(getDirectory(), getClass().getName());
         pf.setPageSize(4*1024);
         pf.setEnablePageCaching(false);
         pf.setWriteBatchSize(1);
@@ -681,7 +694,8 @@ public class ListIndexTest extends IndexTestSupport {
     static class HashSetStringMarshaller extends VariableMarshaller<HashSet<String>> {
         final static HashSetStringMarshaller INSTANCE = new HashSetStringMarshaller();
 
-        public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
+        @Override
+		public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oout = new ObjectOutputStream(baos);
             oout.writeObject(object);
@@ -692,7 +706,8 @@ public class ListIndexTest extends IndexTestSupport {
             dataOut.write(data);
         }
 
-        @SuppressWarnings("unchecked")
+        @Override
+		@SuppressWarnings("unchecked")
         public HashSet<String> readPayload(DataInput dataIn) throws IOException {
             int dataLen = dataIn.readInt();
             byte[] data = new byte[dataLen];
