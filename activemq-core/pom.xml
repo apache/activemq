@@ -1148,10 +1148,16 @@
               <phase>process-classes</phase>
                 <configuration>
                   <includes>
-                    <include>${basedir}/../activemq-leveldb/src/main/java</include>
+                    <include>${basedir}/../activemq-leveldb-store/src/main/java</include>
+                    <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
+                    <include>${basedir}/../activemq-jdbc-store/src/main/java</include>
+                    <include>${basedir}/../activemq-amq-store/src/main/java</include>
+                    <include>${basedir}/../activemq-broker/src/main/java</include>
+                    <include>${basedir}/../activemq-client/src/main/java</include>
                   </includes>
                   <classPathIncludes>
-                    <classPathInclude>${basedir}/../activemq-leveldb/target/classes</classPathInclude>
+                    <classPathInclude>${basedir}/../activemq-leveldb-store/target/classes</classPathInclude>
+                    <classPathInclude>${basedir}/../activemq-kahadb-store/target/classes</classPathInclude>
                   </classPathIncludes>
                   <strictXsdOrder>false</strictXsdOrder>
                   <namespace>http://activemq.apache.org/schema/core</namespace>
