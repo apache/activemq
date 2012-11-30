@@ -22,6 +22,8 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class StatusView implements StatusViewMBean {
@@ -39,14 +41,24 @@ public class StatusView implements StatusViewMBean {
         TabularType tt = new TabularType("Status", "Status", ct, new String[]{"id", "resource"});
         TabularDataSupport rc = new TabularDataSupport(tt);
 
+        List<StatusEvent> list = statusList();
+        for (StatusEvent statusEvent : list) {
+            rc.put(new CompositeDataSupport(ct, factory.getFields(statusEvent)));
+        }
+        return rc;
+    }
+
+    @Override
+    public List<StatusEvent> statusList() throws Exception {
+        List<StatusEvent> answer = new ArrayList<StatusEvent>();
         Map<ObjectName, DestinationView> queueViews = broker.getQueueViews();
         for (Map.Entry<ObjectName, DestinationView> entry : queueViews.entrySet()) {
             DestinationView queue = entry.getValue();
             if (queue.getConsumerCount() == 0 && queue.getProducerCount() > 0) {
-                rc.put(new CompositeDataSupport(ct, factory.getFields(new StatusEvent("AMQ-NoConsumer", entry.getKey().toString()))));
+                answer.add(new StatusEvent("AMQ-NoConsumer", entry.getKey().toString()));
             }
         }
-        return rc;
+        return answer;
     }
 
 }
