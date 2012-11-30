@@ -20,14 +20,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
+import org.apache.activemq.util.IOHelper;
 
 /**
  * DataFile
- * 
- * 
+ *
+ *
  */
 public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFile> {
 
@@ -41,7 +41,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         this.dataFileId = Integer.valueOf(number);
         length = (int)(file.exists() ? file.length() : 0);
     }
-    
+
     public File getFile() {
         return file;
     }
@@ -62,12 +62,13 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         length += size;
     }
 
-    public synchronized String toString() {
+    @Override
+	public synchronized String toString() {
         return file.getName() + " number = " + dataFileId + " , length = " + length;
     }
 
     public synchronized RandomAccessFile openRandomAccessFile() throws IOException {
-        return new RandomAccessFile(file, "rw");
+        return new RandomAccessFile(file.getCanonicalPath(), "rw");
     }
 
     public synchronized void closeRandomAccessFile(RandomAccessFile file) throws IOException {
@@ -77,7 +78,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     public synchronized boolean delete() throws IOException {
         return file.delete();
     }
-    
+
     public synchronized void move(File targetDirectory) throws IOException{
         IOHelper.moveFile(file,targetDirectory);
     }
@@ -85,8 +86,9 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     public SequenceSet getCorruptedBlocks() {
         return corruptedBlocks;
     }
-    
-    public int compareTo(DataFile df) {
+
+    @Override
+	public int compareTo(DataFile df) {
         return dataFileId - df.dataFileId;
     }
 
