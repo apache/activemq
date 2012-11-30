@@ -79,9 +79,8 @@ public class AdvisoryBroker extends BrokerFilter {
         super.addConnection(context, info);
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
-        //do not distribute usernames or passwords in advisory
+        // do not distribute passwords in advisory messages. usernames okay
         ConnectionInfo copy = info.copy();
-        copy.setUserName("");
         copy.setPassword("");
         fireAdvisory(context, topic, copy);
         connections.put(copy.getConnectionId(), copy);
