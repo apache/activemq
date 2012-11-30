@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.annotation.PostConstruct;
 import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
@@ -153,8 +154,12 @@ public class AuthorizationEntry extends DestinationMapEntry {
         return answer;
     }
 
+    /**
+     *
+     * @org.apache.xbean.InitMethod
+     */
+    @PostConstruct
     public void afterPropertiesSet() throws Exception {
-        super.afterPropertiesSet();
 
         if (adminRoles != null) {
             setAdminACLs(parseACLs(adminRoles));

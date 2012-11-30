@@ -44,11 +44,6 @@ public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
         this.persistenceAdapter = persistenceAdapter;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        // ok to have no destination, we default it
-    }
-
     public boolean isPerDestination() {
         return perDestination;
     }
