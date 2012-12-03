@@ -203,6 +203,8 @@
             <transportConnector name="stomp" uri="stomp://localhost:61613"/>
             <!-- Create a XMPP transport for XMPP clients. -->
             <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
+            <!-- Create a Websocket transport for the websocket dmeo -->
+            <transportConnector name="ws" uri="ws://localhost:61614/" />
         </transportConnectors>
 
         <!-- destroy the spring context on shutdown to stop jetty -->
