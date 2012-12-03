@@ -5,6 +5,7 @@ import org.apache.qpid.proton.jms.JMSVendor;
 
 import javax.jms.*;
 import javax.jms.Message;
+import java.util.Set;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -46,8 +47,25 @@ public class ActiveMQJMSVendor extends JMSVendor {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Destination createDestination(String name) {
-        return ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE);
+        return super.createDestination(name, Destination.class);
+    }
+
+    public <T extends Destination> T createDestination(String name, Class<T> kind) {
+        if( kind == Queue.class ) {
+            return kind.cast(new ActiveMQQueue(name));
+        }
+        if( kind == Topic.class ) {
+            return kind.cast(new ActiveMQTopic(name));
+        }
+        if( kind == TemporaryQueue.class ) {
+            return kind.cast(new ActiveMQTempQueue(name));
+        }
+        if( kind == TemporaryTopic.class ) {
+            return kind.cast(new ActiveMQTempTopic(name));
+        }
+        return kind.cast(ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE));
     }
 
     @Override
