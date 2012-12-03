@@ -27,7 +27,6 @@ import javax.jms.ConnectionMetaData;
  * A <CODE>ConnectionMetaData</CODE> object provides information describing
  * the <CODE>Connection</CODE> object.
  */
-
 public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     public static final String PROVIDER_VERSION;
@@ -63,82 +62,83 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS API version.
-     * 
+     *
      * @return the JMS API version
      */
-
+    @Override
     public String getJMSVersion() {
         return "1.1";
     }
 
     /**
      * Gets the JMS major version number.
-     * 
+     *
      * @return the JMS API major version number
      */
-
+    @Override
     public int getJMSMajorVersion() {
         return 1;
     }
 
     /**
      * Gets the JMS minor version number.
-     * 
+     *
      * @return the JMS API minor version number
      */
-
+    @Override
     public int getJMSMinorVersion() {
         return 1;
     }
 
     /**
      * Gets the JMS provider name.
-     * 
+     *
      * @return the JMS provider name
      */
-
+    @Override
     public String getJMSProviderName() {
         return "ActiveMQ";
     }
 
     /**
      * Gets the JMS provider version.
-     * 
+     *
      * @return the JMS provider version
      */
-
+    @Override
     public String getProviderVersion() {
         return PROVIDER_VERSION;
     }
 
     /**
      * Gets the JMS provider major version number.
-     * 
+     *
      * @return the JMS provider major version number
      */
-
+    @Override
     public int getProviderMajorVersion() {
         return PROVIDER_MAJOR_VERSION;
     }
 
     /**
      * Gets the JMS provider minor version number.
-     * 
+     *
      * @return the JMS provider minor version number
      */
-
+    @Override
     public int getProviderMinorVersion() {
         return PROVIDER_MINOR_VERSION;
     }
 
     /**
      * Gets an enumeration of the JMSX property names.
-     * 
+     *
      * @return an Enumeration of JMSX property names
      */
-
+    @Override
     public Enumeration<String> getJMSXPropertyNames() {
         Vector<String> jmxProperties = new Vector<String>();
+        jmxProperties.add("JMSXUserID");
         jmxProperties.add("JMSXGroupID");
         jmxProperties.add("JMSXGroupSeq");
         jmxProperties.add("JMSXDeliveryCount");
