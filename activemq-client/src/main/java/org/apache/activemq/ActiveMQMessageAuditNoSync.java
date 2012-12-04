@@ -30,8 +30,8 @@ import org.apache.activemq.util.LRUCache;
 
 /**
  * Provides basic audit functions for Messages without sync
- * 
- * 
+ *
+ *
  */
 public class ActiveMQMessageAuditNoSync implements Serializable {
 
@@ -41,11 +41,11 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     public static final int MAXIMUM_PRODUCER_COUNT = 64;
     private int auditDepth;
     private int maximumNumberOfProducersToTrack;
-    private LRUCache<Object, BitArrayBin> map;
+    private final LRUCache<Object, BitArrayBin> map;
+    private transient boolean modified = true;
 
     /**
-     * Default Constructor windowSize = 2048, maximumNumberOfProducersToTrack =
-     * 64
+     * Default Constructor windowSize = 2048, maximumNumberOfProducersToTrack = 64
      */
     public ActiveMQMessageAuditNoSync() {
         this(DEFAULT_WINDOW_SIZE, MAXIMUM_PRODUCER_COUNT);
@@ -53,17 +53,16 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * Construct a MessageAudit
-     * 
+     *
      * @param auditDepth range of ids to track
-     * @param maximumNumberOfProducersToTrack number of producers expected in
-     *                the system
+     * @param maximumNumberOfProducersToTrack number of producers expected in the system
      */
     public ActiveMQMessageAuditNoSync(int auditDepth, final int maximumNumberOfProducersToTrack) {
         this.auditDepth = auditDepth;
         this.maximumNumberOfProducersToTrack=maximumNumberOfProducersToTrack;
         this.map = new LRUCache<Object, BitArrayBin>(0, maximumNumberOfProducersToTrack, 0.75f, true);
     }
-    
+
     /**
      * @return the auditDepth
      */
@@ -76,6 +75,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
      */
     public void setAuditDepth(int auditDepth) {
         this.auditDepth = auditDepth;
+        this.modified = true;
     }
 
     /**
@@ -88,15 +88,15 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     /**
      * @param maximumNumberOfProducersToTrack the maximumNumberOfProducersToTrack to set
      */
-    public void setMaximumNumberOfProducersToTrack(
-            int maximumNumberOfProducersToTrack) {
+    public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
         this.maximumNumberOfProducersToTrack = maximumNumberOfProducersToTrack;
         this.map.setMaxCacheSize(maximumNumberOfProducersToTrack);
+        this.modified = true;
     }
 
     /**
      * Checks if this message has been seen before
-     * 
+     *
      * @param message
      * @return true if the message is a duplicate
      * @throws JMSException
@@ -108,7 +108,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     /**
      * checks whether this messageId has been seen before and adds this
      * messageId to the list
-     * 
+     *
      * @param id
      * @return true if the message is a duplicate
      */
@@ -120,10 +120,12 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
             if (bab == null) {
                 bab = new BitArrayBin(auditDepth);
                 map.put(seed, bab);
+                modified = true;
             }
             long index = IdGenerator.getSequenceFromId(id);
             if (index >= 0) {
                 answer = bab.setBit(index, true);
+                modified = true;
             }
         }
         return answer;
@@ -131,7 +133,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * Checks if this message has been seen before
-     * 
+     *
      * @param message
      * @return true if the message is a duplicate
      */
@@ -139,16 +141,16 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
         MessageId id = message.getMessageId();
         return isDuplicate(id);
     }
-    
+
     /**
      * Checks if this messageId has been seen before
-     * 
+     *
      * @param id
      * @return true if the message is a duplicate
      */
     public boolean isDuplicate(final MessageId id) {
         boolean answer = false;
-        
+
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
@@ -156,6 +158,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
                     map.put(pid, bab);
+                    modified = true;
                 }
                 answer = bab.setBit(id.getProducerSequenceId(), true);
             }
@@ -165,17 +168,17 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * mark this message as being received
-     * 
+     *
      * @param message
      */
     public void rollback(final MessageReference message) {
         MessageId id = message.getMessageId();
         rollback(id);
     }
-    
+
     /**
      * mark this message as being received
-     * 
+     *
      * @param id
      */
     public void rollback(final  MessageId id) {
@@ -185,6 +188,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 BitArrayBin bab = map.get(pid);
                 if (bab != null) {
                     bab.setBit(id.getProducerSequenceId(), false);
+                    modified = true;
                 }
             }
         }
@@ -197,10 +201,11 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
             if (bab != null) {
                 long index = IdGenerator.getSequenceFromId(id);
                 bab.setBit(index, false);
+                modified = true;
             }
         }
     }
-    
+
     /**
      * Check the message is in order
      * @param msg
@@ -210,7 +215,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     public boolean isInOrder(Message msg) throws JMSException {
         return isInOrder(msg.getJMSMessageID());
     }
-    
+
     /**
      * Check the message id is in order
      * @param id
@@ -218,7 +223,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
      */
     public boolean isInOrder(final String id) {
         boolean answer = true;
-        
+
         if (id != null) {
             String seed = IdGenerator.getSeedFromId(id);
             if (seed != null) {
@@ -226,22 +231,22 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 if (bab != null) {
                     long index = IdGenerator.getSequenceFromId(id);
                     answer = bab.isInOrder(index);
+                    modified = true;
                 }
-               
             }
         }
         return answer;
     }
-    
+
     /**
      * Check the MessageId is in order
-     * @param message 
+     * @param message
      * @return
      */
     public boolean isInOrder(final MessageReference message) {
         return isInOrder(message.getMessageId());
     }
-    
+
     /**
      * Check the MessageId is in order
      * @param id
@@ -257,6 +262,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
                     map.put(pid, bab);
+                    modified = true;
                 }
                 answer = bab.isInOrder(id.getProducerSequenceId());
 
@@ -276,5 +282,37 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     public void clear() {
         map.clear();
+    }
+
+    /**
+     * Returns if the Audit has been modified since last check, this method does not
+     * reset the modified flag.  If the caller needs to reset the flag in order to avoid
+     * serializing an unchanged Audit then its up the them to reset it themselves.
+     *
+     * @return true if the Audit has been modified.
+     */
+    public boolean isModified() {
+        return this.modified;
+    }
+
+    public void setModified(boolean modified) {
+        this.modified = modified;
+    }
+
+    /**
+     * Reads and returns the current modified state of the Audit, once called the state is
+     * reset to false.  This method is useful for code the needs to know if it should write
+     * out the Audit or otherwise execute some logic based on the Audit having changed since
+     * last check.
+     *
+     * @return true if the Audit has been modified since last check.
+     */
+    public boolean modified() {
+        if (this.modified) {
+            this.modified = false;
+            return true;
+        }
+
+        return false;
     }
 }
