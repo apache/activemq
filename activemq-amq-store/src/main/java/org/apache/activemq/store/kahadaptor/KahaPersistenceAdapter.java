@@ -55,8 +55,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- * 
+ *
  */
+@Deprecated
 public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerServiceAware {
 
     private static final int STORE_LOCKED_WAIT_DELAY = 10 * 1000;
@@ -78,15 +79,15 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
     private boolean persistentIndex = true;
     private BrokerService brokerService;
 
-    
     public KahaPersistenceAdapter(AtomicLong size) {
         this.storeSize=size;
     }
-    
+
     public KahaPersistenceAdapter() {
         this(new AtomicLong());
     }
-    
+
+    @Override
     public Set<ActiveMQDestination> getDestinations() {
         Set<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         try {
@@ -104,6 +105,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         return rc;
     }
 
+    @Override
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         MessageStore rc = queues.get(destination);
         if (rc == null) {
@@ -117,6 +119,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         return rc;
     }
 
+    @Override
     public synchronized TopicMessageStore createTopicMessageStore(ActiveMQTopic destination)
         throws IOException {
         TopicMessageStore rc = topics.get(destination);
@@ -143,14 +146,15 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
      *
      * @param destination Destination to forget
      */
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         queues.remove(destination);
         try{
-        	if(theStore!=null){
-        		theStore.deleteMapContainer(destination,"queue-data");
-        	}
+            if(theStore!=null){
+                theStore.deleteMapContainer(destination,"queue-data");
+            }
         }catch(IOException e ){
-        	LOG.error("Failed to remove store map container for queue:"+destination, e);
+            LOG.error("Failed to remove store map container for queue:"+destination, e);
         }
     }
 
@@ -159,6 +163,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
      *
      * @param destination Destination to forget
      */
+    @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
         topics.remove(destination);
     }
@@ -168,6 +173,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         return result;
     }
 
+    @Override
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
             while (true) {
@@ -194,32 +200,39 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         return transactionStore;
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context) {
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context) throws IOException {
         if (theStore != null) {
             theStore.force();
         }
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context) {
     }
 
+    @Override
     public void start() throws Exception {
         initialize();
     }
 
+    @Override
     public void stop() throws Exception {
         if (theStore != null) {
             theStore.close();
         }
     }
 
+    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         return 0;
     }
 
+    @Override
     public void deleteAllMessages() throws IOException {
         if (theStore != null) {
             if (theStore.isInitialized()) {
@@ -268,6 +281,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
      * @param usageManager The UsageManager that is controlling the broker's
      *                memory usage.
      */
+    @Override
     public void setUsageManager(SystemUsage usageManager) {
     }
 
@@ -277,14 +291,14 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
     public long getMaxDataFileLength() {
         return maxDataFileLength;
     }
-    
-    public boolean isPersistentIndex() {
-		return persistentIndex;
-	}
 
-	public void setPersistentIndex(boolean persistentIndex) {
-		this.persistentIndex = persistentIndex;
-	}
+    public boolean isPersistentIndex() {
+        return persistentIndex;
+    }
+
+    public void setPersistentIndex(boolean persistentIndex) {
+        this.persistentIndex = persistentIndex;
+    }
 
     /**
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
@@ -300,7 +314,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         }
         return theStore;
     }
-    
+
     protected final Store createStore() throws IOException {
         Store result = StoreFactory.open(getStoreDirectory(), "rw",storeSize);
         result.setMaxDataFileLength(maxDataFileLength);
@@ -319,10 +333,12 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         return directory;
     }
 
+    @Override
     public String toString() {
         return "KahaPersistenceAdapter(" + getStoreName() + ")";
     }
 
+    @Override
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }
@@ -331,20 +347,24 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         return brokerName;
     }
 
+    @Override
     public File getDirectory() {
         return this.directory;
     }
 
+    @Override
     public void setDirectory(File directory) {
         this.directory = directory;
     }
 
+    @Override
     public void checkpoint(boolean sync) throws IOException {
         if (sync) {
             getStore().force();
         }
     }
-   
+
+    @Override
     public long size(){
        return storeSize.get();
     }
@@ -367,14 +387,16 @@ public class KahaPersistenceAdapter implements PersistenceAdapter, BrokerService
         }
     }
 
-	public void setBrokerService(BrokerService brokerService) {
-		this.brokerService = brokerService;
-	}
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
 
+    @Override
     public long getLastProducerSequenceId(ProducerId id) {
         // reference store send has adequate duplicate suppression
         return -1;
     }
-  
+
 
 }
