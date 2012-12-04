@@ -45,7 +45,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-client</artifactId>
@@ -84,7 +84,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jdbc-store</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-mqtt</artifactId>
@@ -454,7 +454,7 @@
       </plugin>
       <!-- plugin>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>maven-activemq-plugin</artifactId>
+        <artifactId>activemq-maven-plugin</artifactId>
         <version>${project.version}</version>
         <configuration>
           <configFile>${basedir}/src/release/conf/activemq.xml</configFile>
