@@ -82,7 +82,9 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
 
     synchronized public void decrementQueueRef() throws Exception {
-        queueRefs--;
+        if (queueRefs > 0) {
+            queueRefs--;
+        }
         checkDone();
     }
 
