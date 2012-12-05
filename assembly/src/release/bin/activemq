@@ -376,8 +376,8 @@ invokeJar(){
    PIDFILE="$1"
    RET="1"
 
-   if [ ! -f "${ACTIVEMQ_HOME}/bin/run.jar" ];then
-    echo "ERROR: '${ACTIVEMQ_HOME}/bin/run.jar' does not exist"
+   if [ ! -f "${ACTIVEMQ_HOME}/bin/activemq.jar" ];then
+    echo "ERROR: '${ACTIVEMQ_HOME}/bin/activemq.jar' does not exist"
     exit 1
    fi
 
@@ -400,7 +400,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > $PIDFILE;
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
@@ -414,7 +414,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS --pid $PID &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > $ACTIVEMQ_DATA/stop.pid; exit \$RET" $DOIT_POSTFIX
       RET="$?"
@@ -426,7 +426,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/run.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS" $DOIT_POSTFIX
       RET="$?"
    fi
    return $RET

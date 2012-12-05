@@ -88,7 +88,7 @@
     <dependencySet>
       <outputDirectory>/bin</outputDirectory>
       <unpack>false</unpack>
-      <outputFileNameMapping>run.jar</outputFileNameMapping>
+      <outputFileNameMapping>activemq.jar</outputFileNameMapping>
       <includes>
         <include>${pom.groupId}:activemq-run</include>
       </includes>

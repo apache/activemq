@@ -161,7 +161,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
 
                     for(Object vmInstance : allVMs) {
                         String displayName = (String)getVMDescriptor.invoke(vmInstance, (Object[])null);
-                        if (displayName.contains("run.jar start")) {
+                        if (displayName.contains("activemq.jar start")) {
                             String id = (String)getVMId.invoke(vmInstance, (Object[])null);
 
                             Object vm = attachToVM.invoke(null, id);
@@ -311,11 +311,12 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param tokens - succeeding command arguments
      * @throws Exception
      */
+    @Override
     protected void handleOption(String token, List<String> tokens) throws Exception {
         // Try to handle the options first
         if (token.equals("--jmxurl")) {
             // If no jmx url specified, or next token is a new option
-            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+            if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                 context.printException(new IllegalArgumentException("JMX URL not specified."));
             }
 
@@ -325,7 +326,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                 tokens.clear();
             }
 
-            String strJmxUrl = (String)tokens.remove(0);
+            String strJmxUrl = tokens.remove(0);
             try {
                 this.setJmxServiceUrl(new JMXServiceURL(strJmxUrl));
             } catch (MalformedURLException e) {
@@ -334,7 +335,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
             }
         } else if(token.equals("--pid")) {
            if (isSunJVM()) {
-               if (tokens.isEmpty() || ((String) tokens.get(0)).startsWith("-")) {
+               if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                    context.printException(new IllegalArgumentException("pid not specified"));
                    return;
                }
@@ -362,16 +363,16 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
            }
         } else if (token.equals("--jmxuser")) {
             // If no jmx user specified, or next token is a new option
-            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+            if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                 context.printException(new IllegalArgumentException("JMX user not specified."));
             }
-            this.setJmxUser((String) tokens.remove(0));
+            this.setJmxUser(tokens.remove(0));
         } else if (token.equals("--jmxpassword")) {
             // If no jmx password specified, or next token is a new option
-            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+            if (tokens.isEmpty() || tokens.get(0).startsWith("-")) {
                 context.printException(new IllegalArgumentException("JMX password not specified."));
             }
-            this.setJmxPassword((String) tokens.remove(0));
+            this.setJmxPassword(tokens.remove(0));
         } else if (token.equals("--jmxlocal")) {
             this.setJmxUseLocal(true);
         } else {
@@ -380,6 +381,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         }
     }
 
+    @Override
     public void execute(List<String> tokens) throws Exception {
         try {
             super.execute(tokens);
