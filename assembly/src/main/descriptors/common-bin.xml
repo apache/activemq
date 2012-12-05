@@ -122,6 +122,7 @@
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
         <include>${pom.groupId}:activemq-web</include>
+        <include>org.fusesource.hawtbuf:hawtbuf</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -196,7 +197,6 @@
       <includes>
         <!-- leveldb -->
         <include>org.apache.activemq:activemq-leveldb</include>
-        <include>org.fusesource.hawtbuf:hawtbuf</include>
         <!-- mqtt -->
         <include>org.fusesource.mqtt-client:mqtt-client</include>
       </includes>
