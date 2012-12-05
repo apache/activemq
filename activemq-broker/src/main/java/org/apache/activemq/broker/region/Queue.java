@@ -1530,6 +1530,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         // are we done browsing? no new messages paged
                         if (!added) {
                             browser.decrementQueueRef();
+                            browserDispatches.remove(browserDispatch);
                         }
                     } catch (Exception e) {
                         LOG.warn("exception on dispatch to browser: " + browserDispatch.getBrowser(), e);
