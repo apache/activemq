@@ -45,4 +45,6 @@ public interface AmqpTransport {
 
     public String getRemoteAddress();
 
+    public boolean isTrace();
+
 }
