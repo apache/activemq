@@ -19,11 +19,13 @@ package org.apache.activemq;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
@@ -118,12 +120,18 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.startTime = System.currentTimeMillis();
         this.messageSequence = new AtomicLong(0);
         this.stats = new JMSProducerStatsImpl(session.getSessionStats(), destination);
-        this.session.addProducer(this);
-        this.session.asyncSendPacket(info);
+        try {
+            this.session.addProducer(this);
+            this.session.syncSendPacket(info);
+        } catch (JMSException e) {
+            this.session.removeProducer(this);
+            throw e;
+        }
         this.setSendTimeout(sendTimeout);
         setTransformer(session.getTransformer());
     }
 
+    @Override
     public StatsImpl getStats() {
         return stats;
     }
@@ -140,6 +148,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      *                      some internal error.
      * @since 1.1
      */
+    @Override
     public Destination getDestination() throws JMSException {
         checkClosed();
         return this.info.getDestination();
@@ -157,6 +166,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * @throws JMSException if the JMS provider fails to close the producer due
      *                 to some internal error.
      */
+    @Override
     public void close() throws JMSException {
         if (!closed) {
             dispose();
@@ -164,6 +174,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
     }
 
+    @Override
     public void dispose() {
         if (!closed) {
             this.session.removeProducer(this);
@@ -208,6 +219,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * @see javax.jms.Session#createProducer
      * @since 1.1
      */
+    @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.send(destination, message, deliveryMode, priority, timeToLive, null);
     }
