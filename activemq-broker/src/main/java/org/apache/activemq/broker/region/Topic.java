@@ -404,6 +404,7 @@ public class Topic extends BaseDestination implements Task {
                                     LOG.warn("Waiting for space to send  transacted message - transaction elements = "
                                             + size + " need more space to commit. Message = " + message);
                                 }
+                                count++;
                             }
                         } else {
                             waitForSpace(
