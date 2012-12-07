@@ -26,6 +26,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
+import java.util.Arrays;
+
 
 public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
@@ -41,36 +43,44 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
     public void testWildcardOnExcludedDestination() throws Exception {
 
-        bridge.setExcludedDestinations(new ActiveMQDestination[] { ActiveMQDestination.createDestination("OTHER.>",
-            ActiveMQDestination.TOPIC_TYPE) });
-        bridge.setDynamicallyIncludedDestinations(new ActiveMQDestination[] { ActiveMQDestination.createDestination(
-            "TEST", ActiveMQDestination.QUEUE_TYPE) });
-        bridge.start();
+        NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+
+        configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("OTHER.>",
+                ActiveMQDestination.TOPIC_TYPE)));
+        configuration.setDynamicallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(
+                "TEST", ActiveMQDestination.QUEUE_TYPE)));
+
+        configureAndStartBridge(configuration);
 
         assertReceiveMessageOn("TEST", ActiveMQDestination.QUEUE_TYPE);
         assertReceiveNoMessageOn("OTHER.T1", ActiveMQDestination.TOPIC_TYPE);
     }
 
     public void testWildcardOnTwoExcludedDestination() throws Exception {
+        NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
 
-        bridge.setExcludedDestinations(new ActiveMQDestination[] {
-                ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.QUEUE_TYPE),
-                ActiveMQDestination.createDestination("TEST.X1", ActiveMQDestination.QUEUE_TYPE) });
-        bridge.setDynamicallyIncludedDestinations(new ActiveMQDestination[] { ActiveMQDestination.createDestination(
-            "TEST.X2", ActiveMQDestination.QUEUE_TYPE) });
-        bridge.start();
+        configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.QUEUE_TYPE),
+                ActiveMQDestination.createDestination("TEST.X1", ActiveMQDestination.QUEUE_TYPE)));
+        configuration.setDynamicallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(
+                "TEST.X2", ActiveMQDestination.QUEUE_TYPE)));
+
+        configureAndStartBridge(configuration);
 
         assertReceiveMessageOn("TEST.X2", ActiveMQDestination.QUEUE_TYPE);
         assertReceiveNoMessageOn("OTHER.X1", ActiveMQDestination.QUEUE_TYPE);
         assertReceiveNoMessageOn("TEST.X1", ActiveMQDestination.QUEUE_TYPE);
     }
 
+
     public void testWildcardOnDynamicallyIncludedDestination() throws Exception {
 
-        bridge.setDynamicallyIncludedDestinations(new ActiveMQDestination[] {
-                ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.QUEUE_TYPE),
-                ActiveMQDestination.createDestination("TEST.X2", ActiveMQDestination.QUEUE_TYPE) });
-        bridge.start();
+        NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+
+        configuration.setDynamicallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.QUEUE_TYPE),
+                ActiveMQDestination.createDestination("TEST.X2", ActiveMQDestination.QUEUE_TYPE)));
+
+        configureAndStartBridge(configuration);
+
 
         assertReceiveMessageOn("OTHER.X1", ActiveMQDestination.QUEUE_TYPE);
         assertReceiveMessageOn("TEST.X2", ActiveMQDestination.QUEUE_TYPE);
@@ -78,11 +88,14 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
     public void testDistinctTopicAndQueue() throws Exception {
 
-        bridge.setExcludedDestinations(new ActiveMQDestination[] { ActiveMQDestination.createDestination(">",
-            ActiveMQDestination.TOPIC_TYPE) });
-        bridge.setDynamicallyIncludedDestinations(new ActiveMQDestination[] { ActiveMQDestination.createDestination(
-            ">", ActiveMQDestination.QUEUE_TYPE) });
-        bridge.start();
+        NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
+
+        configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(">",
+                ActiveMQDestination.TOPIC_TYPE)));
+        configuration.setDynamicallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(
+                ">", ActiveMQDestination.QUEUE_TYPE)));
+
+        configureAndStartBridge(configuration);
 
         assertReceiveMessageOn("TEST", ActiveMQDestination.QUEUE_TYPE);
         assertReceiveNoMessageOn("TEST", ActiveMQDestination.TOPIC_TYPE);
@@ -90,14 +103,14 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
     public void testListOfExcludedDestinationWithWildcard() throws Exception {
 
-        bridge.setExcludedDestinations(new ActiveMQDestination[] {
-                ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.TOPIC_TYPE),
-                ActiveMQDestination.createDestination("TEST.*", ActiveMQDestination.TOPIC_TYPE) });
+        NetworkBridgeConfiguration configuration = getDefaultBridgeConfiguration();
 
-        bridge.setDynamicallyIncludedDestinations(new ActiveMQDestination[] { ActiveMQDestination.createDestination(
-            "TEST.X1", ActiveMQDestination.QUEUE_TYPE) });
+        configuration.setExcludedDestinations(Arrays.asList(ActiveMQDestination.createDestination("OTHER.>", ActiveMQDestination.TOPIC_TYPE),
+                ActiveMQDestination.createDestination("TEST.*", ActiveMQDestination.TOPIC_TYPE)));
+        configuration.setDynamicallyIncludedDestinations(Arrays.asList(ActiveMQDestination.createDestination(
+                "TEST.X1", ActiveMQDestination.QUEUE_TYPE)));
 
-        bridge.start();
+        configureAndStartBridge(configuration);
 
         assertReceiveMessageOn("TEST.X1", ActiveMQDestination.QUEUE_TYPE);
         assertReceiveNoMessageOn("OTHER.T1", ActiveMQDestination.TOPIC_TYPE);
@@ -143,11 +156,7 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
     protected void setUp() throws Exception {
         super.setUp();
-        NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
-        config.setBrokerName("local");
-        config.setDispatchAsync(false);
-        bridge = new DemandForwardingBridge(config, createTransport(), createRemoteTransport());
-        bridge.setBrokerService(broker);
+
 
         producerConnection = createConnection();
         ConnectionInfo producerConnectionInfo = createConnectionInfo();
@@ -175,6 +184,28 @@ public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
+    }
+
+    public NetworkBridgeConfiguration getDefaultBridgeConfiguration() {
+        NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
+        config.setBrokerName("local");
+        config.setDispatchAsync(false);
+        return config;
+    }
+
+    private void configureAndStartBridge(NetworkBridgeConfiguration configuration) throws Exception {
+        bridge = new DemandForwardingBridge(configuration, createTransport(), createRemoteTransport());
+        bridge.setBrokerService(broker);
+        bridge.setDynamicallyIncludedDestinations(configuration.getDynamicallyIncludedDestinations().toArray(
+                new ActiveMQDestination[configuration.getDynamicallyIncludedDestinations().size()]
+        ));
+        bridge.setExcludedDestinations(configuration.getExcludedDestinations().toArray(
+                new ActiveMQDestination[configuration.getExcludedDestinations().size()]
+        ));
+        bridge.setStaticallyIncludedDestinations(configuration.getStaticallyIncludedDestinations().toArray(
+                new ActiveMQDestination[configuration.getStaticallyIncludedDestinations().size()]
+        ));
+        bridge.start();
     }
 
 }

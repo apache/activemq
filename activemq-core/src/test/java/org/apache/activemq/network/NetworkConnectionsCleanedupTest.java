@@ -62,7 +62,9 @@ public class NetworkConnectionsCleanedupTest extends TestCase {
     protected ActiveMQTopic excluded;
     protected String consumerName = "durableSubs";
 
-    public void testNetworkConnections() throws Exception {
+    // skip this test. it runs for an hour, doesn't assert anything, and could probably
+    // just be removed (seems like a throwaway impl for https://issues.apache.org/activemq/browse/AMQ-1202)
+    public void skipTestNetworkConnections() throws Exception {
     	String uri = "static:(tcp://localhost:61617)?initialReconnectDelay=100";
     	List<ActiveMQDestination> list = new ArrayList<ActiveMQDestination>();
     	for (int i =0;i < 100;i++){

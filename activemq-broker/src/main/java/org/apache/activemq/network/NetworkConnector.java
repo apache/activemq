@@ -67,9 +67,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     };
 
     private Set<ActiveMQDestination> durableDestinations;
-    private List<ActiveMQDestination> excludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
-    private List<ActiveMQDestination> dynamicallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
-    private List<ActiveMQDestination> staticallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
+
     private BrokerService brokerService;
     private ObjectName objectName;
 
@@ -102,57 +100,16 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         this.durableDestinations = durableDestinations;
     }
 
-    /**
-     * @return Returns the excludedDestinations.
-     */
-    public List<ActiveMQDestination> getExcludedDestinations() {
-        return excludedDestinations;
-    }
-
-    /**
-     * @param excludedDestinations The excludedDestinations to set.
-     */
-    public void setExcludedDestinations(List<ActiveMQDestination> excludedDestinations) {
-        this.excludedDestinations = excludedDestinations;
-    }
 
     public void addExcludedDestination(ActiveMQDestination destiantion) {
         this.excludedDestinations.add(destiantion);
     }
 
-    /**
-     * @return Returns the staticallyIncludedDestinations.
-     */
-    public List<ActiveMQDestination> getStaticallyIncludedDestinations() {
-        return staticallyIncludedDestinations;
-    }
-
-    /**
-     * @param staticallyIncludedDestinations The staticallyIncludedDestinations
-     *                to set.
-     */
-    public void setStaticallyIncludedDestinations(List<ActiveMQDestination> staticallyIncludedDestinations) {
-        this.staticallyIncludedDestinations = staticallyIncludedDestinations;
-    }
 
     public void addStaticallyIncludedDestination(ActiveMQDestination destiantion) {
         this.staticallyIncludedDestinations.add(destiantion);
     }
 
-    /**
-     * @return Returns the dynamicallyIncludedDestinations.
-     */
-    public List<ActiveMQDestination> getDynamicallyIncludedDestinations() {
-        return dynamicallyIncludedDestinations;
-    }
-
-    /**
-     * @param dynamicallyIncludedDestinations The
-     *                dynamicallyIncludedDestinations to set.
-     */
-    public void setDynamicallyIncludedDestinations(List<ActiveMQDestination> dynamicallyIncludedDestinations) {
-        this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
-    }
 
     public void addDynamicallyIncludedDestination(ActiveMQDestination destiantion) {
         this.dynamicallyIncludedDestinations.add(destiantion);

@@ -32,11 +32,6 @@
          conduitSubscriptions = "true"
          decreaseNetworkConsumerPriority = "false">
 
-      	<dynamicallyIncludedDestinations>
-      		<queue physicalName="include.test.foo"/>
-      		<topic physicalName="include.test.bar"/>
-      	</dynamicallyIncludedDestinations>
-
       	<excludedDestinations>
       		<queue physicalName="exclude.test.foo"/>
       		<topic physicalName="exclude.test.bar"/>

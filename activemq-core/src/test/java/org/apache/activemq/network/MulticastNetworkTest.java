@@ -28,4 +28,11 @@ public class MulticastNetworkTest extends SimpleNetworkTest {
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/multicast/localBroker.xml";
     }
+
+    // blocked out for multi cast because temp dest request reply isn't supported
+    // with dynamicallyAddedDestinations
+    @Override
+    public void testRequestReply() throws Exception {
+
+    }
 }
