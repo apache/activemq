@@ -30,6 +30,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.Wait;
@@ -176,18 +177,21 @@ public class DurableSubsOfflineSelectorIndexUseTest extends org.apache.activemq.
         session.close();
         con.close();
 
-        final KahaDBStore store = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore();
-        LOG.info("Store page count: " + store.getPageFile().getPageCount());
-        LOG.info("Store free page count: " + store.getPageFile().getFreePageCount());
-        LOG.info("Store page in-use: " + (store.getPageFile().getPageCount() - store.getPageFile().getFreePageCount()));
+        PersistenceAdapter persistenceAdapter = broker.getPersistenceAdapter();
+        if( persistenceAdapter instanceof KahaDBStore) {
+            final KahaDBStore store = ((KahaDBPersistenceAdapter) persistenceAdapter).getStore();
+            LOG.info("Store page count: " + store.getPageFile().getPageCount());
+            LOG.info("Store free page count: " + store.getPageFile().getFreePageCount());
+            LOG.info("Store page in-use: " + (store.getPageFile().getPageCount() - store.getPageFile().getFreePageCount()));
 
-        assertTrue("no leak of pages, always use just 10", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return 10 == store.getPageFile().getPageCount() -
-                        store.getPageFile().getFreePageCount();
-            }
-        }, TimeUnit.SECONDS.toMillis(10)));
+            assertTrue("no leak of pages, always use just 10", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return 10 == store.getPageFile().getPageCount() -
+                            store.getPageFile().getFreePageCount();
+                }
+            }, TimeUnit.SECONDS.toMillis(10)));
+        }
     }
 
     private void waitFor(final Listener listener, final int count) throws Exception {
