@@ -37,12 +37,14 @@ public class IndirectMessageReference implements QueueMessageReference {
     private boolean acked;
     /** Direct reference to the message */
     private final Message message;
+    private final MessageId messageId;
     
     /**
      * @param message
      */
     public IndirectMessageReference(final Message message) {
         this.message = message;
+        this.messageId = message.getMessageId().copy();
         message.getMessageId();
         message.getGroupID();
         message.getGroupSequence();
@@ -111,7 +113,7 @@ public class IndirectMessageReference implements QueueMessageReference {
     }
 
     public MessageId getMessageId() {
-        return message.getMessageId();
+        return messageId;
     }
 
     public Message.MessageDestination getRegionDestination() {

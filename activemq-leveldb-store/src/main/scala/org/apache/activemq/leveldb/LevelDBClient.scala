@@ -27,16 +27,18 @@ import org.iq80.leveldb._
 
 import org.fusesource.hawtdispatch._
 import record.{CollectionKey, EntryKey, EntryRecord, CollectionRecord}
-import util._
+import org.apache.activemq.leveldb.util._
 import java.util.concurrent._
 import org.fusesource.hawtbuf._
 import java.io.{ObjectInputStream, ObjectOutputStream, File}
 import scala.Option._
-import org.apache.activemq.command.{MessageAck, DataStructure, Message}
+import org.apache.activemq.command.{MessageAck, Message}
 import org.apache.activemq.util.ByteSequence
-import org.apache.activemq.leveldb.RecordLog.LogInfo
 import java.text.SimpleDateFormat
 import java.util.{Date, Collections}
+import org.apache.activemq.leveldb.util.TimeMetric
+import org.apache.activemq.leveldb.RecordLog.LogInfo
+import scala.Some
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -57,6 +59,8 @@ object LevelDBClient extends Log {
     override def shutdown: Unit = {}
     override def shutdownNow = Collections.emptyList[Runnable]
   }
+
+  val PLIST_WRITE_OPTIONS = new WriteOptions().sync(false)
 
   final val DIRTY_INDEX_KEY = bytes(":dirty")
   final val LOG_REF_INDEX_KEY = bytes(":log-refs")
@@ -110,6 +114,18 @@ object LevelDBClient extends Log {
   def decodeLocator(bytes:Array[Byte]):(Long,  Int) = {
     val in = new DataByteArrayInputStream(bytes)
     (in.readVarLong(), in.readVarInt())
+  }
+
+  def encodeLongLong(a1:Long, a2:Long) = {
+    val out = new DataByteArrayOutputStream(8)
+    out.writeLong(a1)
+    out.writeLong(a2)
+    out.toBuffer
+  }
+
+  def decodeLongLong(bytes:Array[Byte]):(Long, Long) = {
+    val in = new DataByteArrayInputStream(bytes)
+    (in.readLong(), in.readLong())
   }
 
   def encodeLong(a1:Long) = {
@@ -404,6 +420,7 @@ class LevelDBClient(store: LevelDBStore) {
   var log:RecordLog = _
 
   var index:RichDB = _
+  var plist:RichDB = _
   var indexOptions:Options = _
 
   var lastIndexSnapshotPos:Long = _
@@ -414,6 +431,7 @@ class LevelDBClient(store: LevelDBStore) {
   
   val collectionMeta = HashMap[Long, CollectionMeta]()
 
+  def plistIndexFile = directory / ("plist"+INDEX_SUFFIX)
   def dirtyIndexFile = directory / ("dirty"+INDEX_SUFFIX)
   def tempIndexFile = directory / ("temp"+INDEX_SUFFIX)
   def snapshotIndexFile(id:Long) = create_sequence_file(directory,id, INDEX_SUFFIX)
@@ -525,6 +543,11 @@ class LevelDBClient(store: LevelDBStore) {
     tempIndexFile.recursiveDelete
 
     retry {
+
+      // Setup the plist index.
+      plistIndexFile.recursiveDelete
+      plistIndexFile.mkdirs()
+      plist = new RichDB(factory.open(plistIndexFile, indexOptions));
 
       // Delete the dirty indexes
       dirtyIndexFile.recursiveDelete
@@ -1274,5 +1297,24 @@ class LevelDBClient(store: LevelDBStore) {
       }
     }
   }
+
+  def removePlist(collectionKey: Long) = {
+    val entryKeyPrefix = encodeLong(collectionKey)
+    collectionMeta.remove(collectionKey)
+    retry {
+      val ro = new ReadOptions
+      ro.fillCache(false)
+      ro.verifyChecksums(false)
+      plist.cursorPrefixed(entryKeyPrefix, ro) { (key, value)=>
+        plist.delete(key)
+        true
+      }
+    }
+  }
+
+  def plistPut(key:Array[Byte], value:Array[Byte]) = plist.put(key, value, PLIST_WRITE_OPTIONS)
+  def plistDelete(key:Array[Byte]) = plist.delete(key, PLIST_WRITE_OPTIONS)
+  def plistGet(key:Array[Byte]) = plist.get(key)
+  def plistIterator = plist.db.iterator()
 
 }

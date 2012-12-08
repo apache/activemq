@@ -278,7 +278,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 systemUsage.getTempUsage().waitForSpace();
                 node.decrementReferenceCount();
                 ByteSequence bs = getByteSequence(node.getMessage());
-                getDiskList().addFirst(node.getMessageId().toString(), bs);
+                Object locator = getDiskList().addFirst(node.getMessageId().toString(), bs);
+                node.getMessageId().setPlistLocator(locator);
 
             } catch (Exception e) {
                 LOG.error("Caught an Exception adding a message: " + node + " first to FilePendingMessageCursor ", e);
@@ -335,7 +336,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
         if (!isDiskListEmpty()) {
             try {
-                getDiskList().remove(node.getMessageId().toString());
+                getDiskList().remove(node.getMessageId().getPlistLocator());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -506,7 +507,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         public MessageReference next() {
             try {
                 PListEntry entry = iterator.next();
-                return getMessage(entry.getByteSequence());
+                Message message = getMessage(entry.getByteSequence());
+                message.getMessageId().setPlistLocator(entry.getLocator());
+                return message;
             } catch (IOException e) {
                 LOG.error("I/O error", e);
                 throw new RuntimeException(e);

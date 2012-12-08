@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.store.PList;
 import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.store.kahadb.disk.index.ListIndex;
@@ -34,6 +36,7 @@ import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.LocationMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
+import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +54,6 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         setValueMarshaller(LocationMarshaller.INSTANCE);
     }
 
-    @Override
     public void setName(String name) {
         this.name = name;
     }
@@ -81,8 +83,20 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
     }
 
+    class Locator {
+        final String id;
+
+        Locator(String id) {
+            this.id = id;
+        }
+
+        PListImpl plist() {
+            return PListImpl.this;
+        }
+    }
+
     @Override
-    public void addLast(final String id, final ByteSequence bs) throws IOException {
+    public Object addLast(final String id, final ByteSequence bs) throws IOException {
         final Location location = this.store.write(bs, false);
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -91,10 +105,11 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                 }
             });
         }
+        return new Locator(id);
     }
 
     @Override
-    public void addFirst(final String id, final ByteSequence bs) throws IOException {
+    public Object addFirst(final String id, final ByteSequence bs) throws IOException {
         final Location location = this.store.write(bs, false);
         synchronized (indexLock) {
             this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
@@ -103,9 +118,17 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                 }
             });
         }
+        return new Locator(id);
     }
 
     @Override
+    public boolean remove(final Object l) throws IOException {
+        Locator locator = (Locator) l;
+        assert locator!=null;
+        assert locator.plist()==this;
+        return remove(locator.id);
+    }
+
     public boolean remove(final String id) throws IOException {
         final AtomicBoolean result = new AtomicBoolean();
         synchronized (indexLock) {
@@ -118,7 +141,6 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         return result.get();
     }
 
-    @Override
     public boolean remove(final long position) throws IOException {
         final AtomicBoolean result = new AtomicBoolean();
         synchronized (indexLock) {
@@ -138,7 +160,6 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         return result.get();
     }
 
-    @Override
     public PListEntry get(final long position) throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
@@ -152,12 +173,11 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
         if (ref.get() != null) {
             ByteSequence bs = this.store.getPayload(ref.get().getValue());
-            result = new PListEntry(ref.get().getKey(), bs);
+            result = new PListEntry(ref.get().getKey(), bs, new Locator(ref.get().getKey()));
         }
         return result;
     }
 
-    @Override
     public PListEntry getFirst() throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
@@ -170,12 +190,11 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
         if (ref.get() != null) {
             ByteSequence bs = this.store.getPayload(ref.get().getValue());
-            result = new PListEntry(ref.get().getKey(), bs);
+            result = new PListEntry(ref.get().getKey(), bs, new Locator(ref.get().getKey()));
         }
         return result;
     }
 
-    @Override
     public PListEntry getLast() throws IOException {
         PListEntry result = null;
         final AtomicReference<Map.Entry<String, Location>> ref = new AtomicReference<Map.Entry<String, Location>>();
@@ -188,7 +207,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
         }
         if (ref.get() != null) {
             ByteSequence bs = this.store.getPayload(ref.get().getValue());
-            result = new PListEntry(ref.get().getKey(), bs);
+            result = new PListEntry(ref.get().getKey(), bs, new Locator(ref.get().getKey()));
         }
         return result;
     }
@@ -230,7 +249,7 @@ public class PListImpl extends ListIndex<String, Location> implements PList {
                 e.initCause(unexpected);
                 throw e;
             }
-            return new PListEntry(entry.getKey(), bs);
+            return new PListEntry(entry.getKey(), bs, new Locator(entry.getKey()));
         }
 
         @Override

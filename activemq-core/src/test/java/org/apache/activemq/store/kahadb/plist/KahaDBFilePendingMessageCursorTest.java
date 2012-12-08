@@ -22,6 +22,7 @@ public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursor
     @Test
     public void testAddRemoveAddIndexSize() throws Exception {
         brokerService = new BrokerService();
+        brokerService.setUseJmx(false);
         SystemUsage usage = brokerService.getSystemUsage();
         usage.getMemoryUsage().setLimit(1024*150);
         String body = new String(new byte[1024]);

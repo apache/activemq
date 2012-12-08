@@ -23,10 +23,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.PriorityNetworkDispatchPolicy;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.derby.iapi.jdbc.BrokeredStatement;
 import org.junit.After;
@@ -52,6 +49,7 @@ public class PriorityNetworkDispatchPolicyTest {
         info.setConsumerId(id);
         info.setNetworkSubscription(true);
         info.setNetworkConsumerPath(new ConsumerId[]{id});
+        node.setMessageId(new MessageId("test:1:1:1:1"));
     }
 
     @After

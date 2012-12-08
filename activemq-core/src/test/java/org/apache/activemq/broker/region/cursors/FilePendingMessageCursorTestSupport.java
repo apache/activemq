@@ -46,6 +46,7 @@ public class FilePendingMessageCursorTestSupport {
 
     private void createBrokerWithTempStoreLimit() throws Exception {
         brokerService = new BrokerService();
+        brokerService.setUseJmx(false);
         SystemUsage usage = brokerService.getSystemUsage();
         usage.getTempUsage().setLimit(1025*1024*15);
 

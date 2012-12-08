@@ -1530,6 +1530,16 @@ public class BrokerService implements Service {
             if (!isPersistent()) {
                 return null;
             }
+
+            try {
+                PersistenceAdapter pa = getPersistenceAdapter();
+                if( pa!=null && pa instanceof PListStore) {
+                    return (PListStore) pa;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             boolean result = true;
             boolean empty = true;
             try {

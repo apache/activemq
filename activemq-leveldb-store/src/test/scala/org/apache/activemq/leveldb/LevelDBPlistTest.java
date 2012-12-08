@@ -14,35 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store;
+package org.apache.activemq.leveldb;
 
-import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.store.PListTestSupport;
 
-public class PListEntry {
+/**
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ */
+public class LevelDBPlistTest extends PListTestSupport {
 
-    private final ByteSequence byteSequence;
-    private final String entry;
-    private final Object locator;
-
-    public PListEntry(String entry, ByteSequence bs, Object locator) {
-        this.entry = entry;
-        this.byteSequence = bs;
-        this.locator = locator;
+    @Override
+    protected LevelDBStore createPListStore() {
+        return new LevelDBStore();
     }
 
-    public ByteSequence getByteSequence() {
-        return this.byteSequence;
+    protected LevelDBStore createConcurrentAddIteratePListStore() {
+        return new LevelDBStore();
     }
 
-    public String getId() {
-        return this.entry;
+    @Override
+    protected LevelDBStore createConcurrentAddRemovePListStore() {
+        return new LevelDBStore();
     }
 
-    public Object getLocator() {
-        return locator;
+    @Override
+    protected LevelDBStore createConcurrentAddRemoveWithPreloadPListStore() {
+        return new LevelDBStore();
     }
 
-    public PListEntry copy() {
-        return new PListEntry(this.entry, this.byteSequence, locator);
+    @Override
+    protected LevelDBStore createConcurrentAddIterateRemovePListStore(boolean enablePageCache) {
+        return new LevelDBStore();
     }
+
 }

@@ -32,6 +32,15 @@ import util.TimeMetric
 import java.util.HashMap
 import collection.mutable.{HashSet, ListBuffer}
 import org.apache.activemq.util.ByteSequence
+import org.apache.activemq.leveldb.QueueEntryRecord
+import util.TimeMetric
+import org.apache.activemq.leveldb.SubAckRecord
+import scala.Some
+import org.apache.activemq.leveldb.UowManagerConstants.QueueEntryKey
+import org.apache.activemq.leveldb.CountDownFuture
+import org.apache.activemq.leveldb.XaAckRecord
+import org.apache.activemq.leveldb.MessageRecord
+import org.apache.activemq.leveldb.DurableSubscription
 
 case class MessageRecord(id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:(Long, Int) = _
@@ -359,6 +368,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
 class DBManager(val parent:LevelDBStore) {
 
   var lastCollectionKey = new AtomicLong(0)
+  var lastPListKey = new AtomicLong(0)
   val client:LevelDBClient = parent.createClient
 
   def writeExecutor = client.writeExecutor
@@ -658,10 +668,10 @@ class DBManager(val parent:LevelDBStore) {
   }
 
   def createQueueStore(dest:ActiveMQQueue):LevelDBStore#LevelDBMessageStore = {
-    parent.createQueueMessageStore(dest, createStore(dest, QUEUE_COLLECTION_TYPE))
+    parent.createQueueMessageStore(dest, createCollection(utf8(dest.getQualifiedName), QUEUE_COLLECTION_TYPE))
   }
   def destroyQueueStore(key:Long) = writeExecutor.sync {
-      client.removeCollection(key)
+    client.removeCollection(key)
   }
 
   def getLogAppendPosition = writeExecutor.sync {
@@ -697,14 +707,14 @@ class DBManager(val parent:LevelDBStore) {
   }
 
   def createTopicStore(dest:ActiveMQTopic) = {
-    var key = createStore(dest, TOPIC_COLLECTION_TYPE)
+    var key = createCollection(utf8(dest.getQualifiedName), TOPIC_COLLECTION_TYPE)
     parent.createTopicMessageStore(dest, key)
   }
 
-  def createStore(destination:ActiveMQDestination, collectionType:Int) = {
+  def createCollection(name:Buffer, collectionType:Int) = {
     val collection = new CollectionRecord.Bean()
     collection.setType(collectionType)
-    collection.setMeta(utf8(destination.getQualifiedName))
+    collection.setMeta(name)
     collection.setKey(lastCollectionKey.incrementAndGet())
     val buffer = collection.freeze()
     buffer.toFramedBuffer // eager encode the record.
@@ -714,19 +724,10 @@ class DBManager(val parent:LevelDBStore) {
     collection.getKey
   }
 
-  def createTransactionContainer(name:XATransactionId) = {
-    val collection = new CollectionRecord.Bean()
-    collection.setType(TRANSACTION_COLLECTION_TYPE)
-    var packet = parent.wireFormat.marshal(name)
-    collection.setMeta(new Buffer(packet.data, packet.offset, packet.length))
-    collection.setKey(lastCollectionKey.incrementAndGet())
-    val buffer = collection.freeze()
-    buffer.toFramedBuffer // eager encode the record.
-    writeExecutor.sync {
-      client.addCollection(buffer)
-    }
-    collection.getKey
-  }
+  def buffer(packet:ByteSequence) = new Buffer(packet.data, packet.offset, packet.length)
+
+  def createTransactionContainer(id:XATransactionId) =
+    createCollection(buffer(parent.wireFormat.marshal(id)), TRANSACTION_COLLECTION_TYPE)
 
   def removeTransactionContainer(key:Long) = { // writeExecutor.sync {
     client.removeCollection(key)
@@ -773,6 +774,18 @@ class DBManager(val parent:LevelDBStore) {
     lastCollectionKey.set(last)
   }
 
+  def createPList(name:String):LevelDBStore#LevelDBPList = {
+    parent.createPList(name, lastPListKey.incrementAndGet())
+  }
+
+  def destroyPList(key:Long) = writeExecutor.sync {
+    client.removePlist(key)
+  }
+
+  def plistPut(key:Array[Byte], value:Array[Byte]) = client.plistPut(key, value)
+  def plistGet(key:Array[Byte]) = client.plistGet(key)
+  def plistDelete(key:Array[Byte]) = client.plistDelete(key)
+  def plistIterator = client.plistIterator
 
   def getMessage(x: MessageId):Message = {
     val id = Option(pendingStores.get(x)).flatMap(_.headOption).map(_.id).getOrElse(x)

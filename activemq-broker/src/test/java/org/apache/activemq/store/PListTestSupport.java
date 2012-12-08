@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadb.plist;
+package org.apache.activemq.store;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,33 +22,86 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.store.PList;
-import org.apache.activemq.store.PListEntry;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ByteSequence;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PListTest {
-    static final Logger LOG = LoggerFactory.getLogger(PListTest.class);
-    private PListStoreImpl store;
-    private PListImpl plist;
+public abstract class PListTestSupport {
+    static final Logger LOG = LoggerFactory.getLogger(PListTestSupport.class);
+    private PListStore store;
+    private PList plist;
     final ByteSequence payload = new ByteSequence(new byte[400]);
     final String idSeed = new String("Seed" + new byte[1024]);
     final Vector<Throwable> exceptions = new Vector<Throwable>();
     ExecutorService executor;
+
+    @Test
+    public void testAddLast() throws Exception {
+        final int COUNT = 1000;
+        LinkedList<ByteSequence> list = new LinkedList<ByteSequence>();
+        for (int i = 0; i < COUNT; i++) {
+            String test = new String("test" + i);
+            ByteSequence bs = new ByteSequence(test.getBytes());
+            list.addLast(bs);
+            plist.addLast(test, bs);
+        }
+        assertEquals(plist.size(), COUNT);
+
+        PList.PListIterator actual = plist.iterator();
+        Iterator<ByteSequence> expected = list.iterator();
+        while (expected.hasNext()) {
+            ByteSequence bs = expected.next();
+            assertTrue(actual.hasNext());
+            PListEntry entry = actual.next();
+            String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
+            String plistString = new String(entry.getByteSequence().getData(), entry.getByteSequence().getOffset(),
+                    entry.getByteSequence().getLength());
+            assertEquals(origStr, plistString);
+        }
+        assertFalse(actual.hasNext());
+    }
+
+   @Test
+    public void testAddFirst() throws Exception {
+       final int COUNT = 1000;
+       LinkedList<ByteSequence> list = new LinkedList<ByteSequence>();
+       for (int i = 0; i < COUNT; i++) {
+           String test = new String("test" + i);
+           ByteSequence bs = new ByteSequence(test.getBytes());
+           list.addFirst(bs);
+           plist.addFirst(test, bs);
+       }
+       assertEquals(plist.size(), COUNT);
+
+       PList.PListIterator actual = plist.iterator();
+       Iterator<ByteSequence> expected = list.iterator();
+       while (expected.hasNext()) {
+           ByteSequence bs = expected.next();
+           assertTrue(actual.hasNext());
+           PListEntry entry = actual.next();
+           String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
+           String plistString = new String(entry.getByteSequence().getData(), entry.getByteSequence().getOffset(),
+                   entry.getByteSequence().getLength());
+           assertEquals(origStr, plistString);
+       }
+       assertFalse(actual.hasNext());
+   }
+
+    @Test
+    public void testRemove() throws IOException {
+        doTestRemove(2000);
+    }
 
     private PListEntry getFirst(PList plist) throws IOException {
         PList.PListIterator iterator = plist.iterator();
@@ -63,55 +116,6 @@ public class PListTest {
         }
     }
 
-    @Test
-    public void testAddLast() throws Exception {
-        final int COUNT = 1000;
-        Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
-        for (int i = 0; i < COUNT; i++) {
-            String test = new String("test" + i);
-            ByteSequence bs = new ByteSequence(test.getBytes());
-            map.put(test, bs);
-            plist.addLast(test, bs);
-        }
-        assertEquals(plist.size(), COUNT);
-        int count = 0;
-        for (ByteSequence bs : map.values()) {
-            String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
-            PListEntry entry = plist.get(count);
-            String plistString = new String(entry.getByteSequence().getData(), entry.getByteSequence().getOffset(),
-                    entry.getByteSequence().getLength());
-            assertEquals(origStr, plistString);
-            count++;
-        }
-    }
-
-   @Test
-    public void testAddFirst() throws Exception {
-        final int COUNT = 1000;
-        Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
-        for (int i = 0; i < COUNT; i++) {
-            String test = new String("test" + i);
-            ByteSequence bs = new ByteSequence(test.getBytes());
-            map.put(test, bs);
-            plist.addFirst(test, bs);
-        }
-        assertEquals(plist.size(), COUNT);
-        long count = plist.size() - 1;
-        for (ByteSequence bs : map.values()) {
-            String origStr = new String(bs.getData(), bs.getOffset(), bs.getLength());
-            PListEntry entry = plist.get(count);
-            String plistString = new String(entry.getByteSequence().getData(), entry.getByteSequence().getOffset(),
-                    entry.getByteSequence().getLength());
-            assertEquals(origStr, plistString);
-            count--;
-        }
-    }
-
-    @Test
-    public void testRemove() throws IOException {
-        doTestRemove(2000);
-    }
-
     protected void doTestRemove(final int COUNT) throws IOException {
         Map<String, ByteSequence> map = new LinkedHashMap<String, ByteSequence>();
         for (int i = 0; i < COUNT; i++) {
@@ -121,10 +125,10 @@ public class PListTest {
             plist.addLast(test, bs);
         }
         assertEquals(plist.size(), COUNT);
-        PListEntry entry = plist.getFirst();
+        PListEntry entry = getFirst(plist);
         while (entry != null) {
-            plist.remove(entry.getId());
-            entry = plist.getFirst();
+            plist.remove(entry.getLocator());
+            entry = getFirst(plist);
         }
         assertEquals(0,plist.size());
 
@@ -153,12 +157,12 @@ public class PListTest {
 
     @Test
     public void testRemoveSecond() throws Exception {
-        plist.addLast("First", new ByteSequence("A".getBytes()));
-        plist.addLast("Second", new ByteSequence("B".getBytes()));
+        Object first = plist.addLast("First", new ByteSequence("A".getBytes()));
+        Object second = plist.addLast("Second", new ByteSequence("B".getBytes()));
 
-        assertTrue(plist.remove("Second"));
-        assertTrue(plist.remove("First"));
-        assertFalse(plist.remove("doesNotExist"));
+        assertTrue(plist.remove(second));
+        assertTrue(plist.remove(first));
+        assertFalse(plist.remove(first));
     }
 
     @Test
@@ -174,12 +178,12 @@ public class PListTest {
 
     @Test
     public void testRemoveSecondPosition() throws Exception {
-        plist.addLast("First", new ByteSequence("A".getBytes()));
-        plist.addLast("Second", new ByteSequence("B".getBytes()));
+        Object first = plist.addLast("First", new ByteSequence("A".getBytes()));
+        Object second = plist.addLast("Second", new ByteSequence("B".getBytes()));
 
-        assertTrue(plist.remove(1));
-        assertTrue(plist.remove(0));
-        assertFalse(plist.remove(0));
+        assertTrue(plist.remove(second));
+        assertTrue(plist.remove(first));
+        assertFalse(plist.remove(first));
     }
 
     @Test
@@ -188,11 +192,8 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStoreImpl();
-        store.setCleanupInterval(400);
+        store = createConcurrentAddRemovePListStore();
         store.setDirectory(directory);
-        store.setJournalMaxFileLength(1024*5);
-        store.setLazyInit(false);
         store.start();
 
         final ByteSequence payload = new ByteSequence(new byte[1024*2]);
@@ -220,9 +221,9 @@ public class PListTest {
                         PList candidate = lists[i%numLists];
                         Thread.currentThread().setName("ALRF:"+candidate.getName());
                         synchronized (plistLocks(candidate)) {
-                            candidate.addLast(String.valueOf(i), payload);
+                            Object last = candidate.addLast(String.valueOf(i), payload);
                             getFirst(candidate);
-                            assertTrue(candidate.remove(String.valueOf(i)));
+                            assertTrue(candidate.remove(last));
                         }
                     }
                 } catch (Exception error) {
@@ -244,9 +245,9 @@ public class PListTest {
                         PList candidate = lists[i%numLists];
                         Thread.currentThread().setName("ALRF:"+candidate.getName());
                          synchronized (plistLocks(candidate)) {
-                            candidate.addLast(String.valueOf(i), payload);
-                            getFirst(candidate);
-                            assertTrue(candidate.remove(String.valueOf(i)));
+                             Object last = candidate.addLast(String.valueOf(i), payload);
+                             getFirst(candidate);
+                            assertTrue(candidate.remove(last));
                          }
                     }
                 } catch (Exception error) {
@@ -272,13 +273,15 @@ public class PListTest {
         assertTrue("finished ok", finishedInTime);
     }
 
+    protected abstract PListStore createConcurrentAddRemovePListStore();
+
     @Test
     public void testConcurrentAddLast() throws Exception {
         File directory = store.getDirectory();
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStoreImpl();
+        store = createPListStore();
         store.setDirectory(directory);
         store.start();
 
@@ -287,15 +290,15 @@ public class PListTest {
         final int iterations = 1000;
         executor = Executors.newFixedThreadPool(100);
         for (int i=0; i<numThreads; i++) {
-            new Job(i, PListTest.TaskType.ADD, iterations).run();
+            new Job(i, PListTestSupport.TaskType.ADD, iterations).run();
         }
 
         for (int i=0; i<numThreads; i++) {
-            executor.execute(new Job(i, PListTest.TaskType.ITERATE, iterations));
+            executor.execute(new Job(i, PListTestSupport.TaskType.ITERATE, iterations));
         }
 
         for (int i=0; i<100; i++) {
-            executor.execute(new Job(i+20, PListTest.TaskType.ADD, 100));
+            executor.execute(new Job(i+20, PListTestSupport.TaskType.ADD, 100));
         }
 
         executor.shutdown();
@@ -309,16 +312,16 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStoreImpl();
+        store = createPListStore();
         store.setDirectory(directory);
         store.start();
 
         for (int i=0;i<2000; i++) {
-            new Job(i, PListTest.TaskType.ADD, 5).run();
+            new Job(i, PListTestSupport.TaskType.ADD, 5).run();
 
         }
-        LOG.info("After Load index file: " + store.pageFile.getFile().length());
-        LOG.info("After remove index file: " + store.pageFile.getFile().length());
+//        LOG.info("After Load index file: " + store.pageFile.getFile().length());
+//        LOG.info("After remove index file: " + store.pageFile.getFile().length());
     }
 
     @Test
@@ -327,11 +330,8 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStoreImpl();
+        store = createConcurrentAddRemoveWithPreloadPListStore();
         store.setDirectory(directory);
-        store.setJournalMaxFileLength(1024*5);
-        store.setCleanupInterval(5000);
-        store.setIndexWriteBatchSize(500);
         store.start();
 
         final int iterations = 500;
@@ -342,21 +342,21 @@ public class PListTest {
         // create/delete
         LOG.info("create");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.CREATE, iterations).run();
+            new Job(i, PListTestSupport.TaskType.CREATE, iterations).run();
         }
 
         LOG.info("delete");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.DELETE, iterations).run();
+            new Job(i, PListTestSupport.TaskType.DELETE, iterations).run();
         }
 
         LOG.info("fill");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.ADD, iterations).run();
+            new Job(i, PListTestSupport.TaskType.ADD, iterations).run();
         }
         LOG.info("remove");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.REMOVE, iterations).run();
+            new Job(i, PListTestSupport.TaskType.REMOVE, iterations).run();
         }
 
         LOG.info("check empty");
@@ -366,18 +366,18 @@ public class PListTest {
 
         LOG.info("delete again");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.DELETE, iterations).run();
+            new Job(i, PListTestSupport.TaskType.DELETE, iterations).run();
         }
 
         LOG.info("fill again");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.ADD, iterations).run();
+            new Job(i, PListTestSupport.TaskType.ADD, iterations).run();
         }
 
         LOG.info("parallel add and remove");
         executor = Executors.newFixedThreadPool(numLists*2);
         for (int i=0; i<numLists*2; i++) {
-            executor.execute(new Job(i, i>=numLists ? PListTest.TaskType.ADD : PListTest.TaskType.REMOVE, iterations));
+            executor.execute(new Job(i, i>=numLists ? PListTestSupport.TaskType.ADD : PListTestSupport.TaskType.REMOVE, iterations));
         }
 
         executor.shutdown();
@@ -386,6 +386,8 @@ public class PListTest {
         assertTrue("no exceptions", exceptions.isEmpty());
         assertTrue("finished ok", finishedInTime);
     }
+
+    protected abstract PListStore createConcurrentAddRemoveWithPreloadPListStore();
 
     // for non determinant issues, increasing this may help diagnose
     final int numRepeats = 1;
@@ -409,9 +411,7 @@ public class PListTest {
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStoreImpl();
-        store.setIndexEnablePageCaching(enablePageCache);
-        store.setIndexPageSize(2*1024);
+        store = createConcurrentAddIterateRemovePListStore(enablePageCache);
         store.setDirectory(directory);
         store.start();
 
@@ -420,12 +420,12 @@ public class PListTest {
 
         LOG.info("create");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.CREATE, iterations).run();
+            new Job(i, PListTestSupport.TaskType.CREATE, iterations).run();
         }
 
         LOG.info("fill");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.ADD, iterations).run();
+            new Job(i, PListTestSupport.TaskType.ADD, iterations).run();
         }
 
         LOG.info("parallel add and remove");
@@ -434,7 +434,7 @@ public class PListTest {
         final int numConsumer = 10;
         for (int i=0; i<numLists; i++) {
             for (int j=0; j<numProducer; j++) {
-                executor.execute(new Job(i, PListTest.TaskType.ADD, iterations*2));
+                executor.execute(new Job(i, PListTestSupport.TaskType.ADD, iterations*2));
             }
             for (int k=0;k<numConsumer; k++) {
                 executor.execute(new Job(i, TaskType.ITERATE_REMOVE, iterations/4));
@@ -442,7 +442,7 @@ public class PListTest {
         }
 
          for (int i=numLists; i<numLists*10; i++) {
-            executor.execute(new Job(i, PListTest.TaskType.ADD, iterations));
+            executor.execute(new Job(i, PListTestSupport.TaskType.ADD, iterations));
          }
 
         executor.shutdown();
@@ -452,19 +452,17 @@ public class PListTest {
         assertTrue("test did not  timeout ", shutdown);
     }
 
+    protected abstract PListStore createConcurrentAddIterateRemovePListStore(boolean enablePageCache);
+
+    @Ignore("Takes too long.. might have broken it.")
     @Test
     public void testConcurrentAddIterate() throws Exception {
         File directory = store.getDirectory();
         store.stop();
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
-        store = new PListStoreImpl();
-        store.setIndexPageSize(2*1024);
-        store.setJournalMaxFileLength(1024*1024);
+        store = createConcurrentAddIteratePListStore();
         store.setDirectory(directory);
-        store.setCleanupInterval(-1);
-        store.setIndexEnablePageCaching(false);
-        store.setIndexWriteBatchSize(100);
         store.start();
 
         final int iterations = 250;
@@ -472,7 +470,7 @@ public class PListTest {
 
         LOG.info("create");
         for (int i=0; i<numLists;i++) {
-            new Job(i, PListTest.TaskType.CREATE, iterations).run();
+            new Job(i, PListTestSupport.TaskType.CREATE, iterations).run();
         }
 
         LOG.info("parallel add and iterate");
@@ -484,7 +482,7 @@ public class PListTest {
         final int numConsumer = 100;
         for (int i=0; i<numLists; i++) {
             for (int j=0; j<numProducer; j++) {
-                executor.execute(new Job(i, PListTest.TaskType.ADD, iterations));
+                executor.execute(new Job(i, PListTestSupport.TaskType.ADD, iterations));
             }
             for (int k=0;k<numConsumer; k++) {
                 executor.execute(new Job(i, TaskType.ITERATE, iterations*2));
@@ -496,10 +494,13 @@ public class PListTest {
         boolean shutdown = executor.awaitTermination(60*60, TimeUnit.SECONDS);
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
         assertTrue("test did not  timeout ", shutdown);
-        LOG.info("Num dataFiles:" + store.getJournal().getFiles().size());
+//        LOG.info("Num dataFiles:" + store.getJournal().getFiles().size());
     }
 
+    abstract protected PListStore createConcurrentAddIteratePListStore();
+
     enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE, ITERATE_REMOVE}
+    ConcurrentHashMap<String, Object> entries = new ConcurrentHashMap<String, Object>();
 
     class Job implements Runnable {
 
@@ -517,7 +518,7 @@ public class PListTest {
         public void run() {
             final String threadName = Thread.currentThread().getName();
             try {
-                PListImpl plist = null;
+                PList plist = null;
                 switch (task) {
                     case CREATE:
                         Thread.currentThread().setName("C:"+id);
@@ -535,7 +536,8 @@ public class PListTest {
                         for (int j = 0; j < iterations; j++) {
                             synchronized (plistLocks(plist)) {
                                 if (exceptions.isEmpty()) {
-                                    plist.addLast ("PL>"  + id + idSeed + "-" + j, payload);
+                                    String key = "PL>" + id + idSeed + "-" + j;
+                                    entries.put(key, plist.addLast(key, payload));
                                 } else {
                                     break;
                                 }
@@ -552,7 +554,11 @@ public class PListTest {
                         synchronized (plistLocks(plist)) {
 
                             for (int j = iterations -1; j >= 0; j--) {
-                                plist.remove("PL>"  + id + idSeed + "-" + j);
+                                String key = "PL>" + id + idSeed + "-" + j;
+                                Object position = entries.remove(key);
+                                if( position!=null ) {
+                                    plist.remove(position);
+                                }
                                 if (j > 0 && j % (iterations / 2) == 0) {
                                     LOG.info("Job-" + id + " Done remove: " + j);
                                 }
@@ -640,11 +646,13 @@ public class PListTest {
     }
 
     protected void startStore(File directory) throws Exception {
-        store = new PListStoreImpl();
+        store = createPListStore();
         store.setDirectory(directory);
         store.start();
         plist = store.getPList("main");
     }
+
+    abstract protected PListStore createPListStore();
 
     @After
     public void tearDown() throws Exception {

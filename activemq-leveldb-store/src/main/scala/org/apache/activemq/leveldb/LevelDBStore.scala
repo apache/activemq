@@ -23,8 +23,8 @@ import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.{CountDownLatch, ExecutionException, Future}
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.{ExecutionException, Future}
+import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
 import reflect.BeanProperty
 import org.apache.activemq.store._
 import java.util._
@@ -34,6 +34,9 @@ import javax.management.ObjectName
 import org.apache.activemq.broker.jmx.AnnotatedMBean
 import org.apache.activemq.util._
 import org.apache.activemq.leveldb.util.{RetrySupport, FileSupport, Log}
+import org.apache.activemq.store.PList.PListIterator
+import java.lang
+import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream, Buffer}
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -111,7 +114,7 @@ class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
 
 import LevelDBStore._
 
-class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with PersistenceAdapter with TransactionStore {
+class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with PersistenceAdapter with TransactionStore with PListStore {
 
   final val wireFormat = new OpenWireFormat
   final val db = new DBManager(this)
@@ -157,6 +160,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   val queues = collection.mutable.HashMap[ActiveMQQueue, LevelDBStore#LevelDBMessageStore]()
   val topics = collection.mutable.HashMap[ActiveMQTopic, LevelDBStore#LevelDBTopicMessageStore]()
   val topicsById = collection.mutable.HashMap[Long, LevelDBStore#LevelDBTopicMessageStore]()
+  val plists = collection.mutable.HashMap[String, LevelDBStore#LevelDBPList]()
 
   def init() = {}
 
@@ -299,7 +303,9 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           if( prepared ) {
             uow.dequeue(xacontainer_id, message.getMessageId)
           }
-          message.setMessageId(message.getMessageId.copy())
+          var copy = message.getMessageId.copy()
+          copy.setEntryLocator(null)
+          message.setMessageId(copy)
           store.doAdd(uow, message, delay)
         }
 
@@ -370,7 +376,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     preCommit.run()
     transactions.remove(txid) match {
       case None=>
-        println("The transaction does not exist")
         postCommit.run()
       case Some(tx)=>
         val done = new CountDownLatch(1)
@@ -432,6 +437,31 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       this.doingRecover = false
     }
   }
+
+
+  def getPList(name: String): PList = {
+    this.synchronized(plists.get(name)).getOrElse(db.createPList(name))
+  }
+
+  def createPList(name: String, key: Long):LevelDBStore#LevelDBPList = {
+    var rc = new LevelDBPList(name, key)
+    this.synchronized {
+      plists.put(name, rc)
+    }
+    rc
+  }
+
+  def removePList(name: String): Boolean = {
+    plists.remove(name) match {
+      case Some(list)=>
+        db.destroyPList(list.key)
+        list.listSize.set(0)
+        true
+      case None =>
+        false
+    }
+  }
+
 
   def createMessageStore(destination: ActiveMQDestination):LevelDBStore#LevelDBMessageStore = {
     destination match {
@@ -531,6 +561,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): Future[AnyRef] = {
+      message.getMessageId.setEntryLocator(null)
       if(  message.getTransactionId!=null ) {
         transaction(message.getTransactionId).add(this, message, delay)
         DONE
@@ -761,6 +792,101 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         case Some(sub) =>
           (lastSeq.get - sub.lastAckPosition).toInt
         case None => 0
+      }
+    }
+
+  }
+  class LevelDBPList(val name: String, val key: Long) extends PList {
+    import LevelDBClient._
+
+    val lastSeq = new AtomicLong(Long.MaxValue/2)
+    val firstSeq = new AtomicLong(lastSeq.get+1)
+    val listSize = new AtomicLong(0)
+
+    def getName: String = name
+    def destroy() = {
+      removePList(name)
+    }
+
+    def addFirst(id: String, bs: ByteSequence): AnyRef = {
+      var pos = lastSeq.decrementAndGet()
+      add(pos, id, bs)
+      listSize.incrementAndGet()
+      new lang.Long(pos)
+    }
+
+    def addLast(id: String, bs: ByteSequence): AnyRef = {
+      var pos = lastSeq.incrementAndGet()
+      add(pos, id, bs)
+      listSize.incrementAndGet()
+      new lang.Long(pos)
+    }
+
+    def add(pos:Long, id: String, bs: ByteSequence) = {
+      val encoded_key = encodeLongLong(key, pos)
+      val encoded_id = new UTF8Buffer(id)
+      val os = new DataByteArrayOutputStream(2+encoded_id.length+bs.length)
+      os.writeShort(encoded_id.length)
+      os.write(encoded_id.data, encoded_id.offset, encoded_id.length)
+      os.write(bs.getData, bs.getOffset, bs.getLength)
+      db.plistPut(encoded_key, os.toBuffer.toByteArray)
+    }
+
+    def remove(position: AnyRef): Boolean = {
+      val pos = position.asInstanceOf[lang.Long].longValue()
+      val encoded_key = encodeLongLong(key, pos)
+      db.plistGet(encoded_key) match {
+        case Some(value) =>
+          db.plistDelete(encoded_key)
+          listSize.decrementAndGet()
+          true
+        case None =>
+          false
+      }
+    }
+
+    def isEmpty = size()==0
+    def size(): Long = listSize.get()
+
+    def iterator() = new PListIterator() {
+      val prefix = LevelDBClient.encodeLong(key)
+      var dbi = db.plistIterator
+      var last_key:Array[Byte] = _
+
+      dbi.seek(prefix);
+
+
+      def hasNext: Boolean = dbi!=null && dbi.hasNext && dbi.peekNext.getKey.startsWith(prefix)
+      def next() = {
+        if ( dbi==null || !dbi.hasNext ) {
+          throw new NoSuchElementException();
+        }
+        val n = dbi.peekNext();
+        last_key = n.getKey
+        val (k, pos) = decodeLongLong(last_key)
+        if( k!=key ) {
+          throw new NoSuchElementException();
+        }
+        var value = n.getValue
+        val is = new org.fusesource.hawtbuf.DataByteArrayInputStream(value)
+        val id = is.readBuffer(is.readShort()).utf8().toString
+        val data = new ByteSequence(value, is.getPos, value.length-is.getPos)
+        dbi.next()
+        new PListEntry(id, data, pos)
+      }
+
+      def release() = {
+        dbi.close()
+        dbi = null
+      }
+
+      def remove() = {
+        if( last_key==null ) {
+          throw new NoSuchElementException();
+        }
+        db.plistDelete(last_key)
+        listSize.decrementAndGet()
+        last_key = null
       }
     }
 

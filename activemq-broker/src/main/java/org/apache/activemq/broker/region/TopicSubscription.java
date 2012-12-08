@@ -100,6 +100,9 @@ public class TopicSubscription extends AbstractSubscription {
         if (isDuplicate(node)) {
             return;
         }
+        // Lets use an indirect reference so that we can associate a unique
+        // locator /w the message.
+        node = new IndirectMessageReference(node.getMessage());
         enqueueCounter.incrementAndGet();
         if (!isFull() && matched.isEmpty()) {
             // if maximumPendingMessages is set we will only discard messages which
@@ -540,7 +543,7 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void dispatch(final MessageReference node) throws IOException {
-        Message message = (Message)node;
+        Message message = node.getMessage();
         if (node != null) {
             node.incrementReferenceCount();
         }
