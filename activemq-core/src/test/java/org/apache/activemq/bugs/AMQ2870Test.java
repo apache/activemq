@@ -53,7 +53,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
     
     public void initCombosForTestSize() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.AMQ});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB});
     }
     
     public void testSize() throws Exception {

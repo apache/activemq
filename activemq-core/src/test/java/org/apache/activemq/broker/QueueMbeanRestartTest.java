@@ -49,7 +49,7 @@ public class QueueMbeanRestartTest extends TestSupport {
 
     public void initCombosForTestMBeanPresenceOnRestart() {
         addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
     }
 
     public void testMBeanPresenceOnRestart() throws Exception {

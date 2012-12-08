@@ -132,7 +132,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestConsumeOnlyMatchedMessages() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
                 new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
@@ -223,7 +223,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     
     public void initCombosForTestVerifyAllConsumedAreAcked() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-               new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+               new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
                 new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
@@ -453,7 +453,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
                 new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }
@@ -532,7 +532,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestInterleavedOfflineSubscriptionCanConsume() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
     }
 
     public void testInterleavedOfflineSubscriptionCanConsume() throws Exception {
@@ -608,7 +608,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestMixOfOnLineAndOfflineSubsGetAllMatched() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
     }
 
     private static String filter = "$a='A1' AND (($b=true AND $c=true) OR ($d='D1' OR $d='D2'))";
@@ -809,7 +809,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
     }
     
     public void testOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
@@ -899,7 +899,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     public void initCombosForTestOfflineAfterRestart() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
     }
 
     public void testOfflineSubscriptionAfterRestart() throws Exception {
