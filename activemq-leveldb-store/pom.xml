@@ -61,8 +61,14 @@
 
     <dependency>
       <groupId>org.iq80.leveldb</groupId>
+      <artifactId>leveldb-api</artifactId>
+      <version>${leveldb-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.iq80.leveldb</groupId>
       <artifactId>leveldb</artifactId>
-      <version>0.2</version>
+      <version>${leveldb-version}</version>
     </dependency>
 
     <dependency>
@@ -354,83 +360,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.fusesource.mvnplugins</groupId>
-        <artifactId>maven-uberize-plugin</artifactId>
-        <version>1.14</version>
-        <executions>
-          <execution>
-            <id>all</id>
-            <phase>package</phase>
-            <goals><goal>uberize</goal></goals>
-          </execution>
-        </executions>
-        <configuration>
-          <uberArtifactAttached>true</uberArtifactAttached>
-          <uberClassifierName>uber</uberClassifierName>
-          <artifactSet>
-            <includes>
-              <include>org.scala-lang:scala-library</include>
-              <include>org.fusesource.hawtdispatch:hawtdispatch</include>
-              <include>org.fusesource.hawtdispatch:hawtdispatch-scala</include>
-              <include>org.fusesource.hawtbuf:hawtbuf</include>
-              <include>org.fusesource.hawtbuf:hawtbuf-proto</include>
-
-              <include>org.iq80.leveldb:leveldb-api</include>
-
-              <!--
-              <include>org.iq80.leveldb:leveldb</include>
-              <include>org.xerial.snappy:snappy-java</include>
-              <include>com.google.guava:guava</include>
-              -->
-              <include>org.xerial.snappy:snappy-java</include>
-
-              <include>org.fusesource.leveldbjni:leveldbjni</include>
-              <include>org.fusesource.leveldbjni:leveldbjni-osx</include>
-              <include>org.fusesource.leveldbjni:leveldbjni-linux32</include>
-              <include>org.fusesource.leveldbjni:leveldbjni-linux64</include>
-              <include>org.fusesource.hawtjni:hawtjni-runtime</include>
-
-              <!-- include bits need to access hdfs as a client -->
-              <include>org.apache.hadoop:hadoop-core</include>
-              <include>commons-configuration:commons-configuration</include>
-              <include>org.codehaus.jackson:jackson-mapper-asl</include>
-              <include>org.codehaus.jackson:jackson-core-asl</include>
-
-            </includes>
-          </artifactSet>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <configuration>
-          <classifier>bundle</classifier>
-          <excludeDependencies />
-          <instructions>
-            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-            <Fragment-Host>org.apache.activemq.activemq-core</Fragment-Host>
-            <Export-Package>
-                org.apache.activemq.leveldb*;version=${project.version};-noimport:=;-split-package:=merge-last,
-            </Export-Package>
-            <Embed-Dependency>*;inline=**;artifactId=
-              hawtjni-runtime|hawtbuf|hawtbuf-proto|hawtdispatch|hawtdispatch-scala|scala-library|
-              leveldb-api|leveldbjni|leveldbjni-osx|leveldbjni-linux32|leveldbjni-linux64|
-              hadoop-core|commons-configuration|jackson-mapper-asl|jackson-core-asl|commons-lang</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package>*;resolution:=optional</Import-Package>
-          </instructions>
-        </configuration>
-        <executions>
-          <execution>
-            <id>bundle</id>
-            <phase>package</phase>
-            <goals>
-              <goal>bundle</goal>
-            </goals>
-          </execution>
-        </executions>
-        </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
