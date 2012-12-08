@@ -747,6 +747,7 @@ class LevelDBClient(store: LevelDBStore) {
         log.close
       }
       copyDirtyIndexToSnapshot
+      plist.close
       log = null
     }
   }
