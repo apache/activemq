@@ -24,7 +24,7 @@ import java.util.List;
  */
 public interface StatusViewMBean {
 
-    public TabularData status() throws Exception;
+    public TabularData health() throws Exception;
 
     /**
      * Warning this method can only be invoked if you have the correct version
@@ -33,5 +33,5 @@ public interface StatusViewMBean {
      *
      * If in doubt, please use the {@link #status()} method instead!
      */
-    List<StatusEvent> statusList() throws Exception;
+    List<StatusEvent> healthList() throws Exception;
 }

@@ -2079,7 +2079,7 @@ public class BrokerService implements Service {
             try {
                 ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":"
                         + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
-                        + "Type=Status");
+                        + "Type=Health");
 
                 AnnotatedMBean.registerMBean(getManagementContext(), statusView, objectName);
             } catch (Throwable e) {

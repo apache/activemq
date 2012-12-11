@@ -35,13 +35,13 @@ public class StatusView implements StatusViewMBean {
     }
 
     @Override
-    public TabularData status() throws Exception {
+    public TabularData health() throws Exception {
         OpenTypeSupport.OpenTypeFactory factory = OpenTypeSupport.getFactory(StatusEvent.class);
         CompositeType ct = factory.getCompositeType();
         TabularType tt = new TabularType("Status", "Status", ct, new String[]{"id", "resource"});
         TabularDataSupport rc = new TabularDataSupport(tt);
 
-        List<StatusEvent> list = statusList();
+        List<StatusEvent> list = healthList();
         for (StatusEvent statusEvent : list) {
             rc.put(new CompositeDataSupport(ct, factory.getFields(statusEvent)));
         }
@@ -49,7 +49,7 @@ public class StatusView implements StatusViewMBean {
     }
 
     @Override
-    public List<StatusEvent> statusList() throws Exception {
+    public List<StatusEvent> healthList() throws Exception {
         List<StatusEvent> answer = new ArrayList<StatusEvent>();
         Map<ObjectName, DestinationView> queueViews = broker.getQueueViews();
         for (Map.Entry<ObjectName, DestinationView> entry : queueViews.entrySet()) {
