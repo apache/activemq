@@ -96,7 +96,7 @@
 <td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
 <td><form:tooltip text="${row.connectionId}" length="10"/></td>
 <td><form:tooltip text="${row.destinationName}" length="10"/></td>
-<td>${row.selector}</td>
+<td><c:out value="${row.selector}"/></td>
 <td>${row.pendingQueueSize}</td>
 <td>${row.dispatchedQueueSize}</td>
 <td>${row.dispatchedCounter}</td>
@@ -140,7 +140,7 @@
 <td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
 <td><form:tooltip text="${row.connectionId}" length="10"/></td>
 <td><form:tooltip text="${row.destinationName}" length="10"/></td>
-<td>${row.selector}</td>
+<td><c:out value="${row.selector}"/></td>
 <td>${row.pendingQueueSize}</td>
 <td>${row.dispatchedQueueSize}</td>
 <td>${row.dispatchedCounter}</td>

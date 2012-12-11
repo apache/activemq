@@ -21,7 +21,7 @@
             subscriptionName="${row.subscriptionName}" 
             connectionId="${row.connectionId}"
             destinationName="${row.destinationName}" 
-            selector="${row.selector}" 
+            selector="<c:out value="${row.selector}"/>" 
             active="yes" >
   <stats pendingQueueSize="${row.pendingQueueSize}"
          dispatchedQueueSize="${row.dispatchedQueueSize}"
@@ -37,7 +37,7 @@
             subscriptionName="${row.subscriptionName}" 
             connectionId="${row.connectionId}"
             destinationName="${row.destinationName}" 
-            selector="${row.selector}" 
+            selector="<c:out value="${row.selector}"/>" 
             active="no" >
   <stats pendingQueueSize="${row.pendingQueueSize}"
          dispatchedQueueSize="${row.dispatchedQueueSize}"
