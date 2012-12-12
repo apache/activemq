@@ -1756,18 +1756,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             // transform to our own message format here
             ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
+           msg.setDestination(destination);
 
             // Set the message id.
             if (msg == message) {
                 msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
             } else {
                 msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
-                message.setJMSMessageID(msg.getMessageId().toString());
+                // Make sure the JMS destination is set on the foreign messages too.
+                message.setJMSDestination(destination);
             }
             //clear the brokerPath in case we are re-sending this message
             msg.setBrokerPath(null);
-            // destination format is provider specific so only set on transformed message
-            msg.setJMSDestination(destination);
 
             msg.setTransactionId(txid);
             if (connection.isCopyMessageOnSend()) {
