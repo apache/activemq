@@ -223,6 +223,10 @@
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
         <include>jdom:jdom</include>
+
+        <!-- REST API -->
+        <include>org.jolokia:jolokia-core</include>
+        <include>com.googlecode.json-simple:json-simple</include>
       </includes>
     </dependencySet>
   </dependencySets>
