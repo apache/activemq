@@ -124,6 +124,12 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     }
 
     private String nameFromDestinationFilter(ActiveMQDestination destination) {
+
+        if (destination.getQualifiedName().length() > IOHelper.getMaxFileNameLength()) {
+            LOG.warn("Destination name is longer than 'MaximumFileNameLength' system property, " +
+                     "potential problem with recovery can result from name truncation.");
+        }
+
         return IOHelper.toFileSystemSafeName(destination.getQualifiedName());
     }
 
@@ -132,20 +138,24 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
                 ((XATransactionId)xid).getFormatId() == LOCAL_FORMAT_ID_MAGIC;
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context) throws IOException {
         throw new IllegalStateException();
     }
 
+    @Override
     public void checkpoint(final boolean sync) throws IOException {
         for (PersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.checkpoint(sync);
         }
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context) throws IOException {
         throw new IllegalStateException();
     }
 
+    @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         PersistenceAdapter persistenceAdapter = getMatchingPersistenceAdapter(destination);
         return transactionStore.proxy(persistenceAdapter.createTransactionStore(), persistenceAdapter.createQueueMessageStore(destination));
@@ -187,15 +197,18 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         }
     }
 
+    @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
         PersistenceAdapter persistenceAdapter = getMatchingPersistenceAdapter(destination);
         return transactionStore.proxy(persistenceAdapter.createTransactionStore(), persistenceAdapter.createTopicMessageStore(destination));
     }
 
+    @Override
     public TransactionStore createTransactionStore() throws IOException {
         return transactionStore;
     }
 
+    @Override
     public void deleteAllMessages() throws IOException {
         for (PersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.deleteAllMessages();
@@ -204,6 +217,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         IOHelper.deleteChildren(getDirectory());
     }
 
+    @Override
     public Set<ActiveMQDestination> getDestinations() {
         Set<ActiveMQDestination> results = new HashSet<ActiveMQDestination>();
         for (PersistenceAdapter persistenceAdapter : adapters) {
@@ -212,6 +226,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         return results;
     }
 
+    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         long maxId = -1;
         for (PersistenceAdapter persistenceAdapter : adapters) {
@@ -220,6 +235,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         return maxId;
     }
 
+    @Override
     public long getLastProducerSequenceId(ProducerId id) throws IOException {
         long maxId = -1;
         for (PersistenceAdapter persistenceAdapter : adapters) {
@@ -228,6 +244,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         return maxId;
     }
 
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         PersistenceAdapter adapter = getMatchingPersistenceAdapter(destination);
         adapter.removeQueueMessageStore(destination);
@@ -237,6 +254,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         }
     }
 
+    @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
         PersistenceAdapter adapter = getMatchingPersistenceAdapter(destination);
         if (adapter instanceof KahaDBPersistenceAdapter) {
@@ -263,22 +281,26 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         }
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context) throws IOException {
         throw new IllegalStateException();
     }
 
+    @Override
     public void setBrokerName(String brokerName) {
         for (PersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.setBrokerName(brokerName);
         }
     }
 
+    @Override
     public void setUsageManager(SystemUsage usageManager) {
         for (PersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.setUsageManager(usageManager);
         }
     }
 
+    @Override
     public long size() {
         long size = 0;
         for (PersistenceAdapter persistenceAdapter : adapters) {
@@ -287,6 +309,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         return size;
     }
 
+    @Override
     public void start() throws Exception {
         Object result = this.chooseValue(matchAll);
         if (result != null) {
@@ -373,12 +396,14 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         return adapter;
     }
 
+    @Override
     public void stop() throws Exception {
         for (PersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.stop();
         }
     }
 
+    @Override
     public File getDirectory() {
         return this.directory;
     }
@@ -388,6 +413,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         this.directory = directory;
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         for (KahaDBPersistenceAdapter persistenceAdapter : adapters) {
             persistenceAdapter.setBrokerService(brokerService);

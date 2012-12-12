@@ -16,18 +16,26 @@
  */
 package org.apache.activemq.util;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 /**
- * 
+ *
  */
 public final class IOHelper {
+
     protected static final int MAX_DIR_NAME_LENGTH;
     protected static final int MAX_FILE_NAME_LENGTH;
     private static final int DEFAULT_BUFFER_SIZE = 4096;
+
     private IOHelper() {
     }
 
@@ -62,18 +70,18 @@ public final class IOHelper {
     public static String toFileSystemDirectorySafeName(String name) {
         return toFileSystemSafeName(name, true, MAX_DIR_NAME_LENGTH);
     }
-    
+
     public static String toFileSystemSafeName(String name) {
         return toFileSystemSafeName(name, false, MAX_FILE_NAME_LENGTH);
     }
-    
+
     /**
      * Converts any string into a string that is safe to use as a file name.
      * The result will only include ascii characters and numbers, and the "-","_", and "." characters.
      *
      * @param name
-     * @param dirSeparators 
-     * @param maxFileLength 
+     * @param dirSeparators
+     * @param maxFileLength
      * @return
      */
     public static String toFileSystemSafeName(String name,boolean dirSeparators,int maxFileLength) {
@@ -147,7 +155,7 @@ public final class IOHelper {
         result &= fileToDelete.delete();
         return result;
     }
-    
+
     public static boolean deleteChildren(File parent) {
         if (parent == null || !parent.exists()) {
             return false;
@@ -172,21 +180,20 @@ public final class IOHelper {
                 }
             }
         }
-       
+
         return result;
     }
-    
-    
+
     public static void moveFile(File src, File targetDirectory) throws IOException {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
             throw new IOException("Failed to move " + src + " to " + targetDirectory);
         }
     }
-    
+
     public static void copyFile(File src, File dest) throws IOException {
         copyFile(src, dest, null);
     }
-    
+
     public static void copyFile(File src, File dest, FilenameFilter filter) throws IOException {
         if (src.getCanonicalPath().equals(dest.getCanonicalPath()) == false) {
             if (src.isDirectory()) {
@@ -209,7 +216,7 @@ public final class IOHelper {
             }
         }
     }
-    
+
     static File getCopyParent(File from, File to, File src) {
         File result = null;
         File parent = src.getParentFile();
@@ -224,13 +231,13 @@ public final class IOHelper {
         }
         return result;
     }
-    
+
     static List<File> getFiles(File dir,FilenameFilter filter){
         List<File> result = new ArrayList<File>();
         getFiles(dir,result,filter);
         return result;
     }
-    
+
     static void getFiles(File dir,List<File> list,FilenameFilter filter) {
         if (!list.contains(dir)) {
             list.add(dir);
@@ -245,14 +252,13 @@ public final class IOHelper {
             }
         }
     }
-    
-    
+
     public static void copySingleFile(File src, File dest) throws IOException {
         FileInputStream fileSrc = new FileInputStream(src);
         FileOutputStream fileDest = new FileOutputStream(dest);
         copyInputStream(fileSrc, fileDest);
     }
-    
+
     public static void copyInputStream(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
         int len = in.read(buffer);
@@ -263,19 +269,26 @@ public final class IOHelper {
         in.close();
         out.close();
     }
-    
+
     static {
-        MAX_DIR_NAME_LENGTH = Integer.getInteger("MaximumDirNameLength",200);
-        MAX_FILE_NAME_LENGTH = Integer.getInteger("MaximumFileNameLength",64);
+        MAX_DIR_NAME_LENGTH = Integer.getInteger("MaximumDirNameLength", 200);
+        MAX_FILE_NAME_LENGTH = Integer.getInteger("MaximumFileNameLength", 64);
     }
 
-    
+    public static int getMaxDirNameLength() {
+        return MAX_DIR_NAME_LENGTH;
+    }
+
+    public static int getMaxFileNameLength() {
+        return MAX_FILE_NAME_LENGTH;
+    }
+
     public static void mkdirs(File dir) throws IOException {
         if (dir.exists()) {
             if (!dir.isDirectory()) {
                 throw new IOException("Failed to create directory '" + dir +"', regular file already existed with that name");
             }
-            
+
         } else {
             if (!dir.mkdirs()) {
                 throw new IOException("Failed to create directory '" + dir+"'");
