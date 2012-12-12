@@ -46,7 +46,9 @@
                       queueSearchBase="ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org"
                       topicSearchBase="ou=Topic,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org"
                       tempSearchBase="ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org"
-                      refreshInterval="300000" />
+                      refreshInterval="300000"
+                      legacyGroupMapping="false"
+                  />
               </map>
           </authorizationPlugin>
       </plugins>
