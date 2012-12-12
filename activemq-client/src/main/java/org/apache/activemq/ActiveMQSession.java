@@ -1292,6 +1292,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
 
+        if (topic == null) {
+            throw new InvalidDestinationException("Topic cannot be null");
+        }
+
         if (isIndividualAcknowledge()) {
             throw JMSExceptionSupport.create("Cannot create a durable consumer for a Session in "+
                                              "INDIVIDUAL_ACKNOWLEDGE mode.", null);
