@@ -827,6 +827,7 @@
                                 <exclude>org/apache/activemq/bugs/AMQ3678Test.*</exclude>
                                 <exclude>org/apache/activemq/bugs/AMQ3732Test.*</exclude>
                                 <exclude>org/apache/activemq/bugs/AMQ3841Test.*</exclude>
+                                <exclude>org/apache/activemq/bugs/AMQ4221Test.*</exclude>
                                 <exclude>org/apache/activemq/bugs/ActiveMQSlowConsumerManualTest.*</exclude>
                                 <exclude>org/apache/activemq/bugs/ConnectionPerMessageTest.*</exclude>
                                 <exclude>org/apache/activemq/bugs/CraigsBugTest.*</exclude>

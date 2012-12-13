@@ -225,6 +225,7 @@ public final class ListNode<Key, Value> {
                         toRemoveNode = currentNode;
                         previousNode.setNext(toRemoveNode.getNext());
                         previousNode.store(tx);
+                        currentNode = previousNode;
                     }
                 }
                 targetList.onRemove();

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -273,6 +274,35 @@ public class ListIndexTest extends IndexTestSupport {
             assertEquals(key(counter), entry.getKey());
             assertEquals(counter, (long) entry.getValue());
             counter++;
+        }
+        assertEquals("We iterated over all entries", entryCount, counter);
+
+        this.index.unload(tx);
+        tx.commit();
+    }
+
+    // https://issues.apache.org/jira/browse/AMQ-4221
+    public void testIterationRemoveTailAndPrev() throws Exception {
+        createPageFileAndIndex(100);
+        ListIndex<String, Long> index = ((ListIndex<String, Long>) this.index);
+        this.index.load(tx);
+        tx.commit();
+
+        String payload = new String(new byte[8]);
+        final int entryCount = 9;
+        for (int i=0; i<entryCount; i++) {
+            index.put(tx, payload + "-" + i, (long)i);
+        }
+        tx.commit();
+
+        int counter = 0;
+        long[] toRemove = new long[] {6, 7, 8};
+        for (Iterator<Map.Entry<String, Long>> i = index.iterator(tx); i.hasNext(); ) {
+            Map.Entry<String, Long> entry = i.next();
+            assertEquals(counter, (long) entry.getValue());
+            if (Arrays.binarySearch(toRemove, counter++)  >= 0) {
+                i.remove();
+            }
         }
         assertEquals("We iterated over all entries", entryCount, counter);
 
