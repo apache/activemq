@@ -124,7 +124,6 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     }
 
     private String nameFromDestinationFilter(ActiveMQDestination destination) {
-
         if (destination.getQualifiedName().length() > IOHelper.getMaxFileNameLength()) {
             LOG.warn("Destination name is longer than 'MaximumFileNameLength' system property, " +
                      "potential problem with recovery can result from name truncation.");
@@ -247,10 +246,10 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         PersistenceAdapter adapter = getMatchingPersistenceAdapter(destination);
-        adapter.removeQueueMessageStore(destination);
         if (adapter instanceof KahaDBPersistenceAdapter) {
             adapter.removeQueueMessageStore(destination);
             removeMessageStore((KahaDBPersistenceAdapter)adapter, destination);
+            removeAll(destination);
         }
     }
 
@@ -260,6 +259,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         if (adapter instanceof KahaDBPersistenceAdapter) {
             adapter.removeTopicMessageStore(destination);
             removeMessageStore((KahaDBPersistenceAdapter)adapter, destination);
+            removeAll(destination);
         }
     }
 
@@ -464,5 +464,4 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
         return "MultiKahaDBPersistenceAdapter[" + path + "]" + adapters;
     }
-
 }
