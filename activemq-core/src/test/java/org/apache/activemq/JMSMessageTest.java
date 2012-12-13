@@ -27,7 +27,6 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageProducer;
@@ -37,12 +36,13 @@ import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
 import junit.framework.Test;
+
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * Test cases used to test the JMS message consumer.
- * 
- * 
+ *
+ *
  */
 public class JMSMessageTest extends JmsTestSupport {
 
@@ -99,6 +99,7 @@ public class JMSMessageTest extends JmsTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+    @Override
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectURL);
         return factory;
@@ -271,181 +272,228 @@ public class JMSMessageTest extends JmsTestSupport {
         private long expiration;
         private int priority;
         private String text;
-        private HashMap<String, Object> props = new HashMap<String, Object>();
+        private final HashMap<String, Object> props = new HashMap<String, Object>();
 
+        @Override
         public String getJMSMessageID() throws JMSException {
             return messageId;
         }
 
+        @Override
         public void setJMSMessageID(String arg0) throws JMSException {
             messageId = arg0;
         }
 
+        @Override
         public long getJMSTimestamp() throws JMSException {
             return timestamp;
         }
 
+        @Override
         public void setJMSTimestamp(long arg0) throws JMSException {
             timestamp = arg0;
         }
 
+        @Override
         public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
             return null;
         }
 
+        @Override
         public void setJMSCorrelationIDAsBytes(byte[] arg0) throws JMSException {
         }
 
+        @Override
         public void setJMSCorrelationID(String arg0) throws JMSException {
             correlationId = arg0;
         }
 
+        @Override
         public String getJMSCorrelationID() throws JMSException {
             return correlationId;
         }
 
+        @Override
         public Destination getJMSReplyTo() throws JMSException {
             return replyTo;
         }
 
+        @Override
         public void setJMSReplyTo(Destination arg0) throws JMSException {
             replyTo = arg0;
         }
 
+        @Override
         public Destination getJMSDestination() throws JMSException {
             return destination;
         }
 
+        @Override
         public void setJMSDestination(Destination arg0) throws JMSException {
             destination = arg0;
         }
 
+        @Override
         public int getJMSDeliveryMode() throws JMSException {
             return deliveryMode;
         }
 
+        @Override
         public void setJMSDeliveryMode(int arg0) throws JMSException {
             deliveryMode = arg0;
         }
 
+        @Override
         public boolean getJMSRedelivered() throws JMSException {
             return redelivered;
         }
 
+        @Override
         public void setJMSRedelivered(boolean arg0) throws JMSException {
             redelivered = arg0;
         }
 
+        @Override
         public String getJMSType() throws JMSException {
             return type;
         }
 
+        @Override
         public void setJMSType(String arg0) throws JMSException {
             type = arg0;
         }
 
+        @Override
         public long getJMSExpiration() throws JMSException {
             return expiration;
         }
 
+        @Override
         public void setJMSExpiration(long arg0) throws JMSException {
             expiration = arg0;
         }
 
+        @Override
         public int getJMSPriority() throws JMSException {
             return priority;
         }
 
+        @Override
         public void setJMSPriority(int arg0) throws JMSException {
             priority = arg0;
         }
 
+        @Override
         public void clearProperties() throws JMSException {
         }
 
+        @Override
         public boolean propertyExists(String arg0) throws JMSException {
             return false;
         }
 
+        @Override
         public boolean getBooleanProperty(String arg0) throws JMSException {
             return false;
         }
 
+        @Override
         public byte getByteProperty(String arg0) throws JMSException {
             return 0;
         }
 
+        @Override
         public short getShortProperty(String arg0) throws JMSException {
             return 0;
         }
 
+        @Override
         public int getIntProperty(String arg0) throws JMSException {
             return 0;
         }
 
+        @Override
         public long getLongProperty(String arg0) throws JMSException {
             return 0;
         }
 
+        @Override
         public float getFloatProperty(String arg0) throws JMSException {
             return 0;
         }
 
+        @Override
         public double getDoubleProperty(String arg0) throws JMSException {
             return 0;
         }
 
+        @Override
         public String getStringProperty(String arg0) throws JMSException {
             return (String)props.get(arg0);
         }
 
+        @Override
         public Object getObjectProperty(String arg0) throws JMSException {
             return props.get(arg0);
         }
 
+        @Override
         public Enumeration getPropertyNames() throws JMSException {
             return new Vector<String>(props.keySet()).elements();
         }
 
+        @Override
         public void setBooleanProperty(String arg0, boolean arg1) throws JMSException {
         }
 
+        @Override
         public void setByteProperty(String arg0, byte arg1) throws JMSException {
         }
 
+        @Override
         public void setShortProperty(String arg0, short arg1) throws JMSException {
         }
 
+        @Override
         public void setIntProperty(String arg0, int arg1) throws JMSException {
         }
 
+        @Override
         public void setLongProperty(String arg0, long arg1) throws JMSException {
         }
 
+        @Override
         public void setFloatProperty(String arg0, float arg1) throws JMSException {
         }
 
+        @Override
         public void setDoubleProperty(String arg0, double arg1) throws JMSException {
         }
 
+        @Override
         public void setStringProperty(String arg0, String arg1) throws JMSException {
             props.put(arg0, arg1);
         }
 
+        @Override
         public void setObjectProperty(String arg0, Object arg1) throws JMSException {
             props.put(arg0, arg1);
         }
 
+        @Override
         public void acknowledge() throws JMSException {
         }
 
+        @Override
         public void clearBody() throws JMSException {
         }
 
+        @Override
         public void setText(String arg0) throws JMSException {
             text = arg0;
         }
 
+        @Override
         public String getText() throws JMSException {
             return text;
         }
@@ -475,8 +523,7 @@ public class JMSMessageTest extends JmsTestSupport {
             // JMSDestination, JMSDeliveryMode,  JMSExpiration, JMSPriority, JMSMessageID, and JMSTimestamp
             //must be set by sending a message.
 
-            // exception for jms destination as the format is provider defined so it is only set on the copy
-            assertNull(message.getJMSDestination());
+            assertNotNull(message.getJMSDestination());
             assertEquals(Session.AUTO_ACKNOWLEDGE, message.getJMSDeliveryMode());
             assertTrue(start  + timeToLive <= message.getJMSExpiration());
             assertTrue(end + timeToLive >= message.getJMSExpiration());
