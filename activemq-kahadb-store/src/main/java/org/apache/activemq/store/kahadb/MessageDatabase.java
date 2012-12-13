@@ -89,7 +89,6 @@ import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.LockFile;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
@@ -218,7 +217,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
 
     protected AtomicBoolean opened = new AtomicBoolean();
-    private LockFile lockFile;
     private boolean ignoreMissingJournalfiles = false;
     private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;

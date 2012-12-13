@@ -19,16 +19,18 @@ package org.apache.activemq.usage;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
+
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.store.PListStore;
 import org.apache.activemq.store.PersistenceAdapter;
 
 /**
  * Holder for Usage instances for memory, store and temp files Main use case is
  * manage memory usage.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class SystemUsage implements Service {
 
@@ -38,6 +40,7 @@ public class SystemUsage implements Service {
     private StoreUsage storeUsage;
     private TempUsage tempUsage;
     private ThreadPoolExecutor executor;
+    private JobSchedulerUsage jobSchedulerUsage;
 
     /**
      * True if someone called setSendFailIfNoSpace() on this particular usage
@@ -51,15 +54,16 @@ public class SystemUsage implements Service {
     private final List<SystemUsage> children = new CopyOnWriteArrayList<SystemUsage>();
 
     public SystemUsage() {
-        this("default", null, null);
+        this("default", null, null, null);
     }
 
-    public SystemUsage(String name, PersistenceAdapter adapter, PListStore tempStore) {
+    public SystemUsage(String name, PersistenceAdapter adapter, PListStore tempStore, JobSchedulerStore jobSchedulerStore) {
         this.parent = null;
         this.name = name;
         this.memoryUsage = new MemoryUsage(name + ":memory");
         this.storeUsage = new StoreUsage(name + ":store", adapter);
         this.tempUsage = new TempUsage(name + ":temp", tempStore);
+        this.jobSchedulerUsage = new JobSchedulerUsage(name + ":jobScheduler", jobSchedulerStore);
         this.memoryUsage.setExecutor(getExecutor());
         this.storeUsage.setExecutor(getExecutor());
         this.tempUsage.setExecutor(getExecutor());
@@ -72,6 +76,7 @@ public class SystemUsage implements Service {
         this.memoryUsage = new MemoryUsage(parent.memoryUsage, name + ":memory");
         this.storeUsage = new StoreUsage(parent.storeUsage, name + ":store");
         this.tempUsage = new TempUsage(parent.tempUsage, name + ":temp");
+        this.jobSchedulerUsage = new JobSchedulerUsage(parent.jobSchedulerUsage, name + ":jobScheduler");
         this.memoryUsage.setExecutor(getExecutor());
         this.storeUsage.setExecutor(getExecutor());
         this.tempUsage.setExecutor(getExecutor());
@@ -102,11 +107,19 @@ public class SystemUsage implements Service {
         return this.tempUsage;
     }
 
+    /**
+     * @return the schedulerUsage
+     */
+    public JobSchedulerUsage getJobSchedulerUsage() {
+        return this.jobSchedulerUsage;
+    }
+
     @Override
     public String toString() {
         return "UsageManager(" + getName() + ")";
     }
 
+    @Override
     public void start() {
         if (parent != null) {
             parent.addChild(this);
@@ -114,8 +127,10 @@ public class SystemUsage implements Service {
         this.memoryUsage.start();
         this.storeUsage.start();
         this.tempUsage.start();
+        this.jobSchedulerUsage.start();
     }
 
+    @Override
     public void stop() {
         if (parent != null) {
             parent.removeChild(this);
@@ -123,6 +138,7 @@ public class SystemUsage implements Service {
         this.memoryUsage.stop();
         this.storeUsage.stop();
         this.tempUsage.stop();
+        this.jobSchedulerUsage.stop();
     }
 
     /**
@@ -185,6 +201,7 @@ public class SystemUsage implements Service {
         this.memoryUsage.setName(name + ":memory");
         this.storeUsage.setName(name + ":store");
         this.tempUsage.setName(name + ":temp");
+        this.jobSchedulerUsage.setName(name + ":jobScheduler");
     }
 
     public void setMemoryUsage(MemoryUsage memoryUsage) {
@@ -210,7 +227,6 @@ public class SystemUsage implements Service {
         }
         this.storeUsage = storeUsage;
         this.storeUsage.setExecutor(executor);
-
     }
 
     public void setTempUsage(TempUsage tempDiskUsage) {
@@ -225,6 +241,20 @@ public class SystemUsage implements Service {
         }
         this.tempUsage = tempDiskUsage;
         this.tempUsage.setExecutor(getExecutor());
+    }
+
+    public void setJobSchedulerUsage(JobSchedulerUsage jobSchedulerUsage) {
+        if (jobSchedulerUsage.getStore() == null) {
+            jobSchedulerUsage.setStore(this.jobSchedulerUsage.getStore());
+        }
+        if (jobSchedulerUsage.getName() == null) {
+            jobSchedulerUsage.setName(this.jobSchedulerUsage.getName());
+        }
+        if (parent != null) {
+            jobSchedulerUsage.setParent(parent.jobSchedulerUsage);
+        }
+        this.jobSchedulerUsage = jobSchedulerUsage;
+        this.jobSchedulerUsage.setExecutor(getExecutor());
     }
 
     /**
@@ -248,6 +278,9 @@ public class SystemUsage implements Service {
         }
         if (this.tempUsage != null) {
             this.tempUsage.setExecutor(this.executor);
+        }
+        if(this.jobSchedulerUsage != null) {
+            this.jobSchedulerUsage.setExecutor(this.executor);
         }
     }
 }

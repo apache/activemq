@@ -74,6 +74,9 @@ public class XBeanBrokerService extends BrokerService {
         if (usage.getTempUsage().getStore() == null) {
             usage.getTempUsage().setStore(getTempDataStore());
         }
+        if (usage.getJobSchedulerUsage().getStore() == null) {
+            usage.getJobSchedulerUsage().setStore(getJobSchedulerStore());
+        }
     }
 
     /**

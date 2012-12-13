@@ -16,18 +16,70 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
-import org.apache.activemq.broker.jmx.*;
-import org.apache.activemq.broker.region.*;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.jmx.ConnectorView;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.JmsConnectorView;
+import org.apache.activemq.broker.jmx.JobSchedulerView;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
+import org.apache.activemq.broker.jmx.ManagedRegionBroker;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.NetworkConnectorView;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.ProxyConnectorView;
+import org.apache.activemq.broker.jmx.StatusView;
+import org.apache.activemq.broker.jmx.StatusViewMBean;
+import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFactory;
+import org.apache.activemq.broker.region.DestinationFactoryImpl;
+import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.MirroredQueue;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -51,22 +103,20 @@ import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.*;
+import org.apache.activemq.util.BrokerSupport;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.IOExceptionHandler;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.InetAddressUtil;
+import org.apache.activemq.util.JMXSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
+import org.apache.activemq.util.TimeUtils;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
@@ -125,8 +175,7 @@ public class BrokerService implements Service {
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
     private JmsConnector[] jmsBridgeConnectors; // these are Jms to Jms bridges
-    // to other jms messaging
-    // systems
+    // to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
     private URI vmConnectorURI;
@@ -173,6 +222,7 @@ public class BrokerService implements Service {
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
+    private JobSchedulerStore jobSchedulerStore;
 
     private int offlineDurableSubscriberTimeout = -1;
     private int offlineDurableSubscriberTaskSchedule = 300000;
@@ -332,6 +382,7 @@ public class BrokerService implements Service {
         // Set a connection filter so that the connector does not establish loop
         // back connections.
         connector.setConnectionFilter(new ConnectionFilter() {
+            @Override
             public boolean connectTo(URI location) {
                 List<TransportConnector> transportConnectors = getTransportConnectors();
                 for (Iterator<TransportConnector> iter = transportConnectors.iterator(); iter.hasNext();) {
@@ -463,6 +514,7 @@ public class BrokerService implements Service {
         }
     }
 
+    @Override
     public void start() throws Exception {
         if (stopped.get() || !started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls
@@ -617,6 +669,7 @@ public class BrokerService implements Service {
      * @throws Exception
      * @org.apache .xbean.DestroyMethod
      */
+    @Override
     @PreDestroy
     public void stop() throws Exception {
         if (!stopping.compareAndSet(false, true)) {
@@ -662,6 +715,10 @@ public class BrokerService implements Service {
             broker = null;
         }
 
+        if (jobSchedulerStore != null) {
+            jobSchedulerStore.stop();
+            jobSchedulerStore = null;
+        }
         if (tempDataStore != null) {
             tempDataStore.stop();
             tempDataStore = null;
@@ -961,11 +1018,13 @@ public class BrokerService implements Service {
     public SystemUsage getSystemUsage() {
         try {
             if (systemUsage == null) {
-                systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore());
+
+                systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore(), getJobSchedulerStore());
                 systemUsage.setExecutor(getExecutor());
                 systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // 64 MB
                 systemUsage.getTempUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
                 systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1024 * 100); // 100 GB
+                systemUsage.getJobSchedulerUsage().setLimit(1024L * 1024 * 1000 * 50); // 50 // Gb
                 addService(this.systemUsage);
             }
             return systemUsage;
@@ -1714,6 +1773,36 @@ public class BrokerService implements Service {
         this.useTempMirroredQueues = useTempMirroredQueues;
     }
 
+    public synchronized JobSchedulerStore getJobSchedulerStore() {
+        if (jobSchedulerStore == null && isSchedulerSupport()) {
+            try {
+                String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
+                jobSchedulerStore = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
+                jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
+                configureService(jobSchedulerStore);
+                jobSchedulerStore.start();
+                LOG.info("JobScheduler using directory: " + getSchedulerDirectoryFile());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        return jobSchedulerStore;
+    }
+
+    public void setJobSchedulerStore(JobSchedulerStore jobSchedulerStore) {
+        this.jobSchedulerStore = jobSchedulerStore;
+        configureService(jobSchedulerStore);
+        try {
+            jobSchedulerStore.start();
+        } catch (Exception e) {
+            RuntimeException exception = new RuntimeException(
+                    "Failed to start provided job scheduler store: " + jobSchedulerStore, e);
+            LOG.error(exception.getLocalizedMessage(), e);
+            throw exception;
+        }
+    }
+
     //
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1826,6 +1915,29 @@ public class BrokerService implements Service {
                               " mb, whilst the max journal file size for the temporary store is: " +
                               maxJournalFileSize / (1024 * 1024) + " mb, " +
                               "the temp store will not accept any data when used.");
+                }
+            }
+        }
+
+        if (getJobSchedulerStore() != null) {
+            JobSchedulerStore scheduler = getJobSchedulerStore();
+            File schedulerDir = scheduler.getDirectory();
+            if (schedulerDir != null) {
+
+                String schedulerDirPath = schedulerDir.getAbsolutePath();
+                if (!schedulerDir.isAbsolute()) {
+                    schedulerDir = new File(schedulerDirPath);
+                }
+
+                while (schedulerDir != null && schedulerDir.isDirectory() == false) {
+                    schedulerDir = schedulerDir.getParentFile();
+                }
+                long schedularLimit = usage.getJobSchedulerUsage().getLimit();
+                long dirFreeSpace = schedulerDir.getUsableSpace();
+                if (schedularLimit > dirFreeSpace) {
+                    LOG.warn("Job Schedular Store limit is " + schedularLimit / (1024 * 1024) +
+                             " mb, whilst the data directory: " + schedulerDir.getAbsolutePath() +
+                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
                 }
             }
         }
@@ -2056,7 +2168,7 @@ public class BrokerService implements Service {
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
         if (isSchedulerSupport()) {
-            SchedulerBroker sb = new SchedulerBroker(broker, getSchedulerDirectoryFile());
+            SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
             if (isUseJmx()) {
                 JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
                 try {
@@ -2283,6 +2395,7 @@ public class BrokerService implements Service {
                         10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
                         new ThreadFactory() {
                             int count=0;
+                            @Override
                             public Thread newThread(Runnable runnable) {
                                 Thread thread = new Thread(runnable, "NetworkConnector Start Thread-" +(count++));
                                 thread.setDaemon(true);
@@ -2301,6 +2414,7 @@ public class BrokerService implements Service {
                 }
                 if (networkConnectorStartExecutor != null) {
                     networkConnectorStartExecutor.execute(new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 LOG.info("Async start of " + connector);

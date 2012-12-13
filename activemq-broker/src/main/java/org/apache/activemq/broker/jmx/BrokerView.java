@@ -157,6 +157,14 @@ public class BrokerView implements BrokerViewMBean {
     public int getTempPercentUsage() {
        return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
     }
+    
+    public long getJobSchedulerStoreLimit() {
+        return brokerService.getSystemUsage().getJobSchedulerUsage().getLimit();
+    }
+    
+    public int getJobSchedulerStorePercentUsage() {
+        return brokerService.getSystemUsage().getJobSchedulerUsage().getPercentUsage();
+    }
 
     public void setStoreLimit(long limit) {
         brokerService.getSystemUsage().getStoreUsage().setLimit(limit);
@@ -164,6 +172,10 @@ public class BrokerView implements BrokerViewMBean {
 
     public void setTempLimit(long limit) {
         brokerService.getSystemUsage().getTempUsage().setLimit(limit);
+    }
+    
+    public void setJobSchedulerStoreLimit(long limit) {
+        brokerService.getSystemUsage().getJobSchedulerUsage().setLimit(limit);
     }
 
     public void resetStatistics() {

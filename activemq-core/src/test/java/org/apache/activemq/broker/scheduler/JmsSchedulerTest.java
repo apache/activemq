@@ -29,10 +29,14 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.ProducerThread;
+import org.apache.activemq.util.Wait;
 
 public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
@@ -211,6 +215,64 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
         producer.send(message);
         producer.close();
+    }
+    
+    public void testJobSchedulerStoreUsage() throws Exception {
+        
+        // Shrink the store limit down so we get the producer to block
+        broker.getSystemUsage().getJobSchedulerUsage().setLimit(10 * 1024);
+        
+        
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+        Connection conn = factory.createConnection();
+        conn.start();
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final long time = 5000;
+        final ProducerThread producer = new ProducerThread(sess, destination) {
+            @Override
+            protected Message createMessage(int i) throws Exception {
+                Message message = super.createMessage(i);
+                message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
+                return message;
+            }  
+        };
+        producer.setMessageCount(100);
+        producer.start();
+        
+        MessageConsumer consumer = sess.createConsumer(destination);
+        final CountDownLatch latch = new CountDownLatch(100);
+        consumer.setMessageListener(new MessageListener() {
+            public void onMessage(Message message) {
+                latch.countDown();
+            }
+        });
+
+        // wait for the producer to block, which should happen immediately, and also wait long 
+        // enough for the delay to elapse.  We should see no deliveries as the send should block
+        // on the first message.
+        Thread.sleep(10000l);
+        
+        assertEquals(100, latch.getCount());
+
+        // Increase the store limit so the producer unblocks.  Everything should enqueue at this point.
+        broker.getSystemUsage().getJobSchedulerUsage().setLimit(1024 * 1024 * 33);
+
+        // Wait long enough that the messages are enqueued and the delivery delay has elapsed.
+        Thread.sleep(10000l);
+
+        // Make sure we sent all the messages we expected to send
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return producer.getSentCount() == producer.getMessageCount();
+            }
+        }, 20000l);
+        
+        assertEquals("Producer didn't send all messages", producer.getMessageCount(), producer.getSentCount());
+        
+        // Make sure we got all the messages we expected to get
+        latch.await(20000l, TimeUnit.MILLISECONDS);
+        
+        assertEquals("Consumer did not receive all messages.", 0, latch.getCount());
     }
 
     @Override

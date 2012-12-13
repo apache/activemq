@@ -17,12 +17,14 @@
 package org.apache.activemq.broker.scheduler;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -33,13 +35,15 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
+import org.apache.activemq.usage.JobSchedulerUsage;
+import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.TypeConversionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.util.ByteSequence;
 
 public class SchedulerBroker extends BrokerFilter implements JobListener {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerBroker.class);
@@ -50,36 +54,23 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private final ConnectionContext context = new ConnectionContext();
     private final ProducerId producerId = new ProducerId();
     private File directory;
+    private final SystemUsage systemUsage;
 
-    private JobSchedulerStore store;
+    private final JobSchedulerStore store;
     private JobScheduler scheduler;
 
-    public SchedulerBroker(Broker next, File directory) throws Exception {
+    public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
-        this.directory = directory;
+
+        this.store = store;
         this.producerId.setConnectionId(ID_GENERATOR.generateId());
         this.context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-        context.setBroker(next);
-        LOG.info("Scheduler using directory: " + directory);
-
+        this.context.setBroker(next);
+        this.systemUsage = brokerService.getSystemUsage();
     }
 
     public synchronized JobScheduler getJobScheduler() throws Exception {
         return new JobSchedulerFacade(this);
-    }
-
-    /**
-     * @return the directory
-     */
-    public File getDirectory() {
-        return this.directory;
-    }
-    /**
-     * @param directory
-     *            the directory to set
-     */
-    public void setDirectory(File directory) {
-        this.directory = directory;
     }
 
     @Override
@@ -116,9 +107,8 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
 
         String physicalName = messageSend.getDestination().getPhysicalName();
-        boolean schedularManage = physicalName.regionMatches(true, 0,
-                ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
-                ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION.length());
+        boolean schedularManage = physicalName.regionMatches(true, 0, ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
+            ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION.length());
 
         if (schedularManage == true) {
 
@@ -127,14 +117,14 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
             String action = (String) messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION);
 
-            if (action != null ) {
+            if (action != null) {
 
                 Object startTime = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_START_TIME);
                 Object endTime = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_END_TIME);
 
                 if (replyTo != null && action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE)) {
 
-                    if( startTime != null && endTime != null ) {
+                    if (startTime != null && endTime != null) {
 
                         long start = (Long) TypeConversionSupport.convert(startTime, Long.class);
                         long finish = (Long) TypeConversionSupport.convert(endTime, Long.class);
@@ -152,7 +142,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                     scheduler.remove(jobId);
                 } else if (action.equals(ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL)) {
 
-                    if( startTime != null && endTime != null ) {
+                    if (startTime != null && endTime != null) {
 
                         long start = (Long) TypeConversionSupport.convert(startTime, Long.class);
                         long finish = (Long) TypeConversionSupport.convert(endTime, Long.class);
@@ -165,7 +155,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             }
 
         } else if ((cronValue != null || periodValue != null || delayValue != null) && jobId == null) {
-            //clear transaction context
+            // clear transaction context
             Message msg = messageSend.copy();
             msg.setTransactionId(null);
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(msg);
@@ -173,7 +163,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 cronEntry = cronValue.toString();
             }
             if (periodValue != null) {
-              period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
+                period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
             }
             if (delayValue != null) {
                 delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
@@ -182,17 +172,17 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             if (repeatValue != null) {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
             }
-            getInternalScheduler().schedule(msg.getMessageId().toString(),
-                    new ByteSequence(packet.data, packet.offset, packet.length),cronEntry, delay, period, repeat);
+            getInternalScheduler().schedule(msg.getMessageId().toString(), new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay,
+                period, repeat);
 
         } else {
             super.send(producerExchange, messageSend);
         }
     }
 
+    @Override
     public void scheduledJob(String id, ByteSequence job) {
-        org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job
-                .getOffset(), job.getLength());
+        org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getData(), job.getOffset(), job.getLength());
         try {
             Message messageSend = (Message) this.wireFormat.unmarshal(packet);
             messageSend.setOriginalTransactionId(null);
@@ -204,11 +194,36 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
             }
 
+            // Check for room in the job scheduler store
+            if (systemUsage.getJobSchedulerUsage() != null) {
+                JobSchedulerUsage usage = systemUsage.getJobSchedulerUsage();
+                if (usage.isFull()) {
+                    final String logMessage = "Job Scheduler Store is Full (" +
+                        usage.getPercentUsage() + "% of " + usage.getLimit() +
+                        "). Stopping producer (" + messageSend.getProducerId() +
+                        ") to prevent flooding of the job scheduler store." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+
+                    long start = System.currentTimeMillis();
+                    long nextWarn = start;
+                    while (!usage.waitForSpace(1000)) {
+                        if (context.getStopping().get()) {
+                            throw new IOException("Connection closed, send aborted.");
+                        }
+
+                        long now = System.currentTimeMillis();
+                        if (now >= nextWarn) {
+                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
+                            nextWarn = now + 30000l;
+                        }
+                    }
+                }
+            }
+
             if (repeat != 0 || cronStr != null && cronStr.length() > 0) {
                 // create a unique id - the original message could be sent
                 // lots of times
-                messageSend.setMessageId(
-                        new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
+                messageSend.setMessageId(new MessageId(this.producerId, this.messageIdGenerator.getNextSequenceId()));
             }
 
             // Add the jobId as a property
@@ -233,7 +248,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
                 long expiration = timeToLive + newTimeStamp;
 
-                if(expiration > oldExpiration) {
+                if (expiration > oldExpiration) {
                     if (timeToLive > 0 && expiration > 0) {
                         messageSend.setExpiration(expiration);
                     }
@@ -257,7 +272,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     protected synchronized JobScheduler getInternalScheduler() throws Exception {
         if (this.started.get()) {
             if (this.scheduler == null) {
-                this.scheduler = getStore().getJobScheduler("JMS");
+                this.scheduler = store.getJobScheduler("JMS");
                 this.scheduler.addListener(this);
             }
             return this.scheduler;
@@ -265,21 +280,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         return null;
     }
 
-    private JobSchedulerStore getStore() throws Exception {
-        if (started.get()) {
-            if (this.store == null) {
-                String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
-                this.store = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
-                this.store.setDirectory(directory);
-                this.store.start();
-            }
-            return this.store;
-        }
-        return null;
-    }
-
-    protected void sendScheduledJob(ConnectionContext context, Job job, ActiveMQDestination replyTo)
-            throws Exception {
+    protected void sendScheduledJob(ConnectionContext context, Job job, ActiveMQDestination replyTo) throws Exception {
 
         org.apache.activemq.util.ByteSequence packet = new org.apache.activemq.util.ByteSequence(job.getPayload());
         try {

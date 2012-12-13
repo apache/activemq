@@ -16,25 +16,6 @@
  */
 package org.apache.activemq.store.kahadb.scheduler;
 
-import org.apache.activemq.broker.scheduler.JobScheduler;
-import org.apache.activemq.broker.scheduler.JobSchedulerStore;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.ServiceSupport;
-import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
-import org.apache.activemq.store.kahadb.disk.journal.Journal;
-import org.apache.activemq.store.kahadb.disk.journal.Location;
-import org.apache.activemq.store.kahadb.disk.page.Page;
-import org.apache.activemq.store.kahadb.disk.page.PageFile;
-import org.apache.activemq.store.kahadb.disk.page.Transaction;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.store.kahadb.disk.util.IntegerMarshaller;
-import org.apache.activemq.util.LockFile;
-import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
-import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
@@ -47,6 +28,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.activemq.broker.scheduler.JobScheduler;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
+import org.apache.activemq.store.kahadb.disk.journal.Journal;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.store.kahadb.disk.page.Page;
+import org.apache.activemq.store.kahadb.disk.page.PageFile;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.store.kahadb.disk.util.IntegerMarshaller;
+import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
+import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.LockFile;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ServiceSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedulerStore {
     static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStoreImpl.class);
@@ -58,6 +59,7 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
     private File directory;
     PageFile pageFile;
     private Journal journal;
+    protected AtomicLong journalSize = new AtomicLong(0);
     private LockFile lockFile;
     private boolean failIfDatabaseIsLocked;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
@@ -72,6 +74,7 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         protected MetaData(JobSchedulerStoreImpl store) {
             this.store = store;
         }
+
         private final JobSchedulerStoreImpl store;
         Page<MetaData> page;
         BTreeIndex<Integer, Integer> journalRC;
@@ -111,7 +114,6 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         public void write(DataOutput os) throws IOException {
             os.writeLong(this.storedSchedulers.getPageId());
             os.writeLong(this.journalRC.getPageId());
-
         }
     }
 
@@ -121,18 +123,22 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         MetaDataMarshaller(JobSchedulerStoreImpl store) {
             this.store = store;
         }
+
+        @Override
         public MetaData readPayload(DataInput dataIn) throws IOException {
             MetaData rc = new MetaData(this.store);
             rc.read(dataIn);
             return rc;
         }
 
+        @Override
         public void writePayload(MetaData object, DataOutput dataOut) throws IOException {
             object.write(dataOut);
         }
     }
 
     class ValueMarshaller extends VariableMarshaller<List<JobLocation>> {
+        @Override
         public List<JobLocation> readPayload(DataInput dataIn) throws IOException {
             List<JobLocation> result = new ArrayList<JobLocation>();
             int size = dataIn.readInt();
@@ -144,6 +150,7 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
             return result;
         }
 
+        @Override
         public void writePayload(List<JobLocation> value, DataOutput dataOut) throws IOException {
             dataOut.writeInt(value.size());
             for (JobLocation jobLocation : value) {
@@ -154,15 +161,19 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
 
     class JobSchedulerMarshaller extends VariableMarshaller<JobSchedulerImpl> {
         private final JobSchedulerStoreImpl store;
+
         JobSchedulerMarshaller(JobSchedulerStoreImpl store) {
             this.store = store;
         }
+
+        @Override
         public JobSchedulerImpl readPayload(DataInput dataIn) throws IOException {
             JobSchedulerImpl result = new JobSchedulerImpl(this.store);
             result.read(dataIn);
             return result;
         }
 
+        @Override
         public void writePayload(JobSchedulerImpl js, DataOutput dataOut) throws IOException {
             js.write(dataOut);
         }
@@ -177,14 +188,14 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
     public void setDirectory(File directory) {
         this.directory = directory;
     }
-    
+
     @Override
     public long size() {
-        if ( !isStarted() ) {
+        if (!isStarted()) {
             return 0;
         }
         try {
-            return journal.getDiskSize() + pageFile.getDiskSize();
+            return journalSize.get() + pageFile.getDiskSize();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -197,6 +208,7 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
             final JobSchedulerImpl js = new JobSchedulerImpl(this);
             js.setName(name);
             getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     js.createIndexes(tx);
                     js.load(tx);
@@ -221,6 +233,7 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         if (result) {
             js.stop();
             getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+                @Override
                 public void execute(Transaction tx) throws IOException {
                     metaData.storedSchedulers.remove(tx, name);
                     js.destroy(tx);
@@ -241,12 +254,14 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         this.journal.setDirectory(directory);
         this.journal.setMaxFileLength(getJournalMaxFileLength());
         this.journal.setWriteBatchSize(getJournalMaxWriteBatchSize());
+        this.journal.setSizeAccumulator(this.journalSize);
         this.journal.start();
         this.pageFile = new PageFile(directory, "scheduleDB");
         this.pageFile.setWriteBatchSize(1);
         this.pageFile.load();
 
         this.pageFile.tx().execute(new Transaction.Closure<IOException>() {
+            @Override
             public void execute(Transaction tx) throws IOException {
                 if (pageFile.getPageCount() == 0) {
                     Page<MetaData> page = tx.allocate();
@@ -263,20 +278,20 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
                 }
                 metaData.load(tx);
                 metaData.loadScheduler(tx, schedulers);
-                for (JobSchedulerImpl js :schedulers.values()) {
+                for (JobSchedulerImpl js : schedulers.values()) {
                     try {
                         js.start();
                     } catch (Exception e) {
-                        JobSchedulerStoreImpl.LOG.error("Failed to load " + js.getName(),e);
+                        JobSchedulerStoreImpl.LOG.error("Failed to load " + js.getName(), e);
                     }
-               }
+                }
             }
         });
 
         this.pageFile.flush();
         LOG.info(this + " started");
     }
-    
+
     @Override
     protected synchronized void doStop(ServiceStopper stopper) throws Exception {
         for (JobSchedulerImpl js : this.schedulers.values()) {
@@ -293,7 +308,6 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         }
         this.lockFile = null;
         LOG.info(this + " stopped");
-
     }
 
     synchronized void incrementJournalCount(Transaction tx, Location location) throws IOException {
@@ -301,7 +315,6 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         Integer val = this.metaData.journalRC.get(tx, logId);
         int refCount = val != null ? val.intValue() + 1 : 1;
         this.metaData.journalRC.put(tx, logId, refCount);
-
     }
 
     synchronized void decrementJournalCount(Transaction tx, Location location) throws IOException {
@@ -316,7 +329,6 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
         } else {
             this.metaData.journalRC.put(tx, logId, refCount);
         }
-
     }
 
     synchronized ByteSequence getPayload(Location location) throws IllegalStateException, IOException {
@@ -341,9 +353,8 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
                         lockFile.lock();
                         break;
                     } catch (IOException e) {
-                        LOG.info("Database " + lockFileName + " is locked... waiting "
-                                + (DATABASE_LOCKED_WAIT_DELAY / 1000)
-                                + " seconds for the database to be unlocked. Reason: " + e);
+                        LOG.info("Database " + lockFileName + " is locked... waiting " + (DATABASE_LOCKED_WAIT_DELAY / 1000)
+                            + " seconds for the database to be unlocked. Reason: " + e);
                         try {
                             Thread.sleep(DATABASE_LOCKED_WAIT_DELAY);
                         } catch (InterruptedException e1) {
@@ -395,5 +406,4 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
     public String toString() {
         return "JobSchedulerStore:" + this.directory;
     }
-
 }

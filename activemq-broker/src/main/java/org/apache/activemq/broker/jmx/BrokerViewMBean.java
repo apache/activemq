@@ -107,10 +107,18 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Percent of temp limit used.")
     int getTempPercentUsage();
 
-    @MBeanInfo("Disk limit, in bytes, used for non-persistent messages and temporary date before producers are blocked.")
+    @MBeanInfo("Disk limit, in bytes, used for non-persistent messages and temporary data before producers are blocked.")
     long getTempLimit();
 
     void setTempLimit(@MBeanInfo("bytes") long limit);
+    
+    @MBeanInfo("Percent of job store limit used.")
+    int getJobSchedulerStorePercentUsage();
+
+    @MBeanInfo("Disk limit, in bytes, used for scheduled messages before producers are blocked.")
+    long getJobSchedulerStoreLimit();
+
+    void setJobSchedulerStoreLimit(@MBeanInfo("bytes") long limit);
 
     @MBeanInfo("Messages are synchronized to disk.")
     boolean isPersistent();
