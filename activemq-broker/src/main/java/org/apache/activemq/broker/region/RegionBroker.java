@@ -473,10 +473,10 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+        ActiveMQDestination destination = message.getDestination();
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null
                 || (producerExchange.getRegionDestination() != null && producerExchange.getRegionDestination().isDisposed())) {
-            ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
             producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination, isAllowTempAutoCreationOnSend());
             Region region;
@@ -501,6 +501,13 @@ public class RegionBroker extends EmptyBroker {
         }
 
         producerExchange.getRegion().send(producerExchange, message);
+
+        // clean up so these references aren't kept (possible leak) in the producer exchange
+        // especially since temps are transitory
+        if (destination.isTemporary()) {
+            producerExchange.setRegionDestination(null);
+            producerExchange.setRegion(null);
+        }
     }
 
     @Override

@@ -170,6 +170,10 @@ public abstract class TestSupport extends CombinationTestSupport {
     private static Map<ActiveMQDestination, org.apache.activemq.broker.region.Destination> getDestinationMap(BrokerService target,
             ActiveMQDestination destination) {
         RegionBroker regionBroker = (RegionBroker) target.getRegionBroker();
+        if (destination.isTemporary()) {
+            return destination.isQueue() ? regionBroker.getTempQueueRegion().getDestinationMap() :
+                    regionBroker.getTempTopicRegion().getDestinationMap();
+        }
         return destination.isQueue() ?
                     regionBroker.getQueueRegion().getDestinationMap() :
                         regionBroker.getTopicRegion().getDestinationMap();
