@@ -19,6 +19,8 @@ package org.apache.activemq;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -44,11 +46,11 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * code. In fact, if the URI passed to this class does not have an "ssl" scheme,
  * this class will pass all work on to its superclass.
  *
- * There are two alternative approaches you can use to provide X.509 certificates
- * for the SSL connections:
+ * There are two alternative approaches you can use to provide X.509
+ * certificates for the SSL connections:
  *
- * Call <code>setTrustStore</code>, <code>setTrustStorePassword</code>, <code>setKeyStore</code>,
- * and <code>setKeyStorePassword</code>.
+ * Call <code>setTrustStore</code>, <code>setTrustStorePassword</code>,
+ * <code>setKeyStore</code>, and <code>setKeyStorePassword</code>.
  *
  * Call <code>setKeyAndTrustManagers</code>.
  *
@@ -80,9 +82,12 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     /**
      * Sets the key and trust managers used when creating SSL connections.
      *
-     * @param km The KeyManagers used.
-     * @param tm The TrustManagers used.
-     * @param random The SecureRandom number used.
+     * @param km
+     *            The KeyManagers used.
+     * @param tm
+     *            The TrustManagers used.
+     * @param random
+     *            The SecureRandom number used.
      */
     public void setKeyAndTrustManagers(final KeyManager[] km, final TrustManager[] tm, final SecureRandom random) {
         keyManager = km;
@@ -98,6 +103,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      *
      * @author sepandm@gmail.com
      */
+    @Override
     protected Transport createTransport() throws JMSException {
         SslContext existing = SslContext.getCurrentSslContext();
         try {
@@ -121,11 +127,10 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         KeyStore trustedCertStore = KeyStore.getInstance("jks");
 
         if (trustStore != null) {
-            InputStream tsStream = getUrlOrResourceAsStream(trustStore);
+            InputStream tsStream = getInputStream(trustStore);
 
             trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
-            TrustManagerFactory tmf  =
-                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
             tmf.init(trustedCertStore);
             trustStoreManagers = tmf.getTrustManagers();
@@ -134,8 +139,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     protected KeyManager[] createKeyManager() throws Exception {
-        KeyManagerFactory kmf =
-            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         KeyStore ks = KeyStore.getInstance("jks");
         KeyManager[] keystoreManagers = null;
         if (keyStore != null) {
@@ -155,11 +159,11 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         if (fileName == null) {
             return null;
         }
-        InputStream in = getUrlOrResourceAsStream(fileName);
+        InputStream in = getInputStream(fileName);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[512];
         int i = in.read(buf);
-        while (i  > 0) {
+        while (i > 0) {
             out.write(buf, 0, i);
             i = in.read(buf);
         }
@@ -167,23 +171,34 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         return out.toByteArray();
     }
 
-    protected InputStream getUrlOrResourceAsStream(String urlOrResource) throws IOException {
+    protected InputStream getInputStream(String urlOrResource) throws IOException {
+        try {
+            File ifile = new File(urlOrResource);
+            // only open the file if and only if it exists
+            if (ifile.exists()) {
+                return new FileInputStream(ifile);
+            }
+        } catch (Exception e) {
+        }
+
         InputStream ins = null;
+
         try {
             URL url = new URL(urlOrResource);
             ins = url.openStream();
-        }
-        catch (MalformedURLException ignore) {
-            ins = null;
+            if (ins != null) {
+                return ins;
+            }
+        } catch (MalformedURLException ignore) {
         }
 
         // Alternatively, treat as classpath resource
         if (ins == null) {
-            ins = getClass().getClassLoader().getResourceAsStream(urlOrResource);
+            ins = Thread.currentThread().getContextClassLoader().getResourceAsStream(urlOrResource);
         }
 
         if (ins == null) {
-            throw new java.io.IOException("Could not load resource: " + urlOrResource);
+            throw new IOException("Could not load resource: " + urlOrResource);
         }
 
         return ins;
@@ -194,10 +209,12 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     /**
-     * The location of a keystore file (in <code>jks</code> format) containing one or more
-     * trusted certificates.
+     * The location of a keystore file (in <code>jks</code> format) containing
+     * one or more trusted certificates.
      *
-     * @param trustStore If specified with a scheme, treat as a URL, otherwise treat as a classpath resource.
+     * @param trustStore
+     *            If specified with a scheme, treat as a URL, otherwise treat as
+     *            a classpath resource.
      */
     public void setTrustStore(String trustStore) throws Exception {
         this.trustStore = trustStore;
@@ -211,7 +228,8 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     /**
      * The password to match the trust store specified by {@link setTrustStore}.
      *
-     * @param trustStorePassword The password used to unlock the keystore file.
+     * @param trustStorePassword
+     *            The password used to unlock the keystore file.
      */
     public void setTrustStorePassword(String trustStorePassword) {
         this.trustStorePassword = trustStorePassword;
@@ -222,10 +240,12 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     }
 
     /**
-     * The location of a keystore file (in <code>jks</code> format) containing a certificate
-     * and its private key.
+     * The location of a keystore file (in <code>jks</code> format) containing a
+     * certificate and its private key.
      *
-     * @param keyStore If specified with a scheme, treat as a URL, otherwise treat as a classpath resource.
+     * @param keyStore
+     *            If specified with a scheme, treat as a URL, otherwise treat as
+     *            a classpath resource.
      */
     public void setKeyStore(String keyStore) throws Exception {
         this.keyStore = keyStore;
@@ -239,8 +259,10 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     /**
      * The password to match the key store specified by {@link setKeyStore}.
      *
-     * @param keyStorePassword The password, which is used both to unlock the keystore file
-     * and as the pass phrase for the private key stored in the keystore.
+     * @param keyStorePassword
+     *            The password, which is used both to unlock the keystore file
+     *            and as the pass phrase for the private key stored in the
+     *            keystore.
      */
     public void setKeyStorePassword(String keyStorePassword) {
         this.keyStorePassword = keyStorePassword;
