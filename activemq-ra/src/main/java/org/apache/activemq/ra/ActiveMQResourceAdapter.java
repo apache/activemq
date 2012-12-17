@@ -181,7 +181,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         }
 
         if (!(activationSpec instanceof MessageActivationSpec)) {
-            throw new NotSupportedException("That type of ActicationSpec not supported: " + activationSpec.getClass());
+            throw new NotSupportedException("That type of ActivationSpec not supported: " + activationSpec.getClass());
         }
 
         ActiveMQEndpointActivationKey key = new ActiveMQEndpointActivationKey(endpointFactory, (MessageActivationSpec)activationSpec);

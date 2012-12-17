@@ -88,6 +88,8 @@ public class ManagedConnectionFactoryTest extends TestCase {
         assertTrue(connection != null);
         assertTrue(connection instanceof ManagedConnectionProxy);
 
+        connection.close();
+
     }
 
     public void testConnectionFactoryConnectionMatching() throws ResourceException, JMSException {
@@ -123,6 +125,9 @@ public class ManagedConnectionFactoryTest extends TestCase {
         test = managedConnectionFactory.matchManagedConnections(set, null, ri2);
         assertTrue(connection2 == test);
 
+        for (ManagedConnection managedConnection : set) {
+            managedConnection.destroy();
+        }
     }
 
     public void testConnectionFactoryIsSerializableAndReferenceable() throws ResourceException, JMSException {

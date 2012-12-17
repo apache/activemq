@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -49,9 +50,19 @@ import javax.transaction.xa.Xid;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.spi.ErrorHandler;
+import org.apache.log4j.spi.Filter;
+import org.apache.log4j.spi.LoggingEvent;
 
 public class MDBTest extends TestCase {
 
@@ -197,6 +208,147 @@ public class MDBTest extends TestCase {
 
     }
 
+    public void testErrorOnNoMessageDeliveryBrokerZeroPrefetchConfig() throws Exception {
+
+        final BrokerService brokerService = new BrokerService();
+        final String brokerUrl = "vm://zeroPrefetch?create=false";
+        brokerService.setBrokerName("zeroPrefetch");
+        brokerService.setPersistent(false);
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry zeroPrefetchPolicy = new PolicyEntry();
+        zeroPrefetchPolicy.setQueuePrefetch(0);
+        policyMap.setDefaultEntry(zeroPrefetchPolicy);
+        brokerService.setDestinationPolicy(policyMap);
+        brokerService.start();
+
+        final AtomicReference<String> errorMessage = new AtomicReference<String>();
+        final Appender testAppender = new Appender() {
+
+            @Override
+            public void addFilter(Filter filter) {
+            }
+
+            @Override
+            public Filter getFilter() {
+                return null;
+            }
+
+            @Override
+            public void clearFilters() {
+            }
+
+            @Override
+            public void close() {
+            }
+
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
+                    errorMessage.set(event.getRenderedMessage());
+                }
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+
+            @Override
+            public void setErrorHandler(ErrorHandler errorHandler) {
+            }
+
+            @Override
+            public ErrorHandler getErrorHandler() {
+                return null;
+            }
+
+            @Override
+            public void setLayout(Layout layout) {
+            }
+
+            @Override
+            public Layout getLayout() {
+                return null;
+            }
+
+            @Override
+            public void setName(String s) {
+            }
+
+            @Override
+            public boolean requiresLayout() {
+                return false;
+            }
+        };
+        LogManager.getRootLogger().addAppender(testAppender);
+
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+        Connection connection = factory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageConsumer advisory = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(new ActiveMQQueue("TEST")));
+
+        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+        adapter.setServerUrl(brokerUrl);
+        adapter.start(new StubBootstrapContext());
+
+        final CountDownLatch messageDelivered = new CountDownLatch(1);
+
+        final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
+            public void onMessage(Message message) {
+                super.onMessage(message);
+                messageDelivered.countDown();
+            };
+        };
+
+        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+        activationSpec.setDestinationType(Queue.class.getName());
+        activationSpec.setDestination("TEST");
+        activationSpec.setResourceAdapter(adapter);
+        activationSpec.validate();
+
+        MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
+            public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
+                endpoint.xaresource = resource;
+                return endpoint;
+            }
+
+            public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
+                return true;
+            }
+        };
+
+        // Activate an Endpoint
+        adapter.endpointActivation(messageEndpointFactory, activationSpec);
+
+        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(1000);
+        if (msg != null) {
+            assertEquals("Prefetch size hasn't been set", 0, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
+        } else {
+            fail("Consumer hasn't been created");
+        }
+
+        // Send the broker a message to that endpoint
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
+        producer.send(session.createTextMessage("Hello!"));
+
+        connection.close();
+
+        // Wait for the message to be delivered.
+        assertFalse(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
+
+        // Shut the Endpoint down.
+        adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
+        adapter.stop();
+
+        assertNotNull("We got an error message", errorMessage.get());
+        assertTrue("correct message", errorMessage.get().contains("zero"));
+
+        LogManager.getRootLogger().removeAppender(testAppender);
+        brokerService.stop();
+    }
 
     public void testMessageExceptionReDelivery() throws Exception {
 

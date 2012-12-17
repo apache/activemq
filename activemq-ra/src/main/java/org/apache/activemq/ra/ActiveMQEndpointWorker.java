@@ -35,6 +35,7 @@ import javax.resource.spi.work.WorkException;
 import javax.resource.spi.work.WorkManager;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionConsumer;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -74,7 +75,7 @@ public class ActiveMQEndpointWorker {
     private final Object shutdownMutex = new String("shutdownMutex");
     
     private ActiveMQConnection connection;
-    private ConnectionConsumer consumer;
+    private ActiveMQConnectionConsumer consumer;
     private ServerSessionPoolImpl serverSessionPool;
     private boolean running;
 
@@ -127,7 +128,7 @@ public class ActiveMQEndpointWorker {
                         connection.start();
 
                         if (activationSpec.isDurableSubscription()) {
-                            consumer = connection.createDurableConnectionConsumer(
+                            consumer = (ActiveMQConnectionConsumer) connection.createDurableConnectionConsumer(
                                     (Topic) dest,
                                     activationSpec.getSubscriptionName(),
                                     emptyToNull(activationSpec.getMessageSelector()),
@@ -135,7 +136,7 @@ public class ActiveMQEndpointWorker {
                                     connection.getPrefetchPolicy().getDurableTopicPrefetch(),
                                     activationSpec.getNoLocalBooleanValue());
                         } else {
-                            consumer = connection.createConnectionConsumer(
+                            consumer = (ActiveMQConnectionConsumer) connection.createConnectionConsumer(
                                     dest,
                                     emptyToNull(activationSpec.getMessageSelector()),
                                     serverSessionPool,
@@ -151,6 +152,11 @@ public class ActiveMQEndpointWorker {
                         } else {
                             LOG.error("Could not release connection lock");
                         }
+
+                        if (consumer.getConsumerInfo().getCurrentPrefetchSize() == 0) {
+                            LOG.error("Endpoint " + endpointActivationKey.getActivationSpec() + " will not receive any messages due to broker 'zero prefetch' configuration for: " + dest);
+                        }
+
                     } catch (JMSException error) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to connect: " + error.getMessage(), error);

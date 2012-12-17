@@ -2337,6 +2337,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             for (ActiveMQSession session : this.sessions) {
                 session.setPrefetchSize(command.getConsumerId(), command.getPrefetch());
             }
+            for (ActiveMQConnectionConsumer connectionConsumer: connectionConsumers) {
+                ConsumerInfo consumerInfo = connectionConsumer.getConsumerInfo();
+                if (consumerInfo.getConsumerId().equals(command.getConsumerId())) {
+                    consumerInfo.setPrefetchSize(command.getPrefetch());
+                }
+            }
         }
     }
 

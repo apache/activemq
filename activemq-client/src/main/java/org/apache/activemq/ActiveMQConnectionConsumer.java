@@ -28,6 +28,7 @@ import javax.jms.ServerSession;
 import javax.jms.ServerSessionPool;
 import javax.jms.Session;
 
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageDispatch;
 
@@ -76,7 +77,7 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
 
         this.connection.addConnectionConsumer(this);
         this.connection.addDispatcher(consumerInfo.getConsumerId(), this);
-        this.connection.asyncSendPacket(this.consumerInfo);
+        this.connection.syncSendPacket(this.consumerInfo);
     }
 
     /**
@@ -159,5 +160,9 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
         // before indicating that all is complete.        
         // Till there is a need, lets immediately allow dispatch
         this.connection.transportInterruptionProcessingComplete();
+    }
+
+    public ConsumerInfo getConsumerInfo() {
+        return consumerInfo;
     }
 }
