@@ -87,9 +87,7 @@ public class CachedLDAPSecurityLegacyTest extends AbstractLdapTestUnit {
         Queue queue = sess.createQueue("ADMIN.FOO");
 
         try {
-            // https://issues.apache.org/jira/browse/AMQ-4213
-            // sync send on producer so it throws
-            MessageProducer producer = sess.createProducer(queue);
+            sess.createProducer(queue);
             fail("expect auth exception");
         } catch (JMSException expected) {
         }
@@ -104,9 +102,7 @@ public class CachedLDAPSecurityLegacyTest extends AbstractLdapTestUnit {
         Queue queue = sess.createQueue("TEST.FOO,ADMIN.FOO");
 
         try {
-            // https://issues.apache.org/jira/browse/AMQ-4213
-            // sync send on producer so it throws
-            MessageProducer producer = sess.createProducer(queue);
+            sess.createProducer(queue);
             fail("expect auth exception");
         } catch (JMSException expected) {
         }
