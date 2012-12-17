@@ -352,9 +352,9 @@ public class FailoverTransactionTest extends TestSupport {
 
     public void initCombosForTestFailoverSendReplyLost() {
         addCombinationValues("defaultPersistenceAdapter",
-            new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB,
+            new Object[]{PersistenceAdapterChoice.KahaDB,
                     PersistenceAdapterChoice.JDBC
-                    // not implemented for AMQ store
+                    // not implemented for AMQ store or PersistenceAdapterChoice.LevelDB
             });
     }
 
@@ -461,9 +461,10 @@ public class FailoverTransactionTest extends TestSupport {
 
     public void initCombosForTestFailoverConnectionSendReplyLost() {
         addCombinationValues("defaultPersistenceAdapter",
-            new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB,
+            new Object[]{PersistenceAdapterChoice.KahaDB,
                     PersistenceAdapterChoice.JDBC
                     // last producer message id store feature not implemented for AMQ store
+                    // or PersistenceAdapterChoice.LevelDB
             });
     }
 
