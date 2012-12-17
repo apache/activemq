@@ -478,24 +478,28 @@ public final class OpenTypeSupport {
         }
     }
 
-    static class StatusEventOpenTypeFactory extends AbstractOpenTypeFactory {
+    static class HealthStatusOpenTypeFactory extends AbstractOpenTypeFactory {
         @Override
         protected String getTypeName() {
-            return StatusEvent.class.getName();
+            return HealthStatus.class.getName();
         }
 
         @Override
         protected void init() throws OpenDataException {
             super.init();
-            addItem("id", "event id", SimpleType.STRING);
+            addItem("healthId", "health check id", SimpleType.STRING);
+            addItem("level", "severity", SimpleType.STRING);
+            addItem("message", "severity", SimpleType.STRING);
             addItem("resource", "event resource", SimpleType.STRING);
         }
 
         @Override
         public Map<String, Object> getFields(Object o) throws OpenDataException {
-            StatusEvent event = (StatusEvent) o;
+            HealthStatus event = (HealthStatus) o;
             Map<String, Object> rc = super.getFields(o);
-            rc.put("id", event.getId());
+            rc.put("healthId", event.getHealthId());
+            rc.put("level", event.getLevel());
+            rc.put("message", event.getMessage());
             rc.put("resource", event.getResource());
             return rc;
         }
@@ -511,7 +515,7 @@ public final class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(Job.class, new JobOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(SlowConsumerEntry.class, new SlowConsumerEntryOpenTypeFactory());
         OPEN_TYPE_FACTORIES.put(ActiveMQBlobMessage.class, new ActiveMQBlobMessageOpenTypeFactory());
-        OPEN_TYPE_FACTORIES.put(StatusEvent.class, new StatusEventOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(HealthStatus.class, new HealthStatusOpenTypeFactory());
     }
 
     private OpenTypeSupport() {

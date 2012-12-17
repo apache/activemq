@@ -22,16 +22,16 @@ import java.util.List;
 /**
  * Returns the status events of the broker to indicate any warnings.
  */
-public interface StatusViewMBean {
+public interface HealthViewMBean {
 
     public TabularData health() throws Exception;
 
     /**
      * Warning this method can only be invoked if you have the correct version
-     * of {@link StatusEvent} on your classpath or you use something
+     * of {@link HealthStatus} on your classpath or you use something
      * like <a href="http://jolokia.org/">jolokia</a> to access JMX.
      *
      * If in doubt, please use the {@link #status()} method instead!
      */
-    List<StatusEvent> healthList() throws Exception;
+    List<HealthStatus> healthList() throws Exception;
 }

@@ -26,36 +26,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StatusView implements StatusViewMBean {
+public class HealthView implements HealthViewMBean {
 
     ManagedRegionBroker broker;
 
-    public StatusView(ManagedRegionBroker broker) {
+    public HealthView(ManagedRegionBroker broker) {
         this.broker = broker;
     }
 
     @Override
     public TabularData health() throws Exception {
-        OpenTypeSupport.OpenTypeFactory factory = OpenTypeSupport.getFactory(StatusEvent.class);
+        OpenTypeSupport.OpenTypeFactory factory = OpenTypeSupport.getFactory(HealthStatus.class);
         CompositeType ct = factory.getCompositeType();
-        TabularType tt = new TabularType("Status", "Status", ct, new String[]{"id", "resource"});
+        TabularType tt = new TabularType("HealthStatus", "HealthStatus", ct, new String[]{"healthId", "level", "message", "resource"});
         TabularDataSupport rc = new TabularDataSupport(tt);
 
-        List<StatusEvent> list = healthList();
-        for (StatusEvent statusEvent : list) {
-            rc.put(new CompositeDataSupport(ct, factory.getFields(statusEvent)));
+        List<HealthStatus> list = healthList();
+        for (HealthStatus healthStatus : list) {
+            rc.put(new CompositeDataSupport(ct, factory.getFields(healthStatus)));
         }
         return rc;
     }
 
     @Override
-    public List<StatusEvent> healthList() throws Exception {
-        List<StatusEvent> answer = new ArrayList<StatusEvent>();
+    public List<HealthStatus> healthList() throws Exception {
+        List<HealthStatus> answer = new ArrayList<HealthStatus>();
         Map<ObjectName, DestinationView> queueViews = broker.getQueueViews();
         for (Map.Entry<ObjectName, DestinationView> entry : queueViews.entrySet()) {
             DestinationView queue = entry.getValue();
             if (queue.getConsumerCount() == 0 && queue.getProducerCount() > 0) {
-                answer.add(new StatusEvent("AMQ-NoConsumer", entry.getKey().toString()));
+                ObjectName key = entry.getKey();
+                String message = "Queue " + queue.getName() + " has no consumers";
+                answer.add(new HealthStatus("org.apache.activemq.noConsumer", "WARNING", message, key.toString()));
             }
         }
         return answer;

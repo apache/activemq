@@ -18,29 +18,32 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.Serializable;
 
-public class StatusEvent implements Serializable {
+public class HealthStatus implements Serializable {
+    private final String healthId;
+    private final String level;
+    private final String message;
+    private final String resource;
 
-    protected String id;
-    protected String resource;
-
-    public StatusEvent(String id, String resource) {
-        this.id = id;
+    public HealthStatus(String healthId, String level, String message, String resource) {
+        this.healthId = healthId;
+        this.level = level;
+        this.message = message;
         this.resource = resource;
     }
 
-    public String getId() {
-        return id;
+    public String getHealthId() {
+        return healthId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getLevel() {
+        return level;
     }
 
-    public Object getResource() {
+    public String getMessage() {
+        return message;
+    }
+
+    public String getResource() {
         return resource;
-    }
-
-    public void setResource(String resource) {
-        this.resource = resource;
     }
 }

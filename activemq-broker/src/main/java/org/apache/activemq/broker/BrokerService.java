@@ -58,6 +58,8 @@ import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.HealthView;
+import org.apache.activemq.broker.jmx.HealthViewMBean;
 import org.apache.activemq.broker.jmx.JmsConnectorView;
 import org.apache.activemq.broker.jmx.JobSchedulerView;
 import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
@@ -66,8 +68,6 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.ProxyConnectorView;
-import org.apache.activemq.broker.jmx.StatusView;
-import org.apache.activemq.broker.jmx.StatusViewMBean;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -2187,7 +2187,7 @@ public class BrokerService implements Service {
             broker = sb;
         }
         if (isUseJmx()) {
-            StatusViewMBean statusView = new StatusView((ManagedRegionBroker)getRegionBroker());
+            HealthViewMBean statusView = new HealthView((ManagedRegionBroker)getRegionBroker());
             try {
                 ObjectName objectName = new ObjectName(getManagementContext().getJmxDomainName() + ":"
                         + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
