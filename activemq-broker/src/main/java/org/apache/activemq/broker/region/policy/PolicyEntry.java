@@ -260,6 +260,10 @@ public class PolicyEntry extends DestinationMapEntry {
         
         if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH){
             sub.setPrefetchSize(getQueuePrefetch());
+            if (sub.getPrefetchSize() == 0) {
+                // tell the sub so that it can issue a pull request
+                sub.updateConsumerPrefetch(0);
+            }
         }
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());

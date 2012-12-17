@@ -26,6 +26,10 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.spring.SpringConsumer;
 import org.slf4j.Logger;
@@ -40,6 +44,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
     protected Connection connection;
     protected Queue queue;
+    protected Queue brokerZeroQueue = new ActiveMQQueue("brokerZeroConfig");
 
     public void testCannotUseMessageListener() throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -313,7 +318,31 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         answer = (TextMessage)consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
-    
+
+    // https://issues.apache.org/jira/browse/AMQ-4224
+    public void testBrokerZeroPrefetchConfig() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageProducer producer = session.createProducer(brokerZeroQueue);
+        producer.send(session.createTextMessage("Msg1"));
+        // now lets receive it
+        MessageConsumer consumer = session.createConsumer(brokerZeroQueue);
+
+        TextMessage answer = (TextMessage)consumer.receive(5000);
+        assertEquals("Should have received a message!", answer.getText(), "Msg1");
+    }
+
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        BrokerService brokerService = super.createBroker();
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry zeroPrefetchPolicy = new PolicyEntry();
+        zeroPrefetchPolicy.setQueuePrefetch(0);
+        policyMap.put(ActiveMQDestination.transform(brokerZeroQueue), zeroPrefetchPolicy);
+        brokerService.setDestinationPolicy(policyMap);
+        return brokerService;
+    }
+
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:0";
         super.setUp();
