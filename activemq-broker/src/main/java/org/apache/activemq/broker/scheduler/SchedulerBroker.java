@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,7 +52,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private final WireFormat wireFormat = new OpenWireFormat();
     private final ConnectionContext context = new ConnectionContext();
     private final ProducerId producerId = new ProducerId();
-    private File directory;
     private final SystemUsage systemUsage;
 
     private final JobSchedulerStore store;
@@ -310,6 +308,5 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         } catch (Exception e) {
             LOG.error("Failed to send scheduled message " + job.getJobId(), e);
         }
-
     }
 }
