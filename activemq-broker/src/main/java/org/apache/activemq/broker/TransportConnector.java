@@ -33,7 +33,10 @@ import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.transport.*;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportAcceptListener;
+import org.apache.activemq.transport.TransportFactorySupport;
+import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.ServiceStopper;
@@ -70,6 +73,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean auditNetworkProducers = false;
     private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
+    private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
 
@@ -117,9 +121,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setAuditNetworkProducers(isAuditNetworkProducers());
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
+        rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
         return rc;
     }
 
+    @Override
     public BrokerInfo getBrokerInfo() {
         return brokerInfo;
     }
@@ -172,6 +178,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * @return the statistics for this connector
      */
+    @Override
     public ConnectorStatistics getStatistics() {
         return statistics;
     }
@@ -188,6 +195,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.messageAuthorizationPolicy = messageAuthorizationPolicy;
     }
 
+    @Override
     public void start() throws Exception {
         broker = brokerService.getBroker();
         brokerInfo.setBrokerName(broker.getBrokerName());
@@ -196,9 +204,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
         brokerInfo.setBrokerURL(broker.getBrokerService().getDefaultSocketURIString());
         getServer().setAcceptListener(new TransportAcceptListener() {
+            @Override
             public void onAccept(final Transport transport) {
                 try {
                     brokerService.getTaskRunnerFactory().execute(new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 Connection connection = createConnection(transport);
@@ -217,6 +227,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 }
             }
 
+            @Override
             public void onAcceptError(Exception error) {
                 onAcceptError(error, null);
             }
@@ -244,25 +255,14 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public String getPublishableConnectString() throws Exception {
-        return getPublishableConnectString(getConnectUri());
-    }
-
-    public String getPublishableConnectString(URI theConnectURI) throws Exception {
-        String publishableConnectString = null;
-        if (theConnectURI != null) {
-            publishableConnectString = theConnectURI.toString();
-            // strip off server side query parameters which may not be compatible to clients
-            if (theConnectURI.getRawQuery() != null) {
-                publishableConnectString = publishableConnectString.substring(0, publishableConnectString
-                        .indexOf(theConnectURI.getRawQuery()) - 1);
-            }
-        }
+        String publishableConnectString = publishedAddressPolicy.getPublishableConnectString(this);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Publishing: " + publishableConnectString + " for broker transport URI: " + theConnectURI);
+            LOG.debug("Publishing: " + publishableConnectString + " for broker transport URI: " + getConnectUri());
         }
         return publishableConnectString;
     }
 
+    @Override
     public void stop() throws Exception {
         ServiceStopper ss = new ServiceStopper();
         if (discoveryAgent != null) {
@@ -425,6 +425,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
     }
 
+    @Override
     public void updateClientClusterInfo() {
         if (isRebalanceClusterClients() || isUpdateClusterClients()) {
             ConnectionControl control = getConnectionControl();
@@ -488,6 +489,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * This is called by the BrokerService right before it starts the transport.
      */
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
     }
@@ -503,6 +505,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * @return the updateClusterClients
      */
+    @Override
     public boolean isUpdateClusterClients() {
         return this.updateClusterClients;
     }
@@ -518,6 +521,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * @return the rebalanceClusterClients
      */
+    @Override
     public boolean isRebalanceClusterClients() {
         return this.rebalanceClusterClients;
     }
@@ -533,6 +537,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     /**
      * @return the updateClusterClientsOnRemove
      */
+    @Override
     public boolean isUpdateClusterClientsOnRemove() {
         return this.updateClusterClientsOnRemove;
     }
@@ -559,6 +564,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.updateClusterFilter = updateClusterFilter;
     }
 
+    @Override
     public int connectionCount() {
         return connections.size();
     }
@@ -590,5 +596,25 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public void setMaximumConsumersAllowedPerConnection(int maximumConsumersAllowedPerConnection) {
         this.maximumConsumersAllowedPerConnection = maximumConsumersAllowedPerConnection;
+    }
+
+    /**
+     * Gets the currently configured policy for creating the published connection address of this
+     * TransportConnector.
+     *
+     * @return the publishedAddressPolicy
+     */
+    public PublishedAddressPolicy getPublishedAddressPolicy() {
+        return publishedAddressPolicy;
+    }
+
+    /**
+     * Sets the configured policy for creating the published connection address of this
+     * TransportConnector.
+     *
+     * @return the publishedAddressPolicy
+     */
+    public void setPublishedAddressPolicy(PublishedAddressPolicy publishedAddressPolicy) {
+        this.publishedAddressPolicy = publishedAddressPolicy;
     }
 }
