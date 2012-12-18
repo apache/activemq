@@ -80,4 +80,10 @@ public class ActiveMQMessageAudit extends ActiveMQMessageAuditNoSync {
             return super.isInOrder(id);
         }
     }
+
+    public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
+        synchronized (this) {
+            super.setMaximumNumberOfProducersToTrack(maximumNumberOfProducersToTrack);
+        }
+    }
 }

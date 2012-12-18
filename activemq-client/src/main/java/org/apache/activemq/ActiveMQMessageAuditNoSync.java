@@ -89,8 +89,19 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
      * @param maximumNumberOfProducersToTrack the maximumNumberOfProducersToTrack to set
      */
     public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
-        this.maximumNumberOfProducersToTrack = maximumNumberOfProducersToTrack;
+
+        if (maximumNumberOfProducersToTrack < this.maximumNumberOfProducersToTrack){
+            LRUCache<Object, BitArrayBin> newMap = new LRUCache<Object, BitArrayBin>(0,maximumNumberOfProducersToTrack,0.75f,true);
+            /**
+             * As putAll will access the entries in the right order,
+             * this shouldn't result in wrong cache entries being removed
+             */
+            newMap.putAll(this.map);
+            this.map.clear();
+            this.map.putAll(newMap);
+        }
         this.map.setMaxCacheSize(maximumNumberOfProducersToTrack);
+        this.maximumNumberOfProducersToTrack = maximumNumberOfProducersToTrack;
         this.modified = true;
     }
 
