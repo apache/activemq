@@ -132,6 +132,5 @@
 
   <!-- Use Web applications and Camel in secured broker environment -->
   <import resource="jetty.xml"/>
-  <import resource="camel.xml"/>
 
 </beans>
