@@ -75,7 +75,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
                         // sends complete it is no longer updated till next send via a call to isFull
                         // this is optimal as it is only used to block producers
                         broker.getSystemUsage().getStoreUsage().isFull();
-                        LOG.info("store precent usage: "+brokerView.getStorePercentUsage());
+                        LOG.info("store percent usage: "+brokerView.getStorePercentUsage());
                         return broker.getAdminView().getStorePercentUsage() < minPercentUsageForStore;
                     }
                 }));
@@ -166,6 +166,9 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         properties.put("cleanupInterval", "2000");
         properties.put("checkpointInterval", "2000");
        
+        // leveldb
+        properties.put("logSize", maxFileLengthVal);
+
         IntrospectionSupport.setProperties(persistenceAdapter, properties);
     }
 
