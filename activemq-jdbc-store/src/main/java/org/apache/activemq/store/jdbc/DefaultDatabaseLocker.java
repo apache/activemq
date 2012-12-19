@@ -100,6 +100,11 @@ public class DefaultDatabaseLocker extends AbstractLocker {
                     // connections 
                     if (null != connection) {
                         try {
+                            connection.rollback();
+                        } catch (SQLException e1) {
+                            LOG.error("Caught exception during rollback on connection: " + e1, e1);
+                        }
+                        try {
                             connection.close();
                         } catch (SQLException e1) {
                             LOG.error("Caught exception while closing connection: " + e1, e1);

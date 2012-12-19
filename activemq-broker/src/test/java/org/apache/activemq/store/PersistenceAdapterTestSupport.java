@@ -34,21 +34,22 @@ import org.apache.activemq.command.MessageId;
 abstract public class PersistenceAdapterTestSupport extends TestCase {
 
     protected PersistenceAdapter pa;
-    protected BrokerService brokerService = new BrokerService();
+    protected BrokerService brokerService;
 
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
 
     @Override
     protected void setUp() throws Exception {
+        brokerService = new BrokerService();
         pa = createPersistenceAdapter(true);
-        pa.start();
+        brokerService.setPersistenceAdapter(pa);
+        brokerService.start();
     }
     
     @Override
     protected void tearDown() throws Exception {
-        if( pa!=null ) {
-            pa.stop();
-            pa=null;
+        if (brokerService != null) {
+            brokerService.stop();
         }
     }
     
