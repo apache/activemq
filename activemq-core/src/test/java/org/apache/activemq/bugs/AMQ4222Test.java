@@ -20,12 +20,12 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.*;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.util.Wait;
 
-import javax.jms.*;
 import javax.jms.Connection;
+import javax.jms.*;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Map;
@@ -135,9 +135,14 @@ public class AMQ4222Test extends TestSupport {
         // still have a reference in his producerBrokerExchange.. this will keep the destination
         // from being reclaimed by GC if there is never another send that producer makes...
         // let's see if that reference is there...
-        TransportConnector connector = VMTransportFactory.CONNECTORS.get("localhost");
+        final TransportConnector connector = VMTransportFactory.CONNECTORS.get("localhost");
         assertNotNull(connector);
-        assertEquals(1, connector.getConnections().size());
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connector.getConnections().size() == 1;
+            }
+        }));
         TransportConnection transportConnection = connector.getConnections().get(0);
         Map<ProducerId, ProducerBrokerExchange> exchanges = getProducerExchangeFromConn(transportConnection);
         assertEquals(1, exchanges.size());
