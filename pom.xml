@@ -46,7 +46,7 @@
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>0.3</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.10.2</camel-version>
+    <camel-version>2.10.3</camel-version>
     <camel-version-range>[2.10,3)</camel-version-range>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
@@ -81,11 +81,12 @@
     <jmock-version>2.5.1</jmock-version>
     <josql-version>1.5_5</josql-version>
     <junit-version>4.10</junit-version>
+    <hamcrest-version>1.1</hamcrest-version>
     <jxta-version>2.0</jxta-version>
     <karaf-version>2.2.9</karaf-version>
     <leveldb-api-version>0.4</leveldb-api-version>
     <leveldb-version>0.4</leveldb-version>
-    <leveldbjni-version>1.4</leveldbjni-version>    
+    <leveldbjni-version>1.4</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
     <mqtt-client-version>1.4</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
@@ -199,7 +200,7 @@
   </distributionManagement>
 
   <modules>
-    
+
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
@@ -236,7 +237,7 @@
     <module>assembly</module>
     <module>activemq-log4j-appender</module>
     <module>activemq-http</module>
-    
+
   </modules>
 
   <scm>
@@ -297,7 +298,7 @@
         <artifactId>activemq-stomp</artifactId>
         <version>${project.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-client</artifactId>
@@ -935,7 +936,7 @@
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-all</artifactId>
-        <version>1.1</version>
+        <version>${hamcrest-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
