@@ -436,6 +436,8 @@ class LevelDBClient(store: LevelDBStore) {
   def tempIndexFile = directory / ("temp"+INDEX_SUFFIX)
   def snapshotIndexFile(id:Long) = create_sequence_file(directory,id, INDEX_SUFFIX)
 
+  def size: Long = logRefs.size * store.logSize
+
   def createLog: RecordLog = {
     new RecordLog(logDirectory, LOG_SUFFIX)
   }

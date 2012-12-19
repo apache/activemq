@@ -528,7 +528,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   }
 
   def size: Long = {
-    return 0
+    return db.client.size
   }
 
   def checkpoint(sync: Boolean): Unit = db.checkpoint(sync)
