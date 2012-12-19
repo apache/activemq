@@ -30,16 +30,16 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class HttpTestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(HttpTestSupport.class);
-    
+
     BrokerService broker;
     Server server;
     ActiveMQConnectionFactory factory;
@@ -47,16 +47,17 @@ public abstract class HttpTestSupport extends TestCase {
     Session session;
     MessageProducer producer;
     Destination destination;
-    
+
     protected boolean createBroker = true;
-    
+
     final File homeDir = new File("src/main/webapp/uploads/");
-    
+
+    @Override
     protected void setUp() throws Exception {
-        
+
         server = new Server();
         SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(8080);
+        connector.setPort(0);
         connector.setServer(server);
         WebAppContext context = new WebAppContext();
 
@@ -68,8 +69,11 @@ public abstract class HttpTestSupport extends TestCase {
             connector
         });
         server.start();
-        waitForJettySocketToAccept("http://localhost:8080");
-        
+
+        int port = connector.getLocalPort();
+
+        waitForJettySocketToAccept("http://localhost:" + port);
+
         if (createBroker) {
             broker = new BrokerService();
             broker.setPersistent(false);
@@ -77,19 +81,21 @@ public abstract class HttpTestSupport extends TestCase {
             broker.addConnector("vm://localhost");
             broker.start();
             broker.waitUntilStarted();
-            
+
             factory = new ActiveMQConnectionFactory("vm://localhost");
+            factory.getBlobTransferPolicy().setDefaultUploadUrl("http://localhost:" + port + "/uploads/");
             connection = factory.createConnection();
             connection.start();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             destination = session.createQueue("test");
             producer = session.createProducer(destination);
-            
+
             IOHelper.deleteFile(homeDir);
             homeDir.mkdir();
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         server.stop();
         if (createBroker) {
@@ -105,6 +111,7 @@ public abstract class HttpTestSupport extends TestCase {
         final URL url = new URL(bindLocation);
         assertTrue("Jetty endpoint is available", Wait.waitFor(new Wait.Condition() {
 
+            @Override
             public boolean isSatisified() throws Exception {
                 boolean canConnect = false;
                 try {
@@ -117,6 +124,6 @@ public abstract class HttpTestSupport extends TestCase {
                 return canConnect;
             }}, 60 * 1000));
     }
-    
+
 }
 
