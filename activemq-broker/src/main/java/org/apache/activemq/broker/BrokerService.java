@@ -733,6 +733,7 @@ public class BrokerService implements Service {
             // Clear SelectorParser cache to free memory
             SelectorParser.clearCache();
         } finally {
+            started.set(false);
             stopped.set(true);
             stoppedLatch.countDown();
         }
