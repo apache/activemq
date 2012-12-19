@@ -417,26 +417,20 @@ public class ConfigTest extends TestCase {
 
             ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory("tcp://localhost:61631");
             javax.jms.Connection connection = activeMQConnectionFactory.createConnection();
-            final CountDownLatch latch = new CountDownLatch(1);
-            connection.setExceptionListener(new ExceptionListener() {
-                public void onException(JMSException e) {
-                    if (e.getCause() instanceof IllegalStateException) {
-                        latch.countDown();
-                    }
-                }
-            });
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic topic = session.createTopic("test.foo");
 
-            for (int i = 0; i < (MAX_PRODUCERS + 1); i++) {
-                MessageProducer messageProducer = session.createProducer(topic);
+            for (int i = 0; i < MAX_PRODUCERS; i++) {
+                session.createProducer(topic);
             }
 
-            latch.await(5, TimeUnit.SECONDS);
-            if (latch.getCount() > 0) {
-                fail("Should have got an exception");
+            try {
+                session.createProducer(topic);
+                fail("Should have got an exception on exceeding MAX_PRODUCERS");
+            } catch (JMSException expected) {
             }
+
             try {
                 for (int i = 0; i < (MAX_CONSUMERS + 1); i++) {
                     MessageConsumer consumer = session.createConsumer(topic);
