@@ -75,13 +75,21 @@ public final class MarshallingSupport {
         return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
     }
 
+    public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, boolean force) throws IOException {
+        return unmarshalPrimitiveMap(in, Integer.MAX_VALUE, force);
+    }
+
+    public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize) throws IOException {
+        return unmarshalPrimitiveMap(in, Integer.MAX_VALUE, false);
+    }
+
     /**
      * @param in
      * @return
      * @throws IOException
      * @throws IOException
      */
-    public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize) throws IOException {
+    public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize, boolean force) throws IOException {
         int size = in.readInt();
         if (size > maxPropertySize) {
             throw new IOException("Primitive map is larger than the allowed size: " + size);
@@ -92,7 +100,7 @@ public final class MarshallingSupport {
             Map<String, Object> rc = new HashMap<String, Object>(size);
             for (int i = 0; i < size; i++) {
                 String name = in.readUTF();
-                rc.put(name, unmarshalPrimitive(in, true));
+                rc.put(name, unmarshalPrimitive(in, force));
             }
             return rc;
         }
@@ -100,17 +108,20 @@ public final class MarshallingSupport {
 
     public static void marshalPrimitiveList(List list, DataOutputStream out) throws IOException {
         out.writeInt(list.size());
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Object element = iter.next();
+        for (Object element : list) {
             marshalPrimitive(out, element);
         }
     }
 
     public static List<Object> unmarshalPrimitiveList(DataInputStream in) throws IOException {
+        return unmarshalPrimitiveList(in, false);
+    }
+
+    public static List<Object> unmarshalPrimitiveList(DataInputStream in, boolean force) throws IOException {
         int size = in.readInt();
         List<Object> answer = new ArrayList<Object>(size);
         while (size-- > 0) {
-            answer.add(unmarshalPrimitive(in, true));
+            answer.add(unmarshalPrimitive(in, force));
         }
         return answer;
     }
@@ -203,10 +214,10 @@ public final class MarshallingSupport {
             break;
         }
         case MAP_TYPE:
-            value = unmarshalPrimitiveMap(in);
+            value = unmarshalPrimitiveMap(in, true);
             break;
         case LIST_TYPE:
-            value = unmarshalPrimitiveList(in);
+            value = unmarshalPrimitiveList(in, true);
             break;
         case NULL:
             value = null;
