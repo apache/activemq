@@ -46,4 +46,8 @@ public class HealthStatus implements Serializable {
     public String getResource() {
         return resource;
     }
+
+    public String toString(){
+        return healthId + ": " + level + " " + message + " from " + resource;
+    }
 }
