@@ -92,7 +92,7 @@ public final class MarshallingSupport {
             Map<String, Object> rc = new HashMap<String, Object>(size);
             for (int i = 0; i < size; i++) {
                 String name = in.readUTF();
-                rc.put(name, unmarshalPrimitive(in));
+                rc.put(name, unmarshalPrimitive(in, true));
             }
             return rc;
         }
@@ -110,7 +110,7 @@ public final class MarshallingSupport {
         int size = in.readInt();
         List<Object> answer = new ArrayList<Object>(size);
         while (size-- > 0) {
-            answer.add(unmarshalPrimitive(in));
+            answer.add(unmarshalPrimitive(in, true));
         }
         return answer;
     }
@@ -152,6 +152,10 @@ public final class MarshallingSupport {
     }
 
     public static Object unmarshalPrimitive(DataInputStream in) throws IOException {
+        return unmarshalPrimitive(in, false);
+    }
+
+    public static Object unmarshalPrimitive(DataInputStream in, boolean force) throws IOException {
         Object value = null;
         byte type = in.readByte();
         switch (type) {
@@ -183,18 +187,19 @@ public final class MarshallingSupport {
             value = new byte[in.readInt()];
             in.readFully((byte[])value);
             break;
-        case STRING_TYPE: {
-            int length = in.readUnsignedShort();
-            byte data[] = new byte[length];
-            in.readFully(data);
-            value = new UTF8Buffer(data);
+        case STRING_TYPE:
+            if (force) {
+                value = in.readUTF();
+            } else {
+                value = readUTF(in, in.readUnsignedShort());
+            }
             break;
-        }
         case BIG_STRING_TYPE: {
-            int length = in.readInt();
-            byte data[] = new byte[length];
-            in.readFully(data);
-            value = new UTF8Buffer(data);
+            if (force) {
+                value = readUTF8(in);
+            } else {
+                value = readUTF(in, in.readInt());
+            }
             break;
         }
         case MAP_TYPE:
@@ -210,6 +215,12 @@ public final class MarshallingSupport {
             throw new IOException("Unknown primitive type: " + type);
         }
         return value;
+    }
+
+    public static UTF8Buffer readUTF(DataInputStream in, int length) throws IOException {
+        byte data[] = new byte[length];
+        in.readFully(data);
+        return new UTF8Buffer(data);
     }
 
     public static void marshalNull(DataOutputStream out) throws IOException {
