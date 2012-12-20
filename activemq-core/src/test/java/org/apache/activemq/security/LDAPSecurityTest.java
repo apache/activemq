@@ -87,8 +87,8 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
         conn.start();
         Queue queue = sess.createQueue("ADMIN.FOO");
 
-        MessageProducer producer = sess.createProducer(queue);
         try {
+            MessageProducer producer = sess.createProducer(queue);
             producer.send(sess.createTextMessage("test"));
             fail("expect auth exception");
         } catch (JMSException expected) {
@@ -103,8 +103,8 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
         conn.start();
         Queue queue = sess.createQueue("TEST.FOO,ADMIN.FOO");
 
-        MessageProducer producer = sess.createProducer(queue);
         try {
+            MessageProducer producer = sess.createProducer(queue);
             producer.send(sess.createTextMessage("test"));
             fail("expect auth exception");
         } catch (JMSException expected) {
