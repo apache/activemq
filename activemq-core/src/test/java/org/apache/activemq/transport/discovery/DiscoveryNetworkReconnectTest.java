@@ -109,6 +109,8 @@ public class DiscoveryNetworkReconnectTest {
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Broker"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=Health"))));
+            allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=NC"))));
             allowing (managementContext).registerMBean(with(any(Object.class)), with(equal(            
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Topic,Destination=ActiveMQ.Advisory.Connection"))));
@@ -138,6 +140,8 @@ public class DiscoveryNetworkReconnectTest {
            
             allowing (managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=Broker"))));
+            allowing (managementContext).unregisterMBean(with(equal(
+                    new ObjectName("Test:BrokerName=BrokerNC,Type=Health"))));
             allowing (managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:BrokerName=BrokerNC,Type=NetworkConnector,NetworkConnectorName=NC"))));
             allowing (managementContext).unregisterMBean(with(equal(            
@@ -202,13 +206,13 @@ public class DiscoveryNetworkReconnectTest {
             }));
             
             // wait for network connector
-            assertTrue("network connector mbean registered within 3 minute", mbeanRegistered.tryAcquire(180, TimeUnit.SECONDS));
+            assertTrue("network connector mbean registered within 1 minute", mbeanRegistered.tryAcquire(60, TimeUnit.SECONDS));
             
             // force an inactivity timeout via the proxy
             proxy.pause();
         
             // wait for the inactivity timeout and network shutdown
-            assertTrue("network connector mbean unregistered within 3 minute", mbeanUnregistered.tryAcquire(180, TimeUnit.SECONDS));
+            assertTrue("network connector mbean unregistered within 1 minute", mbeanUnregistered.tryAcquire(60, TimeUnit.SECONDS));
             
             // whack all connections
             proxy.close();
