@@ -23,6 +23,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.util.Wait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.*;
@@ -36,6 +38,8 @@ import java.util.concurrent.TimeUnit;
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
  */
 public class AMQ4222Test extends TestSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ4222Test.class);
 
     protected BrokerService brokerService;
 
@@ -84,7 +88,7 @@ public class AMQ4222Test extends TestSupport {
             public void onMessage(Message message) {
                 try {
                     if (message instanceof TextMessage) {
-                        System.out.println("You got a message: " + ((TextMessage) message).getText());
+                        LOG.info("You got a message: " + ((TextMessage) message).getText());
                         countDownLatch.countDown();
                     }
                 } catch (JMSException e) {
@@ -107,7 +111,7 @@ public class AMQ4222Test extends TestSupport {
                 try {
                     consumerProducer.send(message.getJMSReplyTo(), message);
                 } catch (JMSException e) {
-                    System.out.println("error sending a response on the temp queue");
+                    LOG.error("error sending a response on the temp queue");
                     e.printStackTrace();
                 }
             }
