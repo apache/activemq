@@ -63,7 +63,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     private final KeyedObjectPool<SessionKey, PooledSession> sessionPool;
     private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
     private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
-    private final CopyOnWriteArrayList<PooledSessionEventListener> tempDestEventListeners =
+    private final CopyOnWriteArrayList<PooledSessionEventListener> sessionEventListeners =
         new CopyOnWriteArrayList<PooledSessionEventListener>();
 
     private ActiveMQSession session;
@@ -81,10 +81,10 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         this.transactional = session.isTransacted();
     }
 
-    public void addTempDestEventListener(PooledSessionEventListener listener) {
+    public void addSessionEventListener(PooledSessionEventListener listener) {
         // only add if really needed
-        if (!tempDestEventListeners.contains(listener)) {
-            this.tempDestEventListeners.add(listener);
+        if (!sessionEventListeners.contains(listener)) {
+            this.sessionEventListeners.add(listener);
         }
     }
 
@@ -129,7 +129,10 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
             } finally {
                 consumers.clear();
                 browsers.clear();
-                tempDestEventListeners.clear();
+                for (PooledSessionEventListener listener : this.sessionEventListeners) {
+                    listener.onSessionClosed(this);
+                }
+                sessionEventListeners.clear();
             }
 
             if (invalidate) {
@@ -205,7 +208,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         result = getInternalSession().createTemporaryQueue();
 
         // Notify all of the listeners of the created temporary Queue.
-        for (PooledSessionEventListener listener : this.tempDestEventListeners) {
+        for (PooledSessionEventListener listener : this.sessionEventListeners) {
             listener.onTemporaryQueueCreate(result);
         }
 
@@ -219,7 +222,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         result = getInternalSession().createTemporaryTopic();
 
         // Notify all of the listeners of the created temporary Topic.
-        for (PooledSessionEventListener listener : this.tempDestEventListeners) {
+        for (PooledSessionEventListener listener : this.sessionEventListeners) {
             listener.onTemporaryTopicCreate(result);
         }
 

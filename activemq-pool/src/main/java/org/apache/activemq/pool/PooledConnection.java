@@ -62,6 +62,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     private volatile boolean stopped;
     private final List<TemporaryQueue> connTempQueues = new CopyOnWriteArrayList<TemporaryQueue>();
     private final List<TemporaryTopic> connTempTopics = new CopyOnWriteArrayList<TemporaryTopic>();
+    private final List<PooledSession> loanedSessions = new CopyOnWriteArrayList<PooledSession>();
 
     /**
      * Creates a new PooledConnection instance that uses the given ConnectionPool to create
@@ -86,6 +87,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     @Override
     public void close() throws JMSException {
         this.cleanupConnectionTemporaryDestinations();
+        this.cleanupAllLoanedSessions();
         if (this.pool != null) {
             this.pool.decrementReferenceCount();
             this.pool = null;
@@ -104,8 +106,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     }
 
     @Override
-    public ConnectionConsumer createConnectionConsumer(Destination destination, String selector, ServerSessionPool serverSessionPool, int maxMessages)
-            throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Destination destination, String selector, ServerSessionPool serverSessionPool, int maxMessages) throws JMSException {
         return getConnection().createConnectionConsumer(destination, selector, serverSessionPool, maxMessages);
     }
 
@@ -115,8 +116,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     }
 
     @Override
-    public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String selector, String s1, ServerSessionPool serverSessionPool, int i)
-            throws JMSException {
+    public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String selector, String s1, ServerSessionPool serverSessionPool, int i) throws JMSException {
         return getConnection().createDurableConnectionConsumer(topic, selector, s1, serverSessionPool, i);
     }
 
@@ -173,10 +173,14 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
         PooledSession result;
         result = (PooledSession) pool.createSession(transacted, ackMode);
 
-        // Add a temporary destination event listener to the session that notifies us when
-        // the session creates temporary destinations.
-        result.addTempDestEventListener(this);
-        return (Session) result;
+        // Store the session so we can close the sessions that this PooledConnection
+        // created in order to ensure that consumers etc are closed per the JMS contract.
+        loanedSessions.add(result);
+
+        // Add a event listener to the session that notifies us when the session
+        // creates / destroys temporary destinations and closes etc.
+        result.addSessionEventListener(this);
+        return result;
     }
 
     // EnhancedCollection API
@@ -190,12 +194,21 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
     // Implementation methods
     // -------------------------------------------------------------------------
 
+    @Override
     public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
         connTempQueues.add(tempQueue);
     }
 
+    @Override
     public void onTemporaryTopicCreate(TemporaryTopic tempTopic) {
         connTempTopics.add(tempTopic);
+    }
+
+    @Override
+    public void onSessionClosed(PooledSession session) {
+        if (session != null) {
+            this.loanedSessions.remove(session);
+        }
     }
 
     public ActiveMQConnection getConnection() throws JMSException {
@@ -213,6 +226,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
         return (ActiveMQSession) getConnection().createSession(key.isTransacted(), key.getAckMode());
     }
 
+    @Override
     public String toString() {
         return "PooledConnection { " + pool + " }";
     }
@@ -244,6 +258,23 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
             }
         }
         connTempTopics.clear();
+    }
+
+    /**
+     * The PooledSession tracks all Sessions that it created and now we close them.  Closing the
+     * PooledSession will return the internal Session to the Pool of Session after cleaning up
+     * all the resources that the Session had allocated for this PooledConnection.
+     */
+    protected void cleanupAllLoanedSessions() {
+
+        for (PooledSession session : loanedSessions) {
+            try {
+                session.close();
+            } catch (JMSException ex) {
+                LOG.info("failed to close laoned Session \"" + session + "\" on closing pooled connection: " + ex.getMessage());
+            }
+        }
+        loanedSessions.clear();
     }
 
     /**
