@@ -24,6 +24,7 @@ import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueBrowserSubscription;
 import org.apache.activemq.broker.region.QueueSubscription;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -182,11 +183,7 @@ public class PolicyEntry extends DestinationMapEntry {
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
-        //override prefetch size if not set by the Consumer
-        int prefetch=subscription.getConsumerInfo().getPrefetchSize();
-        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH){
-            subscription.getConsumerInfo().setPrefetchSize(getTopicPrefetch());
-        }
+        configurePrefetch(subscription);
         if (pendingMessageLimitStrategy != null) {
             int value = pendingMessageLimitStrategy.getMaximumPendingMessageLimit(subscription);
             int consumerLimit = subscription.getInfo().getMaximumPendingMessageLimit();
@@ -220,12 +217,8 @@ public class PolicyEntry extends DestinationMapEntry {
     public void configure(Broker broker, SystemUsage memoryManager, DurableTopicSubscription sub) {
         String clientId = sub.getSubscriptionKey().getClientId();
         String subName = sub.getSubscriptionKey().getSubscriptionName();
-        int prefetch = sub.getPrefetchSize();
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
-        //override prefetch size if not set by the Consumer
-        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH || prefetch == ActiveMQPrefetchPolicy.DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH){
-            sub.setPrefetchSize(getDurableTopicPrefetch());
-        }
+        configurePrefetch(sub);
         if (pendingDurableSubscriberPolicy != null) {
             PendingMessageCursor cursor = pendingDurableSubscriberPolicy.getSubscriberPendingMessageCursor(broker,clientId, subName,sub.getPrefetchSize(),sub);
             cursor.setSystemUsage(memoryManager);
@@ -242,31 +235,42 @@ public class PolicyEntry extends DestinationMapEntry {
     }
     
     public void configure(Broker broker, SystemUsage memoryManager, QueueBrowserSubscription sub) {
-       
-        int prefetch = sub.getPrefetchSize();
-        //override prefetch size if not set by the Consumer
-        
-        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH){
-            sub.setPrefetchSize(getQueueBrowserPrefetch());
-        }
+        configurePrefetch(sub);
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
     }
     
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
-        
-        int prefetch = sub.getPrefetchSize();
-        //override prefetch size if not set by the Consumer
-        
-        if (prefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH){
-            sub.setPrefetchSize(getQueuePrefetch());
-            if (sub.getPrefetchSize() == 0) {
-                // tell the sub so that it can issue a pull request
-                sub.updateConsumerPrefetch(0);
-            }
-        }
+        configurePrefetch(sub);
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
+    }
+
+    public void configurePrefetch(Subscription subscription) {
+
+        final int currentPrefetch = subscription.getConsumerInfo().getPrefetchSize();
+        if (subscription instanceof QueueBrowserSubscription) {
+            if (currentPrefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH) {
+                ((QueueBrowserSubscription) subscription).setPrefetchSize(getQueueBrowserPrefetch());
+            }
+        } else if (subscription instanceof QueueSubscription) {
+            if (currentPrefetch == ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH) {
+                ((QueueSubscription) subscription).setPrefetchSize(getQueuePrefetch());
+            }
+        } else if (subscription instanceof DurableTopicSubscription) {
+            if (currentPrefetch == ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH ||
+                    subscription.getConsumerInfo().getPrefetchSize() == ActiveMQPrefetchPolicy.DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH) {
+                ((DurableTopicSubscription)subscription).setPrefetchSize(getDurableTopicPrefetch());
+            }
+        } else if (subscription instanceof TopicSubscription) {
+            if (currentPrefetch == ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH) {
+                ((TopicSubscription) subscription).setPrefetchSize(getTopicPrefetch());
+            }
+        }
+        if (currentPrefetch != 0 && subscription.getPrefetchSize() == 0) {
+            // tell the sub so that it can issue a pull request
+            subscription.updateConsumerPrefetch(0);
+        }
     }
 
     // Properties

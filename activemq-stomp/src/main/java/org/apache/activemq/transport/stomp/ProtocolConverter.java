@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerContextAware;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -553,12 +554,15 @@ public class ProtocolConverter {
         final ActiveMQDestination actualDest = translator.convertDestination(this, destination, true);
 
         if (actualDest == null) {
-            throw new ProtocolException("Invalid Destination.");
+            throw new ProtocolException("Invalid 'null' Destination.");
         }
 
         final ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
-        consumerInfo.setPrefetchSize(1000);
+        consumerInfo.setPrefetchSize(actualDest.isQueue() ?
+                ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH :
+                headers.containsKey("activemq.subscriptionName") ?
+                        ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH : ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH);
         consumerInfo.setDispatchAsync(true);
 
         String browser = headers.get(Stomp.Headers.Subscribe.BROWSER);
@@ -569,6 +573,7 @@ public class ProtocolConverter {
             }
 
             consumerInfo.setBrowser(true);
+            consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_QUEUE_BROWSER_PREFETCH);
         }
 
         String selector = headers.remove(Stomp.Headers.Subscribe.SELECTOR);

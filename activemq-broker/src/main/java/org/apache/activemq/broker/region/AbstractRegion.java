@@ -31,6 +31,7 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
@@ -582,9 +583,15 @@ public abstract class AbstractRegion implements Region {
         Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub != null && sub instanceof AbstractSubscription) {
             ((AbstractSubscription) sub).setPrefetchSize(control.getPrefetch());
+            if (broker.getDestinationPolicy() != null) {
+                PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(control.getDestination());
+                if (entry != null) {
+                    entry.configurePrefetch(sub);
+                }
+            }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("setting prefetch: " + control.getPrefetch() + ", on subscription: "
-                        + control.getConsumerId());
+                        + control.getConsumerId() + "; resulting value: " + sub.getConsumerInfo().getCurrentPrefetchSize());
             }
             try {
                 lookup(consumerExchange.getConnectionContext(), control.getDestination(),false).wakeup();

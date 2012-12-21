@@ -129,6 +129,10 @@ public class StompConnection {
         if (client != null) {
             headers.put("client-id", client);
         }
+        connect(headers);
+    }
+
+    public void connect(HashMap<String, String> headers) throws Exception {
         StompFrame frame = new StompFrame("CONNECT", headers);
         sendFrame(frame.format());
 

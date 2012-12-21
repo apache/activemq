@@ -27,10 +27,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConsumerControl;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.spring.SpringConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -330,6 +334,31 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
         TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
+    }
+
+    // https://issues.apache.org/jira/browse/AMQ-4234
+    // https://issues.apache.org/jira/browse/AMQ-4235
+    public void testBrokerZeroPrefetchConfigWithConsumerControl() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(brokerZeroQueue);
+        assertEquals("broker config prefetch in effect", 0, consumer.info.getCurrentPrefetchSize());
+
+        // verify sub view broker
+        Subscription sub =
+                broker.getRegionBroker().getDestinationMap().get(ActiveMQDestination.transform(brokerZeroQueue)).getConsumers().get(0);
+        assertEquals("broker sub prefetch is correct", 0, sub.getConsumerInfo().getCurrentPrefetchSize());
+
+        // manipulate Prefetch (like failover and stomp)
+        ConsumerControl consumerControl = new ConsumerControl();
+        consumerControl.setConsumerId(consumer.info.getConsumerId());
+        consumerControl.setDestination(ActiveMQDestination.transform(brokerZeroQueue));
+        consumerControl.setPrefetch(1000); // default for a q
+
+        Object reply = ((ActiveMQConnection) connection).getTransport().request(consumerControl);
+        assertTrue("good request", !(reply instanceof ExceptionResponse));
+        assertEquals("broker config prefetch in effect", 0, consumer.info.getCurrentPrefetchSize());
+        assertEquals("broker sub prefetch is correct", 0, sub.getConsumerInfo().getCurrentPrefetchSize());
     }
 
     @Override
