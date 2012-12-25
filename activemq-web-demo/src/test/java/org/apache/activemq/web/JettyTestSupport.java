@@ -52,6 +52,7 @@ public class JettyTestSupport extends TestCase {
 
     protected void setUp() throws Exception {
         broker = new BrokerService();
+        broker.setBrokerName("amq-broker");
         broker.setPersistent(false);
         broker.setUseJmx(true);
         tcpUri = new URI(broker.addConnector("tcp://localhost:0").getPublishableConnectString());
