@@ -91,7 +91,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Health,BrokerName=localhost");
         HealthViewMBean health =  MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, HealthViewMBean.class, true);
         List<HealthStatus> list = health.healthList();
-        assertEquals(2,list.size());
+        assertTrue("There should be at least two statuses", list.size() >= 2);
 
     }
 
