@@ -16,17 +16,10 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
@@ -37,7 +30,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.net.SocketFactory;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
@@ -58,10 +50,11 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.codec.CONNECT;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
+import static org.junit.Assert.*;
 
 
 public class MQTTTest {
@@ -85,7 +78,7 @@ public class MQTTTest {
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(false);
-        this.numberOfMessages = 2000;
+        this.numberOfMessages = 1000;
     }
 
     @After
