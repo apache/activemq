@@ -176,10 +176,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   def objectName = {
     var brokerON = brokerService.getBrokerObjectName
-    val broker_name = brokerON.getKeyPropertyList().get("BrokerName")
-    new ObjectName(brokerON.getDomain() + ":" +
-            "BrokerName="+JMXSupport.encodeObjectNamePart(broker_name)+ "," +
-            "Type=LevelDBStore");
+    new ObjectName(brokerON.toString() +",persistentAdapter=LevelDBStore");
+
   }
 
   def retry[T](func : =>T):T = RetrySupport.retry(LevelDBStore, isStarted, func _)
