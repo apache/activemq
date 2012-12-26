@@ -853,7 +853,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.setVersion(Stomp.V1_1);
 
         String domain = "org.apache.activemq";
-        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
 
         BrokerViewMBean view = (BrokerViewMBean)brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
 
@@ -943,7 +943,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.setVersion(Stomp.V1_1);
 
         String domain = "org.apache.activemq";
-        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
 
         BrokerViewMBean view = (BrokerViewMBean)brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
 

@@ -16,13 +16,6 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
@@ -33,19 +26,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import com.thoughtworks.xstream.io.xml.XppReader;
+import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
+import javax.jms.*;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -55,12 +43,7 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
-import com.thoughtworks.xstream.io.xml.XppReader;
-import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
+import static org.junit.Assert.*;
 
 public class StompTest extends StompTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
@@ -1489,7 +1472,7 @@ public class StompTest extends StompTestSupport {
         // get broker JMX view
 
         String domain = "org.apache.activemq";
-        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
 
         BrokerViewMBean view = (BrokerViewMBean)
                 brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
@@ -1543,7 +1526,7 @@ public class StompTest extends StompTestSupport {
         // get broker JMX view
 
         String domain = "org.apache.activemq";
-        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
 
         BrokerViewMBean view = (BrokerViewMBean)
                 brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
@@ -2148,16 +2131,14 @@ public class StompTest extends StompTestSupport {
 
     private BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
         ObjectName brokerViewMBean = new ObjectName(
-            "org.apache.activemq:Type=Broker,BrokerName=localhost");
+            "org.apache.activemq:type=Broker,brokerName=localhost");
         BrokerViewMBean proxy = (BrokerViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(brokerViewMBean, BrokerViewMBean.class, true);
         return proxy;
     }
 
     private QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":Type=Queue,Destination=" + name
-                + ",BrokerName=localhost");
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
         QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;
