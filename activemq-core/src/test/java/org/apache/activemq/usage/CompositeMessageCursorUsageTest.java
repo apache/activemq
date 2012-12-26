@@ -84,7 +84,7 @@ public class CompositeMessageCursorUsageTest extends TestCase {
     }
     
     public QueueViewMBean getQueueView(String queueName) throws Exception {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq" + ":Type=Queue,Destination=" + queueName + ",BrokerName=localhost");
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq" + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queueName);
         return (QueueViewMBean) broker.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
     }
 }

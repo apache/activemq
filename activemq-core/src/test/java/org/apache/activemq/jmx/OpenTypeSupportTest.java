@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.jmx;
 
-import static org.junit.Assert.assertEquals;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -27,7 +25,6 @@ import javax.jms.Session;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.CompositeDataConstants;
@@ -40,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
 
 public class OpenTypeSupportTest {
     private static final Logger LOG = LoggerFactory.getLogger(OpenTypeSupportTest.class);
@@ -109,9 +107,7 @@ public class OpenTypeSupportTest {
     }
 
     private QueueViewMBean getProxyToQueueViewMBean() throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName(
-                "org.apache.activemq" + ":Type=Queue,Destination=" +
-                queue.getQueueName() + ",BrokerName=localhost");
+        final ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queue.getQueueName());
         QueueViewMBean proxy = (QueueViewMBean)
             brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;

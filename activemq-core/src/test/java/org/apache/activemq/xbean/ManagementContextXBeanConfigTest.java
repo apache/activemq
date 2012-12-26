@@ -16,22 +16,22 @@
  */
 package org.apache.activemq.xbean;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.util.JMXSupport;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-
 import junit.framework.TestCase;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +48,8 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         assertEquals("test.domain", brokerService.getManagementContext().getJmxDomainName());
         // Make sure the broker is registered in the right jmx domain.
         Hashtable<String, String> map = new Hashtable<String, String>();
-        map.put("Type", "Broker");
-        map.put("BrokerName", JMXSupport.encodeObjectNamePart("localhost"));
+        map.put("type", "Broker");
+        map.put("brokerName", JMXSupport.encodeObjectNamePart("localhost"));
         ObjectName on = new ObjectName("test.domain", map);
         Object value = brokerService.getManagementContext().getAttribute(on, "TotalEnqueueCount");
         assertNotNull(value);
@@ -77,7 +77,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     public void assertAuthentication(JMXConnector connector) throws Exception {
         connector.connect();
         MBeanServerConnection connection = connector.getMBeanServerConnection();
-        ObjectName name = new ObjectName("test.domain:BrokerName=localhost,Type=Broker");
+        ObjectName name = new ObjectName("test.domain:type=Broker,brokerName=localhost");
         BrokerViewMBean mbean = (BrokerViewMBean) MBeanServerInvocationHandler
                 .newProxyInstance(connection, name, BrokerViewMBean.class, true);
         LOG.info("Broker " + mbean.getBrokerId() + " - " + mbean.getBrokerName());

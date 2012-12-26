@@ -88,7 +88,10 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
             }
             Thread.sleep(1000);
 
-        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Health,BrokerName=localhost");
+        String objectNameStr = broker.getBrokerObjectName().toString();
+        objectNameStr += ",service=Health";
+        ObjectName brokerName = assertRegisteredObjectName(objectNameStr
+        );
         HealthViewMBean health =  MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, HealthViewMBean.class, true);
         List<HealthStatus> list = health.healthList();
         assertTrue("There should be at least two statuses", list.size() >= 2);

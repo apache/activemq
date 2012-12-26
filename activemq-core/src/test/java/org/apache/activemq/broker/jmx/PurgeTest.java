@@ -16,21 +16,23 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
 import junit.framework.Test;
 import junit.textui.TestRunner;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +75,9 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         }
 
         // Now get the QueueViewMBean and purge
-        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+        String objectNameStr = broker.getBrokerObjectName().toString();
+        objectNameStr += ",destinationType=Queue,destinationName="+getDestinationString();
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(objectNameStr);
         QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         long count = proxy.getQueueSize();
@@ -104,7 +108,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
     }
 
     public void initCombosForTestDelete() {
-        addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new AMQPersistenceAdapter(), new JDBCPersistenceAdapter()});
+        addCombinationValues("persistenceAdapter", new Object[] {new MemoryPersistenceAdapter(), new KahaDBPersistenceAdapter()});
     }
 
     public void testDeleteSameProducer() throws Exception {
@@ -122,7 +126,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         Message received = consumer.receive(1000);
         assertEquals(message, received);
 
-        ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean brokerProxy = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerViewMBeanName, BrokerViewMBean.class, true);
 
         brokerProxy.removeQueue(getDestinationString());
@@ -144,10 +148,11 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         sendMessages(session, messageCount);
 
         // Now get the QueueViewMBean and purge
-        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         QueueViewMBean queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
-        ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean brokerProxy = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerViewMBeanName, BrokerViewMBean.class, true);
 
         long count = queueProxy.getQueueSize();
@@ -157,7 +162,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
         sendMessages(session, messageCount);
 
-        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         count = queueProxy.getQueueSize();
@@ -165,7 +170,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
         queueProxy.purge();
 
-        // Queues have a special case once there are more than a thousand
+        // Queue have a special case once there are more than a thousand
         // dead messages, make sure we hit that.
         messageCount += 1000;
         sendMessages(session, messageCount);
@@ -177,7 +182,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
         sendMessages(session, messageCount);
 
-        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
         queueProxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         count = queueProxy.getQueueSize();

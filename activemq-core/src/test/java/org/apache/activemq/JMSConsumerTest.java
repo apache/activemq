@@ -35,12 +35,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
-
 import junit.framework.Test;
-
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -915,9 +911,9 @@ public class JMSConsumerTest extends JmsTestSupport {
          String domain = "org.apache.activemq";
          ObjectName name;
         if (destination.isQueue()) {
-            name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=test");
+            name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=test");
         } else {
-            name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination=test");
+            name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test");
         }
         return (DestinationViewMBean)broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
     }

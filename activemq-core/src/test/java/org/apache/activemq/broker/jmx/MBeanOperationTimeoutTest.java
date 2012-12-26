@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -31,7 +28,6 @@ import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.After;
@@ -39,6 +35,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class MBeanOperationTimeoutTest {
     private static final Logger LOG = LoggerFactory.getLogger(MBeanOperationTimeoutTest.class);
@@ -61,7 +59,10 @@ public class MBeanOperationTimeoutTest {
         LOG.info("Produced " + messageCount + " messages to the broker.");
 
         // Now get the QueueViewMBean and purge
-        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + destinationName + ",BrokerName=localhost");
+        String objectNameStr = broker.getBrokerObjectName().toString();
+        objectNameStr += ",destinationType=Queue,destinationName="+destinationName;
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(objectNameStr);
         QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         long count = proxy.getQueueSize();

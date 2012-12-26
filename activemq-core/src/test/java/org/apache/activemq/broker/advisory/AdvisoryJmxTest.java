@@ -48,7 +48,7 @@ public class AdvisoryJmxTest extends EmbeddedBrokerTestSupport {
         JMXConnector connector = JMXConnectorFactory.connect(url, null);
         connector.connect();
         MBeanServerConnection connection = connector.getMBeanServerConnection();
-        ObjectName name = new ObjectName("org.apache.activemq:Type=Broker,BrokerName=localhost");
+        ObjectName name = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost");
         BrokerViewMBean brokerMbean = (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(connection, name, BrokerViewMBean.class, true);
         Connection conn = createConnection();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);

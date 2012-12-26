@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.bugs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +30,6 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.ObjectName;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
@@ -46,6 +42,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AMQ4083Test {
 
@@ -113,8 +111,6 @@ public class AMQ4083Test {
         assertEquals(101, queueView.getInFlightCount());
 
         consumer.setMessageListener(new MessageListener() {
-
-            @Override
             public void onMessage(Message message) {
                 try {
                     message.acknowledge();
@@ -133,7 +129,6 @@ public class AMQ4083Test {
 
         assertTrue("Inflight count should reach zero, currently: " + queueView.getInFlightCount(), Wait.waitFor(new Wait.Condition() {
 
-            @Override
             public boolean isSatisified() throws Exception {
                 return queueView.getInFlightCount() == 0;
             }
@@ -177,8 +172,6 @@ public class AMQ4083Test {
         assertEquals(101, queueView.getInFlightCount());
 
         consumer.setMessageListener(new MessageListener() {
-
-            @Override
             public void onMessage(Message message) {
                 try {
                     session.commit();
@@ -507,8 +500,7 @@ public class AMQ4083Test {
     }
 
     private QueueViewMBean getProxyToQueueViewMBean() throws Exception {
-        final ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:Type=Queue,Destination="
-                + queue.getQueueName() + ",BrokerName=localhost");
+        final ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queue.getQueueName());
         final QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext().newProxyInstance(
                 queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;

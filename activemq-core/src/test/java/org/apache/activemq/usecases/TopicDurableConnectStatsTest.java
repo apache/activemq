@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Date;
 import java.util.Vector;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -145,8 +146,12 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
 
         DurableSubscriptionViewMBean subscriber1 = null;
 
-        ObjectName subscriberObjName1 = assertRegisteredObjectName(domain + ":BrokerName=" + getName(true) + ",Type=Subscription,persistentMode=Durable,subscriptionID=SubsId,destinationType=Topic,destinationName=" + topic.getTopicName() + ",clientId=cliId1");
-        subscriber1 = (DurableSubscriptionViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, subscriberObjName1, DurableSubscriptionViewMBean.class, true);
+        ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=" + getName(true) + ",destinationType=Topic,destinationName=" + topic.getTopicName() + ",endpoint=Consumer,clientId=cliId1,consumerId=*");
+
+        java.util.Set<ObjectName>set = mbeanServer.queryNames(query,null);
+
+        ObjectName subscriberObjName1 = set.iterator().next();
+        subscriber1 = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, subscriberObjName1, DurableSubscriptionViewMBean.class, true);
 
         LOG.info("Beginning Pending Queue Size count: " + subscriber1.getPendingQueueSize());
         LOG.info("Prefetch Limit: " + subscriber1.getPrefetchSize());
@@ -196,7 +201,6 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         consumer2.setMessageListener(listener);
 
         assertTrue("received all sent", Wait.waitFor(new Wait.Condition() {
-            @Override
             public boolean isSatisified() throws Exception {
                 return numMessages == listener.count;
             }

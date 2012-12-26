@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.JMSException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -27,20 +28,7 @@ import junit.framework.Test;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DataArrayResponse;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.command.TransactionInfo;
-import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.command.*;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,8 +127,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     private RecoveredXATransactionViewMBean getProxyToPreparedTransactionViewMBean(TransactionId xid) throws MalformedObjectNameException, JMSException {
 
-        ObjectName objectName = new ObjectName("org.apache.activemq:Type=RecoveredXaTransaction,Xid=" +
-                JMXSupport.encodeObjectNamePart(xid.toString()) + ",BrokerName=localhost");
+        ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,transactionType=RecoveredXaTransaction,Xid=" +
+                JMXSupport.encodeObjectNamePart(xid.toString()));
         RecoveredXATransactionViewMBean proxy = (RecoveredXATransactionViewMBean) broker.getManagementContext().newProxyInstance(objectName,
                 RecoveredXATransactionViewMBean.class, true);
         return proxy;
@@ -148,8 +136,10 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     private DestinationViewMBean getProxyToDestination(ActiveMQDestination destination) throws MalformedObjectNameException, JMSException {
 
-        ObjectName objectName = new ObjectName("org.apache.activemq:Type=" + (destination.isQueue() ? "Queue" : "Topic") + ",Destination=" +
-                JMXSupport.encodeObjectNamePart(destination.getPhysicalName()) + ",BrokerName=localhost");
+        final ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName="+broker.getBrokerName()+",destinationType="
+                + JMXSupport.encodeObjectNamePart(destination.getDestinationTypeAsString())
+                + ",destinationName=" + JMXSupport.encodeObjectNamePart(destination.getPhysicalName()));
+
         DestinationViewMBean proxy = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(objectName,
                 DestinationViewMBean.class, true);
         return proxy;

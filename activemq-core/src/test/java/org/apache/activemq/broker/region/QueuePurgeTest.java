@@ -29,13 +29,9 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
@@ -142,9 +138,9 @@ public class QueuePurgeTest extends CombinationTestSupport {
 
     private QueueViewMBean getProxyToQueueViewMBean()
             throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":Type=Queue,Destination=" + queue.getQueueName()
-                + ",BrokerName=localhost");
+        ObjectName queueViewMBeanName =
+                new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="
+                + queue.getQueueName());
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()
                 .newProxyInstance(queueViewMBeanName,
                         QueueViewMBean.class, true);

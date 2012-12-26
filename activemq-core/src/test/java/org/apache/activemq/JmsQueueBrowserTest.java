@@ -191,7 +191,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
             producer.send(outbound[i]);
         }
 
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:Type=Queue,Destination=TEST,BrokerName=localhost");
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=TEST");
 
         LOG.info("Create QueueView MBean...");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
