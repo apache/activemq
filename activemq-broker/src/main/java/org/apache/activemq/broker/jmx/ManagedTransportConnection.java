@@ -17,10 +17,8 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
-import java.util.Hashtable;
 
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
@@ -116,27 +114,21 @@ public class ManagedTransportConnection extends TransportConnection {
     }
 
     protected ObjectName createByAddressObjectName(String type, String value) throws IOException {
-        Hashtable<String, String> map = connectorName.getKeyPropertyList();
         try {
-            return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
-                                  + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + ","
-                                  + "Type=Connection," + "ConnectorName="
-                                  + JMXSupport.encodeObjectNamePart((String)map.get("ConnectorName")) + ","
-                                  + "ViewType=" + JMXSupport.encodeObjectNamePart(type) + "," + "Name="
-                                  + JMXSupport.encodeObjectNamePart(value));
+            String objectNameStr = connectorName.toString();
+            objectNameStr += ",connectionViewType="   + JMXSupport.encodeObjectNamePart(type);
+            objectNameStr += ",connectionName="+JMXSupport.encodeObjectNamePart(value);
+            return new ObjectName(objectNameStr);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
     protected ObjectName createByClientIdObjectName(String value) throws IOException {
-        Hashtable<String, String> map = connectorName.getKeyPropertyList();
         try {
-            return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
-                                  + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + ","
-                                  + "Type=Connection," + "ConnectorName="
-                                  + JMXSupport.encodeObjectNamePart((String)map.get("ConnectorName")) + ","
-                                  + "Connection=" + JMXSupport.encodeObjectNamePart(value));
+            String objectNameStr = connectorName.toString();
+            objectNameStr += ",connectionName="+JMXSupport.encodeObjectNamePart(value);
+            return new ObjectName(objectNameStr);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }

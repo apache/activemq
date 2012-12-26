@@ -33,5 +33,12 @@ public interface HealthViewMBean {
      *
      * If in doubt, please use the {@link #status()} method instead!
      */
+    @MBeanInfo("List of warnings and errors about the current health of the Broker - empty list is Good!")
     List<HealthStatus> healthList() throws Exception;
+
+    /**
+     * @return  String representation of the current Broker state
+     */
+    @MBeanInfo("String representation of current Broker state")
+    String getCurrentStatus();
 }

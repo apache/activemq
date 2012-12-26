@@ -35,6 +35,7 @@ import org.apache.activemq.usage.SystemUsage;
 public class HealthView implements HealthViewMBean {
 
     ManagedRegionBroker broker;
+    String currentState = "Good";
 
     public HealthView(ManagedRegionBroker broker) {
         this.broker = broker;
@@ -172,7 +173,24 @@ public class HealthView implements HealthViewMBean {
             }
         }
 
+    if (answer != null && !answer.isEmpty()){
+         this.currentState = "Feeling Ill {";
+        for (HealthStatus hs: answer){
+            currentState += hs + " , ";
+        }
+        currentState += " }";
+    } else{
+        this.currentState="Good";
+    }
         return answer;
+    }
+
+    /**
+     * @return String representation of the current Broker state
+     */
+    @Override
+    public String getCurrentStatus() {
+        return this.currentState;
     }
 
 }

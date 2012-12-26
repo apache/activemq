@@ -149,9 +149,9 @@ public class ConnectionView implements ConnectionViewMBean {
 
     private ObjectName createConsumerQueury(String clientId) throws IOException {
         try {
-            return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=*,"
-                                  + "Type=Subscription,persistentMode=*,"
+            return new ObjectName(managementContext.getJmxDomainName() + ":type=Broker,brokerName=*,"
                                   + "destinationType=*,destinationName=*,"
+                                  + "endpoint=Consumer,"
                                   + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
                                   + "consumerId=*");
         } catch (Throwable e) {
@@ -161,11 +161,11 @@ public class ConnectionView implements ConnectionViewMBean {
 
     private ObjectName createProducerQueury(String clientId) throws IOException {
         try {
-            return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=*,"
-                                  + "Type=Producer,"
-                                  + "destinationType=*,destinationName=*,"
-                                  + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
-                                  + "producerId=*");
+            return new ObjectName(managementContext.getJmxDomainName() + ":type=Broker,brokerName=*,"
+                    + "destinationType=*,destinationName=*,"
+                    + "endpoint=Producer,"
+                    + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
+                    + "producerId=*");
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }

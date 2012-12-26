@@ -74,7 +74,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
                 if (managementCtx != null) {
 
                     try {
-                        ObjectName query = createConnectionQueury(managementCtx, service.getBrokerName());
+                        ObjectName query = createConnectionQuery(managementCtx, service.getBrokerName());
                         Set<ObjectName> names = managementCtx.queryNames(query, null);
                         if (names.size() == 1) {
                             result = names.iterator().next();
@@ -87,12 +87,12 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return result;
     }
 
-    private ObjectName createConnectionQueury(ManagementContext ctx, String brokerName) throws IOException {
+    private ObjectName createConnectionQuery(ManagementContext ctx, String brokerName) throws IOException {
         try {
-            return new ObjectName(ctx.getJmxDomainName() + ":" + "BrokerName="
+            return new ObjectName(ctx.getJmxDomainName() + ":type=Broker,brokerName="
                                   + JMXSupport.encodeObjectNamePart(brokerName) + ","
-                                  + "Type=Connection," + "ConnectorName=*,"
-                                  + "Connection=" + JMXSupport.encodeObjectNamePart(clientId));
+                                  + "connector=*," + "connectorName=*,"
+                                  + "connectionName=" + JMXSupport.encodeObjectNamePart(clientId));
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }

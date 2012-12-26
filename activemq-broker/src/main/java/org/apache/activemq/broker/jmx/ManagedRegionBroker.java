@@ -40,23 +40,12 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationFactory;
-import org.apache.activemq.broker.region.DestinationFactoryImpl;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.Region;
-import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.broker.region.TopicRegion;
-import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.broker.region.*;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -228,27 +217,15 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public static String getSubscriptionObjectName(ConsumerInfo info, String connectionClientId, ObjectName brokerJmxObjectName) {
-        Hashtable<String, String> map = brokerJmxObjectName.getKeyPropertyList();
-        String brokerDomain = brokerJmxObjectName.getDomain();
-        String objectNameStr = brokerDomain + ":" + "BrokerName=" + map.get("BrokerName") + ",Type=Subscription,";
-        String destinationType = "destinationType=" + info.getDestination().getDestinationTypeAsString();
-        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(info.getDestination().getPhysicalName());
-        String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
-        String persistentMode = "persistentMode=";
-        String consumerId = "";
-        if (info.isDurable()) {
-            persistentMode += "Durable,subscriptionID=" + JMXSupport.encodeObjectNamePart(info.getSubscriptionName());
+        String objectNameStr = brokerJmxObjectName.toString();
+        objectNameStr += getDestinationType(info.getDestination()) + ",endpoint=Consumer";
+        objectNameStr += ",clientId=" +  JMXSupport.encodeObjectNamePart(connectionClientId);
+        objectNameStr += ",consumerId=";
+        if (info.isDurable()){
+            objectNameStr += "Durable(" +  JMXSupport.encodeObjectNamePart(connectionClientId + ":" + info.getSubscriptionName()) +")";
         } else {
-            persistentMode += "Non-Durable";
-            if (info.getConsumerId() != null) {
-                consumerId = ",consumerId=" + JMXSupport.encodeObjectNamePart(info.getConsumerId().toString());
-            }
+            objectNameStr += JMXSupport.encodeObjectNamePart(info.getConsumerId().toString());
         }
-        objectNameStr += persistentMode + ",";
-        objectNameStr += destinationType + ",";
-        objectNameStr += destinationName + ",";
-        objectNameStr += clientId;
-        objectNameStr += consumerId;
         return objectNameStr;
     }
 
@@ -698,39 +675,33 @@ public class ManagedRegionBroker extends RegionBroker {
         this.contextBroker = contextBroker;
     }
 
-    protected ObjectName createObjectName(ActiveMQDestination destName) throws MalformedObjectNameException {
+    protected ObjectName createObjectName(ActiveMQDestination destination) throws MalformedObjectNameException {
         // Build the object name for the destination
-        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
-        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type="
-                                               + JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()) + "," + "Destination="
-                                               + JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
-        return objectName;
+        String objectNameStr = brokerObjectName.toString();
+        objectNameStr += getDestinationType(destination);
+        return new ObjectName(objectNameStr);
+    }
+
+    protected static String getDestinationType(ActiveMQDestination destination){
+        String result = "";
+        if (destination != null){
+            result = ",destinationType="+ JMXSupport.encodeObjectNamePart(destination.getDestinationTypeAsString()) +  ",destinationName=" + JMXSupport.encodeObjectNamePart(destination.getPhysicalName());
+        }
+        return result;
     }
 
     protected ObjectName createObjectName(ProducerInfo producerInfo, String connectionClientId) throws MalformedObjectNameException {
-        // Build the object name for the producer info
-        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
-
-        String destinationType = "destinationType=";
-        String destinationName = "destinationName=";
+        String objectNameStr = brokerObjectName.toString();
 
         if (producerInfo.getDestination() == null) {
-            destinationType += "Dynamic";
-            destinationName = null;
+            objectNameStr += ",endpoint=dynamicProducer";
         } else {
-            destinationType += producerInfo.getDestination().getDestinationTypeAsString();
-            destinationName += JMXSupport.encodeObjectNamePart(producerInfo.getDestination().getPhysicalName());
+            objectNameStr += getDestinationType(producerInfo.getDestination()) + ",endpoint=Producer";
         }
 
-        String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
-        String producerId = "producerId=" + JMXSupport.encodeObjectNamePart(producerInfo.getProducerId().toString());
-
-        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
-                                               + "Type=Producer" + ","
-                                               + destinationType + ","
-                                               + (destinationName != null ? destinationName + "," : "")
-                                               + clientId + "," + producerId);
-        return objectName;
+        objectNameStr += ",clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
+        objectNameStr += ",producerId=" + JMXSupport.encodeObjectNamePart(producerInfo.getProducerId().toString());
+        return new ObjectName(objectNameStr);
     }
 
     public ObjectName registerSlowConsumerStrategy(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
@@ -750,9 +721,8 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     protected ObjectName createObjectName(XATransaction transaction) throws MalformedObjectNameException {
-        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
-        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName")
-                                               + "," + "Type=RecoveredXaTransaction"
+        ObjectName objectName = new ObjectName(brokerObjectName.toString()
+                                               + "," + "transactionType=RecoveredXaTransaction"
                                                + "," + "Xid="
                                                + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString()));
         return objectName;
@@ -789,9 +759,10 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     private ObjectName createObjectName(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException{
+        String objectNameStr = this.brokerObjectName.toString();
+        objectNameStr += "Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
         Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
-        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ","
-                            + "Type=SlowConsumerStrategy," + "InstanceName=" + JMXSupport.encodeObjectNamePart(strategy.getName()));
+        ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
     }
 
