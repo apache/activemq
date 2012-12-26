@@ -867,7 +867,7 @@ public class BrokerService implements Service {
      * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
     public boolean waitUntilStarted() {
-        boolean waitSucceeded = false;
+        boolean waitSucceeded = isStarted();
         while (!isStarted() && !stopped.get() && !waitSucceeded) {
             try {
                 if (startException != null) {
