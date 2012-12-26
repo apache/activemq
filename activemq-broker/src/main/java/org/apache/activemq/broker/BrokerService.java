@@ -471,7 +471,7 @@ public class BrokerService implements Service {
     }
 
     public boolean isStarted() {
-        return started.get();
+        return started.get() && startedLatch.getCount() == 0;
     }
 
     /**
@@ -868,7 +868,7 @@ public class BrokerService implements Service {
      */
     public boolean waitUntilStarted() {
         boolean waitSucceeded = false;
-        while (isStarted() && !stopped.get() && !waitSucceeded) {
+        while (!isStarted() && !stopped.get() && !waitSucceeded) {
             try {
                 if (startException != null) {
                     return waitSucceeded;
