@@ -130,8 +130,8 @@ public class PooledConnectionSessionCleanupTest {
 
     private QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":Type=Queue,Destination=" + name
-                + ",BrokerName=localhost");
+                + ":destinationType=Queue,destinationName=" + name
+                + ",type=Broker,brokerName=localhost");
         QueueViewMBean proxy = (QueueViewMBean) service.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;
