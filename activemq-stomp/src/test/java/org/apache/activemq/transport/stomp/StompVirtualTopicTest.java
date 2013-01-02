@@ -240,9 +240,9 @@ public class StompVirtualTopicTest extends StompTestSupport {
 
         private long reportQueueStatistics() throws Exception {
 
-            ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:Type=Queue" +
-                                                           ",Destination=Consumer.A.VirtualTopic.FOO" +
-                                                           ",BrokerName=localhost");
+            ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:destinationType=Queue" +
+                                                           ",destinationName=Consumer.A.VirtualTopic.FOO" +
+                                                           ",type=Broker,brokerName=localhost");
             QueueViewMBean queue = (QueueViewMBean)
                 brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
 
