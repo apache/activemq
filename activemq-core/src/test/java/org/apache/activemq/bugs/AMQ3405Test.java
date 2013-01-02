@@ -36,6 +36,7 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.policy.AbstractDeadLetterStrategy;
@@ -43,7 +44,6 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.TestSupport;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +117,7 @@ public class AMQ3405Test extends TestSupport {
         for (int i = 0; i < 2; ++i) {
 
             assertTrue("DLQ was not filled as expected", Wait.waitFor(new Wait.Condition() {
+                @Override
                 public boolean isSatisified() throws Exception {
                     return dlqView.getQueueSize() == messageCount;
                 }
@@ -137,6 +138,7 @@ public class AMQ3405Test extends TestSupport {
             dlqView.moveMatchingMessagesTo("", moveTo);
 
             assertTrue("DLQ was not emptied as expected", Wait.waitFor(new Wait.Condition() {
+                @Override
                 public boolean isSatisified() throws Exception {
                     return dlqView.getQueueSize() == 0;
                 }
@@ -163,6 +165,7 @@ public class AMQ3405Test extends TestSupport {
         dlqConsumer = dlqSession.createConsumer(dlqDestination);
     }
 
+    @Override
     protected void setUp() throws Exception {
         broker = createBroker();
         broker.start();
@@ -177,6 +180,7 @@ public class AMQ3405Test extends TestSupport {
         dlqSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         dlqConsumer.close();
         dlqSession.close();
@@ -188,6 +192,7 @@ public class AMQ3405Test extends TestSupport {
         }
     };
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory()
             throws Exception {
         ActiveMQConnectionFactory answer = super.createConnectionFactory();
@@ -226,9 +231,9 @@ public class AMQ3405Test extends TestSupport {
     }
 
     private QueueViewMBean getProxyToDLQ() throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":Type=Queue,Destination=ActiveMQ.DLQ"
-                + ",BrokerName=localhost");
+        ObjectName queueViewMBeanName = new ObjectName(
+            "org.apache.activemq:type=Broker,brokerName=localhost," +
+            "destinationType=Queue,destinationName=ActiveMQ.DLQ");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;
@@ -256,6 +261,7 @@ public class AMQ3405Test extends TestSupport {
             deliveryCount = delvery;
         }
 
+        @Override
         public void onMessage(Message message) {
             try {
                 int expectedMessageId = rollbacks.get() / deliveryCount;

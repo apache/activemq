@@ -16,7 +16,8 @@
  */
 package org.apache.activemq.bugs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -121,8 +122,8 @@ public class AMQ3445Test {
 
     private QueueViewMBean getProxyToQueueViewMBean() throws Exception {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":Type=Queue,Destination=" + queueName
-                + ",BrokerName=localhost");
+                + ":destinationType=Queue,destinationName=" + queueName
+                + ",type=Broker,brokerName=localhost");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;

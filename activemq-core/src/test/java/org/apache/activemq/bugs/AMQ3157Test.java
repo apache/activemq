@@ -154,14 +154,17 @@ public class AMQ3157Test extends EmbeddedBrokerTestSupport {
         String domain = "org.apache.activemq";
         ObjectName name;
         if (destination.isQueue()) {
-            name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=" + destination.getPhysicalName());
+            name = new ObjectName(domain + ":type=Broker,brokerName=localhost," +
+                                  "destinationType=Queue,destinationName=" + destination.getPhysicalName());
         } else {
-            name = new ObjectName(domain + ":BrokerName=localhost,Type=Topic,Destination=" + destination.getPhysicalName());
+            name = new ObjectName(domain + ":type=Broker,brokerName=localhost," +
+                                  "destinationType=Topic,destinationName=" + destination.getPhysicalName());
         }
 
         return name;
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
