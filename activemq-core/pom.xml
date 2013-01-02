@@ -202,13 +202,6 @@
       <artifactId>commons-net</artifactId>
     </dependency>
 
-    <!-- not really a dependency at all - just added optionally to get the generator working -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
-    </dependency>
-
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
     <!-- =============================== -->
@@ -1100,41 +1093,7 @@
                 </plugins>
             </build>
         </profile>
-    <profile>
-      <id>openwire-generate</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-openwire-generator</artifactId>
-          <version>${project.version}</version>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>default</id>
-                <phase>generate-sources</phase>
-                <configuration>
-                  <tasks>
-                    <echo>Running OpenWire Generator</echo>
-                    <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath" />
-                    <generate version="9" outputdir="${basedir}" basedir="${basedir}/../activemq-client" generateMarshalers="false"/>
-                  </tasks>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
+
     <!-- To generate the XBean meta-data, run: mvn -P xbean-generate clean process-classes -->
     <profile>
       <id>xbean-generate</id>

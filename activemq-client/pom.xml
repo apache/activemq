@@ -84,6 +84,16 @@
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- =============================== -->
+    <!-- Plugin Dependencies            -->
+    <!-- =============================== -->
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-openwire-generator</artifactId>
+      <optional>true</optional>
+    </dependency>
+    
   </dependencies>
 
   <reporting>
