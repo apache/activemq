@@ -98,7 +98,8 @@ public class AMQ2513Test extends TestCase {
 
     DestinationViewMBean createView() throws Exception {
         String domain = "org.apache.activemq";
-        ObjectName name = new ObjectName(domain + ":BrokerName=localhost,Type=Queue,Destination=test");
+        ObjectName name = new ObjectName(domain + ":type=Broker,brokerName=localhost," +
+                                                  "destinationType=Queue,destinationName=test");
         return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,
                 true);
     }

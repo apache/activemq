@@ -163,10 +163,6 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         TimeUnit.SECONDS.sleep(5);
 
-        for (ObjectName name : broker.getAdminView().getQueues()) {
-            LOG.info("Broker Queue: {}", name);
-        }
-
         final DestinationViewMBean view = createView(destination);
         Wait.waitFor(new Wait.Condition() {
             @Override
@@ -580,8 +576,6 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
         } else {
             name = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test");
         }
-
-        LOG.info("Attempting to find Queue named: {}", name);
 
         return (DestinationViewMBean) broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
     }
