@@ -16,12 +16,28 @@
  */
 package org.apache.activemq.broker.policy;
 
+import java.lang.reflect.UndeclaredThrowableException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 import javax.management.InstanceNotFoundException;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
+
 import junit.framework.Test;
+
 import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AbortSlowConsumerStrategyViewMBean;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -29,20 +45,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.MessageIdList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.TabularData;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 
 public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport implements ExceptionListener {
@@ -55,7 +57,7 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
     public long checkPeriod = 2 * 1000;
     public long maxSlowDuration = 5 * 1000;
 
-    private List<Throwable> exceptions = new ArrayList<Throwable>();
+    private final List<Throwable> exceptions = new ArrayList<Throwable>();
 
     @Override
     protected void setUp() throws Exception {
@@ -109,7 +111,6 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
         allMessagesList.assertAtLeastMessagesReceived(10);
     }
 
-
     public void initCombosForTestSlowConsumerIsAborted() {
         addCombinationValues("abortConnection", new Object[]{Boolean.TRUE, Boolean.FALSE});
         addCombinationValues("topic", new Object[]{Boolean.TRUE, Boolean.FALSE});
@@ -125,12 +126,9 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
         startProducers(destination, 100);
 
         consumertoAbort.getValue().assertMessagesReceived(1);
-
         TimeUnit.SECONDS.sleep(5);
-
         consumertoAbort.getValue().assertAtMostMessagesReceived(1);
     }
-
 
     public void testSlowConsumerIsAbortedViaJmx() throws Exception {
         underTest.setMaxSlowDuration(60*1000); // so jmx does the abort
@@ -145,11 +143,11 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
         consumertoAbort.getValue().assertMessagesReceived(1);
 
         ActiveMQDestination amqDest = (ActiveMQDestination)destination;
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:Type=" +
-                (amqDest.isTopic() ? "Topic" : "Queue") +",Destination="
-                + amqDest.getPhysicalName() + ",BrokerName=localhost");
+        ObjectName destinationViewMBean = new ObjectName("org.apache.activemq:destinationType=" +
+                (amqDest.isTopic() ? "Topic" : "Queue") +",destinationName="
+                + amqDest.getPhysicalName() + ",type=Broker,brokerName=localhost");
 
-        QueueViewMBean queue = (QueueViewMBean) broker.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        DestinationViewMBean queue = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(destinationViewMBean, DestinationViewMBean.class, true);
         ObjectName slowConsumerPolicyMBeanName = queue.getSlowConsumerStrategy();
 
         assertNotNull(slowConsumerPolicyMBeanName);
@@ -185,9 +183,7 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
             assertTrue("correct exception: " + expected.getCause(),
                     expected.getCause() instanceof InstanceNotFoundException);
         }
-
     }
-
 
     public void testOnlyOneSlowConsumerIsAborted() throws Exception {
         consumerCount = 10;
@@ -203,9 +199,7 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
         allMessagesList.assertAtLeastMessagesReceived(99);
 
         consumertoAbort.getValue().assertMessagesReceived(1);
-
         TimeUnit.SECONDS.sleep(5);
-
         consumertoAbort.getValue().assertAtMostMessagesReceived(1);
     }
 
@@ -276,6 +270,7 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
         // socket proxy on pause, close could hang??
     }
 
+    @Override
     public void onException(JMSException exception) {
         exceptions.add(exception);
         exception.printStackTrace();

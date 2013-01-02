@@ -19,7 +19,6 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +39,23 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
-import org.apache.activemq.broker.region.*;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFactory;
+import org.apache.activemq.broker.region.DestinationFactoryImpl;
+import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.Region;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.TopicRegion;
+import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -568,19 +578,23 @@ public class ManagedRegionBroker extends RegionBroker {
             ActiveMQTopic topic = new ActiveMQTopic(view.getDestinationName());
             TopicMessageStore store = adapter.createTopicMessageStore(topic);
             store.recover(new MessageRecoveryListener() {
+                @Override
                 public boolean recoverMessage(Message message) throws Exception {
                     result.add(message);
                     return true;
                 }
 
+                @Override
                 public boolean recoverMessageReference(MessageId messageReference) throws Exception {
                     throw new RuntimeException("Should not be called.");
                 }
 
+                @Override
                 public boolean hasSpace() {
                     return true;
                 }
 
+                @Override
                 public boolean isDuplicate(MessageId id) {
                     return false;
                 }
@@ -760,8 +774,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     private ObjectName createObjectName(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException{
         String objectNameStr = this.brokerObjectName.toString();
-        objectNameStr += "Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
-        Hashtable<String, String> map = brokerObjectName.getKeyPropertyList();
+        objectNameStr += ",Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
     }
