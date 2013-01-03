@@ -662,6 +662,7 @@ public class BrokerService implements Service {
         getBroker().brokerServiceStarted();
         checkSystemUsageLimits();
         startedLatch.countDown();
+        getBroker().nowMasterBroker();
     }
 
     /**

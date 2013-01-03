@@ -89,9 +89,6 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                         }
                     }, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
                 }
-                if (brokerService != null) {
-                    brokerService.getBroker().nowMasterBroker();
-                }
             }
         }
     }
