@@ -33,14 +33,16 @@
 package org.apache.activemq.usecases;
 
 import java.net.URI;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.management.ObjectName;
+
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
@@ -60,27 +62,27 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
 
     private void sendReceiveTempQueueMessage(String broker) throws Exception {
 
-    	ConnectionFactory factory = getConnectionFactory(broker);
-    	Connection conn = factory.createConnection();
-    	Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    	Destination dest = session.createTemporaryQueue();
-    	conn.close();
+        ConnectionFactory factory = getConnectionFactory(broker);
+        Connection conn = factory.createConnection();
+        Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createTemporaryQueue();
+        conn.close();
     }
 
     public void testTemporaryQueueAdvisory() throws Exception {
-    	LOG.info("Running testTemporaryQueueAdvisory()");
+        LOG.info("Running testTemporaryQueueAdvisory()");
 
         bridgeBrokers("BrokerA", "BrokerB");
         bridgeBrokers("BrokerB", "BrokerA");
 
-    	startAllBrokers();
+        startAllBrokers();
         waitForBridgeFormation();
         waitForMinTopicRegionConsumerCount("BrokerB", 1);
         waitForMinTopicRegionConsumerCount("BrokerA", 1);
 
         final int iterations = 30;
         for (int i = 0; i < iterations; i++) {
-	        sendReceiveTempQueueMessage("BrokerA");
+            sendReceiveTempQueueMessage("BrokerA");
         }
 
         waitForMinTopicRegionConsumerCount("BrokerB", 1);
@@ -172,14 +174,14 @@ public class TwoBrokerTempQueueAdvisoryTest extends JmsMultipleBrokersTestSuppor
         String domain = "org.apache.activemq";
         ObjectName name;
         if (type == ActiveMQDestination.QUEUE_TYPE) {
-            name = new ObjectName(domain + ":BrokerName=" + broker + ",Type=Queue,Destination=" + destination);
+            name = new ObjectName(domain + ":type=Broker,brokerName=" + broker + ",destinationType=Queue,destinationName=" + destination);
         } else {
-            name = new ObjectName(domain + ":BrokerName=" + broker + ",Type=Topic,Destination=" + destination);
+            name = new ObjectName(domain + ":type=Broker,brokerName=" + broker + ",destinationType=Topic,destinationName=" + destination);
         }
-        return (DestinationViewMBean) brokers.get(broker).broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class,
-                true);
+        return (DestinationViewMBean) brokers.get(broker).broker.getManagementContext().newProxyInstance(name, DestinationViewMBean.class, true);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
