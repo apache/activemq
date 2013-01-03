@@ -17,10 +17,13 @@
 
 package org.apache.activemq.usecases;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.URI;
-import javax.jms.Connection;
+
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -99,7 +102,7 @@ public class ConsumeUncompressedCompressedMessageTest {
     @Test
     public void testBrowseAndReceiveCompressedMessages() throws Exception {
 
-        assertTrue(((ActiveMQConnection) connection).isUseCompression());
+        assertTrue(connection.isUseCompression());
 
         createProducerAndSendMessages(1);
 
@@ -165,8 +168,8 @@ public class ConsumeUncompressedCompressedMessageTest {
     private QueueViewMBean getProxyToQueueViewMBean()
             throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
-                + ":Type=Queue,Destination=" + queue.getQueueName()
-                + ",BrokerName=localhost");
+                + ":destinationType=Queue,destinationName=" + queue.getQueueName()
+                + ",type=Broker,brokerName=localhost");
         QueueViewMBean proxy = (QueueViewMBean) broker.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class,
                         true);
