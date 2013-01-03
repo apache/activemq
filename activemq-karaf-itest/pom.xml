@@ -113,7 +113,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkMode>pertest</forkMode>
-          <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          <redirectTestOutputToFile>false</redirectTestOutputToFile>
           <argLine>-Xmx256m</argLine>
           <excludes>
             <!--<exclude>**/*Cxf*.*</exclude>-->
