@@ -22,10 +22,10 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
+
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(MirroredQueueTest.class);
@@ -74,7 +74,7 @@ public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
 
         LOG.info("Received: " + messageList);
     }
-    
+
     public void testTempMirroredQueuesClearDown() throws Exception{
         if (connection == null) {
             connection = createConnection();
@@ -84,9 +84,9 @@ public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
         TemporaryQueue tempQueue = session.createTemporaryQueue();
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
-        assertTrue(rb.getDestinationMap().size()==4);
+        assertTrue(rb.getDestinationMap().size()==5);
         tempQueue.delete();
-        assertTrue(rb.getDestinationMap().size()==3);        
+        assertTrue(rb.getDestinationMap().size()==4);
     }
 
     protected Destination createConsumeDestination() {
@@ -106,6 +106,7 @@ public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
         return answer;
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
