@@ -67,6 +67,7 @@ public class PooledConnectionSessionCleanupTest {
     @Before
     public void prepTest() throws java.lang.Exception {
         service = new BrokerService();
+        service.setBrokerName("PooledConnectionSessionCleanupTestBroker");
         service.setUseJmx(true);
         service.setPersistent(false);
         service.setSchedulerSupport(false);
@@ -97,23 +98,35 @@ public class PooledConnectionSessionCleanupTest {
     @After
     public void cleanupTest() throws java.lang.Exception {
         try {
-            pooledConn1.close();
+            if (pooledConn1 != null) {
+                pooledConn1.close();
+            }
         } catch (JMSException jms_exc) {
         }
         try {
-            pooledConn2.close();
+            if (pooledConn2 != null) {
+                pooledConn2.close();
+            }
         } catch (JMSException jms_exc) {
         }
         try {
-            directConn1.close();
+            if (directConn1 != null) {
+                directConn1.close();
+            }
         } catch (JMSException jms_exc) {
         }
         try {
-            directConn2.close();
+            if (directConn2 != null) {
+                directConn2.close();
+            }
         } catch (JMSException jms_exc) {
         }
         try {
-            service.stop();
+            if (service != null) {
+                service.stop();
+                service.waitUntilStopped();
+                service = null;
+            }
         } catch (JMSException jms_exc) {
         }
     }
@@ -131,7 +144,7 @@ public class PooledConnectionSessionCleanupTest {
     private QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq"
                 + ":destinationType=Queue,destinationName=" + name
-                + ",type=Broker,brokerName=localhost");
+                + ",type=Broker,brokerName=" + service.getBrokerName());
         QueueViewMBean proxy = (QueueViewMBean) service.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;
