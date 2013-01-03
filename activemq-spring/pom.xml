@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-spring</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Spring</name>
   <description>ActiveMQ Spring Integration</description>
 

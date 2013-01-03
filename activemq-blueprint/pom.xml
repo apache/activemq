@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-blueprint</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Blueprint</name>
   <description>The ActiveMQ Message Broker and Client implementations</description>
 

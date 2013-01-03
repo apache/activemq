@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-pool</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Pool</name>
   <description>ActiveMQ Pooled ConnectionFactory</description>
 

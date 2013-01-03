@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-ra</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: RA</name>
   <description>A JCA Resource Adapter used to integrate ActiveMQ with transactional enterprise containers</description>
 

@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-karaf</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Apache Karaf</name>
   <description>Provides resources for running ActiveMQ in Apache Karaf</description>
 

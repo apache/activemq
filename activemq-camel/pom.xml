@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-camel</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Camel</name>
   <description>ActiveMQ component for Camel</description>
 

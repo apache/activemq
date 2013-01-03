@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-core</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Core</name>
   <description>The ActiveMQ Message Broker and Client implementations</description>
 

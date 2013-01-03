@@ -26,7 +26,6 @@
   </parent>
 
   <artifactId>activemq-console</artifactId>
-  <packaging>bundle</packaging>
   <name>ActiveMQ :: Console</name>
   <description>ActiveMQ Management Console</description>
 
