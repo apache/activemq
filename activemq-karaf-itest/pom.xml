@@ -119,6 +119,7 @@
             <!--<exclude>**/*Cxf*.*</exclude>-->
           </excludes>
           <systemPropertyVariables>
+            <activemqVersion>${project.version}</activemqVersion>
             <karafVersion>${karaf-version}</karafVersion>
           </systemPropertyVariables>
         </configuration>
@@ -151,6 +152,7 @@
                 <exclude>**/*Test.*</exclude>
               </excludes>
               <systemPropertyVariables>
+                <activemqVersion>${project.version}</activemqVersion>
                 <karafVersion>${karaf-version}</karafVersion>
               </systemPropertyVariables>
             </configuration>
