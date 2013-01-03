@@ -21,26 +21,18 @@ import org.fusesource.hawtdispatch._
 import org.fusesource.hawtdispatch.BaseRetained
 import java.util.concurrent._
 import atomic._
-import org.fusesource.hawtbuf.{DataByteArrayOutputStream, DataByteArrayInputStream, ByteArrayOutputStream, Buffer}
+import org.fusesource.hawtbuf.Buffer
 import org.apache.activemq.store.MessageRecoveryListener
 import java.lang.ref.WeakReference
 import scala.Option._
 import org.fusesource.hawtbuf.Buffer._
 import org.apache.activemq.command._
 import org.apache.activemq.leveldb.record.{SubscriptionRecord, CollectionRecord}
-import util.TimeMetric
 import java.util.HashMap
 import collection.mutable.{HashSet, ListBuffer}
 import org.apache.activemq.util.ByteSequence
-import org.apache.activemq.leveldb.QueueEntryRecord
 import util.TimeMetric
-import org.apache.activemq.leveldb.SubAckRecord
 import scala.Some
-import org.apache.activemq.leveldb.UowManagerConstants.QueueEntryKey
-import org.apache.activemq.leveldb.CountDownFuture
-import org.apache.activemq.leveldb.XaAckRecord
-import org.apache.activemq.leveldb.MessageRecord
-import org.apache.activemq.leveldb.DurableSubscription
 
 case class MessageRecord(id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:(Long, Int) = _
