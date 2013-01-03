@@ -37,11 +37,13 @@ public class QueueMbeanRestartTest extends TestSupport {
         return suite(QueueMbeanRestartTest.class);
     }
 
+    @Override
     public void setUp() throws Exception {
         topic = false;
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         broker.stop();
@@ -73,11 +75,11 @@ public class QueueMbeanRestartTest extends TestSupport {
     private void verifyPresenceOfQueueMbean() throws Exception {
         for (ObjectName name : broker.getManagementContext().queryNames(null, null)) {
             LOG.info("candidate :" + name);
-            String type = name.getKeyProperty("Type");
+            String type = name.getKeyProperty("destinationType");
             if (type != null && type.equals("Queue")) {
                 assertEquals(
                         JMXSupport.encodeObjectNamePart(((ActiveMQQueue) createDestination()).getPhysicalName()),
-                        name.getKeyProperty("Destination"));
+                        name.getKeyProperty("destinationName"));
                 LOG.info("found mbbean " + name);
                 return;
             }
