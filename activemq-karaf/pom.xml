@@ -37,6 +37,7 @@
     <xstream-bundle-version>1.3_3</xstream-bundle-version>
     <servicemix.specs.version>1.9.0</servicemix.specs.version>
     <pax-exam-version>1.2.4</pax-exam-version>
+    <karaf-version>2.2.9</karaf-version>
   </properties>
 
     <dependencies>
