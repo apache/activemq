@@ -83,9 +83,17 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
         Map<String, String> map = new HashMap<String, String>(connectorName.getKeyPropertyList());
-        return new ObjectName(connectorName.getDomain() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart((String) map.get("BrokerName")) + "," + "Type=NetworkBridge,"
-                              + "NetworkConnectorName=" + JMXSupport.encodeObjectNamePart((String)map.get("NetworkConnectorName")) + "," + "Name="
-                              + JMXSupport.encodeObjectNamePart(JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress())));
+
+        StringBuilder objectNameStr = new StringBuilder();
+
+        objectNameStr.append(connectorName.getDomain()).append(":");
+        objectNameStr.append("type=Broker").append(",");
+        objectNameStr.append("brokerName=" + JMXSupport.encodeObjectNamePart(map.get("brokerName"))).append(",");
+        objectNameStr.append("service=NetworkBridge").append(",");
+        objectNameStr.append("networkConnectorName=" + JMXSupport.encodeObjectNamePart(map.get("networkConnectorName"))).append(",");
+        objectNameStr.append("networkBridgeName=" + JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress()));
+
+        return new ObjectName(objectNameStr.toString());
     }
 
     public void setCreatedByDuplex(boolean createdByDuplex) {

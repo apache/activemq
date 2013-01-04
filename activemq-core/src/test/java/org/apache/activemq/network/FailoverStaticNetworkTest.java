@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,10 +29,6 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -51,17 +50,17 @@ import org.apache.activemq.transport.tcp.SslBrokerServiceTest;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.Wait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FailoverStaticNetworkTest {
     protected static final Logger LOG = LoggerFactory.getLogger(FailoverStaticNetworkTest.class);
 
-	private final static String DESTINATION_NAME = "testQ";
-	protected BrokerService brokerA;
+    private final static String DESTINATION_NAME = "testQ";
+    protected BrokerService brokerA;
     protected BrokerService brokerA1;
     protected BrokerService brokerB;
     protected BrokerService brokerC;
@@ -122,12 +121,12 @@ public class FailoverStaticNetworkTest {
         TrustManager[] tm = SslBrokerServiceTest.getTrustManager();
         sslContext = new SslContext(km, tm, null);
     }
-    
+
     @After
     public void tearDown() throws Exception {
         brokerB.stop();
         brokerB.waitUntilStopped();
-        
+
         brokerA.stop();
         brokerA.waitUntilStopped();
 
@@ -192,8 +191,8 @@ public class FailoverStaticNetworkTest {
     private Set<String> getNetworkBridgeMBeanName(BrokerService brokerB) throws Exception {
         Set<String> names = new HashSet<String>();
         for (ObjectName objectName : brokerB.getManagementContext().queryNames(null, null)) {
-            if ("NetworkBridge".equals(objectName.getKeyProperty("Type"))) {
-                names.add(objectName.getKeyProperty("Name"));
+            if ("NetworkBridge".equals(objectName.getKeyProperty("service"))) {
+                names.add(objectName.getKeyProperty("networkBridgeName"));
             }
         }
         return names;
@@ -210,6 +209,7 @@ public class FailoverStaticNetworkTest {
         brokerA1 = slave;
         ExecutorService executor = Executors.newCachedThreadPool();
         executor.execute(new Runnable() {
+            @Override
             public void run() {
                 try {
                     slave.start();
@@ -253,6 +253,7 @@ public class FailoverStaticNetworkTest {
         brokerA1 = slave;
         ExecutorService executor = Executors.newCachedThreadPool();
         executor.execute(new Runnable() {
+            @Override
             public void run() {
                 try {
                     slave.start();
@@ -298,23 +299,23 @@ public class FailoverStaticNetworkTest {
      */
     @Test
     public void testSendReceive() throws Exception {
-              
+
         brokerA = createBroker("tcp", "61617", null);
-        brokerA.start();        
+        brokerA.start();
         brokerB = createBroker("tcp", "62617", new String[]{"61617","1111"});
         brokerB.start();
-  
+
         doTestNetworkSendReceive();
     }
 
     @Test
     public void testSendReceiveSsl() throws Exception {
-              
+
         brokerA = createBroker("ssl", "61617", null);
-        brokerA.start();        
+        brokerA.start();
         brokerB = createBroker("ssl", "62617", new String[]{"61617", "1111"});
         brokerB.start();
-  
+
         doTestNetworkSendReceive();
     }
 
@@ -415,7 +416,7 @@ public class FailoverStaticNetworkTest {
     private void doTestNetworkSendReceive(final BrokerService to, final BrokerService from) throws Exception, JMSException {
 
         LOG.info("Creating Consumer on the networked broker ..." + from);
-        
+
         SslContext.setCurrentSslContext(sslContext);
         // Create a consumer on brokerA
         ConnectionFactory consFactory = createConnectionFactory(from);
@@ -428,13 +429,14 @@ public class FailoverStaticNetworkTest {
         LOG.info("publishing to " + to);
 
         sendMessageTo(destination, to);
-        
+
         boolean gotMessage = Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 Message message = consumer.receive(5000);
                 LOG.info("from:  " + from.getBrokerObjectName().getKeyProperty("BrokerName") +  ", received: " + message);
                 return message != null;
-            }      
+            }
         });
         try {
             consConn.close();
@@ -451,9 +453,9 @@ public class FailoverStaticNetworkTest {
         session.createProducer(destination).send(session.createTextMessage("Hi"));
         conn.close();
     }
-    
-    protected ConnectionFactory createConnectionFactory(final BrokerService broker) throws Exception {    
-        String url = ((TransportConnector) broker.getTransportConnectors().get(0)).getServer().getConnectURI().toString();
+
+    protected ConnectionFactory createConnectionFactory(final BrokerService broker) throws Exception {
+        String url = broker.getTransportConnectors().get(0).getServer().getConnectURI().toString();
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
         connectionFactory.setOptimizedMessageDispatch(true);
         connectionFactory.setDispatchAsync(false);
