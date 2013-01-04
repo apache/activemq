@@ -80,7 +80,7 @@ public final class MarshallingSupport {
     }
 
     public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize) throws IOException {
-        return unmarshalPrimitiveMap(in, Integer.MAX_VALUE, false);
+        return unmarshalPrimitiveMap(in, maxPropertySize, false);
     }
 
     /**
@@ -106,7 +106,7 @@ public final class MarshallingSupport {
         }
     }
 
-    public static void marshalPrimitiveList(List list, DataOutputStream out) throws IOException {
+    public static void marshalPrimitiveList(List<Object> list, DataOutputStream out) throws IOException {
         out.writeInt(list.size());
         for (Object element : list) {
             marshalPrimitive(out, element);
