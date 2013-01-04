@@ -138,10 +138,12 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
 
             createConsumer(interest, cleanupMsgCount);
 
-            String brokerVersion = (String) mbeanServer.getAttribute(new ObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker"), "BrokerVersion");
+            String brokerVersion = (String) mbeanServer.getAttribute(new ObjectName("org.apache.activemq:brokerName=localhost,type=Broker"), "BrokerVersion");
 
             LOG.info("Test run on: " + brokerVersion);
-            final String theJmxObject = "org.apache.activemq:BrokerName=localhost,Type=Subscription,persistentMode=Durable,subscriptionID=MyDurableTopic,destinationType=Topic,destinationName=TEST,clientId=Jason";
+            final String theJmxObject = "org.apache.activemq:type=Broker,brokerName=localhost," +
+                    "endpoint=Consumer,destinationType=Topic,destinationName=TEST,clientId=Jason," +
+                    "consumerId=Durable(Jason_MyDurableTopic)";
 
             assertTrue("pendingQueueSize should be zero", Wait.waitFor(new Wait.Condition() {
                 @Override
@@ -275,10 +277,10 @@ public class DurableSubscriberNonPersistentMessageTest extends TestCase {
 
     public class Consumer {
 
-        private ConnectionFactory factory;
-        private ActiveMQConnection connection;
-        private Session session;
-        private MessageConsumer messageConsumer;
+        private final ConnectionFactory factory;
+        private final ActiveMQConnection connection;
+        private final Session session;
+        private final MessageConsumer messageConsumer;
 
         public Consumer(String brokerURL, String interest, String clientId) throws JMSException {
             factory = new ActiveMQConnectionFactory(brokerURL);
