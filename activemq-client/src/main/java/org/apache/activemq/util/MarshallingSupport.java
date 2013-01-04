@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -34,8 +33,6 @@ import org.fusesource.hawtbuf.UTF8Buffer;
 /**
  * The fixed version of the UTF8 encoding function. Some older JVM's UTF8
  * encoding function breaks when handling large strings.
- *
- *
  */
 public final class MarshallingSupport {
 
@@ -54,16 +51,14 @@ public final class MarshallingSupport {
     public static final byte LIST_TYPE = 12;
     public static final byte BIG_STRING_TYPE = 13;
 
-    private MarshallingSupport() {
-    }
+    private MarshallingSupport() {}
 
-    public static void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
+    public static void marshalPrimitiveMap(Map<String, Object> map, DataOutputStream out) throws IOException {
         if (map == null) {
             out.writeInt(-1);
         } else {
             out.writeInt(map.size());
-            for (Iterator iter = map.keySet().iterator(); iter.hasNext();) {
-                String name = (String)iter.next();
+            for (String name : map.keySet()) {
                 out.writeUTF(name);
                 Object value = map.get(name);
                 marshalPrimitive(out, value);
@@ -153,10 +148,10 @@ public final class MarshallingSupport {
             marshalString(out, value.toString());
         } else if (value instanceof Map) {
             out.writeByte(MAP_TYPE);
-            marshalPrimitiveMap((Map)value, out);
+            marshalPrimitiveMap((Map<String, Object>)value, out);
         } else if (value instanceof List) {
             out.writeByte(LIST_TYPE);
-            marshalPrimitiveList((List)value, out);
+            marshalPrimitiveList((List<Object>)value, out);
         } else {
             throw new IOException("Object is not a primitive: " + value);
         }
