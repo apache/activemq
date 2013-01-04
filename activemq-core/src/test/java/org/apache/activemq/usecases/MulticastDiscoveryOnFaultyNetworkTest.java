@@ -37,13 +37,12 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
     protected static final int MESSAGE_COUNT = 200;
     private static final String HUB = "HubBroker";
     private static final String SPOKE = "SpokeBroker";
-    public boolean useDuplexNetworkBridge;
+    public boolean useDuplexNetworkBridge = true;
+    public boolean useStaticDiscovery = false;
 
-   private TransportConnector mCastTrpConnector;
-   
     public void initCombosForTestSendOnAFaultyTransport() {
         addCombinationValues( "useDuplexNetworkBridge", new Object[]{ Boolean.TRUE , Boolean.FALSE } );
-        addCombinationValues( "sumulateStalledNetwork", new Object[]{ Boolean.TRUE } );
+        addCombinationValues( "useStaticDiscovery", new Object[]{ Boolean.TRUE , Boolean.FALSE } );
     }
     
     public void testSendOnAFaultyTransport() throws Exception {
@@ -109,20 +108,23 @@ public class MulticastDiscoveryOnFaultyNetworkTest extends JmsMultipleBrokersTes
 
     @Override
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
-        DiscoveryNetworkConnector connector = new DiscoveryNetworkConnector(new URI("multicast://default?group=TESTERIC&useLocalHost=false"));
+        String networkDisoveryUrlString = useStaticDiscovery ?
+                "static:(" + remoteBroker.getTransportConnectors().get(0).getPublishableConnectString() + ")?useExponentialBackOff=false" :
+                "multicast://default?group=TESTERIC&useLocalHost=false";
+
+        DiscoveryNetworkConnector connector = new DiscoveryNetworkConnector(new URI(networkDisoveryUrlString));
         connector.setDynamicOnly(dynamicOnly);
         connector.setNetworkTTL(networkTTL);
-        localBroker.addNetworkConnector(connector);
+        connector.setDuplex(useDuplexNetworkBridge);
         maxSetupTime = 2000;
-        if (useDuplexNetworkBridge) {
-            connector.setDuplex(true);
+        if (!useStaticDiscovery) {
+            List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
+            if (!transportConnectors.isEmpty()) {
+		        TransportConnector mCastTrpConnector = ((TransportConnector)transportConnectors.get(0));
+		        mCastTrpConnector.setDiscoveryUri(new URI("multicast://default?group=TESTERIC"));
+            }
         }
-
-        List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
-        if (!transportConnectors.isEmpty()) {
-		    mCastTrpConnector = ((TransportConnector)transportConnectors.get(0));
-		    mCastTrpConnector.setDiscoveryUri(new URI("multicast://default?group=TESTERIC"));
-	    }
+        localBroker.addNetworkConnector(connector);
 	    return connector;
     }
 }
