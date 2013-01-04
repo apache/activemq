@@ -28,12 +28,7 @@ import javax.jms.QueueConnection;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.management.MBeanServerConnection;
-import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -132,7 +127,7 @@ public class JMXRemoveQueueThenSendIgnoredTest {
 
     private int numberOfMessages() throws Exception {
         ObjectName queueViewMBeanName = new ObjectName(
-            domain + ":Type=Queue,Destination=myqueue,BrokerName=dev");
+            domain + ":destinationType=Queue,destinationName=myqueue,type=Broker,brokerName=dev");
         QueueViewMBean queue = (QueueViewMBean)
                 brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         long size = queue.getQueueSize();
