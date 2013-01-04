@@ -582,7 +582,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     override def removeAsyncMessage(context: ConnectionContext, ack: MessageAck): Unit = {
       if(  ack.getTransactionId!=null ) {
         transaction(ack.getTransactionId).remove(this, ack)
-        DONE
       } else {
         waitOn(withUow{uow=>
           doRemove(uow, ack.getLastMessageId)

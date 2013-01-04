@@ -274,7 +274,7 @@
 
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.9.1</artifactId>
+      <artifactId>scalatest_${scala-version}</artifactId>
       <version>${scalatest-version}</version>
       <scope>test</scope>
     </dependency>
@@ -290,8 +290,8 @@
 
     <plugins>
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
         <version>${scala-plugin-version}</version>
         <executions>
           <execution>
@@ -327,7 +327,7 @@
             <compilerPlugin>
               <groupId>org.fusesource.jvmassert</groupId>
               <artifactId>jvmassert</artifactId>
-              <version>1.1</version>
+              <version>1.4</version>
             </compilerPlugin>
           </compilerPlugins>
         </configuration>
@@ -379,13 +379,9 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>
-                      org.fusesource.hawtbuf
-                    </groupId>
-                    <artifactId>
-                      hawtbuf-protoc
-                    </artifactId>
-                    <versionRange>[1.9,)</versionRange>
+                    <groupId>org.fusesource.hawtbuf</groupId>
+                    <artifactId>hawtbuf-protoc</artifactId>
+                    <versionRange>[${hawtbuf-version},)</versionRange>
                     <goals>
                       <goal>compile</goal>
                     </goals>
@@ -396,13 +392,9 @@
               </pluginExecution>
               <pluginExecution>
                 <pluginExecutionFilter>
-                    <groupId>org.scala-tools</groupId>
-                    <artifactId>
-                      maven-scala-plugin
-                    </artifactId>
-                    <versionRange>
-                      [2.15.1,)
-                    </versionRange>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <versionRange>[${scala-plugin-version},)</versionRange>
                     <goals>
                       <goal>compile</goal>
                       <goal>testCompile</goal>

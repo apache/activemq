@@ -470,7 +470,7 @@ class LevelDBClient(store: LevelDBStore) {
           -1
         }
       } catch {
-        case e => throw new Exception("Unexpected version file format: " + version_file)
+        case e:Throwable => throw new Exception("Unexpected version file format: " + version_file)
       }
       ver match {
         case STORE_SCHEMA_VERSION => // All is good.
@@ -702,14 +702,13 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   private def storeCounters = {
-    def storeMap(key:Array[Byte], map:HashMap[Long, _ <: AnyRef]) {
+    def storeMap[T <: AnyRef](key:Array[Byte], map:HashMap[Long, T]) {
       val baos = new ByteArrayOutputStream()
       val os = new ObjectOutputStream(baos);
       os.writeInt(map.size);
-      map.foreach {
-        case (k, v) =>
-          os.writeLong(k)
-          os.writeObject(v)
+      for( (k,v) <- map ) {
+        os.writeLong(k)
+        os.writeObject(v)
       }
       os.close()
       index.put(key, baos.toByteArray)

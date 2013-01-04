@@ -100,8 +100,8 @@
     <rome-version>1.0</rome-version>
     <saxon-version>9.4</saxon-version>
     <saxon-bundle-version>9.4.0.1_2</saxon-bundle-version>
-    <scala-plugin-version>2.15.2</scala-plugin-version>
-    <scala-version>2.9.1</scala-version>
+    <scala-plugin-version>3.1.0</scala-plugin-version>
+    <scala-version>2.10.0</scala-version>
     <scalatest-version>1.8</scalatest-version>
     <slf4j-version>1.6.6</slf4j-version>
     <spring-version>3.0.7.RELEASE</spring-version>
