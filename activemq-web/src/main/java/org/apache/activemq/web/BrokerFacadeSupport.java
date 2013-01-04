@@ -184,8 +184,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
         String brokerName = getBrokerName();
         queueName = StringUtils.replace(queueName, "\"", "_");
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
-                + ",Type=Subscription,destinationType=Queue,destinationName=" + queueName + ",*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Consumer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
