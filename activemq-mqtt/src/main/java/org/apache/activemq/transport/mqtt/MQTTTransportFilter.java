@@ -153,5 +153,19 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         protocolConverter.setDefaultKeepAlive(defaultHeartBeat);
     }
 
+    public int getActiveMQSubscriptionPrefetch() {
+        return protocolConverter.getActiveMQSubscriptionPrefetch();
+    }
+
+    /**
+     * set the default prefetch size when mapping the MQTT subscription to an ActiveMQ one
+     * The default = 1
+     * @param activeMQSubscriptionPrefetch set the prefetch for the corresponding ActiveMQ subscription
+     */
+
+    public void setActiveMQSubscriptionPrefetch(int activeMQSubscriptionPrefetch) {
+        protocolConverter.setActiveMQSubscriptionPrefetch(activeMQSubscriptionPrefetch);
+    }
+
 
 }

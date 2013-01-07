@@ -78,7 +78,7 @@ public class MQTTTest {
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(false);
-        this.numberOfMessages = 1000;
+        this.numberOfMessages = 3000;
     }
 
     @After
@@ -200,6 +200,7 @@ public class MQTTTest {
             assertNotNull("Should get a message", message);
             LOG.debug(payload);
             message.ack();
+            //System.err.println("Sent " + payload + " GOT " + new String(message.getPayload()));
             assertEquals(payload, new String(message.getPayload()));
         }
         subConnection.disconnect();
