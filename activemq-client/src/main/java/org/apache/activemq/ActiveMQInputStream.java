@@ -21,9 +21,11 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
+
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -39,7 +41,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
- * 
+ *
  */
 public class ActiveMQInputStream extends InputStream implements ActiveMQDispatcher {
 
@@ -57,7 +59,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
     private ProducerId producerId;
     private long nextSequenceId;
-    private long timeout;
+    private final long timeout;
     private boolean firstReceived;
 
     public ActiveMQInputStream(ActiveMQConnection connection, ConsumerId consumerId, ActiveMQDestination dest, String selector, boolean noLocal, String name, int prefetch,  long timeout)
@@ -86,7 +88,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
         if (timeout < -1) throw new IllegalArgumentException("Timeout must be >= -1");
         this.timeout = timeout;
-        
+
         this.info = new ConsumerInfo(consumerId);
         this.info.setSubscriptionName(name);
 
@@ -155,6 +157,21 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         return jmsProperties;
     }
 
+    /**
+     * This method allows the client to receive the Stream data as unaltered ActiveMQMessage
+     * object which is how the split stream data is sent.  Each message will contains one
+     * chunk of the written bytes as well as a valid message group sequence id.  The EOS
+     * message will have a message group sequence id of -1.
+     *
+     * This method is useful for testing, but should never be mixed with calls to the
+     * normal stream receive methods as it will break the normal stream processing flow
+     * and can lead to loss of data.
+     *
+     * @return an ActiveMQMessage object that either contains byte data or an end of strem
+     *         marker.
+     * @throws JMSException
+     * @throws ReadTimeoutException
+     */
     public ActiveMQMessage receive() throws JMSException, ReadTimeoutException {
         checkClosed();
         MessageDispatch md;
@@ -198,7 +215,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     }
 
     /**
-     * 
+     *
      * @see InputStream#read()
      * @throws ReadTimeoutException if a timeout was given and the first chunk of the message could not read within the timeout
      */
@@ -211,9 +228,9 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
         return buffer[pos++] & 0xff;
     }
-    
+
     /**
-     * 
+     *
      * @see InputStream#read(byte[], int, int)
      * @throws ReadTimeoutException if a timeout was given and the first chunk of the message could not read within the timeout
      */
@@ -285,6 +302,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         }
     }
 
+    @Override
     public void dispatch(MessageDispatch md) {
         unconsumedMessages.enqueue(md);
     }
@@ -294,12 +312,12 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         return "ActiveMQInputStream { value=" + info.getConsumerId() + ", producerId=" + producerId + " }";
     }
 
-
     /**
      * Exception which should get thrown if the first chunk of the stream could not read within the configured timeout
-     *
      */
     public class ReadTimeoutException extends IOException {
+        private static final long serialVersionUID = -3217758894326719909L;
+
         public ReadTimeoutException() {
             super();
         }

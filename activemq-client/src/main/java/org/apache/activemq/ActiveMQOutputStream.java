@@ -33,11 +33,12 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class ActiveMQOutputStream extends OutputStream implements Disposable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQOutputStream.class);
 
     protected int count;
 
@@ -53,6 +54,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     private final int priority;
     private final long timeToLive;
     private boolean alwaysSyncSend = false;
+    private boolean addPropertiesOnFirstMsgOnly = false;
 
     /**
      * JMS Property which is used to specify the size (in kb) which is used as chunk size when splitting the stream. Default is 64kb
@@ -91,6 +93,15 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
             Map<String, String> options = new HashMap<String, String>(destination.getOptions());
             IntrospectionSupport.setProperties(this, options, "producer.");
             IntrospectionSupport.setProperties(this.info, options, "producer.");
+            if (options.size() > 0) {
+                String msg = "There are " + options.size()
+                    + " producer options that couldn't be set on the producer."
+                    + " Check the options are spelled correctly."
+                    + " Unknown parameters=[" + options + "]."
+                    + " This producer cannot be started.";
+                LOG.warn(msg);
+                throw new ConfigurationException(msg);
+            }
         }
 
         this.info.setDestination(destination);
@@ -99,6 +110,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         this.connection.asyncSendPacket(info);
     }
 
+    @Override
     public void close() throws IOException {
         if (!closed) {
             flushBuffer();
@@ -113,6 +125,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         }
     }
 
+    @Override
     public void dispose() {
         if (!closed) {
             this.connection.removeOutputStream(this);
@@ -120,6 +133,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         }
     }
 
+    @Override
     public synchronized void write(int b) throws IOException {
         buffer[count++] = (byte) b;
         if (count == buffer.length) {
@@ -127,6 +141,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         }
     }
 
+    @Override
     public synchronized void write(byte b[], int off, int len) throws IOException {
         while (len > 0) {
             int max = Math.min(len, buffer.length - count);
@@ -142,6 +157,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         }
     }
 
+    @Override
     public synchronized void flush() throws IOException {
         flushBuffer();
     }
@@ -164,7 +180,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
      * @throws JMSException
      */
     private void send(ActiveMQMessage msg, boolean eosMessage) throws JMSException {
-        if (properties != null) {
+        if (properties != null && (messageSequence == 0 || !addPropertiesOnFirstMsgOnly)) {
             for (Iterator<String> iter = properties.keySet().iterator(); iter.hasNext();) {
                 String key = iter.next();
                 Object value = properties.get(key);
@@ -182,6 +198,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         connection.send(info.getDestination(), msg, id, deliveryMode, priority, timeToLive, !eosMessage && !isAlwaysSyncSend());
     }
 
+    @Override
     public String toString() {
         return "ActiveMQOutputStream { producerId=" + info.getProducerId() + " }";
     }
@@ -194,4 +211,11 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         this.alwaysSyncSend = alwaysSyncSend;
     }
 
+    public boolean isAddPropertiesOnFirstMsgOnly() {
+        return addPropertiesOnFirstMsgOnly;
+    }
+
+    public void setAddPropertiesOnFirstMsgOnly(boolean propertiesOnFirstMsgOnly) {
+        this.addPropertiesOnFirstMsgOnly = propertiesOnFirstMsgOnly;
+    }
 }
