@@ -59,7 +59,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         final int QUEUE_SIZE = 30000;
         final String MOVE_TO_DESTINATION_NAME = getDestinationString()
                 + ".dest";
-        final long TEST_TIMEOUT = 8000;
+        final long TEST_TIMEOUT = 10000;
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
@@ -108,7 +108,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
         final int QUEUE_SIZE = 30000;
         final String MOVE_TO_DESTINATION_NAME = getDestinationString()
                 + ".dest";
-        final long TEST_TIMEOUT = 8000;
+        final long TEST_TIMEOUT = 10000;
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
@@ -154,7 +154,7 @@ public class LargeQueueSparseDeleteTest extends EmbeddedBrokerTestSupport {
 
     public void testRemoveMessages() throws Exception {
         final int QUEUE_SIZE = 30000;
-        final long TEST_TIMEOUT = 8000;
+        final long TEST_TIMEOUT = 10000;
 
         // Populate a test queue with uniquely-identifiable messages.
         Connection conn = createConnection();
