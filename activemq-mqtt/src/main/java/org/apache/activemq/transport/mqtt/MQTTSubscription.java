@@ -56,16 +56,12 @@ class MQTTSubscription {
         return publish;
     }
 
-    public boolean expectAck() {
-        return qos != QoS.AT_MOST_ONCE;
-    }
-
-    public void setDestination(ActiveMQDestination destination) {
-        this.destination = destination;
-    }
-
-    public ActiveMQDestination getDestination() {
-        return destination;
+    public boolean expectAck(PUBLISH publish) {
+        QoS publishQoS = publish.qos();
+        if (publishQoS.compareTo(this.qos) > 0){
+            publishQoS = this.qos;
+        }
+        return !publishQoS.equals(QoS.AT_MOST_ONCE);
     }
 
     public ConsumerInfo getConsumerInfo() {

@@ -24,9 +24,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import org.apache.activemq.broker.BrokerService;
 import org.fusesource.mqtt.client.MQTT;
-import org.junit.Ignore;
 
 public class MQTTSSLTest extends MQTTTest {
 
@@ -54,6 +52,15 @@ public class MQTTSSLTest extends MQTTTest {
         mqtt.setSslContext(ctx);
         return mqtt;
     }
+
+    protected void initializeConnection(MQTTClientProvider provider) throws Exception {
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+        provider.setSslContext(ctx);
+        provider.connect("ssl://localhost:"+mqttConnector.getConnectUri().getPort());
+    }
+
+
 
     static class DefaultTrustManager implements X509TrustManager {
 

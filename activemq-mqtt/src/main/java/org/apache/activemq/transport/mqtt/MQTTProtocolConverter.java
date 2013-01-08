@@ -305,7 +305,6 @@ class MQTTProtocolConverter {
             //by default subscribers are persistent
             consumerInfo.setSubscriptionName(connect.clientId().toString());
         }
-
         MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
 
         subscriptionsByConsumerId.put(id, mqttSubscription);
@@ -364,13 +363,13 @@ class MQTTProtocolConverter {
             if (sub != null) {
                 MessageAck ack = sub.createMessageAck(md);
                 PUBLISH publish = sub.createPublish((ActiveMQMessage) md.getMessage());
-                if (ack != null && sub.expectAck()) {
+                if (ack != null && sub.expectAck(publish)) {
                     synchronized (consumerAcks) {
                         consumerAcks.put(publish.messageId(), ack);
                     }
                 }
                 getMQTTTransport().sendToMQTT(publish.encode());
-                if (ack != null && !sub.expectAck()) {
+                if (ack != null && !sub.expectAck(publish)) {
                     getMQTTTransport().sendToActiveMQ(ack);
                 }
             }
@@ -683,11 +682,10 @@ class MQTTProtocolConverter {
     /**
      * Set the default keep alive time (in milliseconds) that would be used if configured on server side
      * and the client sends a keep-alive value of 0 (zero) on a CONNECT frame
-     *
-     * @param defaultKeepAlive the keepAlive in milliseconds
+     * @param keepAlive the keepAlive in milliseconds
      */
-    public void setDefaultKeepAlive(long defaultKeepAlive) {
-        this.defaultKeepAlive = defaultKeepAlive;
+    public void setDefaultKeepAlive(long keepAlive) {
+        this.defaultKeepAlive = keepAlive;
     }
 
     public int getActiveMQSubscriptionPrefetch() {
