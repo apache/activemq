@@ -16,12 +16,10 @@
  */
 package org.apache.activemq.store;
 
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.wireformat.WireFormat;
-
 import java.io.IOException;
 import java.util.Iterator;
+
+import org.apache.activemq.util.ByteSequence;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -32,12 +30,15 @@ public interface PList {
     void destroy() throws IOException;
 
     Object addFirst(String id, ByteSequence bs) throws IOException;
+
     Object addLast(String id, ByteSequence bs) throws IOException;
 
     boolean remove(Object position) throws IOException;
 
     boolean isEmpty();
+
     PListIterator iterator() throws IOException;
+
     long size();
 
     public interface PListIterator extends Iterator<PListEntry> {
