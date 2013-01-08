@@ -120,12 +120,12 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<String> getConnections(String connectorName) throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
-                + ",Type=Connection,ConnectorName=" + connectorName + ",Connection=*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionName=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult) {
-            String name = StringUtils.replace(on.getKeyProperty("Connection"), "_", ":");
+            String name = StringUtils.replace(on.getKeyProperty("connectionName"), "_", ":");
             result.add(name);
         }
         return result;
@@ -135,8 +135,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     public ConnectionViewMBean getConnection(String connectionName) throws Exception {
         connectionName = StringUtils.replace(connectionName, ":", "_");
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
-                + ",Type=Connection,*,Connection=" + connectionName);
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",connector=clientConnectors,*,connectionName=" + connectionName);
         Set<ObjectName> queryResult = queryNames(query, null);
         if (queryResult.size() == 0)
             return null;
@@ -148,18 +148,18 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<String> getConnectors() throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connector,*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=clientConnectors,connectorName=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult)
-            result.add(on.getKeyProperty("ConnectorName"));
+            result.add(on.getKeyProperty("connectorName"));
         return result;
     }
 
     public ConnectorViewMBean getConnector(String name) throws Exception {
         String brokerName = getBrokerName();
-        ObjectName objectName = new ObjectName("org.apache.activemq:BrokerName=" + brokerName
-                + ",Type=Connector,ConnectorName=" + name);
+        ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",connector=clientConnectors,connectorName=" + name);
         return (ConnectorViewMBean) newProxyInstance(objectName, ConnectorViewMBean.class, true);
     }
 
