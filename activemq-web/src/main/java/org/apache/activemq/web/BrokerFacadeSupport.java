@@ -166,7 +166,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<NetworkConnectorViewMBean> getNetworkConnectors() throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=NetworkConnector,*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=networkConnectors,networkConnectorName=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
                 NetworkConnectorViewMBean.class);
@@ -174,7 +174,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
 
     public Collection<NetworkBridgeViewMBean> getNetworkBridges() throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=NetworkBridge,*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=networkConnectors,networkConnectorName=*,networkBridge=*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]),
                 NetworkBridgeViewMBean.class);
