@@ -33,7 +33,7 @@
     <!-- activemq -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-client</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
