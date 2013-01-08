@@ -92,7 +92,43 @@
       <version>${org.osgi.core-version}</version>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-remote</artifactId>
+      <version>${pax-exam-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-rbc</artifactId>
+      <version>${pax-exam-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-rbc-client</artifactId>
+      <version>${pax-exam-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-invoker-junit</artifactId>
+      <version>${pax-exam-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-inject</artifactId>
+      <version>${pax-exam-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-extender-service</artifactId>
+      <version>${pax-exam-version}</version>
+      <scope>test</scope>
+    </dependency>
+      
     <!-- test and logging -->
     <dependency>
       <groupId>junit</groupId>
