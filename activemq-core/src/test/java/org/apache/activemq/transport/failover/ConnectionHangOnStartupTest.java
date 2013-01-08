@@ -75,11 +75,11 @@ public class ConnectionHangOnStartupTest {
     }
 
     protected String getSlaveXml() {
-        return "org/apache/activemq/broker/ft/slave.xml";
+        return "org/apache/activemq/broker/ft/sharedFileSlave.xml";
     }
 
     protected String getMasterXml() {
-        return "org/apache/activemq/broker/ft/master.xml";
+        return "org/apache/activemq/broker/ft/sharedFileMaster.xml";
     }
 
     @Test(timeout=60000)
@@ -101,7 +101,8 @@ public class ConnectionHangOnStartupTest {
         };
         t.start();
         createMaster();
-        createSlave();
+        // slave will never start unless the master dies!
+        //createSlave();
 
         conn.get().stop();
     }

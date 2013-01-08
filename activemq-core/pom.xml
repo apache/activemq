@@ -178,11 +178,6 @@
 
     <!-- for XML parsing -->
     <dependency>
-      <groupId>org.apache.xbean</groupId>
-      <artifactId>xbean-spring</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
@@ -204,6 +199,12 @@
     <!-- =============================== -->
     <!-- Testing Dependencies            -->
     <!-- =============================== -->
+    <dependency>
+       <groupId>org.apache.xbean</groupId>
+       <artifactId>xbean-spring</artifactId>
+       <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-broker</artifactId>
