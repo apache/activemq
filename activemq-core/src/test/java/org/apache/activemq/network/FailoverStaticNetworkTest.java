@@ -191,8 +191,8 @@ public class FailoverStaticNetworkTest {
     private Set<String> getNetworkBridgeMBeanName(BrokerService brokerB) throws Exception {
         Set<String> names = new HashSet<String>();
         for (ObjectName objectName : brokerB.getManagementContext().queryNames(null, null)) {
-            if ("NetworkBridge".equals(objectName.getKeyProperty("service"))) {
-                names.add(objectName.getKeyProperty("networkBridgeName"));
+            if (objectName.getKeyProperty("networkBridge") != null) {
+                names.add(objectName.getKeyProperty("networkBridge"));
             }
         }
         return names;

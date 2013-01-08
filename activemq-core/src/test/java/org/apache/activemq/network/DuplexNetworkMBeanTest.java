@@ -64,18 +64,18 @@ public class DuplexNetworkMBeanTest {
                 networkedBroker = createNetworkedBroker();
                 try {
                     networkedBroker.start();
-                    assertEquals(1, countMbeans(networkedBroker, "service=NetworkBridge", 2000));
-                    assertEquals(1, countMbeans(broker, "service=NetworkBridge", 2000));
+                    assertEquals(1, countMbeans(networkedBroker, "networkBridge", 2000));
+                    assertEquals(1, countMbeans(broker, "networkBridge", 2000));
                     assertEquals(1, countMbeans(broker, "connectionName"));
                 } finally {
                     networkedBroker.stop();
                     networkedBroker.waitUntilStopped();
                 }
                 assertEquals(0, countMbeans(networkedBroker, "stopped"));
-                assertEquals(0, countMbeans(broker, "service=NetworkBridge"));
+                assertEquals(0, countMbeans(broker, "networkBridge"));
             }
 
-            assertEquals(0, countMbeans(networkedBroker, "service=NetworkBridge"));
+            assertEquals(0, countMbeans(networkedBroker, "networkBridge"));
             assertEquals(0, countMbeans(networkedBroker, "connector"));
             assertEquals(0, countMbeans(networkedBroker, "connectionName"));
             assertEquals(1, countMbeans(broker, "connector"));
@@ -99,7 +99,7 @@ public class DuplexNetworkMBeanTest {
                 broker = createBroker();
                 try {
                     broker.start();
-                    assertEquals(1, countMbeans(networkedBroker, "service=NetworkBridge", 5000));
+                    assertEquals(1, countMbeans(networkedBroker, "networkBridge", 5000));
                     assertEquals("restart number: " + i, 1, countMbeans(broker, "connectionName", 10000));
                 } finally {
                     broker.stop();

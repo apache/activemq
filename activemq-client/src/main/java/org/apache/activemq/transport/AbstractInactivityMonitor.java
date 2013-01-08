@@ -414,7 +414,6 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     WRITE_CHECK_TIMER = null;
                     READ_CHECK_TIMER = null;
                     ThreadPoolUtils.shutdown(ASYNC_TASKS);
-                    ASYNC_TASKS = null;
                 }
             }
         }

@@ -75,12 +75,11 @@ public class DiscoveryNetworkReconnectTest {
             ObjectName mine = (ObjectName) name;
             LOG.info("Match: " + mine + " vs: " + other);
 
-            if (other.getKeyProperty("service") == null) {
+            if (!"networkConnectors".equals(other.getKeyProperty("connector"))) {
                 return false;
             }
-
-            return other.getKeyProperty("service").equals(mine.getKeyProperty("service")) &&
-                other.getKeyProperty("networkConnectorName").equals(mine.getKeyProperty("networkConnectorName"));
+            return other.getKeyProperty("connector").equals(mine.getKeyProperty("connector")) &&
+                   other.getKeyProperty("networkBridge") != null && mine.getKeyProperty("networkBridge") != null;
         }
 
         @Override
@@ -129,17 +128,17 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=jobScheduler,jobSchedulerName=JMS"))));
 
             atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
-                        new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=NetworkBridge,networkConnectorName=NC,networkBridgeName=localhost/127.0.0.1_"
+                        new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal register network mbean") {
                                 @Override
                                 public Object invoke(Invocation invocation) throws Throwable {
                                     LOG.info("Mbean Registered: " + invocation.getParameter(0));
                                     mbeanRegistered.release();
-                                    return new ObjectInstance((ObjectName)invocation.getParameter(1), "dscription");
+                                    return new ObjectInstance((ObjectName)invocation.getParameter(1), "discription");
                                 }
                             });
             atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(new NetworkBridgeObjectNameMatcher<ObjectName>(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=NetworkBridge,networkConnectorName=NC,networkBridgeName=localhost/127.0.0.1_"
+                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
                             + proxy.getUrl().getPort())))); will(new CustomAction("signal unregister network mbean") {
                                 @Override
                                 public Object invoke(Invocation invocation) throws Throwable {
@@ -186,21 +185,22 @@ public class DiscoveryNetworkReconnectTest {
     @Test
     public void testMulicastReconnect() throws Exception {
 
+        brokerB.addNetworkConnector(discoveryAddress + "&discovered.trace=true&discovered.wireFormat.maxInactivityDuration=1000&discovered.wireFormat.maxInactivityDurationInitalDelay=1000");
+        brokerB.start();
+        brokerB.waitUntilStarted();
+
         // control multicast advertise agent to inject proxy
         agent = MulticastDiscoveryAgentFactory.createDiscoveryAgent(new URI(discoveryAddress));
         agent.registerService(proxy.getUrl().toString());
         agent.start();
 
-        brokerB.addNetworkConnector(discoveryAddress + "&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
-        brokerB.start();
-        brokerB.waitUntilStarted();
         doReconnect();
     }
 
     @Test
     public void testSimpleReconnect() throws Exception {
         brokerB.addNetworkConnector("simple://(" + proxy.getUrl()
-                + ")?useExponentialBackOff=false&initialReconnectDelay=500&wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=1000");
+                + ")?useExponentialBackOff=false&initialReconnectDelay=500&discovered.wireFormat.maxInactivityDuration=1000&discovered.wireFormat.maxInactivityDurationInitalDelay=1000");
         brokerB.start();
         brokerB.waitUntilStarted();
         doReconnect();

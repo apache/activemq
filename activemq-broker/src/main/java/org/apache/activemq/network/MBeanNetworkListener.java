@@ -17,6 +17,7 @@
 package org.apache.activemq.network;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.management.MalformedObjectNameException;
@@ -82,18 +83,9 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
     }
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
-        Map<String, String> map = new HashMap<String, String>(connectorName.getKeyPropertyList());
-
-        StringBuilder objectNameStr = new StringBuilder();
-
-        objectNameStr.append(connectorName.getDomain()).append(":");
-        objectNameStr.append("type=Broker").append(",");
-        objectNameStr.append("brokerName=" + JMXSupport.encodeObjectNamePart(map.get("brokerName"))).append(",");
-        objectNameStr.append("service=NetworkBridge").append(",");
-        objectNameStr.append("networkConnectorName=" + JMXSupport.encodeObjectNamePart(map.get("networkConnectorName"))).append(",");
-        objectNameStr.append("networkBridgeName=" + JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress()));
-
-        return new ObjectName(objectNameStr.toString());
+        Hashtable<String, String> map = new Hashtable<String, String>(connectorName.getKeyPropertyList());
+        map.put("networkBridge", JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress()));
+        return new ObjectName(connectorName.getDomain(), map);
     }
 
     public void setCreatedByDuplex(boolean createdByDuplex) {
