@@ -74,12 +74,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
     </dependency>
-
-    <!-- TODO this should not be needed, but transitive dependencies are not working -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
