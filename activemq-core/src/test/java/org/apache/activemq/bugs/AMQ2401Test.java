@@ -31,6 +31,8 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -40,14 +42,11 @@ import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePoli
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import junit.framework.TestCase;
-
 /**
  * An AMQ-2401 Test
- *
  */
-public class AMQ2401Test extends TestCase implements MessageListener{
-    BrokerService broker;
+public class AMQ2401Test extends TestCase implements MessageListener {
+    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private static final int SEND_COUNT = 500;
     private static final int CONSUMER_COUNT = 50;
@@ -56,15 +55,16 @@ public class AMQ2401Test extends TestCase implements MessageListener{
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2401Test.class);
 
-    private ArrayList<Service> services = new ArrayList<Service>(CONSUMER_COUNT + PRODUCER_COUNT);
-    int count = 0;
-    CountDownLatch latch;
+    private final ArrayList<Service> services = new ArrayList<Service>(CONSUMER_COUNT + PRODUCER_COUNT);
+    private int count = 0;
+    private CountDownLatch latch;
 
+    @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
         broker.setDeleteAllMessagesOnStartup(true);
-        broker.addConnector("tcp://0.0.0.0:2401");
+        String connectionUri = broker.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
         PolicyMap policies = new PolicyMap();
         PolicyEntry entry = new PolicyEntry();
         entry.setMemoryLimit(1024 * 100);
@@ -73,15 +73,18 @@ public class AMQ2401Test extends TestCase implements MessageListener{
         entry.setQueue(">");
         policies.setDefaultEntry(entry);
         broker.setDestinationPolicy(policies);
+        broker.setUseJmx(false);
         broker.start();
         broker.waitUntilStarted();
 
-        factory = new ActiveMQConnectionFactory("tcp://0.0.0.0:2401");
+        factory = new ActiveMQConnectionFactory(connectionUri);
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         broker.stop();
+        broker.waitUntilStopped();
     }
 
     public void testDupsOk() throws Exception {
@@ -89,23 +92,20 @@ public class AMQ2401Test extends TestCase implements MessageListener{
         TestProducer p = null;
         TestConsumer c = null;
         try {
-
             latch = new CountDownLatch(SEND_COUNT);
 
-            for(int i = 0; i < CONSUMER_COUNT; i++)
-            {
+            for (int i = 0; i < CONSUMER_COUNT; i++) {
                 TestConsumer consumer = new TestConsumer();
                 consumer.start();
                 services.add(consumer);
             }
-            for(int i = 0; i < PRODUCER_COUNT; i++)
-            {
+            for (int i = 0; i < PRODUCER_COUNT; i++) {
                 TestProducer producer = new TestProducer();
                 producer.start();
                 services.add(producer);
             }
-            waitForMessageReceipt(TimeUnit.SECONDS.toMillis(30));
 
+            waitForMessageReceipt(TimeUnit.SECONDS.toMillis(30));
         } finally {
             if (p != null) {
                 p.close();
@@ -115,43 +115,34 @@ public class AMQ2401Test extends TestCase implements MessageListener{
                 c.close();
             }
         }
-
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see javax.jms.MessageListener#onMessage(javax.jms.Message)
-     */
+    @Override
     public void onMessage(Message message) {
         latch.countDown();
         if (++count % LOG_INTERVAL == 0) {
             LOG.debug("Received message " + count);
         }
+
         try {
             Thread.sleep(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-
     }
 
     /**
      * @throws InterruptedException
      * @throws TimeoutException
-     *
      */
     private void waitForMessageReceipt(long timeout) throws InterruptedException, TimeoutException {
         if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
-            throw new TimeoutException(String.format(
-                "Consumner didn't receive expected # of messages, %d of %d received.",
-                latch.getCount(), SEND_COUNT ));
+            throw new TimeoutException(String.format("Consumner didn't receive expected # of messages, %d of %d received.", latch.getCount(), SEND_COUNT));
         }
     }
 
     private interface Service {
         public void start() throws Exception;
-
         public void close();
     }
 
@@ -169,19 +160,20 @@ public class AMQ2401Test extends TestCase implements MessageListener{
             connection.start();
             session = connection.createSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             producer = session.createProducer(session.createQueue("AMQ2401Test"));
-
         }
 
+        @Override
         public void start() {
             thread.start();
         }
 
+        @Override
         public void run() {
 
             int count = SEND_COUNT / PRODUCER_COUNT;
             for (int i = 1; i <= count; i++) {
                 try {
-                    if( (i% LOG_INTERVAL)==0 ) {
+                    if ((i % LOG_INTERVAL) == 0) {
                         LOG.debug("Sending: " + i);
                     }
                     message = session.createBytesMessage();
@@ -194,6 +186,7 @@ public class AMQ2401Test extends TestCase implements MessageListener{
             }
         }
 
+        @Override
         public void close() {
             try {
                 connection.close();
@@ -217,10 +210,12 @@ public class AMQ2401Test extends TestCase implements MessageListener{
             consumer.setMessageListener(AMQ2401Test.this);
         }
 
+        @Override
         public void start() throws Exception {
             connection.start();
         }
 
+        @Override
         public void close() {
             try {
                 connection.close();
@@ -228,11 +223,7 @@ public class AMQ2401Test extends TestCase implements MessageListener{
             }
         }
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see java.lang.Runnable#run()
-         */
+        @Override
         public void run() {
             while (latch.getCount() > 0) {
                 try {
