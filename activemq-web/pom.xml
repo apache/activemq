@@ -48,15 +48,11 @@
     <!-- activemq -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-camel</artifactId>
     </dependency>
     <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>activemq-camel</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>activemq-pool</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -71,19 +67,16 @@
       <artifactId>geronimo-servlet_2.5_spec</artifactId>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all-server</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-websocket</artifactId>
-        <version>${jetty-version}</version>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-websocket</artifactId>
+      <version>${jetty-version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-continuation</artifactId>
@@ -101,41 +94,32 @@
       <groupId>jdom</groupId>
       <artifactId>jdom</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
       <optional>false</optional>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
       <optional>false</optional>
     </dependency>
-
     <dependency>
       <groupId>xpp3</groupId>
       <artifactId>xpp3</artifactId>
     </dependency>
-
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
     </dependency>
-
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
-
 </project>

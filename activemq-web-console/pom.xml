@@ -30,11 +30,11 @@
   <name>ActiveMQ :: Web Console</name>
   <description>Web Console for ActiveMQ</description>
 
-	<properties>
-		<jetty.port>8080</jetty.port>
-	</properties>
+    <properties>
+        <jetty.port>8080</jetty.port>
+    </properties>
 
-	<build>
+    <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -145,7 +145,7 @@
                 org.slf4j.spi;version="[1.6,2)";resolution:=optional,
                 org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
                 org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
-				org.eclipse.jetty.continuation;resolution:=optional
+                org.eclipse.jetty.continuation;resolution:=optional
             </Import-Package>
           </instructions>
         </configuration>
@@ -195,26 +195,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
       <version>${project.version}</version>
-    </dependency>
-
-    <!-- TODO this should not be needed, but transitive dependencies are not working -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-        <exclusions>
-            <exclusion>
-                <artifactId>servlet-api</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-            </exclusion>
-            <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-            </exclusion>
-            <exclusion>
-                <artifactId>ecj</artifactId>
-                <groupId>org.eclipse.jdt.core.compiler</groupId>
-            </exclusion>
-        </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
