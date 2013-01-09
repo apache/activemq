@@ -72,7 +72,6 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.XATransaction;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
@@ -162,7 +161,7 @@ public class ManagedRegionBroker extends RegionBroker {
     public void register(ActiveMQDestination destName, Destination destination) {
         // TODO refactor to allow views for custom destinations
         try {
-            ObjectName objectName = createObjectName(destName);
+            ObjectName objectName = BrokerMBeanSuppurt.createDestinationName(brokerObjectName, destName);
             DestinationView view;
             if (destination instanceof Queue) {
                 view = new QueueView(this, (Queue)destination);
@@ -182,7 +181,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public void unregister(ActiveMQDestination destName) {
         try {
-            ObjectName objectName = createObjectName(destName);
+            ObjectName objectName = BrokerMBeanSuppurt.createDestinationName(brokerObjectName, destName);
             unregisterDestination(objectName);
         } catch (Exception e) {
             LOG.error("Failed to unregister " + destName, e);
@@ -191,11 +190,10 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public ObjectName registerSubscription(ConnectionContext context, Subscription sub) {
         String connectionClientId = context.getClientId();
-        ObjectName brokerJmxObjectName = brokerObjectName;
-        String objectNameStr = getSubscriptionObjectName(sub.getConsumerInfo(), connectionClientId, brokerJmxObjectName);
+
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), sub.getConsumerInfo().getSubscriptionName());
         try {
-            ObjectName objectName = new ObjectName(objectNameStr);
+            ObjectName objectName = BrokerMBeanSuppurt.createSubscriptionName(brokerObjectName, connectionClientId, sub.getConsumerInfo());
             SubscriptionView view;
             if (sub.getConsumerInfo().getConsumerId().getConnectionId().equals("OFFLINE")) {
                 // add offline subscribers to inactive list
@@ -226,19 +224,6 @@ public class ManagedRegionBroker extends RegionBroker {
         }
     }
 
-    public static String getSubscriptionObjectName(ConsumerInfo info, String connectionClientId, ObjectName brokerJmxObjectName) {
-        String objectNameStr = brokerJmxObjectName.toString();
-        objectNameStr += getDestinationType(info.getDestination()) + ",endpoint=Consumer";
-        objectNameStr += ",clientId=" +  JMXSupport.encodeObjectNamePart(connectionClientId);
-        objectNameStr += ",consumerId=";
-        if (info.isDurable()){
-            objectNameStr += "Durable(" +  JMXSupport.encodeObjectNamePart(connectionClientId + ":" + info.getSubscriptionName()) +")";
-        } else {
-            objectNameStr += JMXSupport.encodeObjectNamePart(info.getConsumerId().toString());
-        }
-        return objectNameStr;
-    }
-
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         Subscription sub = super.addConsumer(context, info);
@@ -263,11 +248,10 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     @Override
-    public void addProducer(ConnectionContext context, ProducerInfo info)
-            throws Exception {
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.addProducer(context, info);
         String connectionClientId = context.getClientId();
-        ObjectName objectName = createObjectName(info, connectionClientId);
+        ObjectName objectName = BrokerMBeanSuppurt.createProducerName(brokerObjectName, context.getClientId(), info);
         String userName = brokerService.isPopulateUserNameInMBeans() ? context.getUserName() : null;
         ProducerView view = new ProducerView(info, connectionClientId, userName, this);
         registerProducer(objectName, info.getDestination(), view);
@@ -275,7 +259,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        ObjectName objectName = createObjectName(info, context.getClientId());
+        ObjectName objectName = BrokerMBeanSuppurt.createProducerName(brokerObjectName, context.getClientId(), info);
         unregisterProducer(objectName);
         super.removeProducer(context, info);
     }
@@ -285,7 +269,7 @@ public class ManagedRegionBroker extends RegionBroker {
         if (exchange != null && exchange.getProducerState() != null && exchange.getProducerState().getInfo() != null) {
             ProducerInfo info = exchange.getProducerState().getInfo();
             if (info.getDestination() == null && info.getProducerId() != null) {
-                ObjectName objectName = createObjectName(info, exchange.getConnectionContext().getClientId());
+                ObjectName objectName = BrokerMBeanSuppurt.createProducerName(brokerObjectName, exchange.getConnectionContext().getClientId(), info);
                 ProducerView view = this.dynamicDestinationProducers.get(objectName);
                 if (view != null) {
                     ActiveMQDestination dest = message.getDestination();
@@ -524,7 +508,7 @@ public class ManagedRegionBroker extends RegionBroker {
     protected void addInactiveSubscription(SubscriptionKey key, SubscriptionInfo info, Subscription subscription) {
         try {
             ConsumerInfo offlineConsumerInfo = subscription != null ? subscription.getConsumerInfo() : ((TopicRegion)getTopicRegion()).createInactiveConsumerInfo(info);
-            ObjectName objectName = new ObjectName(getSubscriptionObjectName(offlineConsumerInfo, info.getClientId(), brokerObjectName));
+            ObjectName objectName = BrokerMBeanSuppurt.createSubscriptionName(brokerObjectName, info.getClientId(), offlineConsumerInfo);
             SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info, subscription);
 
             try {
@@ -689,39 +673,10 @@ public class ManagedRegionBroker extends RegionBroker {
         this.contextBroker = contextBroker;
     }
 
-    protected ObjectName createObjectName(ActiveMQDestination destination) throws MalformedObjectNameException {
-        // Build the object name for the destination
-        String objectNameStr = brokerObjectName.toString();
-        objectNameStr += getDestinationType(destination);
-        return new ObjectName(objectNameStr);
-    }
-
-    protected static String getDestinationType(ActiveMQDestination destination){
-        String result = "";
-        if (destination != null){
-            result = ",destinationType="+ JMXSupport.encodeObjectNamePart(destination.getDestinationTypeAsString()) +  ",destinationName=" + JMXSupport.encodeObjectNamePart(destination.getPhysicalName());
-        }
-        return result;
-    }
-
-    protected ObjectName createObjectName(ProducerInfo producerInfo, String connectionClientId) throws MalformedObjectNameException {
-        String objectNameStr = brokerObjectName.toString();
-
-        if (producerInfo.getDestination() == null) {
-            objectNameStr += ",endpoint=dynamicProducer";
-        } else {
-            objectNameStr += getDestinationType(producerInfo.getDestination()) + ",endpoint=Producer";
-        }
-
-        objectNameStr += ",clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
-        objectNameStr += ",producerId=" + JMXSupport.encodeObjectNamePart(producerInfo.getProducerId().toString());
-        return new ObjectName(objectNameStr);
-    }
-
     public ObjectName registerSlowConsumerStrategy(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
         ObjectName objectName = null;
         try {
-            objectName = createObjectName(strategy);
+            objectName = BrokerMBeanSuppurt.createAbortSlowConsumerStrategyName(brokerObjectName, strategy);
             if (!registeredMBeans.contains(objectName))  {
                 AbortSlowConsumerStrategyView view = new AbortSlowConsumerStrategyView(this, strategy);
                 AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
@@ -734,17 +689,9 @@ public class ManagedRegionBroker extends RegionBroker {
         return objectName;
     }
 
-    protected ObjectName createObjectName(XATransaction transaction) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(brokerObjectName.toString()
-                                               + "," + "transactionType=RecoveredXaTransaction"
-                                               + "," + "Xid="
-                                               + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString()));
-        return objectName;
-    }
-
     public void registerRecoveredTransactionMBean(XATransaction transaction) {
         try {
-            ObjectName objectName = createObjectName(transaction);
+            ObjectName objectName = BrokerMBeanSuppurt.createXATransactionName(brokerObjectName, transaction);
             if (!registeredMBeans.contains(objectName))  {
                 RecoveredXATransactionView view = new RecoveredXATransactionView(this, transaction);
                 AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
@@ -758,7 +705,7 @@ public class ManagedRegionBroker extends RegionBroker {
 
     public void unregister(XATransaction transaction) {
         try {
-            ObjectName objectName = createObjectName(transaction);
+            ObjectName objectName = BrokerMBeanSuppurt.createXATransactionName(brokerObjectName, transaction);
             if (registeredMBeans.remove(objectName)) {
                 try {
                     managementContext.unregisterMBean(objectName);
@@ -770,13 +717,6 @@ public class ManagedRegionBroker extends RegionBroker {
         } catch (Exception e) {
             LOG.warn("Failed to create object name to unregister " + transaction, e);
         }
-    }
-
-    private ObjectName createObjectName(AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException{
-        String objectNameStr = this.brokerObjectName.toString();
-        objectNameStr += ",Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
-        ObjectName objectName = new ObjectName(objectNameStr);
-        return objectName;
     }
 
     public ObjectName getSubscriberObjectName(Subscription key) {

@@ -19,6 +19,7 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
@@ -27,7 +28,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class ManagedTransportConnection extends TransportConnection {
 
     private final ManagementContext managementContext;
     private final ObjectName connectorName;
-    private ConnectionViewMBean mbean;
+    private final ConnectionViewMBean mbean;
 
     private ObjectName byClientIdName;
     private ObjectName byAddressName;
@@ -74,6 +74,7 @@ public class ManagedTransportConnection extends TransportConnection {
         super.stopAsync();
     }
 
+    @Override
     public Response processAddConnection(ConnectionInfo info) throws Exception {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
@@ -115,10 +116,7 @@ public class ManagedTransportConnection extends TransportConnection {
 
     protected ObjectName createByAddressObjectName(String type, String value) throws IOException {
         try {
-            String objectNameStr = connectorName.toString();
-            objectNameStr += ",connectionViewType="   + JMXSupport.encodeObjectNamePart(type);
-            objectNameStr += ",connectionName="+JMXSupport.encodeObjectNamePart(value);
-            return new ObjectName(objectNameStr);
+            return BrokerMBeanSuppurt.createConnectionViewByAddressName(connectorName, type, value);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
@@ -126,12 +124,9 @@ public class ManagedTransportConnection extends TransportConnection {
 
     protected ObjectName createByClientIdObjectName(String value) throws IOException {
         try {
-            String objectNameStr = connectorName.toString();
-            objectNameStr += ",connectionName="+JMXSupport.encodeObjectNamePart(value);
-            return new ObjectName(objectNameStr);
+            return BrokerMBeanSuppurt.createConnectionViewByClientIdName(connectorName, value);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
     }
-
 }

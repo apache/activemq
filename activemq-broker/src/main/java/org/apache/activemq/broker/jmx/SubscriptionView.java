@@ -31,7 +31,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.JMXSupport;
 
 /**
  *
@@ -56,6 +55,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the clientId
      */
+    @Override
     public String getClientId() {
         return clientId;
     }
@@ -63,6 +63,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @returns the ObjectName of the Connection that created this subscription
      */
+    @Override
     public ObjectName getConnection() {
         ObjectName result = null;
 
@@ -89,10 +90,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
 
     private ObjectName createConnectionQuery(ManagementContext ctx, String brokerName) throws IOException {
         try {
-            return new ObjectName(ctx.getJmxDomainName() + ":type=Broker,brokerName="
-                                  + JMXSupport.encodeObjectNamePart(brokerName) + ","
-                                  + "connector=*," + "connectorName=*,"
-                                  + "connectionName=" + JMXSupport.encodeObjectNamePart(clientId));
+            return BrokerMBeanSuppurt.createConnectionQuery(ctx.getJmxDomainName(), brokerName, clientId);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
@@ -101,6 +99,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Connection the Subscription is on
      */
+    @Override
     public String getConnectionId() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -112,6 +111,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Session the subscription is on
      */
+    @Override
     public long getSessionId() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -123,6 +123,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Subscription
      */
+    @Override
     public long getSubcriptionId() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -134,6 +135,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the destination name
      */
+    @Override
     public String getDestinationName() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -143,6 +145,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return "NOTSET";
     }
 
+    @Override
     public String getSelector() {
         if (subscription != null) {
             return subscription.getSelector();
@@ -150,6 +153,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return null;
     }
 
+    @Override
     public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException {
         if (subscription != null) {
             subscription.setSelector(selector);
@@ -161,6 +165,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true if the destination is a Queue
      */
+    @Override
     public boolean isDestinationQueue() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -173,6 +178,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true of the destination is a Topic
      */
+    @Override
     public boolean isDestinationTopic() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -185,6 +191,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true if the destination is temporary
      */
+    @Override
     public boolean isDestinationTemporary() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
@@ -197,6 +204,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true if the subscriber is active
      */
+    @Override
     public boolean isActive() {
         return true;
     }
@@ -214,6 +222,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return whether or not the subscriber is retroactive or not
      */
+    @Override
     public boolean isRetroactive() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isRetroactive() : false;
@@ -222,6 +231,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return whether or not the subscriber is an exclusive consumer
      */
+    @Override
     public boolean isExclusive() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isExclusive() : false;
@@ -230,6 +240,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return whether or not the subscriber is durable (persistent)
      */
+    @Override
     public boolean isDurable() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isDurable() : false;
@@ -238,6 +249,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return whether or not the subscriber ignores local messages
      */
+    @Override
     public boolean isNoLocal() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isNoLocal() : false;
@@ -249,6 +261,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      *         perform eviction of messages for slow consumers on non-durable
      *         topics.
      */
+    @Override
     public int getMaximumPendingMessageLimit() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getMaximumPendingMessageLimit() : 0;
@@ -257,6 +270,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the consumer priority
      */
+    @Override
     public byte getPriority() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getPriority() : 0;
@@ -266,6 +280,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return the name of the consumer which is only used for durable
      *         consumers.
      */
+    @Override
     public String getSubcriptionName() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getSubscriptionName() : null;
@@ -274,6 +289,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages pending delivery
      */
+    @Override
     public int getPendingQueueSize() {
         return subscription != null ? subscription.getPendingQueueSize() : 0;
     }
@@ -281,10 +297,12 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages dispatched
      */
+    @Override
     public int getDispatchedQueueSize() {
         return subscription != null ? subscription.getDispatchedQueueSize() : 0;
     }
 
+    @Override
     public int getMessageCountAwaitingAcknowledge() {
         return getDispatchedQueueSize();
     }
@@ -292,6 +310,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages that matched the subscription
      */
+    @Override
     public long getDispatchedCounter() {
         return subscription != null ? subscription.getDispatchedCounter() : 0;
     }
@@ -299,6 +318,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages that matched the subscription
      */
+    @Override
     public long getEnqueueCounter() {
         return subscription != null ? subscription.getEnqueueCounter() : 0;
     }
@@ -306,6 +326,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return number of messages queued by the client
      */
+    @Override
     public long getDequeueCounter() {
         return subscription != null ? subscription.getDequeueCounter() : 0;
     }
@@ -317,16 +338,19 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return pretty print
      */
+    @Override
     public String toString() {
         return "SubscriptionView: " + getClientId() + ":" + getConnectionId();
     }
 
     /**
      */
+    @Override
     public int getPrefetchSize() {
         return subscription != null ? subscription.getPrefetchSize() : 0;
     }
 
+    @Override
     public boolean isMatchingQueue(String queueName) {
         if (isDestinationQueue()) {
             return matchesDestination(new ActiveMQQueue(queueName));
@@ -334,6 +358,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return false;
     }
 
+    @Override
     public boolean isMatchingTopic(String topicName) {
         if (isDestinationTopic()) {
             return matchesDestination(new ActiveMQTopic(topicName));

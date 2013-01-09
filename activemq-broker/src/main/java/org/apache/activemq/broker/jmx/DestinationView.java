@@ -69,38 +69,47 @@ public class DestinationView implements DestinationViewMBean {
         destination.gc();
     }
 
+    @Override
     public String getName() {
         return destination.getName();
     }
 
+    @Override
     public void resetStatistics() {
         destination.getDestinationStatistics().reset();
     }
 
+    @Override
     public long getEnqueueCount() {
         return destination.getDestinationStatistics().getEnqueues().getCount();
     }
 
+    @Override
     public long getDequeueCount() {
         return destination.getDestinationStatistics().getDequeues().getCount();
     }
 
+    @Override
     public long getDispatchCount() {
         return destination.getDestinationStatistics().getDispatched().getCount();
     }
 
+    @Override
     public long getInFlightCount() {
         return destination.getDestinationStatistics().getInflight().getCount();
     }
 
+    @Override
     public long getExpiredCount() {
         return destination.getDestinationStatistics().getExpired().getCount();
     }
 
+    @Override
     public long getConsumerCount() {
         return destination.getDestinationStatistics().getConsumers().getCount();
     }
 
+    @Override
     public long getQueueSize() {
         return destination.getDestinationStatistics().getMessages().getCount();
     }
@@ -109,38 +118,47 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
 
+    @Override
     public int getMemoryPercentUsage() {
         return destination.getMemoryUsage().getPercentUsage();
     }
 
+    @Override
     public long getMemoryUsageByteCount() {
         return destination.getMemoryUsage().getUsage();
     }
 
+    @Override
     public long getMemoryLimit() {
         return destination.getMemoryUsage().getLimit();
     }
 
+    @Override
     public void setMemoryLimit(long limit) {
         destination.getMemoryUsage().setLimit(limit);
     }
 
+    @Override
     public double getAverageEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getAverageTime();
     }
 
+    @Override
     public long getMaxEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMaxTime();
     }
 
+    @Override
     public long getMinEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
     }
 
+    @Override
     public boolean isPrioritizedMessages() {
         return destination.isPrioritizedMessages();
     }
 
+    @Override
     public CompositeData[] browse() throws OpenDataException {
         try {
             return browse(null);
@@ -150,6 +168,7 @@ public class DestinationView implements DestinationViewMBean {
         }
     }
 
+    @Override
     public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException {
         Message[] messages = destination.browse();
         ArrayList<CompositeData> c = new ArrayList<CompositeData>();
@@ -187,6 +206,7 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * Browses the current destination returning a list of messages
      */
+    @Override
     public List<Object> browseMessages() throws InvalidSelectorException {
         return browseMessages(null);
     }
@@ -195,6 +215,7 @@ public class DestinationView implements DestinationViewMBean {
      * Browses the current destination with the given selector returning a list
      * of messages
      */
+    @Override
     public List<Object> browseMessages(String selector) throws InvalidSelectorException {
         Message[] messages = destination.browse();
         ArrayList<Object> answer = new ArrayList<Object>();
@@ -223,6 +244,7 @@ public class DestinationView implements DestinationViewMBean {
         return answer;
     }
 
+    @Override
     public TabularData browseAsTable() throws OpenDataException {
         try {
             return browseAsTable(null);
@@ -231,6 +253,7 @@ public class DestinationView implements DestinationViewMBean {
         }
     }
 
+    @Override
     public TabularData browseAsTable(String selector) throws OpenDataException, InvalidSelectorException {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(ActiveMQMessage.class);
         Message[] messages = destination.browse();
@@ -260,18 +283,22 @@ public class DestinationView implements DestinationViewMBean {
         return rc;
     }
 
+    @Override
     public String sendTextMessage(String body) throws Exception {
         return sendTextMessage(Collections.EMPTY_MAP, body);
     }
 
+    @Override
     public String sendTextMessage(Map headers, String body) throws Exception {
         return sendTextMessage(headers, body, null, null);
     }
 
+    @Override
     public String sendTextMessage(String body, String user, String password) throws Exception {
         return sendTextMessage(Collections.EMPTY_MAP, body, user, password);
     }
 
+    @Override
     public String sendTextMessage(Map headers, String body, String userName, String password) throws Exception {
 
         String brokerUrl = "vm://" + broker.getBrokerName();
@@ -305,10 +332,12 @@ public class DestinationView implements DestinationViewMBean {
 
     }
 
+    @Override
     public int getMaxAuditDepth() {
         return destination.getMaxAuditDepth();
     }
 
+    @Override
     public int getMaxProducersToAudit() {
         return destination.getMaxProducersToAudit();
     }
@@ -321,38 +350,47 @@ public class DestinationView implements DestinationViewMBean {
         destination.setEnableAudit(enableAudit);
     }
 
+    @Override
     public void setMaxAuditDepth(int maxAuditDepth) {
         destination.setMaxAuditDepth(maxAuditDepth);
     }
 
+    @Override
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         destination.setMaxProducersToAudit(maxProducersToAudit);
     }
 
+    @Override
     public float getMemoryUsagePortion() {
         return destination.getMemoryUsage().getUsagePortion();
     }
 
+    @Override
     public long getProducerCount() {
         return destination.getDestinationStatistics().getProducers().getCount();
     }
 
+    @Override
     public boolean isProducerFlowControl() {
         return destination.isProducerFlowControl();
     }
 
+    @Override
     public void setMemoryUsagePortion(float value) {
         destination.getMemoryUsage().setUsagePortion(value);
     }
 
+    @Override
     public void setProducerFlowControl(boolean producerFlowControl) {
         destination.setProducerFlowControl(producerFlowControl);
     }
 
+    @Override
     public boolean isAlwaysRetroactive() {
         return destination.isAlwaysRetroactive();
     }
 
+    @Override
     public void setAlwaysRetroactive(boolean alwaysRetroactive) {
         destination.setAlwaysRetroactive(alwaysRetroactive);
     }
@@ -365,6 +403,7 @@ public class DestinationView implements DestinationViewMBean {
      * @param blockedProducerWarningInterval the interval at which warning about
      *            blocked producers will be triggered.
      */
+    @Override
     public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
         destination.setBlockedProducerWarningInterval(blockedProducerWarningInterval);
     }
@@ -374,39 +413,45 @@ public class DestinationView implements DestinationViewMBean {
      * @return the interval at which warning about blocked producers will be
      *         triggered.
      */
+    @Override
     public long getBlockedProducerWarningInterval() {
         return destination.getBlockedProducerWarningInterval();
     }
 
+    @Override
     public int getMaxPageSize() {
         return destination.getMaxPageSize();
     }
 
+    @Override
     public void setMaxPageSize(int pageSize) {
         destination.setMaxPageSize(pageSize);
     }
 
+    @Override
     public boolean isUseCache() {
         return destination.isUseCache();
     }
 
+    @Override
     public void setUseCache(boolean value) {
         destination.setUseCache(value);
     }
 
+    @Override
     public ObjectName[] getSubscriptions() throws IOException, MalformedObjectNameException {
         List<Subscription> subscriptions = destination.getConsumers();
         ObjectName[] answer = new ObjectName[subscriptions.size()];
-        ObjectName objectName = broker.getBrokerService().getBrokerObjectName();
+        ObjectName brokerObjectName = broker.getBrokerService().getBrokerObjectName();
         int index = 0;
         for (Subscription subscription : subscriptions) {
             String connectionClientId = subscription.getContext().getClientId();
-            String objectNameStr = ManagedRegionBroker.getSubscriptionObjectName(subscription.getConsumerInfo(), connectionClientId, objectName);
-            answer[index++] = new ObjectName(objectNameStr);
+            answer[index++] = BrokerMBeanSuppurt.createSubscriptionName(brokerObjectName, connectionClientId, subscription.getConsumerInfo());
         }
         return answer;
     }
 
+    @Override
     public ObjectName getSlowConsumerStrategy() throws IOException, MalformedObjectNameException {
         ObjectName result = null;
         SlowConsumerStrategy strategy = destination.getSlowConsumerStrategy();
@@ -416,6 +461,7 @@ public class DestinationView implements DestinationViewMBean {
         return result;
     }
 
+    @Override
     public String getOptions() {
         Map<String, String> options = destination.getActiveMQDestination().getOptions();
         String optionsString = "";

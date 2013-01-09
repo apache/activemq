@@ -55,6 +55,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.BrokerMBeanSuppurt;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
@@ -109,7 +110,6 @@ import org.apache.activemq.util.IOExceptionHandler;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.InetAddressUtil;
-import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.util.TimeUtils;
@@ -1992,9 +1992,7 @@ public class BrokerService implements Service {
     }
 
     private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
-        String objectNameStr = getBrokerObjectName().toString();
-        objectNameStr += ",connector=clientConnectors,connectorName="+ JMXSupport.encodeObjectNamePart(connector.getName());
-        return new ObjectName(objectNameStr);
+        return BrokerMBeanSuppurt.createConnectorName(getBrokerObjectName(), "clientConnectors", connector.getName());
     }
 
     protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
@@ -2009,15 +2007,11 @@ public class BrokerService implements Service {
     }
 
     protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
-        String objectNameStr = getBrokerObjectName().toString();
-        objectNameStr += ",connector=networkConnectors,networkConnectorName="+ JMXSupport.encodeObjectNamePart(connector.getName());
-        return new ObjectName(objectNameStr);
+        return BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "networkConnectors", connector.getName());
     }
 
     public ObjectName createDuplexNetworkConnectorObjectName(String transport) throws MalformedObjectNameException {
-        String objectNameStr = getBrokerObjectName().toString();
-        objectNameStr += ",connector=duplexNetworkConnectors,networkConnectorName="+ JMXSupport.encodeObjectNamePart(transport);
-        return new ObjectName(objectNameStr);
+        return BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport.toString());
     }
 
     protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
@@ -2034,9 +2028,7 @@ public class BrokerService implements Service {
     protected void registerProxyConnectorMBean(ProxyConnector connector) throws IOException {
         ProxyConnectorView view = new ProxyConnectorView(connector);
         try {
-            String objectNameStr = getBrokerObjectName().toString();
-            objectNameStr += ",connector=proxyConnectors,proxyConnectorName="+ JMXSupport.encodeObjectNamePart(connector.getName());
-            ObjectName objectName = new ObjectName(objectNameStr);
+            ObjectName objectName = BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "proxyConnectors", connector.getName());
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
@@ -2046,9 +2038,7 @@ public class BrokerService implements Service {
     protected void registerJmsConnectorMBean(JmsConnector connector) throws IOException {
         JmsConnectorView view = new JmsConnectorView(connector);
         try {
-            String objectNameStr = getBrokerObjectName().toString();
-            objectNameStr += ",connector=jmsConnectors,JmsConnectors="+ JMXSupport.encodeObjectNamePart(connector.getName());
-            ObjectName objectName = new ObjectName(objectNameStr);
+            ObjectName objectName = BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "jmsConnectors", connector.getName());
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
@@ -2167,9 +2157,7 @@ public class BrokerService implements Service {
             if (isUseJmx()) {
                 JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
                 try {
-                    String objectNameStr = getBrokerObjectName().toString();
-                    objectNameStr += ",service=JobScheduler,name=JMS";
-                    ObjectName objectName = new ObjectName(objectNameStr);
+                    ObjectName objectName = BrokerMBeanSuppurt.createJobSchedulerServiceName(getBrokerObjectName());
                     AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
                     this.adminView.setJMSJobScheduler(objectName);
                 } catch (Throwable e) {
@@ -2182,9 +2170,7 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             HealthViewMBean statusView = new HealthView((ManagedRegionBroker)getRegionBroker());
             try {
-                String objectNameStr = getBrokerObjectName().toString();
-                objectNameStr += ",service=Health";
-                ObjectName objectName = new ObjectName(objectNameStr);
+                ObjectName objectName = BrokerMBeanSuppurt.createHealthServiceName(getBrokerObjectName());
                 AnnotatedMBean.registerMBean(getManagementContext(), statusView, objectName);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create("Status MBean could not be registered in JMX: "
@@ -2235,9 +2221,7 @@ public class BrokerService implements Service {
     }
 
     protected ObjectName createBrokerObjectName() throws MalformedObjectNameException  {
-        String objectNameStr = getManagementContext().getJmxDomainName() + ":type=Broker,brokerName=";
-        objectNameStr += JMXSupport.encodeObjectNamePart(getBrokerName());
-        return new ObjectName(objectNameStr);
+        return BrokerMBeanSuppurt.createBrokerObjectName(getManagementContext().getJmxDomainName(), getBrokerName());
     }
 
     protected TransportConnector createTransportConnector(URI brokerURI) throws Exception {

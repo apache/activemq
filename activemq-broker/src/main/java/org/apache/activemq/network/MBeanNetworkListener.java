@@ -16,18 +16,14 @@
  */
 package org.apache.activemq.network;
 
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.BrokerMBeanSuppurt;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
-import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,9 +79,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
     }
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
-        Hashtable<String, String> map = new Hashtable<String, String>(connectorName.getKeyPropertyList());
-        map.put("networkBridge", JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress()));
-        return new ObjectName(connectorName.getDomain(), map);
+        return BrokerMBeanSuppurt.createNetworkBridgeObjectName(connectorName, bridge.getRemoteAddress());
     }
 
     public void setCreatedByDuplex(boolean createdByDuplex) {

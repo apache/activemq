@@ -1,0 +1,252 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.broker.jmx;
+
+import java.util.Hashtable;
+
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
+import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.transaction.XATransaction;
+import org.apache.activemq.util.JMXSupport;
+
+public class BrokerMBeanSuppurt {
+
+    // MBean Name Creation
+
+    public static ObjectName createBrokerObjectName(String jmxDomainName, String brokerName) throws MalformedObjectNameException  {
+        String objectNameStr = jmxDomainName + ":type=Broker,brokerName=";
+        objectNameStr += JMXSupport.encodeObjectNamePart(brokerName);
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createDestinationName(ObjectName brokerObjectName, ActiveMQDestination destination) throws MalformedObjectNameException {
+        return createDestinationName(brokerObjectName.toString(), destination);
+    }
+
+    public static ObjectName createDestinationName(String brokerObjectName, ActiveMQDestination destination) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += createDestinationProperties(destination);
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createDestinationName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += createDestinationProperties(type, name);
+        return new ObjectName(objectNameStr);
+    }
+
+    private static String createDestinationProperties(ActiveMQDestination destination){
+        String result = "";
+        if (destination != null){
+            result = createDestinationProperties(destination.getDestinationTypeAsString(), destination.getPhysicalName());
+        }
+        return result;
+    }
+
+    private static String createDestinationProperties(String type, String name){
+        return ",destinationType="+ JMXSupport.encodeObjectNamePart(type) +
+               ",destinationName=" + JMXSupport.encodeObjectNamePart(name);
+    }
+
+    public static ObjectName createSubscriptionName(ObjectName brokerObjectName, String connectionClientId, ConsumerInfo info) throws MalformedObjectNameException {
+        return createSubscriptionName(brokerObjectName.toString(), connectionClientId, info);
+    }
+
+    public static ObjectName createSubscriptionName(String brokerObjectName, String connectionClientId, ConsumerInfo info) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += createDestinationProperties(info.getDestination()) + ",endpoint=Consumer";
+        objectNameStr += ",clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
+        objectNameStr += ",consumerId=";
+
+        if (info.isDurable()){
+            objectNameStr += "Durable(" + JMXSupport.encodeObjectNamePart(connectionClientId + ":" + info.getSubscriptionName()) +")";
+        } else {
+            objectNameStr += JMXSupport.encodeObjectNamePart(info.getConsumerId().toString());
+        }
+
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createProducerName(ObjectName brokerObjectName, String connectionClientId, ProducerInfo info) throws MalformedObjectNameException {
+        return createProducerName(brokerObjectName.toString(), connectionClientId, info);
+    }
+
+    public static ObjectName createProducerName(String brokerObjectName, String connectionClientId, ProducerInfo producerInfo) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+
+        if (producerInfo.getDestination() == null) {
+            objectNameStr += ",endpoint=dynamicProducer";
+        } else {
+            objectNameStr += createDestinationProperties(producerInfo.getDestination()) + ",endpoint=Producer";
+        }
+
+        objectNameStr += ",clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
+        objectNameStr += ",producerId=" + JMXSupport.encodeObjectNamePart(producerInfo.getProducerId().toString());
+
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createXATransactionName(ObjectName brokerObjectName, XATransaction transaction) throws MalformedObjectNameException {
+        return createXATransactionName(brokerObjectName.toString(), transaction);
+    }
+
+    public static ObjectName createXATransactionName(String brokerObjectName, XATransaction transaction) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+
+        objectNameStr += "," + "transactionType=RecoveredXaTransaction";
+        objectNameStr += "," + "Xid=" + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString());
+
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createAbortSlowConsumerStrategyName(ObjectName brokerObjectName, AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
+        return createAbortSlowConsumerStrategyName(brokerObjectName.toString(), strategy);
+    }
+
+    public static ObjectName createAbortSlowConsumerStrategyName(String brokerObjectName, AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    public static ObjectName createConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        return createConnectorName(brokerObjectName.toString(), type, name);
+    }
+
+    public static ObjectName createConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",connector=" + type + ",connectorName="+ JMXSupport.encodeObjectNamePart(name);
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    public static ObjectName createNetworkConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        return createNetworkConnectorName(brokerObjectName.toString(), type, name);
+    }
+
+    public static ObjectName createNetworkConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",connector=" + type + ",networkConnectorName="+ JMXSupport.encodeObjectNamePart(name);
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    public static ObjectName createConnectionViewByAddressName(ObjectName connectorName, String type, String address) throws MalformedObjectNameException {
+        String objectNameStr = connectorName.toString();
+        objectNameStr += ",connectionViewType=" + JMXSupport.encodeObjectNamePart(type);
+        objectNameStr += ",connectionName="+ JMXSupport.encodeObjectNamePart(address);
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createConnectionViewByClientIdName(ObjectName connectorName, String clientId) throws MalformedObjectNameException {
+        String objectNameStr = connectorName.toString();
+        objectNameStr += ",connectionName="+JMXSupport.encodeObjectNamePart(clientId);
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createNetworkBridgeObjectName(ObjectName connectorName, String remoteAddress) throws MalformedObjectNameException {
+        Hashtable<String, String> map = new Hashtable<String, String>(connectorName.getKeyPropertyList());
+        map.put("networkBridge", JMXSupport.encodeObjectNamePart(remoteAddress));
+        return new ObjectName(connectorName.getDomain(), map);
+    }
+
+    public static ObjectName createProxyConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        return createProxyConnectorName(brokerObjectName.toString(), type, name);
+    }
+
+    public static ObjectName createProxyConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",connector=" + type + ",proxyConnectorName="+ JMXSupport.encodeObjectNamePart(name);
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    public static ObjectName createJmsConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        return createJmsConnectorName(brokerObjectName.toString(), type, name);
+    }
+
+    public static ObjectName createJmsConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",connector=" + type + ",JmsConnectors="+ JMXSupport.encodeObjectNamePart(name);
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    public static ObjectName createJobSchedulerServiceName(ObjectName brokerObjectName) throws MalformedObjectNameException {
+        return createJobSchedulerServiceName(brokerObjectName.toString());
+    }
+
+    public static ObjectName createJobSchedulerServiceName(String brokerObjectName) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",service=JobScheduler,name=JMS";
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    public static ObjectName createHealthServiceName(ObjectName brokerObjectName) throws MalformedObjectNameException {
+        return createHealthServiceName(brokerObjectName.toString());
+    }
+
+    public static ObjectName createHealthServiceName(String brokerObjectName) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+        objectNameStr += ",service=Health";
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
+    // MBean Query Creation
+
+    public static ObjectName createConnectionQuery(String jmxDomainName, String brokerName, String clientId) throws MalformedObjectNameException {
+        return new ObjectName(jmxDomainName + ":type=Broker,brokerName="
+                              + JMXSupport.encodeObjectNamePart(brokerName) + ","
+                              + "connector=*," + "connectorName=*,"
+                              + "connectionName=" + JMXSupport.encodeObjectNamePart(clientId));
+    }
+
+    public static ObjectName createConsumerQueury(String jmxDomainName, String clientId) throws MalformedObjectNameException {
+        return createConsumerQueury(jmxDomainName, null, clientId);
+    }
+
+    public static ObjectName createConsumerQueury(String jmxDomainName, String brokerName, String clientId) throws MalformedObjectNameException {
+        return new ObjectName(jmxDomainName + ":type=Broker,brokerName="
+                              + (brokerName != null ? brokerName : "*") + ","
+                              + "destinationType=*,destinationName=*,"
+                              + "endpoint=Consumer,"
+                              + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
+                              + "consumerId=*");
+    }
+
+    public static ObjectName createProducerQueury(String jmxDomainName, String clientId) throws MalformedObjectNameException {
+        return createProducerQueury(jmxDomainName, null, clientId);
+    }
+
+    public static ObjectName createProducerQueury(String jmxDomainName, String brokerName, String clientId) throws MalformedObjectNameException {
+        return new ObjectName(jmxDomainName + ":type=Broker,brokerName="
+                + (brokerName != null ? brokerName : "*") + ","
+                + "destinationType=*,destinationName=*,"
+                + "endpoint=Producer,"
+                + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
+                + "producerId=*");
+    }
+
+}

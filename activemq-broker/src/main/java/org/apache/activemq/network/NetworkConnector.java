@@ -19,13 +19,10 @@ package org.apache.activemq.network;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -33,13 +30,13 @@ import javax.management.ObjectName;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.BrokerMBeanSuppurt;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
@@ -57,10 +54,12 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
     protected ServiceSupport serviceSupport = new ServiceSupport() {
 
+        @Override
         protected void doStart() throws Exception {
             handleStart();
         }
 
+        @Override
         protected void doStop(ServiceStopper stopper) throws Exception {
             handleStop(stopper);
         }
@@ -145,7 +144,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             }
 
             ActiveMQDestination[] dest = new ActiveMQDestination[topics.size()];
-            dest = (ActiveMQDestination[])topics.toArray(dest);
+            dest = topics.toArray(dest);
             result.setDurableDestinations(dest);
         }
         return result;
@@ -155,10 +154,12 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         return TransportFactory.connect(localURI);
     }
 
+    @Override
     public void start() throws Exception {
         serviceSupport.start();
     }
 
+    @Override
     public void stop() throws Exception {
         serviceSupport.stop();
     }
@@ -228,11 +229,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
-        ObjectName connectorName = getObjectName();
-        Map<String, String> map = new HashMap<String, String>(connectorName.getKeyPropertyList());
-        return new ObjectName(connectorName.getDomain() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + "," + "Type=NetworkBridge,"
-                              + "NetworkConnectorName=" + JMXSupport.encodeObjectNamePart((String)map.get("NetworkConnectorName")) + "," + "Name="
-                              + JMXSupport.encodeObjectNamePart(JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress())));
+        return BrokerMBeanSuppurt.createNetworkBridgeObjectName(getObjectName(), bridge.getRemoteAddress());
     }
 
     // ask all the bridges as we can't know to which this consumer is tied

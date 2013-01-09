@@ -23,7 +23,6 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.JMXSupport;
 
 public class ConnectionView implements ConnectionViewMBean {
 
@@ -149,11 +148,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     private ObjectName createConsumerQueury(String clientId) throws IOException {
         try {
-            return new ObjectName(managementContext.getJmxDomainName() + ":type=Broker,brokerName=*,"
-                                  + "destinationType=*,destinationName=*,"
-                                  + "endpoint=Consumer,"
-                                  + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
-                                  + "consumerId=*");
+            return BrokerMBeanSuppurt.createConsumerQueury(managementContext.getJmxDomainName(), clientId);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
@@ -161,11 +156,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     private ObjectName createProducerQueury(String clientId) throws IOException {
         try {
-            return new ObjectName(managementContext.getJmxDomainName() + ":type=Broker,brokerName=*,"
-                    + "destinationType=*,destinationName=*,"
-                    + "endpoint=Producer,"
-                    + "clientId=" + JMXSupport.encodeObjectNamePart(clientId) + ","
-                    + "producerId=*");
+            return BrokerMBeanSuppurt.createProducerQueury(managementContext.getJmxDomainName(), clientId);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
