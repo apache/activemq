@@ -71,6 +71,8 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
             if (pos >= 0) {
                 val = key.substring(pos + 1);
                 key = key.substring(0, pos);
+            } else {
+                objNameQuery += delimiter + key;
             }
 
             if (val.startsWith(QUERY_EXP_PREFIX)) {
