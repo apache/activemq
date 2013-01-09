@@ -19,6 +19,7 @@ package org.apache.activemq.bugs;
 import java.io.File;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -26,6 +27,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.TestSupport;
@@ -55,7 +57,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
     Destination bigDestination = new ActiveMQQueue("FooTwoBig");
 
     private String connectionUri;
-    private Vector<Throwable> exceptions = new Vector<Throwable>();
+    private final Vector<Throwable> exceptions = new Vector<Throwable>();
 
     public void testBlockByOtherResumeNoException() throws Exception {
 
@@ -176,7 +178,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
         broker = new BrokerService();
         broker.setDataDirectory("target" + File.separator + "activemq-data");
         broker.setPersistent(true);
-        broker.setUseJmx(true);
+        broker.setUseJmx(false);
         broker.setAdvisorySupport(false);
         broker.setDeleteAllMessagesOnStartup(true);
 
