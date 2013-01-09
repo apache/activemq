@@ -63,6 +63,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
         // Constructs object name query
         String objNameQuery = "";
         String queryExp = "";
+        String delimiter = "";
         for (Iterator i = queries.iterator(); i.hasNext();) {
             String key = (String)i.next();
             String val = "";
@@ -75,12 +76,10 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
             if (val.startsWith(QUERY_EXP_PREFIX)) {
                 // do nothing as of the moment
             } else if (!key.equals("") && !val.equals("")) {
-                objNameQuery = objNameQuery + key + "=" + val + ",";
+                objNameQuery += delimiter + key + "=" + val;
+                delimiter = ",";
             }
         }
-
-        // Append * to object name
-        objNameQuery = objNameQuery + "*";
 
         return queryMBeans(new ObjectName(DEFAULT_JMX_DOMAIN + ":" + objNameQuery), queryExp);
     }

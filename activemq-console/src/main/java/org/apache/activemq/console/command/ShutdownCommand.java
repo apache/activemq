@@ -79,7 +79,6 @@ public class ShutdownCommand extends AbstractJmxCommand {
             } else if (brokerNames.isEmpty()) {
                 // Stop the default broker
                 mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-
                 // If there is no broker to stop
                 if (mbeans.isEmpty()) {
                     context.printInfo("There are no brokers to stop.");
@@ -130,7 +129,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
         for (Iterator i = brokerBeans.iterator(); i.hasNext();) {
             brokerObjName = ((ObjectInstance)i.next()).getObjectName();
 
-            String brokerName = brokerObjName.getKeyProperty("BrokerName");
+            String brokerName = brokerObjName.getKeyProperty("brokerName");
             context.print("Stopping broker: " + brokerName);
 
             try {

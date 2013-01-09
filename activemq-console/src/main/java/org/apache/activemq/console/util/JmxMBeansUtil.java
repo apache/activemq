@@ -42,19 +42,19 @@ public final class JmxMBeansUtil {
     }
 
     public static List getAllBrokers(MBeanServerConnection jmxConnection) throws Exception {
-        return (new MBeansObjectNameQueryFilter(jmxConnection)).query("Type=Broker");
+        return (new MBeansObjectNameQueryFilter(jmxConnection)).query("type=Broker,brokerName=*");
     }
 
     public static List getBrokersByName(MBeanServerConnection jmxConnection, String brokerName) throws Exception {
-        return (new MBeansObjectNameQueryFilter(jmxConnection)).query("Type=Broker,BrokerName=" + brokerName);
+        return (new MBeansObjectNameQueryFilter(jmxConnection)).query("type=Broker,brokerName=" + brokerName);
     }
 
     public static List getAllBrokers(MBeanServerConnection jmxConnection, Set attributes) throws Exception {
-        return (new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))).query("Type=Broker");
+        return (new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))).query("type=Broker");
     }
 
     public static List getBrokersByName(MBeanServerConnection jmxConnection, String brokerName, Set attributes) throws Exception {
-        return (new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))).query("Type=Broker,BrokerName=" + brokerName);
+        return (new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))).query("type=Broker,brokerName=" + brokerName);
     }
 
     public static List queryMBeans(MBeanServerConnection jmxConnection, List queryList) throws Exception {

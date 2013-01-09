@@ -111,7 +111,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     @SuppressWarnings("unchecked")
     public Collection<ConnectionViewMBean> getConnections() throws Exception {
         String brokerName = getBrokerName();
-        ObjectName query = new ObjectName("org.apache.activemq:BrokerName=" + brokerName + ",Type=Connection,ConnectorName=*,Connection=*");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=clientConnectors,connectorName=*,connectionName=*");
 
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
