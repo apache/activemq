@@ -39,7 +39,6 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
     protected MBeanServer mbeanServer;
     protected String domain = "org.apache.activemq";
 
-
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:0";
         useTopic = false;
@@ -48,8 +47,6 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     protected void tearDown() throws Exception {
-
-
         super.tearDown();
     }
 
@@ -63,8 +60,8 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         answer.setPersistent(true);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.getSystemUsage().getTempUsage().setLimit(1024 * 1024 * 64);
+        answer.getSystemUsage().getStoreUsage().setLimit(1024 * 1024 * 64);
         answer.setUseJmx(true);
-
 
         // allow options to be visible via jmx
 
@@ -73,29 +70,32 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testHealthView() throws Exception{
-            Connection connection = connectionFactory.createConnection();
+        Connection connection = connectionFactory.createConnection();
 
-            connection.start();
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            destination = createDestination();
-            MessageProducer producer = session.createProducer(destination);
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        destination = createDestination();
+        MessageProducer producer = session.createProducer(destination);
+        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
-            for (int i = 0; i < 60; i++) {
-                BytesMessage message = session.createBytesMessage();
-                message.writeBytes(new byte[1024 *1024]);
-                producer.send(message);
-            }
-            Thread.sleep(1000);
+        for (int i = 0; i < 60; i++) {
+            BytesMessage message = session.createBytesMessage();
+            message.writeBytes(new byte[1024 *1024]);
+            producer.send(message);
+        }
+        Thread.sleep(1000);
 
         String objectNameStr = broker.getBrokerObjectName().toString();
         objectNameStr += ",service=Health";
-        ObjectName brokerName = assertRegisteredObjectName(objectNameStr
-        );
+        ObjectName brokerName = assertRegisteredObjectName(objectNameStr);
         HealthViewMBean health =  MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, HealthViewMBean.class, true);
         List<HealthStatus> list = health.healthList();
-        assertEquals(2,list.size());
 
+        for (HealthStatus status : list) {
+            LOG.info("Health status: {}", status);
+        }
+
+        assertEquals(2, list.size());
     }
 
     protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
