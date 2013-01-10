@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.jms.Connection;
@@ -96,6 +97,8 @@ public class DurableSubDelayedUnsubscribeTest {
         final BrokerService brokerService = this.broker;
 
         // Wait for all client subscription to be unsubscribed or swept away.
+        // Ensure we sleep longer than the housekeeper's sweep delay otherwise we can
+        // miss the fact that all durables that were abandoned do finally get cleaned up.
 
         assertTrue("should have only one inactiveSubscriber subscribed but was: " + brokerService.getAdminView().getInactiveDurableTopicSubscribers().length,
             Wait.waitFor(new Wait.Condition() {
@@ -104,7 +107,7 @@ public class DurableSubDelayedUnsubscribeTest {
                 public boolean isSatisified() throws Exception {
                     return brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1;
                 }
-            }, TimeUnit.MINUTES.toMillis(3)));
+            }, TimeUnit.MINUTES.toMillis(houseKeeper.SWEEP_DELAY * 2)));
 
         assertTrue("should be no subscribers subscribed but was: " + brokerService.getAdminView().getDurableTopicSubscribers().length,
             Wait.waitFor(new Wait.Condition() {
@@ -137,6 +140,9 @@ public class DurableSubDelayedUnsubscribeTest {
                     return pa.getStore().getJournal().getFileMap().size() <= 3;
                 }
             }, TimeUnit.MINUTES.toMillis(3)));
+
+        // Be good and cleanup our mess a bit.
+        this.houseKeeper.shutdown();
 
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
 
@@ -575,6 +581,10 @@ public class DurableSubDelayedUnsubscribeTest {
      */
     private final class HouseKeeper extends Thread {
 
+        private final AtomicBoolean done = new AtomicBoolean();
+
+        public final long SWEEP_DELAY = TimeUnit.MINUTES.toMillis(3);
+
         private HouseKeeper() {
             super("HouseKeeper");
             setDaemon(true);
@@ -582,11 +592,26 @@ public class DurableSubDelayedUnsubscribeTest {
 
         public final CopyOnWriteArrayList<String> abandonedSubscriptions = new CopyOnWriteArrayList<String>();
 
+        public void shutdown() throws Exception {
+            done.set(true);
+
+            // In case we are sleeping, abort the sleep.
+            this.interrupt();
+
+            // Wait for run to complete.
+            this.join(TimeUnit.MINUTES.toMillis(SWEEP_DELAY));
+
+            // Ensure all abandoned subscriptions get wiped.
+            if (!abandonedSubscriptions.isEmpty()) {
+                this.sweep();
+            }
+        }
+
         @Override
         public void run() {
-            while (true) {
+            while (!done.get()) {
                 try {
-                    Thread.sleep(3 * 60 * 1000);
+                    Thread.sleep(SWEEP_DELAY);
 
                     processLock.readLock().lock();
                     try {
@@ -679,7 +704,6 @@ public class DurableSubDelayedUnsubscribeTest {
         clientManager = new ClientManager();
         server = new Server();
         houseKeeper = new HouseKeeper();
-
     }
 
     @After
