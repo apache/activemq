@@ -117,7 +117,7 @@ public final class JmxMBeansUtil {
         // Use regular expressions to filter the query result
         // Retrieve the attributes needed
         // Retrieve the mbeans object name specified by the query
-        return new WildcardToRegExTransformFilter(new MBeansRegExQueryFilter(new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))));
+        return new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection));
     }
 
     public static QueryFilter createMessageQueryFilter(MBeanServerConnection jmxConnection, ObjectName destName) {

@@ -31,12 +31,12 @@ public class QueryCommand extends AbstractJmxCommand {
     private static final Properties PREDEFINED_OBJNAME_QUERY = new Properties();
 
     static {
-        PREDEFINED_OBJNAME_QUERY.setProperty("Broker", "Type=Broker,BrokerName=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Connection", "Type=Connection,Connection=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Connector", "Type=Connector,ConnectorName=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("NetworkConnector", "Type=NetworkConnector,BrokerName=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Queue", "Type=Queue,Destination=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Topic", "Type=Topic,Destination=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Broker", "type=Broker,brokerName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Connection", "type=Broker,connector=clientConnectors,connectionName=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Connector", "type=Broker,brokerName=*,connector=clientConnectors,connectorName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("NetworkConnector", "type=Broker,brokerName=%1,connector=networkConnectors,networkConnectorName=*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Queue", "type=Broker,brokerName=*,destinationType=Queue,destinationName=%1");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Topic", "type=Broker,brokerName=*,destinationType=Topic,destinationName=%1,*");
     };
 
     protected String[] helpFile = new String[] {
