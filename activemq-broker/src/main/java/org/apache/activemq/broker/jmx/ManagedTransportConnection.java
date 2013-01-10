@@ -116,7 +116,7 @@ public class ManagedTransportConnection extends TransportConnection {
 
     protected ObjectName createObjectName(String type, String value) throws IOException {
         try {
-            return BrokerMBeanSuppurt.createConnectionViewByType(connectorName, type, value);
+            return BrokerMBeanSupport.createConnectionViewByType(connectorName, type, value);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }

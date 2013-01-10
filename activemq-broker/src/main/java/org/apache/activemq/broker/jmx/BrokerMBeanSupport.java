@@ -28,7 +28,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.transaction.XATransaction;
 import org.apache.activemq.util.JMXSupport;
 
-public class BrokerMBeanSuppurt {
+public class BrokerMBeanSupport {
 
     // MBean Name Creation
 

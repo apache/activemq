@@ -1081,7 +1081,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             }
         }
         ObjectName query = //new ObjectName(domain + ":type=Broker,brokerName=localhost,connector=*," + "connectorName=*,connectionName=MBeanTest");
-            BrokerMBeanSuppurt.createConnectionQuery(domain, "localhost", connection.getClientID());
+            BrokerMBeanSupport.createConnectionQuery(domain, "localhost", connection.getClientID());
 
         Set<ObjectName> names = mbeanServer.queryNames(query, null);
         boolean found = false;

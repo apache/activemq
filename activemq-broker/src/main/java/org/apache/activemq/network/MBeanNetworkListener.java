@@ -21,7 +21,7 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
-import org.apache.activemq.broker.jmx.BrokerMBeanSuppurt;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.slf4j.Logger;
@@ -79,7 +79,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
     }
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
-        return BrokerMBeanSuppurt.createNetworkBridgeObjectName(connectorName, bridge.getRemoteAddress());
+        return BrokerMBeanSupport.createNetworkBridgeObjectName(connectorName, bridge.getRemoteAddress());
     }
 
     public void setCreatedByDuplex(boolean createdByDuplex) {

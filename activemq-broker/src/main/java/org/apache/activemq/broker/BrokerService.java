@@ -55,7 +55,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
-import org.apache.activemq.broker.jmx.BrokerMBeanSuppurt;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
@@ -1992,7 +1992,7 @@ public class BrokerService implements Service {
     }
 
     private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
-        return BrokerMBeanSuppurt.createConnectorName(getBrokerObjectName(), "clientConnectors", connector.getName());
+        return BrokerMBeanSupport.createConnectorName(getBrokerObjectName(), "clientConnectors", connector.getName());
     }
 
     protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
@@ -2007,11 +2007,11 @@ public class BrokerService implements Service {
     }
 
     protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
-        return BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "networkConnectors", connector.getName());
+        return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "networkConnectors", connector.getName());
     }
 
     public ObjectName createDuplexNetworkConnectorObjectName(String transport) throws MalformedObjectNameException {
-        return BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport.toString());
+        return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport.toString());
     }
 
     protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
@@ -2028,7 +2028,7 @@ public class BrokerService implements Service {
     protected void registerProxyConnectorMBean(ProxyConnector connector) throws IOException {
         ProxyConnectorView view = new ProxyConnectorView(connector);
         try {
-            ObjectName objectName = BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "proxyConnectors", connector.getName());
+            ObjectName objectName = BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "proxyConnectors", connector.getName());
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
@@ -2038,7 +2038,7 @@ public class BrokerService implements Service {
     protected void registerJmsConnectorMBean(JmsConnector connector) throws IOException {
         JmsConnectorView view = new JmsConnectorView(connector);
         try {
-            ObjectName objectName = BrokerMBeanSuppurt.createNetworkConnectorName(getBrokerObjectName(), "jmsConnectors", connector.getName());
+            ObjectName objectName = BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "jmsConnectors", connector.getName());
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
@@ -2157,7 +2157,7 @@ public class BrokerService implements Service {
             if (isUseJmx()) {
                 JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
                 try {
-                    ObjectName objectName = BrokerMBeanSuppurt.createJobSchedulerServiceName(getBrokerObjectName());
+                    ObjectName objectName = BrokerMBeanSupport.createJobSchedulerServiceName(getBrokerObjectName());
                     AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
                     this.adminView.setJMSJobScheduler(objectName);
                 } catch (Throwable e) {
@@ -2170,7 +2170,7 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             HealthViewMBean statusView = new HealthView((ManagedRegionBroker)getRegionBroker());
             try {
-                ObjectName objectName = BrokerMBeanSuppurt.createHealthServiceName(getBrokerObjectName());
+                ObjectName objectName = BrokerMBeanSupport.createHealthServiceName(getBrokerObjectName());
                 AnnotatedMBean.registerMBean(getManagementContext(), statusView, objectName);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create("Status MBean could not be registered in JMX: "
@@ -2221,7 +2221,7 @@ public class BrokerService implements Service {
     }
 
     protected ObjectName createBrokerObjectName() throws MalformedObjectNameException  {
-        return BrokerMBeanSuppurt.createBrokerObjectName(getManagementContext().getJmxDomainName(), getBrokerName());
+        return BrokerMBeanSupport.createBrokerObjectName(getManagementContext().getJmxDomainName(), getBrokerName());
     }
 
     protected TransportConnector createTransportConnector(URI brokerURI) throws Exception {

@@ -30,7 +30,7 @@ import javax.management.ObjectName;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
-import org.apache.activemq.broker.jmx.BrokerMBeanSuppurt;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -229,7 +229,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
-        return BrokerMBeanSuppurt.createNetworkBridgeObjectName(getObjectName(), bridge.getRemoteAddress());
+        return BrokerMBeanSupport.createNetworkBridgeObjectName(getObjectName(), bridge.getRemoteAddress());
     }
 
     // ask all the bridges as we can't know to which this consumer is tied

@@ -90,7 +90,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
 
     private ObjectName createConnectionQuery(ManagementContext ctx, String brokerName) throws IOException {
         try {
-            return BrokerMBeanSuppurt.createConnectionQuery(ctx.getJmxDomainName(), brokerName, clientId);
+            return BrokerMBeanSupport.createConnectionQuery(ctx.getJmxDomainName(), brokerName, clientId);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }

@@ -446,7 +446,7 @@ public class DestinationView implements DestinationViewMBean {
         int index = 0;
         for (Subscription subscription : subscriptions) {
             String connectionClientId = subscription.getContext().getClientId();
-            answer[index++] = BrokerMBeanSuppurt.createSubscriptionName(brokerObjectName, connectionClientId, subscription.getConsumerInfo());
+            answer[index++] = BrokerMBeanSupport.createSubscriptionName(brokerObjectName, connectionClientId, subscription.getConsumerInfo());
         }
         return answer;
     }

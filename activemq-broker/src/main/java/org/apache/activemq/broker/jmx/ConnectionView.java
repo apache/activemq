@@ -153,7 +153,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     private ObjectName createConsumerQueury(String clientId) throws IOException {
         try {
-            return BrokerMBeanSuppurt.createConsumerQueury(managementContext.getJmxDomainName(), clientId);
+            return BrokerMBeanSupport.createConsumerQueury(managementContext.getJmxDomainName(), clientId);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
@@ -161,7 +161,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     private ObjectName createProducerQueury(String clientId) throws IOException {
         try {
-            return BrokerMBeanSuppurt.createProducerQueury(managementContext.getJmxDomainName(), clientId);
+            return BrokerMBeanSupport.createProducerQueury(managementContext.getJmxDomainName(), clientId);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
