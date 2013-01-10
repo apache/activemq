@@ -575,8 +575,9 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         LOG.info("Starting consumer...");
         MessageConsumer queueConsumer = sess.createConsumer(queue);
         for (int i = 0; i < 500; i++) {
-            Message msg = queueConsumer.receive(5000);
+            Message msg = queueConsumer.receive(20000);
             LOG.debug("received i=" + i + ", " + (msg!=null? msg.getJMSMessageID() : null));
+            if (msg == null) dumpAllThreads("backlog");
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < 10 ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
