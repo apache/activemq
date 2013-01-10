@@ -81,10 +81,12 @@ public class ManagedTransportConnection extends TransportConnection {
         if (populateUserName) {
             ((ConnectionView) mbean).setUserName(info.getUserName());
         }
-        if (clientId != null) {
-            if (byClientIdName == null) {
-                byClientIdName = createByClientIdObjectName(clientId);
-                registerMBean(byClientIdName);
+        if (!managementContext.isAllowRemoteAddressInMBeanNames()) {
+            if (clientId != null) {
+                if (byClientIdName == null) {
+                    byClientIdName = createByClientIdObjectName(clientId);
+                    registerMBean(byClientIdName);
+                }
             }
         }
         return answer;

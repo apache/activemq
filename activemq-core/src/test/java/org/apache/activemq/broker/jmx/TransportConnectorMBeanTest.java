@@ -50,7 +50,7 @@ public class TransportConnectorMBeanTest {
         createBroker(allowRemoteAddress);
         ActiveMQConnection connection = createConnection();
         Set<ObjectName> registeredMbeans = getRegisteredMbeans();
-        assertTrue("found mbean with clientId", match(connection.getClientID(), registeredMbeans));
+        assertEquals("presence of mbean with clientId", !allowRemoteAddress, match(connection.getClientID(), registeredMbeans));
         assertEquals("presence of mbean with local port", allowRemoteAddress, match(extractLocalPort(connection), registeredMbeans));
     }
 
@@ -84,8 +84,9 @@ public class TransportConnectorMBeanTest {
     }
 
     private ActiveMQConnection createConnection() throws Exception {
+        final String opts = "?jms.watchTopicAdvisories=false";
         ActiveMQConnection connection = (ActiveMQConnection)
-                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
+                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri() + opts).createConnection();
         connection.start();
         return connection;
     }
