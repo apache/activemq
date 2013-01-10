@@ -398,9 +398,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     task = (StoreQueueTask) asyncTaskMap.get(key);
                 }
                 if (task != null) {
-                    if (!task.cancel()) {
+                    if (ack.isInTransaction() || !task.cancel()) {
                         try {
-
                             task.future.get();
                         } catch (InterruptedException e) {
                             throw new InterruptedIOException(e.toString());
