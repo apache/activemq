@@ -148,6 +148,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 flushToDisk();
             }
         }
+        // ensure any memory ref is released
+        iter = null;
     }
 
     @Override
