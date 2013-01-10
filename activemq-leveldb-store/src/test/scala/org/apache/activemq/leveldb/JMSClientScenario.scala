@@ -102,7 +102,7 @@ abstract class JMSClientScenario extends Scenario {
       try {
         connection.close()
       } catch {
-        case _ =>
+         case _:Throwable =>
       }
     }
 
