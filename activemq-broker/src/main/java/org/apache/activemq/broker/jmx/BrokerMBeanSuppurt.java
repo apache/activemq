@@ -151,16 +151,10 @@ public class BrokerMBeanSuppurt {
         return objectName;
     }
 
-    public static ObjectName createConnectionViewByAddressName(ObjectName connectorName, String type, String address) throws MalformedObjectNameException {
+    public static ObjectName createConnectionViewByType(ObjectName connectorName, String type, String name) throws MalformedObjectNameException {
         String objectNameStr = connectorName.toString();
         objectNameStr += ",connectionViewType=" + JMXSupport.encodeObjectNamePart(type);
-        objectNameStr += ",connectionName="+ JMXSupport.encodeObjectNamePart(address);
-        return new ObjectName(objectNameStr);
-    }
-
-    public static ObjectName createConnectionViewByClientIdName(ObjectName connectorName, String clientId) throws MalformedObjectNameException {
-        String objectNameStr = connectorName.toString();
-        objectNameStr += ",connectionName="+JMXSupport.encodeObjectNamePart(clientId);
+        objectNameStr += ",connectionName="+ JMXSupport.encodeObjectNamePart(name);
         return new ObjectName(objectNameStr);
     }
 
@@ -216,11 +210,11 @@ public class BrokerMBeanSuppurt {
 
     // MBean Query Creation
 
-    public static ObjectName createConnectionQuery(String jmxDomainName, String brokerName, String clientId) throws MalformedObjectNameException {
+    public static ObjectName createConnectionQuery(String jmxDomainName, String brokerName, String name) throws MalformedObjectNameException {
         return new ObjectName(jmxDomainName + ":type=Broker,brokerName="
                               + JMXSupport.encodeObjectNamePart(brokerName) + ","
-                              + "connector=*," + "connectorName=*,"
-                              + "connectionName=" + JMXSupport.encodeObjectNamePart(clientId));
+                              + "connector=*," + "connectorName=*," + "connectionViewType=*,"
+                              + "connectionName=" + JMXSupport.encodeObjectNamePart(name));
     }
 
     public static ObjectName createConsumerQueury(String jmxDomainName, String clientId) throws MalformedObjectNameException {

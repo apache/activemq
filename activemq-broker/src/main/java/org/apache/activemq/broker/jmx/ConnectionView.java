@@ -99,6 +99,11 @@ public class ConnectionView implements ConnectionViewMBean {
         return connection.getRemoteAddress();
     }
 
+    @Override
+    public String getClientId() {
+        return connection.getConnectionId();
+    }
+
     public String getConnectionId() {
         return connection.getConnectionId();
     }

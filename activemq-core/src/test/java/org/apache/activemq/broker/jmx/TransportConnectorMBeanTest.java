@@ -50,7 +50,7 @@ public class TransportConnectorMBeanTest {
         createBroker(allowRemoteAddress);
         ActiveMQConnection connection = createConnection();
         Set<ObjectName> registeredMbeans = getRegisteredMbeans();
-        assertEquals("presence of mbean with clientId", !allowRemoteAddress, match(connection.getClientID(), registeredMbeans));
+        assertEquals("presence of mbean with clientId", true, match(connection.getClientID(), registeredMbeans));
         assertEquals("presence of mbean with local port", allowRemoteAddress, match(extractLocalPort(connection), registeredMbeans));
     }
 

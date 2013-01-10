@@ -56,7 +56,7 @@ public class ManagedTransportConnection extends TransportConnection {
         this.mbean = new ConnectionView(this, managementContext);
         this.populateUserName = broker.getBrokerService().isPopulateUserNameInMBeans();
         if (managementContext.isAllowRemoteAddressInMBeanNames()) {
-            byAddressName = createByAddressObjectName("address", transport.getRemoteAddress());
+            byAddressName = createObjectName("remoteAddress", transport.getRemoteAddress());
             registerMBean(byAddressName);
         }
     }
@@ -81,12 +81,10 @@ public class ManagedTransportConnection extends TransportConnection {
         if (populateUserName) {
             ((ConnectionView) mbean).setUserName(info.getUserName());
         }
-        if (!managementContext.isAllowRemoteAddressInMBeanNames()) {
-            if (clientId != null) {
-                if (byClientIdName == null) {
-                    byClientIdName = createByClientIdObjectName(clientId);
-                    registerMBean(byClientIdName);
-                }
+        if (clientId != null) {
+            if (byClientIdName == null) {
+                byClientIdName = createObjectName("clientId", clientId);
+                registerMBean(byClientIdName);
             }
         }
         return answer;
@@ -116,19 +114,12 @@ public class ManagedTransportConnection extends TransportConnection {
         }
     }
 
-    protected ObjectName createByAddressObjectName(String type, String value) throws IOException {
+    protected ObjectName createObjectName(String type, String value) throws IOException {
         try {
-            return BrokerMBeanSuppurt.createConnectionViewByAddressName(connectorName, type, value);
+            return BrokerMBeanSuppurt.createConnectionViewByType(connectorName, type, value);
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
-    protected ObjectName createByClientIdObjectName(String value) throws IOException {
-        try {
-            return BrokerMBeanSuppurt.createConnectionViewByClientIdName(connectorName, value);
-        } catch (Throwable e) {
-            throw IOExceptionSupport.create(e);
-        }
-    }
 }

@@ -56,8 +56,16 @@ public interface ConnectionViewMBean extends Service {
      *
      * @return the source address for this connection
      */
-    @MBeanInfo("Source address for this connection")
+    @MBeanInfo("source address for this connection")
     String getRemoteAddress();
+
+    /**
+     * Returns the client identifier for this connection
+     *
+     * @return the the client identifier for this connection
+     */
+    @MBeanInfo("client id for this connection")
+    String getClientId();
 
     /**
      * Returns the number of messages to be dispatched to this connection

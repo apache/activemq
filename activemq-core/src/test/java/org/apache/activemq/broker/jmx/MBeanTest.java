@@ -678,7 +678,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         bindAddress = "tcp://localhost:0";
         useTopic = false;
         super.setUp();
-        mbeanServer = broker.getManagementContext().getMBeanServer();
+        ManagementContext managementContext = broker.getManagementContext();
+        mbeanServer = managementContext.getMBeanServer();
     }
 
     protected void tearDown() throws Exception {
@@ -953,6 +954,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // Our consumer plus one advisory consumer.
         assertEquals(2, connectionView.getConsumers().length);
 
+        assertEquals("client id match", "MBeanTest", connectionView.getClientId());
+
         // Check that the subscription view we found earlier is in this list.
         boolean found = false;
         for (ObjectName name : connectionView.getConsumers()) {
@@ -1077,7 +1080,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
                 assertNull(subscriberView.getUserName());
             }
         }
-        ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=localhost,connector=*," + "connectorName=*,connectionName=MBeanTest");
+        ObjectName query = //new ObjectName(domain + ":type=Broker,brokerName=localhost,connector=*," + "connectorName=*,connectionName=MBeanTest");
+            BrokerMBeanSuppurt.createConnectionQuery(domain, "localhost", connection.getClientID());
 
         Set<ObjectName> names = mbeanServer.queryNames(query, null);
         boolean found = false;
