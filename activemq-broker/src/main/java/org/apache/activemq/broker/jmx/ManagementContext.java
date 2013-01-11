@@ -18,13 +18,16 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.rmi.NoSuchObjectException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.management.Attribute;
 import javax.management.InstanceNotFoundException;
 import javax.management.JMException;
@@ -46,15 +49,17 @@ import org.slf4j.MDC;
 
 /**
  * An abstraction over JMX mbean registration
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class ManagementContext implements Service {
+
     /**
      * Default activemq domain
      */
     public static final String DEFAULT_DOMAIN = "org.apache.activemq";
+
     private static final Logger LOG = LoggerFactory.getLogger(ManagementContext.class);
     private MBeanServer beanServer;
     private String jmxDomainName = DEFAULT_DOMAIN;
@@ -65,7 +70,7 @@ public class ManagementContext implements Service {
     private boolean findTigerMbeanServer = true;
     private String connectorHost = "localhost";
     private int connectorPort = 1099;
-    private Map environment;
+    private Map<String, ?> environment;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -85,6 +90,7 @@ public class ManagementContext implements Service {
         this.beanServer = server;
     }
 
+    @Override
     public void start() throws IOException {
         // lets force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
@@ -122,7 +128,7 @@ public class ManagementContext implements Service {
                                 try {
                                     // need to remove MDC as we must not inherit MDC in child threads causing leaks
                                     MDC.remove("activemq.broker");
-                                	server.start();
+                                    server.start();
                                 } finally {
                                     if (brokerName != null) {
                                         MDC.put("activemq.broker", brokerName);
@@ -145,6 +151,7 @@ public class ManagementContext implements Service {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             MBeanServer mbeanServer = getMBeanServer();
@@ -165,10 +172,10 @@ public class ManagementContext implements Service {
             connectorServer = null;
             if (server != null) {
                 try {
-                	if (!connectorStarting.get()) {
+                    if (!connectorStarting.get()) {
                         LOG.debug("Stopping jmx connector");
                         server.stop();
-                	}
+                    }
                 } catch (IOException e) {
                     LOG.warn("Failed to stop jmx connector: " + e.getMessage());
                 }
@@ -185,9 +192,10 @@ public class ManagementContext implements Service {
                 }
                 namingServiceObjectName = null;
             }
+
             if (locallyCreateMBeanServer && beanServer != null) {
                 // check to see if the factory knows about this server
-                List list = MBeanServerFactory.findMBeanServer(null);
+                List<MBeanServer> list = MBeanServerFactory.findMBeanServer(null);
                 if (list != null && !list.isEmpty() && list.contains(beanServer)) {
                     LOG.debug("Releasing MBeanServer {}", beanServer);
                     MBeanServerFactory.releaseMBeanServer(beanServer);
@@ -196,8 +204,17 @@ public class ManagementContext implements Service {
             beanServer = null;
         }
 
-        // clear reference to aid GC
-        registry = null;
+        // Un-export JMX RMI registry, if it was created
+        if (registry != null) {
+            try {
+                UnicastRemoteObject.unexportObject(registry, true);
+                LOG.debug("Unexported JMX RMI Registry");
+            } catch (NoSuchObjectException e) {
+                LOG.debug("Error occurred while unexporting JMX RMI registry. This exception will be ignored.");
+            }
+
+            registry = null;
+        }
     }
 
     /**
@@ -231,7 +248,7 @@ public class ManagementContext implements Service {
 
     /**
      * Get the MBeanServer
-     * 
+     *
      * @return the MBeanServer
      */
     protected MBeanServer getMBeanServer() {
@@ -243,7 +260,7 @@ public class ManagementContext implements Service {
 
     /**
      * Set the MBeanServer
-     * 
+     *
      * @param beanServer
      */
     public void setMBeanServer(MBeanServer beanServer) {
@@ -283,10 +300,10 @@ public class ManagementContext implements Service {
     }
 
     public boolean isConnectorStarted() {
-		return connectorStarting.get() || (connectorServer != null && connectorServer.isActive());
-	}
+        return connectorStarting.get() || (connectorServer != null && connectorServer.isActive());
+    }
 
-	/**
+    /**
      * Enables/disables the searching for the Java 5 platform MBeanServer
      */
     public void setFindTigerMbeanServer(boolean findTigerMbeanServer) {
@@ -295,7 +312,7 @@ public class ManagementContext implements Service {
 
     /**
      * Formulate and return the MBean ObjectName of a custom control MBean
-     * 
+     *
      * @param type
      * @param name
      * @return the JMX ObjectName of the MBean, or <code>null</code> if
@@ -314,7 +331,7 @@ public class ManagementContext implements Service {
 
     /**
      * The ':' and '/' characters are reserved in ObjectNames
-     * 
+     *
      * @param in
      * @return sanitized String
      */
@@ -329,20 +346,20 @@ public class ManagementContext implements Service {
     }
 
     /**
-     * Retrive an System ObjectName
-     * 
+     * Retrieve an System ObjectName
+     *
      * @param domainName
      * @param containerName
      * @param theClass
      * @return the ObjectName
      * @throws MalformedObjectNameException
      */
-    public static ObjectName getSystemObjectName(String domainName, String containerName, Class theClass) throws MalformedObjectNameException, NullPointerException {
+    public static ObjectName getSystemObjectName(String domainName, String containerName, Class<?> theClass) throws MalformedObjectNameException, NullPointerException {
         String tmp = domainName + ":" + "type=" + theClass.getName() + ",name=" + getRelativeName(containerName, theClass);
         return new ObjectName(tmp);
     }
 
-    private static String getRelativeName(String containerName, Class theClass) {
+    private static String getRelativeName(String containerName, Class<?> theClass) {
         String name = theClass.getName();
         int index = name.lastIndexOf(".");
         if (index >= 0 && (index + 1) < name.length()) {
@@ -350,41 +367,38 @@ public class ManagementContext implements Service {
         }
         return containerName + "." + name;
     }
-    
-    public Object newProxyInstance( ObjectName objectName,
-                      Class interfaceClass,
-                      boolean notificationBroadcaster){
+
+    public Object newProxyInstance(ObjectName objectName, Class<?> interfaceClass, boolean notificationBroadcaster){
         return MBeanServerInvocationHandler.newProxyInstance(getMBeanServer(), objectName, interfaceClass, notificationBroadcaster);
-        
     }
-    
+
     public Object getAttribute(ObjectName name, String attribute) throws Exception{
         return getMBeanServer().getAttribute(name, attribute);
     }
-    
+
     public ObjectInstance registerMBean(Object bean, ObjectName name) throws Exception{
         ObjectInstance result = getMBeanServer().registerMBean(bean, name);
         this.registeredMBeanNames.put(name, result.getObjectName());
         return result;
     }
-    
+
     public Set<ObjectName> queryNames(ObjectName name, QueryExp query) throws Exception{
-    	if (name != null) {
-    		ObjectName actualName = this.registeredMBeanNames.get(name);
-    		if (actualName != null) {
-    			return getMBeanServer().queryNames(actualName, query);
-    		}
+        if (name != null) {
+            ObjectName actualName = this.registeredMBeanNames.get(name);
+            if (actualName != null) {
+                return getMBeanServer().queryNames(actualName, query);
+            }
         }
         return getMBeanServer().queryNames(name, query);
     }
-    
+
     public ObjectInstance getObjectInstance(ObjectName name) throws InstanceNotFoundException {
         return getMBeanServer().getObjectInstance(name);
     }
-    
+
     /**
      * Unregister an MBean
-     * 
+     *
      * @param name
      * @throws JMException
      */
@@ -398,18 +412,17 @@ public class ManagementContext implements Service {
 
     protected synchronized MBeanServer findMBeanServer() {
         MBeanServer result = null;
-        // create the mbean server
+
         try {
             if (useMBeanServer) {
                 if (findTigerMbeanServer) {
                     result = findTigerMBeanServer();
                 }
                 if (result == null) {
-                    // lets piggy back on another MBeanServer -
-                    // we could be in an appserver!
-                    List list = MBeanServerFactory.findMBeanServer(null);
+                    // lets piggy back on another MBeanServer - we could be in an appserver!
+                    List<MBeanServer> list = MBeanServerFactory.findMBeanServer(null);
                     if (list != null && list.size() > 0) {
-                        result = (MBeanServer)list.get(0);
+                        result = list.get(0);
                     }
                 }
             }
@@ -427,16 +440,16 @@ public class ManagementContext implements Service {
 
     public MBeanServer findTigerMBeanServer() {
         String name = "java.lang.management.ManagementFactory";
-        Class type = loadClass(name, ManagementContext.class.getClassLoader());
+        Class<?> type = loadClass(name, ManagementContext.class.getClassLoader());
         if (type != null) {
             try {
                 Method method = type.getMethod("getPlatformMBeanServer", new Class[0]);
                 if (method != null) {
                     Object answer = method.invoke(null, new Object[0]);
                     if (answer instanceof MBeanServer) {
-                    	if (createConnector) {
-                    		createConnector((MBeanServer)answer);
-                    	}
+                        if (createConnector) {
+                            createConnector((MBeanServer)answer);
+                        }
                         return (MBeanServer)answer;
                     } else {
                         LOG.warn("Could not cast: " + answer + " into an MBeanServer. There must be some classloader strangeness in town");
@@ -453,7 +466,7 @@ public class ManagementContext implements Service {
         return null;
     }
 
-    private static Class loadClass(String name, ClassLoader loader) {
+    private static Class<?> loadClass(String name, ClassLoader loader) {
         try {
             return loader.loadClass(name);
         } catch (ClassNotFoundException e) {
@@ -496,10 +509,9 @@ public class ManagementContext implements Service {
 
             // Do not use the createMBean as the mx4j jar may not be in the
             // same class loader than the server
-            Class cl = Class.forName("mx4j.tools.naming.NamingService");
+            Class<?> cl = Class.forName("mx4j.tools.naming.NamingService");
             mbeanServer.registerMBean(cl.newInstance(), namingServiceObjectName);
-            // mbeanServer.createMBean("mx4j.tools.naming.NamingService",
-            // namingServiceObjectName, null);
+
             // set the naming port
             Attribute attr = new Attribute("Port", Integer.valueOf(connectorPort));
             mbeanServer.setAttribute(namingServiceObjectName, attr);
@@ -508,11 +520,11 @@ public class ManagementContext implements Service {
         } catch (Throwable e) {
             LOG.debug("Failed to create local registry. This exception will be ignored.", e);
         }
+
         // Create the JMXConnectorServer
         String rmiServer = "";
         if (rmiServerPort != 0) {
-            // This is handy to use if you have a firewall and need to
-            // force JMX to use fixed ports.
+            // This is handy to use if you have a firewall and need to force JMX to use fixed ports.
             rmiServer = ""+getConnectorHost()+":" + rmiServerPort;
         }
         String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
@@ -579,11 +591,11 @@ public class ManagementContext implements Service {
         this.connectorHost = connectorHost;
     }
 
-    public Map getEnvironment() {
+    public Map<String, ?> getEnvironment() {
         return environment;
     }
 
-    public void setEnvironment(Map environment) {
+    public void setEnvironment(Map<String, ?> environment) {
         this.environment = environment;
     }
 
