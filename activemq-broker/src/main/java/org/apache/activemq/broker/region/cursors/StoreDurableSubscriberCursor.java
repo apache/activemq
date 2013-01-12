@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -36,8 +37,6 @@ import org.slf4j.LoggerFactory;
 /**
  * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
- * 
- * 
  */
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
@@ -50,6 +49,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private PendingMessageCursor currentCursor;
     private final DurableTopicSubscription subscription;
     private boolean immediatePriorityDispatch = true;
+
     /**
      * @param broker Broker for this cursor
      * @param clientId clientId for this cursor
@@ -67,7 +67,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         } else {
             this.nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
         }
-        
+
         this.nonPersistent.setMaxBatchSize(maxBatchSize);
         this.nonPersistent.setSystemUsage(systemUsage);
         this.storePrefetches.add(this.nonPersistent);
@@ -82,7 +82,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (!isStarted()) {
             super.start();
             for (PendingMessageCursor tsp : storePrefetches) {
-            	tsp.setMessageAudit(getMessageAudit());
+                tsp.setMessageAudit(getMessageAudit());
                 tsp.start();
             }
         }
@@ -108,7 +108,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     /**
      * Add a destination
-     * 
+     *
      * @param context
      * @param destination
      * @throws Exception
@@ -134,7 +134,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     /**
      * remove a destination
-     * 
+     *
      * @param context
      * @param destination
      * @throws Exception
@@ -173,7 +173,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     /**
      * Informs the Broker if the subscription needs to intervention to recover
      * it's state e.g. DurableTopicSubscriber may do
-     * 
+     *
      * @see org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor
      * @return true if recovery required
      */
@@ -290,6 +290,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     @Override
     public synchronized void release() {
+        this.currentCursor = null;
         for (PendingMessageCursor storePrefetch : storePrefetches) {
             storePrefetch.release();
         }
@@ -326,7 +327,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             tsp.setSystemUsage(usageManager);
         }
     }
-    
+
     @Override
     public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
         super.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
@@ -334,7 +335,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             cursor.setMemoryUsageHighWaterMark(memoryUsageHighWaterMark);
         }
     }
-    
+
     @Override
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
@@ -350,7 +351,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             cursor.setMaxAuditDepth(maxAuditDepth);
         }
     }
-    
+
     @Override
     public void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
@@ -358,7 +359,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             cursor.setEnableAudit(enableAudit);
         }
     }
-    
+
     @Override
     public  void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
@@ -366,7 +367,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             cursor.setUseCache(useCache);
         }
     }
-    
+
     protected synchronized PendingMessageCursor getNextCursor() throws Exception {
         if (currentCursor == null || currentCursor.isEmpty()) {
             currentCursor = null;
@@ -384,7 +385,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
         return currentCursor;
     }
-    
+
     @Override
     public String toString() {
         return "StoreDurableSubscriber(" + clientId + ":" + subscriberName + ")";

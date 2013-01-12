@@ -17,11 +17,12 @@
 package org.apache.activemq.command;
 
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.transport.TransmitCallback;
 
 /**
- * 
+ *
  * @openwire:marshaller code="21"
- * 
+ *
  */
 public class MessageDispatch extends BaseCommand {
 
@@ -34,13 +35,15 @@ public class MessageDispatch extends BaseCommand {
 
     protected transient long deliverySequenceId;
     protected transient Object consumer;
-    protected transient Runnable transmitCallback;
+    protected transient TransmitCallback transmitCallback;
     protected transient Throwable rollbackCause;
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public boolean isMessageDispatch() {
         return true;
     }
@@ -105,15 +108,16 @@ public class MessageDispatch extends BaseCommand {
         this.consumer = consumer;
     }
 
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processMessageDispatch(this);
     }
 
-    public Runnable getTransmitCallback() {
+    public TransmitCallback getTransmitCallback() {
         return transmitCallback;
     }
 
-    public void setTransmitCallback(Runnable transmitCallback) {
+    public void setTransmitCallback(TransmitCallback transmitCallback) {
         this.transmitCallback = transmitCallback;
     }
 

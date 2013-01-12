@@ -24,7 +24,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
@@ -43,6 +42,7 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +88,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     /**
      * Allows a message to be pulled on demand by a client
      */
+    @Override
     public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
         // The slave should not deliver pull messages.
         // TODO: when the slave becomes a master, He should send a NULL message to all the
@@ -143,6 +144,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
     }
 
+    @Override
     public void add(MessageReference node) throws Exception {
         synchronized (pendingLock) {
             // The destination may have just been removed...
@@ -160,6 +162,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         dispatchPending();
     }
 
+    @Override
     public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
         synchronized(pendingLock) {
             try {
@@ -189,6 +192,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         + mdn.getConsumerId() + " on " + mdn.getDestination().getPhysicalName());
     }
 
+    @Override
     public final void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
         boolean callDispatchMatched = false;
@@ -305,7 +309,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     Destination nodeDest = (Destination) node.getRegionDestination();
                     if (node.isExpired()) {
                         if (broker.isExpired(node)) {
-                            Destination regionDestination = (Destination) nodeDest;
+                            Destination regionDestination = nodeDest;
                             regionDestination.messageExpired(context, this, node);
                         }
                         iter.remove();
@@ -500,6 +504,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         broker.getRoot().sendToDeadLetterQueue(context, node, this);
     }
 
+    @Override
     public int getInFlightSize() {
         return dispatched.size();
     }
@@ -509,6 +514,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      *
      * @return
      */
+    @Override
     public boolean isFull() {
         return dispatched.size() - prefetchExtension.get() >= info.getPrefetchSize();
     }
@@ -516,6 +522,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
+    @Override
     public boolean isLowWaterMark() {
         return (dispatched.size() - prefetchExtension.get()) <= (info.getPrefetchSize() * .4);
     }
@@ -523,6 +530,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
+    @Override
     public boolean isHighWaterMark() {
         return (dispatched.size() - prefetchExtension.get()) >= (info.getPrefetchSize() * .9);
     }
@@ -532,22 +540,27 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         return info.getPrefetchSize() + prefetchExtension.get() - dispatched.size();
     }
 
+    @Override
     public int getPendingQueueSize() {
         return pending.size();
     }
 
+    @Override
     public int getDispatchedQueueSize() {
         return dispatched.size();
     }
 
+    @Override
     public long getDequeueCounter() {
         return dequeueCounter;
     }
 
+    @Override
     public long getDispatchedCounter() {
         return dispatchCounter;
     }
 
+    @Override
     public long getEnqueueCounter() {
         return enqueueCounter;
     }
@@ -613,8 +626,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     setPendingBatchSize(pending, numberToDispatch);
                     int count = 0;
                     pending.reset();
-                    while (pending.hasNext() && !isFull()
-                            && count < numberToDispatch) {
+                    while (pending.hasNext() && !isFull() && count < numberToDispatch) {
                         MessageReference node = pending.next();
                         if (node == null) {
                             break;
@@ -683,14 +695,28 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         if (info.isDispatchAsync()) {
-            md.setTransmitCallback(new Runnable() {
+            md.setTransmitCallback(new TransmitCallback() {
 
-                public void run() {
-                    // Since the message gets queued up in async dispatch,
-                    // we don't want to
-                    // decrease the reference count until it gets put on the
-                    // wire.
+                @Override
+                public void onSuccess() {
+                    // Since the message gets queued up in async dispatch, we don't want to
+                    // decrease the reference count until it gets put on the wire.
                     onDispatch(node, message);
+                }
+
+                @Override
+                public void onFailure() {
+                    Destination nodeDest = (Destination) node.getRegionDestination();
+                    if (nodeDest != null) {
+                        if (node != QueueMessageReference.NULL_MESSAGE) {
+                            nodeDest.getDestinationStatistics().getDispatched().increment();
+                            nodeDest.getDestinationStatistics().getInflight().increment();
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace(info.getConsumerId() + " failed to dispatch: " + message.getMessageId() + " - "
+                                        + message.getDestination()  + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
+                            }
+                        }
+                    }
                 }
             });
             context.getConnection().dispatchAsync(md);
@@ -728,6 +754,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      *
      * @param newPrefetch
      */
+    @Override
     public void updateConsumerPrefetch(int newPrefetch) {
         if (context != null && context.getConnection() != null && context.getConnection().isManageable()) {
             ConsumerControl cc = new ConsumerControl();

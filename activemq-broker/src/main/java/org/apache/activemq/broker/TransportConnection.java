@@ -36,10 +36,44 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.transaction.xa.XAResource;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.command.ConnectionError;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ControlCommand;
+import org.apache.activemq.command.DataArrayResponse;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.FlushCommand;
+import org.apache.activemq.command.IntegerResponse;
+import org.apache.activemq.command.KeepAliveInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
+import org.apache.activemq.command.SessionId;
+import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.MBeanNetworkListener;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
@@ -57,12 +91,12 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.ResponseCorrelator;
+import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
-import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,6 +208,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      *
      * @return size of dispatch queue
      */
+    @Override
     public int getDispatchQueueSize() {
         synchronized (dispatchQueue) {
             return dispatchQueue.size();
@@ -207,8 +242,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     private boolean expected(IOException e) {
-        return isStomp() &&
-                ((e instanceof SocketException && e.getMessage().indexOf("reset") != -1) || e instanceof EOFException);
+        return isStomp() && ((e instanceof SocketException && e.getMessage().indexOf("reset") != -1) || e instanceof EOFException);
     }
 
     private boolean isStomp() {
@@ -221,6 +255,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      * service exception closes a socket, we should not tie up broker threads
      * since client sockets may hang or cause deadlocks.
      */
+    @Override
     public void serviceExceptionAsync(final IOException e) {
         if (asyncException.compareAndSet(false, true)) {
             new Thread("Async Exception Handler") {
@@ -237,6 +272,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
      * if: the client is closing or broker is closing. Otherwise, the connection
      * error transmitted to the client before stopping it's transport.
      */
+    @Override
     public void serviceException(Throwable e) {
         // are we a transport exception such as not being able to dispatch
         // synchronously to a transport
@@ -282,6 +318,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
+    @Override
     public Response service(Command command) {
         MDC.put("activemq.connector", connector.getUri().toString());
         Response response = null;
@@ -324,30 +361,36 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return response;
     }
 
+    @Override
     public Response processKeepAlive(KeepAliveInfo info) throws Exception {
         return null;
     }
 
+    @Override
     public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
         broker.removeSubscription(lookupConnectionState(info.getConnectionId()).getContext(), info);
         return null;
     }
 
+    @Override
     public Response processWireFormat(WireFormatInfo info) throws Exception {
         wireFormatInfo = info;
         protocolVersion.set(info.getVersion());
         return null;
     }
 
+    @Override
     public Response processShutdown(ShutdownInfo info) throws Exception {
         stopAsync();
         return null;
     }
 
+    @Override
     public Response processFlush(FlushCommand command) throws Exception {
         return null;
     }
 
+    @Override
     public Response processBeginTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = null;
@@ -365,6 +408,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processEndTransaction(TransactionInfo info) throws Exception {
         // No need to do anything. This packet is just sent by the client
         // make sure he is synced with the server as commit command could
@@ -372,6 +416,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processPrepareTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = null;
@@ -403,6 +448,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
+    @Override
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
@@ -411,6 +457,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
@@ -419,6 +466,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processRollbackTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
@@ -427,6 +475,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processForgetTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
@@ -434,6 +483,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processRecoverTransactions(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
@@ -441,6 +491,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return new DataArrayResponse(preparedTransactions);
     }
 
+    @Override
     public Response processMessage(Message messageSend) throws Exception {
         ProducerId producerId = messageSend.getProducerId();
         ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
@@ -450,6 +501,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processMessageAck(MessageAck ack) throws Exception {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(ack.getConsumerId());
         if (consumerExchange != null) {
@@ -458,15 +510,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processMessagePull(MessagePull pull) throws Exception {
         return broker.messagePull(lookupConnectionState(pull.getConsumerId()).getContext(), pull);
     }
 
+    @Override
     public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception {
         broker.processDispatchNotification(notification);
         return null;
     }
 
+    @Override
     public Response processAddDestination(DestinationInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.addDestinationInfo(cs.getContext(), info);
@@ -476,6 +531,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processRemoveDestination(DestinationInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.removeDestinationInfo(cs.getContext(), info);
@@ -485,6 +541,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processAddProducer(ProducerInfo info) throws Exception {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
@@ -517,6 +574,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processRemoveProducer(ProducerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
@@ -535,6 +593,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processAddConsumer(ConsumerInfo info) throws Exception {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
@@ -569,6 +628,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processRemoveConsumer(ConsumerId id, long lastDeliveredSequenceId) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
@@ -593,6 +653,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processAddSession(SessionInfo info) throws Exception {
         ConnectionId connectionId = info.getSessionId().getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -609,6 +670,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception {
         ConnectionId connectionId = id.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -642,6 +704,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processAddConnection(ConnectionInfo info) throws Exception {
         // Older clients should have been defaulting this field to true.. but
         // they were not.
@@ -728,6 +791,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public synchronized Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId)
             throws InterruptedException {
         LOG.debug("remove connection id: " + id);
@@ -776,15 +840,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processProducerAck(ProducerAck ack) throws Exception {
         // A broker should not get ProducerAck messages.
         return null;
     }
 
+    @Override
     public Connector getConnector() {
         return connector;
     }
 
+    @Override
     public void dispatchSync(Command message) {
         try {
             processDispatch(message);
@@ -793,6 +860,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
+    @Override
     public void dispatchAsync(Command message) {
         if (!stopping.get()) {
             if (taskRunner == null) {
@@ -810,17 +878,17 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         } else {
             if (message.isMessageDispatch()) {
                 MessageDispatch md = (MessageDispatch) message;
-                Runnable sub = md.getTransmitCallback();
+                TransmitCallback sub = md.getTransmitCallback();
                 broker.postProcessDispatch(md);
                 if (sub != null) {
-                    sub.run();
+                    sub.onFailure();
                 }
             }
         }
     }
 
     protected void processDispatch(Command command) throws IOException {
-        final MessageDispatch messageDispatch = (MessageDispatch) (command.isMessageDispatch() ? command : null);
+        MessageDispatch messageDispatch = (MessageDispatch) (command.isMessageDispatch() ? command : null);
         try {
             if (!stopping.get()) {
                 if (messageDispatch != null) {
@@ -828,17 +896,27 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 dispatch(command);
             }
-        } finally {
+        } catch (Throwable e) {
             if (messageDispatch != null) {
-                Runnable sub = messageDispatch.getTransmitCallback();
+                TransmitCallback sub = messageDispatch.getTransmitCallback();
                 broker.postProcessDispatch(messageDispatch);
                 if (sub != null) {
-                    sub.run();
+                    sub.onFailure();
+                }
+                messageDispatch = null;
+            }
+        } finally {
+            if (messageDispatch != null) {
+                TransmitCallback sub = messageDispatch.getTransmitCallback();
+                broker.postProcessDispatch(messageDispatch);
+                if (sub != null) {
+                    sub.onSuccess();
                 }
             }
         }
     }
 
+    @Override
     public boolean iterate() {
         try {
             if (pendingStop || stopping.get()) {
@@ -877,6 +955,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     /**
      * Returns the statistics for this connection
      */
+    @Override
     public ConnectionStatistics getStatistics() {
         return statistics;
     }
@@ -889,10 +968,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.messageAuthorizationPolicy = messageAuthorizationPolicy;
     }
 
+    @Override
     public boolean isManageable() {
         return manageable;
     }
 
+    @Override
     public void start() throws Exception {
         try {
             synchronized (this) {
@@ -931,6 +1012,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         // do not stop task the task runner factories (taskRunnerFactory, stopTaskRunnerFactory)
         // as their lifecycle is handled elsewhere
@@ -949,6 +1031,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             try {
                 stopTaskRunnerFactory.execute(new Runnable() {
+                    @Override
                     public void run() {
                         try {
                             Thread.sleep(waitTime);
@@ -985,6 +1068,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             try {
                 stopTaskRunnerFactory.execute(new Runnable() {
+                    @Override
                     public void run() {
                         serviceLock.writeLock().lock();
                         try {
@@ -1039,10 +1123,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 Command command = iter.next();
                 if (command.isMessageDispatch()) {
                     MessageDispatch md = (MessageDispatch) command;
-                    Runnable sub = md.getTransmitCallback();
+                    TransmitCallback sub = md.getTransmitCallback();
                     broker.postProcessDispatch(md);
                     if (sub != null) {
-                        sub.run();
+                        sub.onFailure();
                     }
                 }
             }
@@ -1109,6 +1193,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     /**
      * @return true if the Connection is slow
      */
+    @Override
     public boolean isSlow() {
         return slow;
     }
@@ -1132,6 +1217,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     /**
      * @return if after being marked, the Connection is still writing
      */
+    @Override
     public boolean isBlocked() {
         return blocked;
     }
@@ -1139,6 +1225,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     /**
      * @return true if the Connection is connected
      */
+    @Override
     public boolean isConnected() {
         return connected;
     }
@@ -1160,6 +1247,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     /**
      * @return true if the Connection is active
      */
+    @Override
     public boolean isActive() {
         return active;
     }
@@ -1178,10 +1266,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return starting;
     }
 
+    @Override
     public synchronized boolean isNetworkConnection() {
         return networkConnection;
     }
 
+    @Override
     public boolean isFaultTolerantConnection() {
         return this.faultTolerantConnection;
     }
@@ -1201,9 +1291,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.pendingStop = pendingStop;
     }
 
+    @Override
     public Response processBrokerInfo(BrokerInfo info) {
         if (info.isSlaveBroker()) {
-            BrokerService bService = connector.getBrokerService();
             LOG.error(" Slave Brokers are no longer supported - slave trying to attach is: " + info.getBrokerName());
         } else if (info.isNetworkConnection() && info.isDuplexConnection()) {
             // so this TransportConnection is the rear end of a network bridge
@@ -1291,10 +1381,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
 
+    @Override
     public String getRemoteAddress() {
         return transport.getRemoteAddress();
     }
 
+    @Override
     public String getConnectionId() {
         List<TransportConnectionState> connectionStates = listConnectionStates();
         for (TransportConnectionState cs : connectionStates) {
@@ -1306,6 +1398,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public void updateClient(ConnectionControl control) {
         if (isActive() && isBlocked() == false && isFaultTolerantConnection() && this.wireFormatInfo != null
                 && this.wireFormatInfo.getVersion() >= 6) {
@@ -1388,6 +1481,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return protocolVersion.get();
     }
 
+    @Override
     public Response processControlCommand(ControlCommand command) throws Exception {
         String control = command.getCommand();
         if (control != null && control.equals("shutdown")) {
@@ -1396,10 +1490,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processMessageDispatch(MessageDispatch dispatch) throws Exception {
         return null;
     }
 
+    @Override
     public Response processConnectionControl(ConnectionControl control) throws Exception {
         if (control != null) {
             faultTolerantConnection = control.isFaultTolerant();
@@ -1407,10 +1503,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
+    @Override
     public Response processConnectionError(ConnectionError error) throws Exception {
         return null;
     }
 
+    @Override
     public Response processConsumerControl(ConsumerControl control) throws Exception {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(control.getConsumerId());
         broker.processConsumerControl(consumerExchange, control);

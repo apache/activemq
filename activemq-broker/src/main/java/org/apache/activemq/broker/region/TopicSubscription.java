@@ -41,6 +41,7 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,7 @@ public class TopicSubscription extends AbstractSubscription {
         this.active=true;
     }
 
+    @Override
     public void add(MessageReference node) throws Exception {
         if (isDuplicate(node)) {
             return;
@@ -236,6 +238,7 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
+    @Override
     public void processMessageDispatchNotification(MessageDispatchNotification mdn) {
         synchronized (matchedListMutex) {
             try {
@@ -256,6 +259,7 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
+    @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
         if (ack.isStandardAck() || ack.isPoisonAck() || ack.isIndividualAck()) {
@@ -299,6 +303,7 @@ public class TopicSubscription extends AbstractSubscription {
         throw new JMSException("Invalid acknowledgment: " + ack);
     }
 
+    @Override
     public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
 
         // The slave should not deliver pull messages.
@@ -320,6 +325,7 @@ public class TopicSubscription extends AbstractSubscription {
                 if (pull.getTimeout() > 0) {
                     scheduler.executeAfterDelay(new Runnable() {
 
+                        @Override
                         public void run() {
                             pullTimeout();
                         }
@@ -346,10 +352,12 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
+    @Override
     public int getPendingQueueSize() {
         return matched();
     }
 
+    @Override
     public int getDispatchedQueueSize() {
         return (int)(dispatchedCounter.get() - dequeueCounter.get());
     }
@@ -358,14 +366,17 @@ public class TopicSubscription extends AbstractSubscription {
         return maximumPendingMessages;
     }
 
+    @Override
     public long getDispatchedCounter() {
         return dispatchedCounter.get();
     }
 
+    @Override
     public long getEnqueueCounter() {
         return enqueueCounter.get();
     }
 
+    @Override
     public long getDequeueCounter() {
         return dequeueCounter.get();
     }
@@ -445,10 +456,12 @@ public class TopicSubscription extends AbstractSubscription {
 
     // Implementation methods
     // -------------------------------------------------------------------------
+    @Override
     public boolean isFull() {
         return getDispatchedQueueSize() >= info.getPrefetchSize() && !prefetchWindowOpen.get();
     }
 
+    @Override
     public int getInFlightSize() {
         return getDispatchedQueueSize();
     }
@@ -456,6 +469,7 @@ public class TopicSubscription extends AbstractSubscription {
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
+    @Override
     public boolean isLowWaterMark() {
         return getDispatchedQueueSize() <= (info.getPrefetchSize() * .4);
     }
@@ -463,6 +477,7 @@ public class TopicSubscription extends AbstractSubscription {
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
+    @Override
     public boolean isHighWaterMark() {
         return getDispatchedQueueSize() >= (info.getPrefetchSize() * .9);
     }
@@ -507,6 +522,7 @@ public class TopicSubscription extends AbstractSubscription {
      *
      * @param newPrefetch
      */
+    @Override
     public void updateConsumerPrefetch(int newPrefetch) {
         if (context != null && context.getConnection() != null && context.getConnection().isManageable()) {
             ConsumerControl cc = new ConsumerControl();
@@ -567,9 +583,18 @@ public class TopicSubscription extends AbstractSubscription {
         }
         if (info.isDispatchAsync()) {
             if (node != null) {
-                md.setTransmitCallback(new Runnable() {
+                md.setTransmitCallback(new TransmitCallback() {
+
                     @Override
-                    public void run() {
+                    public void onSuccess() {
+                        Destination regionDestination = (Destination) node.getRegionDestination();
+                        regionDestination.getDestinationStatistics().getDispatched().increment();
+                        regionDestination.getDestinationStatistics().getInflight().increment();
+                        node.decrementReferenceCount();
+                    }
+
+                    @Override
+                    public void onFailure() {
                         Destination regionDestination = (Destination) node.getRegionDestination();
                         regionDestination.getDestinationStatistics().getDispatched().increment();
                         regionDestination.getDestinationStatistics().getInflight().increment();
@@ -612,6 +637,7 @@ public class TopicSubscription extends AbstractSubscription {
                + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded();
     }
 
+    @Override
     public void destroy() {
         this.active=false;
         synchronized (matchedListMutex) {
