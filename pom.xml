@@ -104,7 +104,7 @@
     <scala-version>2.10.0</scala-version>
     <scalatest-version>1.8</scalatest-version>
     <slf4j-version>1.6.6</slf4j-version>
-    <spring-version>3.0.7.RELEASE</spring-version>
+    <spring-version>3.1.3.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
     <spring-oxm-version>1.5.10</spring-oxm-version>
     <stax2-api-version>3.0.2</stax2-api-version>
@@ -1500,7 +1500,7 @@
       </build>
     </profile>
     <!--
-      To generate a graph of the project dependencies, run: 
+      To generate a graph of the project dependencies, run:
       mvn -P graph graph:reactor -Dhide-scope=test -Dhide-transitive=true -Dhide-external=true -Dgraph.label= -Dhide-version=true -Dhide-group-id=true -Dhide-type=true
     -->
     <profile>
@@ -1516,7 +1516,7 @@
       </build>
     </profile>
   </profiles>
-  
+
   <repositories>
     <!-- for the proton dependency -->
     <repository>
