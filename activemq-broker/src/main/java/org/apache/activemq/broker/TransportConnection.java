@@ -896,7 +896,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 }
                 dispatch(command);
             }
-        } catch (Throwable e) {
+        } catch (IOException e) {
             if (messageDispatch != null) {
                 TransmitCallback sub = messageDispatch.getTransmitCallback();
                 broker.postProcessDispatch(messageDispatch);
@@ -904,6 +904,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     sub.onFailure();
                 }
                 messageDispatch = null;
+                throw e;
             }
         } finally {
             if (messageDispatch != null) {
