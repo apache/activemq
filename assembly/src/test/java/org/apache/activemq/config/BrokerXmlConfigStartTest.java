@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -32,34 +35,49 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.URISupport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BrokerXmlConfigStartTest extends TestCase {
+@RunWith(value = Parameterized.class)
+public class BrokerXmlConfigStartTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerXmlConfigStartTest.class);
     Properties secProps;
-    public void testStartBrokerUsingXmlConfig() throws Exception {
-        doTestStartBrokerUsingXmlConfig("xbean:src/release/conf/activemq.xml");
-    }
 
-    public void testStartBrokerUsingSampleConfig() throws Exception {
-        // resource:copy-resource brings all config files into target/conf
+    private String configUrl;
+
+    @Parameterized.Parameters
+    public static Collection<String[]> getTestParameters() {
+        List<String[]> configUrls = new ArrayList<String[]>();
+        configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml"});
+
         File sampleConfDir = new File("target/conf");
-        
         for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
                 return pathname.isFile() &&
-                pathname.getName().startsWith("activemq-") &&
-                pathname.getName().endsWith("xml");
+                        pathname.getName().startsWith("activemq-") &&
+                        pathname.getName().endsWith("xml");
             }})) {
-            
-            doTestStartBrokerUsingXmlConfig("xbean:" + sampleConfDir.getAbsolutePath() + "/" + xmlFile.getName());
+
+            configUrls.add(new String[]{"xbean:" + sampleConfDir.getAbsolutePath() + "/" + xmlFile.getName()});
         }
+
+        return configUrls;
     }
 
-    public void doTestStartBrokerUsingXmlConfig(String configUrl) throws Exception {
 
+    public BrokerXmlConfigStartTest(String config) {
+        this.configUrl = config;
+    }
+
+    @Test
+    public void testStartBrokerUsingXmlConfig1() throws Exception {
         BrokerService broker = null;
         LOG.info("Broker config: " + configUrl);
         System.err.println("Broker config: " + configUrl);
@@ -95,6 +113,7 @@ public class BrokerXmlConfigStartTest extends TestCase {
         }
     }
 
+    @Before
     public void setUp() throws Exception {
         System.setProperty("activemq.base", "target");
         System.setProperty("activemq.home", "target"); // not a valid home but ok for xml validation
@@ -104,6 +123,7 @@ public class BrokerXmlConfigStartTest extends TestCase {
         secProps.load(new FileInputStream(new File("target/conf/credentials.properties")));
     }
     
+    @After
     public void tearDown() throws Exception {
         TimeUnit.SECONDS.sleep(1);
     }
