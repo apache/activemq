@@ -86,7 +86,7 @@ public class BrokerXmlConfigStartTest {
         try {
             for (TransportConnector transport : broker.getTransportConnectors()) {
                 final URI UriToConnectTo = URISupport.removeQuery(transport.getConnectUri());
-                 
+
                 if (UriToConnectTo.getScheme().startsWith("stomp")) {
                     LOG.info("validating alive with connection to: " + UriToConnectTo);
                     StompConnection connection = new StompConnection();
@@ -108,6 +108,7 @@ public class BrokerXmlConfigStartTest {
         } finally {
             if (broker != null) {
                 broker.stop();
+                broker.waitUntilStopped();
                 broker = null;
             }
         }
@@ -122,7 +123,7 @@ public class BrokerXmlConfigStartTest {
         secProps = new Properties();
         secProps.load(new FileInputStream(new File("target/conf/credentials.properties")));
     }
-    
+
     @After
     public void tearDown() throws Exception {
         TimeUnit.SECONDS.sleep(1);
