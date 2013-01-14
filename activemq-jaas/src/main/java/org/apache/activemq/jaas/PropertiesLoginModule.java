@@ -19,10 +19,8 @@ package org.apache.activemq.jaas;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.security.auth.Subject;
@@ -50,14 +48,10 @@ public class PropertiesLoginModule implements LoginModule {
 
     private boolean debug;
     private boolean reload = false;
-    private static String usersFile;
-    private static String groupsFile;
-    private static Properties users;
-    private static Properties groups;
-    private static long usersReloadTime = 0;
-    private static long groupsReloadTime = 0;
+    private static volatile PrincipalProperties users;
+    private static volatile PrincipalProperties groups;
     private String user;
-    private Set<Principal> principals = new HashSet<Principal>();
+    private final Set<Principal> principals = new HashSet<Principal>();
     private File baseDir;
     private boolean loginSucceeded;
 
@@ -67,49 +61,33 @@ public class PropertiesLoginModule implements LoginModule {
         this.callbackHandler = callbackHandler;
         loginSucceeded = false;
 
-        debug = "true".equalsIgnoreCase((String)options.get("debug"));
+        debug = "true".equalsIgnoreCase((String) options.get("debug"));
         if (options.get("reload") != null) {
-            reload = "true".equalsIgnoreCase((String)options.get("reload"));
+            reload = "true".equalsIgnoreCase((String) options.get("reload"));
         }
 
         if (options.get("baseDir") != null) {
-            baseDir = new File((String)options.get("baseDir"));
+            baseDir = new File((String) options.get("baseDir"));
         }
 
         setBaseDir();
-        usersFile = (String) options.get(USER_FILE) + "";
+        String usersFile = (String) options.get(USER_FILE) + "";
         File uf = baseDir != null ? new File(baseDir, usersFile) : new File(usersFile);
 
-        if (reload || users == null || uf.lastModified() > usersReloadTime) {
+        if (reload || users == null || uf.lastModified() > users.getReloadTime()) {
             if (debug) {
                 LOG.debug("Reloading users from " + uf.getAbsolutePath());
             }
-            try {
-                users = new Properties();
-                java.io.FileInputStream in = new java.io.FileInputStream(uf);
-                users.load(in);
-                in.close();
-                usersReloadTime = System.currentTimeMillis();
-            } catch (IOException ioe) {
-                LOG.warn("Unable to load user properties file " + uf);
-            }
+            users = new PrincipalProperties("user", uf, LOG);
         }
 
-        groupsFile = (String) options.get(GROUP_FILE) + "";
+        String groupsFile = (String) options.get(GROUP_FILE) + "";
         File gf = baseDir != null ? new File(baseDir, groupsFile) : new File(groupsFile);
-        if (reload || groups == null || gf.lastModified() > groupsReloadTime) {
+        if (reload || groups == null || gf.lastModified() > groups.getReloadTime()) {
             if (debug) {
                 LOG.debug("Reloading groups from " + gf.getAbsolutePath());
             }
-            try {
-                groups = new Properties();
-                java.io.FileInputStream in = new java.io.FileInputStream(gf);
-                groups.load(in);
-                in.close();
-                groupsReloadTime = System.currentTimeMillis();
-            } catch (IOException ioe) {
-                LOG.warn("Unable to load group properties file " + gf);
-            }
+            groups = new PrincipalProperties("group", gf, LOG);
         }
     }
 
@@ -137,8 +115,8 @@ public class PropertiesLoginModule implements LoginModule {
         } catch (UnsupportedCallbackException uce) {
             throw new LoginException(uce.getMessage() + " not available to obtain information from user");
         }
-        user = ((NameCallback)callbacks[0]).getName();
-        char[] tmpPassword = ((PasswordCallback)callbacks[1]).getPassword();
+        user = ((NameCallback) callbacks[0]).getName();
+        char[] tmpPassword = ((PasswordCallback) callbacks[1]).getPassword();
         if (tmpPassword == null) {
             tmpPassword = new char[0];
         }
@@ -167,9 +145,9 @@ public class PropertiesLoginModule implements LoginModule {
         if (result) {
             principals.add(new UserPrincipal(user));
 
-            for (Enumeration<?> enumeration = groups.keys(); enumeration.hasMoreElements();) {
-                String name = (String)enumeration.nextElement();
-                String[] userList = ((String)groups.getProperty(name) + "").split(",");
+            for (Map.Entry<String, String> entry : groups.entries()) {
+                String name = entry.getKey();
+                String[] userList = entry.getValue().split(",");
                 for (int i = 0; i < userList.length; i++) {
                     if (user.equals(userList[i])) {
                         principals.add(new GroupPrincipal(name));
@@ -214,5 +192,13 @@ public class PropertiesLoginModule implements LoginModule {
     private void clear() {
         user = null;
         loginSucceeded = false;
+    }
+
+    /**
+     * For test-usage only.
+     */
+    static void resetUsersAndGroupsCache() {
+        users = null;
+        groups = null;
     }
 }
