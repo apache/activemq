@@ -44,7 +44,7 @@
     <ant-version>1.8.4</ant-version>
     <ant-bundle-version>1.7.0_6</ant-bundle-version>
     <aopalliance-version>1.0</aopalliance-version>
-    <aries-version>0.3</aries-version>
+    <aries-version>1.0.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
     <camel-version>2.10.3</camel-version>
     <camel-version-range>[2.10,3)</camel-version-range>
