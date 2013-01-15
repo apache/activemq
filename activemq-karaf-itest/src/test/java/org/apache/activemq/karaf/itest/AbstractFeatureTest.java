@@ -140,7 +140,7 @@ public abstract class AbstractFeatureTest {
     public static UrlReference getActiveMQKarafFeatureUrl() {
         String type = "xml/features";
         return mavenBundle().groupId("org.apache.activemq").
-            artifactId("activemq-karaf").version(activemqVersion()).type(type);
+            artifactId("activemq-karaf").versionAsInProject().type(type);
     }
     
     public static UrlReference getKarafFeatureUrl() {

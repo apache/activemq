@@ -229,6 +229,7 @@
     <module>activemq-osgi</module>
     <module>activemq-blueprint</module>
     <module>activemq-karaf</module>
+    <module>activemq-karaf-itest</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-pool</module>
     <module>activemq-ra</module>

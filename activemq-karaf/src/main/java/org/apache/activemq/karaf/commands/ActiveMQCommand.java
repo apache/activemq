@@ -157,4 +157,9 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
         return action;
     }
 
+    @Override
+    public Map<String, Completer> getOptionalCompleters() {
+        //TODO implement completers
+        return null;
+    }
 }

@@ -31,6 +31,10 @@
   <name>ActiveMQ :: Karaf Integration Tests</name>
   <description>Performs Karaf compliance integration tests</description>
 
+    <properties>
+      <pax-exam-version>2.6.0</pax-exam-version>
+    </properties>
+
   <dependencies>
 
     <dependency>
@@ -38,6 +42,23 @@
       <artifactId>activemq-client</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-karaf</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+      <dependency>
+           <groupId>org.ops4j.pax.logging</groupId>
+           <artifactId>pax-logging-api</artifactId>
+           <version>1.6.2</version>
+      </dependency>
+      <dependency>
+           <groupId>org.ops4j.pax.logging</groupId>
+           <artifactId>pax-logging-service</artifactId>
+           <version>1.6.2</version>
+      </dependency>
 
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
@@ -137,6 +158,11 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
@@ -145,6 +171,19 @@
 
   <build>
     <plugins>
+        <!-- generate dependencies versions -->
+        <plugin>
+            <groupId>org.apache.servicemix.tooling</groupId>
+            <artifactId>depends-maven-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>generate-depends-file</id>
+                    <goals>
+                        <goal>generate-depends-file</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
