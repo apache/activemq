@@ -44,6 +44,7 @@
       org.apache.activemq.pool*;version=${project.version};-noimport:=;-split-package:=merge-last,
       org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last,
       org.apache.activemq.hooks*;version=${project.version};-noimport:=;-split-package:=merge-last
+      org.apache.activemq.hooks.osgi*;version=${project.version};-noimport:=;-split-package:=merge-last
     </activemq.osgi.export>
   </properties>
 
@@ -178,6 +179,8 @@
     <dependency>
         <groupId>org.springframework.osgi</groupId>
         <artifactId>spring-osgi-core</artifactId>
+        <scope>provided</scope>
+        <optional>true</optional>
         <exclusions>
             <exclusion>
                 <groupId>org.springframework</groupId>

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.hooks;
+package org.apache.activemq.hooks.osgi;
 
 import org.osgi.framework.BundleException;
 import org.slf4j.Logger;
