@@ -101,7 +101,7 @@
         -->
 
         <shutdownHooks>
-           <bean xmlns="http://www.springframework.org/schema/beans" id="hook" class="org.apache.activemq.hooks.SpringOsgiContextHook" />
+           <bean xmlns="http://www.springframework.org/schema/beans" id="hook" class="org.apache.activemq.hooks.osgi.SpringOsgiContextHook" />
         </shutdownHooks>
 
         <!-- The transport connectors ActiveMQ will listen to -->
