@@ -114,12 +114,12 @@ public class DurableSubProcessMultiRestartTest {
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
 
         final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        assertTrue("only one journal file should be left: " + pa.getStore().getJournal().getFileMap().size(),
+        assertTrue("only two journal files should be left: " + pa.getStore().getJournal().getFileMap().size(),
             Wait.waitFor(new Wait.Condition() {
 
                 @Override
                 public boolean isSatisified() throws Exception {
-                    return pa.getStore().getJournal().getFileMap().size() == 1;
+                    return pa.getStore().getJournal().getFileMap().size() == 2;
                 }
             }, TimeUnit.MINUTES.toMillis(3))
         );
