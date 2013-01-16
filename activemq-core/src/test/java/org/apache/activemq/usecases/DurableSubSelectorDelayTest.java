@@ -76,11 +76,11 @@ public class DurableSubSelectorDelayTest {
         TimeUnit.MINUTES.sleep(2);
 
         final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        assertTrue("only one journal file should be left ", Wait.waitFor(new Wait.Condition() {
+        assertTrue("only two journal files should be left ", Wait.waitFor(new Wait.Condition() {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return pa.getStore().getJournal().getFileMap().size() == 1;
+                return pa.getStore().getJournal().getFileMap().size() == 2;
             }
         }, TimeUnit.MINUTES.toMillis(2)));
 
