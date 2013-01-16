@@ -61,26 +61,28 @@
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/${dom4j-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
         <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries-version}</bundle>
         <!-- the following 4 bundles is needed by activemq-console -->
         <bundle dependency="true">mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
         <bundle dependency="true">mvn:org.fusesource.hawtbuf/hawtbuf-proto/${hawtbuf-version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson-version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
-        <bundle>mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
     </feature>
 
     <feature name="activemq-spring" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="[1.2,2)">spring-dm</feature>
-        <feature version="${project.version}">activemq</feature>
+        <feature version="${project.version}">activemq-broker</feature>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-spring/${project.version}</bundle>
     </feature>
 
     <feature name="activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="${project.version}">activemq</feature>
+        <feature version="${project.version}">activemq-broker</feature>
         <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
         <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
+        <bundle dependency="true">mvn:org.apache.aries.proxy/org.apache.aries.proxy/${aries-version}</bundle>
+        <bundle dependency="true">mvn:org.apache.aries.blueprint/org.apache.aries.blueprint/${aries-version}</bundle>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-blueprint/${project.version}</bundle>
     </feature>
@@ -102,7 +104,7 @@
     </feature>
 
     <feature name="activemq-camel" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="${project.version}">activemq</feature>
+        <feature version="${project.version}">activemq-broker</feature>
         <feature version="${camel-version-range}">camel-jms</feature>
         <bundle>mvn:org.apache.activemq/activemq-camel/${project.version}</bundle>
     </feature>
