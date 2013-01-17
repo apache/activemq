@@ -76,11 +76,11 @@ public class DurableSubSelectorDelayTest {
         TimeUnit.MINUTES.sleep(2);
 
         final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        assertTrue("only two journal files should be left ", Wait.waitFor(new Wait.Condition() {
+        assertTrue("less than two journal file should be left, was: " + pa.getStore().getJournal().getFileMap().size(), Wait.waitFor(new Wait.Condition() {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return pa.getStore().getJournal().getFileMap().size() == 2;
+                return pa.getStore().getJournal().getFileMap().size() <= 2;
             }
         }, TimeUnit.MINUTES.toMillis(2)));
 
@@ -92,17 +92,23 @@ public class DurableSubSelectorDelayTest {
      */
     final class MsgProducer extends Thread {
 
-         final String url = "vm://"
-                 + DurableSubSelectorDelayTest.getName();
+        final String url = "vm://" + DurableSubSelectorDelayTest.getName();
 
         final ConnectionFactory cf = new ActiveMQConnectionFactory(url);
 
         int transRover = 0;
         int messageRover = 0;
+        int count = 40;
 
         public MsgProducer() {
             super("MsgProducer");
             setDaemon(true);
+        }
+
+        public MsgProducer(int count) {
+            super("MsgProducer");
+            setDaemon(true);
+            this.count = count;
         }
 
         @Override
@@ -115,8 +121,8 @@ public class DurableSubSelectorDelayTest {
                     send();
                 }
             } catch (Throwable e) {
-               e.printStackTrace(System.out);
-               throw new RuntimeException(e);
+                e.printStackTrace(System.out);
+                throw new RuntimeException(e);
             }
         }
 
@@ -124,10 +130,8 @@ public class DurableSubSelectorDelayTest {
 
             int trans = ++transRover;
             boolean relevantTrans = true;
-            int count = 40;
 
-            LOG.info("Sending Trans[id=" + trans + ", count="
-                    + count + "]");
+            LOG.info("Sending Trans[id=" + trans + ", count=" + count + "]");
 
             Connection con = cf.createConnection();
 
@@ -150,8 +154,7 @@ public class DurableSubSelectorDelayTest {
             message.setBooleanProperty("RELEVANT", relevantTrans);
             prod.send(topic, message);
 
-            LOG.info("Committed Trans[id=" + trans + ", count="
-                    + count + "], ID=" + messageRover);
+            LOG.info("Committed Trans[id=" + trans + ", count=" + count + "], ID=" + messageRover);
 
             sess.close();
             con.close();
@@ -167,7 +170,7 @@ public class DurableSubSelectorDelayTest {
 
         final ConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
 
-        private final String subName ;
+        private final String subName;
 
         private final int id;
         private final String conClientId;
@@ -176,8 +179,8 @@ public class DurableSubSelectorDelayTest {
         public DurableSubscriber(int id) throws JMSException {
             this.id = id;
             conClientId = "cli" + id;
-            subName = "subscription"+ id;
-            selector ="RELEVANT = true";
+            subName = "subscription" + id;
+            selector = "RELEVANT = true";
         }
 
         private void process() throws JMSException {
@@ -196,7 +199,7 @@ public class DurableSubSelectorDelayTest {
                     long max = end - System.currentTimeMillis();
 
                     if (max <= 0) {
-                            break;
+                        break;
                     }
 
                     Message message = consumer.receive(max);
@@ -204,9 +207,7 @@ public class DurableSubSelectorDelayTest {
                         continue;
                     }
 
-                    LOG.info("Received Trans[id="
-                            + message.getIntProperty("TRANS") + ", count="
-                            + transCount + "] in " + this + ".");
+                    LOG.info("Received Trans[id=" + message.getIntProperty("TRANS") + ", count=" + transCount + "] in " + this + ".");
 
                 } while (true);
 
@@ -227,8 +228,7 @@ public class DurableSubSelectorDelayTest {
 
         private void unsubscribe() throws JMSException {
             Connection con = openConnection();
-            Session session = con
-                    .createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session.unsubscribe(subName);
             session.close();
             con.close();
@@ -265,14 +265,14 @@ public class DurableSubSelectorDelayTest {
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
 
         File kahadbData = new File("activemq-data/" + getName() + "-kahadb");
-            if (deleteAllMessages)
-                delete(kahadbData);
+        if (deleteAllMessages)
+            delete(kahadbData);
 
-            broker.setPersistent(true);
-            KahaDBPersistenceAdapter kahadb = new KahaDBPersistenceAdapter();
-            kahadb.setDirectory(kahadbData);
-            kahadb.setJournalMaxFileLength(  500 * 1024);
-            broker.setPersistenceAdapter(kahadb);
+        broker.setPersistent(true);
+        KahaDBPersistenceAdapter kahadb = new KahaDBPersistenceAdapter();
+        kahadb.setDirectory(kahadbData);
+        kahadb.setJournalMaxFileLength(500 * 1024);
+        broker.setPersistenceAdapter(kahadb);
 
         connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
 
