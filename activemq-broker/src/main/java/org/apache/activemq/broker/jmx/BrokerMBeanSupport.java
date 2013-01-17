@@ -118,6 +118,15 @@ public class BrokerMBeanSupport {
         return new ObjectName(objectNameStr);
     }
 
+    public static ObjectName createPersistenceAdapterName(String brokerObjectName, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+
+        objectNameStr += "," + "Service=PersistenceAdapter";
+        objectNameStr += "," + "InstanceName=" + JMXSupport.encodeObjectNamePart(name);
+
+        return new ObjectName(objectNameStr);
+    }
+
     public static ObjectName createAbortSlowConsumerStrategyName(ObjectName brokerObjectName, AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
         return createAbortSlowConsumerStrategyName(brokerObjectName.toString(), strategy);
     }

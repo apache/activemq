@@ -19,6 +19,8 @@ package org.apache.activemq.store.kahadb;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.LockableServiceSupport;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.PersistenceAdapterView;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -38,6 +40,10 @@ import org.apache.activemq.util.ServiceStopper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.Callable;
+
+
+import static org.apache.activemq.broker.jmx.BrokerMBeanSupport.createPersistenceAdapterName;
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with
@@ -189,6 +195,24 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     public void doStart() throws Exception {
         this.letter.start();
+
+        if (brokerService != null && brokerService.isUseJmx()) {
+            PersistenceAdapterView view = new PersistenceAdapterView(this);
+            view.setInflightTransactionViewCallable(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return letter.getTransactions();
+                }
+            });
+            view.setDataViewCallable(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return letter.getJournal().getFileMap().keySet().toString();
+                }
+            });
+            AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view,
+                    createPersistenceAdapterName(brokerService.getBrokerObjectName().toString(), toString()));
+        }
     }
 
     /**

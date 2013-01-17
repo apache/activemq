@@ -466,6 +466,72 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return l;
     }
 
+    class TranInfo {
+        TransactionId id;
+        Location location;
+
+        class opCount {
+            int add;
+            int remove;
+        }
+        HashMap<KahaDestination, opCount> destinationOpCount = new HashMap<KahaDestination, opCount>();
+
+        public void track(Operation operation) {
+            if (location == null ) {
+                location = operation.getLocation();
+            }
+            KahaDestination destination;
+            boolean isAdd = false;
+            if (operation instanceof AddOpperation) {
+                AddOpperation add = (AddOpperation) operation;
+                destination = add.getCommand().getDestination();
+                isAdd = true;
+            } else {
+                RemoveOpperation removeOpperation = (RemoveOpperation) operation;
+                destination = removeOpperation.getCommand().getDestination();
+            }
+            opCount opCount = destinationOpCount.get(destination);
+            if (opCount == null) {
+                opCount = new opCount();
+                destinationOpCount.put(destination, opCount);
+            }
+            if (isAdd) {
+                opCount.add++;
+            } else {
+                opCount.remove++;
+            }
+        }
+
+        @Override
+        public String toString() {
+           StringBuffer buffer = new StringBuffer();
+           buffer.append(location).append(";").append(id).append(";\n");
+           for (Entry<KahaDestination, opCount> op : destinationOpCount.entrySet()) {
+               buffer.append(op.getKey()).append('+').append(op.getValue().add).append(',').append('-').append(op.getValue().remove).append(';');
+           }
+           return buffer.toString();
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public String getTransactions() {
+
+        ArrayList<TranInfo> infos = new ArrayList<TranInfo>();
+        synchronized (inflightTransactions) {
+            if (!inflightTransactions.isEmpty()) {
+                for (Entry<TransactionId, List<Operation>> entry : inflightTransactions.entrySet()) {
+                    TranInfo info = new TranInfo();
+                    info.id = entry.getKey();
+                    for (Operation operation : entry.getValue()) {
+                        info.track(operation);
+                    }
+                    infos.add(info);
+                }
+            }
+        }
+        return infos.toString();
+    }
+
     /**
      * Move all the messages that were in the journal into long term storage. We
      * just replay and do a checkpoint.
