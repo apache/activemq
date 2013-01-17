@@ -248,6 +248,10 @@ public abstract class BaseDestination implements Destination {
         return memoryUsage;
     }
 
+	public void setMemoryUsage(MemoryUsage memoryUsage) {
+    	this.memoryUsage = memoryUsage;
+    }
+
     public DestinationStatistics getDestinationStatistics() {
         return destinationStatistics;
     }

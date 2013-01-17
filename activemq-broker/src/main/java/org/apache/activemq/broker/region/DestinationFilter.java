@@ -101,6 +101,11 @@ public class DestinationFilter implements Destination {
         return next.getMemoryUsage();
     }
 
+	@Override
+	public void setMemoryUsage(MemoryUsage memoryUsage) {
+		next.setMemoryUsage(memoryUsage);
+	}
+
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
         next.removeSubscription(context, sub, lastDeliveredSequenceId);
     }

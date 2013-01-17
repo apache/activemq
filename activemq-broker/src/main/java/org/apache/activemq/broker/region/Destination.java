@@ -66,6 +66,8 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     MemoryUsage getMemoryUsage();
 
+    void setMemoryUsage(MemoryUsage memoryUsage);
+
     void dispose(ConnectionContext context) throws IOException;
 
     boolean isDisposed();
