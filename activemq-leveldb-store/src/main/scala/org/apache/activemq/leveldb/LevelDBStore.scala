@@ -31,7 +31,7 @@ import java.util._
 import collection.mutable.ListBuffer
 import concurrent.CountDownLatch
 import javax.management.ObjectName
-import org.apache.activemq.broker.jmx.AnnotatedMBean
+import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
 import org.apache.activemq.util._
 import org.apache.activemq.leveldb.util.{RetrySupport, FileSupport, Log}
 import org.apache.activemq.store.PList.PListIterator
@@ -171,13 +171,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   }
 
   override def toString: String = {
-    return "LevelDB:[" + directory.getAbsolutePath + "]"
+    return "LevelDB[" + directory.getAbsolutePath + "]"
   }
 
   def objectName = {
     var brokerON = brokerService.getBrokerObjectName
-    new ObjectName(brokerON.toString() +",persistentAdapter=LevelDBStore");
-
+    BrokerMBeanSupport.createPersistenceAdapterName(brokerON.toString, this.toString)
   }
 
   def retry[T](func : =>T):T = RetrySupport.retry(LevelDBStore, isStarted, func _)
