@@ -26,26 +26,16 @@
   </parent>
 
   <artifactId>activemq-spring</artifactId>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: Spring</name>
   <description>ActiveMQ Spring Integration</description>
 
   <properties>
-    <activemq.osgi.import.pkg>
+    <activemq.osgi.import>
       javax.transaction*;resolution:=optional,
       org.apache.geronimo.transaction.manager*;resolution:=optional,
-      org.springframework*;resolution:=optional,
-      *
-    </activemq.osgi.import.pkg>
-    <activemq.osgi.export>
-      org.apache.activemq.store*;version=${project.version};-noimport:=;-split-package:=merge-last,
-      org.apache.activemq.security*;version=${project.version};-noimport:=;-split-package:=merge-last,
-      org.apache.activemq.network*;version=${project.version};-noimport:=;-split-package:=merge-last,
-      org.apache.activemq.spring*;version=${project.version};-noimport:=;-split-package:=merge-last,
-      org.apache.activemq.pool*;version=${project.version};-noimport:=;-split-package:=merge-last,
-      org.apache.activemq.xbean*;version=${project.version};-noimport:=true;-split-package:=merge-last,
-      org.apache.activemq.hooks*;version=${project.version};-noimport:=;-split-package:=merge-last
-      org.apache.activemq.hooks.osgi*;version=${project.version};-noimport:=;-split-package:=merge-last
-    </activemq.osgi.export>
+      org.springframework*;resolution:=optional
+    </activemq.osgi.import>
   </properties>
 
   <dependencies>

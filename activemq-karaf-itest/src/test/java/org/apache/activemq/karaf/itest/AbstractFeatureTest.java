@@ -170,6 +170,8 @@ public abstract class AbstractFeatureTest {
                 // override the config.properties (to fix pax-exam bug)
                 replaceConfigurationFile("etc/config.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/config.properties")),
                 replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
+                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server-default.cfg")),
+                replaceConfigurationFile("etc/activemq.xml", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/activemq.xml")),
                 scanFeatures(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
 
         return options;

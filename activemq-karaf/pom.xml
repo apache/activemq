@@ -170,7 +170,7 @@
         <configuration>
             <instructions>
                 <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                <Export-Package>org.apache.activemq.karaf.commands;version=${project.version};-split-package:=merge-first</Export-Package>
+                <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
                 <Import-Package>
                   org.apache.felix.gogo.commands,
                   *

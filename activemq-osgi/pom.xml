@@ -94,11 +94,71 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-camel</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-console</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-ra</artifactId>
+    </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>activemq-spring</artifactId>
+      </dependency>
     
   </dependencies>
 
   <build>
     <plugins>
+        <plugin>
+          <groupId>org.apache.xbean</groupId>
+          <artifactId>maven-xbean-plugin</artifactId>
+          <version>3.12</version>
+          <executions>
+            <execution>
+            <phase>process-classes</phase>
+              <configuration>
+                <includes>
+                  <include>${basedir}/../activemq-client/src/main/java</include>
+                  <include>${basedir}/../activemq-broker/src/main/java</include>
+                  <include>${basedir}/../activemq-leveldb-store/src/main/java</include>
+                  <include>${basedir}/../activemq-jdbc-store/src/main/java</include>
+                  <include>${basedir}/../activemq-amq-store/src/main/java</include>
+                  <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
+                  <include>${basedir}/../activemq-mqtt/src/main/java</include>
+                  <include>${basedir}/../activemq-stomp/src/main/java</include>
+                  <include>${basedir}/../activemq-spring/src/main/java</include>
+                </includes>
+                <strictXsdOrder>false</strictXsdOrder>
+                <namespace>http://activemq.apache.org/schema/core</namespace>
+                <schema>${basedir}/target/classes/activemq.xsd</schema>
+                <outputDir>${basedir}/target/classes</outputDir>
+                <generateSpringSchemasFile>false</generateSpringSchemasFile>
+                <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
+              </configuration>
+              <goals>
+                <goal>mapping</goal>
+              </goals>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>com.thoughtworks.qdox</groupId>
+              <artifactId>qdox</artifactId>
+              <version>1.12</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
