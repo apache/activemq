@@ -29,6 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -421,7 +422,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         try {
             if( pageFile != null && pageFile.isLoaded() ) {
                 metadata.state = CLOSED_STATE;
-                metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
+                metadata.firstInProgressTransactionLocation = getInProgressTxLocationRange()[0];
 
                 if (metadata.page != null) {
                     pageFile.tx().execute(new Transaction.Closure<IOException>() {
@@ -440,30 +441,36 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     // public for testing
     @SuppressWarnings("rawtypes")
-    public Location getFirstInProgressTxLocation() {
-        Location l = null;
+    public Location[] getInProgressTxLocationRange() {
+        Location[] range = new Location[]{null, null};
         synchronized (inflightTransactions) {
             if (!inflightTransactions.isEmpty()) {
                 for (List<Operation> ops : inflightTransactions.values()) {
                     if (!ops.isEmpty()) {
-                        l = ops.get(0).getLocation();
-                        break;
+                        trackMaxAndMin(range, ops);
                     }
                 }
             }
             if (!preparedTransactions.isEmpty()) {
                 for (List<Operation> ops : preparedTransactions.values()) {
                     if (!ops.isEmpty()) {
-                        Location t = ops.get(0).getLocation();
-                        if (l==null || t.compareTo(l) <= 0) {
-                            l = t;
-                        }
-                        break;
+                        trackMaxAndMin(range, ops);
                     }
                 }
             }
         }
-        return l;
+        return range;
+    }
+
+    private void trackMaxAndMin(Location[] range, List<Operation> ops) {
+        Location t = ops.get(0).getLocation();
+        if (range[0]==null || t.compareTo(range[0]) <= 0) {
+            range[0] = t;
+        }
+        t = ops.get(ops.size() -1).getLocation();
+        if (range[1]==null || t.compareTo(range[1]) >= 0) {
+            range[1] = t;
+        }
     }
 
     class TranInfo {
@@ -1385,11 +1392,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         LOG.debug("Checkpoint started.");
 
         // reflect last update exclusive of current checkpoint
-        Location firstTxLocation = metadata.lastUpdate;
+        Location lastUpdate = metadata.lastUpdate;
 
         metadata.state = OPEN_STATE;
         metadata.producerSequenceIdTrackerLocation = checkpointProducerAudit();
-        metadata.firstInProgressTransactionLocation = getFirstInProgressTxLocation();
+        Location[] inProgressTxRange = getInProgressTxLocationRange();
+        metadata.firstInProgressTransactionLocation = inProgressTxRange[0];
         tx.store(metadata.page, metadataMarshaller, true);
         pageFile.flush();
 
@@ -1399,7 +1407,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             final TreeSet<Integer> gcCandidateSet = new TreeSet<Integer>(completeFileSet);
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Last update: " + firstTxLocation + ", full gc candidates set: " + gcCandidateSet);
+                LOG.trace("Last update: " + lastUpdate + ", full gc candidates set: " + gcCandidateSet);
+            }
+
+            if (lastUpdate != null) {
+                gcCandidateSet.remove(lastUpdate.getDataFileId());
             }
 
             // Don't GC files under replication
@@ -1411,25 +1423,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 gcCandidateSet.remove(metadata.producerSequenceIdTrackerLocation.getDataFileId());
             }
 
-            // Don't GC files after the first in progress tx
-            if( metadata.firstInProgressTransactionLocation!=null ) {
-                if (metadata.firstInProgressTransactionLocation.getDataFileId() < firstTxLocation.getDataFileId()) {
-                    firstTxLocation = metadata.firstInProgressTransactionLocation;
+            // Don't GC files referenced by in-progress tx
+            if (inProgressTxRange[0] != null) {
+                for (int pendingTx=inProgressTxRange[0].getDataFileId(); pendingTx <= inProgressTxRange[1].getDataFileId(); pendingTx++) {
+                    gcCandidateSet.remove(pendingTx);
                 }
             }
-
-            if( firstTxLocation!=null ) {
-                while( !gcCandidateSet.isEmpty() ) {
-                    Integer last = gcCandidateSet.last();
-                    if( last >= firstTxLocation.getDataFileId() ) {
-                        gcCandidateSet.remove(last);
-                    } else {
-                        break;
-                    }
-                }
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("gc candidates after first tx:" + firstTxLocation + ", " + gcCandidateSet);
-                }
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("gc candidates after tx range:" + Arrays.asList(inProgressTxRange) + ", " + gcCandidateSet);
             }
 
             // Go through all the destinations to see if any of them can remove GC candidates.

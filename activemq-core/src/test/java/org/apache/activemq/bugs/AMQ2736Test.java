@@ -54,7 +54,7 @@ public class AMQ2736Test {
         KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
         KahaDBStore store = pa.getStore();
 
-        assertNotNull("last tx location is present " + store.getFirstInProgressTxLocation());
+        assertNotNull("last tx location is present " + store.getInProgressTxLocationRange()[1]);
 
         // test hack, close the journal to ensure no further journal updates when broker stops
         // mimic kill -9 in terms of no normal shutdown sequence
@@ -74,7 +74,7 @@ public class AMQ2736Test {
         store = pa.getStore();
 
         // inflight non xa tx should be rolledback on recovery
-        assertNull("in progress tx location is present ", store.getFirstInProgressTxLocation());
+        assertNull("in progress tx location is present ", store.getInProgressTxLocationRange()[0]);
 
     }
 
