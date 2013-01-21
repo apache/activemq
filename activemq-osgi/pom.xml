@@ -35,8 +35,7 @@
 
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
-      org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first,
-      '=META-INF.services.org.apache.xbean.spring.http.activemq.apache.org.schema';-noimport:=true
+      org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first
     </activemq.osgi.export>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
     <surefire.argLine>-Xmx512M</surefire.argLine>
@@ -165,6 +164,8 @@
         <configuration>
           <instructions>
             <!-- <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator> -->
+             <Embed-Dependency>*;groupId=org.apache.activemq;inline=META-INF/services/*</Embed-Dependency>
+             <Embed-Transitive>true</Embed-Transitive>
           </instructions>
         </configuration>
       </plugin>
