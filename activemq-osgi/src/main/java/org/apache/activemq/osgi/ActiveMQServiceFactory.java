@@ -25,10 +25,12 @@ import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.Resource;
 
-import java.util.Dictionary;
-import java.util.HashMap;
+import java.util.*;
 
 public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
@@ -54,17 +56,37 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
         }
 
         LOG.info("Starting broker " + name);
-        //TODO properties
 
         try {
             Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
             Resource resource = Utils.resourceFromString(config);
-            ResourceXmlApplicationContext ctx = new ResourceXmlApplicationContext((resource)) {
+
+            ResourceXmlApplicationContext ctx = new ResourceXmlApplicationContext(resource, Collections.EMPTY_LIST, null, Collections.EMPTY_LIST, false) {
                 protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
                     reader.setValidating(false);
                 }
             };
 
+            // Handle properties in configuration
+            PropertySourcesPlaceholderConfigurer configurator =
+                        new PropertySourcesPlaceholderConfigurer();
+
+            //convert dictionary to properties. Is there a better way?
+            Properties props = new Properties();
+            Enumeration elements = properties.keys();
+            while (elements.hasMoreElements()) {
+                Object key = elements.nextElement();
+                props.put(key, properties.get(key));
+            }
+
+            configurator.setProperties(props);
+            configurator.setIgnoreUnresolvablePlaceholders(true);
+
+            ctx.addBeanFactoryPostProcessor(configurator);
+
+            ctx.refresh();
+
+            // Start the broker
             BrokerService broker = ctx.getBean(BrokerService.class);
             if (broker == null) {
                 throw new ConfigurationException(null, "Broker not defined");
