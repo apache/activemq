@@ -22,6 +22,8 @@ import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.Resource;
 
@@ -32,6 +34,8 @@ import java.util.Map;
 
 public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQServiceFactory.class);
+
     BundleContext bundleContext;
     HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
 
@@ -41,7 +45,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     }
 
     @Override
-    public void updated(String pid, Dictionary properties) throws ConfigurationException {
+    synchronized public void updated(String pid, Dictionary properties) throws ConfigurationException {
         String config = (String)properties.get("config");
         if (config == null) {
             throw new ConfigurationException("config", "Property must be set");
@@ -77,18 +81,24 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     }
 
     @Override
-    public void deleted(String pid) {
+    synchronized public void deleted(String pid) {
+        LOG.info("Stopping broker " + pid);
         BrokerService broker = brokers.get(pid);
         if (broker == null) {
-            //TODO LOG
+            LOG.warn("Broker " + pid + " not found");
             return;
         }
         try {
             broker.stop();
             broker.waitUntilStopped();
         } catch (Exception e) {
-            //TODO LOG
-            e.printStackTrace();
+            LOG.error("Exception on stopping broker", e);
+        }
+    }
+
+    synchronized public void destroy() {
+        for (String broker: brokers.keySet()) {
+            deleted(broker);
         }
     }
 
