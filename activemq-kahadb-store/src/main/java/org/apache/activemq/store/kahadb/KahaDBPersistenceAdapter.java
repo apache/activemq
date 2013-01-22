@@ -16,9 +16,19 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.apache.activemq.broker.jmx.BrokerMBeanSupport.createPersistenceAdapterName;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.LockableServiceSupport;
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.PersistenceAdapterView;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -29,21 +39,17 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
-import org.apache.activemq.broker.Locker;
-import org.apache.activemq.store.*;
+import org.apache.activemq.store.JournaledStore;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.SharedFileLocker;
+import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-
-import static org.apache.activemq.broker.jmx.BrokerMBeanSupport.createPersistenceAdapterName;
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with
@@ -60,6 +66,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#beginTransaction(org.apache.activemq.broker.ConnectionContext)
      */
+    @Override
     public void beginTransaction(ConnectionContext context) throws IOException {
         this.letter.beginTransaction(context);
     }
@@ -69,6 +76,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#checkpoint(boolean)
      */
+    @Override
     public void checkpoint(boolean sync) throws IOException {
         this.letter.checkpoint(sync);
     }
@@ -78,6 +86,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#commitTransaction(org.apache.activemq.broker.ConnectionContext)
      */
+    @Override
     public void commitTransaction(ConnectionContext context) throws IOException {
         this.letter.commitTransaction(context);
     }
@@ -88,6 +97,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#createQueueMessageStore(org.apache.activemq.command.ActiveMQQueue)
      */
+    @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         return this.letter.createQueueMessageStore(destination);
     }
@@ -98,6 +108,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#createTopicMessageStore(org.apache.activemq.command.ActiveMQTopic)
      */
+    @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
         return this.letter.createTopicMessageStore(destination);
     }
@@ -107,6 +118,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#createTransactionStore()
      */
+    @Override
     public TransactionStore createTransactionStore() throws IOException {
         return this.letter.createTransactionStore();
     }
@@ -115,6 +127,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#deleteAllMessages()
      */
+    @Override
     public void deleteAllMessages() throws IOException {
         this.letter.deleteAllMessages();
     }
@@ -123,6 +136,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return destinations
      * @see org.apache.activemq.store.PersistenceAdapter#getDestinations()
      */
+    @Override
     public Set<ActiveMQDestination> getDestinations() {
         return this.letter.getDestinations();
     }
@@ -132,10 +146,12 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#getLastMessageBrokerSequenceId()
      */
+    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         return this.letter.getLastMessageBrokerSequenceId();
     }
 
+    @Override
     public long getLastProducerSequenceId(ProducerId id) throws IOException {
         return this.letter.getLastProducerSequenceId(id);
     }
@@ -144,6 +160,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @param destination
      * @see org.apache.activemq.store.PersistenceAdapter#removeQueueMessageStore(org.apache.activemq.command.ActiveMQQueue)
      */
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         this.letter.removeQueueMessageStore(destination);
     }
@@ -152,6 +169,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @param destination
      * @see org.apache.activemq.store.PersistenceAdapter#removeTopicMessageStore(org.apache.activemq.command.ActiveMQTopic)
      */
+    @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
         this.letter.removeTopicMessageStore(destination);
     }
@@ -161,6 +179,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws IOException
      * @see org.apache.activemq.store.PersistenceAdapter#rollbackTransaction(org.apache.activemq.broker.ConnectionContext)
      */
+    @Override
     public void rollbackTransaction(ConnectionContext context) throws IOException {
         this.letter.rollbackTransaction(context);
     }
@@ -169,6 +188,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @param brokerName
      * @see org.apache.activemq.store.PersistenceAdapter#setBrokerName(java.lang.String)
      */
+    @Override
     public void setBrokerName(String brokerName) {
         this.letter.setBrokerName(brokerName);
     }
@@ -177,6 +197,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @param usageManager
      * @see org.apache.activemq.store.PersistenceAdapter#setUsageManager(org.apache.activemq.usage.SystemUsage)
      */
+    @Override
     public void setUsageManager(SystemUsage usageManager) {
         this.letter.setUsageManager(usageManager);
     }
@@ -185,6 +206,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @return the size of the store
      * @see org.apache.activemq.store.PersistenceAdapter#size()
      */
+    @Override
     public long size() {
         return this.letter.size();
     }
@@ -193,6 +215,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws Exception
      * @see org.apache.activemq.Service#start()
      */
+    @Override
     public void doStart() throws Exception {
         this.letter.start();
 
@@ -219,8 +242,14 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @throws Exception
      * @see org.apache.activemq.Service#stop()
      */
+    @Override
     public void doStop(ServiceStopper stopper) throws Exception {
         this.letter.stop();
+
+        if (brokerService != null && brokerService.isUseJmx()) {
+            ObjectName brokerObjectName = brokerService.getBrokerObjectName();
+            brokerService.getManagementContext().unregisterMBean(createPersistenceAdapterName(brokerObjectName.toString(), toString()));
+        }
     }
 
     /**
@@ -228,6 +257,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      *
      * @return the journalMaxFileLength
      */
+    @Override
     public int getJournalMaxFileLength() {
         return this.letter.getJournalMaxFileLength();
     }
@@ -367,6 +397,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      *
      * @return the directory
      */
+    @Override
     public File getDirectory() {
         return this.letter.getDirectory();
     }
@@ -375,6 +406,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      * @param dir
      * @see org.apache.activemq.store.PersistenceAdapter#setDirectory(java.io.File)
      */
+    @Override
     public void setDirectory(File dir) {
         this.letter.setDirectory(dir);
     }
@@ -607,6 +639,7 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return rc;
     }
 
+    @Override
     public Locker createDefaultLocker() throws IOException {
         SharedFileLocker locker = new SharedFileLocker();
         locker.configure(this);
