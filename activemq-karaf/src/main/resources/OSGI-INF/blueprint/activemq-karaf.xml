@@ -20,16 +20,6 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:shell="http://karaf.apache.org/xmlns/shell/v1.0.0">
 
-    <bean id="activeMQServiceFactory" class="org.apache.activemq.karaf.ActiveMQServiceFactory" destroy-method="destroy">
-      <property name="bundleContext" ref="blueprintBundleContext"/>
-    </bean>
-
-    <service ref="activeMQServiceFactory" interface="org.osgi.service.cm.ManagedServiceFactory">
-      <service-properties>
-        <entry key="service.pid" value="org.apache.activemq.server"/>
-      </service-properties>
-    </service>
-
     <shell:command-bundle>
 
         <shell:command name="activemq/create-broker">

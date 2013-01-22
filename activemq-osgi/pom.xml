@@ -113,6 +113,18 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>activemq-spring</artifactId>
       </dependency>
+
+      <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+          <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.compendium</artifactId>
+        <version>4.2.0</version>
+      </dependency>
     
   </dependencies>
 

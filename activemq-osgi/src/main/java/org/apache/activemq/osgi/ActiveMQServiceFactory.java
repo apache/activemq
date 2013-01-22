@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.karaf;
+package org.apache.activemq.osgi;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.Utils;
@@ -27,10 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.Resource;
 
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Map;
 
 public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
@@ -51,9 +49,13 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             throw new ConfigurationException("config", "Property must be set");
         }
         String name = (String)properties.get("broker-name");
-        if (config == null) {
+        if (name == null) {
             throw new ConfigurationException("broker-name", "Property must be set");
         }
+
+        LOG.info("Starting broker " + name);
+        //TODO properties
+
         try {
             Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
             Resource resource = Utils.resourceFromString(config);
