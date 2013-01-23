@@ -70,7 +70,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
         long done = System.currentTimeMillis() + getMaxTestTime();
         synchronized (testMutex) {
            while (!testMutex.testCompleted && System.currentTimeMillis() < done) {
-              testMutex.wait(TimeUnit.SECONDS.toMillis(5));
+              testMutex.wait(TimeUnit.SECONDS.toMillis(10));
            }
         }
 
@@ -84,6 +84,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
         return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
+    @Override
     protected void setUp() throws Exception {
         setAutoFail(true);
         bindAddress = "tcp://localhost:0";
@@ -98,12 +99,14 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
         connection.start();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         connectionConsumer.close();
         connection.close();
         super.tearDown();
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = super.createBroker();
         PolicyMap policyMap = new PolicyMap();
@@ -130,7 +133,8 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
              serverSession = new TestServerSession(this);
          }
 
-         public ServerSession getServerSession() throws JMSException {
+         @Override
+        public ServerSession getServerSession() throws JMSException {
              synchronized (this) {
                  if (serverSessionInUse) {
                      LOG.info("asked for session while in use, not serialised delivery");
@@ -155,14 +159,17 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
              session.setMessageListener(new TestMessageListener());
          }
 
-         public Session getSession() throws JMSException {
+         @Override
+        public Session getSession() throws JMSException {
              return session;
          }
 
-         public void start() throws JMSException {
+         @Override
+        public void start() throws JMSException {
              // use a separate thread to process the message asynchronously
              new Thread() {
-                 public void run() {
+                 @Override
+                public void run() {
                      // let the session deliver the message
                      session.run();
 
@@ -187,6 +194,7 @@ public class OnePrefetchAsyncConsumerTest extends EmbeddedBrokerTestSupport {
     }
 
     private class TestMessageListener implements MessageListener {
+        @Override
         public void onMessage(Message message) {
             try {
                String text = ((TextMessage)message).getText();
