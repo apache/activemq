@@ -24,7 +24,7 @@ public class DataByteArrayInputStreamTest extends TestCase {
      * https://issues.apache.org/activemq/browse/AMQ-1911
      */
     public void testNonAscii() throws Exception {
-        doMarshallUnMarshallValidation("meißen");
+        doMarshallUnMarshallValidation("mei\u00DFen");
         
         String accumulator = new String();
         
@@ -62,7 +62,7 @@ public class DataByteArrayInputStreamTest extends TestCase {
         doMarshallUnMarshallValidation(accumulator);
     }
     
-    void doMarshallUnMarshallValidation(String value) throws Exception {        
+    void doMarshallUnMarshallValidation(String value) throws Exception {
         DataByteArrayOutputStream out = new DataByteArrayOutputStream();
         out.writeBoolean(true);
         out.writeUTF(value);
