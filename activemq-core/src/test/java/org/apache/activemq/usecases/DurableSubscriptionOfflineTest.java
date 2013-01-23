@@ -1558,7 +1558,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         }
     }
 
-
     public void testRedeliveryFlag() throws Exception {
 
         Connection con;
@@ -1625,7 +1624,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                     con.close();
 
                     // peek all
-                    for (int j = 0; j < random.nextInt(10); j++) {
+                    for (int j = -1; j < random.nextInt(10); j++) {
                         con = createConnection(clientId);
                         session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
                         consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
@@ -1637,7 +1636,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                         session.close();
                         con.close();
                     }
-
 
                     // consume remaining
                     con = createConnection(clientId);
