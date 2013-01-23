@@ -159,6 +159,7 @@ class AmqpProtocolConverter {
                 frame.moveHead(count);
             } catch (Throwable e) {
                 handleException(new AmqpProtocolException("Could not decode AMQP frame: " + frame, true, e));
+                return;
             }
             try {
 
