@@ -226,7 +226,6 @@
     <module>activemq-console</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
-    <module>activemq-osgi</module>
     <module>activemq-blueprint</module>
     <module>activemq-karaf</module>
     <module>activemq-karaf-itest</module>
@@ -236,6 +235,7 @@
     <module>activemq-rar</module>
     <module>activemq-run</module>
     <module>activemq-spring</module>
+    <module>activemq-osgi</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
     <module>activemq-web-demo</module>

@@ -130,45 +130,49 @@
 
   <build>
     <plugins>
-        <plugin>
-          <groupId>org.apache.xbean</groupId>
-          <artifactId>maven-xbean-plugin</artifactId>
-          <version>3.12</version>
-          <executions>
-            <execution>
-            <phase>process-classes</phase>
-              <configuration>
-                <includes>
-                  <include>${basedir}/../activemq-client/src/main/java</include>
-                  <include>${basedir}/../activemq-broker/src/main/java</include>
-                  <include>${basedir}/../activemq-leveldb-store/src/main/java</include>
-                  <include>${basedir}/../activemq-jdbc-store/src/main/java</include>
-                  <include>${basedir}/../activemq-amq-store/src/main/java</include>
-                  <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
-                  <include>${basedir}/../activemq-mqtt/src/main/java</include>
-                  <include>${basedir}/../activemq-stomp/src/main/java</include>
-                  <include>${basedir}/../activemq-spring/src/main/java</include>
-                </includes>
-                <strictXsdOrder>false</strictXsdOrder>
-                <namespace>http://activemq.apache.org/schema/core</namespace>
-                <schema>${basedir}/target/classes/activemq.xsd</schema>
-                <outputDir>${basedir}/target/classes</outputDir>
-                <generateSpringSchemasFile>false</generateSpringSchemasFile>
-                <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
-              </configuration>
-              <goals>
-                <goal>mapping</goal>
-              </goals>
-            </execution>
-          </executions>
-          <dependencies>
-            <dependency>
-              <groupId>com.thoughtworks.qdox</groupId>
-              <artifactId>qdox</artifactId>
-              <version>1.12</version>
-            </dependency>
-          </dependencies>
-        </plugin>
+      <!-- Copy all necessary resources from other modules, like spring schema mapping, xbean resources, etc. -->
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-xbean</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/../activemq-spring/target/classes/</directory>
+                  <includes>
+                    <include>activemq.xsd*</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-spring</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/META-INF</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/../activemq-spring/target/classes/META-INF</directory>
+                  <includes>
+                    <include>spring.*</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
 
       <plugin>
         <groupId>org.apache.felix</groupId>
