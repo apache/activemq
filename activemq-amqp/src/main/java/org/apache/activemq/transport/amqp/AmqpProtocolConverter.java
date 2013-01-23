@@ -270,11 +270,13 @@ class AmqpProtocolConverter {
 
     public void onAMQPException(IOException error) {
         closedSocket = true;
-        if( !closing) {
-            System.out.println("AMQP client disconnected");
-            error.printStackTrace();
+        if( !closing ) {
+            amqpTransport.sendToActiveMQ(error);
         } else {
-            doClose();
+            try {
+                amqpTransport.stop();
+            } catch (Exception ignore) {
+            }
         }
     }
 

@@ -72,16 +72,16 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public void onException(IOException error) {
+        protocolConverter.lock.lock();
         try {
-            protocolConverter.lock.lock();
-            try {
-                protocolConverter.onAMQPException(error);
-            } finally {
-                protocolConverter.lock.unlock();
-            }
+            protocolConverter.onAMQPException(error);
         } finally {
-            super.onException(error);
+            protocolConverter.lock.unlock();
         }
+    }
+
+    public void sendToActiveMQ(IOException error) {
+        super.onException(error);
     }
 
     public void onCommand(Object command) {

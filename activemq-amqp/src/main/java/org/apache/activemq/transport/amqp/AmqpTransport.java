@@ -29,6 +29,8 @@ public interface AmqpTransport {
 
     public void sendToActiveMQ(Command command);
 
+    public void sendToActiveMQ(IOException command);
+
     public void sendToAmqp(Object command) throws IOException;
 
     public X509Certificate[] getPeerCertificates();
