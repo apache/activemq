@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -140,7 +139,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private TransportConnection duplexInitiatingConnection;
     private BrokerService brokerService = null;
     private ObjectName mbeanObjectName;
-    private ExecutorService serialExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService serialExecutor = Executors.newSingleThreadExecutor();
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -156,6 +155,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         serviceRemoteCommand(remoteBrokerInfo);
     }
 
+    @Override
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
 
@@ -178,11 +178,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             });
             remoteBroker.setTransportListener(new DefaultTransportListener() {
 
+                @Override
                 public void onCommand(Object o) {
                     Command command = (Command) o;
                     serviceRemoteCommand(command);
                 }
 
+                @Override
                 public void onException(IOException error) {
                     serviceRemoteException(error);
                 }
@@ -206,6 +208,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void triggerLocalStartBridge() throws IOException {
         brokerService.getTaskRunnerFactory().execute(new Runnable() {
+            @Override
             public void run() {
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("StartLocalBridge: localBroker=" + localBroker);
@@ -222,6 +225,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void triggerRemoteStartBridge() throws IOException {
         brokerService.getTaskRunnerFactory().execute(new Runnable() {
+            @Override
             public void run() {
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("StartRemoteBridge: remoteBroker=" + remoteBroker);
@@ -344,6 +348,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    @Override
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             if (disposed.compareAndSet(false, true)) {
@@ -357,6 +362,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     final CountDownLatch sendShutdown = new CountDownLatch(1);
 
                     brokerService.getTaskRunnerFactory().execute(new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 serialExecutor.shutdown();
@@ -400,6 +406,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    @Override
     public void serviceRemoteException(Throwable error) {
         if (!disposed.get()) {
             if (error instanceof SecurityException || error instanceof GeneralSecurityException) {
@@ -409,6 +416,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             }
             LOG.debug("The remote Exception was: " + error, error);
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
+                @Override
                 public void run() {
                     ServiceSupport.dispose(getControllingService());
                 }
@@ -631,6 +639,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (destInfo.isRemoveOperation()) {
                 // serialise with removeSub operations such that all removeSub advisories are generated
                 serialExecutor.execute(new Runnable() {
+                    @Override
                     public void run() {
                         try {
                             localBroker.oneway(destInfo);
@@ -648,11 +657,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    @Override
     public void serviceLocalException(Throwable error) {
         if (!disposed.get()) {
             LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
             LOG.debug("The local Exception was:" + error, error);
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
+                @Override
                 public void run() {
                     ServiceSupport.dispose(getControllingService());
                 }
@@ -683,6 +694,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // serialise with removeDestination operations so that removeSubs are serialised with removeDestinations
             // such that all removeSub advisories are generated
             serialExecutor.execute(new Runnable() {
+                @Override
                 public void run() {
                     sub.waitForCompletion();
                     try {
@@ -760,6 +772,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             // broker when we get confirmation that the remote
                             // broker has received the message.
                             ResponseCallback callback = new ResponseCallback() {
+                                @Override
                                 public void onCompletion(FutureResponse future) {
                                     try {
                                         Response response = future.getResult();
@@ -1184,6 +1197,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         ConsumerInfo info = new ConsumerInfo();
         info.setDestination(destination);
 
+        // Indicate that this subscription is being made on behalf of the remote broker.
+        info.setBrokerPath(new BrokerId[] { remoteBrokerId });
+
         // the remote info held by the DemandSubscription holds the original consumerId,
         // the local info get's overwritten
         info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator.getNextSequenceId()));
@@ -1307,6 +1323,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return remoteBrokerPath;
     }
 
+    @Override
     public void setNetworkBridgeListener(NetworkBridgeListener listener) {
         this.networkBridgeListener = listener;
     }
@@ -1318,26 +1335,32 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    @Override
     public String getRemoteAddress() {
         return remoteBroker.getRemoteAddress();
     }
 
+    @Override
     public String getLocalAddress() {
         return localBroker.getRemoteAddress();
     }
 
+    @Override
     public String getRemoteBrokerName() {
         return remoteBrokerInfo == null ? null : remoteBrokerInfo.getBrokerName();
     }
 
+    @Override
     public String getLocalBrokerName() {
         return localBrokerInfo == null ? null : localBrokerInfo.getBrokerName();
     }
 
+    @Override
     public long getDequeueCounter() {
         return dequeueCounter.get();
     }
 
+    @Override
     public long getEnqueueCounter() {
         return enqueueCounter.get();
     }
@@ -1350,16 +1373,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return subscriptionMapByRemoteId;
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
         this.localBrokerId = brokerService.getRegionBroker().getBrokerId();
         localBrokerPath[0] = localBrokerId;
     }
 
+    @Override
     public void setMbeanObjectName(ObjectName objectName) {
         this.mbeanObjectName = objectName;
     }
 
+    @Override
     public ObjectName getMbeanObjectName() {
         return mbeanObjectName;
     }
