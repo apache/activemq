@@ -74,20 +74,24 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
+
+        @Override
         public void run() {
             long now = System.currentTimeMillis();
-            long elapsed = (now-lastRunTime);
+            long elapsed = (now - lastRunTime);
 
-            if( lastRunTime != 0 && LOG.isDebugEnabled() ) {
-                LOG.debug(""+elapsed+" ms elapsed since last read check.");
+            if (lastRunTime != 0 && LOG.isDebugEnabled()) {
+                LOG.debug("" + elapsed + " ms elapsed since last read check.");
             }
 
             // Perhaps the timer executed a read check late.. and then executes
             // the next read check on time which causes the time elapsed between
             // read checks to be small..
 
-            // If less than 90% of the read check Time elapsed then abort this readcheck.
-            if( !allowReadCheck(elapsed) ) { // FUNKY qdox bug does not allow me to inline this expression.
+            // If less than 90% of the read check Time elapsed then abort this
+            // readcheck.
+            if (!allowReadCheck(elapsed)) { // FUNKY qdox bug does not allow me
+                                            // to inline this expression.
                 LOG.debug("Aborting read check.. Not enough time elapsed since last read check.");
                 return;
             }
@@ -109,6 +113,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     private final Runnable writeChecker = new Runnable() {
         long lastRunTime;
 
+        @Override
         public void run() {
             long now = System.currentTimeMillis();
             if (lastRunTime != 0 && LOG.isDebugEnabled()) {
@@ -130,11 +135,13 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         this.wireFormat = wireFormat;
     }
 
+    @Override
     public void start() throws Exception {
         next.start();
         startMonitorThreads();
     }
 
+    @Override
     public void stop() throws Exception {
         stopMonitorThreads();
         next.stop();
@@ -148,8 +155,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             return;
         }
 
-        if (!commandSent.get() && useKeepAlive && monitorStarted.get() &&
-            !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
+        if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace(this + " no message sent since last write check, sending a KeepAliveInfo");
@@ -157,13 +163,15 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
             try {
                 ASYNC_TASKS.execute(new Runnable() {
+                    @Override
                     public void run() {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Running {}", this);
                         }
                         if (monitorStarted.get()) {
                             try {
-                                // If we can't get the lock it means another write beat us into the
+                                // If we can't get the lock it means another
+                                // write beat us into the
                                 // send and we don't need to heart beat now.
                                 if (sendLock.writeLock().tryLock()) {
                                     KeepAliveInfo info = new KeepAliveInfo();
@@ -173,9 +181,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                             } catch (IOException e) {
                                 onException(e);
                             } finally {
-                                 if (sendLock.writeLock().isHeldByCurrentThread()) {
+                                if (sendLock.writeLock().isHeldByCurrentThread()) {
                                     sendLock.writeLock().unlock();
-                                 }
+                                }
                             }
                         }
                     }
@@ -203,14 +211,13 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     final void readCheck() {
         int currentCounter = next.getReceiveCounter();
         int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
-        if (inReceive.get() || currentCounter!=previousCounter ) {
+        if (inReceive.get() || currentCounter != previousCounter) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("A receive is in progress");
             }
             return;
         }
-        if (!commandReceived.get() && monitorStarted.get() &&
-            !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
+        if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("No message received since last read check for " + toString() + ". Throwing InactivityIOException.");
@@ -218,11 +225,12 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
             try {
                 ASYNC_TASKS.execute(new Runnable() {
+                    @Override
                     public void run() {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Running {}", this);
                         }
-                        onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: "+next.getRemoteAddress()));
+                        onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
                     }
 
                     @Override
@@ -245,8 +253,10 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     }
 
     protected abstract void processInboundWireFormatInfo(WireFormatInfo info) throws IOException;
+
     protected abstract void processOutboundWireFormatInfo(WireFormatInfo info) throws IOException;
 
+    @Override
     public void onCommand(Object command) {
         commandReceived.set(true);
         inReceive.set(true);
@@ -282,10 +292,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         }
     }
 
+    @Override
     public void oneway(Object o) throws IOException {
         // To prevent the inactivity monitor from sending a message while we
-        // are performing a send we take a read lock.  The inactivity monitor
-        // sends its Heart-beat commands under a write lock.  This means that
+        // are performing a send we take a read lock. The inactivity monitor
+        // sends its Heart-beat commands under a write lock. This means that
         // the MutexTransport is still responsible for synchronizing sends
         this.sendLock.readLock().lock();
         inSend.set(true);
@@ -311,9 +322,13 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         next.oneway(command);
     }
 
+    @Override
     public void onException(IOException error) {
         if (failed.compareAndSet(false, true)) {
             stopMonitorThreads();
+            if (sendLock.writeLock().isHeldByCurrentThread()) {
+                sendLock.writeLock().unlock();
+            }
             transportListener.onException(error);
         }
     }
@@ -377,11 +392,11 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
         if (writeCheckTime > 0 || readCheckTime > 0) {
             monitorStarted.set(true);
-            synchronized(AbstractInactivityMonitor.class) {
-                if( CHECKER_COUNTER == 0 ) {
+            synchronized (AbstractInactivityMonitor.class) {
+                if (CHECKER_COUNTER == 0) {
                     ASYNC_TASKS = createExecutor();
-                    READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer",true);
-                    WRITE_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor WriteCheckTimer",true);
+                    READ_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor ReadCheckTimer", true);
+                    WRITE_CHECK_TIMER = new Timer("ActiveMQ InactivityMonitor WriteCheckTimer", true);
                 }
                 CHECKER_COUNTER++;
                 if (readCheckTime > 0) {
@@ -419,7 +434,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         }
     }
 
-    private ThreadFactory factory = new ThreadFactory() {
+    private final ThreadFactory factory = new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable runnable) {
             Thread thread = new Thread(runnable, "ActiveMQ InactivityMonitor Worker");
             thread.setDaemon(true);
