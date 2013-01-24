@@ -39,6 +39,7 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
 
     private Connection connection;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         connection = createConnection();
@@ -47,6 +48,7 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
     /**
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
@@ -70,7 +72,7 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
         });
 
         // warmup...
-        for(int i=0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             benchmarkNonCallbackRate();
             benchmarkCallbackRate();
         }
@@ -82,7 +84,7 @@ public class JmsSendWithAsyncCallbackTest extends TestSupport {
         LOG.info(String.format("NonAsyncCallback Send rate: %,.2f m/s", nonCallbackRate));
 
         // The async style HAS to be faster than the non-async style..
-        assertTrue( callbackRate/nonCallbackRate > 1.5 );
+        assertTrue("async rate[" + callbackRate + "] should beat non-async rate[" + nonCallbackRate + "]", callbackRate / nonCallbackRate > 1.5);
     }
 
     private double benchmarkNonCallbackRate() throws JMSException {
