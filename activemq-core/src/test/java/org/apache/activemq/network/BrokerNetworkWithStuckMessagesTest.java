@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -35,8 +39,6 @@ import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.management.ObjectName;
-
-import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -63,6 +65,9 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +77,7 @@ import org.slf4j.LoggerFactory;
  * and connectors are created. Also, this test asserts message counts via JMX on
  * each broker.
  */
-public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSupport*/ {
+public class BrokerNetworkWithStuckMessagesTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerNetworkWithStuckMessagesTest.class);
 
@@ -94,8 +99,8 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
 
     protected String amqDomain = "org.apache.activemq";
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
         // For those who want visual confirmation:
         //   Uncomment the following to enable JMX support on a port number to use
@@ -131,7 +136,6 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         bridge.start();
 
         waitForBridgeFormation();
-
     }
 
     protected void waitForBridgeFormation() throws Exception {
@@ -147,13 +151,14 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         bridge.stop();
         localBroker.stop();
         remoteBroker.stop();
     }
 
+    @Test(timeout=120000)
     public void testBrokerNetworkWithStuckMessages() throws Exception {
 
         int sendNumMessages = 10;
@@ -180,7 +185,6 @@ public class BrokerNetworkWithStuckMessagesTest extends TestCase /*NetworkTestSu
         // Ensure that there are 10 messages on the local broker
         Object[] messages = browseQueueWithJmx(localBroker);
         assertEquals(sendNumMessages, messages.length);
-
 
         // Create a synchronous consumer on the remote broker
         StubConnection connection2 = createRemoteConnection();
