@@ -179,7 +179,7 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <!-- <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator> -->
+             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
              <Embed-Dependency>*;groupId=org.apache.activemq;inline=META-INF/services/*</Embed-Dependency>
              <Embed-Transitive>true</Embed-Transitive>
           </instructions>
