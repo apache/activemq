@@ -36,7 +36,7 @@
             </virtualDestinationInterceptor>
         </destinationInterceptors>
         <plugins>
-            <virtualSelectorCacheBrokerPlugin persistFile = "selectorcache.data"/>
+            <virtualSelectorCacheBrokerPlugin persistFile = "target/selectorcache.data"/>
         </plugins>
     </broker>
 </beans>

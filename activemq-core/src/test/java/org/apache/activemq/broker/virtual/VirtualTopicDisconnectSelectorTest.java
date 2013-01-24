@@ -44,10 +44,16 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
 
     private static final Logger LOG = LoggerFactory.getLogger(VirtualTopicDisconnectSelectorTest.class);
     protected Connection connection;
-    protected int total = 3000;
-    protected String messageSelector;
 
-    public void testVirtualTopicDisconnect() throws Exception {
+    public void testVirtualTopicSelectorDisconnect() throws Exception {
+        testVirtualTopicDisconnect("odd = 'no'", 3000, 1500);
+    }
+
+    public void testVirtualTopicNoSelectorDisconnect() throws Exception {
+        testVirtualTopicDisconnect(null, 3000, 3000);
+    }
+
+    public void testVirtualTopicDisconnect(String messageSelector, int total , int expected) throws Exception {
         if (connection == null) {
             connection = createConnection();
         }
@@ -63,7 +69,7 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
         LOG.info("Sending to: " + producerDestination);
         LOG.info("Consuming from: " + destination );
 
-        MessageConsumer consumer = session.createConsumer(destination, messageSelector);
+        MessageConsumer consumer = createConsumer(session, destination, messageSelector);
 
         MessageListener listener = new MessageListener(){
             public void onMessage(Message message){
@@ -93,12 +99,12 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
                consumer.close();
             }
             if (i==reconnectCount){
-                consumer = session.createConsumer(destination, messageSelector);
+                consumer = createConsumer(session, destination, messageSelector);
                 consumer.setMessageListener(listener);
             }
         }
 
-        assertMessagesArrived(messageList,total/2,10000);
+        assertMessagesArrived(messageList, expected ,10000);
     }
             
     protected Destination getConsumerDsetination() {
@@ -112,7 +118,14 @@ public class VirtualTopicDisconnectSelectorTest extends EmbeddedBrokerTestSuppor
 
     protected void setUp() throws Exception {
         super.setUp();
-        messageSelector = "odd = 'no'";
+    }
+
+    protected MessageConsumer createConsumer(Session session, Destination destination, String messageSelector) throws JMSException {
+        if (messageSelector != null) {
+            return session.createConsumer(destination, messageSelector);
+        } else {
+            return session.createConsumer(destination);
+        }
     }
 
     protected TextMessage createMessage(Session session, int i) throws JMSException {

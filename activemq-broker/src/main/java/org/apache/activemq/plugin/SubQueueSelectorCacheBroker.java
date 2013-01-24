@@ -86,9 +86,15 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("Caching consumer selector [" + info.getSelector() + "] on a " + info.getDestination().getQualifiedName());
-        if (info.getSelector() != null) {
-            subSelectorCache.put(info.getDestination().getQualifiedName(), info.getSelector());
-        } //if
+        String selector = info.getSelector();
+
+        // As ConcurrentHashMap doesn't support null values, use always true expression
+        if (selector == null) {
+            selector = "TRUE";
+        }
+
+        subSelectorCache.put(info.getDestination().getQualifiedName(), selector);
+
         return super.addConsumer(context, info);
     }
 
