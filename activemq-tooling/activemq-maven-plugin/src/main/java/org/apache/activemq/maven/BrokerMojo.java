@@ -51,7 +51,7 @@ public class BrokerMojo extends AbstractMojo {
     /**
      * The maven project.
      *
-     * @parameter property="${project}"
+     * @parameter property="project"
      * @required
      * @readonly
      */
@@ -62,7 +62,7 @@ public class BrokerMojo extends AbstractMojo {
      * is described <a
      * href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
      *
-     * @parameter property="${configUri}"
+     * @parameter property="configUri"
      *            default-value="broker:(tcp://localhost:61616)?useJmx=false&persistent=false"
      * @required
      */
@@ -71,21 +71,21 @@ public class BrokerMojo extends AbstractMojo {
     /**
      * Indicates whether to fork the broker, useful for integration tests.
      *
-     * @parameter property="${fork}" default-value="false"
+     * @parameter property="fork" default-value="false"
      */
     private boolean fork;
 
     /**
      * System properties to add
      *
-     * @parameter property="${systemProperties}"
+     * @parameter property="systemProperties"
      */
     private Properties systemProperties;
 
     /**
      * Skip execution of the ActiveMQ Broker plugin if set to true
      *
-     * @parameter property="${skip}"
+     * @parameter property="skip"
      */
     private boolean skip;
 
