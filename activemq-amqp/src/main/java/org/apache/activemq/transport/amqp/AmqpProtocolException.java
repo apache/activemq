@@ -23,6 +23,7 @@ public class AmqpProtocolException extends IOException {
 
     private static final long serialVersionUID = -2869735532997332242L;
 
+    private final String symbolicName;
     private final boolean fatal;
 
     public AmqpProtocolException() {
@@ -37,8 +38,17 @@ public class AmqpProtocolException extends IOException {
         this(s, fatal, null);
     }
 
+    public AmqpProtocolException(String s, String msg) {
+        this(s, msg, false, null);
+    }
+
     public AmqpProtocolException(String s, boolean fatal, Throwable cause) {
+        this("error", s, fatal, cause);
+    }
+
+    public AmqpProtocolException(String symbolicName, String s, boolean fatal, Throwable cause) {
         super(s);
+        this.symbolicName = symbolicName;
         this.fatal = fatal;
         initCause(cause);
     }
@@ -47,4 +57,7 @@ public class AmqpProtocolException extends IOException {
         return fatal;
     }
 
+    public String getSymbolicName() {
+        return symbolicName;
+    }
 }

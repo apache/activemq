@@ -89,7 +89,6 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     // static helper methods for working with destinations
     // -------------------------------------------------------------------------
     public static ActiveMQDestination createDestination(String name, byte defaultType) {
-
         if (name.startsWith(QUEUE_QUALIFIED_PREFIX)) {
             return new ActiveMQQueue(name.substring(QUEUE_QUALIFIED_PREFIX.length()));
         } else if (name.startsWith(TOPIC_QUALIFIED_PREFIX)) {
