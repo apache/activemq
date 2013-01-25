@@ -16,7 +16,12 @@
  */
 package org.apache.activemq.network;
 
+import java.net.URI;
+import java.util.HashMap;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.util.URISupport;
 
 /**
  * Factory for network bridges
@@ -64,5 +69,14 @@ public final class NetworkBridgeFactory {
             result.setNetworkBridgeListener(listener);
         }
         return result;
+    }
+
+    public static Transport createLocalTransport(Broker broker) throws Exception {
+        URI uri = broker.getVmConnectorURI();
+        HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
+        map.put("network", "true");
+        map.put("async", "false");
+        uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
+        return TransportFactory.connect(uri);
     }
 }

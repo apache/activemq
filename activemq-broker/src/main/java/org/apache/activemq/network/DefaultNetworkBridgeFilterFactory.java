@@ -28,6 +28,6 @@ import org.apache.activemq.command.NetworkBridgeFilter;
  */
 public class DefaultNetworkBridgeFilterFactory implements NetworkBridgeFilterFactory {
     public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int networkTimeToLive) {
-        return new NetworkBridgeFilter(remoteBrokerPath[0], networkTimeToLive);
+        return new NetworkBridgeFilter(info, remoteBrokerPath[0], networkTimeToLive);
     }
 }

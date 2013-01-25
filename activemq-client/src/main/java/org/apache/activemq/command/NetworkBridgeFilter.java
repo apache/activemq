@@ -37,13 +37,15 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
     protected BrokerId networkBrokerId;
     protected int networkTTL;
+    transient ConsumerInfo consumerInfo;
 
     public NetworkBridgeFilter() {
     }
 
-    public NetworkBridgeFilter(BrokerId networkBrokerId, int networkTTL) {
+    public NetworkBridgeFilter(ConsumerInfo consumerInfo, BrokerId networkBrokerId, int networkTTL) {
         this.networkBrokerId = networkBrokerId;
         this.networkTTL = networkTTL;
+        this.consumerInfo = consumerInfo;
     }
 
     public byte getDataStructureType() {
@@ -91,21 +93,29 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             return false;
         }
 
-        if (message.isAdvisory() && message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
-            ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
-            hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
-            if (hops >= networkTTL) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
+        if (message.isAdvisory()) {
+            if (consumerInfo != null && consumerInfo.isNetworkSubscription()) {
+                // they will be interpreted by the bridge leading to dup commands
+                //if (LOG.isTraceEnabled()) {
+                LOG.error("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
+                //}
+                return false;
+            } else if ( message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
+                ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
+                hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
+                if (hops >= networkTTL) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
+                    }
+                    return false;
                 }
-                return false;
-            }
 
-            if (contains(info.getBrokerPath(), networkBrokerId)) {
-                LOG.trace("ConsumerInfo advisory all ready routed once through target broker ("
-                        + networkBrokerId + "), path: "
-                        + Arrays.toString(info.getBrokerPath()) + " - ignoring: " + message);
-                return false;
+                if (contains(info.getBrokerPath(), networkBrokerId)) {
+                    LOG.trace("ConsumerInfo advisory all ready routed once through target broker ("
+                            + networkBrokerId + "), path: "
+                            + Arrays.toString(info.getBrokerPath()) + " - ignoring: " + message);
+                    return false;
+                }
             }
         }
         return true;

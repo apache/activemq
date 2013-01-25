@@ -137,12 +137,12 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
                     public boolean isSatisified() throws Exception {
                         long numVmConnections = VMTransportFactory.SERVERS.get(HUB).getConnectionCount();
                         LOG.info("Num VM connetions:" + numVmConnections);
-                        return numVmConnections == 1;
+                        return numVmConnections == 2;
                     }});
         if (!allGood) {
             dumpAllThreads("ExtraHubVMConnection");
         }
-        assertTrue("should be only one vm connection for the single network duplex network connector", allGood);
+        assertTrue("should be only 2 vm connections for the single network duplex network connector", allGood);
     }
     
     public void testTwoDuplexNCsAreAllowed() throws Exception {

@@ -28,15 +28,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
-import org.apache.activemq.broker.DestinationAlreadyExistsException;
+import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -147,7 +145,7 @@ public abstract class AbstractRegion implements Region {
                     addSubscriptionsForDestination(context, dest);
                 }
                 if (dest == null) {
-                    throw new JMSException("The destination " + destination + " does not exist.");
+                    throw new DestinationDoesNotExistException(destination.getQualifiedName());
                 }
             }
             return dest;
@@ -451,13 +449,8 @@ public abstract class AbstractRegion implements Region {
                 // Try to auto create the destination... re-invoke broker
                 // from the
                 // top so that the proper security checks are performed.
-                try {
-                    context.getBroker().addDestination(context, destination, createTemporary);
-                    dest = addDestination(context, destination, false);
-                } catch (DestinationAlreadyExistsException e) {
-                    // if the destination already exists then lets ignore
-                    // this error
-                }
+                context.getBroker().addDestination(context, destination, createTemporary);
+                dest = addDestination(context, destination, false);
                 // We should now have the dest created.
                 destinationsLock.readLock().lock();
                 try {

@@ -57,6 +57,7 @@ public class NetworkBridgeConfiguration {
     private boolean alwaysSyncSend = false;
     private boolean staticBridge = false;
     private boolean useCompression = false;
+    private boolean advisoryForFailedForward = false;
 
     /**
      * @return the conduitSubscriptions
@@ -384,5 +385,13 @@ public class NetworkBridgeConfiguration {
      */
     public boolean isUseCompression() {
         return useCompression;
+    }
+
+    public boolean isAdvisoryForFailedForward() {
+        return advisoryForFailedForward;
+    }
+
+    public void setAdvisoryForFailedForward(boolean advisoryForFailedForward) {
+        this.advisoryForFailedForward = advisoryForFailedForward;
     }
 }

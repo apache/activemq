@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Adds the incrementing sequence number to commands along with performing the
- * corelation of responses to requests to create a blocking request-response
+ * correlation of responses to requests to create a blocking request-response
  * semantics.
  * 
  * 

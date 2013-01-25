@@ -14,26 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker;
+package org.apache.activemq;
 
 import javax.jms.JMSException;
 
-import org.apache.activemq.command.ActiveMQDestination;
-
 /**
- * An exception thrown if a destination is attempted to be created when it already exists.
- * 
+ * An exception thrown on a send if a destination does not exist.
+ * Allows a network bridge to easily cherry-pick and ignore
  * 
  */
-public class DestinationAlreadyExistsException extends JMSException {
-    private final ActiveMQDestination destination;
+public class DestinationDoesNotExistException extends JMSException {
 
-    public DestinationAlreadyExistsException(ActiveMQDestination destination) {
-        super("Destination already exists: " + destination);
-        this.destination = destination;
+    public DestinationDoesNotExistException(String destination) {
+        super(destination);
     }
 
-    public ActiveMQDestination getDestination() {
-        return destination;
+    public boolean isTemporary() {
+        return getMessage().startsWith("temp-");
+    }
+
+    @Override
+    public String getLocalizedMessage() {
+        return "The destination " + getMessage() + " does not exist.";
     }
 }

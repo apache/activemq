@@ -291,7 +291,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 // Record the error that caused the transport to stop
                 this.stopError = e;
                 // Wait a little bit to try to get the output buffer to flush
-                // the exption notification to the client.
+                // the exception notification to the client.
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException ie) {
@@ -1326,12 +1326,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     }
                     setDuplexNetworkConnectorId(duplexNetworkConnectorId);
                 }
-                URI uri = broker.getVmConnectorURI();
-                HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-                map.put("network", "true");
-                map.put("async", "false");
-                uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-                Transport localTransport = TransportFactory.connect(uri);
+                Transport localTransport = NetworkBridgeFactory.createLocalTransport(broker);
                 Transport remoteBridgeTransport = new ResponseCorrelator(transport);
                 String duplexName = localTransport.toString();
                 if (duplexName.contains("#")) {

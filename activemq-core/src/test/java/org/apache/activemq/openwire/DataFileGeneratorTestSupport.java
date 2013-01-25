@@ -323,7 +323,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     }
 
     protected BooleanExpression createBooleanExpression(String string) {
-        return new NetworkBridgeFilter(new BrokerId(string), 10);
+        return new NetworkBridgeFilter(null, new BrokerId(string), 10);
     }
 
 }

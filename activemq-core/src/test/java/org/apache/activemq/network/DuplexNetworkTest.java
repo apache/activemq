@@ -19,10 +19,12 @@ package org.apache.activemq.network;
 import javax.jms.MessageProducer;
 import javax.jms.TemporaryQueue;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
 
@@ -47,7 +49,12 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
         Thread.sleep(100);
         assertEquals("Destination not created", 1, remoteBroker.getAdminView().getTemporaryQueues().length);
         temp.delete();
-        Thread.sleep(100);
-        assertEquals("Destination not deleted", 0, remoteBroker.getAdminView().getTemporaryQueues().length);
+
+        assertTrue("Destination not deleted", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 0 == remoteBroker.getAdminView().getTemporaryQueues().length;
+            }
+        }));
     }
 }

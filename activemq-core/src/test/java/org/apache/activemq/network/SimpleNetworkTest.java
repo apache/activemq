@@ -72,6 +72,8 @@ public class SimpleNetworkTest {
     protected ActiveMQTopic excluded;
     protected String consumerName = "durableSubs";
 
+    // works b/c of non marshaling vm transport, the connection
+    // ref from the client is used during the forward
     @Test
     public void testMessageCompression() throws Exception {
 
