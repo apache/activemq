@@ -197,10 +197,10 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 			throws IOException, MalformedObjectNameException {
 		ObjectName name;
 		if (this.brokerName == null) {
-			name = new ObjectName("org.apache.activemq:Type=Broker,*");
+			name = new ObjectName("org.apache.activemq:type=Broker,*");
 		} else {
-			name = new ObjectName("org.apache.activemq:BrokerName="
-					+ this.brokerName + ",Type=Broker");
+			name = new ObjectName("org.apache.activemq:brokerName="
+					+ this.brokerName + ",Type=broker");
 		}
 
 		Set<ObjectName> brokers = connection.queryNames(name, null);
