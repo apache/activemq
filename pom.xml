@@ -1525,6 +1525,13 @@
       <releases><enabled>true</enabled></releases>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
+    <repository>
+        <id>com.fusesource.m2.snapshot</id>
+        <url>http://repo.fusesource.com/nexus/content/repositories/snapshots/</url>
+        <releases><enabled>false</enabled></releases>
+        <snapshots><enabled>true</enabled></snapshots>
+      </repository>
+
   </repositories>
 
 </project>
