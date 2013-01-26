@@ -53,22 +53,18 @@ public class JoramJmsTest extends TestCase {
 
         // TODO: Fix these tests..
         if (false) {
-            // Fails due to https://issues.apache.org/jira/browse/QPID-4454
-            suite.addTestSuite(MessageHeaderTest.class);
+            // Fails due to
             // https://issues.apache.org/jira/browse/PROTON-154
             suite.addTestSuite(TopicSessionTest.class);
         }
 
-        // TODO: enable once QPID 0.20 is released
-        if(false) {
-            suite.addTestSuite(QueueBrowserTest.class);
-            suite.addTestSuite(MessageTypeTest.class);
-            suite.addTestSuite(UnifiedSessionTest.class);
-            suite.addTestSuite(TemporaryTopicTest.class);
-            suite.addTestSuite(TopicConnectionTest.class);
-        }
-
         // Passing tests
+        suite.addTestSuite(MessageHeaderTest.class);
+        suite.addTestSuite(QueueBrowserTest.class);
+        suite.addTestSuite(MessageTypeTest.class);
+        suite.addTestSuite(UnifiedSessionTest.class);
+        suite.addTestSuite(TemporaryTopicTest.class);
+        suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(SelectorSyntaxTest.class);
         suite.addTestSuite(QueueSessionTest.class);
         suite.addTestSuite(SelectorTest.class);
