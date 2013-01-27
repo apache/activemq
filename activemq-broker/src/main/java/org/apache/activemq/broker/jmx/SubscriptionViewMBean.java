@@ -90,6 +90,9 @@ public interface SubscriptionViewMBean {
     @MBeanInfo("Subscription is active (connected and receiving messages).")
     boolean isActive();
 
+    @MBeanInfo("Subscription was created by a demand-forwarding network bridge")
+    boolean isNetwork();
+
     /**
      * @return number of messages pending delivery
      */

@@ -209,6 +209,15 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return true;
     }
 
+    @Override
+    public boolean isNetwork() {
+        ConsumerInfo info = getConsumerInfo();
+        if (info != null) {
+            return info.isNetworkSubscription();
+        }
+        return false;
+    }
+
     /**
      * The subscription should release as may references as it can to help the
      * garbage collector reclaim memory.

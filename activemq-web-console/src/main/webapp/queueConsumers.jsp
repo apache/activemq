@@ -52,9 +52,16 @@
 <c:forEach items="${requestContext.queueConsumerQuery.consumers}" var="row">
 <tr>
 	<td>
-		<a href="connection.jsp?connectionID=${row.clientId}">${row.clientId}</a><br/>
-	    ${row.connectionId}</a>
-	</td>
+        <c:choose>
+            <c:when test="${row.network}">
+                <a href="network.jsp">${row.clientId}</a><br/>
+            </c:when>
+            <c:otherwise>
+                <a href="connection.jsp?connectionID=${row.clientId}">${row.clientId}</a><br/>
+            </c:otherwise>
+        </c:choose>
+            ${row.connectionId}</a>
+    </td>
 	<td>${row.sessionId}</td>
 	<td>${row.selector}</td>
 	<td>${row.enqueueCounter}</td>
