@@ -35,7 +35,9 @@
 
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
-      org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first
+      org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first,
+      org.iq80*;-noimport:=true;-split-package:=merge-first,
+      org.fusesource*;-noimport:=true;-split-package:=merge-first
     </activemq.osgi.export>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
     <surefire.argLine>-Xmx512M</surefire.argLine>
@@ -60,6 +62,8 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-leveldb-store</artifactId>
+      <version>${project.version}</version>
+      <classifier>uber</classifier>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
