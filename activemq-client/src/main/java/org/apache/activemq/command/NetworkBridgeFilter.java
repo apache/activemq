@@ -96,9 +96,9 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         if (message.isAdvisory()) {
             if (consumerInfo != null && consumerInfo.isNetworkSubscription()) {
                 // they will be interpreted by the bridge leading to dup commands
-                //if (LOG.isTraceEnabled()) {
-                LOG.error("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
-                //}
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
+                }
                 return false;
             } else if ( message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
                 ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
