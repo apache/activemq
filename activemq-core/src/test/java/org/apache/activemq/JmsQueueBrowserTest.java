@@ -25,6 +25,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
+import javax.jms.Connection;
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
@@ -299,6 +300,36 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         // Receive the first message.
         assertEquals(outbound[0], consumer.receive(1000));
         consumer.close();
+        browser.close();
+        producer.close();
+
+    }
+
+    public void testLargeNumberOfMessages() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        connection.start();
+
+        MessageProducer producer = session.createProducer(destination);
+
+        for (int i = 0; i < 1000; i++) {
+            producer.send(session.createTextMessage("Message: "  + i));
+        }
+
+        QueueBrowser browser = session.createBrowser(destination);
+        Enumeration enumeration = browser.getEnumeration();
+
+        assertTrue(enumeration.hasMoreElements());
+
+        int numberBrowsed = 0;
+
+        while (enumeration.hasMoreElements()) {
+            enumeration.nextElement();
+            numberBrowsed++;
+        }
+
+        System.out.println("Number browsed:  " + numberBrowsed);
+        assertEquals(1000, numberBrowsed);
         browser.close();
         producer.close();
 
