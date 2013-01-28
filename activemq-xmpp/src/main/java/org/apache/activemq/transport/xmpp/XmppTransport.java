@@ -47,13 +47,14 @@ import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
+import org.jabber.etherx.streams.Features;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.jabber.etherx.streams.Features;
 
 /**
- * 
+ * @deprecated
  */
+@Deprecated
 public class XmppTransport extends TcpTransport {
     protected static final QName ATTRIBUTE_TO = new QName("to");
 
@@ -141,6 +142,7 @@ public class XmppTransport extends TcpTransport {
         try {
             XMLInputFactory xif = XMLInputFactory.newInstance();
             xif.setXMLReporter(new XMLReporter() {
+                @Override
                 public void report(String message, String errorType, Object relatedInformation, Location location) throws XMLStreamException {
                     LOG.warn(message + " errorType: " + errorType + " relatedInfo: " + relatedInformation);
                 }

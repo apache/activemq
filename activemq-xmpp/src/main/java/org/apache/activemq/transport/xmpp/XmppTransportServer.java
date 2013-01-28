@@ -29,8 +29,9 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
- * 
+ * @deprecated
  */
+@Deprecated
 public class XmppTransportServer extends TcpTransportServer {
 
     public XmppTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {

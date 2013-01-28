@@ -31,10 +31,12 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
- * 
+ * @deprecated
  */
+@Deprecated
 public class XmppTransportFactory extends TcpTransportFactory {
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "xmpp";
     }
