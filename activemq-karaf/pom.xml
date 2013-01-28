@@ -96,10 +96,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-http</artifactId>
     </dependency>
     <dependency>

@@ -86,7 +86,7 @@
     <!-- testing helpers -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-unit-tests</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

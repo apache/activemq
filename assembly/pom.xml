@@ -68,11 +68,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-unit-tests</artifactId>
       <type>test-jar</type>
     </dependency>
     <dependency>

@@ -220,7 +220,7 @@
     <module>activemq-jdbc-store</module>
     <module>activemq-leveldb-store</module>
 
-    <module>activemq-core</module>
+    <module>activemq-unit-tests</module>
     <module>activemq-all</module>
     <module>activemq-camel</module>
     <module>activemq-console</module>
@@ -334,12 +334,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-core</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-core</artifactId>
+        <artifactId>activemq-unit-tests</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
