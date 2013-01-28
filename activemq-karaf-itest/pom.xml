@@ -15,9 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -31,35 +30,31 @@
   <name>ActiveMQ :: Karaf Integration Tests</name>
   <description>Performs Karaf compliance integration tests</description>
 
-    <properties>
-      <pax-exam-version>2.6.0</pax-exam-version>
-    </properties>
+  <properties>
+    <pax-exam-version>2.6.0</pax-exam-version>
+  </properties>
 
   <dependencies>
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-client</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-karaf</artifactId>
       <scope>test</scope>
     </dependency>
-
-      <dependency>
-           <groupId>org.ops4j.pax.logging</groupId>
-           <artifactId>pax-logging-api</artifactId>
-           <version>1.6.2</version>
-      </dependency>
-      <dependency>
-           <groupId>org.ops4j.pax.logging</groupId>
-           <artifactId>pax-logging-service</artifactId>
-           <version>1.6.2</version>
-      </dependency>
-
+    <dependency>
+      <groupId>org.ops4j.pax.logging</groupId>
+      <artifactId>pax-logging-api</artifactId>
+      <version>1.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.logging</groupId>
+      <artifactId>pax-logging-service</artifactId>
+      <version>1.6.2</version>
+    </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
@@ -166,24 +161,23 @@
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>
     <plugins>
-        <!-- generate dependencies versions -->
-        <plugin>
-            <groupId>org.apache.servicemix.tooling</groupId>
-            <artifactId>depends-maven-plugin</artifactId>
-            <executions>
-                <execution>
-                    <id>generate-depends-file</id>
-                    <goals>
-                        <goal>generate-depends-file</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
+      <!-- generate dependencies versions -->
+      <plugin>
+        <groupId>org.apache.servicemix.tooling</groupId>
+        <artifactId>depends-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-depends-file</id>
+            <goals>
+              <goal>generate-depends-file</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
@@ -191,7 +185,7 @@
           <redirectTestOutputToFile>false</redirectTestOutputToFile>
           <argLine>-Xmx256m</argLine>
           <excludes>
-            <!--<exclude>**/*Cxf*.*</exclude>-->
+          <!--<exclude>**/*Cxf*.*</exclude>-->
           </excludes>
           <systemPropertyVariables>
             <activemqVersion>${project.version}</activemqVersion>
@@ -199,7 +193,6 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 

@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -31,7 +32,6 @@
   <description>ActiveMQ Log4j Appender</description>
 
   <dependencies>
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-client</artifactId>
@@ -64,36 +64,36 @@
   </dependencies>
   <build>
     <plugins>
-        <plugin>
-            <artifactId>maven-jar-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                </archive>
-            </configuration>
-        </plugin>
-       <plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-            <instructions>
-                <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                <Fragment-Host>org.apache.activemq.activemq-core</Fragment-Host>
-                <Export-Package>
-                  org.apache.activemq.transport.util*;version=${project.version};-noimport:=;-split-package:=merge-last,
-                </Export-Package>
-            </instructions>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Fragment-Host>org.apache.activemq.activemq-core</Fragment-Host>
+            <Export-Package>
+              org.apache.activemq.transport.util*;version=${project.version};-noimport:=;-split-package:=merge-last,
+            </Export-Package>
+          </instructions>
         </configuration>
-           <executions>
-               <execution>
-                   <id>bundle-manifest</id>
-                   <phase>process-classes</phase>
-                   <goals>
-                       <goal>manifest</goal>
-                   </goals>
-               </execution>
-           </executions>
-       </plugin>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>

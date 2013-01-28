@@ -54,7 +54,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activeio-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-client</artifactId>
@@ -76,7 +75,6 @@
       <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-leveldb-store</artifactId>
@@ -93,7 +91,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jdbc-store</artifactId>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-mqtt</artifactId>
@@ -106,7 +103,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-amqp</artifactId>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-log4j-appender</artifactId>
@@ -115,7 +111,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-http</artifactId>
     </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
@@ -219,12 +214,10 @@
       <groupId>xpp3</groupId>
       <artifactId>xpp3</artifactId>
     </dependency>
-
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
@@ -287,7 +280,6 @@
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all-server</artifactId>
@@ -342,13 +334,11 @@
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt-spring3</artifactId>
       <version>${jasypt-version}</version>
     </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -381,11 +371,9 @@
       <artifactId>json-simple</artifactId>
       <version>1.1</version>
     </dependency>
-
   </dependencies>
 
   <build>
-
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -506,5 +494,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

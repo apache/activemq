@@ -30,11 +30,8 @@
   <name>ActiveMQ :: MQTT Protocol</name>
   <description>The ActiveMQ MQTT Protocol Implementation</description>
 
-  <properties>
-  </properties>
-
   <dependencies>
-    
+
     <!-- =============================== -->
     <!-- Required Dependencies -->
     <!-- =============================== -->
@@ -112,11 +109,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>xalan</groupId>
@@ -245,6 +237,5 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-  </profiles>
+
 </project>

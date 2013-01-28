@@ -6,17 +6,18 @@
   The ASF licenses this file to You under the Apache License, Version 2.0
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
-  
+
   http://www.apache.org/licenses/LICENSE-2.0
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -43,17 +44,8 @@
       org.apache.activemq.console*;version=${project.version};-noimport:=true,
     </activemq.osgi.export>
   </properties>
-  
+
   <dependencies>
-    <!-- activemq related dependencies -->
-    <!--<dependency>-->
-      <!--<groupId>${project.groupId}</groupId>-->
-      <!--<artifactId>activemq-spring</artifactId>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>${project.groupId}</groupId>-->
-      <!--<artifactId>activemq-amq-store</artifactId>-->
-    <!--</dependency>-->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-kahadb-store</artifactId>
@@ -68,17 +60,14 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
     </dependency>
-
     <dependency>
       <groupId>commons-pool</groupId>
       <artifactId>commons-pool</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -100,8 +89,6 @@
       <artifactId>jackson-mapper-asl</artifactId>
       <version>${jackson-version}</version>
     </dependency>
-
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-broker</artifactId>
@@ -114,7 +101,7 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
@@ -130,13 +117,11 @@
       <artifactId>derby</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
@@ -158,16 +143,13 @@
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
     </dependency>
-    
     <dependency>
       <groupId>commons-daemon</groupId>
       <artifactId>commons-daemon</artifactId>
-    </dependency> 
-
+    </dependency>
   </dependencies>
 
   <build>
-
     <plugins>
       <!-- Configure which tests are included/excuded -->
       <plugin>
@@ -175,31 +157,24 @@
         <configuration>
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
-          <useFile>true</useFile>          
-           <systemProperties>
+          <useFile>true</useFile>
+          <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
             <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
-                 while running mvn:test
-                 Note: if you want to see log messages on the console window remove
-                       "redirectTestOutputToFile" from the parent pom
-            -->
-            <!--           
-            <property>
-              <name>log4j.configuration</name>
-              <value>file:target/test-classes/log4j.properties</value>
-            </property>
-            -->
+              while running mvn:test Note: if you want to see log messages on the console window remove "redirectTestOutputToFile"
+              from the parent pom -->
+            <!-- <property> <name>log4j.configuration</name> <value>file:target/test-classes/log4j.properties</value>
+              </property> -->
           </systemProperties>
-
           <includes>
             <include>**/*Test*</include>
           </includes>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.fusesource.hawtbuf</groupId>
         <artifactId>hawtbuf-protoc</artifactId>
@@ -207,7 +182,7 @@
         <configuration>
           <type>alt</type>
         </configuration>
-         <executions>
+        <executions>
           <execution>
             <goals>
               <goal>compile</goal>

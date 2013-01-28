@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -113,23 +114,23 @@
       <artifactId>activemq-ra</artifactId>
     </dependency>
 
-      <dependency>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>activemq-spring</artifactId>
-      </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-spring</artifactId>
+    </dependency>
 
-      <dependency>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.core</artifactId>
-          <scope>provided</scope>
-      </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
-      <dependency>
-        <groupId>org.osgi</groupId>
-        <artifactId>org.osgi.compendium</artifactId>
-        <version>4.2.0</version>
-      </dependency>
-    
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>4.2.0</version>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -183,9 +184,9 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
-             <Embed-Dependency>*;groupId=org.apache.activemq;inline=META-INF/services/*</Embed-Dependency>
-             <Embed-Transitive>true</Embed-Transitive>
+            <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
+            <Embed-Dependency>*;groupId=org.apache.activemq;inline=META-INF/services/*</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
           </instructions>
         </configuration>
       </plugin>

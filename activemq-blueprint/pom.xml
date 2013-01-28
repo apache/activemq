@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -31,24 +32,24 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-        org.apache.xbean*;version="[3.12,4)",
-        org.apache.aries.blueprint.*;version="[1.0,2)",
-          *
+      org.apache.xbean*;version="[3.12,4)",
+      org.apache.aries.blueprint.*;version="[1.0,2)",
+      *
     </activemq.osgi.import.pkg>
   </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint</artifactId>
-            <version>${aries-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.xbean</groupId>
-            <artifactId>xbean-blueprint</artifactId>
-            <version>${xbean-version}</version>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.aries.blueprint</groupId>
+      <artifactId>org.apache.aries.blueprint</artifactId>
+      <version>${aries-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-blueprint</artifactId>
+      <version>${xbean-version}</version>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
@@ -57,18 +58,17 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <!--Fragment-Host>org.apache.activemq.activemq-core;version=[$(version;==;${activemq.osgi.version}),$(version;=+;${activemq.osgi.version}))</Fragment-Host-->
+            <!--Fragment-Host>org.apache.activemq.activemq-core;version=[$(version;==;${activemq.osgi.version}),$(version;=+;${activemq.osgi.version}))</Fragment-Host -->
             <Fragment-Host>org.apache.activemq.activemq-core</Fragment-Host>
           </instructions>
         </configuration>
       </plugin>
-    <plugin>
-      <artifactId>maven-resources-plugin</artifactId>
-    </plugin>
-    <plugin>
-      <artifactId>maven-install-plugin</artifactId>
-    </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
-
 </project>

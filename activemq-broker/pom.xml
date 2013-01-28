@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -48,7 +49,7 @@
     </dependency>
 
     <!-- =============================== -->
-    <!-- Optional Dependencies           -->
+    <!-- Optional Dependencies -->
     <!-- =============================== -->
 
     <dependency>
@@ -62,10 +63,6 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>org.springframework</groupId>-->
-      <!--<artifactId>spring-context</artifactId>-->
-    <!--</dependency>-->
 
     <!-- to support XPath based Selectors -->
     <dependency>
@@ -75,7 +72,7 @@
     </dependency>
 
     <!-- =============================== -->
-    <!-- Testing Dependencies            -->
+    <!-- Testing Dependencies -->
     <!-- =============================== -->
     <dependency>
       <groupId>junit</groupId>
@@ -181,27 +178,21 @@
           <forkMode>always</forkMode>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-
-           <systemProperties>
+          <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
-            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
-                 while running mvn:test
-                 Note: if you want to see log messages on the console window remove
-                       "redirectTestOutputToFile" from the parent pom
-            -->
-            <!--
-            <property>
-              <name>log4j.configuration</name>
-              <value>file:target/test-classes/log4j.properties</value>
-            </property>
-            -->
-           </systemProperties>
-           <includes>
-             <include>**/*Test.*</include>
-           </includes>
+            <!-- Uncomment the following if you want to configure custom logging
+              (using src/test/resources/log4j.properties) while running mvn:test Note: if you want
+              to see log messages on the console window remove "redirectTestOutputToFile" from
+              the parent pom -->
+            <!-- <property> <name>log4j.configuration</name> <value>file:target/test-classes/log4j.properties</value>
+              </property> -->
+          </systemProperties>
+          <includes>
+            <include>**/*Test.*</include>
+          </includes>
         </configuration>
       </plugin>
       <plugin>

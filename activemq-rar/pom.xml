@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -62,108 +63,108 @@
           <artifactId>geronimo-servlet_2.5_spec</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>geronimo</groupId>
-           <artifactId>geronimo-kernel</artifactId>
+          <groupId>geronimo</groupId>
+          <artifactId>geronimo-kernel</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>geronimo</groupId>
-           <artifactId>geronimo-j2ee</artifactId>
+          <groupId>geronimo</groupId>
+          <artifactId>geronimo-j2ee</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>axion</groupId>
-           <artifactId>axion</artifactId>
+          <groupId>axion</groupId>
+          <artifactId>axion</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>${project.groupId}</groupId>
-           <artifactId>activemq-jaas</artifactId>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-jaas</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>howl</groupId>
-           <artifactId>howl-logger</artifactId>
+          <groupId>howl</groupId>
+          <artifactId>howl-logger</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>activemq</groupId>
-           <artifactId>smackx</artifactId>
+          <groupId>activemq</groupId>
+          <artifactId>smackx</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>activemq</groupId>
-           <artifactId>smack</artifactId>
+          <groupId>activemq</groupId>
+          <artifactId>smack</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-jmx</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-jmx</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-impl</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-impl</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-remote</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-remote</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-tools</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-tools</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>qdox</groupId>
-           <artifactId>qdox</artifactId>
+          <groupId>qdox</groupId>
+          <artifactId>qdox</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>junit</groupId>
-           <artifactId>junit</artifactId>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>regexp</groupId>
-           <artifactId>regexp</artifactId>
+          <groupId>regexp</groupId>
+          <artifactId>regexp</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>javax.jmdns</groupId>
-           <artifactId>jmdns</artifactId>
+          <groupId>javax.jmdns</groupId>
+          <artifactId>jmdns</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xalan</groupId>
-           <artifactId>xalan</artifactId>
+          <groupId>xalan</groupId>
+          <artifactId>xalan</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xmlbeans</groupId>
-           <artifactId>xbean</artifactId>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xbean</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xmlbeans</groupId>
-           <artifactId>xmlpublic</artifactId>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xmlpublic</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xmlbeans</groupId>
-           <artifactId>xbean_xpath</artifactId>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xbean_xpath</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xerces</groupId>
-           <artifactId>xercesImpl</artifactId>
+          <groupId>xerces</groupId>
+          <artifactId>xercesImpl</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xml-apis</groupId>
-           <artifactId>xml-apis</artifactId>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>ant</groupId>
-           <artifactId>ant</artifactId>
+          <groupId>ant</groupId>
+          <artifactId>ant</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>commons-collections</groupId>
-           <artifactId>commons-collections</artifactId>
+          <groupId>commons-collections</groupId>
+          <artifactId>commons-collections</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>commons-primitives</groupId>
-           <artifactId>commons-primitives</artifactId>
+          <groupId>commons-primitives</groupId>
+          <artifactId>commons-primitives</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>commons-pool</groupId>
-           <artifactId>commons-pool</artifactId>
+          <groupId>commons-pool</groupId>
+          <artifactId>commons-pool</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -196,108 +197,108 @@
           <artifactId>geronimo-servlet_2.5_spec</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>geronimo</groupId>
-           <artifactId>geronimo-kernel</artifactId>
+          <groupId>geronimo</groupId>
+          <artifactId>geronimo-kernel</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>geronimo</groupId>
-           <artifactId>geronimo-j2ee</artifactId>
+          <groupId>geronimo</groupId>
+          <artifactId>geronimo-j2ee</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>axion</groupId>
-           <artifactId>axion</artifactId>
+          <groupId>axion</groupId>
+          <artifactId>axion</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>${project.groupId}</groupId>
-           <artifactId>activemq-jaas</artifactId>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-jaas</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>howl</groupId>
-           <artifactId>howl-logger</artifactId>
+          <groupId>howl</groupId>
+          <artifactId>howl-logger</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>activemq</groupId>
-           <artifactId>smackx</artifactId>
+          <groupId>activemq</groupId>
+          <artifactId>smackx</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>activemq</groupId>
-           <artifactId>smack</artifactId>
+          <groupId>activemq</groupId>
+          <artifactId>smack</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-jmx</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-jmx</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-impl</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-impl</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-remote</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-remote</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>mx4j</groupId>
-           <artifactId>mx4j-tools</artifactId>
+          <groupId>mx4j</groupId>
+          <artifactId>mx4j-tools</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>qdox</groupId>
-           <artifactId>qdox</artifactId>
+          <groupId>qdox</groupId>
+          <artifactId>qdox</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>junit</groupId>
-           <artifactId>junit</artifactId>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>regexp</groupId>
-           <artifactId>regexp</artifactId>
+          <groupId>regexp</groupId>
+          <artifactId>regexp</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>javax.jmdns</groupId>
-           <artifactId>jmdns</artifactId>
+          <groupId>javax.jmdns</groupId>
+          <artifactId>jmdns</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xalan</groupId>
-           <artifactId>xalan</artifactId>
+          <groupId>xalan</groupId>
+          <artifactId>xalan</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xmlbeans</groupId>
-           <artifactId>xbean</artifactId>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xbean</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xmlbeans</groupId>
-           <artifactId>xmlpublic</artifactId>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xmlpublic</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xmlbeans</groupId>
-           <artifactId>xbean_xpath</artifactId>
+          <groupId>xmlbeans</groupId>
+          <artifactId>xbean_xpath</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xerces</groupId>
-           <artifactId>xercesImpl</artifactId>
+          <groupId>xerces</groupId>
+          <artifactId>xercesImpl</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>xml-apis</groupId>
-           <artifactId>xml-apis</artifactId>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>ant</groupId>
-           <artifactId>ant</artifactId>
+          <groupId>ant</groupId>
+          <artifactId>ant</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>commons-collections</groupId>
-           <artifactId>commons-collections</artifactId>
+          <groupId>commons-collections</groupId>
+          <artifactId>commons-collections</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>commons-primitives</groupId>
-           <artifactId>commons-primitives</artifactId>
+          <groupId>commons-primitives</groupId>
+          <artifactId>commons-primitives</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>commons-pool</groupId>
-           <artifactId>commons-pool</artifactId>
+          <groupId>commons-pool</groupId>
+          <artifactId>commons-pool</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -328,8 +329,8 @@
       <artifactId>spring-core</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-context</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -388,32 +389,31 @@
     </plugins>
   </build>
 
-    <profiles>
-        <profile>
-            <id>deploy</id>
-            <build>
-            <defaultGoal>deploy</defaultGoal>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>2.1.2</version>
-                    <configuration>
-                        <attach>false</attach>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-          </build>
-        </profile>
-    </profiles>
+  <profiles>
+    <profile>
+      <id>deploy</id>
+      <build>
+        <defaultGoal>deploy</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.1.2</version>
+            <configuration>
+              <attach>false</attach>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
-

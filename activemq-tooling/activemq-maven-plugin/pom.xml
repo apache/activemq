@@ -41,7 +41,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-broker</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -72,6 +72,7 @@
       <artifactId>slf4j-log4j12</artifactId>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>

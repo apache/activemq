@@ -32,7 +32,6 @@
   <description>ActiveMQ implementaiton of AMQP messaging protocol</description>
 
   <dependencies>
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
@@ -41,13 +40,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.qpid</groupId>
       <artifactId>proton-jms</artifactId>
       <version>${qpid-proton-version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.fusesource.hawtbuf</groupId>
       <artifactId>hawtbuf</artifactId>
@@ -75,7 +72,6 @@
       <artifactId>jetty-all-server</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
@@ -87,12 +83,6 @@
       <artifactId>activemq-spring</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>org.apache.activemq</groupId>-->
-      <!--<artifactId>activemq-console</artifactId>-->
-      <!--<scope>test</scope>-->
-    <!--</dependency>-->
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -103,9 +93,8 @@
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
-  
+
   <profiles>
     <profile>
       <!-- profile which is activated is the swiftmq-client-home prop is defined.
@@ -155,5 +144,4 @@
       </build>
     </profile>
   </profiles>
-
 </project>

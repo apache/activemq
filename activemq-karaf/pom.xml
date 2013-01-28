@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -40,18 +41,17 @@
     <karaf-version>2.2.9</karaf-version>
   </properties>
 
-    <dependencies>
-     <dependency>
-          <groupId>org.ops4j.pax.logging</groupId>
-          <artifactId>pax-logging-api</artifactId>
-          <version>1.6.2</version>
-     </dependency>
-     <dependency>
-          <groupId>org.ops4j.pax.logging</groupId>
-          <artifactId>pax-logging-service</artifactId>
-          <version>1.6.2</version>
-     </dependency>
-
+  <dependencies>
+    <dependency>
+      <groupId>org.ops4j.pax.logging</groupId>
+      <artifactId>pax-logging-api</artifactId>
+      <version>1.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.logging</groupId>
+      <artifactId>pax-logging-service</artifactId>
+      <version>1.6.2</version>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -90,29 +90,29 @@
       <version>${karaf-version}</version>
     </dependency>
     <dependency>
-        <groupId>org.osgi</groupId>
-        <artifactId>org.osgi.core</artifactId>
-        <scope>provided</scope>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-core</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-http</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-http</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-log4j-appender</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-log4j-appender</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-console</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-pool</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-pool</artifactId>
     </dependency>
     <!-- used for testing -->
     <dependency>
@@ -121,6 +121,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <resources>
       <resource>
@@ -133,52 +134,52 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
-           <execution>
-              <id>filter</id>
-              <phase>generate-resources</phase>
-              <goals>
-                <goal>resources</goal>
-              </goals>
-           </execution>
+          <execution>
+            <id>filter</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>resources</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>attach-artifacts</id>
-              <phase>package</phase>
-              <goals>
-                <goal>attach-artifact</goal>
-              </goals>
-              <configuration>
-                <artifacts>
-                  <artifact>
-                    <file>target/classes/features.xml</file>
-                     <type>xml</type>
-                     <classifier>features</classifier>
-                   </artifact>
-                 </artifacts>
-               </configuration>
-             </execution>
-         </executions>
-       </plugin>
-       <plugin>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>target/classes/features.xml</file>
+                  <type>xml</type>
+                  <classifier>features</classifier>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-            <instructions>
-                <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
-                <Import-Package>
-                  org.apache.felix.gogo.commands,
-                  *
-                </Import-Package>
-                <Private-Package>!*</Private-Package>
-                <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-                <Embed-Transitive>true</Embed-Transitive>
-            </instructions>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
+            <Import-Package>
+              org.apache.felix.gogo.commands,
+              *
+            </Import-Package>
+            <Private-Package>!*</Private-Package>
+            <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+            <Embed-Transitive>true</Embed-Transitive>
+          </instructions>
         </configuration>
       </plugin>
     </plugins>
