@@ -51,7 +51,7 @@ public class TwoBrokerQueueSendReceiveTest  extends TwoBrokerTopicSendReceiveTes
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("local subs map size = " + bridge.getLocalSubscriptionMap().size());
-                return 1 == bridge.getLocalSubscriptionMap().size();
+                return 0 == bridge.getLocalSubscriptionMap().size();
             }
         }));
 
