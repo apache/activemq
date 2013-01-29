@@ -185,9 +185,25 @@
         <configuration>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
-            <Embed-Dependency>*;groupId=org.apache.activemq;inline=META-INF/services/*</Embed-Dependency>
+            <Embed-Dependency>
+              *;
+              groupId=org.apache.activemq;inline=META-INF/services/*,
+              groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
+              groupId=org.xerial.snappy;inline=org/xerial/snappy/*</Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
-          </instructions>
+            <Bundle-NativeCode>
+              META-INF/native/windows32/leveldbjni.dll;osname=Win32;processor=x86,
+              META-INF/native/windows64/leveldbjni.dll;osname=Win32;processor=x86-64,
+              META-INF/native/osx/libleveldbjni.jnilib;osname=macosx,
+              META-INF/native/linux32/libleveldbjni.so;osname=Linux;processor=x86,
+              META-INF/native/linux64/libleveldbjni.so;osname=Linux;processor=x86-64,
+              org/xerial/snappy/native/Linux/i386/libsnappyjava.so;osname=Linux;processor=x86,
+              org/xerial/snappy/native/Mac/i386/libsnappyjava.jnilib;osname=macosx;processor=x86,
+              org/xerial/snappy/native/Mac/x86_64/libsnappyjava.jnilib;osname=macosx;processor=x86-64,
+              org/xerial/snappy/native/Windows/amd64/snappyjava.dll;osname=Win32;processor=x86-64,
+              org/xerial/snappy/native/Windows/x86/snappyjava.dll;osname=Win32;processor=x86
+            </Bundle-NativeCode>
+         </instructions>
         </configuration>
       </plugin>
     </plugins>

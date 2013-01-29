@@ -389,6 +389,8 @@
               <include>org.fusesource.leveldbjni:leveldbjni-osx</include>
               <include>org.fusesource.leveldbjni:leveldbjni-linux32</include>
               <include>org.fusesource.leveldbjni:leveldbjni-linux64</include>
+              <include>org.fusesource.leveldbjni:leveldbjni-win32</include>
+              <include>org.fusesource.leveldbjni:leveldbjni-win64</include>
               <include>org.fusesource.hawtjni:hawtjni-runtime</include>
 
               <!-- include bits need to access hdfs as a client -->
