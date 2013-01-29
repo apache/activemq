@@ -189,15 +189,18 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 			}
         };
         cf.setExceptionListener(exListener);
+        connection.close();
         
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection.getExceptionListener());
         assertEquals(exListener, connection.getExceptionListener());
+        connection.close();
         
         connection = (ActiveMQConnection)cf.createConnection();
         assertEquals(exListener, connection.getExceptionListener());
         
         assertEquals(exListener, cf.getExceptionListener());
+        connection.close();
         
     }
 
@@ -213,14 +216,17 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         };
         connection.setClientInternalExceptionListener(listener);
         cf.setClientInternalExceptionListener(listener);
+        connection.close();
         
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection.getClientInternalExceptionListener());
         assertEquals(listener, connection.getClientInternalExceptionListener());
+        connection.close();
         
         connection = (ActiveMQConnection)cf.createConnection();
         assertEquals(listener, connection.getClientInternalExceptionListener());   
         assertEquals(listener, cf.getClientInternalExceptionListener());
+        connection.close();
         
     }
 
