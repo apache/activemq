@@ -1332,7 +1332,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void configureDemandSubscription(ConsumerInfo info, DemandSubscription sub) throws IOException {
-        sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());
+        if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination())){
+            sub.getLocalInfo().setDispatchAsync(true);
+        } else {
+            sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());
+        }
         sub.getLocalInfo().setPrefetchSize(configuration.getPrefetchSize());
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(), sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(), sub);
