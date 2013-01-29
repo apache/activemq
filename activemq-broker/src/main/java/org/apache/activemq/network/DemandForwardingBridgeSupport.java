@@ -33,12 +33,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.ObjectName;
 
+import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
-import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.AbstractRegion;
@@ -81,7 +81,6 @@ import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
-import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IdGenerator;
@@ -702,7 +701,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.trace(configuration.getBrokerName() + " bridging " + (destInfo.isAddOperation() ? "add" : "remove") + " destination on " + localBroker + " from " + remoteBrokerName + ", destination: " + destInfo);
             }
             if (destInfo.isRemoveOperation()) {
-                // serialise with removeSub operations such that all removeSub advisories are generated
+                // Serialize with removeSub operations such that all removeSub advisories are generated
                 serialExecutor.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -809,7 +808,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
 
             // continue removal in separate thread to free up this thread for outstanding responses
-            // serialise with removeDestination operations so that removeSubs are serialised with removeDestinations
+            // Serialize with removeDestination operations so that removeSubs are serialised with removeDestinations
             // such that all removeSub advisories are generated
             serialExecutor.execute(new Runnable() {
                 @Override
