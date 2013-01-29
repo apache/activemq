@@ -804,6 +804,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         + " for remote " + sub.getRemoteInfo().getConsumerId());
             }
 
+            // ensure not available for conduit subs pending removal
+            subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
+            subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
+
             // continue removal in separate thread to free up this thread for outstanding responses
             // serialise with removeDestination operations so that removeSubs are serialised with removeDestinations
             // such that all removeSub advisories are generated
@@ -815,9 +819,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
                     } catch (IOException e) {
                         LOG.warn("failed to deliver remove command for local subscription, for remote " + sub.getRemoteInfo().getConsumerId(), e);
-                    } finally {
-                        subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
-                        subscriptionMapByRemoteId.remove(sub.getRemoteInfo().getConsumerId());
                     }
                 }
             });
