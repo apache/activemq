@@ -82,11 +82,5 @@
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
 
-    <feature name="activemq-extra" version="${project.version}" resolver="(obr)" start-level="50">
-        <bundle>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
-        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch/${hawtdispatch-version}</bundle>
-        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-scala/${hawtdispatch-version}</bundle>
-        <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-transport/${hawtdispatch-version}</bundle>
-    </feature>
 </features>
 
