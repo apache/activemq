@@ -34,14 +34,15 @@ import org.slf4j.LoggerFactory;
 /**
  * This interceptor deals with out of order commands together with being able to
  * handle dropped commands and the re-requesting dropped commands.
- * 
- * 
+ *
+ * @deprecated
  */
+@Deprecated
 public class ReliableTransport extends ResponseCorrelator {
     private static final Logger LOG = LoggerFactory.getLogger(ReliableTransport.class);
 
     private ReplayStrategy replayStrategy;
-    private SortedSet<Command> commands = new TreeSet<Command>(new CommandIdComparator());
+    private final SortedSet<Command> commands = new TreeSet<Command>(new CommandIdComparator());
     private int expectedCounter = 1;
     private int replayBufferCommandCount = 50;
     private int requestTimeout = 2000;
@@ -74,6 +75,7 @@ public class ReliableTransport extends ResponseCorrelator {
         }
     }
 
+    @Override
     public Object request(Object o) throws IOException {
         final Command command = (Command)o;
         FutureResponse response = asyncRequest(command, null);
@@ -86,6 +88,7 @@ public class ReliableTransport extends ResponseCorrelator {
         }
     }
 
+    @Override
     public Object request(Object o, int timeout) throws IOException {
         final Command command = (Command)o;
         FutureResponse response = asyncRequest(command, null);
@@ -104,6 +107,7 @@ public class ReliableTransport extends ResponseCorrelator {
         return response.getResult(0);
     }
 
+    @Override
     public void onCommand(Object o) {
         Command command = (Command)o;
         // lets pass wireformat through
@@ -243,10 +247,12 @@ public class ReliableTransport extends ResponseCorrelator {
         this.replayer = replayer;
     }
 
+    @Override
     public String toString() {
         return next.toString();
     }
 
+    @Override
     public void start() throws Exception {
         if (udpTransport != null) {
             udpTransport.setReplayBuffer(getReplayBuffer());

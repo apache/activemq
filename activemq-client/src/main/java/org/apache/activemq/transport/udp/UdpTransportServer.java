@@ -41,17 +41,17 @@ import org.slf4j.LoggerFactory;
 /**
  * A UDP based implementation of {@link TransportServer}
  *
- *
+ * @deprecated
  */
-
+@Deprecated
 public class UdpTransportServer extends TransportServerSupport {
     private static final Logger LOG = LoggerFactory.getLogger(UdpTransportServer.class);
 
-    private UdpTransport serverTransport;
-    private ReplayStrategy replayStrategy;
-    private Transport configuredTransport;
+    private final UdpTransport serverTransport;
+    private final ReplayStrategy replayStrategy;
+    private final Transport configuredTransport;
     private boolean usingWireFormatNegotiation;
-    private Map<DatagramEndpoint, Transport> transports = new HashMap<DatagramEndpoint, Transport>();
+    private final Map<DatagramEndpoint, Transport> transports = new HashMap<DatagramEndpoint, Transport>();
 
     public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport, ReplayStrategy replayStrategy) {
         super(connectURI);
@@ -60,6 +60,7 @@ public class UdpTransportServer extends TransportServerSupport {
         this.replayStrategy = replayStrategy;
     }
 
+    @Override
     public String toString() {
         return "UdpTransportServer@" + serverTransport;
     }
@@ -71,31 +72,38 @@ public class UdpTransportServer extends TransportServerSupport {
         return serverTransport;
     }
 
+    @Override
     public void setBrokerInfo(BrokerInfo brokerInfo) {
     }
 
+    @Override
     protected void doStart() throws Exception {
         LOG.info("Starting " + this);
 
         configuredTransport.setTransportListener(new TransportListener() {
+            @Override
             public void onCommand(Object o) {
                 final Command command = (Command)o;
                 processInboundConnection(command);
             }
 
+            @Override
             public void onException(IOException error) {
                 LOG.error("Caught: " + error, error);
             }
 
+            @Override
             public void transportInterupted() {
             }
 
+            @Override
             public void transportResumed() {
             }
         });
         configuredTransport.start();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         configuredTransport.stop();
     }
@@ -151,6 +159,7 @@ public class UdpTransportServer extends TransportServerSupport {
         // Joiner must be on outside as the inbound messages must be processed
         // by the reliable transport first
         return new CommandJoiner(reliableTransport, connectionWireFormat) {
+            @Override
             public void start() throws Exception {
                 super.start();
                 reliableTransport.onCommand(command);
@@ -171,6 +180,7 @@ public class UdpTransportServer extends TransportServerSupport {
          */
     }
 
+    @Override
     public InetSocketAddress getSocketAddress() {
         return serverTransport.getLocalSocketAddress();
     }

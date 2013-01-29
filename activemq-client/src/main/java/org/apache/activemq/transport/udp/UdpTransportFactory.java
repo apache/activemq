@@ -16,10 +16,25 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.*;
-import org.apache.activemq.transport.reliable.*;
+import org.apache.activemq.transport.CommandJoiner;
+import org.apache.activemq.transport.InactivityMonitor;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.reliable.DefaultReplayStrategy;
+import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
+import org.apache.activemq.transport.reliable.ReliableTransport;
+import org.apache.activemq.transport.reliable.ReplayStrategy;
+import org.apache.activemq.transport.reliable.Replayer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -28,21 +43,17 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- * 
+ *
+ * @deprecated
  */
+@Deprecated
 public class UdpTransportFactory extends TransportFactory {
-    
+
     private static final Logger log = LoggerFactory.getLogger(TcpTransportFactory.class);
-    
+
+    @Override
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
@@ -64,10 +75,12 @@ public class UdpTransportFactory extends TransportFactory {
         }
     }
 
+    @Override
     public Transport configure(Transport transport, WireFormat format, Map options) throws Exception {
         return configure(transport, format, options, false);
     }
 
+    @Override
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
         final UdpTransport udpTransport = (UdpTransport)transport;
@@ -92,6 +105,7 @@ public class UdpTransportFactory extends TransportFactory {
         return transport;
     }
 
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         OpenWireFormat wireFormat = asOpenWireFormat(wf);
         return new UdpTransport(wireFormat, location);
@@ -104,7 +118,7 @@ public class UdpTransportFactory extends TransportFactory {
 
     /**
      * Configures the transport
-     * 
+     *
      * @param acceptServer true if this transport is used purely as an 'accept'
      *                transport for new connections which work like TCP
      *                SocketServers where new connections spin up a new separate
