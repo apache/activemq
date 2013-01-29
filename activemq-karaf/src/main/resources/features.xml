@@ -51,25 +51,8 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson-version}</bundle>
         <feature version="[3,4)">spring31</feature>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
-        <!--<bundle>mvn:org.apache.activemq/activemq-spring/${project.version}</bundle>-->
         <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
-    </feature>
-
-    <feature name="activemq-spring" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="[1.2,2)">spring-dm</feature>
-        <feature version="${project.version}">activemq-broker</feature>
-        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-spring/${project.version}</bundle>
-    </feature>
-
-    <feature name="activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="${project.version}">activemq-broker</feature>
-        <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
-        <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
-        <bundle dependency="true">mvn:org.apache.aries.proxy/org.apache.aries.proxy/${aries-version}</bundle>
-        <bundle dependency="true">mvn:org.apache.aries.blueprint/org.apache.aries.blueprint/${aries-version}</bundle>
-        <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle>
-        <bundle>mvn:org.apache.activemq/activemq-blueprint/${project.version}</bundle>
+        <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
     </feature>
 
     <feature name="activemq-optional" version="${project.version}" resolver="(obr)" start-level="50">
@@ -100,9 +83,7 @@
     </feature>
 
     <feature name="activemq-extra" version="${project.version}" resolver="(obr)" start-level="50">
-        <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
         <bundle>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
-        <bundle>mvn:org.fusesource.hawtbuf/hawtbuf/${hawtbuf-version}</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch/${hawtdispatch-version}</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-scala/${hawtdispatch-version}</bundle>
         <bundle>mvn:org.fusesource.hawtdispatch/hawtdispatch-transport/${hawtdispatch-version}</bundle>
