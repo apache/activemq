@@ -63,6 +63,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
     protected int echoResponseFill = 0;   // Number of "filler" response messages per request
 
     protected static Log LOG;
+    public boolean duplex = true;
 
     static {
         LOG = LogFactory.getLog(RequestReplyToTopicViaThreeNetworkHopsTest.class);
@@ -76,9 +77,9 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         core2 = new EmbeddedTcpBroker("core", 2);
 
         // duplex is necessary to serialise sends with consumer/destination creation
-        edge1.coreConnectTo(core1, true);
-        edge2.coreConnectTo(core2, true);
-        core1.coreConnectTo(core2, true);
+        edge1.coreConnectTo(core1, duplex);
+        edge2.coreConnectTo(core2, duplex);
+        core1.coreConnectTo(core2, duplex);
 
     }
 
@@ -616,6 +617,10 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
                 throws Exception {
             this.makeConnectionTo(other, duplex_f, true);
             this.makeConnectionTo(other, duplex_f, false);
+            if (!duplex_f) {
+                other.makeConnectionTo(this, duplex_f, true);
+                other.makeConnectionTo(this, duplex_f, false);
+            }
         }
 
         public void start()
