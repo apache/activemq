@@ -1376,7 +1376,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 if (transactedIndividualAck) {
                                     immediateIndividualTransactedAck(md);
                                 } else {
-                                    ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
+                                    session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
                                 }
                             }
                         }
