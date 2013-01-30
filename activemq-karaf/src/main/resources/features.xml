@@ -29,6 +29,18 @@
         <bundle dependency="true">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
     </feature>
 
+    <feature resolver="(obr)" description="Spring support" version="3.1.3.RELEASE" name="spring">
+        <details>Spring Support</details>
+        <bundle dependency="true" start-level="30">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.aopalliance/1.0_6</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-core/3.1.3.RELEASE</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-asm/3.1.3.RELEASE</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-expression/3.1.3.RELEASE</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-beans/3.1.3.RELEASE</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-aop/3.1.3.RELEASE</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-context/3.1.3.RELEASE</bundle>
+        <bundle start-level="30">mvn:org.springframework/spring-context-support/3.1.3.RELEASE</bundle>
+    </feature>
+
     <feature name="activemq-broker" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="${project.version}">activemq-client</feature>
         <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections-version}</bundle>
@@ -49,15 +61,13 @@
         <bundle dependency="true">mvn:org.fusesource.hawtbuf/hawtbuf-proto/${hawtbuf-version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson-version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson-version}</bundle>
-        <feature version="[3,4)">spring31</feature>
+        <feature version="[3,4)">spring</feature>
         <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
         <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
     </feature>
 
     <feature name="activemq-optional" version="${project.version}" resolver="(obr)" start-level="50">
-        <feature version="${project.version}">activemq-blueprint</feature>
-        <feature version="${project.version}">activemq-spring</feature>
         <feature>jetty</feature>
         <bundle>mvn:org.apache.activemq/activemq-optional/${project.version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.josql/${josql-version}</bundle>

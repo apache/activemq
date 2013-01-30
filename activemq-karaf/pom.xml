@@ -73,18 +73,6 @@
       <version>1.2.1</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.karaf.tooling</groupId>
-      <artifactId>org.apache.karaf.tooling.testing</artifactId>
-      <version>${karaf-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.karaf.features</groupId>
-      <artifactId>org.apache.karaf.features.command</artifactId>
-      <version>${karaf-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.karaf.shell</groupId>
       <artifactId>org.apache.karaf.shell.console</artifactId>
       <version>${karaf-version}</version>
