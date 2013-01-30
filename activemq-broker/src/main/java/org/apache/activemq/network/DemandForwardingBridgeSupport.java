@@ -322,7 +322,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     if (l != null) {
                         l.onStart(this);
                     }
-                    LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
+
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
+                    }
 
                 } else {
                     LOG.warn("Bridge was disposed before the startLocalBridge() method was fully executed.");
@@ -400,7 +403,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             if (disposed.compareAndSet(false, true)) {
-                LOG.debug(" stopping " + configuration.getBrokerName() + " bridge to " + remoteBrokerName);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(" stopping " + configuration.getBrokerName() + " bridge to " + remoteBrokerName);
+                }
                 NetworkBridgeListener l = this.networkBridgeListener;
                 if (l != null) {
                     l.onStop(this);
@@ -416,12 +421,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 serialExecutor.shutdown();
                                 if (!serialExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
                                     List<Runnable> pendingTasks = serialExecutor.shutdownNow();
-                                    LOG.info("pending tasks on stop" + pendingTasks);
+                                    if (LOG.isInfoEnabled()) {
+                                        LOG.info("pending tasks on stop" + pendingTasks);
+                                    }
                                 }
                                 localBroker.oneway(new ShutdownInfo());
                                 remoteBroker.oneway(new ShutdownInfo());
                             } catch (Throwable e) {
-                                LOG.debug("Caught exception sending shutdown", e);
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Caught exception sending shutdown", e);
+                                }
                             } finally {
                                 sendShutdown.countDown();
                             }
@@ -450,7 +459,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (remoteBrokerInfo != null) {
                 brokerService.getBroker().removeBroker(null, remoteBrokerInfo);
                 brokerService.getBroker().networkBridgeStopped(remoteBrokerInfo);
-                LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
+                if (LOG.isInfoEnabled()) {
+                    LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
+                }
             }
         }
     }
@@ -756,8 +767,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 return;
             }
-            LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
-            LOG.debug("The local Exception was:" + error, error);
+
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("The local Exception was:" + error, error);
+            }
+
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
                 public void run() {
