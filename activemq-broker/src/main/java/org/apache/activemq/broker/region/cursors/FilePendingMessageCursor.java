@@ -156,7 +156,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public synchronized void destroy() throws Exception {
         stop();
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
-            Message node = (Message) i.next();
+            MessageReference node = i.next();
             node.decrementReferenceCount();
         }
         memoryList.clear();

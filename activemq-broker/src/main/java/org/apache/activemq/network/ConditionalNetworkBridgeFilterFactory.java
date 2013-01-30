@@ -100,28 +100,26 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
         @Override
         protected boolean matchesForwardingFilter(Message message, final MessageEvaluationContext mec) {
             boolean match = true;
-            if (mec.getDestination().isQueue()) {
-                if (contains(message.getBrokerPath(), networkBrokerId)) {
-                    // potential replay back to origin
-                    match = allowReplayWhenNoConsumers && hasNoLocalConsumers(message, mec) && hasNotJustArrived(message);
+            if (mec.getDestination().isQueue() && contains(message.getBrokerPath(), networkBrokerId)) {
+                // potential replay back to origin
+                match = allowReplayWhenNoConsumers && hasNoLocalConsumers(message, mec) && hasNotJustArrived(message);
 
-                    if (match && LOG.isTraceEnabled()) {
-                        LOG.trace("Replaying  [" + message.getMessageId() + "] for [" + message.getDestination()
-                                + "] back to origin in the absence of a local consumer");
-                    }
-                }
-
-                if (match && rateLimitExceeded()) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Throttled network consumer rejecting [" + message.getMessageId() + "] for [" + message.getDestination() + " " + matchCount
-                                + ">" + rateLimit + "/" + rateDuration);
-                    }
-                    match = false;
+                if (match && LOG.isTraceEnabled()) {
+                    LOG.trace("Replaying  [" + message.getMessageId() + "] for [" + message.getDestination()
+                            + "] back to origin in the absence of a local consumer");
                 }
 
             } else {
-                // use existing logic for topics
+                // use existing filter logic for topics and non replays
                 match = super.matchesForwardingFilter(message, mec);
+            }
+
+            if (match && rateLimitExceeded()) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Throttled network consumer rejecting [" + message.getMessageId() + "] for [" + message.getDestination() + " " + matchCount
+                            + ">" + rateLimit + "/" + rateDuration);
+                }
+                match = false;
             }
 
             return match;
