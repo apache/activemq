@@ -65,11 +65,12 @@
         <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
         <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
+        <feature version="${project.version}">activemq-http</feature>
     </feature>
 
-    <feature name="activemq-optional" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature name="activemq-http" version="${project.version}" resolver="(obr)" start-level="50">
         <feature>jetty</feature>
-        <bundle>mvn:org.apache.activemq/activemq-optional/${project.version}</bundle>
+        <bundle>mvn:org.apache.activemq/activemq-http/${project.version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.josql/${josql-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlresolver/${xmlresolver-bundle-version}</bundle>
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.saxon/${saxon-bundle-version}</bundle>
@@ -77,7 +78,6 @@
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlbeans/${xmlbeans-bundle-version}</bundle>
         <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient-version}</bundle>
         <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient-version}</bundle>
-        <bundle>mvn:org.springframework/spring-oxm/${spring-version}</bundle>
         <bundle>mvn:javax.jmdns/jmdns/${jmdns-version}</bundle>
     </feature>
 
