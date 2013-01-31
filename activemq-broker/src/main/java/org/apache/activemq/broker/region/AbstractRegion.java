@@ -589,7 +589,7 @@ public abstract class AbstractRegion implements Region {
             try {
                 lookup(consumerExchange.getConnectionContext(), control.getDestination(),false).wakeup();
             } catch (Exception e) {
-                LOG.warn("failed to deliver consumerControl to destination: " + control.getDestination(), e);
+                LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: " + control.getDestination(), e);
             }
         }
     }
