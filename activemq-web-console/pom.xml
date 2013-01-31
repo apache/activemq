@@ -141,6 +141,8 @@
               javax.management,
               javax.management.openmbean,
               javax.net,
+              org.osgi.framework,
+              org.osgi.service.cm,
               org.apache.commons.logging;version="[1.1,2)";resolution:=optional,
               org.slf4j;version="[1.6,2)";resolution:=optional,
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
@@ -270,11 +272,19 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Derby SQL DB used for testing JDBC message store -->
     <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>4.2.0</version>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
 
 </project>

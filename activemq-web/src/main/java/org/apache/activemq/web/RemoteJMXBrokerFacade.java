@@ -73,7 +73,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     public void shutdown() {
         closeConnection();
     }
-    
+
     private ObjectName getBrokerObjectName(MBeanServerConnection connection)
 			throws IOException, MalformedObjectNameException {
 		Set<ObjectName> brokers = findBrokers(connection);
@@ -197,7 +197,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 			throws IOException, MalformedObjectNameException {
 		ObjectName name;
 		if (this.brokerName == null) {
-			name = new ObjectName("org.apache.activemq:type=Broker,*");
+			name = new ObjectName("org.apache.activemq:type=Broker,brokerName=*");
 		} else {
 			name = new ObjectName("org.apache.activemq:brokerName="
 					+ this.brokerName + ",Type=broker");

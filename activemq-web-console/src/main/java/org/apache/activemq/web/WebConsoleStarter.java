@@ -16,16 +16,25 @@
  */
 package org.apache.activemq.web;
 
+import javax.imageio.spi.ServiceRegistry;
 import javax.jms.ConnectionFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 /**
  * Starts the WebConsole.
@@ -48,7 +57,15 @@ public class WebConsoleStarter implements ServletContextListener {
     }
 
     private WebApplicationContext createWebapplicationContext(ServletContext servletContext) {
+
         String webconsoleType = System.getProperty("webconsole.type", "embedded");
+
+        // detect osgi
+        if (FrameworkUtil.getBundle(getClass()) != null) {
+            webconsoleType = "osgi";
+        }
+
+
         String configuration = "/WEB-INF/webconsole-" + webconsoleType + ".xml";
 
         XmlWebApplicationContext context = new XmlWebApplicationContext();
