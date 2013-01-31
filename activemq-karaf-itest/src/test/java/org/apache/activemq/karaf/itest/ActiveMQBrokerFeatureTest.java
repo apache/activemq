@@ -16,12 +16,16 @@
  */
 package org.apache.activemq.karaf.itest;
 
+import java.util.concurrent.Callable;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4TestRunner.class)
 public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
@@ -32,9 +36,26 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void test() throws Throwable {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.getBrokerURL();
-    }
 
+        withinReason(new Callable<Boolean>(){
+            @Override
+            public Boolean call() throws Exception {
+                assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
+                return true;
+            }
+        });
+
+
+        withinReason(new Callable<Boolean>(){
+            @Override
+            public Boolean call() throws Exception {
+                assertTrue(executeCommand("activemq:bstat").trim().contains("BrokerName = amq-broker"));
+                return true;
+            }
+        });
+
+    }
 }
