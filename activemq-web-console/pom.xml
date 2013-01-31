@@ -202,10 +202,12 @@
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
     </dependency>
+
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-client</artifactId>
+      <artifactId>activemq-all</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>

@@ -41,6 +41,40 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
+    <!-- Transports -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-stomp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-amqp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-mqtt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-http</artifactId>
+    </dependency>
+    <!-- Stores -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-amq-store</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-kahadb-store</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jdbc-store</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-leveldb-store</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-annotation_1.0_spec</artifactId>
@@ -82,7 +116,7 @@
                   <include>${project.groupId}:activemq-mqtt</include>
                   <include>${project.groupId}:activemq-stomp</include>
 
-                  <include>${project.groupId}:activemq-amqp-store</include>
+                  <include>${project.groupId}:activemq-amq-store</include>
                   <include>${project.groupId}:activemq-kahadb-store</include>
                   <include>${project.groupId}:activemq-leveldb-store</include>
                   <include>${project.groupId}:activemq-jdbc-store</include>
