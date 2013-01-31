@@ -108,9 +108,10 @@ public class OptimizedAckTest extends TestSupport {
          for (int i=0; i<10; i++) {
              Thread.sleep(400);
             javax.jms.Message msg = consumer.receive(4000);
+             long inFlightCount = regionBroker.getDestinationStatistics().getInflight().getCount();
             assertNotNull(msg);
              if (i<7) {
-                 assertEquals("all prefetch is still in flight: " + i, 10, regionBroker.getDestinationStatistics().getInflight().getCount());
+                 assertEquals("all prefetch is still in flight: " + i, 10, inFlightCount);
              } else {
                  assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition(){
                      @Override
@@ -145,9 +146,10 @@ public class OptimizedAckTest extends TestSupport {
 
          for (int i=0; i<10; i++) {
             javax.jms.Message msg = consumer.receive(4000);
+             long inFlightCount = regionBroker.getDestinationStatistics().getInflight().getCount();
             assertNotNull(msg);
              if (i<7) {
-                 assertEquals("all prefetch is still in flight", 10, regionBroker.getDestinationStatistics().getInflight().getCount());
+                 assertEquals("all prefetch is still in flight", 10, inFlightCount);
              } else {
                  assertTrue("most are acked but 3 remain", Wait.waitFor(new Wait.Condition(){
                      @Override
