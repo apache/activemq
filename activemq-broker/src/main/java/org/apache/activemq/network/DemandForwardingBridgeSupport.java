@@ -922,6 +922,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         message.setBrokerPath(appendToBrokerPath(message.getBrokerPath(), localBrokerPath));
         message.setProducerId(producerInfo.getProducerId());
         message.setDestination(md.getDestination());
+        message.setMemoryUsage(null);
         if (message.getOriginalTransactionId() == null) {
             message.setOriginalTransactionId(message.getTransactionId());
         }
