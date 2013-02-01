@@ -29,13 +29,13 @@ import javax.management.remote.JMXServiceURL;
  */
 public class SystemPropertiesConfiguration extends AbstractConfiguration {
 
-	private static final String PROPERTY_JMS_URL = "webconsole.jms.url";
-	private static final String PROPERTY_JMS_USER = "webconsole.jms.user";
-	private static final String PROPERTY_JMS_PASSWORD = "webconsole.jms.password";
+	public static final String PROPERTY_JMS_URL = "webconsole.jms.url";
+    public static final String PROPERTY_JMS_USER = "webconsole.jms.user";
+    public static final String PROPERTY_JMS_PASSWORD = "webconsole.jms.password";
 
-	private static final String PROPERTY_JMX_URL = "webconsole.jmx.url";
-	private static final String PROPERTY_JMX_USER = "webconsole.jmx.user";
-	private static final String PROPERTY_JMX_PASSWORD = "webconsole.jmx.password";
+    public static final String PROPERTY_JMX_URL = "webconsole.jmx.url";
+    public static final String PROPERTY_JMX_USER = "webconsole.jmx.user";
+    public static final String PROPERTY_JMX_PASSWORD = "webconsole.jmx.password";
 
 	public ConnectionFactory getConnectionFactory() {
 		String jmsUrl = System.getProperty(PROPERTY_JMS_URL);

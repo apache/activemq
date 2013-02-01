@@ -45,7 +45,7 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
 
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
         Dictionary properties = new Hashtable();
-        properties.put(Constants.SERVICE_PID, "org.apache.activemq.server");
+        properties.put(Constants.SERVICE_PID, "org.apache.activemq.webconsole");
         service = context.registerService(ManagedService.class.getName(),
             this, properties);
 
@@ -73,6 +73,14 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
 
     @Override
     public void updated(Dictionary dictionary) throws ConfigurationException {
-        //TODO update properties
+        jmxUrl = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_URL);
+        if (jmxUrl == null) {
+            throw new IllegalArgumentException("A JMS-url must be specified (system property " + SystemPropertiesConfiguration.PROPERTY_JMX_URL);
+        }
+        jmxUser = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_USER);
+        jmxPassword = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_PASSWORD);
+        jmxUrl = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_URL);
+        jmsUser = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_USER);
+        jmsPassword = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_PASSWORD);
     }
 }
