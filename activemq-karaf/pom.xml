@@ -144,6 +144,21 @@
                   <type>xml</type>
                   <classifier>features</classifier>
                 </artifact>
+                <artifact>
+                  <file>target/classes/activemq.xml</file>
+                  <type>xml</type>
+                  <classifier>activemq</classifier>
+                </artifact>
+                <artifact>
+                  <file>target/classes/org.apache.activemq.server-default.cfg</file>
+                  <type>cfg</type>
+                  <classifier>activemq</classifier>
+                </artifact>
+                <artifact>
+                  <file>target/classes/org.apache.activemq.webconsole.cfg</file>
+                  <type>cfg</type>
+                  <classifier>activemq-webconsole</classifier>
+                </artifact>
               </artifacts>
             </configuration>
           </execution>
