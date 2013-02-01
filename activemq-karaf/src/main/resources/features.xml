@@ -27,6 +27,9 @@
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
         <bundle dependency="true">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
+        <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
+        <feature version="[3,4)">spring</feature>
+        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
     </feature>
 
     <feature resolver="(obr)" description="Spring support" version="3.1.3.RELEASE" name="spring">
@@ -61,8 +64,6 @@
         <bundle dependency="true">mvn:org.fusesource.hawtbuf/hawtbuf-proto/${hawtbuf-version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson-version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson-version}</bundle>
-        <feature version="[3,4)">spring</feature>
-        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
         <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
         <feature version="${project.version}">activemq-http</feature>

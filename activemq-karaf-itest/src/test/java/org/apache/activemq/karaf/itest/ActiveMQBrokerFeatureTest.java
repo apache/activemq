@@ -36,7 +36,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
 
     @Configuration
     public static Option[] configure() {
-        return configure("activemq-broker");
+        return configureBrokerStart(configure("activemq-broker"));
     }
 
     @Test

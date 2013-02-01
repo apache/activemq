@@ -156,6 +156,14 @@ public abstract class AbstractFeatureTest {
             artifactId("standard").version(karafVersion()).type(type);
     }
 
+    public static Option[] configureBrokerStart(Option[] existingOptions) {
+        ArrayList<Option> newOptions = new ArrayList<Option>();
+        newOptions.addAll(Arrays.asList(existingOptions));
+        newOptions.add(replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server.cfg")));
+        newOptions.add(replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/activemq.xml")));
+        return newOptions.toArray(new Option[]{});
+    }
+
     public static Option[] configure(String ...features) {
 
         ArrayList<String> f = new ArrayList<String>();
@@ -175,8 +183,6 @@ public abstract class AbstractFeatureTest {
                 // override the config.properties (to fix pax-exam bug)
                 replaceConfigurationFile("etc/config.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/config.properties")),
                 replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
-                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server.cfg")),
-                replaceConfigurationFile("etc/activemq.xml", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/activemq.xml")),
                 replaceConfigurationFile("etc/org.ops4j.pax.logging.cfg", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/org.ops4j.pax.logging.cfg")),
                 scanFeatures(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
 

@@ -35,7 +35,7 @@ public class ActiveMQClientBundleTest extends AbstractFeatureTest {
     public void test() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.getBrokerURL();
+
+        // todo: validate connection to remote broker
     }
-
-
 }
