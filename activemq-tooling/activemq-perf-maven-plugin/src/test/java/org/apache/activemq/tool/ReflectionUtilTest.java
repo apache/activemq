@@ -280,6 +280,10 @@ public class ReflectionUtilTest extends TestCase {
         public void setTestData(TestClass3 testData) {
             this.testData = testData;
         }
+
+        public TestClass3 getRecursiveData() {
+            return this;
+        }
     }
 
     public class TestClass4 {
