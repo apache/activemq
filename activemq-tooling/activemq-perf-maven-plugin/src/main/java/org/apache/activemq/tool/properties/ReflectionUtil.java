@@ -213,8 +213,7 @@ public final class ReflectionUtil {
                     } else {
                         try {
                             Object val = getterMethods[i].invoke(targetObject, null);
-//                            if (val != null && val != targetObject) {
-                            if (val != null ) {
+                            if (val != null && val != targetObject) {
                                 props.putAll(retrieveClassProperties(propertyName + ".", val.getClass(), val));
                             }
                         } catch (InvocationTargetException e) {
