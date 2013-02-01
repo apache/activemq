@@ -965,25 +965,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
                         }
 
-                        if (!configuration.isAlwaysSyncSend() && !message.isPersistent()) {
-
-                            // If the message was originally sent using async send, we will
-                            // preserve that QOS by bridging it using an async send (small chance
-                            // of message loss).
-                            try {
-                                remoteBroker.oneway(message);
-                                localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
-                                dequeueCounter.incrementAndGet();
-                            } finally {
-                                sub.decrementOutstandingResponses();
-                            }
-
-                        } else {
+                        if (message.isPersistent() || configuration.isAlwaysSyncSend()) {
 
                             // The message was not sent using async send, so we should only
                             // ack the local broker when we get confirmation that the remote
                             // broker has received the message.
-                            ResponseCallback callback = new ResponseCallback() {
+                            remoteBroker.asyncRequest(message, new ResponseCallback() {
                                 @Override
                                 public void onCompletion(FutureResponse future) {
                                     try {
@@ -1001,9 +988,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         sub.decrementOutstandingResponses();
                                     }
                                 }
-                            };
+                            });
 
-                            remoteBroker.asyncRequest(message, callback);
+                        } else {
+                            // If the message was originally sent using async send, we will
+                            // preserve that QOS by bridging it using an async send (small chance
+                            // of message loss).
+                            try {
+                                remoteBroker.oneway(message);
+                                localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
+                                dequeueCounter.incrementAndGet();
+                            } finally {
+                                sub.decrementOutstandingResponses();
+                            }
                         }
                     } else {
                         if (LOG.isDebugEnabled()) {

@@ -54,7 +54,7 @@ public class NetworkBridgeConfiguration {
     private boolean suppressDuplicateQueueSubscriptions = false;
     private boolean suppressDuplicateTopicSubscriptions = true;
 
-    private boolean alwaysSyncSend = false;
+    private boolean alwaysSyncSend = true;
     private boolean staticBridge = false;
     private boolean useCompression = false;
     private boolean advisoryForFailedForward = false;
