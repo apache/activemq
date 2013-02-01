@@ -159,7 +159,7 @@ public abstract class AbstractFeatureTest {
     public static Option[] configureBrokerStart(Option[] existingOptions) {
         ArrayList<Option> newOptions = new ArrayList<Option>();
         newOptions.addAll(Arrays.asList(existingOptions));
-        newOptions.add(replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server.cfg")));
+        newOptions.add(replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server-default.cfg")));
         newOptions.add(replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/activemq.xml")));
         return newOptions.toArray(new Option[]{});
     }
