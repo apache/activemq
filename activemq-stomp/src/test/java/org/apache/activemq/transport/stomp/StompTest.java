@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
@@ -26,14 +33,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
-import com.thoughtworks.xstream.io.xml.XppReader;
-import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
-import javax.jms.*;
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -43,7 +55,12 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.junit.Assert.*;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import com.thoughtworks.xstream.io.xml.XppReader;
+import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
 
 public class StompTest extends StompTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StompTest.class);
@@ -2089,11 +2106,17 @@ public class StompTest extends StompTestSupport {
         // Subscribe to the temp destination, this is where we get our response.
         stompConnection.subscribe(tempDest);
 
-        // Subscribe to the Queue, this is where we get our request.
-        responder.subscribe(dest);
+        // Subscribe to the destination, this is where we get our request.
+        HashMap<String, String> properties = new HashMap<String, String>();
+        properties.put(Stomp.Headers.RECEIPT_REQUESTED, "subscribe-1");
+        responder.subscribe(dest, null, properties);
+
+        frame = responder.receiveFrame();
+        assertTrue("Receipt Frame: " + frame, frame.trim().startsWith("RECEIPT"));
+        assertTrue("Receipt contains correct receipt-id " + frame, frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
 
         // Send a Message with the ReplyTo value set.
-        HashMap<String, String> properties = new HashMap<String, String>();
+        properties = new HashMap<String, String>();
         properties.put(Stomp.Headers.Send.REPLY_TO, tempDest);
         properties.put(Stomp.Headers.RECEIPT_REQUESTED, "send-1");
         LOG.info(String.format("Sending request message: SEND with %s=%s", Stomp.Headers.Send.REPLY_TO, tempDest));
