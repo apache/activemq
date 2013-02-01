@@ -46,6 +46,10 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
     @Override
     synchronized public void updated(String pid, Dictionary properties) throws ConfigurationException {
+
+        // First stop currently running broker (if any)
+        deleted(pid);
+
         String config = (String)properties.get("config");
         if (config == null) {
             throw new ConfigurationException("config", "Property must be set");
@@ -106,13 +110,12 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
     @Override
     synchronized public void deleted(String pid) {
-        LOG.info("Stopping broker " + pid);
         BrokerService broker = brokers.get(pid);
         if (broker == null) {
-            LOG.warn("Broker " + pid + " not found");
             return;
         }
         try {
+            LOG.info("Stopping broker " + pid);
             broker.stop();
             broker.waitUntilStopped();
         } catch (Exception e) {
