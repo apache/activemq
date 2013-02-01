@@ -19,18 +19,6 @@
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:shell="http://karaf.apache.org/xmlns/shell/v1.0.0">
-
-    <shell:command-bundle>
-
-        <shell:command name="activemq/create-broker">
-            <shell:action class="org.apache.activemq.karaf.commands.CreateBrokerCommand"/>
-        </shell:command>
-
-        <shell:command name="activemq/destroy-broker">
-            <shell:action class="org.apache.activemq.karaf.commands.DestroyBrokerCommand"/>
-        </shell:command>
-
-    </shell:command-bundle>
     
     <!-- ActiveMQ List Command -->
     <bean id="listcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
