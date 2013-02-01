@@ -156,6 +156,7 @@
     <build-helper-maven-plugin-version>1.7</build-helper-maven-plugin-version>
     <apache-rat-plugin-version>0.8</apache-rat-plugin-version>
     <ianal-maven-plugin-version>1.0-alpha-1</ianal-maven-plugin-version>
+    <depends-maven-plugin-version>1.2</depends-maven-plugin-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
