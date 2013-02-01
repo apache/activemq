@@ -16,23 +16,22 @@
  */
 package org.apache.activemq.config;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.sql.DataSource;
-
-import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -46,6 +45,7 @@ import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.DefaultDatabaseLocker;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
@@ -54,21 +54,17 @@ import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.wireformat.ObjectStreamWireFormat;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
-/**
- *
- */
-public class ConfigTest extends TestCase {
+public class ConfigTest {
 
     protected static final String JOURNAL_ROOT = "target/test-data/";
     protected static final String DERBY_ROOT = "target/test-data/";
@@ -95,16 +91,13 @@ public class ConfigTest extends TestCase {
      * This tests creating a journal persistence adapter using the persistence
      * adapter factory bean
      */
+    @Test
     public void testJournaledJDBCConfig() throws Exception {
-        // System.out.print("Checking journaled JDBC persistence adapter
-        // configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testJournaledJDBCConfig/journal");
         recursiveDelete(journalFile);
 
         File derbyFile = new File(DERBY_ROOT + "testJournaledJDBCConfig/derbydb"); // Default
-        // derby
-        // name
         recursiveDelete(derbyFile);
 
         BrokerService broker;
@@ -119,8 +112,6 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
 
             // Check persistence factory configurations
-            // System.out.print("Checking persistence adapter factory
-            // settings... ");
             broker.getPersistenceAdapter();
 
             assertTrue(broker.getSystemUsage().getStoreUsage().getStore() instanceof JournalPersistenceAdapter);
@@ -133,40 +124,7 @@ public class ConfigTest extends TestCase {
         }
     }
 
-    /*
-     * This tests creating a jdbc persistence adapter using xbeans-spring
-     */
-    public void testJdbcConfig() throws Exception {
-        // System.out.print("Checking jdbc persistence adapter configuration...
-        // ");
-        File journalFile = new File(JOURNAL_ROOT + "testJDBCConfig/journal");
-        recursiveDelete(journalFile);
-
-        File derbyFile = new File(DERBY_ROOT + "testJDBCConfig/derbydb"); // Default
-        // derby
-        // name
-        recursiveDelete(derbyFile);
-
-        BrokerService broker;
-        broker = createBroker(new FileSystemResource(CONF_ROOT + "jdbc-example.xml"));
-        try {
-            assertEquals("Broker Config Error (brokerName)", "brokerJdbcConfigTest", broker.getBrokerName());
-
-            PersistenceAdapter adapter = broker.getPersistenceAdapter();
-
-            assertTrue("Should have created a jdbc persistence adapter", adapter instanceof JDBCPersistenceAdapter);
-            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000, ((JDBCPersistenceAdapter) adapter).getCleanupPeriod());
-            assertTrue("Should have created an EmbeddedDataSource", ((JDBCPersistenceAdapter) adapter).getDataSource() instanceof EmbeddedDataSource);
-            assertTrue("Should have created a DefaultWireFormat", ((JDBCPersistenceAdapter) adapter).getWireFormat() instanceof ObjectStreamWireFormat);
-
-            LOG.info("Success");
-        } finally {
-            if (broker != null) {
-                broker.stop();
-            }
-        }
-    }
-
+    @Test
     public void testJdbcLockConfigOverride() throws Exception {
 
         JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
@@ -194,7 +152,6 @@ public class ConfigTest extends TestCase {
         assertTrue("has the locker override", adapter.getLocker() instanceof TransactDatabaseLocker);
         adapter.stop();
     }
-
 
     public void testJdbcLockConfigDefault() throws Exception {
 
@@ -228,6 +185,7 @@ public class ConfigTest extends TestCase {
      * This tests configuring the different broker properties using
      * xbeans-spring
      */
+    @Test
     public void testBrokerConfig() throws Exception {
         ActiveMQTopic dest;
         BrokerService broker;
@@ -259,15 +217,15 @@ public class ConfigTest extends TestCase {
 
             // Check transport connectors list
             // System.out.print("Checking transport connectors... ");
-            List connectors = broker.getTransportConnectors();
+            List<TransportConnector> connectors = broker.getTransportConnectors();
             assertTrue("Should have created at least 3 connectors", connectors.size() >= 3);
-            assertTrue("1st connector should be TcpTransportServer", ((TransportConnector) connectors.get(0)).getServer() instanceof TcpTransportServer);
-            assertTrue("2nd connector should be TcpTransportServer", ((TransportConnector) connectors.get(1)).getServer() instanceof TcpTransportServer);
-            assertTrue("3rd connector should be TcpTransportServer", ((TransportConnector) connectors.get(2)).getServer() instanceof TcpTransportServer);
+            assertTrue("1st connector should be TcpTransportServer", connectors.get(0).getServer() instanceof TcpTransportServer);
+            assertTrue("2nd connector should be TcpTransportServer", connectors.get(1).getServer() instanceof TcpTransportServer);
+            assertTrue("3rd connector should be TcpTransportServer", connectors.get(2).getServer() instanceof TcpTransportServer);
 
             // Check network connectors
             // System.out.print("Checking network connectors... ");
-            List networkConnectors = broker.getNetworkConnectors();
+            List<NetworkConnector> networkConnectors = broker.getNetworkConnectors();
             assertEquals("Should have a single network connector", 1, networkConnectors.size());
             LOG.info("Success");
 
@@ -336,10 +294,8 @@ public class ConfigTest extends TestCase {
     /*
      * This tests creating a journal persistence adapter using xbeans-spring
      */
+    @Test
     public void testJournalConfig() throws Exception {
-        // System.out.print("Checking journal persistence adapter
-        // configuration... ");
-
         File journalFile = new File(JOURNAL_ROOT + "testJournalConfig/journal");
         recursiveDelete(journalFile);
 
@@ -364,10 +320,8 @@ public class ConfigTest extends TestCase {
     /*
      * This tests creating a memory persistence adapter using xbeans-spring
      */
+    @Test
     public void testMemoryConfig() throws Exception {
-        // System.out.print("Checking memory persistence adapter
-        // configuration... ");
-
         File journalFile = new File(JOURNAL_ROOT + "testMemoryConfig");
         recursiveDelete(journalFile);
 
@@ -392,12 +346,10 @@ public class ConfigTest extends TestCase {
                 broker.stop();
             }
         }
-
     }
 
+    @Test
     public void testConnectorConfig() throws Exception {
-        // System.out.print("Checking memory persistence adapter
-        // configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testMemoryConfig");
         recursiveDelete(journalFile);
@@ -434,11 +386,11 @@ public class ConfigTest extends TestCase {
             try {
                 for (int i = 0; i < (MAX_CONSUMERS + 1); i++) {
                     MessageConsumer consumer = session.createConsumer(topic);
+                    assertNotNull(consumer);
                 }
                 fail("Should have caught an exception");
             } catch (JMSException e) {
             }
-
 
             LOG.info("Success");
         } finally {
@@ -446,9 +398,9 @@ public class ConfigTest extends TestCase {
                 broker.stop();
             }
         }
-
     }
 
+    @Test
     public void testXmlConfigHelper() throws Exception {
         BrokerService broker;
 
