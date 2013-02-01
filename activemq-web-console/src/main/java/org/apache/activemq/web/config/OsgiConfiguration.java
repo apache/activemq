@@ -73,7 +73,7 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
 
     @Override
     public void updated(Dictionary dictionary) throws ConfigurationException {
-        jmxUrl = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_URL);
+        jmxUrl = dictionary != null ? (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_URL) : null;
         if (jmxUrl == null) {
             throw new IllegalArgumentException("A JMS-url must be specified (system property " + SystemPropertiesConfiguration.PROPERTY_JMX_URL);
         }

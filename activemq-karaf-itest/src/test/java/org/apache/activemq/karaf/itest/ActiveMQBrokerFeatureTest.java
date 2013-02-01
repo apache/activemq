@@ -41,8 +41,6 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
 
     @Test
     public void test() throws Throwable {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        factory.getBrokerURL();
 
         withinReason(new Callable<Boolean>() {
             @Override
@@ -63,15 +61,29 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
 
         // produce and consume
         final String nameAndPayload = String.valueOf(System.currentTimeMillis());
+        produceMessage(nameAndPayload);
+        assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
+    }
+
+    protected String consumeMessage(String nameAndPayload) throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
+        Connection connection = factory.createConnection(USER,PASSWORD);
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
+        TextMessage message = (TextMessage) consumer.receive(4000);
+        System.err.println("message: " + message);
+        connection.close();
+        return message.getText();
+    }
+
+    protected void produceMessage(String nameAndPayload) throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         Connection connection = factory.createConnection(USER,PASSWORD);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createProducer(session.createQueue(nameAndPayload)).send(session.createTextMessage(nameAndPayload));
-
-        MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
-        TextMessage message = (TextMessage) consumer.receive(4000);
-        System.err.println("message: " + message);
-        assertEquals("got our message", nameAndPayload, message.getText());
         connection.close();
     }
+
 }
