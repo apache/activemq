@@ -22,6 +22,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import sun.util.LocaleServiceProviderPool;
 
 import javax.jms.ConnectionFactory;
 import javax.management.remote.JMXServiceURL;
@@ -73,14 +74,16 @@ public class OsgiConfiguration extends AbstractConfiguration implements ManagedS
 
     @Override
     public void updated(Dictionary dictionary) throws ConfigurationException {
-        jmxUrl = dictionary != null ? (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_URL) : null;
-        if (jmxUrl == null) {
-            throw new IllegalArgumentException("A JMS-url must be specified (system property " + SystemPropertiesConfiguration.PROPERTY_JMX_URL);
+        if (dictionary != null) {
+            jmxUrl = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_URL);
+            if (jmxUrl == null) {
+                throw new IllegalArgumentException("A JMS-url must be specified (system property " + SystemPropertiesConfiguration.PROPERTY_JMX_URL);
+            }
+            jmxUser = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_USER);
+            jmxPassword = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_PASSWORD);
+            jmsUrl = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_URL);
+            jmsUser = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_USER);
+            jmsPassword = (String) dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_PASSWORD);
         }
-        jmxUser = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_USER);
-        jmxPassword = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMX_PASSWORD);
-        jmxUrl = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_URL);
-        jmsUser = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_USER);
-        jmsPassword = (String)dictionary.get(SystemPropertiesConfiguration.PROPERTY_JMS_PASSWORD);
     }
 }
