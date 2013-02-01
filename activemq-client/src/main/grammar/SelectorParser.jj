@@ -23,7 +23,6 @@ options {
   UNICODE_INPUT = true;
   
   // some performance optimizations
-  OPTIMIZE_TOKEN_MANAGER = true;
   ERROR_REPORTING = false;
 }
 
