@@ -53,6 +53,8 @@ public abstract class AbstractFeatureTest {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
     private static final long ASSERTION_TIMEOUT = 20000L;
     private static final long COMMAND_TIMEOUT = 10000L;
+    public static final String USER = "karaf";
+    public static final String PASSWORD = "karaf";
 
     static String basedir;
     static {
@@ -92,7 +94,7 @@ public abstract class AbstractFeatureTest {
             final PrintStream printStream = new PrintStream(byteArrayOutputStream);
             final CommandSession commandSession = commandProcessor.createSession(System.in, printStream, printStream);
             commandSession.put("APPLICATION", System.getProperty("karaf.name", "root"));
-            commandSession.put("USER", "karaf");
+            commandSession.put("USER", USER);
             FutureTask<String> commandFuture = new FutureTask<String>(
                     new Callable<String>() {
                         public String call() {
@@ -124,70 +126,6 @@ public abstract class AbstractFeatureTest {
     protected String executeCommand(final String command) {
         return executeCommand(command, COMMAND_TIMEOUT, false);
     }
-
-
-//    protected void testComponent(String component) throws Exception {
-//        long max = System.currentTimeMillis() + 10000;
-//        while (true) {
-//            try {
-//                assertNotNull("Cannot get component with name: " + component, createCamelContext().getComponent(component));
-//                return;
-//            } catch (Exception t) {
-//                if (System.currentTimeMillis() < max) {
-//                    Thread.sleep(1000);
-//                } else {
-//                    throw t;
-//                }
-//            }
-//        }
-//    }
-//
-//    protected void testDataFormat(String format) throws Exception {
-//        long max = System.currentTimeMillis() + 10000;
-//        while (true) {
-//            try {
-//                DataFormatDefinition dataFormatDefinition = createDataformatDefinition(format);
-//                assertNotNull(dataFormatDefinition);
-//                assertNotNull(dataFormatDefinition.getDataFormat(new DefaultRouteContext(createCamelContext())));
-//                return;
-//            } catch (Exception t) {
-//                if (System.currentTimeMillis() < max) {
-//                    Thread.sleep(1000);
-//                    continue;
-//                } else {
-//                    throw t;
-//                }
-//            }
-//        }
-//    }
-//
-//    protected DataFormatDefinition createDataformatDefinition(String format) {
-//        return null;
-//    }
-
-//    protected void testLanguage(String lang) throws Exception {
-//        long max = System.currentTimeMillis() + 10000;
-//        while (true) {
-//            try {
-//                assertNotNull(createCamelContext().resolveLanguage(lang));
-//                return;
-//            } catch (Exception t) {
-//                if (System.currentTimeMillis() < max) {
-//                    Thread.sleep(1000);
-//                    continue;
-//                } else {
-//                    throw t;
-//                }
-//            }
-//        }
-//    }
-
-//    protected CamelContext createCamelContext() throws Exception {
-//        CamelContextFactory factory = new CamelContextFactory();
-//        factory.setBundleContext(bundleContext);
-//        LOG.info("Get the bundleContext is " + bundleContext);
-//        return factory.createContext();
-//    }
 
 
     public static String karafVersion() {

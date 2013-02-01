@@ -17,6 +17,10 @@
 package org.apache.activemq.karaf.itest;
 
 import java.util.concurrent.Callable;
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +44,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.getBrokerURL();
 
-        withinReason(new Callable<Boolean>(){
+        withinReason(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
@@ -57,5 +61,17 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
             }
         });
 
+        // produce and consume
+        final String nameAndPayload = String.valueOf(System.currentTimeMillis());
+        Connection connection = factory.createConnection(USER,PASSWORD);
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createProducer(session.createQueue(nameAndPayload)).send(session.createTextMessage(nameAndPayload));
+
+        MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
+        TextMessage message = (TextMessage) consumer.receive(4000);
+        System.err.println("message: " + message);
+        assertEquals("got our message", nameAndPayload, message.getText());
+        connection.close();
     }
 }
