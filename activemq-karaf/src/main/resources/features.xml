@@ -92,8 +92,8 @@
     </feature>
 
     <feature name="activemq-web-console" version="${project.version}" resolver="(obr)" start-level="50">
-      <feature>war</feature>
-      <feature>eventadmin</feature>
+      <feature start-level="10">war</feature>
+      <feature start-level="10">eventadmin</feature>
       <configfile finalname="/etc/org.apache.activemq.webconsole.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq-webconsole</configfile>
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>

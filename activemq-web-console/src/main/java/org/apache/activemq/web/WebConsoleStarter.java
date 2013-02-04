@@ -81,6 +81,7 @@ public class WebConsoleStarter implements ServletContextListener {
     private void initializeWebClient(ServletContext servletContext, WebApplicationContext context) {
         ConnectionFactory connectionFactory = (ConnectionFactory)context.getBean("connectionFactory");
         servletContext.setAttribute(WebClient.CONNECTION_FACTORY_ATTRIBUTE, connectionFactory);
+        WebClient.initContext(servletContext);
     }
 
     public void contextDestroyed(ServletContextEvent event) {
