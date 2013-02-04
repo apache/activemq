@@ -423,7 +423,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         try {
             startRemoteBridge();
-            startRemoteBridge();
         } catch (Throwable e) {
             serviceRemoteException(e);
         }
