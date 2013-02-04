@@ -46,6 +46,7 @@ public class FailoverUpdateURIsTest extends TestCase {
     BrokerService bs1 = null;
     BrokerService bs2 = null;
 
+    @Override
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
@@ -123,7 +124,7 @@ public class FailoverUpdateURIsTest extends TestCase {
         bs1.start();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + firstTcpUri + ")");
-        Connection connection = cf.createConnection();
+        connection = cf.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue theQueue = session.createQueue(QUEUE_NAME);
