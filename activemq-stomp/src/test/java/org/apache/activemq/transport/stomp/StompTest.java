@@ -1491,7 +1491,7 @@ public class StompTest extends StompTestSupport {
         String domain = "org.apache.activemq";
         ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
 
-        BrokerViewMBean view = (BrokerViewMBean)
+        final BrokerViewMBean view = (BrokerViewMBean)
                 brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
 
         // connect
@@ -1505,17 +1505,22 @@ public class StompTest extends StompTestSupport {
         // subscribe
         frame = "SUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "\n" + "ack:auto\nactivemq.subscriptionName:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
+
         // wait a bit for MBean to get refreshed
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+        Wait.waitFor(new Wait.Condition(){
+            @Override
+            public boolean isSatisified() throws Exception {
+                return view.getDurableTopicSubscribers().length == 1;
+            }
+        });
 
         assertEquals(view.getDurableTopicSubscribers().length, 1);
+
         // disconnect
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         try {
-            Thread.sleep(400);
+            Thread.sleep(2000);
         } catch (InterruptedException e){}
 
         //reconnect
@@ -1531,9 +1536,14 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+
+        Wait.waitFor(new Wait.Condition(){
+            @Override
+            public boolean isSatisified() throws Exception {
+                return view.getDurableTopicSubscribers().length == 0 && view.getInactiveDurableTopicSubscribers().length == 0;
+            }
+        });
+
         assertEquals(view.getDurableTopicSubscribers().length, 0);
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
     }
@@ -1677,7 +1687,7 @@ public class StompTest extends StompTestSupport {
         sendMessage("message 4");
         sendMessage("message 5");
 
-        StompFrame frame = stompConnection.receive();
+        StompFrame frame = stompConnection.receive(20000);
         assertEquals(frame.getBody(), "message 1");
 
         stompConnection.begin("tx1");
@@ -1703,18 +1713,18 @@ public class StompTest extends StompTestSupport {
         stompConnection.ack(frame, "tx2");
         stompConnection.ack(frame1, "tx2");
 
-        StompFrame frame3 = stompConnection.receive();
+        StompFrame frame3 = stompConnection.receive(20000);
         assertEquals(frame3.getBody(), "message 3");
         stompConnection.ack(frame3, "tx2");
 
-        StompFrame frame4 = stompConnection.receive();
+        StompFrame frame4 = stompConnection.receive(20000);
         assertEquals(frame4.getBody(), "message 4");
         stompConnection.ack(frame4, "tx2");
 
         stompConnection.commit("tx2");
 
         stompConnection.begin("tx3");
-        StompFrame frame5 = stompConnection.receive();
+        StompFrame frame5 = stompConnection.receive(20000);
         assertEquals(frame5.getBody(), "message 5");
         stompConnection.ack(frame5, "tx3");
         stompConnection.commit("tx3");
@@ -2317,7 +2327,7 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        sframe = stompConnection.receive(30000);
+        sframe = stompConnection.receive(60000);
         assertNotNull(sframe);
         assertEquals("MESSAGE", sframe.getAction());
         assertEquals(bigBody, sframe.getBody());
