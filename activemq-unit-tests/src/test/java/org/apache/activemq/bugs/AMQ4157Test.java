@@ -16,11 +16,16 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -28,6 +33,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -35,20 +41,18 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionControl;
 import org.junit.After;
 import org.junit.Test;
-
-
-import static junit.framework.Assert.*;
+import org.mortbay.log.Log;
 
 public class AMQ4157Test {
     private BrokerService broker;
     private ActiveMQConnectionFactory connectionFactory;
-    private Destination destination = new ActiveMQQueue("Test");
-    private String payloadString = new String(new byte[8*1024]);
-    private boolean useBytesMessage= true;
+    private final Destination destination = new ActiveMQQueue("Test");
+    private final String payloadString = new String(new byte[8*1024]);
+    private final boolean useBytesMessage= true;
     private final int parallelProducer = 20;
     private final int parallelConsumer = 100;
 
-    private Vector<Exception> exceptions = new Vector<Exception>();
+    private final Vector<Exception> exceptions = new Vector<Exception>();
     long toSend = 1000;
 
     @Test
@@ -90,7 +94,10 @@ public class AMQ4157Test {
         assertTrue("Producers done in time", executorService.isTerminated());
         assertTrue("No exceptions: " + exceptions, exceptions.isEmpty());
 
-        restartBroker(100);
+        restartBroker(500);
+
+        Log.info("Attempting consume of {} messages", toSend);
+
         consumeMessages(toSend);
     }
 
@@ -113,7 +120,7 @@ public class AMQ4157Test {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(destination);
         for (int i=0; i<count; i++) {
-            assertNotNull("got message "+ i, consumer.receive(10000));
+            assertNotNull("got message "+ i, consumer.receive(20000));
         }
         assertNull("none left over", consumer.receive(2000));
     }
@@ -139,8 +146,7 @@ public class AMQ4157Test {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = session.createProducer(destination);
-        long i = 0l;
-        while ( (i=count.getAndDecrement()) > 0) {
+        while ( (count.getAndDecrement()) > 0) {
             Message message = null;
             if (useBytesMessage) {
                 message = session.createBytesMessage();
