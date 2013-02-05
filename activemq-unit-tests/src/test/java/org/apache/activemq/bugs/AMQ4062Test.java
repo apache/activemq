@@ -173,6 +173,7 @@ public class AMQ4062Test {
         assertEquals(5, info.getPrefetchSize());
     }
 
+    @SuppressWarnings("unchecked")
     private ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> getDurableSubscriptions() throws NoSuchFieldException, IllegalAccessException {
         if(durableSubscriptions!=null) return durableSubscriptions;
         RegionBroker regionBroker=(RegionBroker)service.getRegionBroker();
@@ -197,8 +198,8 @@ public class AMQ4062Test {
 
     public class PrefetchConsumer implements MessageListener{
         public static final String SUBSCRIPTION_NAME = "A_NAME_ABC_DEF";
-        private String user = ActiveMQConnection.DEFAULT_USER;
-        private String password = ActiveMQConnection.DEFAULT_PASSWORD;
+        private final String user = ActiveMQConnection.DEFAULT_USER;
+        private final String password = ActiveMQConnection.DEFAULT_PASSWORD;
         private final String uri;
         private boolean transacted;
         ActiveMQConnection connection;
@@ -224,6 +225,7 @@ public class AMQ4062Test {
             consumer.setMessageListener(this);
         }
 
+        @Override
         public void onMessage(Message message) {
             try {
                 a.await();
@@ -245,7 +247,7 @@ public class AMQ4062Test {
 
         protected final String user = ActiveMQConnection.DEFAULT_USER;
 
-        private String password = ActiveMQConnection.DEFAULT_PASSWORD;
+        private final String password = ActiveMQConnection.DEFAULT_PASSWORD;
         private final String uri;
         private boolean transacted;
 

@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -26,8 +29,6 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
-
-import junit.framework.Assert;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -78,26 +79,26 @@ public class AMQ2213Test
     @Test
     public void testEqualsGenericSession() throws JMSException
     {
-        Assert.assertNotNull(this.connection);
+        assertNotNull(this.connection);
         Session sess = this.connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Assert.assertTrue(sess.equals(sess));
+        assertTrue(sess.equals(sess));
     }
 
     @Test
     public void testEqualsTopicSession() throws JMSException
     {
-        Assert.assertNotNull(this.connection);
-        Assert.assertTrue(this.connection instanceof TopicConnection);
+        assertNotNull(this.connection);
+        assertTrue(this.connection instanceof TopicConnection);
         TopicSession sess = ((TopicConnection)this.connection).createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-        Assert.assertTrue(sess.equals(sess));
+        assertTrue(sess.equals(sess));
     }
 
     @Test
     public void testEqualsQueueSession() throws JMSException
     {
-        Assert.assertNotNull(this.connection);
-        Assert.assertTrue(this.connection instanceof QueueConnection);
+        assertNotNull(this.connection);
+        assertTrue(this.connection instanceof QueueConnection);
         QueueSession sess = ((QueueConnection)this.connection).createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        Assert.assertTrue(sess.equals(sess));
+        assertTrue(sess.equals(sess));
     }
 }

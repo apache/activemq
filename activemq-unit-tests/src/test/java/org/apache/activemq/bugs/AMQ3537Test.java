@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -24,8 +26,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import junit.framework.Assert;
 
 import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 import org.junit.Before;
@@ -59,7 +59,7 @@ public class AMQ3537Test implements InvocationHandler, Serializable {
     public static final Class[] TEST_CLASSES = new Class[] { List.class, NonJDKList.class, Serializable.class };
 
     /** Underlying list */
-    private List l = new ArrayList<String>();
+    private final List l = new ArrayList<String>();
 
     @Before
     public void setUp() throws Exception {
@@ -87,8 +87,10 @@ public class AMQ3537Test implements InvocationHandler, Serializable {
         // in ClassLoadingAwareObjectInputStream
         List deserializedProxy = (List) claois.readObject();
 
+        claois.close();
+
         // assert the invocation worked
-        Assert.assertEquals("foo", deserializedProxy.get(0));
+        assertEquals("foo", deserializedProxy.get(0));
     }
 
     @Override

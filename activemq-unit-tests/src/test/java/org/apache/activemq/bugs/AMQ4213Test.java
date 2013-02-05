@@ -42,6 +42,7 @@ public class AMQ4213Test {
 
     private String connectionUri;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws Exception {
         brokerService = new BrokerService();

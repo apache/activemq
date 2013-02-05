@@ -17,6 +17,8 @@
 package org.apache.activemq.bugs;
 //package org.apache.activemq.transport.failover;
 
+import static org.junit.Assert.assertEquals;
+
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Collection;
@@ -30,8 +32,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-
-import junit.framework.Assert;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -74,6 +74,7 @@ public class AMQ2364Test {
         final CountDownLatch latch = new CountDownLatch(messageCount);
         consumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message msg) {
                 try {
                     session.rollback();
@@ -107,6 +108,6 @@ public class AMQ2364Test {
         connection.stop();
         connection.close();
 
-        Assert.assertEquals("Transaction states not cleaned up", 0,transactionStates.size());
+        assertEquals("Transaction states not cleaned up", 0,transactionStates.size());
     }
 }

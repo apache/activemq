@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertNotNull;
+
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -26,6 +28,7 @@ import javax.jms.ResourceAllocationException;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.Topic;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -37,10 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class AMQ3903Test {
 

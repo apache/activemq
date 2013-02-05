@@ -25,9 +25,9 @@ import javax.jms.ObjectMessage;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class MissingDataFileTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(MissingDataFileTest.class);
-    
+
     private static int counter = 500;
 
     private static int hectorToHaloCtr;
@@ -55,13 +55,13 @@ public class MissingDataFileTest extends TestCase {
     private static int haloToXenaCtr;
     private static int haloToTroyCtr;
 
-    private String hectorToHalo = "hectorToHalo";
-    private String xenaToHalo = "xenaToHalo";
-    private String troyToHalo = "troyToHalo";
+    private final String hectorToHalo = "hectorToHalo";
+    private final String xenaToHalo = "xenaToHalo";
+    private final String troyToHalo = "troyToHalo";
 
-    private String haloToHector = "haloToHector";
-    private String haloToXena = "haloToXena";
-    private String haloToTroy = "haloToTroy";
+    private final String haloToHector = "haloToHector";
+    private final String haloToXena = "haloToXena";
+    private final String haloToTroy = "haloToTroy";
 
 
     private BrokerService broker;
@@ -74,7 +74,7 @@ public class MissingDataFileTest extends TestCase {
     private final Object lock = new Object();
     final boolean useTopic = false;
     final boolean useSleep = true;
-    
+
     protected static final String payload = new String(new byte[500]);
 
     public Connection createConnection() throws JMSException {
@@ -92,21 +92,22 @@ public class MissingDataFileTest extends TestCase {
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.addConnector("tcp://localhost:61616").setName("Default");
-   
+
         SystemUsage systemUsage;
         systemUsage = new SystemUsage();
         systemUsage.getMemoryUsage().setLimit(10 * 1024 * 1024); // Just a few messags
         broker.setSystemUsage(systemUsage);
-        
+
         KahaDBPersistenceAdapter kahaDBPersistenceAdapter = new KahaDBPersistenceAdapter();
         kahaDBPersistenceAdapter.setJournalMaxFileLength(16*1024);
         kahaDBPersistenceAdapter.setCleanupInterval(500);
         broker.setPersistenceAdapter(kahaDBPersistenceAdapter);
-        
+
         broker.start();
         LOG.info("Starting broker..");
     }
 
+    @Override
     public void tearDown() throws Exception {
         hectorConnection.close();
         xenaConnection.close();
@@ -116,11 +117,12 @@ public class MissingDataFileTest extends TestCase {
     }
 
     public void testForNoDataFoundError() throws Exception {
-        
+
         startBroker();
         hectorConnection = createConnection();
         Thread hectorThread = buildProducer(hectorConnection, hectorToHalo, false, useTopic);
         Receiver hHectorReceiver = new Receiver() {
+            @Override
             public void receive(String s) throws Exception {
                 haloToHectorCtr++;
                 if (haloToHectorCtr >= counter) {
@@ -136,6 +138,7 @@ public class MissingDataFileTest extends TestCase {
         troyConnection = createConnection();
         Thread troyThread = buildProducer(troyConnection, troyToHalo);
         Receiver hTroyReceiver = new Receiver() {
+            @Override
             public void receive(String s) throws Exception {
                 haloToTroyCtr++;
                 if (haloToTroyCtr >= counter) {
@@ -151,6 +154,7 @@ public class MissingDataFileTest extends TestCase {
         xenaConnection = createConnection();
         Thread xenaThread = buildProducer(xenaConnection, xenaToHalo);
         Receiver hXenaReceiver = new Receiver() {
+            @Override
             public void receive(String s) throws Exception {
                 haloToXenaCtr++;
                 if (haloToXenaCtr >= counter) {
@@ -168,6 +172,7 @@ public class MissingDataFileTest extends TestCase {
         final MessageSender troySender = buildTransactionalProducer(haloToTroy, haloConnection, false);
         final MessageSender xenaSender = buildTransactionalProducer(haloToXena, haloConnection, false);
         Receiver hectorReceiver = new Receiver() {
+            @Override
             public void receive(String s) throws Exception {
                 hectorToHaloCtr++;
                 troySender.send(payload);
@@ -180,6 +185,7 @@ public class MissingDataFileTest extends TestCase {
             }
         };
         Receiver xenaReceiver = new Receiver() {
+            @Override
             public void receive(String s) throws Exception {
                 xenaToHaloCtr++;
                 hectorSender.send(payload);
@@ -192,6 +198,7 @@ public class MissingDataFileTest extends TestCase {
             }
         };
         Receiver troyReceiver = new Receiver() {
+            @Override
             public void receive(String s) throws Exception {
                 troyToHaloCtr++;
                 xenaSender.send(payload);
@@ -239,7 +246,7 @@ public class MissingDataFileTest extends TestCase {
                 Thread.sleep(5000);
             }
         }
-        
+
     }
 
     protected void waitForMessagesToBeDelivered() {
@@ -272,10 +279,11 @@ public class MissingDataFileTest extends TestCase {
     public Thread buildProducer(Connection connection, final String queueName) throws Exception {
         return buildProducer(connection, queueName, false, false);
     }
-    
+
     public Thread buildProducer(Connection connection, final String queueName, boolean transacted, boolean isTopic) throws Exception {
         final MessageSender producer = new MessageSender(queueName, connection, transacted, isTopic);
         Thread thread = new Thread() {
+            @Override
             public synchronized void run() {
                 for (int i = 0; i < counter; i++) {
                     try {
@@ -294,6 +302,7 @@ public class MissingDataFileTest extends TestCase {
         MessageConsumer inputMessageConsumer = session.createConsumer(isTopic ? session.createTopic(queueName) : session.createQueue(queueName));
         MessageListener messageListener = new MessageListener() {
 
+            @Override
             public void onMessage(Message message) {
                 try {
                     ObjectMessage objectMessage = (ObjectMessage)message;

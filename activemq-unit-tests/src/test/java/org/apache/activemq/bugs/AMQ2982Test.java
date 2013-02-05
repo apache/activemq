@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 
 import javax.jms.BytesMessage;
@@ -96,6 +95,7 @@ public class AMQ2982Test {
                 .createQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
         consumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message message) {
                 messageCountDown.countDown();
             }

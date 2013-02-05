@@ -40,21 +40,24 @@ public class VerifySteadyEnqueueRate extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(VerifySteadyEnqueueRate.class);
 
     private static int max_messages = 1000000;
-    private String destinationName = getName() + "_Queue";
+    private final String destinationName = getName() + "_Queue";
     private BrokerService broker;
     final boolean useTopic = false;
 
-    private boolean useAMQPStore = false;
+    private final boolean useAMQPStore = false;
     protected static final String payload = new String(new byte[24]);
 
+    @Override
     public void setUp() throws Exception {
         startBroker();
     }
 
+    @Override
     public void tearDown() throws Exception {
         broker.stop();
     }
 
+    @SuppressWarnings("unused")
     public void testEnqueueRateCanMeetSLA() throws Exception {
         if (true) {
             return;
@@ -68,9 +71,10 @@ public class VerifySteadyEnqueueRate extends TestCase {
         final AtomicLong slaViolations = new AtomicLong(0);
         final AtomicLong max = new AtomicLong(0);
         final int numThreads = 6;
-        
+
         Runnable runner = new Runnable() {
 
+            @Override
             public void run() {
                 try {
                     MessageSender producer = new MessageSender(destinationName,
@@ -83,13 +87,13 @@ public class VerifySteadyEnqueueRate extends TestCase {
                         long duration = endT - startT;
 
                         total.incrementAndGet();
-                        
+
                         if (duration > max.get()) {
                             max.set(duration);
                         }
 
                         if (duration > min) {
-                        	slaViolations.incrementAndGet();
+                            slaViolations.incrementAndGet();
                             System.err.println("SLA violation @ "+Thread.currentThread().getName()
                                     + " "
                                     + DateFormat.getTimeInstance().format(
@@ -107,11 +111,11 @@ public class VerifySteadyEnqueueRate extends TestCase {
             }
         };
         ExecutorService executor = Executors.newCachedThreadPool();
-        
+
         for (int i = 0; i < numThreads; i++) {
             executor.execute(runner);
         }
-        
+
         executor.shutdown();
         while(!executor.isTerminated()) {
             executor.awaitTermination(10, TimeUnit.SECONDS);
@@ -149,18 +153,18 @@ public class VerifySteadyEnqueueRate extends TestCase {
         } else {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File("target/activemq-data/kahadb"));
-            // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
+            // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified
             // what happens if the index is updated but a journal update is lost.
             // Index is going to be in consistent, but can it be repaired?
             kaha.setEnableJournalDiskSyncs(false);
             // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
             kaha.setJournalMaxFileLength(1024*1024*100);
-            
+
             // small batch means more frequent and smaller writes
             kaha.setIndexWriteBatchSize(100);
             // do the index write in a separate thread
             kaha.setEnableIndexWriteAsync(true);
-            
+
             broker.setPersistenceAdapter(kaha);
         }
 

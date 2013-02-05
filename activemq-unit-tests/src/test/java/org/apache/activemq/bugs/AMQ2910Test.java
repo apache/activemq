@@ -20,7 +20,7 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.jms.ConnectionFactory;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -63,6 +63,7 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
         for (int i=0; i<maxConcurrency; i++) {
             final ActiveMQQueue dest = new ActiveMQQueue("Queue-" + i);
             executor.execute(new Runnable() {
+                @Override
                 public void run() {
                     try {
                         sendMessages(factory.createConnection(), dest, msgCount);
@@ -75,15 +76,14 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
 
         executor.shutdown();
 
-
         assertTrue("send completed", executor.awaitTermination(60, TimeUnit.SECONDS));
         assertNoExceptions();
-
 
         executor = Executors.newCachedThreadPool();
         for (int i=0; i<maxConcurrency; i++) {
             final ActiveMQQueue dest = new ActiveMQQueue("Queue-" + i);
             executor.execute(new Runnable() {
+                @Override
                 public void run() {
                     try {
                         startConsumers(factory, dest);

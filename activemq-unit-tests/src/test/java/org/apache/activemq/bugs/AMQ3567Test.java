@@ -18,10 +18,6 @@ package org.apache.activemq.bugs;
 
 import static org.junit.Assert.fail;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -37,11 +33,8 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.DefaultTestAppender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.WriterAppender;
 import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,11 +89,9 @@ public class AMQ3567Test {
             }
         };
         log4jLogger.addAppender(appender);
-        
+
         Level level = log4jLogger.getLevel();
         log4jLogger.setLevel(Level.DEBUG);
-
-        BufferedReader read = null;
 
         try {
             stopConsumer();

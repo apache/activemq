@@ -27,6 +27,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.spring.ConsumerBean;
 
 public class AMQ2585Test extends EmbeddedBrokerAndConnectionTestSupport {
@@ -58,7 +59,7 @@ public class AMQ2585Test extends EmbeddedBrokerAndConnectionTestSupport {
          * lengths for the key name and value.
          */
 
-        final int sizeShouldBeNoLessThan = LENGTH10STRING.length() * 4 + received.DEFAULT_MINIMUM_MESSAGE_SIZE;
+        final int sizeShouldBeNoLessThan = LENGTH10STRING.length() * 4 + Message.DEFAULT_MINIMUM_MESSAGE_SIZE;
         assertTrue("Message size was smaller than expected: " + received.getSize(),
                 received.getSize() >= sizeShouldBeNoLessThan);
         assertFalse(LENGTH10STRING.length() * 2 == received.getSize());

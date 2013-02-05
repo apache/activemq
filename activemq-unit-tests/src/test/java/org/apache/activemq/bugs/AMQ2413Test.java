@@ -68,7 +68,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     public boolean useVMCursor = false;
     public boolean useOptimizeAcks = false;
 
-    private ArrayList<Service> services = new ArrayList<Service>(CONSUMER_COUNT + PRODUCER_COUNT);
+    private final ArrayList<Service> services = new ArrayList<Service>(CONSUMER_COUNT + PRODUCER_COUNT);
     AtomicInteger count = new AtomicInteger(0);
     Semaphore receivedMessages;
     AtomicBoolean running = new AtomicBoolean(false);
@@ -77,9 +77,10 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         addCombinationValues("deliveryMode", new Object[] { DeliveryMode.PERSISTENT, DeliveryMode.NON_PERSISTENT });
         addCombinationValues("ackMode", new Object[] { Session.DUPS_OK_ACKNOWLEDGE, Session.AUTO_ACKNOWLEDGE });
         addCombinationValues("useVMCursor", new Object[] { true, false });
-        //addCombinationValues("useOptimizeAcks", new Object[] {true, false});
+        // addCombinationValues("useOptimizeAcks", new Object[] {true, false});
     }
 
+    @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "AMQ2401Test");
@@ -105,21 +106,21 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         receivedMessages = new Semaphore(0);
 
         factory = new ActiveMQConnectionFactory("tcp://0.0.0.0:2401");
-        //factory = new ActiveMQConnectionFactory("vm://localhost?broker.useJmx=false&broker.persistent=false");
+        // factory = new ActiveMQConnectionFactory("vm://localhost?broker.useJmx=false&broker.persistent=false");
         setAutoFail(true);
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         running.set(false);
-        for(Service service : services)
-        {
+        for (Service service : services) {
             service.close();
         }
-        
+
         broker.stop();
         broker.waitUntilStopped();
-        
+
         super.tearDown();
     }
 
@@ -156,9 +157,10 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jms.MessageListener#onMessage(javax.jms.Message)
      */
+    @Override
     public void onMessage(Message message) {
         receivedMessages.release();
         if (count.incrementAndGet() % 100 == 0) {
@@ -167,7 +169,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         track(message);
         if (RECEIVER_THINK_TIME > 0) {
             try {
-                Thread.currentThread().sleep(RECEIVER_THINK_TIME);
+                Thread.sleep(RECEIVER_THINK_TIME);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -176,11 +178,12 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     }
 
     HashMap<ProducerId, boolean[]> tracker = new HashMap<ProducerId, boolean[]>();
+
     private synchronized void track(Message message) {
         try {
             MessageId id = new MessageId(message.getJMSMessageID());
             ProducerId pid = id.getProducerId();
-            int seq = (int)id.getProducerSequenceId();
+            int seq = (int) id.getProducerSequenceId();
             boolean[] ids = tracker.get(pid);
             if (ids == null) {
                 ids = new boolean[TO_SEND + 1];
@@ -198,13 +201,14 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     /**
      * @throws InterruptedException
      * @throws TimeoutException
-     * 
+     *
      */
     private void waitForMessageReceipt() throws InterruptedException, TimeoutException {
         try {
             while (count.get() < SEND_COUNT) {
                 if (!receivedMessages.tryAcquire(HANG_THRESHOLD, TimeUnit.SECONDS)) {
-                    if (count.get() == SEND_COUNT) break;
+                    if (count.get() == SEND_COUNT)
+                        break;
                     verifyTracking();
                     throw new TimeoutException("@count=" + count.get() + " Message not received for more than " + HANG_THRESHOLD + " seconds");
                 }
@@ -218,7 +222,7 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         Vector<MessageId> missing = new Vector<MessageId>();
         for (ProducerId pid : tracker.keySet()) {
             boolean[] ids = tracker.get(pid);
-            for (int i=1; i<TO_SEND + 1; i++) {
+            for (int i = 1; i < TO_SEND + 1; i++) {
                 if (!ids[i]) {
                     missing.add(new MessageId(pid, i));
                 }
@@ -236,34 +240,32 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
     private class TestProducer implements Runnable, Service {
         Thread thread;
         BytesMessage message;
-        int id;
         Connection connection;
         Session session;
         MessageProducer producer;
 
         TestProducer(int id) throws Exception {
-            this.id = id;
             thread = new Thread(this, "TestProducer-" + id);
             connection = factory.createConnection();
             connection.start();
             session = connection.createSession(false, Session.DUPS_OK_ACKNOWLEDGE);
             producer = session.createProducer(session.createQueue("AMQ2401Test"));
-
         }
 
+        @Override
         public void start() {
             thread.start();
         }
 
+        @Override
         public void run() {
-
 
             int i = 1;
             for (; i <= TO_SEND; i++) {
                 try {
 
                     if (+i % 100 == 0) {
-                        LOG.info(thread.currentThread().getName() + " Sending message " + i);
+                        LOG.info(Thread.currentThread().getName() + " Sending message " + i);
                     }
                     message = session.createBytesMessage();
                     message.writeBytes(new byte[1024]);
@@ -274,9 +276,10 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
                     break;
                 }
             }
-            LOG.info(thread.currentThread().getName() + " Sent: " + (i-1));
+            LOG.info(Thread.currentThread().getName() + " Sent: " + (i - 1));
         }
 
+        @Override
         public void close() {
             try {
                 connection.close();
@@ -291,7 +294,6 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
         ActiveMQConnection connection;
         Session session;
         MessageConsumer consumer;
-        Thread thread;
 
         TestConsumer() throws Exception {
             factory.setOptimizeAcknowledge(false);
@@ -306,10 +308,12 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
             consumer.setMessageListener(AMQ2413Test.this);
         }
 
+        @Override
         public void start() throws Exception {
             connection.start();
         }
 
+        @Override
         public void close() {
             try {
                 connection.close();
@@ -321,9 +325,10 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
 
         /*
          * (non-Javadoc)
-         * 
+         *
          * @see java.lang.Runnable#run()
          */
+        @Override
         public void run() {
             while (running.get()) {
                 try {
@@ -332,12 +337,10 @@ public class AMQ2413Test extends CombinationTestSupport implements MessageListen
                     e.printStackTrace();
                 }
             }
-
         }
-
     }
-    
+
     public static Test suite() {
-       return suite(AMQ2413Test.class);
-     }
+        return suite(AMQ2413Test.class);
+    }
 }

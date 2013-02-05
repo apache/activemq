@@ -21,17 +21,20 @@ import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Session;
-import org.apache.activemq.ActiveMQConnectionFactory;
+
 import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+
 /**
  * An AMQ-1282 Test
- * 
  */
 public class AMQ1282 extends TestCase {
     private ConnectionFactory factory;
     private Connection connection;
     private MapMessage message;
 
+    @Override
     protected void setUp() throws Exception {
         factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = factory.createConnection();
@@ -41,6 +44,7 @@ public class AMQ1282 extends TestCase {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         connection.close();
         super.tearDown();
@@ -72,7 +76,7 @@ public class AMQ1282 extends TestCase {
             Integer actual = message.getInt("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }
@@ -88,7 +92,7 @@ public class AMQ1282 extends TestCase {
             Short actual = message.getShort("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }
@@ -104,7 +108,7 @@ public class AMQ1282 extends TestCase {
             Long actual = message.getLong("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }
@@ -120,7 +124,7 @@ public class AMQ1282 extends TestCase {
             String actual = message.getString("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }
@@ -145,7 +149,7 @@ public class AMQ1282 extends TestCase {
             Byte actual = message.getByte("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }
@@ -161,7 +165,7 @@ public class AMQ1282 extends TestCase {
             Double actual = message.getDouble("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }
@@ -177,7 +181,7 @@ public class AMQ1282 extends TestCase {
             Float actual = message.getFloat("foo");
             assertEquals(expected, actual);
         } catch (Exception ex) {
-            Class aClass = expected.getClass();
+            Class<?> aClass = expected.getClass();
             assertTrue(aClass.isInstance(ex));
         }
     }

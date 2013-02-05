@@ -40,12 +40,9 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AMQ3961Test {
 
-    private static final transient Logger LOG = LoggerFactory.getLogger(AMQ3934Test.class);
     private static BrokerService brokerService;
     private static String BROKER_ADDRESS = "tcp://localhost:0";
 
@@ -73,7 +70,7 @@ public class AMQ3961Test {
 
     public class TestServerSessionPool implements ServerSessionPool {
 
-        private TopicConnection connection;
+        private final TopicConnection connection;
 
         public TestServerSessionPool(final TopicConnection connection) {
             this.connection = connection;
@@ -88,7 +85,7 @@ public class AMQ3961Test {
 
     public class TestServerSession implements ServerSession, MessageListener {
 
-        private TopicSession session;
+        private final TopicSession session;
 
         public TestServerSession(final TopicSession session) throws JMSException {
             this.session = session;
@@ -114,8 +111,8 @@ public class AMQ3961Test {
     }
 
     public static final int MESSAGE_COUNT = 16;
-    private List<TestServerSession> processedSessions = new LinkedList<TestServerSession>();
-    private List<TestServerSession> committedSessions = new LinkedList<TestServerSession>();
+    private final List<TestServerSession> processedSessions = new LinkedList<TestServerSession>();
+    private final List<TestServerSession> committedSessions = new LinkedList<TestServerSession>();
 
     @Test
     public void testPrefetchInDurableSubscription() throws Exception {

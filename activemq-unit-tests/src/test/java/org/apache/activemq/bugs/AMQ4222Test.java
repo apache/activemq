@@ -16,23 +16,35 @@
  */
 package org.apache.activemq.bugs;
 
+import java.lang.reflect.Field;
+import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
-import org.apache.activemq.broker.*;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.*;
-import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
@@ -48,7 +60,6 @@ public class AMQ4222Test extends TestSupport {
         super.setUp();
         topic = false;
         brokerService = createBroker();
-
     }
 
     @Override
@@ -160,6 +171,7 @@ public class AMQ4222Test extends TestSupport {
 
     }
 
+    @SuppressWarnings("unchecked")
     private Map<ProducerId, ProducerBrokerExchange> getProducerExchangeFromConn(TransportConnection transportConnection) throws NoSuchFieldException, IllegalAccessException {
         Field f = TransportConnection.class.getDeclaredField("producerExchanges");
         f.setAccessible(true);
@@ -168,11 +180,9 @@ public class AMQ4222Test extends TestSupport {
         return producerExchanges;
     }
 
-
     private Message createRequest(Session session, Destination replyTo) throws JMSException {
         Message message = session.createTextMessage("Payload");
         message.setJMSReplyTo(replyTo);
         return message;
     }
-
 }

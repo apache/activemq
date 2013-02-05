@@ -17,16 +17,20 @@
 
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -35,33 +39,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 /**
  * Test the loss of messages detected during testing with ActiveMQ 5.4.1 and 5.4.2.
  * <p/>
- * Symptoms:
- * - 1 record is lost "early" in the stream.
- * - no more records lost.
+ * Symptoms: - 1 record is lost "early" in the stream. - no more records lost.
  * <p/>
- * Test Configuration:
- * - Broker Settings:
- * - Destination Policy
- * - Occurs with "Destination Policy" using Store Cursor and a memory limit
- * - Not reproduced without "Destination Policy" defined
- * - Persistence Adapter
- * - Memory: Does not occur.
- * - KahaDB: Occurs.
- * - Messages
- * - Occurs with TextMessage and BinaryMessage
- * - Persistent messages.
+ * Test Configuration: - Broker Settings: - Destination Policy - Occurs with "Destination Policy" using Store Cursor and
+ * a memory limit - Not reproduced without "Destination Policy" defined - Persistence Adapter - Memory: Does not occur.
+ * - KahaDB: Occurs. - Messages - Occurs with TextMessage and BinaryMessage - Persistent messages.
  * <p/>
- * Notes:
- * - Lower memory limits increase the rate of occurrence.
- * - Higher memory limits may prevent the problem (probably because memory limits not reached).
- * - Producers sending a number of messages before consumers come online increases rate of occurrence.
+ * Notes: - Lower memory limits increase the rate of occurrence. - Higher memory limits may prevent the problem
+ * (probably because memory limits not reached). - Producers sending a number of messages before consumers come online
+ * increases rate of occurrence.
  */
 
 public class AMQ3167Test {
@@ -79,25 +68,22 @@ public class AMQ3167Test {
     protected Connection JMS_conn;
     protected long Num_error = 0;
 
-
-    ////             ////
-    ////  UTILITIES  ////
-    ////             ////
-
+    // // ////
+    // // UTILITIES ////
+    // // ////
 
     /**
-     * Create a new, unsecured, client connection to the test broker using the given username and password.  This
+     * Create a new, unsecured, client connection to the test broker using the given username and password. This
      * connection bypasses all security.
      * <p/>
-     * Don't forget to start the connection or no messages will be received by consumers even though producers
-     * will work fine.
+     * Don't forget to start the connection or no messages will be received by consumers even though producers will work
+     * fine.
      *
      * @username name of the JMS user for the connection; may be null.
      * @password Password for the JMS user; may be null.
      */
 
-    protected Connection createUnsecuredConnection(String username, String password)
-            throws javax.jms.JMSException {
+    protected Connection createUnsecuredConnection(String username, String password) throws javax.jms.JMSException {
         ActiveMQConnectionFactory conn_fact;
 
         conn_fact = new ActiveMQConnectionFactory(embeddedBroker.getVmConnectorURI());
@@ -105,15 +91,12 @@ public class AMQ3167Test {
         return conn_fact.createConnection(username, password);
     }
 
-
-    ////                      ////
-    ////  TEST FUNCTIONALITY  ////
-    ////                      ////
-
+    // // ////
+    // // TEST FUNCTIONALITY ////
+    // // ////
 
     @Before
-    public void testPrep()
-            throws Exception {
+    public void testPrep() throws Exception {
         embeddedBroker = new BrokerService();
         configureBroker(embeddedBroker);
         embeddedBroker.start();
@@ -125,16 +108,12 @@ public class AMQ3167Test {
     }
 
     @After
-    public void testCleanup()
-            throws java.lang.Exception {
+    public void testCleanup() throws java.lang.Exception {
         JMS_conn.stop();
         embeddedBroker.stop();
     }
 
-
-    protected void configureBroker(BrokerService broker_svc)
-            throws Exception {
-        TransportConnector conn;
+    protected void configureBroker(BrokerService broker_svc) throws Exception {
 
         broker_svc.setBrokerName("testbroker1");
 
@@ -143,7 +122,6 @@ public class AMQ3167Test {
         broker_svc.setDataDirectory("target/AMQ3167Test");
         configureDestinationPolicy(broker_svc);
     }
-
 
     /**
      * NOTE: overrides any prior policy map defined for the broker service.
@@ -166,7 +144,6 @@ public class AMQ3167Test {
         pol_ent.setProducerFlowControl(false);
         ent_list.add(pol_ent);
 
-
         //
         // COMPLETE POLICY MAP
         //
@@ -177,14 +154,12 @@ public class AMQ3167Test {
         broker_svc.setDestinationPolicy(pol_map);
     }
 
-
-    ////        ////
-    ////  TEST  ////
-    ////        ////
+    // // ////
+    // // TEST ////
+    // // ////
 
     @Test
-    public void testQueueLostMessage()
-            throws Exception {
+    public void testQueueLostMessage() throws Exception {
         Destination dest;
 
         dest = ActiveMQDestination.createDestination("lostmsgtest.queue", ActiveMQDestination.QUEUE_TYPE);
@@ -201,7 +176,6 @@ public class AMQ3167Test {
         assertTrue(Num_error == 0);
     }
 
-
     /**
      *
      */
@@ -211,14 +185,11 @@ public class AMQ3167Test {
             java.lang.System.err.println(msg);
     }
 
-
     /**
      * Main body of the lost-message test.
      */
 
-    protected void runLostMsgTest(Destination dest, int num_msg, int num_send_per_sess, int num_recv_per_sess,
-                                  boolean topic_f)
-            throws Exception {
+    protected void runLostMsgTest(Destination dest, int num_msg, int num_send_per_sess, int num_recv_per_sess, boolean topic_f) throws Exception {
         Thread prod_thread;
         Thread cons_thread;
         String tag;
@@ -226,7 +197,6 @@ public class AMQ3167Test {
         MessageProducer prod;
         MessageConsumer cons;
         int ack_mode;
-
 
         //
         // Start the producer
@@ -242,14 +212,12 @@ public class AMQ3167Test {
         prod_thread.start();
         log("Started producer " + tag);
 
-
         //
         // Delay before starting consumers
         //
 
         log("Waiting before starting consumers");
         java.lang.Thread.sleep(Consumer_startup_delay_ms);
-
 
         //
         // Now create and start the consumer
@@ -270,7 +238,6 @@ public class AMQ3167Test {
         cons_thread.start();
         log("Started consumer " + tag);
 
-
         //
         // Wait for the producer and consumer to finish.
         //
@@ -284,14 +251,13 @@ public class AMQ3167Test {
         log("Shutting down");
     }
 
-
-    ////                    ////
-    ////  INTERNAL CLASSES  ////
-    ////                    ////
+    // // ////
+    // // INTERNAL CLASSES ////
+    // // ////
 
     /**
-     * Producer thread - runs a single producer until the maximum number of messages is sent, the producer stop
-     * time is reached, or a test error is detected.
+     * Producer thread - runs a single producer until the maximum number of messages is sent, the producer stop time is
+     * reached, or a test error is detected.
      */
 
     protected class producerThread extends Thread {
@@ -313,16 +279,14 @@ public class AMQ3167Test {
             numPerSess = sess_size;
         }
 
-        public void execTest()
-                throws Exception {
+        public void execTest() throws Exception {
             Message msg;
             int sess_start;
             int cur;
 
             sess_start = 0;
             cur = 0;
-            while ((cur < numMsg) && (!didTimeOut()) &&
-                    ((!Stop_after_error) || (Num_error == 0))) {
+            while ((cur < numMsg) && (!didTimeOut()) && ((!Stop_after_error) || (Num_error == 0))) {
                 msg = msgSess.createTextMessage("test message from " + producerTag);
                 msg.setStringProperty("testprodtag", producerTag);
                 msg.setIntProperty("seq", cur);
@@ -331,7 +295,6 @@ public class AMQ3167Test {
                     ((ActiveMQMessage) msg).setResponseRequired(true);
                 }
 
-
                 //
                 // Send the message.
                 //
@@ -339,10 +302,9 @@ public class AMQ3167Test {
                 msgProd.send(msg);
                 cur++;
 
-
                 //
                 // Commit if the number of messages per session has been reached, and
-                //  transactions are being used (only when > 1 msg per sess).
+                // transactions are being used (only when > 1 msg per sess).
                 //
 
                 if ((numPerSess > 1) && ((cur - sess_start) >= numPerSess)) {
@@ -356,10 +318,8 @@ public class AMQ3167Test {
                 msgSess.commit();
 
             if (cur < numMsg)
-                log("* Producer " + producerTag + " timed out at " + java.lang.System.nanoTime() +
-                        " (stop time " + producer_stop_time + ")");
+                log("* Producer " + producerTag + " timed out at " + java.lang.System.nanoTime() + " (stop time " + producer_stop_time + ")");
         }
-
 
         /**
          * Check whether it is time for the producer to terminate.
@@ -395,10 +355,9 @@ public class AMQ3167Test {
         }
     }
 
-
     /**
-     * Producer thread - runs a single consumer until the maximum number of messages is received, the consumer stop
-     * time is reached, or a test error is detected.
+     * Producer thread - runs a single consumer until the maximum number of messages is received, the consumer stop time
+     * is reached, or a test error is detected.
      */
 
     protected class consumerThread extends Thread {
@@ -418,8 +377,7 @@ public class AMQ3167Test {
             numPerSess = sess_size;
         }
 
-        public void execTest()
-                throws Exception {
+        public void execTest() throws Exception {
             Message msg;
             int sess_start;
             int cur;
@@ -428,8 +386,7 @@ public class AMQ3167Test {
             sess_start = 0;
             cur = 0;
 
-            while ((cur < numMsg) && (!didTimeOut()) &&
-                    ((!Stop_after_error) || (Num_error == 0))) {
+            while ((cur < numMsg) && (!didTimeOut()) && ((!Stop_after_error) || (Num_error == 0))) {
                 //
                 // Use a timeout of 1 second to periodically check the consumer timeout.
                 //
@@ -453,7 +410,6 @@ public class AMQ3167Test {
                 log("* Consumer " + consumerTag + " timed out");
         }
 
-
         /**
          * Check whether it is time for the consumer to terminate.
          */
@@ -465,14 +421,12 @@ public class AMQ3167Test {
             return false;
         }
 
-
         /**
-         * Verify the message received.  Sequence numbers are checked and are expected to exactly match the
-         * message number (starting at 0).
+         * Verify the message received. Sequence numbers are checked and are expected to exactly match the message
+         * number (starting at 0).
          */
 
-        protected void checkMessage(Message msg, int exp_seq)
-                throws javax.jms.JMSException {
+        protected void checkMessage(Message msg, int exp_seq) throws javax.jms.JMSException {
             int seq;
 
             seq = msg.getIntProperty("seq");
@@ -482,7 +436,6 @@ public class AMQ3167Test {
                 fail("*** Consumer " + consumerTag + " expected seq " + exp_seq + "; received " + seq);
             }
         }
-
 
         /**
          * Run the consumer.
