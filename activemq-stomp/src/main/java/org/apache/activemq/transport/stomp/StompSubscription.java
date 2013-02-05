@@ -107,20 +107,26 @@ public class StompSubscription {
         unconsumedMessage.clear();
     }
 
-    synchronized void onStompCommit(TransactionId transactionId) {
-        for (Iterator<?> iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
-            @SuppressWarnings("rawtypes")
-            Map.Entry entry = (Entry)iter.next();
-            MessageDispatch msg = (MessageDispatch)entry.getValue();
-            if (unconsumedMessage.contains(msg)) {
-                iter.remove();
+    void onStompCommit(TransactionId transactionId) {
+        MessageAck ack = null;
+        synchronized (this) {
+            for (Iterator<?> iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
+                @SuppressWarnings("rawtypes")
+                Map.Entry entry = (Entry)iter.next();
+                MessageDispatch msg = (MessageDispatch)entry.getValue();
+                if (unconsumedMessage.contains(msg)) {
+                    iter.remove();
+                }
+            }
+
+            if (!unconsumedMessage.isEmpty()) {
+                ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
+                unconsumedMessage.clear();
             }
         }
-
-        if (!unconsumedMessage.isEmpty()) {
-            MessageAck ack = new MessageAck(unconsumedMessage.getLast(), MessageAck.STANDARD_ACK_TYPE, unconsumedMessage.size());
+        // avoid contention with onMessageDispatch
+        if (ack != null) {
             protocolConverter.getStompTransport().sendToActiveMQ(ack);
-            unconsumedMessage.clear();
         }
     }
 
