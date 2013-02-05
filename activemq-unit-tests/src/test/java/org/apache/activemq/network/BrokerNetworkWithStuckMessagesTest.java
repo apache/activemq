@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -220,6 +221,7 @@ public class BrokerNetworkWithStuckMessagesTest {
         for (int i = 0; i < receiveNumMessages; ++i) {
             Message message1 = receiveMessage(connection2, 20000);
             assertNotNull(message1);
+            LOG.info("on remote, got: " + message1.getMessageId());
             connection2.send(createAck(consumerInfo2, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
         }
 
@@ -261,6 +263,13 @@ public class BrokerNetworkWithStuckMessagesTest {
         connection2.send(connectionInfo2.createRemoveCommand());
 
         // There should now be 5 messages stuck on the remote broker
+        assertTrue("correct stuck message count", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                Object[] result = browseQueueWithJmx(remoteBroker);
+                return 5 == result.length;
+            }
+        }));
         messages = browseQueueWithJmx(remoteBroker);
         assertEquals(5, messages.length);
 
@@ -303,6 +312,7 @@ public class BrokerNetworkWithStuckMessagesTest {
         int counter = 1;
         for (; counter < receiveNumMessages; counter++) {
             message1 = receiveMessage(connection1);
+            LOG.info("local consume of: " + (message1 != null ? message1.getMessageId() : " null"));
             connection1.send(createAck(consumerInfo1, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
         }
         // Ensure that 5 messages were received

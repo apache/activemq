@@ -603,7 +603,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else {
                     if (isDuplex()) {
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace(configuration.getBrokerName() + " duplex command type: " + command.getCommandId());
+                            LOG.trace(configuration.getBrokerName() + " duplex command type: " + command.getDataStructureType());
                         }
                         if (command.isMessage()) {
                             final ActiveMQMessage message = (ActiveMQMessage) command;
@@ -974,6 +974,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             LOG.debug("bridging (" + configuration.getBrokerName() + " -> " + remoteBrokerName + ") "
                                 + (LOG.isTraceEnabled() ? message : message.getMessageId()) + ", consumer: " + md.getConsumerId() + ", destination "
                                 + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
+                        }
+
+                        if (isDuplex() && AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
+                            try {
+                                // never request b/c they are eventually acked async
+                                remoteBroker.oneway(message);
+                            } finally {
+                                sub.decrementOutstandingResponses();
+                            }
+                            return;
                         }
 
                         if (message.isPersistent() || configuration.isAlwaysSyncSend()) {
