@@ -25,7 +25,11 @@
 	   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
 	   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-    <amq:broker brokerName="test" useJmx="false" persistent="false">
+    <amq:broker brokerName="test" useJmx="true" persistent="false">
+        <amq:managementContext>
+            <amq:managementContext createConnector="false" />
+        </amq:managementContext>
+
         <amq:transportConnectors>
             <amq:transportConnector name="transport" uri="nio://0.0.0.0:61616"/>
         </amq:transportConnectors>
@@ -58,7 +62,7 @@
     <bean id="compositeContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
         <property name="connectionFactory" ref="connectionFactory"/>
         <property name="messageListener" ref="messageListener"/>
-        <property name="destinationName" value="TEST.>?consumer.prefetchSize=1"/>
+        <property name="destinationName" value="TEST.>?consumer.prefetchSize=0"/>
         <property name="transactionManager" ref="transactionManager"/>
     </bean>
 
