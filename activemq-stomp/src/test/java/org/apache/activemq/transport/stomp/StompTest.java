@@ -351,8 +351,12 @@ public class StompTest extends StompTestSupport {
         assertTrue(frame.startsWith("RECEIPT"));
         assertTrue("Receipt contains correct receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
 
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        frame = "DISCONNECT\n" + "receipt: dis-1\n" + "\n\n" + Stomp.NULL;
         receiver.sendFrame(frame);
+        frame = receiver.receiveFrame();
+        assertTrue(frame.startsWith("RECEIPT"));
+        assertTrue("Receipt contains correct receipt-id", frame.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+        receiver.close();
 
         MessageConsumer consumer = session.createConsumer(queue);
 
