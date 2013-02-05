@@ -69,14 +69,15 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected int txGenerator;
     protected int tempDestGenerator;
     protected PersistenceAdapter persistenceAdapter;
-    
+
     protected String queueName = "TEST";
 
-    protected int maxWait = 4000;
+    protected int maxWait = 10000;
 
     protected SystemUsage memoryManager;
     protected PolicyMap policyMap = new PolicyMap();
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         broker = createBroker();
@@ -97,6 +98,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         return broker;
     }
 
+    @Override
     protected void tearDown() throws Exception {
         broker.stop();
         broker.waitUntilStopped();
@@ -352,5 +354,4 @@ public class BrokerTestSupport extends CombinationTestSupport {
             }
         }
     }
-
 }
