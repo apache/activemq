@@ -31,11 +31,15 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpTransportServer extends WebTransportServerSupport {
 
+    private static final Logger LOG = LoggerFactory.getLogger(HttpTransportServer.class);
+
     private TextWireFormat wireFormat;
-    private HttpTransportFactory transportFactory;
+    private final HttpTransportFactory transportFactory;
 
     public HttpTransportServer(URI uri, HttpTransportFactory factory) {
         super(uri);
@@ -44,6 +48,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
         socketConnectorFactory = new SocketConnectorFactory();
     }
 
+    @Override
     public void setBrokerInfo(BrokerInfo brokerInfo) {
     }
 
@@ -70,14 +75,14 @@ public class HttpTransportServer extends WebTransportServerSupport {
         this.connector = connector;
     }
 
+    @Override
     protected void doStart() throws Exception {
         server = new Server();
         if (connector == null) {
             connector = socketConnectorFactory.createConnector();
         }
 
-        URI bind = getBindLocation();
-        bind();
+        URI boundTo = bind();
 
         ServletContextHandler contextHandler =
             new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
@@ -95,8 +100,25 @@ public class HttpTransportServer extends WebTransportServerSupport {
         contextHandler.setHandler(gzipHandler);
 
         server.start();
+
+        // Update the Connect To URI with our actual location in case the configured port
+        // was set to zero so that we report the actual port we are listening on.
+
+        int port = boundTo.getPort();
+        if (connector.getLocalPort() != -1) {
+            port = connector.getLocalPort();
+        }
+
+        setConnectURI(new URI(boundTo.getScheme(),
+                              boundTo.getUserInfo(),
+                              boundTo.getHost(),
+                              port,
+                              boundTo.getPath(),
+                              boundTo.getQuery(),
+                              boundTo.getFragment()));
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;
         server = null;
@@ -105,6 +127,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
         }
     }
 
+    @Override
     public InetSocketAddress getSocketAddress() {
         return null;
     }

@@ -21,17 +21,23 @@ import org.apache.activemq.JmsDurableTopicSendReceiveTest;
 import org.apache.activemq.broker.BrokerService;
 
 public class HttpJmsDurableTopicSendReceiveTest extends JmsDurableTopicSendReceiveTest {
+
     protected BrokerService broker;
 
+    private String connectionUri;
+
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
             broker.start();
+            connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
         }
         super.setUp();
-        WaitForJettyListener.waitForJettySocketToAccept(getBrokerURL());
+        WaitForJettyListener.waitForJettySocketToAccept(connectionUri);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         if (broker != null) {
@@ -39,13 +45,14 @@ public class HttpJmsDurableTopicSendReceiveTest extends JmsDurableTopicSendRecei
         }
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(getBrokerURL());
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(connectionUri);
         return connectionFactory;
     }
 
     protected String getBrokerURL() {
-        return "http://localhost:8161";
+        return "http://localhost:0";
     }
 
     protected BrokerService createBroker() throws Exception {

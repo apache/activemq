@@ -43,6 +43,7 @@ public class WSTransportServer extends WebTransportServerSupport {
         socketConnectorFactory = new SocketConnectorFactory();
     }
 
+    @Override
     protected void doStart() throws Exception {
         server = new Server();
 
@@ -50,9 +51,7 @@ public class WSTransportServer extends WebTransportServerSupport {
             connector = socketConnectorFactory.createConnector();
         }
 
-        URI bind = getBindLocation();
-
-        bind();
+        URI boundTo = bind();
 
         ServletContextHandler contextHandler =
                 new ServletContextHandler(server, "/", ServletContextHandler.NO_SECURITY);
@@ -72,8 +71,25 @@ public class WSTransportServer extends WebTransportServerSupport {
         contextHandler.setAttribute("acceptListener", getAcceptListener());
 
         server.start();
+
+        // Update the Connect To URI with our actual location in case the configured port
+        // was set to zero so that we report the actual port we are listening on.
+
+        int port = boundTo.getPort();
+        if (connector.getLocalPort() != -1) {
+            port = connector.getLocalPort();
+        }
+
+        setConnectURI(new URI(boundTo.getScheme(),
+                              boundTo.getUserInfo(),
+                              boundTo.getHost(),
+                              port,
+                              boundTo.getPath(),
+                              boundTo.getQuery(),
+                              boundTo.getFragment()));
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;
         server = null;
@@ -82,10 +98,12 @@ public class WSTransportServer extends WebTransportServerSupport {
         }
     }
 
+    @Override
     public InetSocketAddress getSocketAddress() {
         return null;
     }
 
+    @Override
     public void setBrokerInfo(BrokerInfo brokerInfo) {
     }
 
@@ -104,5 +122,4 @@ public class WSTransportServer extends WebTransportServerSupport {
     public boolean isSslServer() {
         return false;
     }
-
 }

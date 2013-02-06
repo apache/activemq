@@ -35,7 +35,7 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         super(location);
     }
 
-    public void bind() throws Exception {
+    public URI bind() throws Exception {
 
         URI bind = getBindLocation();
 
@@ -51,6 +51,9 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         if (addr.isAnyLocalAddress()) {
             host = InetAddressUtil.getLocalHostName();
         }
-        setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), host, bindAddress.getPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
+
+        URI boundUri = new URI(bind.getScheme(), bind.getUserInfo(), host, bindAddress.getPort(), bind.getPath(), bind.getQuery(), bind.getFragment());
+        setConnectURI(boundUri);
+        return boundUri;
     }
 }

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.http;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
@@ -23,17 +25,21 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class HttpClientReconnectTest extends TestCase {
-	
-	BrokerService broker;
-	ActiveMQConnectionFactory factory;
+public class HttpClientReconnectTest {
 
-	protected void setUp() throws Exception {
+    private BrokerService broker;
+    private ActiveMQConnectionFactory factory;
+
+    @Before
+    public void setUp() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -41,45 +47,46 @@ public class HttpClientReconnectTest extends TestCase {
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
-		broker = new BrokerService();
-		broker.addConnector("https://localhost:61666?trace=true");
-		broker.setPersistent(false);
-		broker.setUseJmx(false);
-		broker.deleteAllMessages();
-		broker.start();
-		factory = new ActiveMQConnectionFactory("https://localhost:61666?trace=true&soTimeout=1000");
-	}
+        broker = new BrokerService();
+        TransportConnector connector = broker.addConnector("https://localhost:0?trace=true");
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.deleteAllMessages();
+        broker.start();
 
-	protected void tearDown() throws Exception {
-		broker.stop();
-	}
-	
-	public void testReconnectClient() throws Exception {
-		for (int i = 0; i < 100; i++) {
-			sendAndReceiveMessage(i);
-		}
-	}
-	
-	private void sendAndReceiveMessage(int i) throws Exception {
-		Connection conn = factory.createConnection();
-		Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		conn.start();
-		Destination dest = new ActiveMQQueue("test");
-		MessageProducer producer = sess.createProducer(dest);
-		MessageConsumer consumer = sess.createConsumer(dest);
-		String messageText = "test " + i;
-		try {
-			producer.send(sess.createTextMessage(messageText));
-			TextMessage msg = (TextMessage)consumer.receive(1000);
-			assertEquals(messageText, msg.getText());
-		} finally {
-			producer.close();
-			consumer.close();
-			conn.close();
-			sess.close();
-		}
-	}
-	
-	
+        String connectionUri = connector.getPublishableConnectString();
+        factory = new ActiveMQConnectionFactory(connectionUri + "?trace=true&soTimeout=1000");
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        broker.stop();
+    }
+
+    @Test
+    public void testReconnectClient() throws Exception {
+        for (int i = 0; i < 100; i++) {
+            sendAndReceiveMessage(i);
+        }
+    }
+
+    private void sendAndReceiveMessage(int i) throws Exception {
+        Connection conn = factory.createConnection();
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        Destination dest = new ActiveMQQueue("test");
+        MessageProducer producer = sess.createProducer(dest);
+        MessageConsumer consumer = sess.createConsumer(dest);
+        String messageText = "test " + i;
+        try {
+            producer.send(sess.createTextMessage(messageText));
+            TextMessage msg = (TextMessage)consumer.receive(1000);
+            assertEquals(messageText, msg.getText());
+        } finally {
+            producer.close();
+            consumer.close();
+            conn.close();
+            sess.close();
+        }
+    }
 }
