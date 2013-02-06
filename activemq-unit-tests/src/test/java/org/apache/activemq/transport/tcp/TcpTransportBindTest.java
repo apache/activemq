@@ -20,7 +20,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.jms.Connection;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
@@ -28,29 +27,32 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 
 public class TcpTransportBindTest extends EmbeddedBrokerTestSupport {
-    final String addr = "tcp://localhost:61617";
-    
+    String addr = "tcp://localhost:0";
+
     /**
      * exercise some server side socket options
      * @throws Exception
      */
-    protected void setUp() throws Exception {   
+    @Override
+    protected void setUp() throws Exception {
         bindAddress = addr + "?transport.reuseAddress=true&transport.soTimeout=1000";
         super.setUp();
+
+        addr = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
-    
+
     public void testConnect() throws Exception {
         Connection connection = new ActiveMQConnectionFactory(addr).createConnection();
         connection.start();
     }
-    
-    
+
     public void testReceiveThrowsException() throws Exception {
         Connection connection = new ActiveMQConnectionFactory(addr).createConnection();
         connection.start();
         Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = sess.createConsumer(createDestination());
         class StopTask extends TimerTask {
+            @Override
             public void run() {
                 try {
                     broker.stop();
