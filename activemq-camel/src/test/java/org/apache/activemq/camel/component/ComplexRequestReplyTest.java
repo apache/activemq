@@ -66,8 +66,13 @@ public class ComplexRequestReplyTest {
 
     @After
     public void tearDown() throws Exception {
-        shutdownBrokerA();
-        shutdownBrokerB();
+        try {
+            shutdownBrokerA();
+        } catch (Exception ex) {}
+
+        try {
+            shutdownBrokerB();
+        } catch (Exception e) {}
     }
 
     @Test
@@ -137,10 +142,13 @@ public class ComplexRequestReplyTest {
     }
 
     private void shutdownBrokerA() throws Exception {
-        brokerAContext.stop();
-        brokerA.stop();
-        brokerA.waitUntilStopped();
-        brokerA = null;
+        try {
+            brokerAContext.stop();
+        } catch (Exception e) {
+            brokerA.stop();
+            brokerA.waitUntilStopped();
+            brokerA = null;
+        }
     }
 
     private void createBrokerB() throws Exception {
@@ -151,10 +159,13 @@ public class ComplexRequestReplyTest {
     }
 
     private void shutdownBrokerB() throws Exception {
-        brokerBContext.stop();
-        brokerB.stop();
-        brokerB.waitUntilStopped();
-        brokerB = null;
+        try {
+            brokerBContext.stop();
+        } finally {
+            brokerB.stop();
+            brokerB.waitUntilStopped();
+            brokerB = null;
+        }
     }
 
     private BrokerService createBroker(String name) throws Exception {
