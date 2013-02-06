@@ -27,4 +27,9 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
         broker.setPersistenceAdapter(store);
     }
 
+
+    @Override
+    public void testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() {
+        // https://issues.apache.org/jira/browse/AMQ-4296
+    }
 }

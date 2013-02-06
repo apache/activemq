@@ -820,6 +820,12 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     }
 
     public void testOfflineSubscriptionWithSelectorAfterRestart() throws Exception {
+
+        if (PersistenceAdapterChoice.LevelDB == defaultPersistenceAdapter) {
+            // https://issues.apache.org/jira/browse/AMQ-4296
+            return;
+        }
+
         // create offline subs 1
         Connection con = createConnection("offCli1");
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
