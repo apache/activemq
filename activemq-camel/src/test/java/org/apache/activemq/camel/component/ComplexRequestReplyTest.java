@@ -47,14 +47,20 @@ public class ComplexRequestReplyTest {
     private final String toEndpoint = "activemq:queue:send";
     private final String brokerEndpoint = "activemq:send";
 
-    private final String connectionUri = "failover:(tcp://localhost:61616,tcp://localhost:61617)?randomize=false";
+    private String brokerAUri;
+    private String brokerBUri;
+
+    private String connectionUri;
 
     @Before
     public void setUp() throws Exception {
 
         createBrokerA();
+        brokerAUri = brokerA.getTransportConnectors().get(0).getPublishableConnectString();
         createBrokerB();
+        brokerBUri = brokerB.getTransportConnectors().get(0).getPublishableConnectString();
 
+        connectionUri = "failover:(" + brokerAUri + "," + brokerBUri + ")?randomize=false";
         senderContext = createSenderContext();
     }
 
@@ -103,7 +109,7 @@ public class ComplexRequestReplyTest {
 
         PooledConnectionFactory pooled = new PooledConnectionFactory(amqFactory);
         pooled.setMaxConnections(1);
-        pooled.setMaximumActive(500);
+        pooled.setMaximumActiveSessionPerConnection(500);
         // If this is not zero the connection could get closed and the request
         // reply can fail.
         pooled.setIdleTimeout(0);
@@ -124,7 +130,7 @@ public class ComplexRequestReplyTest {
     }
 
     private void createBrokerA() throws Exception {
-        brokerA = createBroker("brokerA", 61616);
+        brokerA = createBroker("brokerA");
         brokerAContext = createBrokerCamelContext("brokerA");
         brokerA.start();
         brokerA.waitUntilStarted();
@@ -138,7 +144,7 @@ public class ComplexRequestReplyTest {
     }
 
     private void createBrokerB() throws Exception {
-        brokerB = createBroker("brokerB", 61617);
+        brokerB = createBroker("brokerB");
         brokerBContext = createBrokerCamelContext("brokerB");
         brokerB.start();
         brokerB.waitUntilStarted();
@@ -151,13 +157,12 @@ public class ComplexRequestReplyTest {
         brokerB = null;
     }
 
-    private BrokerService createBroker(String name, int port) throws Exception {
-
+    private BrokerService createBroker(String name) throws Exception {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
         service.setBrokerName(name);
-        service.addConnector("tcp://localhost:" + Integer.toString(port));
+        service.addConnector("tcp://localhost:0");
 
         return service;
     }
@@ -176,5 +181,4 @@ public class ComplexRequestReplyTest {
         camelContext.start();
         return camelContext;
     }
-
 }
