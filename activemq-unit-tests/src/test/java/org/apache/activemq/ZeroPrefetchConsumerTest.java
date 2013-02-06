@@ -33,14 +33,13 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerControl;
-import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.spring.SpringConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
@@ -99,7 +98,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        
+
         session.createConsumer(queue);
         TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
@@ -145,7 +144,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         answer = (TextMessage)consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
-    
+
     public void testTwoConsumers() throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -164,7 +163,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         answer = (TextMessage)consumer2.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
-    
+
     // https://issues.apache.org/activemq/browse/AMQ-2567
     public void testManyMessageConsumer() throws Exception {
         doTestManyMessageConsumer(true);
@@ -173,7 +172,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     public void testManyMessageConsumerNoTransaction() throws Exception {
         doTestManyMessageConsumer(false);
     }
-    
+
     private void doTestManyMessageConsumer(boolean transacted) throws Exception {
         Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
 
@@ -191,7 +190,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        
+
         MessageConsumer consumer2  = session.createConsumer(queue);
         TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
@@ -214,26 +213,26 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         if (transacted) {
             session.commit();
         }
-        // Now using other consumer 
+        // Now using other consumer
         // this call should return the next message (Msg5) still left on the queue
         answer = (TextMessage)consumer2.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg5");
         if (transacted) {
             session.commit();
         }
-        // Now using other consumer 
+        // Now using other consumer
         // this call should return the next message (Msg5) still left on the queue
         answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg6");
         // read one more message without commit
-        // Now using other consumer 
+        // Now using other consumer
         // this call should return the next message (Msg5) still left on the queue
         answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg7");
         if (transacted) {
             session.commit();
         }
-        // Now using other consumer 
+        // Now using other consumer
         // this call should return the next message (Msg5) still left on the queue
         answer = (TextMessage)consumer2.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg8");
@@ -251,7 +250,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     public void testManyMessageConsumerWithSendNoTransaction() throws Exception {
         doTestManyMessageConsumerWithSend(false);
     }
-    
+
     private void doTestManyMessageConsumerWithSend(boolean transacted) throws Exception {
         Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
 
@@ -269,7 +268,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        
+
         MessageConsumer consumer2  = session.createConsumer(queue);
         TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
@@ -297,23 +296,23 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         if (transacted) {
             session.commit();
         }
-        
+
         answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg6");
         // read one more message without commit
-        // and using other consumer 
+        // and using other consumer
         answer = (TextMessage)consumer2.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg7");
         if (transacted) {
             session.commit();
         }
-        
+
         answer = (TextMessage)consumer2.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg8");
         if (transacted) {
             session.commit();
         }
-        
+
         answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg9");
         if (transacted) {
@@ -372,6 +371,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         return brokerService;
     }
 
+    @Override
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:0";
         super.setUp();
@@ -380,12 +380,14 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         connection.start();
         queue = createQueue();
     }
-    
+
+    @Override
     protected void startBroker() throws Exception {
         super.startBroker();
         bindAddress = broker.getTransportConnectors().get(0).getConnectUri().toString();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         connection.close();
         super.tearDown();

@@ -16,10 +16,10 @@
  */
 package org.apache.activemq;
 
-import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,6 @@ import javax.jms.Topic;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
 import org.apache.activemq.broker.region.policy.FilePendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
@@ -53,10 +52,10 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MessageEvictionTest {
     static final Logger LOG = LoggerFactory.getLogger(MessageEvictionTest.class);
@@ -78,45 +77,47 @@ public class MessageEvictionTest {
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         destination = session.createTopic(destinationName);
     }
-    
+
     @After
     public void tearDown() throws Exception {
         connection.stop();
         broker.stop();
     }
-    
+
     @Test
     public void testMessageEvictionMemoryUsageFileCursor() throws Exception {
         setUp(new FilePendingSubscriberMessageStoragePolicy());
         doTestMessageEvictionMemoryUsage();
     }
-    
+
     @Test
     public void testMessageEvictionMemoryUsageVmCursor() throws Exception {
         setUp(new VMPendingSubscriberMessageStoragePolicy());
         doTestMessageEvictionMemoryUsage();
     }
-    
+
     @Test
     public void testMessageEvictionDiscardedAdvisory() throws Exception {
         setUp(new VMPendingSubscriberMessageStoragePolicy());
-        
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         final CountDownLatch consumerRegistered = new CountDownLatch(1);
         final CountDownLatch gotAdvisory = new CountDownLatch(1);
         final CountDownLatch advisoryIsGood = new CountDownLatch(1);
-        
+
         executor.execute(new Runnable() {
+            @Override
             public void run() {
                 try {
-                    ActiveMQTopic discardedAdvisoryDestination = 
+                    ActiveMQTopic discardedAdvisoryDestination =
                         AdvisorySupport.getMessageDiscardedAdvisoryTopic(destination);
-                    // use separate session rather than asyncDispatch on consumer session 
+                    // use separate session rather than asyncDispatch on consumer session
                     // as we want consumer session to block
                     Session advisorySession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     final MessageConsumer consumer = advisorySession.createConsumer(discardedAdvisoryDestination);
                     consumer.setMessageListener(new MessageListener() {
                         int advisoriesReceived = 0;
+                        @Override
                         public void onMessage(Message message) {
                             try {
                                 LOG.info("advisory:" + message);
@@ -131,7 +132,7 @@ public class MessageEvictionTest {
                             } finally {
                                 gotAdvisory.countDown();
                             }
-                        }           
+                        }
                     });
                     consumerRegistered.countDown();
                     gotAdvisory.await(120, TimeUnit.SECONDS);
@@ -148,18 +149,20 @@ public class MessageEvictionTest {
         assertTrue("got an advisory for discarded", gotAdvisory.await(0, TimeUnit.SECONDS));
         assertTrue("advisory is good",advisoryIsGood.await(0, TimeUnit.SECONDS));
     }
-    
+
     public void doTestMessageEvictionMemoryUsage() throws Exception {
-        
+
         ExecutorService executor = Executors.newCachedThreadPool();
         final CountDownLatch doAck = new CountDownLatch(1);
         final CountDownLatch ackDone = new CountDownLatch(1);
         final CountDownLatch consumerRegistered = new CountDownLatch(1);
         executor.execute(new Runnable() {
+            @Override
             public void run() {
                 try {
                     final MessageConsumer consumer = session.createConsumer(destination);
                     consumer.setMessageListener(new MessageListener() {
+                        @Override
                         public void onMessage(Message message) {
                             try {
                                 // very slow, only ack once
@@ -168,13 +171,13 @@ public class MessageEvictionTest {
                                 message.acknowledge();
                                 ackDone.countDown();
                             } catch (Exception e) {
-                                e.printStackTrace();   
+                                e.printStackTrace();
                                 fail(e.toString());
                             } finally {
                                 consumerRegistered.countDown();
                                 ackDone.countDown();
                             }
-                        }           
+                        }
                     });
                     consumerRegistered.countDown();
                     ackDone.await(60, TimeUnit.SECONDS);
@@ -185,12 +188,13 @@ public class MessageEvictionTest {
                 }
             }
         });
-        
+
         assertTrue("we have a consumer", consumerRegistered.await(10, TimeUnit.SECONDS));
-        
+
         final AtomicInteger sent = new AtomicInteger(0);
         final CountDownLatch sendDone = new CountDownLatch(1);
         executor.execute(new Runnable() {
+            @Override
             public void run() {
                MessageProducer producer;
                try {
@@ -209,17 +213,18 @@ public class MessageEvictionTest {
                }
             }
         });
-        
+
         assertTrue("messages sending done", sendDone.await(180, TimeUnit.SECONDS));
         assertEquals("all message were sent", numMessages, sent.get());
-        
+
         doAck.countDown();
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.SECONDS);
-        
+
         assertTrue("usage goes to 0 once consumer goes away", Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
-                return 0 == TestSupport.getDestination(broker, 
+                return 0 == TestSupport.getDestination(broker,
                         ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage();
             }
         }));
@@ -230,22 +235,22 @@ public class MessageEvictionTest {
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setUseJmx(false);
         brokerService.setDeleteAllMessagesOnStartup(true);
-        
+
         // spooling to disk early so topic memory limit is not reached
         brokerService.getSystemUsage().getMemoryUsage().setLimit(500*1024);
-        
+
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
         final PolicyEntry entry = new PolicyEntry();
         entry.setTopic(">");
-        
+
         entry.setAdvisoryForDiscardingMessages(true);
-        
+
         // so consumer does not get over run while blocked limit the prefetch
         entry.setTopicPrefetch(50);
-        
-        
+
+
         entry.setPendingSubscriberPolicy(pendingSubscriberPolicy);
-        
+
         // limit the number of outstanding messages, large enough to use the file store
         // or small enough not to blow memory limit
         int pendingMessageLimit = 50;
@@ -261,7 +266,7 @@ public class MessageEvictionTest {
         // whether to check expiry before eviction, default limit 1000 is fine as no ttl set in this test
         //messageEvictionStrategy.setEvictExpiredMessagesHighWatermark(1000);
         entry.setMessageEvictionStrategy(messageEvictionStrategy);
-        
+
         // let evicted messaged disappear
         entry.setDeadLetterStrategy(null);
         policyEntries.add(entry);
@@ -269,12 +274,12 @@ public class MessageEvictionTest {
         final PolicyMap policyMap = new PolicyMap();
         policyMap.setPolicyEntries(policyEntries);
         brokerService.setDestinationPolicy(policyMap);
-        
+
         return brokerService;
     }
 
     ConnectionFactory createConnectionFactory() throws Exception {
-        String url = ((TransportConnector) broker.getTransportConnectors().get(0)).getServer().getConnectURI().toString();
+        String url = broker.getTransportConnectors().get(0).getServer().getConnectURI().toString();
         ActiveMQConnectionFactory factory =  new ActiveMQConnectionFactory(url);
         factory.setWatchTopicAdvisories(false);
         return factory;

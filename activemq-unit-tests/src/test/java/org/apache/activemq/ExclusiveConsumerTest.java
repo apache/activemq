@@ -24,8 +24,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQQueue;
 
 public class ExclusiveConsumerTest extends TestCase {
@@ -36,10 +36,12 @@ public class ExclusiveConsumerTest extends TestCase {
         super(name);
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -83,8 +85,8 @@ public class ExclusiveConsumerTest extends TestCase {
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
@@ -122,8 +124,8 @@ public class ExclusiveConsumerTest extends TestCase {
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
@@ -167,9 +169,9 @@ public class ExclusiveConsumerTest extends TestCase {
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer1.receive(100));
-            Assert.assertNull(exclusiveConsumer2.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer1.receive(100));
+            assertNull(exclusiveConsumer2.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
             // Close the exclusive consumer to verify the non-exclusive consumer
             // takes over
@@ -178,8 +180,8 @@ public class ExclusiveConsumerTest extends TestCase {
             producer.send(msg);
             producer.send(msg);
 
-            Assert.assertNotNull(exclusiveConsumer2.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer2.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
@@ -224,9 +226,9 @@ public class ExclusiveConsumerTest extends TestCase {
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer1.receive(100));
-            Assert.assertNull(exclusiveConsumer2.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer1.receive(100));
+            assertNull(exclusiveConsumer2.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
             // Close the exclusive consumer to verify the non-exclusive consumer
             // takes over
@@ -235,8 +237,8 @@ public class ExclusiveConsumerTest extends TestCase {
             producer.send(msg);
             producer.send(msg);
 
-            Assert.assertNotNull(exclusiveConsumer2.receive(1000));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer2.receive(1000));
+            assertNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
@@ -276,8 +278,8 @@ public class ExclusiveConsumerTest extends TestCase {
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
             // Close the exclusive consumer to verify the non-exclusive consumer
             // takes over
@@ -285,7 +287,7 @@ public class ExclusiveConsumerTest extends TestCase {
 
             producer.send(msg);
 
-            Assert.assertNotNull(fallbackConsumer.receive(100));
+            assertNotNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
@@ -325,8 +327,8 @@ public class ExclusiveConsumerTest extends TestCase {
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
             // Close the exclusive consumer to verify the non-exclusive consumer
             // takes over
@@ -335,15 +337,15 @@ public class ExclusiveConsumerTest extends TestCase {
             producer.send(msg);
 
             // Verify other non-exclusive consumer receices the message.
-            Assert.assertNotNull(fallbackConsumer.receive(100));
+            assertNotNull(fallbackConsumer.receive(100));
 
             // Create exclusive consumer to determine if it will start receiving
             // the messages.
             exclusiveConsumer = exclusiveSession.createConsumer(exclusiveQueue);
 
             producer.send(msg);
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();

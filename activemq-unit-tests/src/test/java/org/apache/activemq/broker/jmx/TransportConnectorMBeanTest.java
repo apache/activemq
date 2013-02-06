@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import static org.junit.Assert.assertEquals;
+
 import java.net.Socket;
 import java.util.Set;
+
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -27,9 +31,6 @@ import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TransportConnectorMBeanTest {
     private static final Logger LOG = LoggerFactory.getLogger(TransportConnectorMBeanTest.class);
@@ -73,7 +74,7 @@ public class TransportConnectorMBeanTest {
     }
 
     private String extractLocalPort(ActiveMQConnection connection) throws Exception {
-        Socket socket = (Socket) connection.getTransport().narrow(Socket.class);
+        Socket socket = connection.getTransport().narrow(Socket.class);
         return String.valueOf(socket.getLocalPort());
     }
 

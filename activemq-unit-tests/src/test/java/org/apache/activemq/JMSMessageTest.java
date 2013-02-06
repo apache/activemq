@@ -438,7 +438,7 @@ public class JMSMessageTest extends JmsTestSupport {
         }
 
         @Override
-        public Enumeration getPropertyNames() throws JMSException {
+        public Enumeration<?> getPropertyNames() throws JMSException {
             return new Vector<String>(props.keySet()).elements();
         }
 

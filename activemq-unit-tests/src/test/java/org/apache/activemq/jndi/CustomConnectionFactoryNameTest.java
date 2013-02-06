@@ -23,16 +23,17 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 /**
  * Test case for AMQ-141
  *
- * 
+ *
  */
 public class CustomConnectionFactoryNameTest extends ActiveMQInitialContextFactoryTest {
-    
+
+    @Override
     public void testConnectionFactoriesArePresent() throws NamingException {
         super.testConnectionFactoriesArePresent();
         assertConnectionFactoryPresent("jms/Connection");
         assertConnectionFactoryPresent("jms/DURABLE_SUB_CONNECTION_FACTORY");
     }
-    
+
     public void testConnectionFactoriesAreConfigured() throws NamingException {
         super.testConnectionFactoriesArePresent();
         ActiveMQConnectionFactory factory1 = (ActiveMQConnectionFactory) context.lookup("jms/Connection");
@@ -41,10 +42,12 @@ public class CustomConnectionFactoryNameTest extends ActiveMQInitialContextFacto
         assertEquals("testclient", factory2.getClientID());
     }
 
+    @Override
     protected String getConnectionFactoryLookupName() {
         return "myConnectionFactory";
     }
 
+    @Override
     protected void configureEnvironment() {
         super.configureEnvironment();
         environment.put("connectionFactoryNames", " myConnectionFactory, jms/Connection, jms/DURABLE_SUB_CONNECTION_FACTORY");

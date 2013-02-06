@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import javax.jms.DeliveryMode;
 
 import junit.framework.Test;
+
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
@@ -78,9 +79,10 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
 
         // Make sure the message was delivered via the remote.
         assertTrue("message was received", Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return receiveMessage(connection2) != null;
-            }            
+            }
         }));
     }
 
@@ -122,9 +124,10 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         // Send the message to the local boker.
         connection1.request(createMessage(producerInfo, destination, deliveryMode));
         // Make sure the message was delivered via the remote.
-        Message m = receiveMessage(connection2);
+        receiveMessage(connection2);
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
@@ -135,6 +138,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         bridge.start();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         bridge.stop();
         super.tearDown();

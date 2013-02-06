@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import javax.jms.MessageProducer;
 import javax.jms.TemporaryQueue;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
-
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
 

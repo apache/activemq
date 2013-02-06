@@ -42,8 +42,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Destination;
 import javax.jms.Session;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,9 +60,9 @@ public final class LargeStreamletTest extends TestCase {
     protected Exception writerException;
     protected Exception readerException;
 
-    private AtomicInteger totalRead = new AtomicInteger();
-    private AtomicInteger totalWritten = new AtomicInteger();
-    private AtomicBoolean stopThreads = new AtomicBoolean(false);
+    private final AtomicInteger totalRead = new AtomicInteger();
+    private final AtomicInteger totalWritten = new AtomicInteger();
+    private final AtomicBoolean stopThreads = new AtomicBoolean(false);
 
     public void testStreamlets() throws Exception {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
@@ -75,6 +75,7 @@ public final class LargeStreamletTest extends TestCase {
                 final Destination destination = session.createQueue("wibble");
                 final Thread readerThread = new Thread(new Runnable() {
 
+                    @Override
                     public void run() {
                         totalRead.set(0);
                         try {
@@ -100,6 +101,7 @@ public final class LargeStreamletTest extends TestCase {
                 final Thread writerThread = new Thread(new Runnable() {
                     private final Random random = new Random();
 
+                    @Override
                     public void run() {
                         totalWritten.set(0);
                         int count = MESSAGE_COUNT;
@@ -147,7 +149,7 @@ public final class LargeStreamletTest extends TestCase {
                 assertTrue("Should not have received a reader exception", readerException == null);
                 assertTrue("Should not have received a writer exception", writerException == null);
 
-                Assert.assertEquals("Not all messages accounted for", totalWritten.get(), totalRead.get());
+                assertEquals("Not all messages accounted for", totalWritten.get(), totalRead.get());
 
             } finally {
                 session.close();

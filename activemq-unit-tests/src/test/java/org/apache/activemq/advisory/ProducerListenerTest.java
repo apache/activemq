@@ -30,8 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements ProducerListener {
     private static final Logger LOG = LoggerFactory.getLogger(ProducerListenerTest.class);
@@ -78,10 +78,12 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
         assertConsumerEvent(0, false);
     }
 
+    @Override
     public void onProducerEvent(ProducerEvent event) {
         eventQueue.add(event);
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -91,6 +93,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
         producerEventSource.setProducerListener(this);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (producerEventSource != null) {
             producerEventSource.stop();
@@ -119,6 +122,8 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
 
         Session answer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = answer.createProducer(destination);
+        assertNotNull(producer);
+
         return answer;
     }
 

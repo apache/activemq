@@ -24,8 +24,6 @@ import java.net.URL;
 
 import javax.jms.JMSException;
 
-import junit.framework.Assert;
-
 import org.apache.activemq.command.ActiveMQBlobMessage;
 
 public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
@@ -34,7 +32,7 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
 
     public void testDownload() throws Exception {
         setConnection();
-        
+
         // create file
         File uploadFile = new File(ftpHomeDirFile, "test.txt");
         FileWriter wrt = new FileWriter(uploadFile);
@@ -46,7 +44,7 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
         }
 
         wrt.close();
-        
+
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
         BlobDownloadStrategy strategy = new FTPBlobDownloadStrategy(new BlobTransferPolicy());
         InputStream stream;
@@ -59,16 +57,16 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
                 sb.append((char)i);
                 i = stream.read();
             }
-            Assert.assertEquals("hello world", sb.toString().substring(0, "hello world".length()));
-            Assert.assertEquals(FILE_SIZE, sb.toString().substring("hello world".length()).length());
+            assertEquals("hello world", sb.toString().substring(0, "hello world".length()));
+            assertEquals(FILE_SIZE, sb.toString().substring("hello world".length()).length());
 
             assertTrue(uploadFile.exists());
             strategy.deleteFile(message);
             assertFalse(uploadFile.exists());
-            
+
         } catch (Exception e) {
             e.printStackTrace();
-            Assert.assertTrue(false);
+            assertTrue(false);
         }
     }
 
@@ -79,15 +77,15 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
             message.setURL(new URL("ftp://" + userNamePass + "_wrong:" + userNamePass + "@localhost:"	+ ftpPort + "/ftptest/"));
             strategy.getInputStream(message);
         } catch(JMSException e) {
-            Assert.assertEquals("Wrong Exception", "Cant Authentificate to FTP-Server", e.getMessage());
+            assertEquals("Wrong Exception", "Cant Authentificate to FTP-Server", e.getMessage());
             return;
         } catch(Exception e) {
             System.out.println(e);
-            Assert.assertTrue("Wrong Exception "+ e, false);
+            assertTrue("Wrong Exception "+ e, false);
             return;
         }
 
-        Assert.assertTrue("Expect Exception", false);
+        assertTrue("Expect Exception", false);
     }
 
     public void testWrongFTPPort() throws MalformedURLException {
@@ -97,15 +95,14 @@ public class FTPBlobDownloadStrategyTest extends FTPTestSupport {
             message.setURL(new URL("ftp://" + userNamePass + ":" + userNamePass + "@localhost:"	+ 422 + "/ftptest/"));
             strategy.getInputStream(message);
         } catch(JMSException e) {
-            Assert.assertEquals("Wrong Exception", "Problem connecting the FTP-server", e.getMessage());
+            assertEquals("Wrong Exception", "Problem connecting the FTP-server", e.getMessage());
             return;
         } catch(Exception e) {
             e.printStackTrace();
-            Assert.assertTrue("Wrong Exception "+ e, false);
+            assertTrue("Wrong Exception "+ e, false);
             return;
         }
 
-        Assert.assertTrue("Expect Exception", false);
+        assertTrue("Expect Exception", false);
     }
-
 }

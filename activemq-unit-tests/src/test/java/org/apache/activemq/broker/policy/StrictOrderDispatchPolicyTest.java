@@ -18,6 +18,8 @@ package org.apache.activemq.broker.policy;
 
 import java.util.Iterator;
 
+import javax.jms.MessageConsumer;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TopicSubscriptionTest;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -27,6 +29,7 @@ import org.apache.activemq.util.MessageIdList;
 
 public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
 
@@ -41,48 +44,56 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         return broker;
     }
 
+    @Override
     public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesOnePrefetch();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesOnePrefetch();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testOneProducerTwoConsumersLargeMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesLargePrefetch();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testOneProducerManyConsumersFewMessages() throws Exception {
         super.testOneProducerManyConsumersFewMessages();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testOneProducerManyConsumersManyMessages() throws Exception {
         super.testOneProducerManyConsumersManyMessages();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testManyProducersOneConsumer() throws Exception {
         super.testManyProducersOneConsumer();
 
         assertReceivedMessagesAreOrdered();
     }
 
+    @Override
     public void testManyProducersManyConsumers() throws Exception {
         super.testManyProducersManyConsumers();
 
@@ -96,7 +107,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         }
 
         // Get basis of order
-        Iterator i = consumers.keySet().iterator();
+        Iterator<MessageConsumer> i = consumers.keySet().iterator();
         MessageIdList messageOrder = (MessageIdList)consumers.get(i.next());
 
         for (; i.hasNext();) {

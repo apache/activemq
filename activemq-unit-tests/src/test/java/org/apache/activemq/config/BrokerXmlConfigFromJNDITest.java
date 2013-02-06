@@ -26,15 +26,16 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
- * 
+ *
  */
 public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConnectionsTest {
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         assertBaseDirectoryContainsSpaces();
 
         // we could put these properties into a jndi.properties
         // on the classpath instead
-        Hashtable properties = new Hashtable();
+        Hashtable<String, String> properties = new Hashtable<String, String>();
         properties.put("java.naming.factory.initial", "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
 
         // configure the embedded broker using an XML config file

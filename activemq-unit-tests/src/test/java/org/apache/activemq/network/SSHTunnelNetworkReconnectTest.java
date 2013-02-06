@@ -20,45 +20,43 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test network reconnects over SSH tunnels. This case can be especially tricky
  * since the SSH tunnels fool the TCP transport into thinking that they are
  * initially connected.
- * 
- * @author chirino
+ *
  */
 public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
-    private static final transient Logger LOG = LoggerFactory.getLogger(SSHTunnelNetworkReconnectTest.class);
 
-    ArrayList processes = new ArrayList();
+    ArrayList<Process> processes = new ArrayList<Process>();
 
+    @Override
     protected BrokerService createFirstBroker() throws Exception {
         return BrokerFactory
             .createBroker(new URI("xbean:org/apache/activemq/network/ssh-reconnect-broker1.xml"));
     }
 
+    @Override
     protected BrokerService createSecondBroker() throws Exception {
         return BrokerFactory
             .createBroker(new URI("xbean:org/apache/activemq/network/ssh-reconnect-broker2.xml"));
     }
 
+    @Override
     protected void setUp() throws Exception {
         startProcess("ssh -Nn -L60006:localhost:61616 localhost");
         startProcess("ssh -Nn -L60007:localhost:61617 localhost");
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        for (Iterator iter = processes.iterator(); iter.hasNext();) {
-            Process p = (Process)iter.next();
+        for (Process p : processes) {
             p.destroy();
         }
     }
@@ -67,6 +65,7 @@ public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
         final Process process = Runtime.getRuntime().exec(command);
         processes.add(process);
         new Thread("stdout: " + command) {
+            @Override
             public void run() {
                 try {
                     InputStream is = process.getInputStream();
@@ -79,6 +78,7 @@ public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
             }
         }.start();
         new Thread("stderr: " + command) {
+            @Override
             public void run() {
                 try {
                     InputStream is = process.getErrorStream();

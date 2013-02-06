@@ -18,6 +18,8 @@ package org.apache.activemq.broker.policy;
 
 import java.util.Iterator;
 
+import javax.jms.MessageConsumer;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.QueueSubscriptionTest;
 import org.apache.activemq.broker.region.policy.FixedCountSubscriptionRecoveryPolicy;
@@ -28,6 +30,7 @@ import org.apache.activemq.util.MessageIdList;
 
 public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
 
@@ -42,24 +45,26 @@ public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
         return broker;
     }
 
+    @Override
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
 
         // One consumer should have received all messages, and the rest none
-       // assertOneConsumerReceivedAllMessages(messageCount);
+        // assertOneConsumerReceivedAllMessages(messageCount);
     }
 
+    @Override
     public void testOneProducerTwoConsumersLargeMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesLargePrefetch();
 
         // One consumer should have received all messages, and the rest none
-       // assertOneConsumerReceivedAllMessages(messageCount);
+        // assertOneConsumerReceivedAllMessages(messageCount);
     }
 
     public void assertOneConsumerReceivedAllMessages(int messageCount) throws Exception {
         boolean found = false;
-        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
-            MessageIdList messageIdList = (MessageIdList)consumers.get(i.next());
+        for (Iterator<MessageConsumer> i = consumers.keySet().iterator(); i.hasNext();) {
+            MessageIdList messageIdList = consumers.get(i.next());
             int count = messageIdList.getMessageCount();
             if (count > 0) {
                 if (found) {

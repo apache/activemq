@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.JMSException;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -48,8 +49,9 @@ public class ClientTestSupport extends TestCase {
     protected long idGenerator;
 
     private ActiveMQConnectionFactory connFactory;
-    private String brokerURL = "vm://localhost?broker.persistent=false";
+    private final String brokerURL = "vm://localhost?broker.persistent=false";
 
+    @Override
     public void setUp() throws Exception {
         final AtomicBoolean connected = new AtomicBoolean(false);
         TransportConnector connector;
@@ -57,10 +59,11 @@ public class ClientTestSupport extends TestCase {
         // Start up a broker with a tcp connector.
         try {
             broker = BrokerFactory.createBroker(new URI(this.brokerURL));
-            String brokerId = broker.getBrokerName();
+            broker.getBrokerName();
             connector = new TransportConnector(TransportFactory.bind(new URI(this.brokerURL))) {
                 // Hook into the connector so we can assert that the server
                 // accepted a connection.
+                @Override
                 protected org.apache.activemq.broker.Connection createConnection(org.apache.activemq.transport.Transport transport) throws IOException {
                     connected.set(true);
                     return super.createConnection(transport);
@@ -82,6 +85,7 @@ public class ClientTestSupport extends TestCase {
         connFactory = new ActiveMQConnectionFactory(connectURI);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         if (broker != null) {

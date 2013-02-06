@@ -26,7 +26,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 /**
- * 
+ *
  */
 public class BooleanStreamTest extends TestCase {
 
@@ -40,6 +40,7 @@ public class BooleanStreamTest extends TestCase {
 
     public void testBooleanMarshallingUsingAllTrue() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
+            @Override
             public boolean getBooleanValueFor(int index, int count) {
                 return true;
             }
@@ -48,6 +49,7 @@ public class BooleanStreamTest extends TestCase {
 
     public void testBooleanMarshallingUsingAllFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
+            @Override
             public boolean getBooleanValueFor(int index, int count) {
                 return false;
             }
@@ -56,6 +58,7 @@ public class BooleanStreamTest extends TestCase {
 
     public void testBooleanMarshallingUsingOddAlternateTrueFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
+            @Override
             public boolean getBooleanValueFor(int index, int count) {
                 return (index & 1) == 0;
             }
@@ -64,6 +67,7 @@ public class BooleanStreamTest extends TestCase {
 
     public void testBooleanMarshallingUsingEvenAlternateTrueFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
+            @Override
             public boolean getBooleanValueFor(int index, int count) {
                 return (index & 1) != 0;
             }
@@ -121,13 +125,14 @@ public class BooleanStreamTest extends TestCase {
 
         // lets try read and we should get an exception
         try {
-            byte value = dis.readByte();
+            dis.readByte();
             fail("Should have reached the end of the stream");
         } catch (IOException e) {
             // worked!
         }
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         openWireformat = createOpenWireFormat();

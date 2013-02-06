@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -50,7 +51,6 @@ public class DestinationMapTest extends TestCase {
         map.put(d1, d1);
         map.put(d2, d2);
         map.get(createDestination("TEST.BAR.D2,TEST.BAR.D3"));
-
     }
 
     public void testSimpleDestinations() throws Exception {
@@ -131,7 +131,7 @@ public class DestinationMapTest extends TestCase {
         map.put(d2, v2);
         map.put(d3, v3);
 
-        List allValues = Arrays.asList(new Object[] {v1, v2, v3});
+        List<Object> allValues = Arrays.asList(new Object[] {v1, v2, v3});
 
         assertMapValue(">", allValues);
         assertMapValue("TEST.>", allValues);
@@ -305,10 +305,9 @@ public class DestinationMapTest extends TestCase {
         put("FOO.B", v2);
         assertMapValue("FOO.>", v1, v2);
 
-        Set set = map.removeAll(createDestination("FOO.A"));
+        map.removeAll(createDestination("FOO.A"));
 
         assertMapValue("FOO.>", v2);
-
     }
 
     protected void loadSample2() {
@@ -371,7 +370,7 @@ public class DestinationMapTest extends TestCase {
         assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2, expected3, expected4, expected5, expected6}));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void assertMapValue(ActiveMQDestination destination, Object expected) {
         List expectedList = null;
         if (expected == null) {

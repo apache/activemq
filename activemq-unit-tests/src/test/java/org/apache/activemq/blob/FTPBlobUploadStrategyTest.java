@@ -23,8 +23,6 @@ import java.io.FileWriter;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
-import junit.framework.Assert;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.command.ActiveMQBlobMessage;
@@ -35,22 +33,22 @@ public class FTPBlobUploadStrategyTest extends FTPTestSupport {
 
     public void testFileUpload() throws Exception {
         setConnection();
-		File file = File.createTempFile("amq-data-file-", ".dat");
+        File file = File.createTempFile("amq-data-file-", ".dat");
         // lets write some data
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         writer.append("hello world");
         writer.close();
-        
+
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ((ActiveMQConnection)connection).setCopyMessageOnSend(false);
-        
+
         ActiveMQBlobMessage message = (ActiveMQBlobMessage) ((ActiveMQSession)session).createBlobMessage(file);
         message.setMessageId(new MessageId("testmessage"));
         message.onSend();
-        Assert.assertEquals(ftpUrl + "testmessage", message.getURL().toString()); 
+        assertEquals(ftpUrl + "testmessage", message.getURL().toString());
         File uploaded = new File(ftpHomeDirFile, "testmessage");
         assertTrue("File doesn't exists", uploaded.exists());
-	}
+    }
 
     public void testWriteDenied() throws Exception {
         userNamePass = "guest";
@@ -60,10 +58,10 @@ public class FTPBlobUploadStrategyTest extends FTPTestSupport {
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         writer.append("hello world");
         writer.close();
-        
+
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ((ActiveMQConnection)connection).setCopyMessageOnSend(false);
-        
+
         ActiveMQBlobMessage message = (ActiveMQBlobMessage) ((ActiveMQSession)session).createBlobMessage(file);
         message.setMessageId(new MessageId("testmessage"));
         try {
@@ -74,5 +72,5 @@ public class FTPBlobUploadStrategyTest extends FTPTestSupport {
         }
         fail("Should have failed with permission denied exception!");
     }
-    
+
 }

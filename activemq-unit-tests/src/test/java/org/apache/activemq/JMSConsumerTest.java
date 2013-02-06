@@ -36,7 +36,9 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.management.ObjectName;
+
 import junit.framework.Test;
+
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -45,8 +47,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Test cases used to test the JMS message consumer.
- * 
- * 
+ *
+ *
  */
 public class JMSConsumerTest extends JmsTestSupport {
 
@@ -85,6 +87,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         destination = createDestination(session, destinationType);
         ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 counter.incrementAndGet();
                 if (counter.get() == 1) {
@@ -121,35 +124,37 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch closeDone = new CountDownLatch(1);
-        
+
         connection.start();
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
 
         // preload the queue
         sendMessages(session, destination, 2000);
-        
+
 
         final ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)session.createConsumer(destination);
-       
-        final Map<Thread, Throwable> exceptions = 
+
+        final Map<Thread, Throwable> exceptions =
             Collections.synchronizedMap(new HashMap<Thread, Throwable>());
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
             public void uncaughtException(Thread t, Throwable e) {
                 LOG.error("Uncaught exception:", e);
                 exceptions.put(t, e);
             }
         });
-        
-        final class AckAndClose implements Runnable {            
-            private Message message;
+
+        final class AckAndClose implements Runnable {
+            private final Message message;
 
             public AckAndClose(Message m) {
                 this.message = m;
             }
 
+            @Override
             public void run() {
-                try {   
+                try {
                     int count = counter.incrementAndGet();
                     if (count == 590) {
                         // close in a separate thread is ok by jms
@@ -161,16 +166,17 @@ public class JMSConsumerTest extends JmsTestSupport {
                         // ack every 200
                         message.acknowledge();
                     }
-                } catch (Exception e) {        
+                } catch (Exception e) {
                     LOG.error("Exception on close or ack:", e);
                     exceptions.put(Thread.currentThread(), e);
-                } 
-            }  
+                }
+            }
         };
-    
+
         final ExecutorService executor = Executors.newCachedThreadPool();
         consumer.setMessageListener(new MessageListener() {
-            public void onMessage(Message m) { 
+            @Override
+            public void onMessage(Message m) {
                 // ack and close eventually in separate thread
                 executor.execute(new AckAndClose(m));
             }
@@ -182,7 +188,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
 
-    
+
     public void initCombosForTestMutiReceiveWithPrefetch1() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
         addCombinationValues("ackMode", new Object[] {Integer.valueOf(Session.AUTO_ACKNOWLEDGE), Integer.valueOf(Session.DUPS_OK_ACKNOWLEDGE),
@@ -310,6 +316,7 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         // See if the message get sent to the listener
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 counter.incrementAndGet();
                 if (counter.get() == 4) {
@@ -339,6 +346,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         ActiveMQSession session = (ActiveMQSession) connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationType);
         MessageConsumer consumer = session.createConsumer(destination, new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 counter.incrementAndGet();
                 if (counter.get() == 4) {
@@ -346,6 +354,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                 }
             }
         });
+        assertNotNull(consumer);
 
         // Send the messages
         sendMessages(session, destination, 4);
@@ -357,14 +366,14 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertEquals(4, counter.get());
     }
 
-    public void initCombosForTestMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() { 
+    public void initCombosForTestMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
         addCombinationValues("ackMode", new Object[] {Integer.valueOf(Session.CLIENT_ACKNOWLEDGE)});
         addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE)});
     }
 
     public void testMessageListenerOnMessageCloseUnackedWithPrefetch1StayInQueue() throws Exception {
-    
+
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch sendDone = new CountDownLatch(1);
         final CountDownLatch got2Done = new CountDownLatch(1);
@@ -383,6 +392,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         destination = createDestination(session, destinationType);
         MessageConsumer consumer = session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
@@ -420,6 +430,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         session = connection.createSession(false, ackMode);
         consumer = session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
@@ -440,7 +451,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         Thread.sleep(200);
 
         // assert msg 2 was redelivered as close() from onMessages() will only ack in auto_ack and dups_ok mode
-        assertEquals(5, counter.get());      
+        assertEquals(5, counter.get());
     }
 
     public void initCombosForTestMessageListenerAutoAckOnCloseWithPrefetch1() {
@@ -450,7 +461,7 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
 
     public void testMessageListenerAutoAckOnCloseWithPrefetch1() throws Exception {
-    
+
         final AtomicInteger counter = new AtomicInteger(0);
         final CountDownLatch sendDone = new CountDownLatch(1);
         final CountDownLatch got2Done = new CountDownLatch(1);
@@ -469,6 +480,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         destination = createDestination(session, destinationType);
         MessageConsumer consumer = session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
@@ -506,6 +518,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         session = connection.createSession(false, ackMode);
         consumer = session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
@@ -547,6 +560,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         destination = createDestination(session, destinationType);
         MessageConsumer consumer = session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 counter.incrementAndGet();
                 if (counter.get() == 4) {
@@ -582,6 +596,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         destination = createDestination(session, destinationType);
         MessageConsumer consumer = session.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message m) {
                 counter.incrementAndGet();
                 if (counter.get() == 4) {
@@ -756,7 +771,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
 
-    
+
     public void testDupsOkConsumer() throws Exception {
 
         // Receive a message with the JMS API
@@ -774,10 +789,10 @@ public class JMSConsumerTest extends JmsTestSupport {
             assertNotNull(m);
         }
         assertNull(consumer.receive(1000));
-        
+
         // Close out the consumer.. no other messages should be left on the queue.
         consumer.close();
-        
+
         consumer = session.createConsumer(destination);
         assertNull(consumer.receive(1000));
     }
@@ -787,55 +802,55 @@ public class JMSConsumerTest extends JmsTestSupport {
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
-        
+
         sendMessages(connection, destination, 2);
-        
+
         MessageConsumer consumer = session.createConsumer(destination);
         assertNotNull(consumer.receive(1000));
         assertNotNull(consumer.receive(1000));
-        
+
         // install another consumer while message dispatch is unacked/uncommitted
         Session redispatchSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
 
         // no commit so will auto rollback and get re-dispatched to redisptachConsumer
         session.close();
-                
+
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue("redelivered flag set", msg.getJMSRedelivered());
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
-        
+
         msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getJMSRedelivered());
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         redispatchSession.commit();
-        
+
         assertNull(redispatchConsumer.receive(500));
         redispatchSession.close();
     }
 
-    
+
     public void testRedispatchOfRolledbackTx() throws Exception {
 
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
-        
+
         sendMessages(connection, destination, 2);
-        
+
         MessageConsumer consumer = session.createConsumer(destination);
         assertNotNull(consumer.receive(1000));
         assertNotNull(consumer.receive(1000));
-        
+
         // install another consumer while message dispatch is unacked/uncommitted
         Session redispatchSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
 
         session.rollback();
         session.close();
-                
+
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getJMSRedelivered());
@@ -845,31 +860,31 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertTrue(msg.getJMSRedelivered());
         assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         redispatchSession.commit();
-        
+
         assertNull(redispatchConsumer.receive(500));
         redispatchSession.close();
     }
-    
-    
+
+
     public void initCombosForTestAckOfExpired() {
-        addCombinationValues("destinationType", 
+        addCombinationValues("destinationType",
                 new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
     }
-        
+
     public void testAckOfExpired() throws Exception {
-        
+
         ActiveMQConnectionFactory fact = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=4&jms.sendAcksAsync=false");
         connection = fact.createActiveMQConnection();
-        
+
         connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = (ActiveMQDestination) (destinationType == ActiveMQDestination.QUEUE_TYPE ?
                 session.createQueue("test") : session.createTopic("test"));
-                    
+
         MessageConsumer consumer = session.createConsumer(destination);
         connection.setStatsEnabled(true);
-                
-        Session sendSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
+
+        Session sendSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer producer = sendSession.createProducer(destination);
         producer.setTimeToLive(1000);
         final int count = 4;
@@ -877,37 +892,37 @@ public class JMSConsumerTest extends JmsTestSupport {
             TextMessage message = sendSession.createTextMessage("" + i);
             producer.send(message);
         }
-        
+
         // let first bunch in queue expire
         Thread.sleep(2000);
-        
+
         producer.setTimeToLive(0);
         for (int i = 0; i < count; i++) {
             TextMessage message = sendSession.createTextMessage("no expiry" + i);
             producer.send(message);
         }
-        
+
         ActiveMQMessageConsumer amqConsumer = (ActiveMQMessageConsumer) consumer;
-        
+
         for(int i=0; i<count; i++) {
             TextMessage msg = (TextMessage) amqConsumer.receive();
             assertNotNull(msg);
             assertTrue("message has \"no expiry\" text: " + msg.getText(), msg.getText().contains("no expiry"));
-            
+
             // force an ack when there are expired messages
-            amqConsumer.acknowledge();         
+            amqConsumer.acknowledge();
         }
         assertEquals("consumer has expiredMessages", count, amqConsumer.getConsumerStats().getExpiredMessageCount().getCount());
-    
+
         DestinationViewMBean view = createView(destination);
-        
+
         assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), 0, view.getInFlightCount());
         assertEquals("Wrong dispatch count: " + view.getDispatchCount(), 8, view.getDispatchCount());
         assertEquals("Wrong dequeue count: " + view.getDequeueCount(), 8, view.getDequeueCount());
     }
-    
+
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
-         
+
          String domain = "org.apache.activemq";
          ObjectName name;
         if (destination.isQueue()) {

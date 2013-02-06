@@ -25,11 +25,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 
-import junit.framework.Assert;
-
-public abstract class DataFileGenerator extends Assert {
+public abstract class DataFileGenerator extends org.junit.Assert {
 
     static final File MODULE_BASE_DIR;
     static final File CONTROL_DIR;
@@ -52,16 +49,16 @@ public abstract class DataFileGenerator extends Assert {
      * @throws InstantiationException
      * @throws IllegalAccessException
      */
-    public static ArrayList getAllDataFileGenerators() throws Exception {
+    public static ArrayList<DataFileGenerator> getAllDataFileGenerators() throws Exception {
         // System.out.println("Looking for generators in : "+classFileDir);
-        ArrayList l = new ArrayList();
+        ArrayList<DataFileGenerator> l = new ArrayList<DataFileGenerator>();
         File[] files = CLASS_FILE_DIR.listFiles();
         for (int i = 0; files != null && i < files.length; i++) {
             File file = files[i];
             if (file.getName().endsWith("Data.java")) {
                 String cn = file.getName();
                 cn = cn.substring(0, cn.length() - ".java".length());
-                Class clazz = DataFileGenerator.class.getClassLoader().loadClass("org.apache.activemq.openwire." + cn);
+                Class<?> clazz = DataFileGenerator.class.getClassLoader().loadClass("org.apache.activemq.openwire." + cn);
                 l.add((DataFileGenerator)clazz.newInstance());
             }
         }
@@ -69,12 +66,11 @@ public abstract class DataFileGenerator extends Assert {
     }
 
     private static void generateControlFiles() throws Exception {
-        ArrayList generators = getAllDataFileGenerators();
-        for (Iterator iter = generators.iterator(); iter.hasNext();) {
-            DataFileGenerator object = (DataFileGenerator)iter.next();
+        ArrayList<DataFileGenerator> generators = getAllDataFileGenerators();
+        for (DataFileGenerator element : generators) {
             try {
                 // System.out.println("Processing: "+object.getClass());
-                object.generateControlFile();
+                element.generateControlFile();
             } catch (Exception e) {
                 // System.err.println("Error while processing:
                 // "+object.getClass() + ". Reason: " + e);
@@ -112,11 +108,10 @@ public abstract class DataFileGenerator extends Assert {
     }
 
     public static void assertAllControlFileAreEqual() throws Exception {
-        ArrayList generators = getAllDataFileGenerators();
-        for (Iterator iter = generators.iterator(); iter.hasNext();) {
-            DataFileGenerator object = (DataFileGenerator)iter.next();
+        ArrayList<DataFileGenerator> generators = getAllDataFileGenerators();
+        for (DataFileGenerator element : generators) {
             // System.out.println("Processing: "+object.getClass());
-            object.assertControlFileIsEqual();
+            element.assertControlFileIsEqual();
         }
     }
 

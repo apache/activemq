@@ -34,29 +34,29 @@ import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ProgressPrinter;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.memory.list.SimpleMessageList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class LoadTester extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(LoadTester.class);
-    
+
     protected int messageSize = 1024 * 64;
     protected int produceCount = 10000;
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/broker/store/loadtester.xml"));
     }
 
+    @Override
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getServer().getConnectURI());
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getServer().getConnectURI());
         factory.setUseAsyncSend(true);
         return factory;
     }

@@ -26,12 +26,9 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.Assert;
-
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.command.ActiveMQBlobMessage;
-
 
 public class FTPBlobTest extends FTPTestSupport {
 
@@ -57,7 +54,7 @@ public class FTPBlobTest extends FTPTestSupport {
 
         // check message send
         Message msg = consumer.receive(1000);
-        Assert.assertTrue(msg instanceof ActiveMQBlobMessage);
+        assertTrue(msg instanceof ActiveMQBlobMessage);
 
         assertEquals("name is correct", "fileName", ((ActiveMQBlobMessage)msg).getName());
         InputStream input = ((ActiveMQBlobMessage) msg).getInputStream();
@@ -68,8 +65,8 @@ public class FTPBlobTest extends FTPTestSupport {
             i = input.read();
         }
         input.close();
-        File uploaded = new File(ftpHomeDirFile, msg.getJMSMessageID().toString().replace(":", "_")); 
-        Assert.assertEquals(content, b.toString());
+        File uploaded = new File(ftpHomeDirFile, msg.getJMSMessageID().toString().replace(":", "_"));
+        assertEquals(content, b.toString());
         assertTrue(uploaded.exists());
         ((ActiveMQBlobMessage)msg).deleteFile();
         assertFalse(uploaded.exists());

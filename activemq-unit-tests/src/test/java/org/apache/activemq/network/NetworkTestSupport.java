@@ -36,7 +36,7 @@ import org.apache.activemq.usage.SystemUsage;
 
 public class NetworkTestSupport extends BrokerTestSupport {
 
-    protected ArrayList connections = new ArrayList();
+    protected ArrayList<StubConnection> connections = new ArrayList<StubConnection>();
 
     protected TransportConnector connector;
 
@@ -46,18 +46,19 @@ public class NetworkTestSupport extends BrokerTestSupport {
     protected TransportConnector remoteConnector;
     protected boolean useJmx = false;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
-        remotePersistenceAdapter = createRemotePersistenceAdapter(true);        
+        remotePersistenceAdapter = createRemotePersistenceAdapter(true);
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
         remoteConnector = createRemoteConnector();
         remoteBroker.addConnector( remoteConnector );
         BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
         remoteBroker.start();
     }
-    
-    
+
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false&"));
         connector = createConnector();
@@ -65,7 +66,6 @@ public class NetworkTestSupport extends BrokerTestSupport {
         broker.setUseJmx(useJmx);
         return broker;
     }
-
 
     /**
      * @return
@@ -111,6 +111,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         return answer;
     }
 
+    @Override
     protected StubConnection createConnection() throws Exception {
         Transport transport = TransportFactory.connect(connector.getServer().getConnectURI());
         StubConnection connection = new StubConnection(transport);
@@ -138,7 +139,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
     /**
      * Simulates a broker restart. The memory based persistence adapter is
      * reused so that it does not "loose" it's "persistent" messages.
-     * 
+     *
      * @throws Exception
      */
     protected void restartRemoteBroker() throws Exception {
@@ -150,16 +151,17 @@ public class NetworkTestSupport extends BrokerTestSupport {
         remotePersistenceAdapter.stop();
         remotePersistenceAdapter = createRemotePersistenceAdapter(false);
         remotePersistenceAdapter.start();
-        
+
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
         remoteBroker.addConnector(getRemoteURI());
         remoteBroker.start();
         BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
     }
 
+    @Override
     protected void tearDown() throws Exception {
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            StubConnection connection = (StubConnection)iter.next();
+        for (Iterator<StubConnection> iter = connections.iterator(); iter.hasNext();) {
+            StubConnection connection = iter.next();
             connection.stop();
             iter.remove();
         }

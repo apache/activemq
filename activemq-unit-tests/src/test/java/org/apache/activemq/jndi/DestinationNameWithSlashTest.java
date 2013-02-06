@@ -20,7 +20,7 @@ package org.apache.activemq.jndi;
 /**
  * Test case for AMQ-140
  *
- * 
+ *
  */
 public class DestinationNameWithSlashTest extends JNDITestSupport {
     public void testNameWithSlash() throws Exception {
@@ -28,6 +28,7 @@ public class DestinationNameWithSlashTest extends JNDITestSupport {
 
     }
 
+    @Override
     protected void configureEnvironment() {
         super.configureEnvironment();
         environment.put("queue.jms/Queue", "example.myqueue");

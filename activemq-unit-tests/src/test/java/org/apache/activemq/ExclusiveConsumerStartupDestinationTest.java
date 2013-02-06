@@ -23,7 +23,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import junit.framework.Assert;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -33,6 +33,7 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
 
     private static final String VM_BROKER_URL = "vm://localhost";
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setPersistent(false);
@@ -40,7 +41,7 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
         PolicyEntry entry = new PolicyEntry();
         entry.setAllConsumersExclusiveByDefault(true);
         map.setDefaultEntry(entry);
-        answer.setDestinationPolicy(map);        
+        answer.setDestinationPolicy(map);
         return answer;
     }
 
@@ -87,15 +88,13 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
-
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
         } finally {
             fallbackSession.close();
             senderSession.close();
             conn.close();
         }
-
     }
 
     public void testFailoverToAnotherExclusiveConsumerCreatedFirst() throws JMSException,
@@ -132,9 +131,9 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer1.receive(100));
-            Assert.assertNull(exclusiveConsumer2.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer1.receive(100));
+            assertNull(exclusiveConsumer2.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
             // Close the exclusive consumer to verify the non-exclusive consumer
             // takes over
@@ -143,8 +142,8 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
             producer.send(msg);
             producer.send(msg);
 
-            Assert.assertNotNull("Should have received a message", exclusiveConsumer2.receive(100));
-            Assert.assertNull("Should not have received a message", fallbackConsumer.receive(100));
+            assertNotNull("Should have received a message", exclusiveConsumer2.receive(100));
+            assertNull("Should not have received a message", fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
@@ -184,8 +183,8 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
             Thread.sleep(100);
 
             // Verify exclusive consumer receives the message.
-            Assert.assertNotNull(exclusiveConsumer.receive(100));
-            Assert.assertNull(fallbackConsumer.receive(100));
+            assertNotNull(exclusiveConsumer.receive(100));
+            assertNull(fallbackConsumer.receive(100));
 
             // Close the exclusive consumer to verify the non-exclusive consumer
             // takes over
@@ -193,14 +192,12 @@ public class ExclusiveConsumerStartupDestinationTest extends EmbeddedBrokerTestS
 
             producer.send(msg);
 
-            Assert.assertNotNull(fallbackConsumer.receive(100));
+            assertNotNull(fallbackConsumer.receive(100));
 
         } finally {
             fallbackSession.close();
             senderSession.close();
             conn.close();
         }
-
     }
-
 }

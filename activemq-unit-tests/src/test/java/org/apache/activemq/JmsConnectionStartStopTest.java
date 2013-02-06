@@ -18,13 +18,10 @@ package org.apache.activemq;
 
 import java.util.Random;
 import java.util.Vector;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -35,7 +32,7 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 
 /**
- * 
+ *
  */
 public class JmsConnectionStartStopTest extends TestSupport {
 
@@ -48,6 +45,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
     /**
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
 
         LOG.info(getClass().getClassLoader().getResource("log4j.properties"));
@@ -61,6 +59,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
     /**
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         stoppedConnection.close();
         startedConnection.close();
@@ -69,7 +68,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
     /**
      * Tests if the consumer receives the messages that were sent before the
      * connection was started.
-     * 
+     *
      * @throws JMSException
      */
     public void testStoppedConsumerHoldsMessagesTillStarted() throws JMSException {
@@ -104,7 +103,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
     /**
      * Tests if the consumer is able to receive messages eveb when the
      * connecction restarts multiple times.
-     * 
+     *
      * @throws Exception
      */
     public void testMultipleConnectionStops() throws Exception {
@@ -123,6 +122,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
         final Vector<Throwable> exceptions = new Vector<Throwable>();
         final Random rand = new Random();
         Runnable createSessionTask = new Runnable() {
+            @Override
             public void run() {
                 try {
                     TimeUnit.MILLISECONDS.sleep(rand.nextInt(10));
@@ -134,6 +134,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
         };
 
         Runnable startStopTask = new Runnable() {
+            @Override
             public void run() {
                 try {
                     TimeUnit.MILLISECONDS.sleep(rand.nextInt(10));

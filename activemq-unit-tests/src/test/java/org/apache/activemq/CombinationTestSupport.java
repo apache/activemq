@@ -65,12 +65,12 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(CombinationTestSupport.class);
 
-    private HashMap<String, ComboOption> comboOptions = new HashMap<String, ComboOption>();
+    private final HashMap<String, ComboOption> comboOptions = new HashMap<String, ComboOption>();
     private boolean combosEvaluated;
     private Map<String, Object> options;
     protected File basedir;
 
-    static protected File basedir(Class clazz) {
+    static protected File basedir(Class<?> clazz) {
         try {
             ProtectionDomain protectionDomain = clazz.getProtectionDomain();
             return new File(new File(protectionDomain.getCodeSource().getLocation().getPath()), "../..").getCanonicalFile();
@@ -101,6 +101,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         }
     }
 
+    @Override
     public void runBare() throws Throwable {
         if (combosEvaluated) {
             super.runBare();
@@ -253,6 +254,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         return parameters.length == 0 && name.startsWith("test") && returnType.equals(Void.TYPE);
     }
 
+    @Override
     public String getName() {
         return getName(false);
     }

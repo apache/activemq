@@ -22,7 +22,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -83,7 +82,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertTrue(cf.isUseAsyncSend());
         // the broker url have been adjusted.
         assertEquals("vm:(broker:()/localhost)", cf.getBrokerURL());
-        
+
         cf = new ActiveMQConnectionFactory("vm://localhost?jms.auditDepth=5000");
         assertEquals(5000, cf.getAuditDepth());
     }
@@ -142,7 +141,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     public void testCreateTcpConnectionUsingKnownLocalPort() throws Exception {
         broker = new BrokerService();
         broker.setPersistent(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+        broker.addConnector("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
         broker.start();
 
         // This should create the connection.
@@ -178,56 +177,58 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         cf = (ActiveMQConnectionFactory)objectsIn.readObject();
         assertEquals(cf.getClientID(), clientID);
     }
-    
+
     public void testSetExceptionListener() throws Exception {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNull(connection.getExceptionListener());
-        
+
         ExceptionListener exListener = new ExceptionListener() {
-			public void onException(JMSException arg0) {
-			}
+            @Override
+            public void onException(JMSException arg0) {
+            }
         };
         cf.setExceptionListener(exListener);
         connection.close();
-        
+
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection.getExceptionListener());
         assertEquals(exListener, connection.getExceptionListener());
         connection.close();
-        
+
         connection = (ActiveMQConnection)cf.createConnection();
         assertEquals(exListener, connection.getExceptionListener());
-        
+
         assertEquals(exListener, cf.getExceptionListener());
         connection.close();
-        
+
     }
 
-    
+
     public void testSetClientInternalExceptionListener() throws Exception {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
         assertNull(connection.getClientInternalExceptionListener());
-        
+
         ClientInternalExceptionListener listener = new ClientInternalExceptionListener() {
+            @Override
             public void onException(Throwable exception) {
             }
         };
         connection.setClientInternalExceptionListener(listener);
         cf.setClientInternalExceptionListener(listener);
         connection.close();
-        
+
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection.getClientInternalExceptionListener());
         assertEquals(listener, connection.getClientInternalExceptionListener());
         connection.close();
-        
+
         connection = (ActiveMQConnection)cf.createConnection();
-        assertEquals(listener, connection.getClientInternalExceptionListener());   
+        assertEquals(listener, connection.getClientInternalExceptionListener());
         assertEquals(listener, cf.getClientInternalExceptionListener());
         connection.close();
-        
+
     }
 
     protected void assertCreateConnection(String uri) throws Exception {

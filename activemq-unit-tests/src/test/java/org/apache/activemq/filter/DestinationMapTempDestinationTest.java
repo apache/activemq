@@ -17,13 +17,15 @@
 package org.apache.activemq.filter;
 
 import java.util.Set;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.util.IdGenerator;
 
 public class DestinationMapTempDestinationTest extends TestCase {
-    
+
     public void testtestTempDestinations() throws Exception {
         ConnectionId id = new ConnectionId(new IdGenerator().generateId());
         DestinationMap map = new DestinationMap();
@@ -36,7 +38,7 @@ public class DestinationMapTempDestinationTest extends TestCase {
         for (int i = 0; i < count; i++) {
             ActiveMQTempQueue queue = new ActiveMQTempQueue(id, i);
             map.remove(queue, value);
-            Set set = map.get(queue);
+            Set<?> set = map.get(queue);
             assertTrue(set.isEmpty());
         }
     }

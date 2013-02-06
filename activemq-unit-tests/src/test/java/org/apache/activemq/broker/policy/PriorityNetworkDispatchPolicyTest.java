@@ -16,22 +16,25 @@
  */
 package org.apache.activemq.broker.policy;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.policy.PriorityNetworkDispatchPolicy;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.derby.iapi.jdbc.BrokeredStatement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-
-import static org.junit.Assert.assertEquals;
 
 public class PriorityNetworkDispatchPolicyTest {
 

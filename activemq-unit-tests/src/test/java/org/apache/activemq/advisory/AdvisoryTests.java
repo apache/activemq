@@ -26,7 +26,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.Topic;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
@@ -38,7 +40,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 
 /**
- * 
+ *
  */
 public class AdvisoryTests extends TestCase {
     protected static final int MESSAGE_COUNT = 2000;
@@ -46,13 +48,14 @@ public class AdvisoryTests extends TestCase {
     protected Connection connection;
     protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
     protected int topicCount;
-   
+
 
     public void testNoSlowConsumerAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
         MessageConsumer consumer = s.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
             }
         });
@@ -70,12 +73,13 @@ public class AdvisoryTests extends TestCase {
         Message msg = advisoryConsumer.receive(1000);
         assertNull(msg);
     }
-    
+
     public void testSlowConsumerAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
         MessageConsumer consumer = s.createConsumer(queue);
-        
+        assertNotNull(consumer);
+
         Topic advisoryTopic = AdvisorySupport
                 .getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
         s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -90,56 +94,58 @@ public class AdvisoryTests extends TestCase {
         Message msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
     }
-    
-    public void testMessageDeliveryAdvisory() throws Exception {        
+
+    public void testMessageDeliveryAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
         MessageConsumer consumer = s.createConsumer(queue);
-                
+        assertNotNull(consumer);
+
         Topic advisoryTopic = AdvisorySupport.getMessageDeliveredAdvisoryTopic((ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         //start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
-        
+
         BytesMessage m = s.createBytesMessage();
         m.writeBytes(new byte[1024]);
         producer.send(m);
-        
+
         Message msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
     }
-    
-    public void testMessageConsumedAdvisory() throws Exception {        
+
+    public void testMessageConsumedAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
         MessageConsumer consumer = s.createConsumer(queue);
-                
+
         Topic advisoryTopic = AdvisorySupport.getMessageConsumedAdvisoryTopic((ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         //start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
-        
+
         BytesMessage m = s.createBytesMessage();
         m.writeBytes(new byte[1024]);
         producer.send(m);
         String id = m.getJMSMessageID();
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
-        
+
         msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
-        
+
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
         String originalId = payload.getJMSMessageID();
         assertEquals(originalId, id);
     }
-    
+
     public void testMessageExpiredAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
         MessageConsumer consumer = s.createConsumer(queue);
-                
+        assertNotNull(consumer);
+
         Topic advisoryTopic = AdvisorySupport.getExpiredMessageTopic((ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         //start throwing messages at the consumer
@@ -150,16 +156,17 @@ public class AdvisoryTests extends TestCase {
             m.writeBytes(new byte[1024]);
             producer.send(m);
         }
-                
+
         Message msg = advisoryConsumer.receive(2000);
         assertNotNull(msg);
     }
-    
+
     public void xtestMessageDiscardedAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = s.createTopic(getClass().getName());
         MessageConsumer consumer = s.createConsumer(topic);
-                
+        assertNotNull(consumer);
+
         Topic advisoryTopic = AdvisorySupport.getMessageDiscardedAdvisoryTopic((ActiveMQDestination) topic);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         //start throwing messages at the consumer
@@ -169,12 +176,12 @@ public class AdvisoryTests extends TestCase {
             BytesMessage m = s.createBytesMessage();
             producer.send(m);
         }
-                
+
         Message msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
     }
 
-   
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -185,6 +192,7 @@ public class AdvisoryTests extends TestCase {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         connection.close();

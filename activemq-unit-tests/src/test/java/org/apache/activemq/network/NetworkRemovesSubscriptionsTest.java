@@ -31,7 +31,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 /**
  * Various Tests to show the memory leak suspect in network of brokers. This is
  * for https://issues.apache.org/activemq/browse/AMQ-2530
- * 
+ *
  */
 public class NetworkRemovesSubscriptionsTest extends TestCase {
     private final static String frontEndAddress = "tcp://0.0.0.0:61617";
@@ -109,6 +109,7 @@ public class NetworkRemovesSubscriptionsTest extends TestCase {
         for (int i = 0; i < 100; i++) {
             TopicSession subscriberSession = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
             TopicSubscriber subscriber = subscriberSession.createSubscriber(topic);
+            assertNotNull(subscriber);
         }
 
         connection.close();
@@ -121,7 +122,7 @@ public class NetworkRemovesSubscriptionsTest extends TestCase {
     /**
      * Running this test you can produce a leak of only 2 ConsumerInfo on BE
      * broker, NOT 200 as in other cases!
-     * 
+     *
      */
     public void testWithoutSessionAndSubsciberClosePlayAround() throws Exception {
 
@@ -148,6 +149,7 @@ public class NetworkRemovesSubscriptionsTest extends TestCase {
 
     class DummyMessageListener implements MessageListener {
 
+        @Override
         public void onMessage(Message arg0) {
             // TODO Auto-generated method stub
 

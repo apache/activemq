@@ -18,12 +18,10 @@ package org.apache.activemq.broker.policy;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class NoRetryDeadLetterTest extends DeadLetterTest {
-    private static final Logger LOG = LoggerFactory.getLogger(NoRetryDeadLetterTest.class);
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory connectionFactory = super.createConnectionFactory();
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
@@ -31,5 +29,5 @@ public class NoRetryDeadLetterTest extends DeadLetterTest {
         connectionFactory.setRedeliveryPolicy(redeliveryPolicy);
         return connectionFactory;
     }
-    
+
 }

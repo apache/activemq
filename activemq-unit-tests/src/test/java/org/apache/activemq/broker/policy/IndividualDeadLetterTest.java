@@ -35,11 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class IndividualDeadLetterTest extends DeadLetterTest {
     private static final Logger LOG = LoggerFactory.getLogger(IndividualDeadLetterTest.class);
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
 
@@ -56,11 +57,12 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         return broker;
     }
 
+    @Override
     protected Destination createDlqDestination() {
         String prefix = topic ? "ActiveMQ.DLQ.Topic." : "ActiveMQ.DLQ.Queue.";
         return new ActiveMQQueue(prefix + getClass().getName() + "." + getName());
     }
-    
+
     public void testDLQBrowsing() throws Exception {
         super.topic = false;
         deliveryMode = DeliveryMode.PERSISTENT;
@@ -97,9 +99,9 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         assertNull("The message shouldn't be sent to another DLQ", testConsumer.receive(1000));
 
     }
-    
+
     protected void browseDlq() throws Exception {
-        Enumeration messages = dlqBrowser.getEnumeration();
+        Enumeration<?> messages = dlqBrowser.getEnumeration();
         while (messages.hasMoreElements()) {
             LOG.info("Browsing: " + messages.nextElement());
         }

@@ -16,21 +16,13 @@
  */
 package org.apache.activemq.broker.policy;
 
-import java.util.Enumeration;
-import javax.jms.DeliveryMode;
 import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Queue;
-import org.apache.activemq.ActiveMQConnection;
+
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * for durable subs, allow a dlq per subscriber such that poison messages are not duplicates
@@ -38,10 +30,10 @@ import org.slf4j.LoggerFactory;
  * https://issues.apache.org/jira/browse/AMQ-3003
  */
 public class PerDurableConsumerDeadLetterTest extends DeadLetterTest {
-    private static final Logger LOG = LoggerFactory.getLogger(PerDurableConsumerDeadLetterTest.class);
 
     private static final String CLIENT_ID = "george";
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
 
@@ -59,10 +51,12 @@ public class PerDurableConsumerDeadLetterTest extends DeadLetterTest {
         return broker;
     }
 
+    @Override
     protected String createClientId() {
         return CLIENT_ID;
     }
 
+    @Override
     protected Destination createDlqDestination() {
         String prefix = topic ? "ActiveMQ.DLQ.Topic." : "ActiveMQ.DLQ.Queue.";
         String destinationName = prefix + getClass().getName() + "." + getName();

@@ -16,7 +16,19 @@
  */
 package org.apache.activemq.network.jms;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -25,16 +37,8 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 public class TopicBridgeStandaloneReconnectTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(TopicBridgeStandaloneReconnectTest.class);
 
     private SimpleJmsTopicConnector jmsTopicConnector;
 
@@ -47,7 +51,7 @@ public class TopicBridgeStandaloneReconnectTest {
     private Destination outbound;
     private Destination inbound;
 
-    private ArrayList<Connection> connections = new ArrayList<Connection>();
+    private final ArrayList<Connection> connections = new ArrayList<Connection>();
 
     @Test
     public void testSendAndReceiveOverConnectedBridges() throws Exception {

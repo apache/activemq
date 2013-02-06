@@ -20,25 +20,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.Session;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslBrokerService;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,10 +41,10 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     public static final String SERVER_KEYSTORE = "src/test/resources/server.keystore";
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
-    private TransportConnector connector;
     private ActiveMQConnection connection;
     private BrokerService broker;
 
+    @Override
     protected void tearDown() throws Exception {
         // Try our best to close any previously opend connection.
         try {
@@ -77,7 +68,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(connection);
         connection.start();
         connection.stop();
-    	brokerStop();
+        brokerStop();
     }
 
     public void testCreateFailoverTcpConnectionUsingKnownPort() throws Exception {
@@ -90,12 +81,12 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(connection);
         connection.start();
         connection.stop();
-    	brokerStop();
+        brokerStop();
     }
 
     public void testCreateSslConnection() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-    	String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:61611";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
@@ -113,7 +104,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testFailoverSslConnection() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-    	String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:61611";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
@@ -148,7 +139,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testNegativeCreateSslConnectionWithWrongPassword() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-    	String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:61611";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
@@ -160,8 +151,8 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
             connection = (ActiveMQConnection)cf.createConnection();
         }
         catch (javax.jms.JMSException ignore) {
-        	// Expected exception
-        	LOG.info("Expected java.io.Exception [" + ignore + "]");
+            // Expected exception
+            LOG.info("Expected java.io.Exception [" + ignore + "]");
         }
         assertNull(connection);
 
@@ -170,7 +161,7 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
 
     public void testNegativeCreateSslConnectionWithWrongCert() throws Exception {
         // Create SSL/TLS connection with trusted cert from truststore.
-    	String sslUri = "ssl://localhost:61611";
+        String sslUri = "ssl://localhost:61611";
         broker = createSslBroker(sslUri);
         assertNotNull(broker);
 
@@ -182,8 +173,8 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
             connection = (ActiveMQConnection)cf.createConnection();
         }
         catch (javax.jms.JMSException ignore) {
-        	// Expected exception
-        	LOG.info("Expected SSLHandshakeException [" + ignore + "]");
+            // Expected exception
+            LOG.info("Expected SSLHandshakeException [" + ignore + "]");
         }
         assertNull(connection);
 
@@ -195,26 +186,26 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
-        connector = service.addConnector(uri);
+        service.addConnector(uri);
         service.start();
 
         return service;
     }
 
     protected BrokerService createSslBroker(String uri) throws Exception {
-        
+
         // http://java.sun.com/javase/javaseforbusiness/docs/TLSReadme.html
         // work around: javax.net.ssl.SSLHandshakeException: renegotiation is not allowed
         //System.setProperty("sun.security.ssl.allowUnsafeRenegotiation", "true");
-        
+
         SslBrokerService service = new SslBrokerService();
         service.setPersistent(false);
-        
+
         KeyManager[] km = getKeyManager();
         TrustManager[] tm = getTrustManager();
-        connector = service.addSslConnector(uri, km, tm, null);
+        service.addSslConnector(uri, km, tm, null);
         service.start();
-        
+
         return service;
     }
 
@@ -225,32 +216,32 @@ public class ActiveMQSslConnectionFactoryTest extends CombinationTestSupport {
     public static TrustManager[] getTrustManager() throws Exception {
         TrustManager[] trustStoreManagers = null;
         KeyStore trustedCertStore = KeyStore.getInstance(ActiveMQSslConnectionFactoryTest.KEYSTORE_TYPE);
-        
+
         trustedCertStore.load(new FileInputStream(ActiveMQSslConnectionFactoryTest.TRUST_KEYSTORE), null);
-        TrustManagerFactory tmf  = 
+        TrustManagerFactory tmf  =
             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-  
+
         tmf.init(trustedCertStore);
         trustStoreManagers = tmf.getTrustManagers();
-        return trustStoreManagers; 
+        return trustStoreManagers;
     }
 
     public static KeyManager[] getKeyManager() throws Exception {
-        KeyManagerFactory kmf = 
-            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());  
+        KeyManagerFactory kmf =
+            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
         KeyStore ks = KeyStore.getInstance(ActiveMQSslConnectionFactoryTest.KEYSTORE_TYPE);
         KeyManager[] keystoreManagers = null;
-        
+
         byte[] sslCert = loadClientCredential(ActiveMQSslConnectionFactoryTest.SERVER_KEYSTORE);
-        
-       
+
+
         if (sslCert != null && sslCert.length > 0) {
             ByteArrayInputStream bin = new ByteArrayInputStream(sslCert);
             ks.load(bin, ActiveMQSslConnectionFactoryTest.PASSWORD.toCharArray());
             kmf.init(ks, ActiveMQSslConnectionFactoryTest.PASSWORD.toCharArray());
             keystoreManagers = kmf.getKeyManagers();
         }
-        return keystoreManagers;          
+        return keystoreManagers;
     }
 
     private static byte[] loadClientCredential(String fileName) throws IOException {

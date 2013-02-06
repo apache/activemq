@@ -152,7 +152,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
             } else if (expectedValue instanceof DataStructure) {
                 assertBeansEqual(message + name, comparedObjects, expectedValue, actualValue);
             } else if (expectedValue instanceof Enumeration) {
-            	assertEnumerationEqual(message + name, comparedObjects, (Enumeration)expectedValue, (Enumeration)actualValue);
+                assertEnumerationEqual(message + name, comparedObjects, (Enumeration<?>)expectedValue, (Enumeration<?>)actualValue);
             } else {
                 assertEquals(message, expectedValue, actualValue);
             }
@@ -166,12 +166,12 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
             assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, expected[i], actual[i]);
         }
     }
-    
-    protected void assertEnumerationEqual(String message, Set<Object> comparedObjects, Enumeration expected, Enumeration actual) throws Exception {
+
+    protected void assertEnumerationEqual(String message, Set<Object> comparedObjects, Enumeration<?> expected, Enumeration<?> actual) throws Exception {
         while (expected.hasMoreElements()) {
-        	Object expectedElem = expected.nextElement();
-        	Object actualElem = actual.nextElement();
-        	assertPropertyValuesEqual(message + ". element: " + expectedElem, comparedObjects, expectedElem, actualElem);
+            Object expectedElem = expected.nextElement();
+            Object actualElem = actual.nextElement();
+            assertPropertyValuesEqual(message + ". element: " + expectedElem, comparedObjects, expectedElem, actualElem);
         }
     }
 
@@ -204,6 +204,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         assertEquals(message, expected.getMessage(), actual.getMessage());
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         openWireformat = createOpenWireFormat();

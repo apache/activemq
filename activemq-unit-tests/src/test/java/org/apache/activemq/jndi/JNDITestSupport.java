@@ -28,17 +28,18 @@ import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * 
+ *
  */
 public abstract class JNDITestSupport extends TestCase {
-    
+
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
             .getLog(JNDITestSupport.class);
-    
-    protected Hashtable environment = new Hashtable();
+
+    protected Hashtable<String, String> environment = new Hashtable<String, String>();
     protected Context context;
 
     protected void assertConnectionFactoryPresent(String lookupName) throws NamingException {
@@ -53,15 +54,16 @@ public abstract class JNDITestSupport extends TestCase {
         assertTrue("Should have got a child context but got: " + object, object instanceof Context);
 
         Context childContext = (Context) object;
-        NamingEnumeration iter = childContext.listBindings("");
+        NamingEnumeration<Binding> iter = childContext.listBindings("");
         while (iter.hasMore()) {
-            Binding destinationBinding = (Binding) iter.next();
+            Binding destinationBinding = iter.next();
             LOG.info("Found destination: " + destinationBinding.getName());
             Object destination = destinationBinding.getObject();
             assertTrue("Should have a Destination but got: " + destination, destination instanceof Destination);
         }
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -77,10 +79,11 @@ public abstract class JNDITestSupport extends TestCase {
      *
      * @throws javax.naming.NamingException
      */
+    @Override
     protected void tearDown() throws NamingException, JMSException {
-        NamingEnumeration iter = context.listBindings("");
+        NamingEnumeration<Binding> iter = context.listBindings("");
         while (iter.hasMore()) {
-            Binding binding = (Binding) iter.next();
+            Binding binding = iter.next();
             Object connFactory = binding.getObject();
             if (connFactory instanceof ActiveMQConnectionFactory) {
                // ((ActiveMQConnectionFactory) connFactory).stop();

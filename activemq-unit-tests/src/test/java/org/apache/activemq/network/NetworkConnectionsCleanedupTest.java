@@ -16,40 +16,22 @@
  */
 package org.apache.activemq.network;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.jms.TopicRequestor;
-import javax.jms.TopicSession;
 
 import junit.framework.TestCase;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
 public class NetworkConnectionsCleanedupTest extends TestCase {
 
     protected static final int MESSAGE_COUNT = 10;
-    private static final Logger LOG = LoggerFactory.getLogger(NetworkConnectionsCleanedupTest.class);
 
     protected AbstractApplicationContext context;
     protected Connection localConnection;
@@ -65,28 +47,25 @@ public class NetworkConnectionsCleanedupTest extends TestCase {
     // skip this test. it runs for an hour, doesn't assert anything, and could probably
     // just be removed (seems like a throwaway impl for https://issues.apache.org/activemq/browse/AMQ-1202)
     public void skipTestNetworkConnections() throws Exception {
-    	String uri = "static:(tcp://localhost:61617)?initialReconnectDelay=100";
-    	List<ActiveMQDestination> list = new ArrayList<ActiveMQDestination>();
-    	for (int i =0;i < 100;i++){
-    	    list.add(new ActiveMQTopic("FOO"+i));
-    	}
-    	String bindAddress = "tcp://localhost:61616";
-		BrokerService broker = new BrokerService();
-		broker.setUseJmx(false);
-		broker.setPersistent(false);
-		broker.addConnector(bindAddress);
-		NetworkConnector network = broker.addNetworkConnector(uri);
-		network.setDynamicOnly(true);
-		network.setStaticallyIncludedDestinations(list);
-		uri = "static:(tcp://localhost:61618)?initialReconnectDelay=100";
-		network = broker.addNetworkConnector(uri);
+        String uri = "static:(tcp://localhost:61617)?initialReconnectDelay=100";
+        List<ActiveMQDestination> list = new ArrayList<ActiveMQDestination>();
+        for (int i =0;i < 100;i++){
+            list.add(new ActiveMQTopic("FOO"+i));
+        }
+        String bindAddress = "tcp://localhost:61616";
+        BrokerService broker = new BrokerService();
+        broker.setUseJmx(false);
+        broker.setPersistent(false);
+        broker.addConnector(bindAddress);
+        NetworkConnector network = broker.addNetworkConnector(uri);
         network.setDynamicOnly(true);
         network.setStaticallyIncludedDestinations(list);
-		broker.setUseShutdownHook(false);
-		broker.start();
-		Thread.sleep(1000 * 3600);
+        uri = "static:(tcp://localhost:61618)?initialReconnectDelay=100";
+        network = broker.addNetworkConnector(uri);
+        network.setDynamicOnly(true);
+        network.setStaticallyIncludedDestinations(list);
+        broker.setUseShutdownHook(false);
+        broker.start();
+        Thread.sleep(1000 * 3600);
     }
-
-    
-
 }

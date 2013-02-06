@@ -16,7 +16,23 @@
  */
 package org.apache.activemq.network.jms;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -25,14 +41,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 /**
  * These test cases are used to verify that queue outbound bridge connections get
@@ -41,14 +49,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class TopicOutboundBridgeReconnectTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TopicOutboundBridgeReconnectTest.class);
-
     private BrokerService producerBroker;
     private BrokerService consumerBroker;
     private ActiveMQConnectionFactory producerConnectionFactory;
     private ActiveMQConnectionFactory consumerConnectionFactory;
     private Destination destination;
-    private ArrayList<Connection> connections = new ArrayList<Connection>();
+    private final ArrayList<Connection> connections = new ArrayList<Connection>();
 
     @Test
     public void testMultipleProducerBrokerRestarts() throws Exception {

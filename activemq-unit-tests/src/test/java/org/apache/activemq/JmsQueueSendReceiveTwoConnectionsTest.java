@@ -17,19 +17,18 @@
 package org.apache.activemq;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class JmsQueueSendReceiveTwoConnectionsTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
     /**
      * Set up the test with a queue and using two connections.
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         topic = false;
         super.setUp();

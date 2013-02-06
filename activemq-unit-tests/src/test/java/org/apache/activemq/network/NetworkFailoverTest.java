@@ -37,7 +37,6 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.AbstractDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.TransportFilter;
@@ -62,9 +61,9 @@ public class NetworkFailoverTest extends TestCase {
     protected Session localSession;
     protected Session remoteSession;
     protected ActiveMQQueue included=new ActiveMQQueue("include.test.foo");
-    private AtomicInteger replyToNonExistDest = new AtomicInteger(0);
-    private AtomicInteger roundTripComplete = new AtomicInteger(0);
-    private AtomicInteger remoteDLQCount = new AtomicInteger(0);
+    private final AtomicInteger replyToNonExistDest = new AtomicInteger(0);
+    private final AtomicInteger roundTripComplete = new AtomicInteger(0);
+    private final AtomicInteger remoteDLQCount = new AtomicInteger(0);
 
     public void testRequestReply() throws Exception {
         final MessageProducer remoteProducer = remoteSession.createProducer(null);
@@ -116,7 +115,7 @@ public class NetworkFailoverTest extends TestCase {
                 remoteDLQCount.incrementAndGet();
             }
         });
-       
+
         // allow for consumer infos to perculate arround
         Thread.sleep(2000);
         long done = System.currentTimeMillis() + (MESSAGE_COUNT * 6000);

@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.network;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -103,6 +103,7 @@ public class SimpleNetworkTest {
         final MessageProducer remoteProducer = remoteSession.createProducer(null);
         MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
         remoteConsumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message msg) {
                 try {
                     TextMessage textMsg = (TextMessage)msg;

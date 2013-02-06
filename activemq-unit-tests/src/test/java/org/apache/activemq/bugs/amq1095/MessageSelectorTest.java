@@ -24,14 +24,11 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import junit.framework.Assert;
-
-
 /**
  * <p>
  * Test cases for various ActiveMQ functionalities.
  * </p>
- * 
+ *
  * <ul>
  * <li>
  * <p>
@@ -50,7 +47,7 @@ import junit.framework.Assert;
  * </p>
  * </li>
  * </ul>
- * 
+ *
  * @author Rainer Klute <a
  *         href="mailto:rainer.klute@dp-itsolutions.de">&lt;rainer.klute@dp-itsolutions.de&gt;</a>
  * @since 2007-08-09
@@ -64,7 +61,7 @@ public class MessageSelectorTest extends ActiveMQTestCase {
     /** <p>Constructor</p> */
     public MessageSelectorTest()
     {}
-    
+
     /** <p>Constructor</p>
      * @param name the test case's name
      */
@@ -102,7 +99,7 @@ public class MessageSelectorTest extends ActiveMQTestCase {
     {
         runMessageSelectorTest(false);
     }
-    
+
     /**
      * <p>
      * Tests whether message selectors work. This is done by sending two
@@ -223,7 +220,7 @@ public class MessageSelectorTest extends ActiveMQTestCase {
         catch (JMSException ex)
         {
             ex.printStackTrace();
-            Assert.fail();
+            fail();
         }
     }
 

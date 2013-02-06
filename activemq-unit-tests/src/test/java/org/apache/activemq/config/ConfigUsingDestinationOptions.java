@@ -22,6 +22,7 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -55,7 +56,7 @@ public class ConfigUsingDestinationOptions extends TestCase {
         // JMS selector should be priority
         try {
             cons = (ActiveMQMessageConsumer) sess.createConsumer(queue, "test||1");
-            fail("Selector should be invalid");
+            fail("Selector should be invalid" + cons);
         } catch (InvalidSelectorException e) {
 
         }
@@ -63,7 +64,7 @@ public class ConfigUsingDestinationOptions extends TestCase {
         // Test setting using JMS destinations
         try {
             cons = (ActiveMQMessageConsumer) sess.createConsumer(queue);
-            fail("Selector should be invalid");
+            fail("Selector should be invalid" + cons);
         } catch (InvalidSelectorException e) {
 
         }

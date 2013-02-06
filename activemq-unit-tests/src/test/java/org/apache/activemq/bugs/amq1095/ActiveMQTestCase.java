@@ -17,7 +17,6 @@
 
 package org.apache.activemq.bugs.amq1095;
 
-import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -34,7 +33,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerFactory;
@@ -45,7 +43,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * <p>
  * Common functionality for ActiveMQ test cases.
  * </p>
- * 
+ *
  * @author Rainer Klute <a
  *         href="mailto:rainer.klute@dp-itsolutions.de">&lt;rainer.klute@dp-itsolutions.de&gt;</a>
  * @since 2007-08-10
@@ -57,15 +55,15 @@ public class ActiveMQTestCase extends TestCase
     private BrokerService broker;
     protected Connection connection;
     protected Destination destination;
-    private List<MessageConsumer> consumersToEmpty = new LinkedList<MessageConsumer>();
+    private final List<MessageConsumer> consumersToEmpty = new LinkedList<MessageConsumer>();
     protected final long RECEIVE_TIMEOUT = 500;
 
 
     /** <p>Constructor</p> */
     public ActiveMQTestCase()
     {}
-    
-    /** <p>Constructor</p> 
+
+    /** <p>Constructor</p>
      * @param name the test case's name
      */
     public ActiveMQTestCase(final String name)
@@ -76,6 +74,7 @@ public class ActiveMQTestCase extends TestCase
     /**
      * <p>Sets up the JUnit testing environment.
      */
+    @Override
     protected void setUp()
     {
         URI uri;
@@ -84,7 +83,7 @@ public class ActiveMQTestCase extends TestCase
             /* Copy all system properties starting with "java.naming." to the initial context. */
             final Properties systemProperties = System.getProperties();
             final Properties jndiProperties = new Properties();
-            for (final Iterator i = systemProperties.keySet().iterator(); i.hasNext();)
+            for (final Iterator<Object> i = systemProperties.keySet().iterator(); i.hasNext();)
             {
                 final String key = (String) i.next();
                 if (key.startsWith("java.naming.") || key.startsWith("topic.") ||
@@ -94,7 +93,7 @@ public class ActiveMQTestCase extends TestCase
                     jndiProperties.put(key, value);
                 }
             }
-            context = new InitialContext(jndiProperties); 
+            context = new InitialContext(jndiProperties);
             uri = new URI("xbean:org/apache/activemq/bugs/amq1095/activemq.xml");
             broker = BrokerFactory.createBroker(uri);
             broker.start();
@@ -119,15 +118,15 @@ public class ActiveMQTestCase extends TestCase
         catch (JMSException ex1)
         {
             ex1.printStackTrace();
-            Assert.fail(ex1.toString());
+            fail(ex1.toString());
         }
         catch (NamingException ex2) {
             ex2.printStackTrace();
-            Assert.fail(ex2.toString());
+            fail(ex2.toString());
         }
         catch (Throwable ex3) {
             ex3.printStackTrace();
-            Assert.fail(ex3.toString());
+            fail(ex3.toString());
         }
     }
 
@@ -140,19 +139,20 @@ public class ActiveMQTestCase extends TestCase
      * to be empty.
      * </p>
      */
+    @Override
     protected void tearDown() throws Exception {
         TextMessage msg;
         try {
-			for (final Iterator i = consumersToEmpty.iterator(); i.hasNext();)
-			{
-			    final MessageConsumer consumer = (MessageConsumer) i.next();
-			    if (consumer != null)
-			        do
-			            msg = (TextMessage) consumer.receive(RECEIVE_TIMEOUT);
-			        while (msg != null);
-			}
-		} catch (Exception e) {
-		}
+            for (final Iterator<MessageConsumer> i = consumersToEmpty.iterator(); i.hasNext();)
+            {
+                final MessageConsumer consumer = i.next();
+                if (consumer != null)
+                    do
+                        msg = (TextMessage) consumer.receive(RECEIVE_TIMEOUT);
+                    while (msg != null);
+            }
+        } catch (Exception e) {
+        }
         if (connection != null) {
             connection.stop();
         }

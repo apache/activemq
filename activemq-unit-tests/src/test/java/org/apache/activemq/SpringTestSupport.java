@@ -22,25 +22,26 @@ import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.context.support.AbstractApplicationContext;
 
 /**
  * A useful base class for spring based unit test cases
- * 
- * 
+ *
+ *
  */
 public abstract class SpringTestSupport extends TestCase {
 
     protected AbstractApplicationContext context;
 
+    @Override
     protected void setUp() throws Exception {
         context = createApplicationContext();
     }
 
     protected abstract AbstractApplicationContext createApplicationContext();;
 
+    @Override
     protected void tearDown() throws Exception {
         if (context != null) {
             context.destroy();
@@ -55,7 +56,7 @@ public abstract class SpringTestSupport extends TestCase {
         return bean;
     }
 
-    protected void assertSetEquals(String description, Object[] expected, Set actual) {
+    protected void assertSetEquals(String description, Object[] expected, Set<?> actual) {
         Set<Object> expectedSet = new HashSet<Object>();
         expectedSet.addAll(Arrays.asList(expected));
         assertEquals(description, expectedSet, actual);

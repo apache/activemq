@@ -18,7 +18,6 @@ package org.apache.activemq;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.Map;
 
 import javax.jms.Connection;
@@ -26,8 +25,6 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
-
-import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.DestinationStatistics;
@@ -42,13 +39,11 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.leveldb.LevelDBPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Useful base class for unit test cases
- * 
- * 
+ *
+ *
  */
 public abstract class TestSupport extends CombinationTestSupport {
 
@@ -146,7 +141,7 @@ public abstract class TestSupport extends CombinationTestSupport {
             recursiveDelete(new File(System.getProperty("derby.system.home")));
         }
     }
-    
+
     public static DestinationStatistics getDestinationStatistics(BrokerService broker, ActiveMQDestination destination) {
         DestinationStatistics result = null;
         org.apache.activemq.broker.region.Destination dest = getDestination(broker, destination);
@@ -155,7 +150,7 @@ public abstract class TestSupport extends CombinationTestSupport {
         }
         return result;
     }
-    
+
     public static org.apache.activemq.broker.region.Destination getDestination(BrokerService target, ActiveMQDestination destination) {
         org.apache.activemq.broker.region.Destination result = null;
         for (org.apache.activemq.broker.region.Destination dest : getDestinationMap(target, destination).values()) {
@@ -184,7 +179,7 @@ public abstract class TestSupport extends CombinationTestSupport {
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
     }
-    
+
     public PersistenceAdapter setPersistenceAdapter(BrokerService broker, PersistenceAdapterChoice choice) throws IOException {
         PersistenceAdapter adapter = null;
         switch (choice) {
@@ -212,7 +207,7 @@ public abstract class TestSupport extends CombinationTestSupport {
      * Test if base directory contains spaces
      */
     protected void assertBaseDirectoryContainsSpaces() {
-    	assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
+        assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
     }
 
 }

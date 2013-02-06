@@ -23,13 +23,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.SessionId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class NumberRangesWhileMarshallingTest extends TestCase {
 
@@ -87,7 +88,7 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
         // lets try read and we should get an exception
         try {
             byte value = dis.readByte();
-            fail("Should have reached the end of the stream");
+            fail("Should have reached the end of the stream: " + value);
         } catch (IOException e) {
             // worked!
         }
@@ -124,6 +125,7 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
         assertEquals(Long.MAX_VALUE, wf.getMaxFrameSize());
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         openWireformat = createOpenWireFormat();

@@ -24,8 +24,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQQueue;
 
 public class QueueConsumerPriorityTest extends TestCase {
@@ -36,10 +36,12 @@ public class QueueConsumerPriorityTest extends TestCase {
         super(name);
     }
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -64,6 +66,7 @@ public class QueueConsumerPriorityTest extends TestCase {
 
             consumerLowPriority = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             consumerHighPriority = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            assertNotNull(consumerHighPriority);
             senderSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
             String queueName = getClass().getName();
             ActiveMQQueue low = new ActiveMQQueue(queueName+"?consumer.priority=1");
@@ -79,17 +82,13 @@ public class QueueConsumerPriorityTest extends TestCase {
             Message msg = senderSession.createTextMessage("test");
             for (int i =0; i< 10000;i++) {
                 producer.send(msg);
-                Assert.assertNotNull("null on iteration: " + i, highConsumer.receive(500));
+                assertNotNull("null on iteration: " + i, highConsumer.receive(500));
             }
-            Assert.assertNull(lowConsumer.receive(2000));
-            
-           
+            assertNull(lowConsumer.receive(2000));
+
         } finally {
             conn.close();
         }
-
     }
-
-
 }
 

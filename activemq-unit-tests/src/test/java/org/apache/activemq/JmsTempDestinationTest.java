@@ -40,6 +40,7 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.Wait;
@@ -56,6 +57,7 @@ public class JmsTempDestinationTest extends TestCase {
     private ActiveMQConnectionFactory factory;
     protected List<Connection> connections = Collections.synchronizedList(new ArrayList<Connection>());
 
+    @Override
     protected void setUp() throws Exception {
         factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         factory.setAlwaysSyncSend(true);
@@ -66,9 +68,10 @@ public class JmsTempDestinationTest extends TestCase {
     /**
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            Connection conn = (Connection)iter.next();
+        for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
+            Connection conn = iter.next();
             try {
                 conn.close();
             } catch (Throwable e) {
@@ -79,7 +82,7 @@ public class JmsTempDestinationTest extends TestCase {
 
     /**
      * Make sure Temp destination can only be consumed by local connection
-     * 
+     *
      * @throws JMSException
      */
     public void testTempDestOnlyConsumedByLocalConn() throws JMSException {
@@ -120,7 +123,7 @@ public class JmsTempDestinationTest extends TestCase {
     /**
      * Make sure that a temp queue does not drop message if there is an active
      * consumers.
-     * 
+     *
      * @throws JMSException
      */
     public void testTempQueueHoldsMessagesWithConsumers() throws JMSException {
@@ -143,7 +146,7 @@ public class JmsTempDestinationTest extends TestCase {
     /**
      * Make sure that a temp queue does not drop message if there are no active
      * consumers.
-     * 
+     *
      * @throws JMSException
      */
     public void testTempQueueHoldsMessagesWithoutConsumers() throws JMSException {
@@ -166,14 +169,14 @@ public class JmsTempDestinationTest extends TestCase {
 
     /**
      * Test temp queue works under load
-     * 
+     *
      * @throws JMSException
      */
     public void testTmpQueueWorksUnderLoad() throws JMSException {
         int count = 500;
         int dataSize = 1024;
 
-        ArrayList list = new ArrayList(count);
+        ArrayList<BytesMessage> list = new ArrayList<BytesMessage>(count);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createTemporaryQueue();
         MessageProducer producer = session.createProducer(queue);
@@ -201,13 +204,13 @@ public class JmsTempDestinationTest extends TestCase {
     /**
      * Make sure you cannot publish to a temp destination that does not exist
      * anymore.
-     * 
+     *
      * @throws JMSException
      * @throws InterruptedException
-     * @throws URISyntaxException 
+     * @throws URISyntaxException
      */
     public void testPublishFailsForClosedConnection() throws Exception {
-        
+
         Connection tempConnection = factory.createConnection();
         connections.add(tempConnection);
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -249,7 +252,7 @@ public class JmsTempDestinationTest extends TestCase {
     /**
      * Make sure you cannot publish to a temp destination that does not exist
      * anymore.
-     * 
+     *
      * @throws JMSException
      * @throws InterruptedException
      */
@@ -295,7 +298,7 @@ public class JmsTempDestinationTest extends TestCase {
 
     /**
      * Test you can't delete a Destination with Active Subscribers
-     * 
+     *
      * @throws JMSException
      */
     public void testDeleteDestinationWithSubscribersFails() throws JMSException {

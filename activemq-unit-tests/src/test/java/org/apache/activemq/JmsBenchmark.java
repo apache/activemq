@@ -37,9 +37,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.Test;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
@@ -50,8 +50,8 @@ import org.slf4j.LoggerFactory;
  * same destination. Make sure you run with jvm option -server (makes a big
  * difference). The tests simulate storing 1000 1k jms messages to see the rate
  * of processing msg/sec.
- * 
- * 
+ *
+ *
  */
 public class JmsBenchmark extends JmsTestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(JmsBenchmark.class);
@@ -76,12 +76,14 @@ public class JmsBenchmark extends JmsTestSupport {
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST")});
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         return BrokerFactory.createBroker(new URI("broker://(tcp://localhost:0)?persistent=false"));
     }
 
+    @Override
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
-        return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getServer().getConnectURI());
+        return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getServer().getConnectURI());
     }
 
     /**
@@ -96,7 +98,8 @@ public class JmsBenchmark extends JmsTestSupport {
         final AtomicInteger producedMessages = new AtomicInteger(0);
         final AtomicInteger receivedMessages = new AtomicInteger(0);
 
-        final Callable producer = new Callable() {
+        final Callable<Object> producer = new Callable<Object>() {
+            @Override
             public Object call() throws JMSException, InterruptedException {
                 Connection connection = factory.createConnection();
                 connections.add(connection);
@@ -119,7 +122,8 @@ public class JmsBenchmark extends JmsTestSupport {
             }
         };
 
-        final Callable consumer = new Callable() {
+        final Callable<Object> consumer = new Callable<Object>() {
+            @Override
             public Object call() throws JMSException, InterruptedException {
                 Connection connection = factory.createConnection();
                 connections.add(connection);
@@ -127,6 +131,7 @@ public class JmsBenchmark extends JmsTestSupport {
                 MessageConsumer consumer = session.createConsumer(destination);
 
                 consumer.setMessageListener(new MessageListener() {
+                    @Override
                     public void onMessage(Message msg) {
                         receivedMessages.incrementAndGet();
                     }
@@ -145,6 +150,7 @@ public class JmsBenchmark extends JmsTestSupport {
         final Throwable workerError[] = new Throwable[1];
         for (int i = 0; i < PRODUCER_COUNT; i++) {
             new Thread("Producer:" + i) {
+                @Override
                 public void run() {
                     try {
                         producer.call();
@@ -158,6 +164,7 @@ public class JmsBenchmark extends JmsTestSupport {
 
         for (int i = 0; i < CONSUMER_COUNT; i++) {
             new Thread("Consumer:" + i) {
+                @Override
                 public void run() {
                     try {
                         consumer.call();
@@ -198,7 +205,5 @@ public class JmsBenchmark extends JmsTestSupport {
         if (workerError[0] != null) {
             throw workerError[0];
         }
-
     }
-
 }
