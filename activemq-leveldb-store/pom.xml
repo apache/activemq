@@ -72,28 +72,33 @@
     </dependency>
     <dependency>
       <groupId>org.fusesource.leveldbjni</groupId>
-      <artifactId>leveldbjni-osx</artifactId>
+      <artifactId>leveldbjni</artifactId>
       <version>${leveldbjni-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.leveldbjni</groupId>
+      <artifactId>leveldbjni-osx</artifactId>
+      <version>1.5</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.leveldbjni</groupId>
       <artifactId>leveldbjni-linux32</artifactId>
-      <version>${leveldbjni-version}</version>
+      <version>1.5</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.leveldbjni</groupId>
       <artifactId>leveldbjni-linux64</artifactId>
-      <version>${leveldbjni-version}</version>
+      <version>1.5</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.leveldbjni</groupId>
       <artifactId>leveldbjni-win32</artifactId>
-      <version>${leveldbjni-version}</version>
+      <version>1.5</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.leveldbjni</groupId>
       <artifactId>leveldbjni-win64</artifactId>
-      <version>${leveldbjni-version}</version>
+      <version>1.5</version>
     </dependency>
 
     <!-- For Optional Snappy Compression -->
