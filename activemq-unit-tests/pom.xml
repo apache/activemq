@@ -15,15 +15,14 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.8-SNAPSHOT</version>
+    <version>5.8.0</version>
   </parent>
 
   <artifactId>activemq-unit-tests</artifactId>
@@ -472,11 +471,7 @@
                 <echo>Running the XSDDoc task</echo>
                 <taskdef name="xsddoc" classname="net.sf.xframe.xsddoc.Task" />
                 <mkdir dir="${basedir}/target/site/xsddoc" />
-                <xsddoc file="${basedir}/target/classes/activemq.xsd" out="${basedir}/target/site/xsddoc"
-                  doctitle="Apache ActiveMQ XML Schema Reference"
-                  header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;"
-                  footer="Copyright 2005-2012 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;"
-                  verbose="false" />
+                <xsddoc file="${basedir}/target/classes/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2005-2012 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
                   <!--
                      css="${basedir}/../etc/css/stylesheet.css"
                   -->
