@@ -22,7 +22,7 @@ import java.util.List;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +37,6 @@ public class ConsumerBean extends Assert implements MessageListener {
     public ConsumerBean() {
     }
 
-    
     /**
      * @return all the messages on the list so far, clearing the buffer
      */
@@ -55,6 +54,7 @@ public class ConsumerBean extends Assert implements MessageListener {
      *
      * @param message
      */
+    @Override
     public void onMessage(Message message) {
         synchronized (messages) {
             messages.add(message);

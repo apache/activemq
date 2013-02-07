@@ -30,17 +30,16 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.usecases.CreateLotsOfTemporaryQueuesTest;
 import org.apache.activemq.util.MessageIdList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(RetroactiveConsumerWithMessageQueryTest.class);
-    
+
     protected int messageCount = 20;
     protected Connection connection;
     protected Session session;
@@ -69,12 +68,14 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
         listener.assertMessagesReceived(messageCount);
     }
 
+    @Override
     protected void setUp() throws Exception {
         useTopic = true;
         bindAddress = "vm://localhost";
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (session != null) {
             session.close();
@@ -86,6 +87,7 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
         super.tearDown();
     }
 
+    @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory(bindAddress);
         // answer.setUseRetroactiveConsumer(true);
@@ -93,12 +95,14 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
         return answer;
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         String uri = getBrokerXml();
         LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
+    @Override
     protected void startBroker() throws Exception {
         // broker already started by XBean
     }

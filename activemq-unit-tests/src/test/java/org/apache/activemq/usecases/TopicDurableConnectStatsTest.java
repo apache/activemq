@@ -34,7 +34,9 @@ import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerFactory;
@@ -50,8 +52,8 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
     private static final Logger LOG = LoggerFactory.getLogger(TopicDurableConnectStatsTest.class);
     private BrokerService broker;
     private ActiveMQTopic topic;
-    private Vector<Throwable> exceptions = new Vector<Throwable>();
-    private int messageSize = 4000;
+    private final Vector<Throwable> exceptions = new Vector<Throwable>();
+    private final int messageSize = 4000;
     protected MBeanServerConnection mbeanServer;
     protected String domain = "org.apache.activemq";
     private ActiveMQConnectionFactory connectionFactory = null;
@@ -59,6 +61,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
 
     private static Session session2 = null;
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
 
         connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
@@ -87,6 +90,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         return suite(TopicDurableConnectStatsTest.class);
     }
 
+    @Override
     protected void setUp() throws Exception {
         exceptions.clear();
         topic = (ActiveMQTopic) createDestination();
@@ -96,6 +100,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         destroyBroker();
@@ -143,6 +148,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         Connection consumerCon = createConnection("cliId1");
         Session consumerSession = consumerCon.createSession(true, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer1 = consumerSession.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        assertNotNull(consumer1);
 
         DurableSubscriptionViewMBean subscriber1 = null;
 
@@ -201,6 +207,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         consumer2.setMessageListener(listener);
 
         assertTrue("received all sent", Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return numMessages == listener.count;
             }
@@ -238,6 +245,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
         Listener() {
         }
 
+        @Override
         public void onMessage(Message message) {
             count++;
             try {

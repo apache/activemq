@@ -17,6 +17,8 @@
 
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertTrue;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -33,6 +36,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
@@ -42,9 +46,6 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
-
 
 public class RequestReplyToTopicViaThreeNetworkHopsTest {
     protected static final int CONCURRENT_CLIENT_COUNT = 5;
@@ -60,7 +61,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
     protected boolean testError = false;
     protected boolean fatalTestError = false;
 
-    protected int echoResponseFill = 0;   // Number of "filler" response messages per request
+    protected int echoResponseFill = 0; // Number of "filler" response messages per request
 
     protected static Log LOG;
     public boolean duplex = true;
@@ -69,8 +70,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         LOG = LogFactory.getLog(RequestReplyToTopicViaThreeNetworkHopsTest.class);
     }
 
-    public RequestReplyToTopicViaThreeNetworkHopsTest()
-            throws Exception {
+    public RequestReplyToTopicViaThreeNetworkHopsTest() throws Exception {
         edge1 = new EmbeddedTcpBroker("edge", 1);
         edge2 = new EmbeddedTcpBroker("edge", 2);
         core1 = new EmbeddedTcpBroker("core", 1);
@@ -80,7 +80,6 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         edge1.coreConnectTo(core1, duplex);
         edge2.coreConnectTo(core2, duplex);
         core1.coreConnectTo(core2, duplex);
-
     }
 
     public void logMessage(String msg) {
@@ -88,8 +87,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         System.out.flush();
     }
 
-    public void testMessages(Session sess, MessageProducer req_prod, Destination resp_dest, int num_msg)
-            throws Exception {
+    public void testMessages(Session sess, MessageProducer req_prod, Destination resp_dest, int num_msg) throws Exception {
         MessageConsumer resp_cons;
         TextMessage msg;
         MessageClient cons_client;
@@ -130,7 +128,6 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         else
             LOG.debug("Consumer client shutdown incomplete!!!");
 
-
         //
         // Check that the correct number of messages was received.
         //
@@ -144,15 +141,13 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             if (cons_client.getNumMsgReceived() == 0)
                 fatalTestError = true;
 
-            LOG.error("Have " + cons_client.getNumMsgReceived() + " messages; expected " + tot_expected +
-                    " on destination " + resp_dest);
+            LOG.error("Have " + cons_client.getNumMsgReceived() + " messages; expected " + tot_expected + " on destination " + resp_dest);
         }
 
         resp_cons.close();
     }
 
-    protected void sendWithRetryOnDeletedDest(MessageProducer prod, Message msg)
-            throws JMSException {
+    protected void sendWithRetryOnDeletedDest(MessageProducer prod, Message msg) throws JMSException {
         try {
             if (LOG.isDebugEnabled())
                 LOG.debug("SENDING REQUEST message " + msg);
@@ -167,11 +162,9 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
     /**
      * Test one destination between the given "producer broker" and "consumer broker" specified.
      */
-    public void testOneDest(Connection conn, Session sess, Destination cons_dest, int num_msg)
-            throws Exception {
+    public void testOneDest(Connection conn, Session sess, Destination cons_dest, int num_msg) throws Exception {
         Destination prod_dest;
         MessageProducer msg_prod;
-
 
         //
         // Create the Producer to the echo request Queue
@@ -179,7 +172,6 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         LOG.trace("Creating echo queue and producer");
         prod_dest = sess.createQueue("echo");
         msg_prod = sess.createProducer(prod_dest);
-
 
         //
         // Pass messages around.
@@ -189,57 +181,45 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         msg_prod.close();
     }
 
-
     /**
      * TEST TEMPORARY TOPICS
      */
-    public void testTempTopic(String prod_broker_url, String cons_broker_url)
-            throws Exception {
+    public void testTempTopic(String prod_broker_url, String cons_broker_url) throws Exception {
         Connection conn;
         Session sess;
         Destination cons_dest;
-        int echo_id;
         int num_msg;
 
         num_msg = 5;
 
-        LOG.debug("TESTING TEMP TOPICS " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg +
-                " messages)");
-
+        LOG.debug("TESTING TEMP TOPICS " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg + " messages)");
 
         //
         // Connect to the bus.
         //
-
         conn = createConnection(cons_broker_url);
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-
         //
         // Create the destination on which messages are being tested.
         //
-
         LOG.trace("Creating destination");
         cons_dest = sess.createTemporaryTopic();
 
         testOneDest(conn, sess, cons_dest, num_msg);
 
-
         //
         // Cleanup
         //
-
         sess.close();
         conn.close();
     }
 
-
     /**
      * TEST TOPICS
      */
-    public void testTopic(String prod_broker_url, String cons_broker_url)
-            throws Exception {
+    public void testTopic(String prod_broker_url, String cons_broker_url) throws Exception {
         int num_msg;
 
         Connection conn;
@@ -250,19 +230,15 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         num_msg = 5;
 
-        LOG.info("TESTING TOPICS " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg +
-                " messages)");
-
+        LOG.info("TESTING TOPICS " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg + " messages)");
 
         conn = createConnection(cons_broker_url);
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-
         //
         // Create the destination on which messages are being tested.
         //
-
         topic_name = "topotest2.perm.topic";
         LOG.trace("Removing existing Topic");
         removeTopic(conn, topic_name);
@@ -271,23 +247,18 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         testOneDest(conn, sess, cons_dest, num_msg);
 
-
         //
         // Cleanup
         //
-
         removeTopic(conn, topic_name);
         sess.close();
         conn.close();
     }
 
-
     /**
      * TEST TEMPORARY QUEUES
      */
-    public void testTempQueue(String prod_broker_url, String cons_broker_url)
-            throws Exception {
-        int echo_id;
+    public void testTempQueue(String prod_broker_url, String cons_broker_url) throws Exception {
         int num_msg;
 
         Connection conn;
@@ -297,43 +268,34 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         num_msg = 5;
 
-        LOG.info("TESTING TEMP QUEUES " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg +
-                " messages)");
-
+        LOG.info("TESTING TEMP QUEUES " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg + " messages)");
 
         //
         // Connect to the bus.
         //
-
         conn = createConnection(cons_broker_url);
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-
         //
         // Create the destination on which messages are being tested.
         //
-
         LOG.trace("Creating destination");
         cons_dest = sess.createTemporaryQueue();
 
         testOneDest(conn, sess, cons_dest, num_msg);
 
-
         //
         // Cleanup
         //
-
         sess.close();
         conn.close();
     }
 
-
     /**
      * TEST QUEUES
      */
-    public void testQueue(String prod_broker_url, String cons_broker_url)
-            throws Exception {
+    public void testQueue(String prod_broker_url, String cons_broker_url) throws Exception {
         int num_msg;
 
         Connection conn;
@@ -344,14 +306,11 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         num_msg = 5;
 
-        LOG.info("TESTING QUEUES " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg +
-                " messages)");
-
+        LOG.info("TESTING QUEUES " + prod_broker_url + " -> " + cons_broker_url + " (" + num_msg + " messages)");
 
         conn = createConnection(cons_broker_url);
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
 
         //
         // Create the destination on which messages are being tested.
@@ -364,15 +323,13 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         testOneDest(conn, sess, cons_dest, num_msg);
 
-
         removeQueue(conn, queue_name);
         sess.close();
         conn.close();
     }
 
     @Test
-    public void runWithTempTopicReplyTo()
-            throws Exception {
+    public void runWithTempTopicReplyTo() throws Exception {
         EchoService echo_svc;
         TopicTrafficGenerator traffic_gen;
         Thread start1;
@@ -390,16 +347,15 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         // Execute up to 20 clients at a time to simulate that load.
         //
 
-        clientExecPool = new ThreadPoolExecutor(CONCURRENT_CLIENT_COUNT, CONCURRENT_CLIENT_COUNT,
-                0, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10000));
+        clientExecPool = new ThreadPoolExecutor(CONCURRENT_CLIENT_COUNT, CONCURRENT_CLIENT_COUNT, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10000));
         clientCompletionLatch = new CountDownLatch(TOTAL_CLIENT_ITER);
 
-
         // Use threads to avoid startup deadlock since the first broker started waits until
-        //	it knows the name of the remote broker before finishing its startup, which means
-        //	the remote must already be running.
+        // it knows the name of the remote broker before finishing its startup, which means
+        // the remote must already be running.
 
         start1 = new Thread() {
+            @Override
             public void run() {
                 try {
                     edge1.start();
@@ -410,6 +366,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         };
 
         start2 = new Thread() {
+            @Override
             public void run() {
                 try {
                     edge2.start();
@@ -420,6 +377,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         };
 
         start3 = new Thread() {
+            @Override
             public void run() {
                 try {
                     core1.start();
@@ -430,6 +388,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         };
 
         start4 = new Thread() {
+            @Override
             public void run() {
                 try {
                     core2.start();
@@ -452,13 +411,11 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         traffic_gen = new TopicTrafficGenerator(edge1.getConnectionUrl(), edge2.getConnectionUrl());
         traffic_gen.start();
 
-
         //
         // Now start the echo service with that queue.
         //
         echo_svc = new EchoService("echo", edge1.getConnectionUrl());
         echo_svc.start();
-
 
         //
         // Run the tests on Temp Topics.
@@ -468,10 +425,10 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         iter = 0;
         while ((iter < TOTAL_CLIENT_ITER) && (!fatalTestError)) {
             clientExecPool.execute(new Runnable() {
+                @Override
                 public void run() {
                     try {
-                        RequestReplyToTopicViaThreeNetworkHopsTest.this.testTempTopic(edge1.getConnectionUrl(),
-                                edge2.getConnectionUrl());
+                        RequestReplyToTopicViaThreeNetworkHopsTest.this.testTempTopic(edge1.getConnectionUrl(), edge2.getConnectionUrl());
                     } catch (Exception exc) {
                         LOG.error("test exception", exc);
                         fatalTestError = true;
@@ -487,7 +444,8 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         boolean allDoneOnTime = clientCompletionLatch.await(20, TimeUnit.MINUTES);
 
-        LOG.info("** FINISHED TEMP TOPIC TESTS AFTER " + iter + " ITERATIONS, testError:" + testError + ", fatal: " + fatalTestError + ", onTime:" + allDoneOnTime);
+        LOG.info("** FINISHED TEMP TOPIC TESTS AFTER " + iter + " ITERATIONS, testError:" + testError + ", fatal: " + fatalTestError + ", onTime:"
+            + allDoneOnTime);
 
         Thread.sleep(100);
 
@@ -500,46 +458,39 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         assertTrue("no errors", !testError);
     }
 
-    public void shutdown()
-            throws Exception {
+    public void shutdown() throws Exception {
         edge1.stop();
         edge2.stop();
         core1.stop();
         core2.stop();
     }
 
-    protected Connection createConnection(String url)
-            throws Exception {
+    protected Connection createConnection(String url) throws Exception {
         return org.apache.activemq.ActiveMQConnection.makeConnection(url);
     }
 
-    protected static void removeQueue(Connection conn, String dest_name)
-            throws java.lang.Exception {
+    protected static void removeQueue(Connection conn, String dest_name) throws java.lang.Exception {
         org.apache.activemq.command.ActiveMQDestination dest;
 
         if (conn instanceof org.apache.activemq.ActiveMQConnection) {
-            dest = org.apache.activemq.command.ActiveMQDestination.
-                    createDestination(dest_name, (byte) org.apache.activemq.command.ActiveMQDestination.QUEUE_TYPE);
+            dest = org.apache.activemq.command.ActiveMQDestination.createDestination(dest_name, org.apache.activemq.command.ActiveMQDestination.QUEUE_TYPE);
             ((org.apache.activemq.ActiveMQConnection) conn).destroyDestination(dest);
         }
     }
 
-    protected static void removeTopic(Connection conn, String dest_name)
-            throws java.lang.Exception {
+    protected static void removeTopic(Connection conn, String dest_name) throws java.lang.Exception {
         org.apache.activemq.command.ActiveMQDestination dest;
 
         if (conn instanceof org.apache.activemq.ActiveMQConnection) {
-            dest = org.apache.activemq.command.ActiveMQDestination.
-                    createDestination(dest_name, (byte) org.apache.activemq.command.ActiveMQDestination.TOPIC_TYPE);
+            dest = org.apache.activemq.command.ActiveMQDestination.createDestination(dest_name, org.apache.activemq.command.ActiveMQDestination.TOPIC_TYPE);
             ((org.apache.activemq.ActiveMQConnection) conn).destroyDestination(dest);
         }
     }
 
-    public static String fmtMsgInfo(Message msg)
-            throws Exception {
+    public static String fmtMsgInfo(Message msg) throws Exception {
         StringBuilder msg_desc;
         String prop;
-        Enumeration prop_enum;
+        Enumeration<?> prop_enum;
 
         msg_desc = new StringBuilder();
         msg_desc = new StringBuilder();
@@ -573,8 +524,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         protected String tcpUrl;
         protected String fullUrl;
 
-        public EmbeddedTcpBroker(String name, int number)
-                throws Exception {
+        public EmbeddedTcpBroker(String name, int number) throws Exception {
             brokerSvc = new BrokerService();
 
             synchronized (this.getClass()) {
@@ -599,8 +549,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             brokerSvc.addConnector(tcpUrl);
         }
 
-        public Connection createConnection()
-                throws URISyntaxException, JMSException {
+        public Connection createConnection() throws URISyntaxException, JMSException {
             Connection result;
 
             result = org.apache.activemq.ActiveMQConnection.makeConnection(this.fullUrl);
@@ -612,9 +561,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             return this.fullUrl;
         }
 
-
-        public void coreConnectTo(EmbeddedTcpBroker other, boolean duplex_f)
-                throws Exception {
+        public void coreConnectTo(EmbeddedTcpBroker other, boolean duplex_f) throws Exception {
             this.makeConnectionTo(other, duplex_f, true);
             this.makeConnectionTo(other, duplex_f, false);
             if (!duplex_f) {
@@ -623,24 +570,20 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             }
         }
 
-        public void start()
-                throws Exception {
+        public void start() throws Exception {
             brokerSvc.start();
             brokerSvc.waitUntilStarted();
         }
 
-        public void stop()
-                throws Exception {
+        public void stop() throws Exception {
             brokerSvc.stop();
         }
 
-
-        protected void makeConnectionTo(EmbeddedTcpBroker other, boolean duplex_f, boolean queue_f)
-                throws Exception {
+        protected void makeConnectionTo(EmbeddedTcpBroker other, boolean duplex_f, boolean queue_f) throws Exception {
             NetworkConnector nw_conn;
             String prefix;
             ActiveMQDestination excl_dest;
-            ArrayList excludes;
+            ArrayList<ActiveMQDestination> excludes;
 
             nw_conn = new DiscoveryNetworkConnector(new URI("static:(" + other.tcpUrl + ")"));
             nw_conn.setDuplex(duplex_f);
@@ -663,7 +606,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
                 excl_dest = ActiveMQDestination.createDestination(">", ActiveMQDestination.QUEUE_TYPE);
             }
 
-            excludes = new ArrayList();
+            excludes = new ArrayList<ActiveMQDestination>();
             excludes.add(excl_dest);
             nw_conn.setExcludedDestinations(excludes);
 
@@ -691,6 +634,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             shutdownLatch = new CountDownLatch(1);
         }
 
+        @Override
         public void run() {
             CountDownLatch latch;
 
@@ -748,8 +692,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             return msgCount;
         }
 
-        protected void processMessages()
-                throws Exception {
+        protected void processMessages() throws Exception {
             Message in_msg;
 
             haveFirstSeq = false;
@@ -770,8 +713,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             msgCons.close();
         }
 
-        protected void checkMessage(Message in_msg)
-                throws Exception {
+        protected void checkMessage(Message in_msg) throws Exception {
             int seq;
 
             LOG.debug("received message " + fmtMsgInfo(in_msg) + " from " + in_msg.getJMSDestination());
@@ -784,9 +726,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
                 seq = in_msg.getIntProperty("SEQ");
 
                 if ((haveFirstSeq) && (seq != (lastSeq + 1))) {
-                    LOG.error("***ERROR*** incorrect sequence number; expected " +
-                            Integer.toString(lastSeq + 1) + " but have " +
-                            Integer.toString(seq));
+                    LOG.error("***ERROR*** incorrect sequence number; expected " + Integer.toString(lastSeq + 1) + " but have " + Integer.toString(seq));
 
                     testError = true;
                 }
@@ -794,8 +734,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
                 lastSeq = seq;
 
                 if (msgCount > expectedCount) {
-                    LOG.error("*** have more messages than expected; have " + msgCount +
-                            "; expect " + expectedCount);
+                    LOG.error("*** have more messages than expected; have " + msgCount + "; expect " + expectedCount);
 
                     testError = true;
                 }
@@ -823,8 +762,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         protected ThreadPoolExecutor processorPool;
 
-        public EchoService(String dest, Connection broker_conn)
-                throws Exception {
+        public EchoService(String dest, Connection broker_conn) throws Exception {
             destName = dest;
             jmsConn = broker_conn;
 
@@ -838,16 +776,15 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
             waitShutdown = new CountDownLatch(1);
 
-            processorPool = new ThreadPoolExecutor(CONCURRENT_SERVER_COUNT, CONCURRENT_SERVER_COUNT,
-                    0, TimeUnit.SECONDS,
-                    new ArrayBlockingQueue<Runnable>(10000));
+            processorPool = new ThreadPoolExecutor(CONCURRENT_SERVER_COUNT, CONCURRENT_SERVER_COUNT, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(
+                10000));
         }
 
-        public EchoService(String dest, String broker_url)
-                throws Exception {
+        public EchoService(String dest, String broker_url) throws Exception {
             this(dest, ActiveMQConnection.makeConnection(broker_url));
         }
 
+        @Override
         public void run() {
             Message req;
 
@@ -876,7 +813,6 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
                 }
             }
         }
-
 
         /**
          * Shut down the service, waiting up to 3 seconds for the service to terminate.
@@ -916,8 +852,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
 
         protected Message request;
 
-        public EchoRequestProcessor(Session sess, Message req)
-                throws Exception {
+        public EchoRequestProcessor(Session sess, Message req) throws Exception {
             this.session = sess;
             this.request = req;
 
@@ -930,6 +865,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             this.msg_prod = session.createProducer(this.resp_dest);
         }
 
+        @Override
         public void run() {
             try {
                 this.processRequest(this.request);
@@ -941,8 +877,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         /**
          * Process one request for the Echo Service.
          */
-        protected void processRequest(Message req)
-                throws Exception {
+        protected void processRequest(Message req) throws Exception {
             if (LOG.isDebugEnabled())
                 LOG.debug("ECHO request message " + req.toString());
 
@@ -975,8 +910,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
         protected boolean Shutdown_ind;
         protected int send_count;
 
-        public TopicTrafficGenerator(String url1, String url2)
-                throws Exception {
+        public TopicTrafficGenerator(String url1, String url2) throws Exception {
             conn1 = createConnection(url1);
             conn2 = createConnection(url2);
 
@@ -997,6 +931,7 @@ public class RequestReplyToTopicViaThreeNetworkHopsTest {
             Shutdown_ind = true;
         }
 
+        @Override
         public void run() {
             Message msg;
 

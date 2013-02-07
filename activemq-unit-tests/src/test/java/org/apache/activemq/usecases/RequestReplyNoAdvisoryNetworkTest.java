@@ -27,10 +27,12 @@ import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.Map;
 import java.util.Vector;
+
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -56,7 +58,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
     ActiveMQQueue sendQ = new ActiveMQQueue("sendQ");
     static final String connectionIdMarker = "ID:marker.";
     ActiveMQTempQueue replyQWildcard = new ActiveMQTempQueue(connectionIdMarker + ">");
-    private long receiveTimeout = 30000;
+    private final long receiveTimeout = 30000;
 
     public void testNonAdvisoryNetworkRequestReplyXmlConfig() throws Exception {
         final String xmlConfigString = new String(
@@ -197,9 +199,9 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
             assertTrue("all temps are gone on " + regionBroker.getBrokerName(), Wait.waitFor(new Wait.Condition(){
                 @Override
                 public boolean isSatisified() throws Exception {
-                    Map tempTopics = regionBroker.getTempTopicRegion().getDestinationMap();
+                    Map<?,?> tempTopics = regionBroker.getTempTopicRegion().getDestinationMap();
                     LOG.info("temp topics on " + regionBroker.getBrokerName() + ", " + tempTopics);
-                    Map tempQ = regionBroker.getTempQueueRegion().getDestinationMap();
+                    Map<?,?> tempQ = regionBroker.getTempQueueRegion().getDestinationMap();
                     LOG.info("temp queues on " + regionBroker.getBrokerName() + ", " + tempQ);
                     return tempQ.isEmpty() && tempTopics.isEmpty();
                 }
@@ -236,6 +238,7 @@ public class RequestReplyNoAdvisoryNetworkTest extends JmsMultipleBrokersTestSup
         }
     }
 
+    @Override
     public void tearDown() throws Exception {
         for (BrokerService broker: brokers) {
             broker.stop();

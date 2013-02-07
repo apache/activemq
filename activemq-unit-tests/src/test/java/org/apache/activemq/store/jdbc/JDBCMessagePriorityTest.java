@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
@@ -32,15 +33,17 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicSubscriber;
+
 import junit.framework.Test;
+
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.MessagePriorityTest;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.Wait;
+import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
@@ -62,6 +65,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
     }
 
 
+    @Override
     protected void tearDown() throws Exception {
        super.tearDown();
        try {
@@ -154,7 +158,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         }
 
         final int closeFrequency = MSG_NUM / 2;
-        HashMap dups = new HashMap();
+        HashMap<String, String> dups = new HashMap<String, String>();
         sub = consumerSession.createDurableSubscriber(topic, subName);
         for (int i = 0; i < MSG_NUM * maxPriority; i++) {
             Message msg = sub.receive(10000);
@@ -228,6 +232,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         sub = consumerSession.createDurableSubscriber(topic, subName);
         final AtomicInteger count = new AtomicInteger();
         sub.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 try {
                     count.incrementAndGet();
@@ -273,6 +278,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
         assertTrue("max X times as slow with consumer:" + withConsumerAve + " , noConsumerMax:" + noConsumerAve,
                 withConsumerAve < noConsumerAve * reasonableMultiplier);
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("count: " + count.get());
                 return TO_SEND * 2 == count.get();
@@ -422,6 +428,7 @@ public class JDBCMessagePriorityTest extends MessagePriorityTest {
        }));
     }
 
+    @SuppressWarnings("unused")
     private int messageTableDump() throws Exception {
         int count = -1;
         java.sql.Connection c = dataSource.getConnection();

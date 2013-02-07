@@ -19,34 +19,39 @@ package org.apache.activemq.perf;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
 import javax.jms.Session;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class QueueConnectionMemoryTest extends SimpleQueueTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(QueueConnectionMemoryTest.class);
 
+    @Override
     protected void setUp() throws Exception {
     }
 
+    @Override
     protected void tearDown() throws Exception {
 
     }
 
+    @Override
     protected Destination createDestination(Session s, String destinationName) throws JMSException {
         return s.createTemporaryQueue();
     }
 
+    @Override
     public void testPerformance() throws JMSException {
         // just cancel super class test
     }
 
+    @Override
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
@@ -61,14 +66,14 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest {
         factory = createConnectionFactory(bindAddress);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = createDestination(session, destinationName);
+        createDestination(session, destinationName);
         con.close();
         for (int i = 0; i < 3; i++) {
             Connection connection = factory.createConnection();
             connection.start();
             Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Destination dest = s.createTemporaryQueue();
-            MessageConsumer consumer = s.createConsumer(dest);
+            s.createConsumer(dest);
             LOG.debug("Created connnection: " + i);
             Thread.sleep(1000);
         }

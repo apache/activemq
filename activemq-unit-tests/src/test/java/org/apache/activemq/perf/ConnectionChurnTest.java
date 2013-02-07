@@ -18,10 +18,13 @@ package org.apache.activemq.perf;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -30,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class ConnectionChurnTest extends TestCase {
     protected static final int CONNECTION_COUNT = 200;
@@ -41,7 +44,7 @@ public class ConnectionChurnTest extends TestCase {
 
     public void testPerformance() throws Exception {
         ConnectionFactory factory = createConnectionFactory();
-        List<Connection> list = new ArrayList();
+        List<Connection> list = new ArrayList<Connection>();
         for (int i = 0; i < CONNECTION_COUNT; i++) {
             Connection connection = factory.createConnection();
             connection.start();
@@ -64,6 +67,7 @@ public class ConnectionChurnTest extends TestCase {
         list.clear();
     }
 
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -71,6 +75,7 @@ public class ConnectionChurnTest extends TestCase {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         if (broker != null) {

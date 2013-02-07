@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100; // Best if a factor of 100
@@ -366,6 +366,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         assertEquals("Client for " + broker2 + " should have received 50% of the messages.", (int)(MESSAGE_COUNT * 0.50), msgsClient2);
     }
 
+    @SuppressWarnings("unchecked")
     public void testDuplicateSend() throws Exception {
         broker1 = "BrokerA";
         broker2 = "BrokerB";
@@ -391,6 +392,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
                         if (first.compareAndSet(false, true)) {
                             producerExchange.getConnectionContext().setDontSendReponse(true);
                             Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                @Override
                                 public void run() {
                                     try {
                                         LOG.info("Waiting for recepit");
@@ -441,6 +443,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         }));
     }
 
+    @SuppressWarnings("unchecked")
     public void testDuplicateSendWithNoAuditEnqueueCountStat() throws Exception {
         broker1 = "BrokerA";
         broker2 = "BrokerB";
@@ -463,6 +466,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
                         if (first.compareAndSet(false, true)) {
                             producerExchange.getConnectionContext().setDontSendReponse(true);
                             Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                @Override
                                 public void run() {
                                     try {
                                         LOG.info("Waiting for recepit");
@@ -547,6 +551,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         return msgsReceived;
     }
 
+    @Override
     protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {
         Connection conn = createConnection(brokerName);
         conn.start();
@@ -554,6 +559,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         return sess.createConsumer(dest);
     }
 
+    @Override
     protected void configureBroker(BrokerService broker) {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
@@ -562,6 +568,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         broker.setDestinationPolicy(policyMap);
     }
 
+    @Override
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         NetworkConnector nc = super.bridgeBrokers(localBroker,remoteBroker, dynamicOnly, networkTTL, conduit, failover);
         nc.setPrefetchSize(NETWORK_PREFETCH);
@@ -569,6 +576,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         return nc;
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();

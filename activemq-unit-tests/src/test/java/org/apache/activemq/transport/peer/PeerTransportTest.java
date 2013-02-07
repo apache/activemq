@@ -27,6 +27,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -40,13 +41,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class PeerTransportTest extends TestCase {
     protected static final int MESSAGE_COUNT = 50;
     protected static final int NUMBER_IN_CLUSTER = 3;
     private static final Logger LOG = LoggerFactory.getLogger(PeerTransportTest.class);
-    
+
     protected ActiveMQDestination destination;
     protected boolean topic = true;
     protected int deliveryMode = DeliveryMode.NON_PERSISTENT;
@@ -54,14 +55,13 @@ public class PeerTransportTest extends TestCase {
     protected Connection[] connections;
     protected MessageIdList messageIdList[];
 
+    @Override
     protected void setUp() throws Exception {
 
         connections = new Connection[NUMBER_IN_CLUSTER];
         producers = new MessageProducer[NUMBER_IN_CLUSTER];
         messageIdList = new MessageIdList[NUMBER_IN_CLUSTER];
         ActiveMQDestination destination = createDestination();
-
-        String root = System.getProperty("activemq.store.dir");
 
         for (int i = 0; i < NUMBER_IN_CLUSTER; i++) {
             connections[i] = createConnection(i);
@@ -102,6 +102,7 @@ public class PeerTransportTest extends TestCase {
         LOG.info("Cluster is online.");
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (connections != null) {
             for (int i = 0; i < connections.length; i++) {

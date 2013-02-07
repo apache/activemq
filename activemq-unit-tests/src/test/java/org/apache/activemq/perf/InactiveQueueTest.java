@@ -22,16 +22,16 @@ import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TopicSubscriber;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class InactiveQueueTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(InactiveQueueTest.class);
@@ -39,20 +39,19 @@ public class InactiveQueueTest extends TestCase {
     private static final int MESSAGE_COUNT = 0;
     private static final String DEFAULT_PASSWORD = "";
     private static final String USERNAME = "testuser";
-    private static final String CLIENTID = "mytestclient";
     private static final String QUEUE_NAME = "testevent";
     private static final int DELIVERY_MODE = javax.jms.DeliveryMode.PERSISTENT;
     private static final int DELIVERY_PRIORITY = javax.jms.Message.DEFAULT_PRIORITY;
-    
+
     ActiveMQConnectionFactory connectionFactory;
     BrokerService broker;
 
     private Connection connection;
     private MessageProducer publisher;
-    private TopicSubscriber subscriber;
     private Destination destination;
     private Session session;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         broker = new BrokerService();
@@ -77,6 +76,7 @@ public class InactiveQueueTest extends TestCase {
         connectionFactory.setUseAsyncSend(true);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         broker.stop();
@@ -104,7 +104,7 @@ public class InactiveQueueTest extends TestCase {
             }
         }
         Thread.sleep(1000000);
-        this.assertEquals(loop, MESSAGE_COUNT);
+        assertEquals(loop, MESSAGE_COUNT);
         publisher.close();
         session.close();
         connection.stop();

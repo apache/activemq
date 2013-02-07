@@ -25,9 +25,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TopicSubscriber;
 import javax.management.MBeanServer;
-import javax.management.ObjectName;
 
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -74,7 +74,8 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
 
         sendMessage(true);
 
-        Wait.waitFor(new Wait.Condition() { public boolean isSatisified() { return received >= 1;} }, 10000);
+        Wait.waitFor(new Wait.Condition() { @Override
+        public boolean isSatisified() { return received >= 1;} }, 10000);
 
         assertEquals("Message is not received.", 1, received);
 
@@ -92,6 +93,7 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
         TopicSubscriber subscriber = session.createDurableSubscriber(topic, "subName", "filter=true", false);
 
         subscriber.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 received++;
             }
@@ -123,22 +125,10 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
         producerConnection = null;
     }
 
-    private int getPendingQueueSize() throws Exception {
-        ObjectName[] subs = broker.getAdminView().getDurableTopicSubscribers();
-        for (ObjectName sub: subs) {
-            if ("cliID".equals(mbs.getAttribute(sub, "ClientId"))) {
-                Integer size = (Integer) mbs.getAttribute(sub, "PendingQueueSize");
-                return size != null ? size : 0;
-            }
-        }
-        assertTrue(false);
-        return -1;
-    }
-
     private void startBroker(boolean deleteMessages) throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("test-broker");
-        
+
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
         }
@@ -163,7 +153,8 @@ public class DurableSubscriptionSelectorTest extends org.apache.activemq.TestSup
             broker.stop();
         broker = null;
     }
-    
+
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://test-broker?jms.watchTopicAdvisories=false&waitForStart=5000&create=false");
     }

@@ -19,14 +19,11 @@ package org.apache.activemq.xbean;
 import javax.jms.Connection;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.test.retroactive.RetroactiveConsumerWithMessageQueryTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * @author Neil Clayton
- * 
+ *
  */
 public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MultipleTestsWithEmbeddedBrokerTest.class);
@@ -39,6 +36,7 @@ public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSuppo
     public void test2() throws Exception {
     }
 
+    @Override
     protected void setUp() throws Exception {
         LOG.info("### starting up the test case: " + getName());
 
@@ -48,6 +46,7 @@ public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSuppo
         LOG.info("### started up the test case: " + getName());
     }
 
+    @Override
     protected void tearDown() throws Exception {
         connection.close();
 

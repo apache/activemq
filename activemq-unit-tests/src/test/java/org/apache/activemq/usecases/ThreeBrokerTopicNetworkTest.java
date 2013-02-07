@@ -28,14 +28,13 @@ import javax.jms.Topic;
 import junit.framework.Test;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.JmsMultipleBrokersTestSupport.BrokerItem;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.util.MessageIdList;
 
 /**
- * 
+ *
  */
 public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100;
@@ -79,11 +78,11 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT * 2, msgsB.getMessageCount());
         assertEquals(MESSAGE_COUNT * 2, msgsC.getMessageCount());
     }
-    
+
     public void initCombosForTestABandBCbrokerNetworkWithSelectors() {
-    	addCombinationValues("dynamicOnly", new Object[] {true, false});
+        addCombinationValues("dynamicOnly", new Object[] {true, false});
     }
-    
+
     /**
      * BrokerA -> BrokerB -> BrokerC
      */
@@ -185,7 +184,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
 
 //      let consumers propogate around the network
         Thread.sleep(2000);
-        
+
         // Send messages
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
         sendMessages("BrokerB", dest, MESSAGE_COUNT);
@@ -249,7 +248,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     }
 
     public void testAllConnectedBrokerNetworkSingleProducerTTL() throws Exception {
-        
+
         // duplicates are expected with ttl of 2 as each broker is connected to the next
         // but the dups are suppressed by the store and now also by the topic sub when enableAudit
         // default (true) is present in a matching destination policy entry
@@ -287,7 +286,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
 
         // Send messages
         sendMessages("BrokerA", dest, 1);
-        
+
         // Get message count
         MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
         MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
@@ -299,7 +298,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
 
         // ensure we don't get any more messages
         Thread.sleep(2000);
-        
+
         assertEquals(1, msgsA.getMessageCount());
         assertEquals(1, msgsB.getMessageCount());
         assertEquals(1, msgsC.getMessageCount());
@@ -342,12 +341,12 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
 
         // ensure we don't get any more messages
         Thread.sleep(2000);
-        
+
         assertEquals(1, msgsA.getMessageCount());
         assertEquals(1, msgsB.getMessageCount());
         assertEquals(1, msgsC.getMessageCount());
     }
-    
+
     /**
      * BrokerA <-> BrokerB <-> BrokerC
      */
@@ -364,7 +363,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientA = createConsumer("BrokerA", dest);
         MessageConsumer clientB = createConsumer("BrokerB", dest);
         MessageConsumer clientC = createConsumer("BrokerC", dest);
-        
+
         //let consumers propogate around the network
         Thread.sleep(2000);
 
@@ -387,16 +386,17 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         assertEquals(MESSAGE_COUNT * 3, msgsC.getMessageCount());
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        String options = new String("?persistent=false&useJmx=false"); 
+        String options = new String("?persistent=false&useJmx=false");
         createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA" + options));
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB" + options));
         createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC" + options));
     }
-    
+
     public static Test suite() {
-    	return suite(ThreeBrokerTopicNetworkTest.class);
+        return suite(ThreeBrokerTopicNetworkTest.class);
     }
 }

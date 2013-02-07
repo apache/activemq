@@ -20,7 +20,6 @@ import java.net.SocketAddress;
 import java.net.URI;
 
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.test.JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.ResponseRedirectInterceptor;
@@ -30,14 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class UnreliableUdpTransportTest extends UdpTransportTest {
     private static final Logger LOG = LoggerFactory.getLogger(UnreliableUdpTransportTest.class);
 
     protected DropCommandStrategy dropStrategy = new DropCommandStrategy() {
-        
+
+        @Override
         public boolean shouldDropCommand(int commandId, SocketAddress address, boolean redelivery) {
             if (redelivery) {
                 return false;
@@ -46,6 +46,7 @@ public class UnreliableUdpTransportTest extends UdpTransportTest {
         }
     };
 
+    @Override
     protected Transport createProducer() throws Exception {
         LOG.info("Producer using URI: " + producerURI);
 
@@ -60,6 +61,7 @@ public class UnreliableUdpTransportTest extends UdpTransportTest {
         return new CommandJoiner(reliableTransport, wireFormat);
     }
 
+    @Override
     protected Transport createConsumer() throws Exception {
         LOG.info("Consumer on port: " + consumerPort);
         OpenWireFormat wireFormat = createWireFormat();

@@ -16,16 +16,21 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import junit.framework.TestCase;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQQueue;
-
-import javax.jms.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.FileNotFoundException;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+
+import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
 
 /**
  * @author chirino
@@ -39,7 +44,6 @@ public class KahaDBTest extends TestCase {
         broker.setPersistenceAdapter(kaha);
         broker.start();
         return broker;
-
     }
 
     private KahaDBStore createStore(boolean delete) throws IOException {
@@ -95,7 +99,7 @@ public class KahaDBTest extends TestCase {
 
         // We know we won't get all the messages but we should get most of them.
         int count = receiveMessages();
-        assertTrue( count > 800 ); 
+        assertTrue( count > 800 );
         assertTrue( count < 1000 );
 
         broker.stop();

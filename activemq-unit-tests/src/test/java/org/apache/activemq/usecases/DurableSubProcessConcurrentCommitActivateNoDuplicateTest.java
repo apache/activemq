@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -53,9 +56,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static org.junit.Assert.assertTrue;
-
 public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubProcessConcurrentCommitActivateNoDuplicateTest.class);
     public static final long RUNTIME = 5 * 60 * 1000;
@@ -69,9 +69,9 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
     public static final Random CLIENT_OFFLINE = new Random(1 * 1000, 10 * 1000);
 
     public static final int CLIENT_OFFLINE_DURING_COMMIT = 2; // random(x) == x
-            
+
     public static final Persistence PERSISTENT_ADAPTER = Persistence.KAHADB;
-    
+
     public static final long BROKER_RESTART = -2 * 60 * 1000;
 
     public static final boolean ALLOW_SUBSCRIPTION_ABANDONMENT = true;
@@ -126,10 +126,10 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
         //allow the clients to unsubscribe before finishing
         clientManager.setEnd(true);
         try {
-			Thread.sleep(60 * 1000);
-		} catch (InterruptedException e) {
-			 exit("ProcessTest.testProcess failed.", e);
-		}
+            Thread.sleep(60 * 1000);
+        } catch (InterruptedException e) {
+             exit("ProcessTest.testProcess failed.", e);
+        }
 
         server.done = true;
 
@@ -181,7 +181,7 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
 
         int transRover = 0;
         int messageRover = 0;
-        public volatile int committingTransaction = -1;        
+        public volatile int committingTransaction = -1;
         public boolean  done = false;
         public Server() {
             super("Server");
@@ -194,8 +194,8 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
             try {
                 while (!done) {
 
-                	Thread.sleep(1000);
-                	
+                    Thread.sleep(1000);
+
                     processLock.readLock().lock();
                     try {
                         send();
@@ -347,7 +347,7 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
 
         private final CopyOnWriteArrayList<Client> clients = new CopyOnWriteArrayList<Client>();
 
-		private boolean end;
+        private boolean end;
 
         public ClientManager() {
             super("ClientManager");
@@ -355,11 +355,11 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
         }
 
         public synchronized void setEnd(boolean end) {
-			this.end = end;
-			
-		}
+            this.end = end;
 
-		@Override
+        }
+
+        @Override
         public void run() {
             try {
                 while (true) {
@@ -491,10 +491,10 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
                         offline.sleepRandom();
                     else
                         sleep = true;
-					*/
-                    
+                    */
+
                     Thread.sleep(100);
-                    
+
                     processLock.readLock().lock();
                     onlineCount.incrementAndGet();
                     try {
@@ -524,7 +524,7 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
 
         private void process(long millis) throws JMSException {
             //long end = System.currentTimeMillis() + millis;
-        	long end = System.currentTimeMillis() + 200;
+            long end = System.currentTimeMillis() + 200;
             long hardEnd = end + 20000; // wait to finish the transaction.
             boolean inTransaction = false;
             int transCount = 0;
@@ -565,7 +565,7 @@ public class DurableSubProcessConcurrentCommitActivateNoDuplicateTest {
 
                         inTransaction = false;
                         transCount = 0;
-                        
+
                         int committing = server.committingTransaction;
                         if (committing == trans) {
                             LOG.info("Going offline during transaction commit. messageID=" + message.getIntProperty("ID"));

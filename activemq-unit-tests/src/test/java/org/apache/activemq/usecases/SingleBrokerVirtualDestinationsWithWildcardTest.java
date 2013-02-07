@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
@@ -29,9 +28,6 @@ import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.MessageIdList;
 
@@ -100,6 +96,7 @@ public class SingleBrokerVirtualDestinationsWithWildcardTest extends JmsMultiple
         Thread.sleep(500);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();

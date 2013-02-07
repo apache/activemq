@@ -20,16 +20,10 @@ package org.apache.activemq.store.jdbc;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Properties;
 
-import javax.jms.DeliveryMode;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
 import javax.jms.XAConnection;
 import javax.jms.XASession;
 import javax.transaction.xa.XAException;
@@ -40,8 +34,6 @@ import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import junit.framework.TestCase;
-
 // https://issues.apache.org/activemq/browse/AMQ-2880
 public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCXACommitExceptionTest.class);
@@ -49,7 +41,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
     private long txGenerator = System.currentTimeMillis();
 
     protected ActiveMQXAConnectionFactory factory = new ActiveMQXAConnectionFactory(
-            "tcp://localhost:61616?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected); 
+            "tcp://localhost:61616?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected);
 
     boolean onePhase = true;
 
@@ -130,7 +122,7 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
     }
 
     public Xid createXid() throws IOException {
-        
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(baos);
         os.writeLong(++txGenerator);
@@ -138,14 +130,17 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         final byte[] bs = baos.toByteArray();
 
         return new Xid() {
+            @Override
             public int getFormatId() {
                 return 86;
             }
 
+            @Override
             public byte[] getGlobalTransactionId() {
                 return bs;
             }
 
+            @Override
             public byte[] getBranchQualifier() {
                 return bs;
             }

@@ -36,19 +36,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-
 public class SslContextNBrokerServiceTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(SslContextNBrokerServiceTest.class);
-    
+
     private ClassPathXmlApplicationContext context;
-    Map beansOfType;
-    
+    Map<String, BrokerService> beansOfType;
+
     public void testConfigurationIsolation() throws Exception {
-        
+
         assertTrue("dummy bean has dummy cert", verifyCredentials("dummy"));
         assertTrue("good bean has amq cert", verifyCredentials("activemq.org"));
     }
-    
+
     private boolean verifyCredentials(String name) throws Exception {
         boolean result = false;
         BrokerService broker = getBroker(name);
@@ -66,18 +65,17 @@ public class SslContextNBrokerServiceTest extends TestCase {
         TransportConnector connector = broker.getTransportConnectors().get(0);
         URI brokerUri = connector.getConnectUri();
 
-        SSLContext context = SSLContext.getInstance("TLS");        
-        CertChainCatcher catcher = new CertChainCatcher(); 
-        context.init(null, new TrustManager[] {catcher}, null);
-        
+        SSLContext context = SSLContext.getInstance("TLS");
+        CertChainCatcher catcher = new CertChainCatcher();
+        context.init(null, new TrustManager[] { catcher }, null);
+
         SSLSocketFactory factory = context.getSocketFactory();
-        LOG.info("Connecting to broker: " + broker.getBrokerName()
-                + " on: " + brokerUri.getHost() + ":" + brokerUri.getPort());
-        SSLSocket socket = (SSLSocket)factory.createSocket(brokerUri.getHost(), brokerUri.getPort());
+        LOG.info("Connecting to broker: " + broker.getBrokerName() + " on: " + brokerUri.getHost() + ":" + brokerUri.getPort());
+        SSLSocket socket = (SSLSocket) factory.createSocket(brokerUri.getHost(), brokerUri.getPort());
         socket.setSoTimeout(5000);
         socket.startHandshake();
         socket.close();
-        
+
         boolean matches = false;
         if (catcher.serverCerts != null) {
             for (int i = 0; i < catcher.serverCerts.length; i++) {
@@ -91,15 +89,14 @@ public class SslContextNBrokerServiceTest extends TestCase {
                 }
             }
         }
-        return matches; 
+        return matches;
     }
-
 
     private BrokerService getBroker(String name) {
         BrokerService result = null;
-        Iterator iterator = beansOfType.values().iterator();
-        while(iterator.hasNext()) {
-            BrokerService candidate = (BrokerService)iterator.next();
+        Iterator<BrokerService> iterator = beansOfType.values().iterator();
+        while (iterator.hasNext()) {
+            BrokerService candidate = iterator.next();
             if (candidate.getBrokerName().equals(name)) {
                 result = candidate;
                 break;
@@ -108,29 +105,32 @@ public class SslContextNBrokerServiceTest extends TestCase {
         return result;
     }
 
-
-    protected void setUp() throws Exception {     
-        //System.setProperty("javax.net.debug", "ssl");
+    @Override
+    protected void setUp() throws Exception {
+        // System.setProperty("javax.net.debug", "ssl");
         Thread.currentThread().setContextClassLoader(SslContextNBrokerServiceTest.class.getClassLoader());
         context = new ClassPathXmlApplicationContext("org/apache/activemq/transport/tcp/n-brokers-ssl.xml");
         beansOfType = context.getBeansOfType(BrokerService.class);
-        
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         context.destroy();
     }
 
-
-    class CertChainCatcher implements  X509TrustManager {  
+    class CertChainCatcher implements X509TrustManager {
         X509Certificate[] serverCerts;
-        
+
+        @Override
         public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
         }
+
+        @Override
         public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
             serverCerts = arg0;
         }
+
+        @Override
         public X509Certificate[] getAcceptedIssuers() {
             return null;
         }

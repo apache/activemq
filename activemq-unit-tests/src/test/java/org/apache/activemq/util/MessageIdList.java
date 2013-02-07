@@ -24,8 +24,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,15 +36,15 @@ import org.slf4j.LoggerFactory;
  * chain these instances together with the {@link #setParent(MessageListener)}
  * method so that you can aggregate the total number of messages consumed across
  * a number of consumers.
- * 
- * 
+ *
+ *
  */
 public class MessageIdList extends Assert implements MessageListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageIdList.class);
 
-    private List<String> messageIds = new ArrayList<String>();
-    private Object semaphore;
+    private final List<String> messageIds = new ArrayList<String>();
+    private final Object semaphore;
     private boolean verbose;
     private MessageListener parent;
     private long maximumDuration = 15000L;
@@ -61,6 +60,7 @@ public class MessageIdList extends Assert implements MessageListener {
         this.semaphore = semaphore;
     }
 
+    @Override
     public boolean equals(Object that) {
         if (that instanceof MessageIdList) {
             MessageIdList thatList = (MessageIdList)that;
@@ -69,12 +69,14 @@ public class MessageIdList extends Assert implements MessageListener {
         return false;
     }
 
+    @Override
     public int hashCode() {
         synchronized (semaphore) {
             return messageIds.hashCode() + 1;
         }
     }
 
+    @Override
     public String toString() {
         synchronized (semaphore) {
             return messageIds.toString();
@@ -98,6 +100,7 @@ public class MessageIdList extends Assert implements MessageListener {
         }
     }
 
+    @Override
     public void onMessage(Message message) {
         String id = null;
         try {
@@ -161,7 +164,7 @@ public class MessageIdList extends Assert implements MessageListener {
     /**
      * Performs a testing assertion that the correct number of messages have
      * been received without waiting
-     * 
+     *
      * @param messageCount
      */
     public void assertMessagesReceivedNoWait(int messageCount) {
@@ -172,7 +175,7 @@ public class MessageIdList extends Assert implements MessageListener {
      * Performs a testing assertion that the correct number of messages have
      * been received waiting for the messages to arrive up to a fixed amount of
      * time.
-     * 
+     *
      * @param messageCount
      */
     public void assertMessagesReceived(int messageCount) {
@@ -193,7 +196,7 @@ public class MessageIdList extends Assert implements MessageListener {
     /**
      * Asserts that there are at most the number of messages received without
      * waiting
-     * 
+     *
      * @param messageCount
      */
     public void assertAtMostMessagesReceived(int messageCount) {
@@ -250,7 +253,7 @@ public class MessageIdList extends Assert implements MessageListener {
     /**
      * Gets the amount of time the message listener will spend sleeping to
      * simulate a processing delay.
-     * 
+     *
      * @return
      */
     public long getProcessingDelay() {
@@ -260,7 +263,7 @@ public class MessageIdList extends Assert implements MessageListener {
     /**
      * Sets the amount of time the message listener will spend sleeping to
      * simulate a processing delay.
-     * 
+     *
      * @param processingDelay
      */
     public void setProcessingDelay(long processingDelay) {

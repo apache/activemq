@@ -32,15 +32,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * 
+ *
  */
 public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private static final Logger LOG = LoggerFactory.getLogger(TwoBrokerTopicSendReceiveTest.class);
 
     protected ActiveMQConnectionFactory sendFactory;
     protected ActiveMQConnectionFactory receiveFactory;
-    protected HashMap brokers = new HashMap();
+    protected HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
 
+    @Override
     protected void setUp() throws Exception {
         sendFactory = createSenderConnectionFactory();
         receiveFactory = createReceiverConnectionFactory();
@@ -63,19 +64,22 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
         return createConnectionFactory("org/apache/activemq/usecases/sender.xml", "sender", "vm://sender");
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        for (Iterator iter = brokers.values().iterator(); iter.hasNext();) {
-            BrokerService broker = (BrokerService)iter.next();
+        for (Iterator<BrokerService> iter = brokers.values().iterator(); iter.hasNext();) {
+            BrokerService broker = iter.next();
             ServiceSupport.dispose(broker);
             iter.remove();
         }
     }
 
+    @Override
     protected Connection createReceiveConnection() throws JMSException {
         return receiveFactory.createConnection();
     }
 
+    @Override
     protected Connection createSendConnection() throws JMSException {
         return sendFactory.createConnection();
     }

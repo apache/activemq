@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -33,6 +37,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -46,10 +51,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class DurableSubProcessWithRestartTest {
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubProcessWithRestartTest.class);
@@ -93,22 +94,18 @@ public class DurableSubProcessWithRestartTest {
             if (ALLOW_SUBSCRIPTION_ABANDONMENT)
                 houseKeeper.start();
 
-            if (BROKER_RESTART <= 0)
-                Thread.sleep(RUNTIME);
-            else {
-                long end = System.currentTimeMillis() + RUNTIME;
+            long end = System.currentTimeMillis() + RUNTIME;
 
-                while (true) {
-                    long now = System.currentTimeMillis();
-                    if (now > end)
-                        break;
+            while (true) {
+                long now = System.currentTimeMillis();
+                if (now > end)
+                    break;
 
-                    now = end - now;
-                    now = now < BROKER_RESTART ? now : BROKER_RESTART;
-                    Thread.sleep(now);
+                now = end - now;
+                now = now < BROKER_RESTART ? now : BROKER_RESTART;
+                Thread.sleep(now);
 
-                    restartBroker();
-                }
+                restartBroker();
             }
         } catch (Throwable e) {
             exit("ProcessTest.testProcess failed.", e);
@@ -588,6 +585,7 @@ public class DurableSubProcessWithRestartTest {
         /**
          * Checks if the message was not delivered fast enough.
          */
+        @SuppressWarnings("unused")
         public void checkDeliveryTime(Message message) throws JMSException {
             long creation = message.getJMSTimestamp();
             long min = System.currentTimeMillis() - (offline.max + online.min)

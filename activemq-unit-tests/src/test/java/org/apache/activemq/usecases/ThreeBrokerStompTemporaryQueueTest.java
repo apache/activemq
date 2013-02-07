@@ -38,6 +38,7 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
     private static final Logger LOG = LoggerFactory.getLogger(ThreeBrokerStompTemporaryQueueTest.class);
     private StompConnection stompConnection;
 
+    @Override
     protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL, boolean conduit, boolean failover) throws Exception {
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
@@ -108,7 +109,6 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         advisoryTopicsForTempQueues = countTopicsByName("BrokerC", "ActiveMQ.Advisory.Consumer.Queue.ID");
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
 
-
         LOG.info("Restarting brokerA");
         BrokerItem brokerItem = brokers.remove("BrokerA");
         if (brokerItem != null) {
@@ -133,7 +133,6 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
         advisoryTopicsForTempQueues = countTopicsByName("BrokerC", "ActiveMQ.Advisory.Consumer.Queue.ID");
         assertEquals("Advisory topic should have been deleted", 0, advisoryTopicsForTempQueues);
-
     }
 
     private int countTopicsByName(String broker, String name)
@@ -147,11 +146,12 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         return advisoryTopicsForTempQueues;
     }
 
-
     private void bridgeAndConfigureBrokers(String local, String remote) throws Exception {
         NetworkConnector bridge = bridgeBrokers(local, remote);
+        assertNotNull(bridge);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
@@ -159,14 +159,11 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         createAndConfigureBroker(new URI("broker:(tcp://localhost:61616,stomp://localhost:61613)/BrokerA" + options));
         createAndConfigureBroker(new URI("broker:(tcp://localhost:61617,stomp://localhost:61614)/BrokerB" + options));
         createAndConfigureBroker(new URI("broker:(tcp://localhost:61618,stomp://localhost:61615)/BrokerC" + options));
-
     }
 
     private BrokerService createAndConfigureBroker(URI uri) throws Exception {
         BrokerService broker = createBroker(uri);
-
         configurePersistenceAdapter(broker);
-
         return broker;
     }
 
@@ -176,5 +173,4 @@ public class ThreeBrokerStompTemporaryQueueTest extends JmsMultipleBrokersTestSu
         kaha.setDirectory(dataFileDir);
         broker.setPersistenceAdapter(kaha);
     }
-
 }

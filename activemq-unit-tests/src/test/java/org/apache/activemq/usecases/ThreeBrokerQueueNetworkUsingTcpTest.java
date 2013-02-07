@@ -27,20 +27,20 @@ import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.transport.TransportFactory;
 
 /**
- * 
+ *
  */
 public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetworkTest {
     protected List<DemandForwardingBridge> bridges;
 
     protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
-        List remoteTransports = remoteBroker.getTransportConnectors();
-        List localTransports = localBroker.getTransportConnectors();
+        List<TransportConnector> remoteTransports = remoteBroker.getTransportConnectors();
+        List<TransportConnector> localTransports = localBroker.getTransportConnectors();
 
         URI remoteURI;
         URI localURI;
         if (!remoteTransports.isEmpty() && !localTransports.isEmpty()) {
-            remoteURI = ((TransportConnector)remoteTransports.get(0)).getConnectUri();
-            localURI = ((TransportConnector)localTransports.get(0)).getConnectUri();
+            remoteURI = remoteTransports.get(0).getConnectUri();
+            localURI = localTransports.get(0).getConnectUri();
 
             // Ensure that we are connecting using tcp
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
@@ -61,6 +61,7 @@ public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetwork
         maxSetupTime = 2000;
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
 

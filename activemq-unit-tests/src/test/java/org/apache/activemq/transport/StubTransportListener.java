@@ -21,33 +21,37 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class StubTransportListener implements TransportListener {
 
-    private Queue commands = new ConcurrentLinkedQueue();
-    private Queue exceptions = new ConcurrentLinkedQueue();
+    private final Queue<Object> commands = new ConcurrentLinkedQueue<Object>();
+    private final Queue<Object> exceptions = new ConcurrentLinkedQueue<Object>();
 
-    public Queue getCommands() {
+    public Queue<Object> getCommands() {
         return commands;
     }
 
-    public Queue getExceptions() {
+    public Queue<Object> getExceptions() {
         return exceptions;
     }
 
+    @Override
     public void onCommand(Object command) {
         commands.add(command);
     }
 
+    @Override
     public void onException(IOException error) {
         exceptions.add(error);
     }
 
+    @Override
     public void transportInterupted() {
     }
 
+    @Override
     public void transportResumed() {
     }
 

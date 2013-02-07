@@ -28,14 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * 
+ *
+ *
  */
 public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnectionTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(NewConsumerCreatesDestinationTest.class);
 
     private ActiveMQQueue wildcard;
-    
+
     public void testNewConsumerCausesNewDestinationToBeAutoCreated() throws Exception {
 
         // lets create a wildcard thats kinda like those used by Virtual Topics
@@ -44,10 +44,10 @@ public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnecti
 
         LOG.info("Using wildcard: " + wildcard);
         LOG.info("on destination: " + destination);
-        
+
         assertDestinationCreated(destination, false);
         assertDestinationCreated(wildcard, false);
-        
+
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createConsumer(destination);
 
@@ -56,7 +56,7 @@ public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnecti
     }
 
     protected void assertDestinationCreated(Destination destination, boolean expected) throws Exception {
-        Set answer = broker.getBroker().getDestinations((ActiveMQDestination) destination);
+        Set<?> answer = broker.getBroker().getDestinations((ActiveMQDestination) destination);
         int size = expected ? 1 : 0;
         assertEquals("Size of found destinations: " + answer, size, answer.size());
     }

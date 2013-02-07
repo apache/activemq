@@ -31,13 +31,12 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.test.TemporaryDestinationToFromNameTest;
 import org.apache.activemq.util.MessageIdList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(RetroactiveConsumerTestWithSimpleMessageListTest.class);
@@ -72,12 +71,14 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
 
     }
 
+    @Override
     protected void setUp() throws Exception {
         useTopic = true;
         bindAddress = "vm://localhost";
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (session != null) {
             session.close();
@@ -89,18 +90,21 @@ public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBr
         super.tearDown();
     }
 
+    @Override
     protected ConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory(bindAddress);
         answer.setUseRetroactiveConsumer(true);
         return answer;
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         String uri = getBrokerXml();
         LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
+    @Override
     protected void startBroker() throws Exception {
         // broker already started by XBean
     }

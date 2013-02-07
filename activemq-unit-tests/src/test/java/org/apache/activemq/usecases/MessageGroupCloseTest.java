@@ -77,7 +77,7 @@ public class MessageGroupCloseTest extends TestCase {
                         if (i % 100 == 0) {
                             LOG.info("Sent messages: group=" + i);
                         }
-                        messageGroupCount++;
+                        setMessageGroupCount(getMessageGroupCount() + 1);
                     }
                     LOG.info(messagesSent+" messages sent");
                     latchMessagesCreated.countDown();
@@ -217,5 +217,19 @@ public class MessageGroupCloseTest extends TestCase {
             }
             messageGroups.put(groupId, count + 1);
         }
+    }
+
+    /**
+     * @return the messageGroupCount
+     */
+    public int getMessageGroupCount() {
+        return messageGroupCount;
+    }
+
+    /**
+     * @param messageGroupCount the messageGroupCount to set
+     */
+    public void setMessageGroupCount(int messageGroupCount) {
+        this.messageGroupCount = messageGroupCount;
     }
 }

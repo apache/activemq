@@ -16,11 +16,17 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -28,6 +34,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -41,19 +48,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static junit.framework.Assert.*;
-
 public class KahaDBFastEnqueueTest {
     private static final Logger LOG = LoggerFactory.getLogger(KahaDBFastEnqueueTest.class);
     private BrokerService broker;
     private ActiveMQConnectionFactory connectionFactory;
     KahaDBPersistenceAdapter kahaDBPersistenceAdapter;
-    private Destination destination = new ActiveMQQueue("Test");
-    private String payloadString = new String(new byte[6*1024]);
-    private boolean useBytesMessage= true;
+    private final Destination destination = new ActiveMQQueue("Test");
+    private final String payloadString = new String(new byte[6*1024]);
+    private final boolean useBytesMessage= true;
     private final int parallelProducer = 20;
-    private Vector<Exception> exceptions = new Vector<Exception>();
+    private final Vector<Exception> exceptions = new Vector<Exception>();
     long toSend = 10000;
 
     // use with:

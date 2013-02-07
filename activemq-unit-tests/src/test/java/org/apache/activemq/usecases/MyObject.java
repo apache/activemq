@@ -17,19 +17,18 @@
 
 package org.apache.activemq.usecases;
 
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.IOException;
-import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyObject implements Serializable {
 
+    private static final long serialVersionUID = -2505777188753549398L;
+
     private String message;
-    private AtomicInteger writeObjectCalled = new AtomicInteger(0);
-    private AtomicInteger readObjectCalled = new AtomicInteger(0);
-    private AtomicInteger readObjectNoDataCalled = new AtomicInteger(0);
+    private final AtomicInteger writeObjectCalled = new AtomicInteger(0);
+    private final AtomicInteger readObjectCalled = new AtomicInteger(0);
+    private final AtomicInteger readObjectNoDataCalled = new AtomicInteger(0);
 
     public MyObject(String message) {
         this.setMessage(message);
@@ -50,11 +49,7 @@ public class MyObject implements Serializable {
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        readObjectCalled.incrementAndGet();        
-    }
-
-    private void readObjectNoData() throws ObjectStreamException {
-        readObjectNoDataCalled.incrementAndGet();
+        readObjectCalled.incrementAndGet();
     }
 
     public int getWriteObjectCalled() {

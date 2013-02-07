@@ -16,13 +16,18 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -35,15 +40,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
-
 public class KahaDBStoreRecoveryExpiryTest {
 
     private BrokerService broker;
     private ActiveMQConnection connection;
-    private Destination destination = new ActiveMQQueue("Test");
+    private final Destination destination = new ActiveMQQueue("Test");
     private Session session;
 
     @Test

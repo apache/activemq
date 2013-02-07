@@ -23,12 +23,11 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import org.apache.activemq.TestSupport;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,16 +37,19 @@ public class AdvisoryTopicDeletionTest extends TestSupport {
     private BrokerService broker;
     private Connection connection;
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://" + getName());
     }
 
+    @Override
     protected void setUp() throws Exception {
         createBroker();
         topic = false;
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         destroyBroker();

@@ -16,27 +16,36 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import junit.framework.Test;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.RecoveryBrokerTest;
-import org.apache.activemq.broker.StubConnection;
-import org.apache.activemq.command.*;
-
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
+import junit.framework.Test;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.RecoveryBrokerTest;
+import org.apache.activemq.broker.StubConnection;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.SessionInfo;
+
 
 /**
- * Used to verify that recovery works correctly against 
- * 
- * 
+ * Used to verify that recovery works correctly against
+ *
+ *
  */
 public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 
     enum CorruptionType { None, FailToLoad, LoadInvalid, LoadCorrupt };
     public CorruptionType  failTest = CorruptionType.None;
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
@@ -45,7 +54,9 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         broker.setPersistenceAdapter(kaha);
         return broker;
     }
-    
+
+    @Override
+    @SuppressWarnings("resource")
     protected BrokerService createRestartedBroker() throws Exception {
 
         // corrupting index
@@ -82,11 +93,11 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         broker.setPersistenceAdapter(kaha);
         return broker;
     }
-    
+
     public static Test suite() {
         return suite(KahaDBStoreRecoveryBrokerTest.class);
     }
-    
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
@@ -107,9 +118,9 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         connection.send(connectionInfo);
         connection.send(sessionInfo);
         connection.send(producerInfo);
-        
+
         ArrayList<String> expected = new ArrayList<String>();
-        
+
         int MESSAGE_COUNT = 10000;
         for(int i=0; i < MESSAGE_COUNT; i++) {
             Message message = createMessage(producerInfo, destination);
@@ -140,9 +151,9 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
             MessageAck ack = createAck(consumerInfo, m, 1, MessageAck.STANDARD_ACK_TYPE);
             connection.send(ack);
         }
-        
+
         connection.request(closeConnectionInfo(connectionInfo));
-        
+
         // restart the broker.
         restartBroker();
 
@@ -161,10 +172,10 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
             assertEquals(expected.get(i), m.getMessageId().toString());
             MessageAck ack = createAck(consumerInfo, m, 1, MessageAck.STANDARD_ACK_TYPE);
             connection.send(ack);
-            
-            
+
+
         }
-        
+
         connection.request(closeConnectionInfo(connectionInfo));
     }
 }

@@ -16,28 +16,27 @@
  */
 package org.apache.activemq.usecases;
 
+import java.io.File;
+import java.util.List;
+
+import javax.jms.Connection;
+import javax.jms.Session;
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.SubscriptionView;
-import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-
-import javax.jms.Connection;
-import javax.jms.Session;
-import javax.management.*;
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.util.List;
-
 
 public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
@@ -193,7 +192,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session.createDurableSubscriber(topic, "SubsId" + i);
             session.close();
-        }        
+        }
     }
 
 
@@ -283,6 +282,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         startBroker(false);
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://" + getName() + "?waitForStart=5000&create=false");
     }

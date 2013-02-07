@@ -43,16 +43,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 abstract public class MessagePriorityTest extends CombinationTestSupport {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(MessagePriorityTest.class);
 
     BrokerService broker;
     PersistenceAdapter adapter;
-    
+
     protected ActiveMQConnectionFactory factory;
     protected Connection conn;
     protected Session sess;
-    
+
     public boolean useCache = true;
     public int deliveryMode = Message.DEFAULT_DELIVERY_MODE;
     public boolean dispatchAsync = true;
@@ -64,9 +64,10 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     public int MSG_NUM = 600;
     public int HIGH_PRI = 7;
     public int LOW_PRI = 3;
-    
+
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
-    
+
+    @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("priorityTest");
@@ -96,7 +97,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         broker.setDestinationPolicy(policyMap);
         broker.start();
         broker.waitUntilStarted();
-        
+
         factory = new ActiveMQConnectionFactory("vm://priorityTest");
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setAll(prefetchVal);
@@ -108,7 +109,8 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
-    
+
+    @Override
     protected void tearDown() throws Exception {
         try {
             sess.close();
@@ -119,11 +121,11 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             broker.waitUntilStopped();
         }
     }
-    
+
     public void testStoreConfigured() throws Exception {
         final Queue queue = sess.createQueue("TEST");
         final Topic topic = sess.createTopic("TEST");
-        
+
         MessageProducer queueProducer = sess.createProducer(queue);
         MessageProducer topicProducer = sess.createProducer(topic);
 
@@ -142,24 +144,25 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             }
         });
         assertTrue(broker.getRegionBroker().getDestinationMap().get(topic).getMessageStore().isPrioritizedMessages());
-        
+
         queueProducer.close();
         topicProducer.close();
-        
+
     }
-    
+
     protected class ProducerThread extends Thread {
 
         int priority;
         int messageCount;
         ActiveMQDestination dest;
-        
+
         public ProducerThread(ActiveMQDestination dest, int messageCount, int priority) {
             this.messageCount = messageCount;
             this.priority = priority;
             this.dest = dest;
         }
-        
+
+        @Override
         public void run() {
             try {
                 MessageProducer producer = sess.createProducer(dest);
@@ -178,28 +181,28 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         }
 
         public void setMessageCount(int messageCount) {
-            this.messageCount = messageCount;    
+            this.messageCount = messageCount;
         }
-        
+
     }
-    
+
     public void initCombosForTestQueues() {
         addCombinationValues("useCache", new Object[] {new Boolean(true), new Boolean(false)});
         addCombinationValues("deliveryMode", new Object[] {new Integer(DeliveryMode.NON_PERSISTENT), new Integer(DeliveryMode.PERSISTENT)});
     }
-    
+
     public void testQueues() throws Exception {
         ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
 
         ProducerThread lowPri = new ProducerThread(queue, MSG_NUM, LOW_PRI);
         ProducerThread highPri = new ProducerThread(queue, MSG_NUM, HIGH_PRI);
-        
+
         lowPri.start();
         highPri.start();
-        
+
         lowPri.join();
         highPri.join();
-        
+
         MessageConsumer queueConsumer = sess.createConsumer(queue);
         for (int i = 0; i < MSG_NUM * 2; i++) {
             Message msg = queueConsumer.receive(5000);
@@ -219,21 +222,21 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     public void initCombosForTestDurableSubs() {
         addCombinationValues("prefetchVal", new Object[] {new Integer(1000), new Integer(MSG_NUM/4)});
     }
-    
+
     public void testDurableSubs() throws Exception {
         ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
         TopicSubscriber sub = sess.createDurableSubscriber(topic, "priority");
         sub.close();
-        
+
         ProducerThread lowPri = new ProducerThread(topic, MSG_NUM, LOW_PRI);
         ProducerThread highPri = new ProducerThread(topic, MSG_NUM, HIGH_PRI);
-        
+
         lowPri.start();
         highPri.start();
-        
+
         lowPri.join();
         highPri.join();
-        
+
         sub = sess.createDurableSubscriber(topic, "priority");
         for (int i = 0; i < MSG_NUM * 2; i++) {
             Message msg = sub.receive(5000);
@@ -271,7 +274,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         addCombinationValues("dispatchAsync", new Object[] {Boolean.FALSE});
         addCombinationValues("useCache", new Object[] {Boolean.TRUE, Boolean.FALSE});
     }
-    
+
     public void testDurableSubsReconnect() throws Exception {
         ActiveMQTopic topic = (ActiveMQTopic)sess.createTopic("TEST");
         final String subName = "priorityDisconnect";
@@ -362,7 +365,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
                 assertNotNull("Message was null", msg);
                 LOG.info("received hi? : " + msg);
                 assertEquals("high priority", HIGH_PRI, msg.getJMSPriority());
-                            
+
                 if (i % batchSize*2 == 0) {
                     msg = sub.receive(15000);
                     assertNotNull("Message was null", msg);
@@ -414,7 +417,6 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         LOG.info("Ordered priority messages sent");
 
         sub = sess.createDurableSubscriber(topic, subName);
-        int count = 0;
 
         Message msg = sub.receive(15000);
         assertNotNull("Message was null", msg);

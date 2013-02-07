@@ -17,7 +17,6 @@
 package org.apache.activemq.usecases;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +31,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author pragmasoft
- * 
+ *
  */
 public final class TransactionTest extends TestCase {
 
@@ -54,7 +54,7 @@ public final class TransactionTest extends TestCase {
     private MessageProducer producer;
     private MessageConsumer consumer;
     private Connection connection;
-    private CountDownLatch latch = new CountDownLatch(1);
+    private final CountDownLatch latch = new CountDownLatch(1);
 
     public void testTransaction() throws Exception {
 
@@ -70,6 +70,7 @@ public final class TransactionTest extends TestCase {
         consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
@@ -111,6 +112,7 @@ public final class TransactionTest extends TestCase {
         LOG.info("test completed, destination=" + receivedText);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
             connection.close();

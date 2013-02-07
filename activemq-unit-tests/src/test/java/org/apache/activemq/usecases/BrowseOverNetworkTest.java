@@ -110,6 +110,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
             this.expect = expect;
         }
 
+        @Override
         public void run() {
             int retries = 0;
             while (retries++ < 20 && totalCount != expect) {
@@ -122,8 +123,8 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
                             totalCount += count;
                             for (int i = 0; i < count; i++) {
                                 ActiveMQTextMessage message = (ActiveMQTextMessage)consumer.receive(1000);
-                                LOG.info(broker + " consumer: " + message.getText() + " " + message.getDestination() +  " " + message.getMessageId() + " " + Arrays.toString(message.getBrokerPath()));
                                 if (message == null) break;
+                                LOG.info(broker + " consumer: " + message.getText() + " " + message.getDestination() +  " " + message.getMessageId() + " " + Arrays.toString(message.getBrokerPath()));
                             }
                         }
                     } else {
@@ -216,13 +217,13 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
 
         LOG.info("broker-3A browsed " + browser1.getTotalCount());
         LOG.info("broker-3B browsed " + browser2.getTotalCount());
-        
+
         assertEquals(MESSAGE_COUNT * 2, browser1.getTotalCount() + browser2.getTotalCount() );
 
-    }    
+    }
 
     protected int browseMessages(QueueBrowser browser, String name) throws Exception {
-        Enumeration msgs = browser.getEnumeration();
+        Enumeration<?> msgs = browser.getEnumeration();
         int browsedMessage = 0;
         while (msgs.hasMoreElements()) {
             browsedMessage++;
@@ -240,6 +241,7 @@ public class BrowseOverNetworkTest extends JmsMultipleBrokersTestSupport {
         return browsedMessage;
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();

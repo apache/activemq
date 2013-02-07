@@ -17,18 +17,18 @@
 package org.apache.activemq.selector;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.ComparisonExpression;
 import org.apache.activemq.filter.Expression;
 import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.PropertyExpression;
 import org.apache.activemq.filter.XPathExpression;
-import org.apache.activemq.spring.ConsumerBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class SelectorParserTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorParserTest.class);

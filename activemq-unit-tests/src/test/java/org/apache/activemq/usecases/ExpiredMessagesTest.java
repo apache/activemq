@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.apache.activemq.TestSupport.getDestination;
+import static org.apache.activemq.TestSupport.getDestinationStatistics;
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -42,9 +45,6 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.apache.activemq.TestSupport.getDestination;
-import static org.apache.activemq.TestSupport.getDestinationStatistics;
-
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
@@ -69,6 +69,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+    @Override
     protected void setUp() throws Exception {
         final boolean deleteAllMessages = true;
         broker = createBroker(deleteAllMessages, 100);
@@ -87,6 +88,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         final AtomicLong received = new AtomicLong();
 
         Thread consumerThread = new Thread("Consumer Thread") {
+            @Override
             public void run() {
                 long start = System.currentTimeMillis();
                 try {
@@ -109,6 +111,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
         final int numMessagesToSend = 10000;
         Thread producingThread = new Thread("Producing Thread") {
+            @Override
             public void run() {
                 try {
                     int i = 0;
@@ -132,6 +135,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
         // wait for all to inflight to expire
         assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return view.getInflight().getCount() == 0;
             }
@@ -143,6 +147,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
         // wait for all sent to get delivered and expire
         assertTrue("all sent messages expired ", Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 long oldEnqueues = view.getEnqueues().getCount();
                 Thread.sleep(200);
@@ -159,6 +164,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         assertTrue("got at least what did not expire", received.get() >= view.getDequeues().getCount() - view.getExpired().getCount());
 
         assertTrue("all messages expired - queue size gone to zero " + view.getMessages().getCount(), Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("Stats: received: "  + received.get() + ", size= " + view.getMessages().getCount() + ", enqueues: " + view.getEnqueues().getCount() + ", dequeues: " + view.getDequeues().getCount()
                         + ", dispatched: " + view.getDispatched().getCount() + ", inflight: " + view.getInflight().getCount() + ", expiries: " + view.getExpired().getCount());
@@ -174,6 +180,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
                 + ", dispatched: " + dlqView.getDispatched().getCount() + ", inflight: " + dlqView.getInflight().getCount() + ", expiries: " + dlqView.getExpired().getCount());
 
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return totalExpiredCount == dlqView.getMessages().getCount();
             }
@@ -190,6 +197,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         dlqConsumer.setMessageListener(dlqListener);
 
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return totalExpiredCount == dlqListener.count;
             }
@@ -202,6 +210,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
         int count = 0;
 
+        @Override
         public void onMessage(Message message) {
             count++;
         }
@@ -228,6 +237,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
         Thread producingThread = new Thread("Producing Thread") {
+            @Override
             public void run() {
                 try {
                     int i = 0;
@@ -266,6 +276,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         broker = createBroker(deleteAllMessages, 5000);
 
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 DestinationStatistics view = getDestinationStatistics(broker, destination);
                 LOG.info("Stats: size: " + view.getMessages().getCount() + ", enqueues: "
@@ -311,6 +322,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
 
 
+    @Override
     protected void tearDown() throws Exception {
         connection.stop();
         broker.stop();

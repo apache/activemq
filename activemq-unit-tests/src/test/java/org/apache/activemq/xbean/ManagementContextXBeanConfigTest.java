@@ -27,7 +27,9 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -36,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class ManagementContextXBeanConfigTest extends TestCase {
 
@@ -57,7 +59,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
 
     public void testSuccessAuthentication() throws Exception {
         JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:2011/jmxrmi");
-        Map env = new HashMap();
+        Map<String, Object> env = new HashMap<String, Object>();
         env.put(JMXConnector.CREDENTIALS, new String[]{"admin", "activemq"});
         JMXConnector connector = JMXConnectorFactory.connect(url, env);
         assertAuthentication(connector);
@@ -78,16 +80,18 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         connector.connect();
         MBeanServerConnection connection = connector.getMBeanServerConnection();
         ObjectName name = new ObjectName("test.domain:type=Broker,brokerName=localhost");
-        BrokerViewMBean mbean = (BrokerViewMBean) MBeanServerInvocationHandler
+        BrokerViewMBean mbean = MBeanServerInvocationHandler
                 .newProxyInstance(connection, name, BrokerViewMBean.class, true);
         LOG.info("Broker " + mbean.getBrokerId() + " - " + mbean.getBrokerName());
     }
 
+    @Override
     protected void setUp() throws Exception {
         brokerService = createBroker();
         brokerService.start();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();

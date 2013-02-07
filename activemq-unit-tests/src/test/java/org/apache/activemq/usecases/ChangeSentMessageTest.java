@@ -18,6 +18,7 @@
 package org.apache.activemq.usecases;
 
 import java.util.HashMap;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
@@ -28,7 +29,7 @@ import javax.jms.Session;
 import org.apache.activemq.test.TestSupport;
 
 /**
- * 
+ *
  */
 public class ChangeSentMessageTest extends TestSupport {
     private static final int COUNT = 200;
@@ -36,9 +37,10 @@ public class ChangeSentMessageTest extends TestSupport {
 
     /**
      * test Object messages can be changed after sending with no side-affects
-     * 
+     *
      * @throws Exception
      */
+    @SuppressWarnings("rawtypes")
     public void testDoChangeSentMessage() throws Exception {
         Destination destination = createDestination("test-" + ChangeSentMessageTest.class.getName());
         Connection connection = createConnection();

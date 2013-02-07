@@ -19,15 +19,17 @@ package org.apache.activemq.spring;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.jms.Message;
+
 import junit.framework.TestCase;
-import org.apache.activemq.test.JmsTopicSendReceiveTest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * 
+ *
  */
 public class SpringTestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SpringTest.class);
@@ -64,9 +66,9 @@ public class SpringTestSupport extends TestCase {
         consumer.waitForMessagesToArrive(producer.getMessageCount());
 
         // now lets check that the consumer has received some messages
-        List messages = consumer.flushMessages();
+        List<Message> messages = consumer.flushMessages();
         LOG.info("Consumer has received messages....");
-        for (Iterator iter = messages.iterator(); iter.hasNext();) {
+        for (Iterator<Message> iter = messages.iterator(); iter.hasNext();) {
             Object message = iter.next();
             LOG.info("Received: " + message);
         }
@@ -79,6 +81,7 @@ public class SpringTestSupport extends TestCase {
      *
      * @throws Exception
      */
+    @Override
     protected void tearDown() throws Exception {
         if (consumer != null) {
             consumer.stop();

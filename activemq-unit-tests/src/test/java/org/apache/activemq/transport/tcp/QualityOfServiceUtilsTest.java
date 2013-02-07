@@ -19,6 +19,7 @@ package org.apache.activemq.transport.tcp;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+
 import junit.framework.TestCase;
 
 public class QualityOfServiceUtilsTest extends TestCase {
@@ -33,6 +34,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
     protected void setUp() throws Exception {
         Socket socket = new Socket();
         ECN = socket.getTrafficClass() & Integer.parseInt("00000011", 2);
+        socket.close();
     }
 
     @Override
@@ -104,13 +106,13 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     private void testInvalidDiffServName(String name) {
         try {
-            int dscp = QualityOfServiceUtils.getDSCP(name);
+            QualityOfServiceUtils.getDSCP(name);
             fail("No IllegalArgumentException thrown for invalid Differentiated"
                  + " Services value: " + name + ".");
         } catch (IllegalArgumentException e) {
         }
     }
-    
+
     private void testValidDiffServIntegerValue(int val) {
         try {
             int dscp = QualityOfServiceUtils.getDSCP(Integer.toString(val));
@@ -125,7 +127,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     private void testInvalidDiffServIntegerValue(int val) {
         try {
-            int dscp = QualityOfServiceUtils.getDSCP(Integer.toString(val));
+            QualityOfServiceUtils.getDSCP(Integer.toString(val));
             fail("No IllegalArgumentException thrown for invalid "
                 + "Differentiated Services value " + val + ".");
         } catch (IllegalArgumentException expected) {
@@ -159,7 +161,7 @@ public class QualityOfServiceUtilsTest extends TestCase {
 
     private void testInvalidTypeOfServiceValue(int val) {
         try {
-            int typeOfService = QualityOfServiceUtils.getToS(val);
+            QualityOfServiceUtils.getToS(val);
             fail("No IllegalArgumentException thrown for invalid "
                 + "Type of Service value " + val + ".");
         } catch (IllegalArgumentException expected) {

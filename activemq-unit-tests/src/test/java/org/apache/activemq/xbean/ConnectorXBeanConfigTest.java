@@ -32,6 +32,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.NetworkConnector;
@@ -39,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class ConnectorXBeanConfigTest extends TestCase {
 
@@ -48,57 +49,57 @@ public class ConnectorXBeanConfigTest extends TestCase {
 
     public void testConnectorConfiguredCorrectly() throws Exception {
 
-        TransportConnector connector = (TransportConnector)brokerService.getTransportConnectors().get(0);
+        TransportConnector connector = brokerService.getTransportConnectors().get(0);
 
         assertEquals(new URI("tcp://localhost:61636"), connector.getUri());
         assertTrue(connector.getTaskRunnerFactory() == brokerService.getTaskRunnerFactory());
 
-        NetworkConnector netConnector = (NetworkConnector)brokerService.getNetworkConnectors().get(0);
-        List excludedDestinations = netConnector.getExcludedDestinations();
+        NetworkConnector netConnector = brokerService.getNetworkConnectors().get(0);
+        List<ActiveMQDestination> excludedDestinations = netConnector.getExcludedDestinations();
         assertEquals(new ActiveMQQueue("exclude.test.foo"), excludedDestinations.get(0));
         assertEquals(new ActiveMQTopic("exclude.test.bar"), excludedDestinations.get(1));
 
-        List dynamicallyIncludedDestinations = netConnector.getDynamicallyIncludedDestinations();
+        List<ActiveMQDestination> dynamicallyIncludedDestinations = netConnector.getDynamicallyIncludedDestinations();
         assertEquals(new ActiveMQQueue("include.test.foo"), dynamicallyIncludedDestinations.get(0));
         assertEquals(new ActiveMQTopic("include.test.bar"), dynamicallyIncludedDestinations.get(1));
-
     }
-    
+
     public void testBrokerRestartIsAllowed() throws Exception {
-    	brokerService.stop();
-    	brokerService.waitUntilStopped();
-    
-    	// redundant start is now ignored
-    	brokerService.start();
+        brokerService.stop();
+        brokerService.waitUntilStopped();
+
+        // redundant start is now ignored
+        brokerService.start();
     }
-    
+
     public void testForceBrokerRestart() throws Exception {
-    	brokerService.stop();
-    	brokerService.waitUntilStopped();
-    	
-    	brokerService.start(true); // force restart
-    	brokerService.waitUntilStarted();
-    	
-    	LOG.info("try and connect to restarted broker");
-    	//send and receive a message from a restarted broker
-    	ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61636");
-    	Connection conn = factory.createConnection();
-    	Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    	conn.start();
-    	Destination dest = new ActiveMQQueue("test");
-    	MessageProducer producer = sess.createProducer(dest);
-    	MessageConsumer consumer = sess.createConsumer(dest);
-    	producer.send(sess.createTextMessage("test"));
-    	TextMessage msg = (TextMessage)consumer.receive(1000);
-    	assertEquals("test", msg.getText());
+        brokerService.stop();
+        brokerService.waitUntilStopped();
+
+        brokerService.start(true); // force restart
+        brokerService.waitUntilStarted();
+
+        LOG.info("try and connect to restarted broker");
+        //send and receive a message from a restarted broker
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61636");
+        Connection conn = factory.createConnection();
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+        Destination dest = new ActiveMQQueue("test");
+        MessageProducer producer = sess.createProducer(dest);
+        MessageConsumer consumer = sess.createConsumer(dest);
+        producer.send(sess.createTextMessage("test"));
+        TextMessage msg = (TextMessage)consumer.receive(1000);
+        assertEquals("test", msg.getText());
     }
 
-
+    @Override
     protected void setUp() throws Exception {
         brokerService = createBroker();
         brokerService.start();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
@@ -109,5 +110,4 @@ public class ConnectorXBeanConfigTest extends TestCase {
         String uri = "org/apache/activemq/xbean/connector-test.xml";
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
-
 }

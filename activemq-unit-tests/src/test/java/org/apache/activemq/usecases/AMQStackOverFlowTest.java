@@ -26,8 +26,8 @@ import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -66,6 +66,7 @@ public class AMQStackOverFlowTest extends TestCase {
 
             template1.send("test.q", new MessageCreator() {
 
+                @Override
                 public Message createMessage(Session session) throws JMSException {
                     return session.createTextMessage("test");
                 }
@@ -80,14 +81,14 @@ public class AMQStackOverFlowTest extends TestCase {
 
             final TextMessage tm = (TextMessage)m;
 
-            Assert.assertEquals("test", tm.getText());
+            assertEquals("test", tm.getText());
 
             template2.send("test2.q", new MessageCreator() {
 
+                @Override
                 public Message createMessage(Session session) throws JMSException {
                     return session.createTextMessage("test2");
                 }
-
             });
 
             final Message m2 = template1.receive("test2.q");
@@ -96,17 +97,14 @@ public class AMQStackOverFlowTest extends TestCase {
 
             final TextMessage tm2 = (TextMessage)m2;
 
-            Assert.assertEquals("test2", tm2.getText());
+            assertEquals("test2", tm2.getText());
 
         } finally {
-
             brokerService1.stop();
             brokerService1 = null;
             brokerService2.stop();
             brokerService2 = null;
-
         }
-
     }
 
     private BrokerService createBrokerService(final String brokerName, final String uri1, final String uri2)
@@ -146,6 +144,5 @@ public class AMQStackOverFlowTest extends TestCase {
         }
 
         return brokerService;
-
     }
 }

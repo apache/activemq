@@ -17,7 +17,18 @@
 
 package org.apache.activemq.security;
 
+import java.net.URI;
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.net.ssl.SSLServerSocket;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.StubBroker;
@@ -25,17 +36,11 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
-import org.apache.activemq.transport.tcp.*;
-
-import javax.net.ssl.SSLServerSocket;
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.Configuration;
-import java.net.URI;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import org.apache.activemq.transport.tcp.SslTransportServer;
+import org.apache.activemq.transport.tcp.StubSSLServerSocket;
+import org.apache.activemq.transport.tcp.StubSSLSocketFactory;
+import org.apache.activemq.transport.tcp.StubX509Certificate;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 
 /**
  *
@@ -81,6 +86,7 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
         Configuration.setConfiguration(jaasConfig);
     }
 
+    @Override
     protected void setUp() throws Exception {
         receiveBroker = new StubBroker();
 
@@ -101,7 +107,7 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
         sslTransportServer.bind();
 
         try {
-            nonSslTransportServer = new TcpTransportServer(null, new URI("tcp://localhost:61613"), socketFactory); 
+            nonSslTransportServer = new TcpTransportServer(null, new URI("tcp://localhost:61613"), socketFactory);
         } catch (Exception e) {
             fail("Unable to create TcpTransportServer.");
         }
@@ -112,6 +118,7 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
         createLoginConfig();
     }
 
+    @Override
     protected void tearDown() throws Exception {
             super.tearDown();
     }
@@ -136,13 +143,13 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
         assertEquals("The SecurityContext's userName must be set to that of the UserPrincipal.",
                 DN_USERNAME, receivedContext.getSecurityContext().getUserName());
 
-        Set receivedPrincipals = receivedContext.getSecurityContext().getPrincipals();
+        Set<Principal> receivedPrincipals = receivedContext.getSecurityContext().getPrincipals();
 
 
         assertEquals("2 Principals received", 2, receivedPrincipals.size());
-        
-        for (Iterator iter = receivedPrincipals.iterator(); iter.hasNext();) {
-            Principal currentPrincipal = (Principal)iter.next();
+
+        for (Iterator<Principal> iter = receivedPrincipals.iterator(); iter.hasNext();) {
+            Principal currentPrincipal = iter.next();
 
             if (currentPrincipal instanceof UserPrincipal) {
                 assertEquals("UserPrincipal is '" + DN_USERNAME + "'", DN_USERNAME, currentPrincipal.getName());
@@ -166,7 +173,7 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
         Connector connector = new TransportConnector(nonSslTransportServer);
         connectionContext.setConnector(connector);
         connectionInfo.setUserName(INSECURE_USERNAME);
-        
+
         try {
             authBroker.addConnection(connectionContext, connectionInfo);
         } catch (Exception e) {
@@ -181,11 +188,11 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
         assertEquals("The SecurityContext's userName must be set to that of the UserPrincipal.",
                 INSECURE_USERNAME, receivedContext.getSecurityContext().getUserName());
 
-        Set receivedPrincipals = receivedContext.getSecurityContext().getPrincipals();
+        Set<Principal> receivedPrincipals = receivedContext.getSecurityContext().getPrincipals();
 
         assertEquals("2 Principals received", 2, receivedPrincipals.size());
-        for (Iterator iter = receivedPrincipals.iterator(); iter.hasNext();) {
-            Principal currentPrincipal = (Principal)iter.next();
+        for (Iterator<Principal> iter = receivedPrincipals.iterator(); iter.hasNext();) {
+            Principal currentPrincipal = iter.next();
 
             if (currentPrincipal instanceof UserPrincipal) {
                 assertEquals("UserPrincipal is '" + INSECURE_USERNAME + "'",

@@ -21,6 +21,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -28,7 +29,7 @@ import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
- * 
+ *
  */
 public class SelectorTest extends TestCase {
 
@@ -54,33 +55,33 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "XPATH '//root/b=\"b\"'", true);
         assertSelector(message, "XPATH '//root/b=\"c\"'", false);
         assertSelector(message, "XPATH '//root/b!=\"c\"'", true);
-        
+
         assertSelector(message, "XPATH '//root/*[@key=''second'']'", true);
         assertSelector(message, "XPATH '//root/*[@key=''third'']'", false);
         assertSelector(message, "XPATH '//root/a[@key=''first'']'", true);
         assertSelector(message, "XPATH '//root/a[@num=1]'", true);
         assertSelector(message, "XPATH '//root/a[@key=''second'']'", false);
-        
+
         assertSelector(message, "XPATH '/root/*[@key=''first'' or @key=''third'']'", true);
         assertSelector(message, "XPATH '//root/*[@key=''third'' or @key=''forth'']'", false);
 
         assertSelector(message, "XPATH '/root/b=''b'' and /root/b[@key=''second'']'", true);
         assertSelector(message, "XPATH '/root/b=''b'' and /root/b[@key=''first'']'", false);
-        
+
         assertSelector(message, "XPATH 'not(//root/a)'", false);
         assertSelector(message, "XPATH 'not(//root/c)'", true);
         assertSelector(message, "XPATH '//root/a[not(@key=''first'')]'", false);
         assertSelector(message, "XPATH '//root/a[not(not(@key=''first''))]'", true);
-        
+
         assertSelector(message, "XPATH 'string(//root/b)'", true);
         assertSelector(message, "XPATH 'string(//root/a)'", false);
-        
+
         assertSelector(message, "XPATH 'sum(//@num) < 10'", true);
         assertSelector(message, "XPATH 'sum(//@num) > 10'", false);
-        
+
         assertSelector(message, "XPATH '//root/a[@num > 1]'", false);
-        assertSelector(message, "XPATH '//root/b[@num > 1]'", true);  
-        
+        assertSelector(message, "XPATH '//root/b[@num > 1]'", true);
+
     }
 
     public void testJMSPropertySelectors() throws Exception {
@@ -272,44 +273,21 @@ public class SelectorTest extends TestCase {
     public void testFloatComparisons() throws Exception {
         Message message = createMessage();
 
-        // JMS 1.1 Section 3.8.1.1 : Approximate literals use the Java
-        // floating-point literal syntax.
-        // We will use the java varible x to demo valid floating point syntaxs.
-        double x;
-
-        // test decimals like x.x
-        x = 1.0;
-        x = -1.1;
-        x = 1.0E1;
-        x = 1.1E1;
-        x = -1.1E1;
         assertSelector(message, "1.0 < 1.1", true);
         assertSelector(message, "-1.1 < 1.0", true);
         assertSelector(message, "1.0E1 < 1.1E1", true);
         assertSelector(message, "-1.1E1 < 1.0E1", true);
 
-        // test decimals like x.
-        x = 1.;
-        x = 1.E1;
         assertSelector(message, "1. < 1.1", true);
         assertSelector(message, "-1.1 < 1.", true);
         assertSelector(message, "1.E1 < 1.1E1", true);
         assertSelector(message, "-1.1E1 < 1.E1", true);
 
-        // test decimals like .x
-        x = .5;
-        x = -.5;
-        x = .5E1;
         assertSelector(message, ".1 < .5", true);
         assertSelector(message, "-.5 < .1", true);
         assertSelector(message, ".1E1 < .5E1", true);
         assertSelector(message, "-.5E1 < .1E1", true);
 
-        // test exponents
-        x = 4E10;
-        x = -4E10;
-        x = 5E+10;
-        x = 5E-10;
         assertSelector(message, "4E10 < 5E10", true);
         assertSelector(message, "5E8 < 5E10", true);
         assertSelector(message, "-4E10 < 2E10", true);
@@ -361,10 +339,10 @@ public class SelectorTest extends TestCase {
         message.setByteProperty("byteProp", (byte)123);
         message.setByteProperty("byteProp2", (byte)33);
         message.setShortProperty("shortProp", (short)123);
-        message.setIntProperty("intProp", (int)123);
-        message.setLongProperty("longProp", (long)123);
-        message.setFloatProperty("floatProp", (float)123);
-        message.setDoubleProperty("doubleProp", (double)123);
+        message.setIntProperty("intProp", 123);
+        message.setLongProperty("longProp", 123);
+        message.setFloatProperty("floatProp", 123);
+        message.setDoubleProperty("doubleProp", 123);
 
         message.setIntProperty("rank", 123);
         message.setIntProperty("version", 2);

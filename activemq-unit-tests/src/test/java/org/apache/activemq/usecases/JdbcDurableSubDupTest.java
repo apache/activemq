@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertTrue;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -31,20 +34,17 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-
-import static org.junit.Assert.assertTrue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcDurableSubDupTest {
 
@@ -63,7 +63,7 @@ public class JdbcDurableSubDupTest {
 
     final int TO_RECEIVE = 5000;
     BrokerService broker = null;
-    Vector<Throwable> exceptions = new Vector();
+    Vector<Throwable> exceptions = new Vector<Throwable>();
     final int MAX_MESSAGES = 100000;
     int[] dupChecker = new int[MAX_MESSAGES];
 
@@ -136,7 +136,7 @@ public class JdbcDurableSubDupTest {
         for (int i = 0; i < TO_RECEIVE; i++) {
             assertTrue("got message " + i, dupChecker[i] == 1);
         }
-        
+
     }
 
     class JmsConsumerDup implements MessageListener {
@@ -185,6 +185,7 @@ public class JdbcDurableSubDupTest {
             }
         }
 
+        @Override
         public void onMessage(Message message) {
             ++count;
 
@@ -229,6 +230,7 @@ public class JdbcDurableSubDupTest {
 
         int priorityModulator = 10;
 
+        @Override
         public void run() {
 
             Connection connection;

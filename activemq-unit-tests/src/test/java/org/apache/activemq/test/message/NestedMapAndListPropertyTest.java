@@ -30,13 +30,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Tests that a Message can have nested Map and List properties attached.
- * 
- * 
+ *
  */
 public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NestedMapAndListPropertyTest.class);
 
+    @Override
+    @SuppressWarnings("rawtypes")
     protected void assertMessageValid(int index, Message message) throws JMSException {
         Object value = message.getObjectProperty("textField");
         assertEquals("textField", data[index], value);
@@ -69,6 +70,7 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
         assertEquals("JohnDoe", message.getStringProperty("JMSXUserID"));
     }
 
+    @Override
     protected Message createMessage(int index) throws JMSException {
         Message answer = session.createMessage();
 
@@ -90,5 +92,4 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
 
         return answer;
     }
-
 }

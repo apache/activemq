@@ -27,6 +27,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.StubBroker;
 import org.apache.activemq.command.ConnectionInfo;
@@ -42,6 +43,7 @@ public class JaasCertificateAuthenticationBrokerTest extends TestCase {
     ConnectionContext connectionContext;
     ConnectionInfo connectionInfo;
 
+    @Override
     protected void setUp() throws Exception {
         receiveBroker = new StubBroker();
 
@@ -53,6 +55,7 @@ public class JaasCertificateAuthenticationBrokerTest extends TestCase {
         connectionInfo.setTransportContext(new StubX509Certificate[] {});
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -110,14 +113,14 @@ public class JaasCertificateAuthenticationBrokerTest extends TestCase {
 
         assertEquals("Number of addConnection calls to underlying Broker must match number of calls made to " + "AuthenticationBroker.", 1, receiveBroker.addConnectionData.size());
 
-        ConnectionContext receivedContext = ((StubBroker.AddConnectionData)receiveBroker.addConnectionData.getFirst()).connectionContext;
+        ConnectionContext receivedContext = receiveBroker.addConnectionData.getFirst().connectionContext;
 
         assertEquals("The SecurityContext's userName must be set to that of the UserPrincipal.", dnUserName, receivedContext.getSecurityContext().getUserName());
 
-        Set receivedPrincipals = receivedContext.getSecurityContext().getPrincipals();
+        Set<Principal> receivedPrincipals = receivedContext.getSecurityContext().getPrincipals();
 
-        for (Iterator iter = receivedPrincipals.iterator(); iter.hasNext();) {
-            Principal currentPrincipal = (Principal)iter.next();
+        for (Iterator<Principal> iter = receivedPrincipals.iterator(); iter.hasNext();) {
+            Principal currentPrincipal = iter.next();
 
             if (currentPrincipal instanceof UserPrincipal) {
                 if (userNames.remove(currentPrincipal.getName())) {

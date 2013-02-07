@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.TextMessage;
@@ -55,12 +56,11 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
     private long inactiveDuration = 1000;
     private boolean useSocketProxy = true;
 
-   
     public void initCombosForTestSendOnAReceiveOnBWithTransportDisconnect() {
         addCombinationValues( "useDuplexNetworkBridge", new Object[]{ Boolean.TRUE, Boolean.FALSE} );
         addCombinationValues( "simulateStalledNetwork", new Object[]{ Boolean.TRUE } );
     }
-    
+
     public void testSendOnAReceiveOnBWithTransportDisconnect() throws Exception {
         bridgeBrokers(SPOKE, HUB);
 
@@ -68,24 +68,25 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
 
         // Setup destination
         Destination dest = createDestination("TEST.FOO", false);
-        
+
         // Setup consumers
         MessageConsumer client = createConsumer(HUB, dest);
-        
+
         // allow subscription information to flow back to Spoke
         sleep(600);
-        
+
         // Send messages
         sendMessages(SPOKE, dest, MESSAGE_COUNT);
 
         MessageIdList msgs = getConsumerMessages(HUB, client);
         msgs.waitForMessagesToArrive(MESSAGE_COUNT);
 
-        assertTrue("At least message " + MESSAGE_COUNT + 
+        assertTrue("At least message " + MESSAGE_COUNT +
                 " must be recieved, duplicates are expected, count=" + msgs.getMessageCount(),
                 MESSAGE_COUNT <= msgs.getMessageCount());
     }
 
+    @SuppressWarnings("unchecked")
     public void testNoStuckConnectionsWithTransportDisconnect() throws Exception {
         inactiveDuration=60000l;
         useDuplexNetworkBridge = true;
@@ -120,9 +121,10 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
             socketProxy.halfClose();
             sleep(10000);
         }
-        // wait for full reformation of bridge       
+        // wait for full reformation of bridge
         // verify no extra connections
-        boolean allGood = Wait.waitFor(new Wait.Condition(){ 
+        boolean allGood = Wait.waitFor(new Wait.Condition(){
+                    @Override
                     public boolean isSatisified() throws Exception {
                         long numConnections = hub.broker.getTransportConnectors().get(0).getConnections().size();
                         LOG.info("Num connetions:" + numConnections);
@@ -134,6 +136,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         assertTrue("should be only one transport connection for the single duplex network connector", allGood);
 
         allGood = Wait.waitFor(new Wait.Condition(){
+                    @Override
                     public boolean isSatisified() throws Exception {
                         long numVmConnections = VMTransportFactory.SERVERS.get(HUB).getConnectionCount();
                         LOG.info("Num VM connetions:" + numVmConnections);
@@ -144,7 +147,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         }
         assertTrue("should be only 2 vm connections for the single network duplex network connector", allGood);
     }
-    
+
     public void testTwoDuplexNCsAreAllowed() throws Exception {
         useDuplexNetworkBridge = true;
         useSocketProxy = false;
@@ -154,13 +157,13 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         connector = bridgeBrokers(SPOKE, HUB);
         connector.setName("SecondDuplex");
 
-        startAllBrokers(); 
+        startAllBrokers();
         waitForBridgeFormation();
 
         BrokerItem hub = brokers.get(HUB);
         assertEquals("Has two transport Connectors", 2, hub.broker.getTransportConnectors().get(0).getConnections().size());
     }
-    
+
     @Override
     protected void startAllBrokers() throws Exception {
         // Ensure HUB is started first so bridge will be active from the get go
@@ -171,6 +174,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         sleep(600);
     }
 
+    @Override
     public void setUp() throws Exception {
         networkDownTimeStart = 0;
         inactiveDuration = 1000;
@@ -181,18 +185,19 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         createBroker(new URI("broker:(tcp://localhost:61617)/" + HUB + options));
         createBroker(new URI("broker:(tcp://localhost:61616)/" + SPOKE + options));
     }
-    
+
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (socketProxy != null) {
             socketProxy.close();
         }
     }
-    
+
     public static Test suite() {
         return suite(BrokerQueueNetworkWithDisconnectTest.class);
     }
-       
+
     @Override
     protected void onSend(int i, TextMessage msg) {
         sleep(50);
@@ -224,7 +229,7 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         try {
             Thread.sleep(milliSecondTime);
         } catch (InterruptedException igonred) {
-        }    
+        }
     }
 
     @Override
@@ -232,12 +237,12 @@ public class BrokerQueueNetworkWithDisconnectTest extends JmsMultipleBrokersTest
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
-            remoteURI = ((TransportConnector)transportConnectors.get(0)).getConnectUri();
+            remoteURI = transportConnectors.get(0).getConnectUri();
             if (useSocketProxy) {
                 socketProxy = new SocketProxy(remoteURI);
                 remoteURI = socketProxy.getUrl();
             }
-            DiscoveryNetworkConnector connector = new DiscoveryNetworkConnector(new URI("static:(" + remoteURI 
+            DiscoveryNetworkConnector connector = new DiscoveryNetworkConnector(new URI("static:(" + remoteURI
                     + "?wireFormat.maxInactivityDuration=" + inactiveDuration + "&wireFormat.maxInactivityDurationInitalDelay=" + inactiveDuration + ")?useExponentialBackOff=false"));
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);

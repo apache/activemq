@@ -30,12 +30,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NestedMapMessageTest.class);
 
+    @Override
+    @SuppressWarnings("rawtypes")
     protected void assertMessageValid(int index, Message message) throws JMSException {
         assertTrue("Should be a MapMessage: " + message, message instanceof MapMessage);
 
@@ -71,6 +73,7 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
         assertEquals("listField[2]", "c", list.get(2));
     }
 
+    @Override
     protected Message createMessage(int index) throws JMSException {
         MapMessage answer = session.createMapMessage();
 

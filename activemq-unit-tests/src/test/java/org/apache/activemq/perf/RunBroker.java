@@ -17,6 +17,7 @@
 package org.apache.activemq.perf;
 
 import java.io.File;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.IOHelper;
@@ -29,7 +30,6 @@ public class RunBroker {
             KahaDBPersistenceAdapter kahaDB = new KahaDBPersistenceAdapter();
             File dataFileDir = new File("target/test-amq-data/perfTest/kahadb");
             IOHelper.deleteChildren(dataFileDir);
-            File archiveDir = new File(dataFileDir, "archive");
             kahaDB.setDirectory(dataFileDir);
 
             // The setEnableJournalDiskSyncs(false) setting is a little

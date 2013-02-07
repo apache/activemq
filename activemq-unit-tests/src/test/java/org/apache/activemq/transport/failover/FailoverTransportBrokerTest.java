@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import javax.jms.DeliveryMode;
 
 import junit.framework.Test;
+
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -152,15 +153,16 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         assertNull("no peer brokers present", info[0].getPeerBrokerInfos());
     }
 
+    @Override
     protected String getLocalURI() {
         return "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
     }
 
+    @Override
     protected String getRemoteURI() {
         return "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
     }
 
-    @SuppressWarnings("unchecked")
     protected StubConnection createFailoverConnection(TransportListener listener) throws Exception {
         URI failoverURI = new URI("failover://" + connector.getServer().getConnectURI() + "," + remoteConnector.getServer().getConnectURI() + "");
         Transport transport = TransportFactory.connect(failoverURI);

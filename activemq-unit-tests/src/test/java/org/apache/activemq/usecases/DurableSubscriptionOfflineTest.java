@@ -736,9 +736,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
         for (int i = 0; i < 10; i++) {
-            sent++;
             Message message = session.createMessage();
             message.setStringProperty("filter", "true");
             producer.send(topic, message);

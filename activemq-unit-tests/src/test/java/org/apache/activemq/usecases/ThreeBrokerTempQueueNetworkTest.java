@@ -27,7 +27,7 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.network.NetworkConnector;
 
 /**
- * 
+ *
  */
 public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100;
@@ -41,20 +41,20 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
         bridgeBrokers("BrokerA", "BrokerB", false, 2);
         bridgeBrokers("BrokerB", "BrokerC", false, 2);
         startAllBrokers();
-        BrokerItem brokerItem = (BrokerItem)brokers.get("BrokerC");
+        BrokerItem brokerItem = brokers.get("BrokerC");
         Connection conn = brokerItem.createConnection();
         conn.start();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue tempQ = sess.createTemporaryQueue();
         Thread.sleep(5000);
-        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
-            BrokerItem bi = (BrokerItem)i.next();
+        for (Iterator<BrokerItem> i = brokers.values().iterator(); i.hasNext();) {
+            BrokerItem bi = i.next();
             assertEquals("No queues on broker " + bi.broker.getBrokerName(), 1, bi.broker.getAdminView().getTemporaryQueues().length);
         }
         tempQ.delete();
         Thread.sleep(2000);
-        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
-            BrokerItem bi = (BrokerItem)i.next();
+        for (Iterator<BrokerItem> i = brokers.values().iterator(); i.hasNext();) {
+            BrokerItem bi = i.next();
             assertEquals("Temp queue left behind on broker " + bi.broker.getBrokerName(), 0, bi.broker.getAdminView().getTemporaryQueues().length);
         }
     }
@@ -65,26 +65,26 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
         bridgeBrokers("BrokerA", "BrokerB", false, 3);
         bridgeBrokers("BrokerB", "BrokerC", false, 3);
         startAllBrokers();
-        BrokerItem brokerItem = (BrokerItem)brokers.get("BrokerC");
+        BrokerItem brokerItem = brokers.get("BrokerC");
         Connection conn = brokerItem.createConnection();
         conn.start();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue tempQ = sess.createTemporaryQueue();
         Thread.sleep(5000);
-        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
-            BrokerItem bi = (BrokerItem)i.next();
+        for (Iterator<BrokerItem> i = brokers.values().iterator(); i.hasNext();) {
+            BrokerItem bi = i.next();
             assertEquals("No queues on broker " + bi.broker.getBrokerName(), 1, bi.broker.getAdminView().getTemporaryQueues().length);
         }
         createBroker(new URI("broker:(tcp://localhost:61619)/BrokerD?persistent=false&useJmx=true"));
         bridgeBrokers("BrokerD", "BrokerA", false, 3);
-        BrokerItem newBroker = (BrokerItem)brokers.get("BrokerD");
+        BrokerItem newBroker = brokers.get("BrokerD");
         newBroker.broker.start();
         Thread.sleep(1000);
         assertEquals("No queues on broker D", 1, newBroker.broker.getAdminView().getTemporaryQueues().length);
         tempQ.delete();
         Thread.sleep(2000);
-        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
-            BrokerItem bi = (BrokerItem)i.next();
+        for (Iterator<BrokerItem> i = brokers.values().iterator(); i.hasNext();) {
+            BrokerItem bi = i.next();
             assertEquals("Temp queue left behind on broker " + bi.broker.getBrokerName(), 0, bi.broker.getAdminView().getTemporaryQueues().length);
         }
     }
@@ -100,6 +100,7 @@ public class ThreeBrokerTempQueueNetworkTest extends JmsMultipleBrokersTestSuppo
         fail("Test should have failed since temp queues are disabled.");
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();

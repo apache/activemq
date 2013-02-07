@@ -40,8 +40,6 @@ public class FailoverTransportBackupsTest {
 
     protected Transport transport;
     protected FailoverTransport failoverTransport;
-    private int commandsReceived;
-    private int exceptionReceived;
     private int transportInterruptions;
     private int transportResumptions;
 
@@ -64,8 +62,6 @@ public class FailoverTransportBackupsTest {
         broker3.waitUntilStarted();
 
         // Reset stats
-        commandsReceived = 0;
-        exceptionReceived = 0;
         transportInterruptions = 0;
         transportResumptions = 0;
     }
@@ -92,6 +88,7 @@ public class FailoverTransportBackupsTest {
         assertEquals(2, failoverTransport.getBackupPoolSize());
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 2;
@@ -107,6 +104,7 @@ public class FailoverTransportBackupsTest {
         assertEquals(2, failoverTransport.getBackupPoolSize());
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 2;
@@ -116,6 +114,7 @@ public class FailoverTransportBackupsTest {
         broker1.stop();
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 1;
@@ -128,6 +127,7 @@ public class FailoverTransportBackupsTest {
         broker2.stop();
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 0;
@@ -146,6 +146,7 @@ public class FailoverTransportBackupsTest {
         assertEquals(1, failoverTransport.getBackupPoolSize());
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 1;
@@ -155,6 +156,7 @@ public class FailoverTransportBackupsTest {
         broker1.stop();
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 1;
@@ -164,6 +166,7 @@ public class FailoverTransportBackupsTest {
         broker2.stop();
 
         assertTrue("Timed out waiting for Backups to connect.", Wait.waitFor(new Wait.Condition(){
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.debug("Current Backup Count = " + failoverTransport.getCurrentBackups());
                 return failoverTransport.getCurrentBackups() == 0;
@@ -193,21 +196,23 @@ public class FailoverTransportBackupsTest {
         Transport transport = TransportFactory.connect(new URI(connectionUri));
         transport.setTransportListener(new TransportListener() {
 
+            @Override
             public void onCommand(Object command) {
                 LOG.debug("Test Transport Listener received Command: " + command);
-                commandsReceived++;
             }
 
+            @Override
             public void onException(IOException error) {
                 LOG.debug("Test Transport Listener received Exception: " + error);
-                exceptionReceived++;
             }
 
+            @Override
             public void transportInterupted() {
                 transportInterruptions++;
                 LOG.debug("Test Transport Listener records transport Interrupted: " + transportInterruptions);
             }
 
+            @Override
             public void transportResumed() {
                 transportResumptions++;
                 LOG.debug("Test Transport Listener records transport Resumed: " + transportResumptions);

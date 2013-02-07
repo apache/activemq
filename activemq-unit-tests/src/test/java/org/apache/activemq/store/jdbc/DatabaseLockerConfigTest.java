@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import static org.junit.Assert.assertEquals;
+
 import org.apache.activemq.broker.AbstractLocker;
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
 
 public class DatabaseLockerConfigTest {
 

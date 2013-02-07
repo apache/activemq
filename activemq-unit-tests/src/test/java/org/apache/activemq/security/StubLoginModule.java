@@ -39,6 +39,8 @@ public class StubLoginModule implements LoginModule {
     private String groupNames[];
     private boolean allowLogin;
 
+    @Override
+    @SuppressWarnings("rawtypes")
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         String allowLoginString = (String)(options.get(ALLOW_LOGIN_PROPERTY));
         String usersString = (String)(options.get(USERS_PROPERTY));
@@ -51,6 +53,7 @@ public class StubLoginModule implements LoginModule {
         groupNames = groupsString.split(",");
     }
 
+    @Override
     public boolean login() throws LoginException {
         if (!allowLogin) {
             throw new FailedLoginException("Login was not allowed (as specified in configuration).");
@@ -59,6 +62,7 @@ public class StubLoginModule implements LoginModule {
         return true;
     }
 
+    @Override
     public boolean commit() throws LoginException {
         if (!allowLogin) {
             throw new FailedLoginException("Login was not allowed (as specified in configuration).");
@@ -79,10 +83,12 @@ public class StubLoginModule implements LoginModule {
         return true;
     }
 
+    @Override
     public boolean abort() throws LoginException {
         return true;
     }
 
+    @Override
     public boolean logout() throws LoginException {
         subject.getPrincipals().clear();
 

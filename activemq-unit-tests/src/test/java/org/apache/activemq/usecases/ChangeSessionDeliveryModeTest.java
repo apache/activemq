@@ -29,7 +29,7 @@ import javax.jms.Session;
 import org.apache.activemq.test.TestSupport;
 
 /**
- * 
+ *
  */
 public class ChangeSessionDeliveryModeTest extends TestSupport implements MessageListener {
 
@@ -37,7 +37,7 @@ public class ChangeSessionDeliveryModeTest extends TestSupport implements Messag
      * test following condition- which are defined by JMS Spec 1.1:
      * MessageConsumers cannot use a MessageListener and receive() from the same
      * session
-     * 
+     *
      * @throws Exception
      */
     public void testDoChangeSessionDeliveryMode() throws Exception {
@@ -47,7 +47,6 @@ public class ChangeSessionDeliveryModeTest extends TestSupport implements Messag
         Session consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer1 = consumerSession.createConsumer(destination);
         consumer1.setMessageListener(this);
-        JMSException jmsEx = null;
         MessageConsumer consumer2 = consumerSession.createConsumer(destination);
 
         try {
@@ -58,6 +57,7 @@ public class ChangeSessionDeliveryModeTest extends TestSupport implements Messag
         }
     }
 
+    @Override
     public void onMessage(Message msg) {
     }
 }

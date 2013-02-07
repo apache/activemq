@@ -29,12 +29,11 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.test.JmsSendReceiveTestSupport;
-import org.apache.activemq.test.retroactive.RetroactiveConsumerTestWithSimpleMessageListTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class CompositePublishTest extends JmsSendReceiveTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(CompositePublishTest.class);
@@ -43,8 +42,11 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
     protected Connection receiveConnection;
     protected Session receiveSession;
     protected MessageConsumer[] consumers;
+    @SuppressWarnings("rawtypes")
     protected List[] messageLists;
 
+    @SuppressWarnings("unchecked")
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -95,6 +97,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
 
     protected MessageListener createMessageListener(int i, final List<Message> messageList) {
         return new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 consumeMessage(message, messageList);
             }
@@ -104,6 +107,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
     /**
      * Returns the subject on which we publish
      */
+    @Override
     protected String getSubject() {
         return getPrefix() + "FOO.BAR," + getPrefix() + "FOO.X.Y";
     }
@@ -119,6 +123,8 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         return super.getSubject() + ".";
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
     protected void assertMessagesAreReceived() throws JMSException {
         waitForMessagesToBeDelivered();
         int size = messageLists.length;
@@ -131,10 +137,12 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         }
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() {
         return new ActiveMQConnectionFactory("vm://localhost");
     }
 
+    @Override
     protected void tearDown() throws Exception {
         session.close();
         receiveSession.close();

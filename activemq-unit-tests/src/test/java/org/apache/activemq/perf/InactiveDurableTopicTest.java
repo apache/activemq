@@ -24,16 +24,17 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
-import junit.framework.Assert;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class InactiveDurableTopicTest extends TestCase {
     private static final transient Logger LOG = LoggerFactory.getLogger(InactiveDurableTopicTest.class);
@@ -137,7 +138,7 @@ public class InactiveDurableTopicTest extends TestCase {
                     LOG.info("Sent " + loop + " messages");
                 }
             }
-            Assert.assertEquals(loop, MESSAGE_COUNT);
+            assertEquals(loop, MESSAGE_COUNT);
             publisher.close();
             session.close();
             connection.stop();
@@ -169,12 +170,12 @@ public class InactiveDurableTopicTest extends TestCase {
             assertNotNull(subscriber);
             int loop;
             for (loop = 0; loop < MESSAGE_COUNT; loop++) {
-                Message msg = subscriber.receive();
+                subscriber.receive();
                 if (loop % 500 == 0) {
                     LOG.debug("Received " + loop + " messages");
                 }
             }
-            this.assertEquals(loop, MESSAGE_COUNT);
+            assertEquals(loop, MESSAGE_COUNT);
             subscriber.close();
             session.close();
             connection.close();

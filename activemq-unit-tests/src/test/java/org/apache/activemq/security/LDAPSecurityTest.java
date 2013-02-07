@@ -16,10 +16,20 @@
  */
 package org.apache.activemq.security;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.directory.server.annotations.CreateLdapServer;
 import org.apache.directory.server.annotations.CreateTransport;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
@@ -30,11 +40,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import javax.jms.*;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 
 @RunWith( FrameworkRunner.class )
@@ -51,7 +56,7 @@ public class LDAPSecurityTest extends AbstractLdapTestUnit {
     @Before
     public void setup() throws Exception {
         System.setProperty("ldapPort", String.valueOf(getLdapServer().getPort()));
-        
+
         broker = BrokerFactory.createBroker("xbean:org/apache/activemq/security/activemq-ldap.xml");
         broker.start();
         broker.waitUntilStarted();

@@ -23,22 +23,17 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Useful base class for unit test cases
- * 
- * 
  */
 public class TestSupport extends TestCase {
-    
-    private static final Logger LOG = LoggerFactory.getLogger(TestSupport.class);
-    
+
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;
 

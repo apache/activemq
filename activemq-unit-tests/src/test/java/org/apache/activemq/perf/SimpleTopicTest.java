@@ -21,32 +21,34 @@ import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class SimpleTopicTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleTopicTest.class);
-    
+
     protected BrokerService broker;
-    protected String clientURI="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false&wireFormat.maxInactivityDuration=0";
-    //protected String clientURI="tcp://localhost:61616";
-    protected String bindAddress="tcp://localhost:61616?wireFormat.maxInactivityDuration=0";
-    //protected String bindAddress = "tcp://localhost:61616";
-    //protected String bindAddress="vm://localhost?marshal=true";
-    //protected String bindAddress="vm://localhost";
+    protected String clientURI = "tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false&wireFormat.maxInactivityDuration=0";
+    // protected String clientURI="tcp://localhost:61616";
+    protected String bindAddress = "tcp://localhost:61616?wireFormat.maxInactivityDuration=0";
+    // protected String bindAddress = "tcp://localhost:61616";
+    // protected String bindAddress="vm://localhost?marshal=true";
+    // protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String destinationName = getClass().getName();
     protected int sampleCount = 20;
     protected long sampleInternal = 10000;
-    protected int numberOfDestinations=1;
+    protected int numberOfDestinations = 1;
     protected int numberOfConsumers = 1;
     protected int numberofProducers = 1;
     protected int totalNumberOfProducers;
@@ -54,12 +56,13 @@ public class SimpleTopicTest extends TestCase {
     protected int playloadSize = 12;
     protected byte[] array;
     protected ConnectionFactory factory;
-    
-     /**
+
+    /**
      * Sets up a test where the producer and consumer have their own connection.
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker(bindAddress);
@@ -67,18 +70,17 @@ public class SimpleTopicTest extends TestCase {
         factory = createConnectionFactory(clientURI);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-       
-        
+
         LOG.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s) per " + numberOfDestinations + " Destination(s)");
-       
-        totalNumberOfConsumers=numberOfConsumers*numberOfDestinations;
-        totalNumberOfProducers=numberofProducers*numberOfDestinations;
+
+        totalNumberOfConsumers = numberOfConsumers * numberOfDestinations;
+        totalNumberOfProducers = numberofProducers * numberOfDestinations;
         producers = new PerfProducer[totalNumberOfProducers];
         consumers = new PerfConsumer[totalNumberOfConsumers];
         int consumerCount = 0;
         int producerCount = 0;
-        for (int k =0; k < numberOfDestinations;k++) {
-            Destination destination = createDestination(session, destinationName+":"+k);
+        for (int k = 0; k < numberOfDestinations; k++) {
+            Destination destination = createDestination(session, destinationName + ":" + k);
             LOG.info("Testing against destination: " + destination);
             for (int i = 0; i < numberOfConsumers; i++) {
                 consumers[consumerCount] = createConsumer(factory, destination, consumerCount);
@@ -87,7 +89,7 @@ public class SimpleTopicTest extends TestCase {
             for (int i = 0; i < numberofProducers; i++) {
                 array = new byte[playloadSize];
                 for (int j = i; j < array.length; j++) {
-                    array[j] = (byte)j;
+                    array[j] = (byte) j;
                 }
                 producers[producerCount] = createProducer(factory, destination, i, array);
                 producerCount++;
@@ -97,6 +99,7 @@ public class SimpleTopicTest extends TestCase {
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         for (int i = 0; i < numberOfConsumers; i++) {
@@ -117,12 +120,12 @@ public class SimpleTopicTest extends TestCase {
 
     /**
      * Factory method to create a new broker
-     * 
+     *
      * @throws Exception
      */
     protected BrokerService createBroker(String uri) throws Exception {
         BrokerService answer = new BrokerService();
-        configureBroker(answer,uri);
+        configureBroker(answer, uri);
         answer.start();
         return answer;
     }
@@ -134,9 +137,8 @@ public class SimpleTopicTest extends TestCase {
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         return new PerfConsumer(fac, dest);
     }
-    
-    
-    protected void configureBroker(BrokerService answer,String uri) throws Exception {
+
+    protected void configureBroker(BrokerService answer, String uri) throws Exception {
         answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(uri);
         answer.setUseShutdownHook(false);
@@ -167,34 +169,33 @@ public class SimpleTopicTest extends TestCase {
         }
     }
 
+    @SuppressWarnings("unused")
     protected void dumpProducerRate() {
         int totalRate = 0;
         int totalCount = 0;
-        String producerString="Producers:";
+        String producerString = "Producers:";
         for (int i = 0; i < producers.length; i++) {
             PerfRate rate = producers[i].getRate().cloneAndReset();
             totalRate += rate.getRate();
             totalCount += rate.getTotalCount();
-            producerString+="["+i+":"+rate.getRate() + ","+rate.getTotalCount()+"];";
+            producerString += "[" + i + ":" + rate.getRate() + "," + rate.getTotalCount() + "];";
         }
         if (producers != null && producers.length > 0) {
             int avgRate = totalRate / producers.length;
-            System.out.println("Avg producer rate = " + avgRate
-                    + " msg/sec | Total rate = " + totalRate + ", sent = "
-                    + totalCount);
-           // System.out.println(producerString);
+            System.out.println("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
+            // System.out.println(producerString);
         }
     }
 
     protected void dumpConsumerRate() {
         int totalRate = 0;
         int totalCount = 0;
-        String consumerString="Consumers:";
+        String consumerString = "Consumers:";
         for (int i = 0; i < consumers.length; i++) {
             PerfRate rate = consumers[i].getRate().cloneAndReset();
             totalRate += rate.getRate();
             totalCount += rate.getTotalCount();
-            consumerString+="["+i+":"+rate.getRate() + ","+rate.getTotalCount()+"];";
+            consumerString += "[" + i + ":" + rate.getRate() + "," + rate.getTotalCount() + "];";
         }
         if (consumers != null && consumers.length > 0) {
             int avgRate = totalRate / consumers.length;

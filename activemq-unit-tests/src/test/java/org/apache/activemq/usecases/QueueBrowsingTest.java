@@ -16,6 +16,19 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertEquals;
+
+import java.net.URI;
+import java.util.Enumeration;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -25,13 +38,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-
-import java.net.URI;
-import java.util.Enumeration;
-
-import static org.junit.Assert.*;
 
 public class QueueBrowsingTest {
 
@@ -80,11 +86,12 @@ public class QueueBrowsingTest {
         }
 
         QueueBrowser browser = session.createBrowser(queue);
-        Enumeration enumeration = browser.getEnumeration();
+        Enumeration<?> enumeration = browser.getEnumeration();
         int received = 0;
         while (enumeration.hasMoreElements()) {
             Message m = (Message) enumeration.nextElement();
             received++;
+            LOG.info("Browsed message " + received + ": " + m.getJMSMessageID());
         }
 
         browser.close();
@@ -117,11 +124,12 @@ public class QueueBrowsingTest {
             public void run() {
                 try {
                     QueueBrowser browser = session.createBrowser(queue);
-                    Enumeration enumeration = browser.getEnumeration();
+                    Enumeration<?> enumeration = browser.getEnumeration();
                     int received = 0;
                     while (enumeration.hasMoreElements()) {
                         Message m = (Message) enumeration.nextElement();
                         received++;
+                        LOG.info("Browsed message " + received + ": " + m.getJMSMessageID());
                     }
                     assertEquals("Browsed all messages", messageToSend, received);
                 } catch (Exception e) {
@@ -139,7 +147,7 @@ public class QueueBrowsingTest {
                     MessageConsumer consumer = session.createConsumer(queue);
                     int received = 0;
                     while (true) {
-                        Message m = (Message) consumer.receive(1000);
+                        Message m = consumer.receive(1000);
                         if (m == null)
                             break;
                         received++;
@@ -155,7 +163,6 @@ public class QueueBrowsingTest {
 
         browserThread.join();
         consumerThread.join();
-
     }
 
     @Test
@@ -180,7 +187,7 @@ public class QueueBrowsingTest {
         }
 
         QueueBrowser browser = session.createBrowser(queue);
-        Enumeration enumeration = browser.getEnumeration();
+        Enumeration<?> enumeration = browser.getEnumeration();
         int received = 0;
         while (enumeration.hasMoreElements()) {
             Message m = (Message) enumeration.nextElement();
@@ -189,10 +196,6 @@ public class QueueBrowsingTest {
         }
 
         browser.close();
-
         assertEquals(3, received);
     }
-
-
-
 }

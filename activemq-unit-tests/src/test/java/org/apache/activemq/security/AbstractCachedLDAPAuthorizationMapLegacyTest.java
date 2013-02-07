@@ -16,6 +16,24 @@
  */
 package org.apache.activemq.security;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.naming.Context;
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
+import javax.naming.directory.DirContext;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.jaas.GroupPrincipal;
@@ -32,39 +50,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.naming.Context;
-import javax.naming.NameClassPair;
-import javax.naming.NamingEnumeration;
-import javax.naming.directory.DirContext;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends AbstractLdapTestUnit {
 
     static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
     static final GroupPrincipal USERS = new GroupPrincipal("users");
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
-    
+
     protected LdapConnection connection;
     protected SimpleCachedLDAPAuthorizationMap map;
-    
+
     @Before
     public void setup() throws Exception {
         connection = getLdapConnection();
         map = createMap();
     }
-    
+
     @After
     public void cleanup() throws Exception {
         if (connection != null) {
@@ -74,7 +74,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
                 // Ignore
             }
         }
-        
+
         if (map != null) {
             map.destroy();
         }
@@ -91,7 +91,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
     }
-    
+
     @Test
     public void testSynchronousUpdate() throws Exception {
         map.setRefreshInterval(1);
@@ -103,16 +103,18 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
-        
+
         LdifReader reader = new LdifReader(getRemoveLdif());
 
         for (LdifEntry entry : reader) {
             connection.delete(entry.getDn());
         }
-        
+
+        reader.close();
+
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
-        
+
         assertNull(map.getTempDestinationReadACLs());
         assertNull(map.getTempDestinationWriteACLs());
         assertNull(map.getTempDestinationAdminACLs());
@@ -144,7 +146,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
     @Test
     public void testTemporary() throws Exception {
         map.query();
-        
+
         Thread.sleep(1000);
         Set<?> readACLs = map.getTempDestinationReadACLs();
         assertEquals("set size: " + readACLs, 2, readACLs.size());
@@ -165,6 +167,8 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
             connection.add(entry.getEntry());
         }
 
+        reader.close();
+
         Thread.sleep(2000);
 
         failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
@@ -184,16 +188,17 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
             connection.delete(entry.getDn());
         }
 
+        reader.close();
         Thread.sleep(2000);
 
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
-        
+
         assertTrue(map.getTempDestinationReadACLs() == null || map.getTempDestinationReadACLs().isEmpty());
         assertTrue(map.getTempDestinationWriteACLs() == null || map.getTempDestinationWriteACLs().isEmpty());
         assertTrue(map.getTempDestinationAdminACLs() == null || map.getTempDestinationAdminACLs().isEmpty());
     }
-    
+
     @Test
     public void testRenameDestination() throws Exception {
         map.query();
@@ -214,30 +219,30 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.BAR"));
         assertEquals("set size: " + failedACLs, 2, failedACLs.size());
     }
-    
+
     @Test
     public void testRenamePermission() throws Exception {
         map.query();
-        
+
         // Test for a permission rename
         connection.delete(new Dn("cn=Read,cn=TEST.FOO," + getQueueBaseDn()));
-        
+
         Thread.sleep(2000);
-        
+
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
-        
+
         failedACLs = map.getWriteACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 2, failedACLs.size());
-        
+
         connection.rename(new Dn("cn=Write,cn=TEST.FOO," + getQueueBaseDn()),
                 new Rdn("cn=Read"));
-        
+
         Thread.sleep(2000);
-        
+
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 2, failedACLs.size());
-        
+
         failedACLs = map.getWriteACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
     }
@@ -262,16 +267,16 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 1, failedACLs.size());
-        
+
         // Change destination entry
         request = new ModifyRequestImpl();
         request.setName(new Dn("cn=TEST.FOO," + getQueueBaseDn()));
         request.add("description", "This is a description!  In fact, it is a very good description.");
-        
+
         connection.modify(request);
 
         Thread.sleep(2000);
-        
+
         failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
         assertEquals("set size: " + failedACLs, 1, failedACLs.size());
     }
@@ -304,6 +309,7 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         // wait for the context to be closed
         // as we can't rely on ldar server isStarted()
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 if (sync) {
                     return !map.isContextAlive();
@@ -328,40 +334,41 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
             connection.add(entry.getEntry());
         }
 
+        reader.close();
         Thread.sleep(2000);
 
         failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
         assertEquals("set size: " + failedACLs, 2, failedACLs.size());
     }
-    
+
     protected SimpleCachedLDAPAuthorizationMap createMap() {
         return new SimpleCachedLDAPAuthorizationMap();
     }
-    
+
     protected abstract InputStream getAddLdif();
-    
+
     protected abstract InputStream getRemoveLdif();
-    
+
     protected void setupModifyRequest(ModifyRequest request) {
         request.remove("member", "cn=users");
     }
-    
+
     protected abstract String getQueueBaseDn();
-    
+
     protected abstract LdapConnection getLdapConnection() throws Exception;
-    
+
     public static void cleanAndLoad(String deleteFromDn, String ldifResourcePath,
             String ldapHost, int ldapPort, String ldapUser, String ldapPass,
             DirContext context) throws Exception {
         // Cleanup everything used for testing.
         List<String> dns = new LinkedList<String>();
         dns.add(deleteFromDn);
-        
+
         while (!dns.isEmpty()) {
             String name = dns.get(dns.size() - 1);
             Context currentContext = (Context) context.lookup(name);
             NamingEnumeration<NameClassPair> namingEnum = currentContext.list("");
-            
+
             if (namingEnum.hasMore()) {
                 while (namingEnum.hasMore()) {
                     dns.add(namingEnum.next().getNameInNamespace());
@@ -371,13 +378,14 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
                 dns.remove(dns.size() - 1);
             }
         }
-        
+
         // A bit of a hacked approach to loading an LDIF into OpenLDAP since there isn't an easy way to do it
         // otherwise.  This approach invokes the command line tool programmatically but has
         // to short-circuit the call to System.exit that the command line tool makes when it finishes.
         // We are assuming that there isn't already a security manager in place.
         final SecurityManager securityManager = new SecurityManager() {
 
+            @Override
             public void checkPermission(java.security.Permission permission) {
                 if (permission.getName().contains("exitVM")) {
                     throw new SecurityException("System.exit calls disabled for the moment.");
@@ -387,13 +395,13 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         System.setSecurityManager(securityManager);
 
-        
+
         File file = new File(AbstractCachedLDAPAuthorizationMapLegacyTest.class.getClassLoader().getResource(
                 ldifResourcePath).toURI());
-        
+
         Class<?> clazz = Class.forName("LDAPModify");
         Method mainMethod = clazz.getMethod("main", String[].class);
-        
+
         try {
             mainMethod.invoke(null, new Object[] {
                     new String[] {

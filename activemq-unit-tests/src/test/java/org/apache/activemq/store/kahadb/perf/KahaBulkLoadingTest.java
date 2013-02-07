@@ -20,12 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -35,18 +33,16 @@ import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.ProgressPrinter;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.store.kahadb.KahaDBStore;
 
 /**
  * This tests bulk loading and unloading of messages to a Queue.s
- * 
- * 
+ *
+ *
  */
 public class KahaBulkLoadingTest extends JmsTestSupport {
 
@@ -54,6 +50,7 @@ public class KahaBulkLoadingTest extends JmsTestSupport {
 
     protected int messageSize = 1024 * 4;
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
@@ -64,8 +61,9 @@ public class KahaBulkLoadingTest extends JmsTestSupport {
         return broker;
     }
 
+    @Override
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getServer().getConnectURI());
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getServer().getConnectURI());
         factory.setUseAsyncSend(true);
         return factory;
     }

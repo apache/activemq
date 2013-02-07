@@ -33,9 +33,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 
 
@@ -59,7 +59,7 @@ public class NetworkedSyncTest extends TestCase {
         super(name);
         LOG.info("Testcase started.");
     }
-    
+
    public static void main(String args[]) {
        TestRunner.run(NetworkedSyncTest.class);
    }
@@ -67,10 +67,12 @@ public class NetworkedSyncTest extends TestCase {
     /**
      * @throws java.lang.Exception
      */
+    @Override
     protected void setUp() throws Exception {
         LOG.info("setUp() called.");
         ClassPathXmlApplicationContext context1 = null;
         BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(config));
+        assertNotNull(brokerFactory);
 
         /* start up first broker instance */
         try {
@@ -125,6 +127,7 @@ public class NetworkedSyncTest extends TestCase {
     /**
      * @throws java.lang.Exception
      */
+    @Override
     protected void tearDown() throws Exception {
 
         LOG.info("tearDown() called.");
@@ -148,7 +151,7 @@ public class NetworkedSyncTest extends TestCase {
         LOG.info("testMessageExchange() called.");
 
         long start = System.currentTimeMillis();
-        
+
         // create producer and consumer threads
         Thread producer = new Thread(new Producer());
         Thread consumer = new Thread(new Consumer());
@@ -156,22 +159,22 @@ public class NetworkedSyncTest extends TestCase {
         consumer.start();
         Thread.sleep(2000);
         producer.start();
-        
+
 
         // wait for threads to finish
         producer.join();
         consumer.join();
         long end = System.currentTimeMillis();
-        
+
         System.out.println("Duration: "+(end-start));
     }
 }
 
 /**
  * Message producer running as a separate thread, connecting to broker1
- * 
+ *
  * @author tmielke
- * 
+ *
  */
 class Producer implements Runnable {
 
@@ -180,6 +183,7 @@ class Producer implements Runnable {
     /**
      * connect to broker and constantly send messages
      */
+    @Override
     public void run() {
 
         Connection connection = null;
@@ -192,6 +196,7 @@ class Producer implements Runnable {
             connection = amq.createConnection();
 
             connection.setExceptionListener(new javax.jms.ExceptionListener() {
+                @Override
                 public void onException(javax.jms.JMSException e) {
                     e.printStackTrace();
                 }
@@ -241,16 +246,17 @@ class Producer implements Runnable {
 /*
  * * Message consumer running as a separate thread, connecting to broker2
  * @author tmielke
- * 
+ *
  */
 class Consumer implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);;
 
-    
+
     /**
      * connect to broker and receive messages
      */
+    @Override
     public void run() {
         Connection connection = null;
         Session session = null;
@@ -264,6 +270,7 @@ class Consumer implements Runnable {
             connection.setClientID("tmielke");
 
             connection.setExceptionListener(new javax.jms.ExceptionListener() {
+                @Override
                 public void onException(javax.jms.JMSException e) {
                     e.printStackTrace();
                 }
@@ -276,11 +283,11 @@ class Consumer implements Runnable {
 
             long counter = 0;
             // Wait for a message
-            for (int i = 0; i < NetworkedSyncTest.MESSAGE_COUNT; i++) { 
+            for (int i = 0; i < NetworkedSyncTest.MESSAGE_COUNT; i++) {
                 Message message2 = consumer.receive();
                 if (message2 instanceof TextMessage) {
                     TextMessage textMessage = (TextMessage) message2;
-                    String text = textMessage.getText();
+                    textMessage.getText();
                     // logger.info("Received: " + text);
                 } else {
                     LOG.error("Received message of unsupported type. Expecting TextMessage. "+ message2);
@@ -289,7 +296,7 @@ class Consumer implements Runnable {
                 if ((counter % 1000) == 0)
                     LOG.info("received " + counter + " messages");
 
-                
+
             }
         } catch (Exception e) {
             LOG.error("Error in Consumer: " + e);

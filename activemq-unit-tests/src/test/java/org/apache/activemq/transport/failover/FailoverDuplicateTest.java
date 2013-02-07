@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -30,6 +31,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -49,7 +51,7 @@ public class FailoverDuplicateTest extends TestSupport {
     private String url;
     BrokerService broker;
 
-
+    @Override
     public void tearDown() throws Exception {
         stopBroker();
     }
@@ -58,10 +60,6 @@ public class FailoverDuplicateTest extends TestSupport {
         if (broker != null) {
             broker.stop();
         }
-    }
-
-    private void startCleanBroker() throws Exception {
-        startBroker(true);
     }
 
     public void startBroker(boolean deleteAllMessagesOnStartup) throws Exception {
@@ -115,6 +113,7 @@ public class FailoverDuplicateTest extends TestSupport {
                         if (first.compareAndSet(false, true)) {
                             producerExchange.getConnectionContext().setDontSendReponse(true);
                             Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                @Override
                                 public void run() {
                                     try {
                                         LOG.info("Waiting for recepit");
@@ -160,6 +159,7 @@ public class FailoverDuplicateTest extends TestSupport {
         final CountDownLatch sendDoneLatch = new CountDownLatch(1);
         // broker will die on send reply so this will hang till restart
         Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
             public void run() {
                 LOG.info("doing async send...");
                 try {
