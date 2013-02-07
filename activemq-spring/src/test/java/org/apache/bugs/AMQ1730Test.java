@@ -17,12 +17,7 @@
 
 package org.apache.bugs;
 
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jms.listener.DefaultMessageListenerContainer;
+import java.util.concurrent.CountDownLatch;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -33,17 +28,20 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.concurrent.CountDownLatch;
+
+import junit.framework.TestCase;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 
 public class AMQ1730Test extends TestCase {
 
     private static final Logger log = LoggerFactory.getLogger(AMQ1730Test.class);
-
-
     private static final String JMSX_DELIVERY_COUNT = "JMSXDeliveryCount";
-
-
     BrokerService brokerService;
 
     private static final int MESSAGE_COUNT = 250;
@@ -55,6 +53,7 @@ public class AMQ1730Test extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
         brokerService = new BrokerService();
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setUseJmx(false);
@@ -65,6 +64,7 @@ public class AMQ1730Test extends TestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         brokerService.stop();
+        brokerService.waitUntilStopped();
     }
 
     public void testRedelivery() throws Exception {
@@ -109,7 +109,7 @@ public class AMQ1730Test extends TestCase {
         messageListenerContainer.setSessionTransacted(false);
         messageListenerContainer.setMessageListener(new MessageListener() {
 
-
+            @Override
             public void onMessage(Message message) {
                 if (!(message instanceof TextMessage)) {
                     throw new RuntimeException();
@@ -159,7 +159,5 @@ public class AMQ1730Test extends TestCase {
         T get() {
             return value;
         }
-
     }
-
 }

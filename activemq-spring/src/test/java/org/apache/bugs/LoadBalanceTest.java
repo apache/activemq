@@ -39,9 +39,9 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 import org.springframework.jms.connection.CachingConnectionFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
@@ -61,48 +61,49 @@ public class LoadBalanceTest {
         final AtomicInteger broker1Count = new AtomicInteger(0);
         final AtomicInteger broker2Count = new AtomicInteger(0);
         final CountDownLatch startProducer = new CountDownLatch(1);
+
+        String broker1Uri;
+        String broker2Uri;
+
         try {
-            {
-                brokerService1 = new BrokerService();
-                brokerService1.setBrokerName("one");
-                brokerService1.setUseJmx(false);
-                brokerService1
-                        .setPersistenceAdapter(new MemoryPersistenceAdapter());
-                brokerService1.addConnector("nio://0.0.0.0:61616");
-                final NetworkConnector network1 = brokerService1
-                        .addNetworkConnector("static:(tcp://localhost:51515)");
-                network1.setName("network1");
-                network1.setDynamicOnly(true);
-                network1.setNetworkTTL(3);
-                network1.setPrefetchSize(networkBridgePrefetch);
-                network1.setConduitSubscriptions(false);
-                network1.setDecreaseNetworkConsumerPriority(false);
-                network1.setDispatchAsync(false);
-                brokerService1.start();
-            }
-            {
-                brokerService2 = new BrokerService();
-                brokerService2.setBrokerName("two");
-                brokerService2.setUseJmx(false);
-                brokerService2
-                        .setPersistenceAdapter(new MemoryPersistenceAdapter());
-                brokerService2.addConnector("nio://0.0.0.0:51515");
-                final NetworkConnector network2 = brokerService2
-                        .addNetworkConnector("static:(tcp://localhost:61616)");
-                network2.setName("network1");
-                network2.setDynamicOnly(true);
-                network2.setNetworkTTL(3);
-                network2.setPrefetchSize(networkBridgePrefetch);
-                network2.setConduitSubscriptions(false);
-                network2.setDecreaseNetworkConsumerPriority(false);
-                network2.setDispatchAsync(false);
-                brokerService2.start();
-            }
+
+
+            brokerService1 = new BrokerService();
+            brokerService1.setBrokerName("one");
+            brokerService1.setUseJmx(false);
+            brokerService1.setPersistenceAdapter(new MemoryPersistenceAdapter());
+            broker1Uri = brokerService1.addConnector("nio://0.0.0.0:0").getPublishableConnectString();
+
+            brokerService2 = new BrokerService();
+            brokerService2.setBrokerName("two");
+            brokerService2.setUseJmx(false);
+            brokerService2.setPersistenceAdapter(new MemoryPersistenceAdapter());
+            broker2Uri = brokerService2.addConnector("nio://0.0.0.0:0").getPublishableConnectString();
+
+            final NetworkConnector network1 = brokerService1.addNetworkConnector("static:("+broker2Uri+")");
+            network1.setName("network1");
+            network1.setDynamicOnly(true);
+            network1.setNetworkTTL(3);
+            network1.setPrefetchSize(networkBridgePrefetch);
+            network1.setConduitSubscriptions(false);
+            network1.setDecreaseNetworkConsumerPriority(false);
+            network1.setDispatchAsync(false);
+
+            final NetworkConnector network2 = brokerService2.addNetworkConnector("static:("+broker1Uri+")");
+            network2.setName("network1");
+            network2.setDynamicOnly(true);
+            network2.setNetworkTTL(3);
+            network2.setPrefetchSize(networkBridgePrefetch);
+            network2.setConduitSubscriptions(false);
+            network2.setDecreaseNetworkConsumerPriority(false);
+            network2.setDispatchAsync(false);
+
+            brokerService1.start();
+            brokerService2.start();
+
             final ExecutorService pool = Executors.newSingleThreadExecutor();
-            final ActiveMQConnectionFactory connectionFactory1 = new ActiveMQConnectionFactory(
-                    "vm://one");
-            final SingleConnectionFactory singleConnectionFactory1 = new SingleConnectionFactory(
-                    connectionFactory1);
+            final ActiveMQConnectionFactory connectionFactory1 = new ActiveMQConnectionFactory("vm://one");
+            final SingleConnectionFactory singleConnectionFactory1 = new SingleConnectionFactory(connectionFactory1);
             singleConnectionFactory1.setReconnectOnException(true);
             final DefaultMessageListenerContainer container1 = new DefaultMessageListenerContainer();
             container1.setConnectionFactory(singleConnectionFactory1);
@@ -110,6 +111,7 @@ public class LoadBalanceTest {
             container1.setDestination(new ActiveMQQueue("testingqueue"));
             container1.setMessageListener(new MessageListener() {
 
+                @Override
                 public void onMessage(final Message message) {
                     broker1Count.incrementAndGet();
                 }
@@ -118,6 +120,7 @@ public class LoadBalanceTest {
             container1.start();
             pool.submit(new Callable<Object>() {
 
+                @Override
                 public Object call() throws Exception {
                     try {
                         final ActiveMQConnectionFactory connectionFactory2 = new ActiveMQConnectionFactory(
@@ -133,6 +136,7 @@ public class LoadBalanceTest {
                                 "testingqueue"));
                         container2.setMessageListener(new MessageListener() {
 
+                            @Override
                             public void onMessage(final Message message) {
                                 broker2Count.incrementAndGet();
                             }
@@ -151,6 +155,7 @@ public class LoadBalanceTest {
                         for (int i = 0; i < total; i++) {
                             template.send(queue, new MessageCreator() {
 
+                                @Override
                                 public Message createMessage(
                                         final Session session)
                                         throws JMSException {
@@ -197,6 +202,7 @@ public class LoadBalanceTest {
             try {
                 if (brokerService1 != null) {
                     brokerService1.stop();
+                    brokerService1.waitUntilStopped();
                 }
             } catch (final Throwable t) {
                 t.printStackTrace();
@@ -204,12 +210,13 @@ public class LoadBalanceTest {
             try {
                 if (brokerService2 != null) {
                     brokerService2.stop();
+                    brokerService2.waitUntilStopped();
                 }
             } catch (final Throwable t) {
                 t.printStackTrace();
             }
         }
-        
+
         if (broker1Count.get() < 25 || broker2Count.get() < 25) {
             fail("Each broker should have gotten at least 25 messages but instead broker1 got "
                     + broker1Count.get()
@@ -240,6 +247,7 @@ public class LoadBalanceTest {
         container1.setDestination(new ActiveMQQueue(TESTING_QUEUE));
         container1.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(final Message message) {
                 broker1Count.incrementAndGet();
             }
@@ -248,6 +256,7 @@ public class LoadBalanceTest {
         container1.start();
         pool.submit(new Callable<Object>() {
 
+            @Override
             public Object call() throws Exception {
                 System.setProperty("lbt.brokerName", "two");
                 final ActiveMQConnectionFactory connectionFactory2 = new ActiveMQConnectionFactory(
@@ -261,16 +270,17 @@ public class LoadBalanceTest {
                 container2.setDestination(new ActiveMQQueue(TESTING_QUEUE));
                 container2.setMessageListener(new MessageListener() {
 
+                    @Override
                     public void onMessage(final Message message) {
                         broker2Count.incrementAndGet();
                     }
                 });
                 container2.afterPropertiesSet();
                 container2.start();
-                
-                
+
+
                 assertTrue("wait for start signal", startProducer.await(20, TimeUnit.SECONDS));
-                
+
                 final CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory(
                         singleConnectionFactory2);
                 final JmsTemplate template = new JmsTemplate(
@@ -279,6 +289,7 @@ public class LoadBalanceTest {
                 for (int i = 0; i < total; i++) {
                     template.send(queue, new MessageCreator() {
 
+                        @Override
                         public Message createMessage(final Session session)
                                 throws JMSException {
                             final TextMessage message = session
@@ -291,14 +302,14 @@ public class LoadBalanceTest {
                 return null;
             }
         });
-        
+
         // give network a chance to build, needs advisories
         waitForBridgeFormation();
         startProducer.countDown();
-        
+
         pool.shutdown();
         pool.awaitTermination(10, TimeUnit.SECONDS);
-        
+
         LOG.info("broker1Count " + broker1Count.get() + ", broker2Count " + broker2Count.get());
 
         int count = 0;
