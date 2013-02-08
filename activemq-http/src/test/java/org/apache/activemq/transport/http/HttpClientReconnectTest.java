@@ -63,7 +63,7 @@ public class HttpClientReconnectTest {
         broker.stop();
     }
 
-    @Test
+    @Test(timeout=120000)
     public void testReconnectClient() throws Exception {
         for (int i = 0; i < 100; i++) {
             sendAndReceiveMessage(i);
