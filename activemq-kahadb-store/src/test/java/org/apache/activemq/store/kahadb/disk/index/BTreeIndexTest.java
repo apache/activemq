@@ -181,11 +181,11 @@ public class BTreeIndexTest extends IndexTestSupport {
 
         index.visit(tx, new BTreeVisitor<String, Long>(){
             @Override
-			public boolean isInterestedInKeysBetween(String first, String second) {
+            public boolean isInterestedInKeysBetween(String first, String second) {
                 return true;
             }
             @Override
-			public void visit(List<String> keys, List<Long> values) {
+            public void visit(List<String> keys, List<Long> values) {
             }
         });
 
@@ -236,7 +236,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
     }
 
-    @Test(timeout=300000)
+    @Test(timeout=900000)
     public void testRandomAddRemove() throws Exception {
 
         createPageFileAndIndex(1024);
@@ -565,7 +565,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         final static HashSetStringMarshaller INSTANCE = new HashSetStringMarshaller();
 
         @Override
-		public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
+        public void writePayload(HashSet<String> object, DataOutput dataOut) throws IOException {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oout = new ObjectOutputStream(baos);
             oout.writeObject(object);
@@ -577,7 +577,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         }
 
         @Override
-		public HashSet<String> readPayload(DataInput dataIn) throws IOException {
+        public HashSet<String> readPayload(DataInput dataIn) throws IOException {
             int dataLen = dataIn.readInt();
             byte[] data = new byte[dataLen];
             dataIn.readFully(data);
