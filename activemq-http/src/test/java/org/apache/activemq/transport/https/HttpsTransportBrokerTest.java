@@ -18,15 +18,21 @@ package org.apache.activemq.transport.https;
 
 import junit.framework.Test;
 import junit.textui.TestRunner;
+
 import org.apache.activemq.transport.http.HttpTransportBrokerTest;
 
 public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
 
+    @Override
     protected String getBindLocation() {
         return "https://localhost:8161";
     }
 
+    @Override
     protected void setUp() throws Exception {
+        setAutoFail(true);
+        setMaxTestTime(300000);
+
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
@@ -36,7 +42,7 @@ public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
         //System.setProperty("javax.net.debug", "ssl,handshake,data,trustmanager");
         super.setUp();
     }
-    
+
     public static Test suite() {
         return suite(HttpsTransportBrokerTest.class);
     }
@@ -44,5 +50,4 @@ public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
     public static void main(String[] args) {
         TestRunner.run(suite());
     }
-
 }
