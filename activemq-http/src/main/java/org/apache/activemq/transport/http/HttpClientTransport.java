@@ -45,6 +45,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
@@ -80,7 +81,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     private int soTimeout = MAX_CLIENT_TIMEOUT;
 
     private boolean useCompression = false;
-    private boolean canSendCompressed = false;
+    protected boolean canSendCompressed = false;
     private int minSendAsCompressedSize = 0;
 
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
@@ -285,7 +286,7 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     protected HttpClient createHttpClient() {
-        DefaultHttpClient client = new DefaultHttpClient(new PoolingClientConnectionManager());
+        DefaultHttpClient client = new DefaultHttpClient(createClientConnectionManager());
         if (useCompression) {
             client.addRequestInterceptor( new HttpRequestInterceptor() {
                 @Override
@@ -306,6 +307,10 @@ public class HttpClientTransport extends HttpTransportSupport {
             }
         }
         return client;
+    }
+
+    protected ClientConnectionManager createClientConnectionManager() {
+        return new PoolingClientConnectionManager();
     }
 
     protected void configureMethod(AbstractHttpMessage method) {

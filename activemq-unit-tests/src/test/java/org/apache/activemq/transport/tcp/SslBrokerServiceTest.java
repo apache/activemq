@@ -80,7 +80,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         return service;
     }
 
-    public void testNeedClientAuth() throws Exception {   
+    public void testNeedClientAuthReject() throws Exception {
         SSLContext context = SSLContext.getInstance("TLS");    
         // no client cert
         context.init(null, getTrustManager(), null);
@@ -93,6 +93,12 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         }
         // should work with regular connector
         makeSSLConnection(context, null, connector);
+    }
+
+    public void testNeedClientAuthSucceed() throws Exception {
+        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(getKeyManager(), getTrustManager(), null);
+        makeSSLConnection(context, null, needClientAuthConnector);
     }
     
     public void testCipherSuitesDisabled() throws Exception {

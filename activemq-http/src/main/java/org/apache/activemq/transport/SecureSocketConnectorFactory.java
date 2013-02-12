@@ -31,6 +31,10 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     private String keyPassword = System.getProperty("javax.net.ssl.keyPassword");
     private String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
     private String keyStore = System.getProperty("javax.net.ssl.keyStore");
+    private String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+    private String trustStore = System.getProperty("javax.net.ssl.trustStore");
+    private boolean needClientAuth;
+    private boolean wantClientAuth;
     private String keyStoreType;
     private String secureRandomCertficateAlgorithm;
     private String trustCertificateAlgorithm;
@@ -94,7 +98,17 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
             if (protocol != null) {
                 factory.setProtocol(protocol);
             }
+            if (trustStore != null) {
+                factory.setTrustStore(trustStore);
+            }
+            if (trustStorePassword != null) {
+                factory.setTrustStorePassword(trustStorePassword);
+            }
+
         }
+
+        factory.setNeedClientAuth(needClientAuth);
+        factory.setWantClientAuth(wantClientAuth);
 
         return sslConnector;
     }
@@ -178,5 +192,37 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
      */
     public void setAuth(String auth) {
         this.auth = auth;
+    }
+
+    public boolean isWantClientAuth() {
+        return wantClientAuth;
+    }
+
+    public void setWantClientAuth(boolean wantClientAuth) {
+        this.wantClientAuth = wantClientAuth;
+    }
+
+    public boolean isNeedClientAuth() {
+        return needClientAuth;
+    }
+
+    public void setNeedClientAuth(boolean needClientAuth) {
+        this.needClientAuth = needClientAuth;
+    }
+
+    public String getTrustStore() {
+        return trustStore;
+    }
+
+    public void setTrustStore(String trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
     }
 }
