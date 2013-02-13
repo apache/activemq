@@ -295,6 +295,10 @@ public abstract class Usage<T extends Usage> implements Service {
         if (started.compareAndSet(false, true)){
             if (parent != null) {
                 parent.addChild(this);
+                if(getLimit() > parent.getLimit()) {
+                	LOG.info("Usage({}) limit={} should be smaller than its parent limit={}", 
+                			 new Object[]{getName(), getLimit(), parent.getLimit()});
+                }
             }
             for (T t:children) {
                 t.start();
