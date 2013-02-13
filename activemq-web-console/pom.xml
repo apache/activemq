@@ -188,11 +188,13 @@
     </dependency>
 
     <!-- XMPP support -->
+    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-xmpp</artifactId>
       <version>${project.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>

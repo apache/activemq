@@ -227,7 +227,7 @@
     <module>activemq-console</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
-    <module>activemq-blueprint</module>
+    <!-- <module>activemq-blueprint</module> -->
     <module>activemq-karaf</module>
     <module>activemq-karaf-itest</module>
     <module>activemq-openwire-generator</module>
@@ -241,7 +241,7 @@
     <module>activemq-web</module>
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
-    <module>activemq-xmpp</module>
+    <!-- <module>activemq-xmpp</module> -->
     <module>activemq-itests-spring31</module>
     <module>assembly</module>
     <module>activemq-log4j-appender</module>

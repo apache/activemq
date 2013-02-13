@@ -87,10 +87,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-http</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-xmpp</artifactId>
     </dependency>
+    -->
 
     <!-- Additional Dependencies. -->
     <dependency>

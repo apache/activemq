@@ -95,10 +95,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-stomp</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-amqp</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-log4j-appender</artifactId>
@@ -128,10 +130,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
+    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-xmpp</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
