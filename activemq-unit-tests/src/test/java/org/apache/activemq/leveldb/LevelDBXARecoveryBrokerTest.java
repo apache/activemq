@@ -16,11 +16,12 @@
  */
 package org.apache.activemq.leveldb;
 
+import java.io.File;
+
 import junit.framework.Test;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.XARecoveryBrokerTest;
-
-import java.io.File;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -43,9 +44,4 @@ public class LevelDBXARecoveryBrokerTest extends XARecoveryBrokerTest {
         broker.setPersistenceAdapter(store);
     }
 
-
-    @Override
-    public void testTopicPersistentPreparedAcksAvailableAfterRestartAndRollback() {
-        // https://issues.apache.org/jira/browse/AMQ-4296
-    }
 }

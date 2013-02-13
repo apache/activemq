@@ -137,9 +137,8 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
     }
 
     public void initCombosForTestConsumeOnlyMatchedMessages() throws Exception {
-        // TODO - readd PersistenceAdapterChoice.LevelDB and investigate failure cause.
         this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC});
+                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
         this.addCombinationValues("usePrioritySupport",
                 new Object[]{ Boolean.TRUE, Boolean.FALSE});
     }

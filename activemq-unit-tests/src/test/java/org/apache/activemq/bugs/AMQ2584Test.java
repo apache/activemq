@@ -60,7 +60,7 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
     public void initCombosForTestSize() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
                 new Object[]{
-                        //PersistenceAdapterChoice.LevelDB,  TODO readd and investiaget failures.
+                        PersistenceAdapterChoice.LevelDB,
                         PersistenceAdapterChoice.KahaDB
                 });
     }
