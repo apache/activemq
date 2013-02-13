@@ -174,7 +174,7 @@ public class HealthView implements HealthViewMBean {
         }
 
     if (answer != null && !answer.isEmpty()){
-         this.currentState = "Feeling Ill {";
+         this.currentState = "Getting Worried {";
         for (HealthStatus hs: answer){
             currentState += hs + " , ";
         }
