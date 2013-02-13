@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.perf;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.leveldb.LevelDBStoreFactory;
+
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 
 /**
  * 
@@ -38,13 +39,11 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
         playloadSize = 1024;
         super.setUp();
     }
-    
+
+
     @Override
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
-        AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
-        persistenceFactory.setMaxFileLength(1024*16);
-        persistenceFactory.setPersistentIndex(true);
-        persistenceFactory.setCleanupInterval(10000);
+        LevelDBStoreFactory persistenceFactory = new LevelDBStoreFactory();
         answer.setPersistenceFactory(persistenceFactory);
         //answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(uri);

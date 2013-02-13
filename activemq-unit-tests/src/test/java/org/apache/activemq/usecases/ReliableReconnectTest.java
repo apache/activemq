@@ -34,8 +34,8 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.util.IdGenerator;
 
 public class ReliableReconnectTest extends org.apache.activemq.TestSupport {
@@ -81,10 +81,6 @@ public class ReliableReconnectTest extends org.apache.activemq.TestSupport {
             broker.setDeleteAllMessagesOnStartup(deleteOnStart);
            
             broker.setUseJmx(false);
-            PersistenceAdapter adaptor = broker.getPersistenceAdapter();
-            if (adaptor instanceof AMQPersistenceAdapter) {
-                ((AMQPersistenceAdapter)adaptor).setDisableLocking(true);
-            }
             broker.addConnector(DEFAULT_BROKER_URL);
             broker.start();
         } catch (Exception e) {

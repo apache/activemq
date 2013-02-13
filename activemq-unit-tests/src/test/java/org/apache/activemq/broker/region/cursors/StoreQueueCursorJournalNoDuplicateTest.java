@@ -21,8 +21,8 @@ import java.io.File;
 
 import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 
 /**
  * @author gtully
@@ -37,9 +37,9 @@ public class StoreQueueCursorJournalNoDuplicateTest extends StoreQueueCursorNoDu
         File journalDir = new File(dataFileDir, "journal").getCanonicalFile();
         JournalImpl journal = new JournalImpl(journalDir, 3, 1024 * 1024 * 20);
 
-        KahaPersistenceAdapter kahaAdaptor = new KahaPersistenceAdapter();
-        kahaAdaptor.setDirectory(dataFileDir);
-        JournalPersistenceAdapter journalAdaptor = new JournalPersistenceAdapter(journal, kahaAdaptor, broker.getTaskRunnerFactory());
+        LevelDBStore store = new LevelDBStore();
+        store.setDirectory(dataFileDir);
+        JournalPersistenceAdapter journalAdaptor = new JournalPersistenceAdapter(journal, store, broker.getTaskRunnerFactory());
         journalAdaptor.setMaxCheckpointWorkers(1);
 
         broker.setPersistenceAdapter(journalAdaptor);

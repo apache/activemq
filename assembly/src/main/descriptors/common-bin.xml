@@ -149,7 +149,6 @@
         <include>${pom.groupId}:activemq-leveldb-store</include>
         <include>${pom.groupId}:activemq-log4j-appender</include>
         <include>${pom.groupId}:activemq-pool</include>
-        <include>${pom.groupId}:activemq-xmpp</include>
         <include>${pom.groupId}:activemq-spring</include>
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
@@ -175,9 +174,6 @@
         <include>org.springframework:spring-oxm</include>
         <include>org.springframework:spring-tx</include>
         <include>com.thoughtworks.xstream:xstream</include>
-        <include>xpp3:xpp3</include>
-        <include>org.codehaus.woodstox:woodstox-core-asl</include>
-        <include>org.codehaus.woodstox:stax2-api</include>
         <include>org.codehaus.jettison:jettison</include>
         <include>org.apache.velocity:velocity</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>

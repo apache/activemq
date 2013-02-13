@@ -16,6 +16,14 @@
  */
 package org.apache.activemq.bugs;
 
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
 import java.io.File;
 import java.text.DateFormat;
 import java.util.Date;
@@ -23,17 +31,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.jms.Connection;
-
-import junit.framework.TestCase;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
-import org.apache.activemq.store.kahadb.KahaDBStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class VerifySteadyEnqueueRate extends TestCase {
 
@@ -44,7 +41,6 @@ public class VerifySteadyEnqueueRate extends TestCase {
     private BrokerService broker;
     final boolean useTopic = false;
 
-    private final boolean useAMQPStore = false;
     protected static final String payload = new String(new byte[24]);
 
     @Override
@@ -134,39 +130,21 @@ public class VerifySteadyEnqueueRate extends TestCase {
         broker.setPersistent(true);
         broker.setUseJmx(true);
 
-        if (useAMQPStore) {
-            AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker
-                    .getPersistenceFactory();
-            // ensure there are a bunch of data files but multiple entries in
-            // each
-            // factory.setMaxFileLength(1024 * 20);
-            // speed up the test case, checkpoint an cleanup early and often
-            // factory.setCheckpointInterval(500);
-            factory.setCleanupInterval(1000 * 60 * 30);
-            factory.setSyncOnWrite(false);
+        KahaDBStore kaha = new KahaDBStore();
+        kaha.setDirectory(new File("target/activemq-data/kahadb"));
+        // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified
+        // what happens if the index is updated but a journal update is lost.
+        // Index is going to be in consistent, but can it be repaired?
+        kaha.setEnableJournalDiskSyncs(false);
+        // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
+        kaha.setJournalMaxFileLength(1024*1024*100);
 
-            // int indexBinSize=262144; // good for 6M
-            int indexBinSize = 1024;
-            factory.setIndexMaxBinSize(indexBinSize * 2);
-            factory.setIndexBinSize(indexBinSize);
-            factory.setIndexPageSize(192 * 20);
-        } else {
-            KahaDBStore kaha = new KahaDBStore();
-            kaha.setDirectory(new File("target/activemq-data/kahadb"));
-            // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified
-            // what happens if the index is updated but a journal update is lost.
-            // Index is going to be in consistent, but can it be repaired?
-            kaha.setEnableJournalDiskSyncs(false);
-            // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
-            kaha.setJournalMaxFileLength(1024*1024*100);
+        // small batch means more frequent and smaller writes
+        kaha.setIndexWriteBatchSize(100);
+        // do the index write in a separate thread
+        kaha.setEnableIndexWriteAsync(true);
 
-            // small batch means more frequent and smaller writes
-            kaha.setIndexWriteBatchSize(100);
-            // do the index write in a separate thread
-            kaha.setEnableIndexWriteAsync(true);
-
-            broker.setPersistenceAdapter(kaha);
-        }
+        broker.setPersistenceAdapter(kaha);
 
         broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();

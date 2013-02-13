@@ -16,22 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
-import static org.apache.activemq.TestSupport.getDestination;
-import static org.apache.activemq.TestSupport.getDestinationStatistics;
-
-import java.io.File;
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -41,10 +26,17 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.apache.activemq.TestSupport.getDestination;
+import static org.apache.activemq.TestSupport.getDestinationStatistics;
 
 public class ExpiredMessagesTest extends CombinationTestSupport {
 
@@ -299,9 +291,8 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("localhost");
         broker.setDestinations(new ActiveMQDestination[]{destination});
-        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        LevelDBStore adaptor = new LevelDBStore();
         adaptor.setDirectory(new File("target/expiredtest-data/"));
-        adaptor.setForceRecoverReferenceStore(true);
         broker.setPersistenceAdapter(adaptor);
 
         PolicyEntry defaultPolicy = new PolicyEntry();

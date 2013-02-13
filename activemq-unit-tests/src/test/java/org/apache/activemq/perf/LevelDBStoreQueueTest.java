@@ -14,21 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.usecases;
+package org.apache.activemq.perf;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.leveldb.LevelDBStore;
 
+/**
+ * 
+ */
+public class LevelDBStoreQueueTest extends SimpleQueueTest {
 
-public class ThreeBrokerVirtualTopicNetworkAMQPATest extends ThreeBrokerVirtualTopicNetworkTest {
-    
-     protected void configurePersistenceAdapter(BrokerService broker) throws IOException {
-        File dataFileDir = new File("target/test-amq-data/amq/" + broker.getBrokerName());
-        LevelDBStore adapter = new LevelDBStore();
-        adapter.setDirectory(dataFileDir);
-        broker.setPersistenceAdapter(adapter);
+    protected void configureBroker(BrokerService answer,String uri) throws Exception {
+
+        File dataFileDir = new File("target/test-amq-data/perfTest/amq");
+
+        LevelDBStore adaptor = new LevelDBStore();
+        adaptor.setDirectory(dataFileDir);
+
+        answer.setPersistenceAdapter(adaptor);
+        answer.addConnector(uri);
+        answer.setDeleteAllMessagesOnStartup(true);
+
     }
+
 }

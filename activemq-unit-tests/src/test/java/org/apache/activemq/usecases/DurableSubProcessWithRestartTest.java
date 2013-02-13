@@ -42,8 +42,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.junit.After;
 import org.junit.Before;
@@ -753,7 +752,7 @@ public class DurableSubProcessWithRestartTest {
     }
 
     private enum Persistence {
-        MEMORY, AMQ, KAHA, KAHADB
+        MEMORY, LEVELDB, KAHADB
     }
 
     private void startBroker() throws Exception {
@@ -774,26 +773,15 @@ public class DurableSubProcessWithRestartTest {
             broker.setPersistent(false);
             break;
 
-        case AMQ:
-            File amqData = new File("activemq-data/" + getName() + "-amq");
+        case LEVELDB:
+            File datadir = new File("activemq-data/" + getName() + "-leveldb");
             if (deleteAllMessages)
-                delete(amqData);
+                delete(datadir);
 
             broker.setPersistent(true);
-            AMQPersistenceAdapter amq = new AMQPersistenceAdapter();
-            amq.setDirectory(amqData);
+            LevelDBStore amq = new LevelDBStore();
+            amq.setDirectory(datadir);
             broker.setPersistenceAdapter(amq);
-            break;
-
-        case KAHA:
-            File kahaData = new File("activemq-data/" + getName() + "-kaha");
-            if (deleteAllMessages)
-                delete(kahaData);
-
-            broker.setPersistent(true);
-            KahaPersistenceAdapter kaha = new KahaPersistenceAdapter();
-            kaha.setDirectory(kahaData);
-            broker.setPersistenceAdapter(kaha);
             break;
 
         case KAHADB:

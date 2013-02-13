@@ -26,7 +26,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.activemq.leveldb.LevelDBStore;
 
 public class ManagedDurableSubscriptionTest extends org.apache.activemq.TestSupport {
 
@@ -71,7 +71,7 @@ public class ManagedDurableSubscriptionTest extends org.apache.activemq.TestSupp
         broker = BrokerFactory.createBroker("broker:(vm://localhost)");
         broker.setKeepDurableSubsActive(false);
         broker.setPersistent(true);
-        KahaPersistenceAdapter persistenceAdapter = new KahaPersistenceAdapter();
+        LevelDBStore persistenceAdapter = new LevelDBStore();
         persistenceAdapter.setDirectory(new File("activemq-data/" + getName()));
         broker.setPersistenceAdapter(persistenceAdapter);
         broker.setUseJmx(true);

@@ -19,16 +19,19 @@ package org.apache.activemq.usecases;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.leveldb.LevelDBStore;
+import org.apache.activemq.store.PersistenceAdapter;
 
+/**
+ * 
+ */
+public class LevelDBDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 
-public class ThreeBrokerVirtualTopicNetworkAMQPATest extends ThreeBrokerVirtualTopicNetworkTest {
-    
-     protected void configurePersistenceAdapter(BrokerService broker) throws IOException {
-        File dataFileDir = new File("target/test-amq-data/amq/" + broker.getBrokerName());
-        LevelDBStore adapter = new LevelDBStore();
-        adapter.setDirectory(dataFileDir);
-        broker.setPersistenceAdapter(adapter);
+    protected PersistenceAdapter createPersistenceAdapter() throws IOException {
+        File dataDir = new File("target/test-data/durableLevelDB");
+        LevelDBStore adaptor = new LevelDBStore();
+        adaptor.setDirectory(dataDir);
+        return adaptor;
     }
+
 }

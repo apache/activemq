@@ -33,7 +33,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +61,7 @@ public class AMQ1866 extends TestCase {
     protected void setUp() throws Exception {
         // Start an embedded broker up.
         brokerService = new BrokerService();
-        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
-        adaptor.setIndexBinSize(4096);
+        LevelDBStore adaptor = new LevelDBStore();
         brokerService.setPersistenceAdapter(adaptor);
         brokerService.deleteAllMessages();
 

@@ -61,10 +61,6 @@
     <!-- Stores -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-amq-store</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-kahadb-store</artifactId>
     </dependency>
     <dependency>

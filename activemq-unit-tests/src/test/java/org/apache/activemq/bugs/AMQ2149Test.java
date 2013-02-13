@@ -41,7 +41,7 @@ import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.util.LoggingBrokerPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
@@ -105,9 +105,9 @@ public class AMQ2149Test extends AutoFailTestSupport {
     }
     
     protected void configurePersistenceAdapter(BrokerService brokerService) throws Exception {
-        AMQPersistenceAdapterFactory persistenceFactory = new AMQPersistenceAdapterFactory();
-        persistenceFactory.setDataDirectory(dataDirFile);
-        brokerService.setPersistenceFactory(persistenceFactory);
+        LevelDBStore persistenceFactory = new LevelDBStore();
+        persistenceFactory.setDirectory(dataDirFile);
+        brokerService.setPersistenceAdapter(persistenceFactory);
     }
 
     public void setUp() throws Exception {
@@ -284,35 +284,6 @@ public class AMQ2149Test extends AutoFailTestSupport {
         verifyStats(false);
     }
 
-    // no need to run this unless there are some issues with the others
-    public void noProblem_testOrderWithRestartAndVMIndex() throws Exception {
-        createBroker(new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                AMQPersistenceAdapterFactory persistenceFactory =
-                    (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
-                persistenceFactory.setPersistentIndex(false);
-                broker.deleteAllMessages();     
-            }
-        });
-        
-        final Timer timer = new Timer();
-        schedualRestartTask(timer, new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                AMQPersistenceAdapterFactory persistenceFactory =
-                    (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
-                persistenceFactory.setPersistentIndex(false);
-            }
-        });
-        
-        try {
-            verifyOrderedMessageReceipt();
-        } finally {
-            timer.cancel();
-        }
-        verifyStats(true);
-    }
-
-
     public void testOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -378,39 +349,6 @@ public class AMQ2149Test extends AutoFailTestSupport {
         
         try {
             verifyOrderedMessageReceipt(destinationType, 1, true);
-        } finally {
-            timer.cancel();
-        }
-        
-        verifyStats(true);
-    }
-
-
-    // no need to run this unless there are issues with the other restart tests
-  
-    public void eaiserToRepoduce_testOrderWithRestartWithForceRecover() throws Exception {
-        createBroker(new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                AMQPersistenceAdapterFactory persistenceFactory =
-                    (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
-                persistenceFactory.setForceRecoverReferenceStore(true);
-                broker.setPlugins(plugins);
-                broker.deleteAllMessages();     
-            }
-        });
-        
-        final Timer timer = new Timer();
-        schedualRestartTask(timer, new Configurer() {
-            public void configure(BrokerService broker) throws Exception {
-                AMQPersistenceAdapterFactory persistenceFactory =
-                    (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
-                persistenceFactory.setForceRecoverReferenceStore(true);
-                broker.setPlugins(plugins);
-            }
-        });
-        
-        try {
-            verifyOrderedMessageReceipt();
         } finally {
             timer.cancel();
         }

@@ -15,19 +15,16 @@
  * limitations under the License.
  */
 package org.apache.activemq.bugs.amq1974;
-import java.io.File;
-import java.net.URISyntaxException;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.transport.discovery.simple.SimpleDiscoveryAgent;
+
+import javax.jms.*;
+import java.io.File;
+import java.net.URISyntaxException;
 
 public class TryJmsManager {
 
@@ -46,9 +43,9 @@ public class TryJmsManager {
 
         broker.getSystemUsage().getMemoryUsage().setLimit(10 * 1024 * 1024);
 
-        KahaPersistenceAdapter persist = new KahaPersistenceAdapter();
+        LevelDBStore persist = new LevelDBStore();
         persist.setDirectory(new File("/tmp/broker1"));
-        persist.setMaxDataFileLength(20 * 1024 * 1024);
+        persist.setLogSize(20 * 1024 * 1024);
         broker.setPersistenceAdapter(persist);
 
         String brokerUrl = "tcp://localhost:4500";

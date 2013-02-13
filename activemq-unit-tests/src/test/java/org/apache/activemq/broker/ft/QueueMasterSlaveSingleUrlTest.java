@@ -22,7 +22,7 @@ import java.net.URI;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+import org.apache.activemq.leveldb.LevelDBStore;
 
 
 public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
@@ -48,7 +48,7 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
     }
     
     private void configureSharedPersistenceAdapter(BrokerService broker) throws Exception {
-       AMQPersistenceAdapter adapter = new AMQPersistenceAdapter();
+       LevelDBStore adapter = new LevelDBStore();
        adapter.setDirectory(new File("shared"));
        broker.setPersistenceAdapter(adapter); 
     }

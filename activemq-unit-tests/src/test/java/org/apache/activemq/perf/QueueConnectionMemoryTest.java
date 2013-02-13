@@ -22,7 +22,7 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest {
 
     @Override
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
+        LevelDBStore adaptor = new LevelDBStore();
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(uri);
         answer.setDeleteAllMessagesOnStartup(true);

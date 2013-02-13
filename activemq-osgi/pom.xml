@@ -65,10 +65,6 @@
       <version>${project.version}</version>
       <classifier>uber</classifier>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-amq-store</artifactId>
-    </dependency>
 
     <!-- Additional protocol impls -->
     <dependency>

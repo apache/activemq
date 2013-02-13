@@ -34,7 +34,6 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.leveldb.LevelDBPersistenceAdapter;
@@ -183,9 +182,6 @@ public abstract class TestSupport extends CombinationTestSupport {
     public PersistenceAdapter setPersistenceAdapter(BrokerService broker, PersistenceAdapterChoice choice) throws IOException {
         PersistenceAdapter adapter = null;
         switch (choice) {
-        case AMQ:
-            adapter = new AMQPersistenceAdapter();
-            break;
         case JDBC:
             adapter = new JDBCPersistenceAdapter();
             break;
