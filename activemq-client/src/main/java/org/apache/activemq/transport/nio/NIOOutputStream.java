@@ -191,7 +191,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
                 // Since the write is non-blocking, all the data may not have been
                 // written.
                 out.write(plain);
-                remaining = data.remaining();
+                remaining = plain.remaining();
 
                 // if the data buffer was larger than the packet buffer we might need to
                 // wrap more packets until we reach the end of data, but only when plain
