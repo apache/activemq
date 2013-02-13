@@ -74,6 +74,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     private String enableBatch = "false";
     private String maxMessagesPerBatch = "10";
     private RedeliveryPolicy redeliveryPolicy;
+    private boolean useJndi;
 
     /**
      * @see javax.resource.spi.ActivationSpec#validate()
@@ -452,7 +453,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     public String toString() {
         return "ActiveMQActivationSpec{" + "acknowledgeMode='" + acknowledgeMode + "'" + ", destinationType='" + destinationType + "'" + ", messageSelector='" + messageSelector + "'"
                + ", destination='" + destination + "'" + ", clientId='" + clientId + "'" + ", subscriptionName='" + subscriptionName + "'" + ", subscriptionDurability='" + subscriptionDurability
-               + "'" + "}";
+               + "'" + ", useJndi='"+ useJndi + "'" +"}";
     }
 
     public int getAcknowledgeModeForSession() {
@@ -664,5 +665,13 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
             redeliveryPolicy = new RedeliveryPolicy();
         }
         return redeliveryPolicy;
+    }
+    
+    public void setUseJndi(boolean useJndi) {
+        this.useJndi = useJndi;
+    }
+    
+    public boolean isUseJndi() {
+        return useJndi;
     }
 }

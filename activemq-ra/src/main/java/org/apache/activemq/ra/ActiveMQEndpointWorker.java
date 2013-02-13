@@ -28,6 +28,8 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.Topic;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
 import javax.resource.spi.work.Work;
@@ -200,14 +202,28 @@ public class ActiveMQEndpointWorker {
         };
 
         MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
-        if ("javax.jms.Queue".equals(activationSpec.getDestinationType())) {
-            dest = new ActiveMQQueue(activationSpec.getDestination());
-        } else if ("javax.jms.Topic".equals(activationSpec.getDestinationType())) {
-            dest = new ActiveMQTopic(activationSpec.getDestination());
-        } else {
-            throw new ResourceException("Unknown destination type: " + activationSpec.getDestinationType());
+        if (activationSpec.isUseJndi()) {
+            try {
+                InitialContext initialContext = new InitialContext();
+                dest = (ActiveMQDestination) initialContext.lookup(activationSpec.getDestination());
+            }
+            catch (NamingException exc) {
+                throw new ResourceException("JNDI lookup failed for "
+                    + activationSpec.getDestination());
+            }
         }
-
+        else {
+            if ("javax.jms.Queue".equals(activationSpec.getDestinationType())) {
+                dest = new ActiveMQQueue(activationSpec.getDestination());
+            }
+            else if ("javax.jms.Topic".equals(activationSpec.getDestinationType())) {
+                dest = new ActiveMQTopic(activationSpec.getDestination());
+            }
+            else {
+                throw new ResourceException("Unknown destination type: "
+                    + activationSpec.getDestinationType());
+            }
+        }
     }
 
     /**

@@ -143,6 +143,70 @@ public class MDBTest extends TestCase {
 
     }
 
+    public void testDestinationInJndi() throws Exception{
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        Connection connection = factory.createConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageConsumer advisory = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(new ActiveMQQueue("TEST")));
+
+        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.setQueuePrefetch(1);
+        adapter.start(new StubBootstrapContext());
+
+        final CountDownLatch messageDelivered = new CountDownLatch(1);
+
+        final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
+            public void onMessage(Message message) {
+                super.onMessage(message);
+                messageDelivered.countDown();
+            };
+        };
+
+        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+        activationSpec.setDestinationType(Queue.class.getName());
+        activationSpec.setDestination("MyQueue");
+        activationSpec.setUseJndi(true);
+        activationSpec.setResourceAdapter(adapter);
+        activationSpec.validate();
+
+        MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
+            public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
+                endpoint.xaresource = resource;
+                return endpoint;
+            }
+
+            public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
+                return true;
+            }
+        };
+
+        // Activate an Endpoint
+        adapter.endpointActivation(messageEndpointFactory, activationSpec);
+
+        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(1000);
+        if (msg != null) {
+            assertEquals("Prefetch size hasn't been set", 1, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
+        } else {
+            fail("Consumer hasn't been created");
+        }
+
+        // Send the broker a message to that endpoint
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
+        producer.send(session.createTextMessage("Hello!"));
+
+        connection.close();
+
+        // Wait for the message to be delivered.
+        assertTrue(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
+
+        // Shut the Endpoint down.
+        adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
+        adapter.stop();
+    }
+
     public void testMessageDelivery() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");

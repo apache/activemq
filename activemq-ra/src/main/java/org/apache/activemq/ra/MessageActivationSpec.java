@@ -128,4 +128,7 @@ public interface MessageActivationSpec extends ActivationSpec {
     RedeliveryPolicy redeliveryPolicy();
 
     RedeliveryPolicy lazyCreateRedeliveryPolicy();
+
+    boolean isUseJndi();
+
 }
