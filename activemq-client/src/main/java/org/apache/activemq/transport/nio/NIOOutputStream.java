@@ -76,6 +76,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
      * @param b - byte to write
      * @throws IOException
      */
+    @Override
     public void write(int b) throws IOException {
         checkClosed();
         if (availableBufferToWrite() < 1) {
@@ -92,6 +93,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
      * @param len the length of data to write
      * @throws IOException
      */
+    @Override
     public void write(byte b[], int off, int len) throws IOException {
         checkClosed();
         if (availableBufferToWrite() < len) {
@@ -112,6 +114,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
      *
      * @throws IOException
      */
+    @Override
     public void flush() throws IOException {
         if (count > 0 && out != null) {
             byteBuffer.position(0);
@@ -126,6 +129,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
      *
      * @throws IOException
      */
+    @Override
     public void close() throws IOException {
         super.close();
         if (engine != null) {
@@ -191,7 +195,6 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
                 // Since the write is non-blocking, all the data may not have been
                 // written.
                 out.write(plain);
-                remaining = plain.remaining();
 
                 // if the data buffer was larger than the packet buffer we might need to
                 // wrap more packets until we reach the end of data, but only when plain
@@ -202,6 +205,8 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
                     engine.wrap(data, plain);
                     plain.flip();
                 }
+
+                remaining = plain.remaining();
             }
         } finally {
             writeTimestamp = -1;
@@ -212,6 +217,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     /* (non-Javadoc)
      * @see org.apache.activemq.transport.tcp.TimeStampStream#isWriting()
      */
+    @Override
     public boolean isWriting() {
         return writeTimestamp > 0;
     }
@@ -219,6 +225,7 @@ public class NIOOutputStream extends OutputStream implements TimeStampStream {
     /* (non-Javadoc)
      * @see org.apache.activemq.transport.tcp.TimeStampStream#getWriteTimestamp()
      */
+    @Override
     public long getWriteTimestamp() {
         return writeTimestamp;
     }
