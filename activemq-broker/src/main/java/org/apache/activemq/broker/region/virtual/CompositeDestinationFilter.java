@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region.virtual;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
@@ -79,7 +80,10 @@ public class CompositeDestinationFilter extends DestinationFilter {
                 forwarded_message = message;
             }
 
-            send(context, forwarded_message, destination);
+            // Send it back through the region broker for routing.
+            context.setMutable(true);
+            Broker regionBroker = context.getConnectionContext().getBroker().getBrokerService().getRegionBroker();
+            regionBroker.send(context, forwarded_message);
         }
         if (!forwardOnly) {
             super.send(context, message);
