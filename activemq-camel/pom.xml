@@ -28,26 +28,9 @@
   <artifactId>activemq-camel</artifactId>
   <name>ActiveMQ :: Camel</name>
   <description>ActiveMQ component for Camel</description>
+  <packaging>bundle</packaging>
 
   <properties>
-    <activemq.osgi.import.pkg>
-      org.apache.activemq.pool;resolution:=optional,
-      javax.annotation*;resolution:=optional,
-      com.thoughtworks.xstream*;resolution:=optional,
-      org.apache.activeio*;resolution:=optional,
-      org.apache.camel*;version="[2,3)";resolution:=optional,
-      org.apache.commons.pool*;resolution:=optional,
-      org.apache.derby*;resolution:=optional,
-      org.apache.tools.ant*;resolution:=optional,
-      org.apache.xbean*;resolution:=optional,
-      '=org.apache.xbean.spring.context.v2;resolution:=optional',
-      org.apache.xpath*;resolution:=optional,
-      org.codehaus.jam*;resolution:=optional,
-      org.springframework*;resolution:=optional,
-      org.springframework.beans.factory.xml;resolution:=optional,
-      org.w3c.dom.traversal*;resolution:=optional,
-      *
-    </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq.camel*;version=${project.version};-noimport:=true
     </activemq.osgi.export>
