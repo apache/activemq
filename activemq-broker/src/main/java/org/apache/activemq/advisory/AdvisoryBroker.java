@@ -29,25 +29,13 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicSubscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +53,7 @@ public class AdvisoryBroker extends BrokerFilter {
     protected final ConcurrentHashMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
     protected final ConcurrentHashMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
     protected final ConcurrentHashMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<BrokerInfo, ActiveMQMessage>();
+    protected final ConcurrentHashMap<SubscriptionKey, ActiveMQTopic> durableSubscriptions = new ConcurrentHashMap<SubscriptionKey, ActiveMQTopic>();
     protected final ProducerId advisoryProducerId = new ProducerId();
 
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
@@ -92,6 +81,12 @@ public class AdvisoryBroker extends BrokerFilter {
 
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
+            if (info.getDestination().isTopic() && info.isDurable()) {
+                SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
+                if (!this.durableSubscriptions.contains(key)) {
+                    this.durableSubscriptions.put(key, (ActiveMQTopic)info.getDestination());
+                }
+            }
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
             consumers.put(info.getConsumerId(), info);
             fireConsumerAdvisory(context, info.getDestination(), topic, info);
@@ -261,6 +256,26 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
             }
         }
+    }
+
+    @Override
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
+        super.removeSubscription(context, info);
+
+        SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
+
+        ActiveMQTopic dest = durableSubscriptions.get(key);
+        if (dest == null) {
+            LOG.warn("We cannot send an advisory message for a durable sub removal when we don't know about the durable sub");
+        }
+
+        // Don't advise advisory topics.
+        if (!AdvisorySupport.isAdvisoryTopic(dest)) {
+            ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
+            durableSubscriptions.remove(key);
+            fireConsumerAdvisory(context,dest, topic, info);
+        }
+
     }
 
     @Override
