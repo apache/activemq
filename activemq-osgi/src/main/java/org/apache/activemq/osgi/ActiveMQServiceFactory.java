@@ -24,10 +24,8 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.Resource;
 
 import java.util.*;
@@ -72,8 +70,8 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             };
 
             // Handle properties in configuration
-            PropertySourcesPlaceholderConfigurer configurator =
-                        new PropertySourcesPlaceholderConfigurer();
+            PropertyPlaceholderConfigurer configurator =
+                        new PropertyPlaceholderConfigurer();
 
             //convert dictionary to properties. Is there a better way?
             Properties props = new Properties();

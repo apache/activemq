@@ -31,6 +31,9 @@
   <packaging>bundle</packaging>
 
   <properties>
+    <activemq.osgi.import.pkg>
+       org.springframework.jms*;version="[3,4)",
+    </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq.camel*;version=${project.version};-noimport:=true
     </activemq.osgi.export>
