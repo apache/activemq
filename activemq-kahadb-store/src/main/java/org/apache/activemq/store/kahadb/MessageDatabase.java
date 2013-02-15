@@ -1420,7 +1420,18 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             if (metadata.producerSequenceIdTrackerLocation != null) {
-                gcCandidateSet.remove(metadata.producerSequenceIdTrackerLocation.getDataFileId());
+                int dataFileId = metadata.producerSequenceIdTrackerLocation.getDataFileId();
+                if (gcCandidateSet.contains(dataFileId) && gcCandidateSet.first() == dataFileId) {
+                    // rewrite so we don't prevent gc
+                    metadata.producerSequenceIdTracker.setModified(true);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("rewriting producerSequenceIdTracker:" + metadata.producerSequenceIdTrackerLocation);
+                    }
+                }
+                gcCandidateSet.remove(dataFileId);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("gc candidates after producerSequenceIdTrackerLocation:" + dataFileId + ", " + gcCandidateSet);
+                }
             }
 
             // Don't GC files referenced by in-progress tx
