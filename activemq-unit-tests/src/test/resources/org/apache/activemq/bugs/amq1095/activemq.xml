@@ -30,7 +30,7 @@
     </destinations>
   
     <persistenceAdapter>
-      <kahaPersistenceAdapter directory="file:target/amq1095" maxDataFileLength="200000"/>
+      <kahaDB directory="file:target/amq1095"/>
     </persistenceAdapter>
 
 
