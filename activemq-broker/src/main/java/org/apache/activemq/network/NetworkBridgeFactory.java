@@ -75,7 +75,7 @@ public final class NetworkBridgeFactory {
         URI uri = broker.getVmConnectorURI();
         HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
         map.put("network", "true");
-        map.put("async", "false");
+        map.put("async", "true");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         return TransportFactory.connect(uri);
     }
