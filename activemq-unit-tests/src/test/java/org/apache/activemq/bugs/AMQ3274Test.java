@@ -109,8 +109,8 @@ public class AMQ3274Test {
         if (cons_client.getNumMsgReceived() == tot_expected) {
             LOG.info("Have " + tot_expected + " messages, as-expected");
         } else {
+            LOG.error("Have " + cons_client.getNumMsgReceived() + " messages; expected " + tot_expected);
             testError = true;
-            LOG.info("Have " + cons_client.getNumMsgReceived() + " messages; expected " + tot_expected);
         }
 
         resp_cons.close();
