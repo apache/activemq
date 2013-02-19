@@ -568,6 +568,8 @@
 
                 <!-- journal over journal is odd, but there may be some audit missing in leveldb, to investigate -->
                 <exclude>**/StoreQueueCursorJournalNoDuplicateTest.*</exclude>
+                <exclude>**/org.apache.activemq.usecases.ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
+                <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
