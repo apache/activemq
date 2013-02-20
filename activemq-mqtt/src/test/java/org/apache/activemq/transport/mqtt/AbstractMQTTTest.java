@@ -29,7 +29,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -55,11 +54,9 @@ public abstract class AbstractMQTTTest {
     protected BrokerService brokerService;
     protected LinkedList<Throwable> exceptions = new LinkedList<Throwable>();
     protected int numberOfMessages;
-    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
 
     @Before
     public void startBroker() throws Exception {
-        autoFailTestSupport.startAutoFailThread();
         exceptions.clear();
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -73,10 +70,9 @@ public abstract class AbstractMQTTTest {
         if (brokerService != null) {
             brokerService.stop();
         }
-        autoFailTestSupport.stopAutoFailThread();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAndReceiveMQTT() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -119,7 +115,7 @@ public abstract class AbstractMQTTTest {
         publishProvider.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAtMostOnceReceiveExactlyOnce() throws Exception {
         /**
          * Although subscribing with EXACTLY ONCE, the message gets published
@@ -142,7 +138,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAtLeastOnceReceiveExactlyOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -160,7 +156,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAtLeastOnceReceiveAtMostOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -179,7 +175,7 @@ public abstract class AbstractMQTTTest {
     }
 
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAndReceiveAtMostOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -197,7 +193,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAndReceiveAtLeastOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -215,7 +211,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAndReceiveExactlyOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -231,14 +227,14 @@ public abstract class AbstractMQTTTest {
             String payload = "Test Message: " + i;
             publisher.publish("foo", payload.getBytes(), EXACTLY_ONCE);
             byte[] message = subscriber.receive(5000);
-            assertNotNull("Should get a message", message);
+            assertNotNull("Should get a message + ["+ i + "]", message);
             assertEquals(payload, new String(message));
         }
         subscriber.disconnect();
         publisher.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendAndReceiveLargeMessages() throws Exception {
         byte[] payload = new byte[1024 * 32];
         for (int i = 0; i < payload.length; i++){
@@ -266,7 +262,7 @@ public abstract class AbstractMQTTTest {
     }
 
 
-    @Test
+    @Test(timeout=30000)
     public void testSendMQTTReceiveJMS() throws Exception {
         addMQTTConnector();
         TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
@@ -297,7 +293,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSendJMSReceiveMQTT() throws Exception {
         addMQTTConnector();
         TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");

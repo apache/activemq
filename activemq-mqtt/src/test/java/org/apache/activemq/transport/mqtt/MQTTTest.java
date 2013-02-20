@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 public class MQTTTest extends AbstractMQTTTest {
 
-    @Test
+    @Test(timeout=30000)
     public void testPingKeepsInactivityMonitorAlive() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -45,7 +45,7 @@ public class MQTTTest extends AbstractMQTTTest {
         connection.disconnect();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testTurnOffInactivityMonitor()throws Exception{
         addMQTTConnector("?transport.useInactivityMonitor=false");
         brokerService.start();
@@ -66,7 +66,7 @@ public class MQTTTest extends AbstractMQTTTest {
     }
 
 
-    @Test
+    @Test(timeout=30000)
     public void testDefaultKeepAliveWhenClientSpecifiesZero() throws Exception {
         // default keep alive in milliseconds
         addMQTTConnector("?transport.defaultKeepAlive=2000");
