@@ -895,7 +895,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void addSubscription(DemandSubscription sub) throws IOException {
         if (sub != null) {
-            localBroker.request(sub.getLocalInfo());
+            localBroker.oneway(sub.getLocalInfo());
         }
     }
 
