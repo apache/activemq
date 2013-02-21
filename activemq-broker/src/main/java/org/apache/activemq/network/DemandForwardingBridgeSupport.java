@@ -895,7 +895,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void addSubscription(DemandSubscription sub) throws IOException {
         if (sub != null) {
-            localBroker.oneway(sub.getLocalInfo());
+            if (isDuplex()) {
+                // async vm transport, need to wait for completion
+                localBroker.request(sub.getLocalInfo());
+            } else {
+                localBroker.oneway(sub.getLocalInfo());
+            }
         }
     }
 
