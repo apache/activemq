@@ -51,9 +51,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class TestPurgeCommand extends TestCase {
+public class PurgeCommandTest extends TestCase {
     private static final Logger LOG = LoggerFactory
-            .getLogger(TestPurgeCommand.class);
+            .getLogger(PurgeCommandTest.class);
 
     protected static final int MESSAGE_COUNT = 10;
     protected static final String PROPERTY_NAME = "XTestProperty";
@@ -155,11 +155,8 @@ public class TestPurgeCommand extends TestCase {
 
     @SuppressWarnings("unchecked")
     public void purgeAllMessages() throws IOException, Exception {
-        List<String> tokens = Arrays.asList(new String[] { "*" });
-        for (String token : tokens) {
             List<ObjectInstance> queueList = JmxMBeansUtil.queryMBeans(
-                    createJmxConnection(), "Type=Queue,Destination=" + token
-                            + ",*");
+                    createJmxConnection(), "type=Broker,brokerName=localbroker,destinationType=Queue,destinationName=*");
             for (ObjectInstance oi : queueList) {
                 ObjectName queueName = oi.getObjectName();
                 LOG.info("Purging all messages in queue: "
@@ -167,7 +164,6 @@ public class TestPurgeCommand extends TestCase {
                 createJmxConnection().invoke(queueName, "purge",
                         new Object[] {}, new String[] {});
             }
-        }
     }
 
     public void addMessages() throws IOException, Exception {
@@ -231,8 +227,8 @@ public class TestPurgeCommand extends TestCase {
             List<String> tokens = Arrays.asList(new String[] { "*" });
             for (String token : tokens) {
                 List<ObjectInstance> queueList = JmxMBeansUtil.queryMBeans(
-                        createJmxConnection(), "Type=Queue,Destination="
-                                + token + ",*");
+                        createJmxConnection(), "type=Broker,brokerName=localbroker,destinationType=Queue,destinationName="
+                                + token);
 
                 for (ObjectInstance queue : queueList) {
                     ObjectName queueName = queue

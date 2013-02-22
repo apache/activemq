@@ -96,7 +96,7 @@ public class PurgeCommand extends AbstractJmxCommand {
 
             // Iterate through the queue names
             for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "destinationType=Queue,destinationName=" + i.next() + ",*");
+                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + i.next());
 
                 for (Iterator j = queueList.iterator(); j.hasNext();) {
                     ObjectName queueName = ((ObjectInstance)j.next()).getObjectName();
