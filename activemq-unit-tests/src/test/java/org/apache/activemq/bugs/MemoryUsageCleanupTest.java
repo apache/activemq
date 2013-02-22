@@ -151,7 +151,7 @@ public class MemoryUsageCleanupTest {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return broker.getAdminView().getMemoryPercentUsage() == startPercentage;
+                return broker.getAdminView().getMemoryPercentUsage() <= startPercentage + 1;
             }
         }));
 
