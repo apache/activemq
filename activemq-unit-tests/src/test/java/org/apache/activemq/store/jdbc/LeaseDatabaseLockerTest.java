@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
+import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,11 +64,11 @@ public class LeaseDatabaseLockerTest {
     public void testLockInterleave() throws Exception {
 
         LeaseDatabaseLocker lockerA = new LeaseDatabaseLocker();
-        brokerService.setBrokerName("First");
+        lockerA.setLeaseHolderId("First");
         lockerA.configure(jdbc);
 
         final LeaseDatabaseLocker lockerB = new LeaseDatabaseLocker();
-        brokerService.setBrokerName("Second");
+        lockerB.setLeaseHolderId("Second");
         lockerB.configure(jdbc);
         final AtomicBoolean blocked = new AtomicBoolean(true);
 
@@ -75,11 +77,15 @@ public class LeaseDatabaseLockerTest {
         lockerA.start();
         printLockTable(connection);
 
+        assertTrue("First has lock", lockerA.keepAlive());
+
+        final CountDownLatch lockerBStarting = new CountDownLatch(1);
         ExecutorService executor = Executors.newCachedThreadPool();
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 try {
+                    lockerBStarting.countDown();
                     lockerB.start();
                     blocked.set(false);
                     printLockTable(connection);
@@ -90,6 +96,14 @@ public class LeaseDatabaseLockerTest {
             }
         });
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return lockerBStarting.await(1, TimeUnit.SECONDS);
+            }
+        });
+
+        TimeUnit.MILLISECONDS.sleep(lockerB.getLockAcquireSleepInterval());
         assertTrue("B is blocked", blocked.get());
 
         assertTrue("A is good", lockerA.keepAlive());
