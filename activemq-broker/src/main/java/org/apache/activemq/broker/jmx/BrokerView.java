@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
@@ -67,14 +68,17 @@ public class BrokerView implements BrokerViewMBean {
         this.broker = broker;
     }
 
+    @Override
     public String getBrokerId() {
         return safeGetBroker().getBrokerId().toString();
     }
 
+    @Override
     public String getBrokerName() {
         return safeGetBroker().getBrokerName();
     }
 
+    @Override
     public String getBrokerVersion() {
         return ActiveMQConnectionMetaData.PROVIDER_VERSION;
     }
@@ -84,6 +88,7 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.getUptime();
     }
 
+    @Override
     public void gc() throws Exception {
         brokerService.getBroker().gc();
         try {
@@ -93,35 +98,43 @@ public class BrokerView implements BrokerViewMBean {
         }
     }
 
+    @Override
     public void start() throws Exception {
         brokerService.start();
     }
 
+    @Override
     public void stop() throws Exception {
         brokerService.stop();
     }
 
+    @Override
     public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
             throws Exception {
         brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);
     }
 
+    @Override
     public long getTotalEnqueueCount() {
         return safeGetBroker().getDestinationStatistics().getEnqueues().getCount();
     }
 
+    @Override
     public long getTotalDequeueCount() {
         return safeGetBroker().getDestinationStatistics().getDequeues().getCount();
     }
 
+    @Override
     public long getTotalConsumerCount() {
         return safeGetBroker().getDestinationStatistics().getConsumers().getCount();
     }
 
+    @Override
     public long getTotalProducerCount() {
         return safeGetBroker().getDestinationStatistics().getProducers().getCount();
     }
 
+    @Override
     public long getTotalMessageCount() {
         return safeGetBroker().getDestinationStatistics().getMessages().getCount();
     }
@@ -130,138 +143,172 @@ public class BrokerView implements BrokerViewMBean {
         return safeGetBroker().getDestinationStatistics().getMessagesCached().getCount();
     }
 
+    @Override
     public int getMemoryPercentUsage() {
         return brokerService.getSystemUsage().getMemoryUsage().getPercentUsage();
     }
 
+    @Override
     public long getMemoryLimit() {
         return brokerService.getSystemUsage().getMemoryUsage().getLimit();
     }
 
+    @Override
     public void setMemoryLimit(long limit) {
         brokerService.getSystemUsage().getMemoryUsage().setLimit(limit);
     }
 
+    @Override
     public long getStoreLimit() {
         return brokerService.getSystemUsage().getStoreUsage().getLimit();
     }
 
+    @Override
     public int getStorePercentUsage() {
         return brokerService.getSystemUsage().getStoreUsage().getPercentUsage();
     }
 
+    @Override
     public long getTempLimit() {
        return brokerService.getSystemUsage().getTempUsage().getLimit();
     }
 
+    @Override
     public int getTempPercentUsage() {
        return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
     }
-    
+
+    @Override
     public long getJobSchedulerStoreLimit() {
         return brokerService.getSystemUsage().getJobSchedulerUsage().getLimit();
     }
-    
+
+    @Override
     public int getJobSchedulerStorePercentUsage() {
         return brokerService.getSystemUsage().getJobSchedulerUsage().getPercentUsage();
     }
 
+    @Override
     public void setStoreLimit(long limit) {
         brokerService.getSystemUsage().getStoreUsage().setLimit(limit);
     }
 
+    @Override
     public void setTempLimit(long limit) {
         brokerService.getSystemUsage().getTempUsage().setLimit(limit);
     }
-    
+
+    @Override
     public void setJobSchedulerStoreLimit(long limit) {
         brokerService.getSystemUsage().getJobSchedulerUsage().setLimit(limit);
     }
 
+    @Override
     public void resetStatistics() {
         safeGetBroker().getDestinationStatistics().reset();
     }
 
+    @Override
     public void enableStatistics() {
         safeGetBroker().getDestinationStatistics().setEnabled(true);
     }
 
+    @Override
     public void disableStatistics() {
         safeGetBroker().getDestinationStatistics().setEnabled(false);
     }
 
+    @Override
     public boolean isStatisticsEnabled() {
         return safeGetBroker().getDestinationStatistics().isEnabled();
     }
 
+    @Override
     public boolean isPersistent() {
         return brokerService.isPersistent();
     }
 
+    @Override
     public void terminateJVM(int exitCode) {
         System.exit(exitCode);
     }
 
+    @Override
     public ObjectName[] getTopics() {
         return safeGetBroker().getTopics();
     }
 
+    @Override
     public ObjectName[] getQueues() {
         return safeGetBroker().getQueues();
     }
 
+    @Override
     public ObjectName[] getTemporaryTopics() {
         return safeGetBroker().getTemporaryTopics();
     }
 
+    @Override
     public ObjectName[] getTemporaryQueues() {
         return safeGetBroker().getTemporaryQueues();
     }
 
+    @Override
     public ObjectName[] getTopicSubscribers() {
         return safeGetBroker().getTopicSubscribers();
     }
 
+    @Override
     public ObjectName[] getDurableTopicSubscribers() {
         return safeGetBroker().getDurableTopicSubscribers();
     }
 
+    @Override
     public ObjectName[] getQueueSubscribers() {
         return safeGetBroker().getQueueSubscribers();
     }
 
+    @Override
     public ObjectName[] getTemporaryTopicSubscribers() {
         return safeGetBroker().getTemporaryTopicSubscribers();
     }
 
+    @Override
     public ObjectName[] getTemporaryQueueSubscribers() {
         return safeGetBroker().getTemporaryQueueSubscribers();
     }
 
+    @Override
     public ObjectName[] getInactiveDurableTopicSubscribers() {
         return safeGetBroker().getInactiveDurableTopicSubscribers();
     }
 
+    @Override
     public ObjectName[] getTopicProducers() {
         return safeGetBroker().getTopicProducers();
     }
 
+    @Override
     public ObjectName[] getQueueProducers() {
         return safeGetBroker().getQueueProducers();
     }
 
+    @Override
     public ObjectName[] getTemporaryTopicProducers() {
         return safeGetBroker().getTemporaryTopicProducers();
     }
 
+    @Override
     public ObjectName[] getTemporaryQueueProducers() {
         return safeGetBroker().getTemporaryQueueProducers();
     }
 
+    @Override
     public ObjectName[] getDynamicDestinationProducers() {
         return safeGetBroker().getDynamicDestinationProducers();
     }
 
+    @Override
     public String addConnector(String discoveryAddress) throws Exception {
         TransportConnector connector = brokerService.addConnector(discoveryAddress);
         if (connector == null) {
@@ -271,6 +318,7 @@ public class BrokerView implements BrokerViewMBean {
         return connector.getName();
     }
 
+    @Override
     public String addNetworkConnector(String discoveryAddress) throws Exception {
         NetworkConnector connector = brokerService.addNetworkConnector(discoveryAddress);
         if (connector == null) {
@@ -280,6 +328,7 @@ public class BrokerView implements BrokerViewMBean {
         return connector.getName();
     }
 
+    @Override
     public boolean removeConnector(String connectorName) throws Exception {
         TransportConnector connector = brokerService.getConnectorByName(connectorName);
         if (connector == null) {
@@ -289,6 +338,7 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.removeConnector(connector);
     }
 
+    @Override
     public boolean removeNetworkConnector(String connectorName) throws Exception {
         NetworkConnector connector = brokerService.getNetworkConnectorByName(connectorName);
         if (connector == null) {
@@ -298,22 +348,27 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.removeNetworkConnector(connector);
     }
 
+    @Override
     public void addTopic(String name) throws Exception {
         safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name),true);
     }
 
+    @Override
     public void addQueue(String name) throws Exception {
         safeGetBroker().getContextBroker().addDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name),true);
     }
 
+    @Override
     public void removeTopic(String name) throws Exception {
         safeGetBroker().getContextBroker().removeDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQTopic(name), 1000);
     }
 
+    @Override
     public void removeQueue(String name) throws Exception {
         safeGetBroker().getContextBroker().removeDestination(BrokerSupport.getConnectionContext(safeGetBroker().getContextBroker()), new ActiveMQQueue(name), 1000);
     }
 
+    @Override
     public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName,
                                               String selector) throws Exception {
         ConnectionContext context = new ConnectionContext();
@@ -336,6 +391,7 @@ public class BrokerView implements BrokerViewMBean {
         return null;
     }
 
+    @Override
     public void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
@@ -347,6 +403,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     //  doc comment inherited from BrokerViewMBean
+    @Override
     public void reloadLog4jProperties() throws Throwable {
 
         // Avoid a direct dependency on log4j.. use reflection.
@@ -379,6 +436,7 @@ public class BrokerView implements BrokerViewMBean {
         }
     }
 
+    @Override
     public  Map<String, String> getTransportConnectors() {
         Map<String, String> answer = new HashMap<String, String>();
         try {
@@ -396,6 +454,7 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.getTransportConnectorURIsAsMap().get(type);
     }
 
+    @Override
     @Deprecated
     /**
      * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
@@ -405,6 +464,7 @@ public class BrokerView implements BrokerViewMBean {
         return answer != null ? answer : "";
     }
 
+    @Override
     @Deprecated
     /**
      * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
@@ -414,6 +474,7 @@ public class BrokerView implements BrokerViewMBean {
         return answer != null ? answer : "";
     }
 
+    @Override
     @Deprecated
     /**
      * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
@@ -423,6 +484,7 @@ public class BrokerView implements BrokerViewMBean {
         return answer != null ? answer : "";
     }
 
+    @Override
     @Deprecated
     /**
      * @deprecated use {@link #getTransportConnectors()} or {@link #getTransportConnectorByType(String)}
@@ -432,11 +494,13 @@ public class BrokerView implements BrokerViewMBean {
         return answer != null ? answer : "";
     }
 
+    @Override
     public String getVMURL() {
         URI answer = brokerService.getVmConnectorURI();
         return answer != null ? answer.toString() : "";
     }
 
+    @Override
     public String getDataDirectory() {
         File file = brokerService.getDataDirectoryFile();
         try {
@@ -446,12 +510,18 @@ public class BrokerView implements BrokerViewMBean {
         }
     }
 
+    @Override
     public ObjectName getJMSJobScheduler() {
         return this.jmsJobScheduler;
     }
 
     public void setJMSJobScheduler(ObjectName name) {
         this.jmsJobScheduler=name;
+    }
+
+    @Override
+    public boolean isSlave() {
+        return brokerService.isSlave();
     }
 
     private ManagedRegionBroker safeGetBroker() {

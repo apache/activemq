@@ -232,6 +232,7 @@ public class BrokerService implements Service {
     private Throwable startException = null;
     private boolean startAsync = false;
     private Date startDate;
+    private boolean slave = true;
 
     static {
         String localHostName = "localhost";
@@ -706,6 +707,7 @@ public class BrokerService implements Service {
             }
         }
         stopAllConnectors(stopper);
+        this.slave = true;
         // remove any VMTransports connected
         // this has to be done after services are stopped,
         // to avoid timing issue with discovery (spinning up a new instance)
@@ -2354,6 +2356,7 @@ public class BrokerService implements Service {
             this.transportConnectors.clear();
             setTransportConnectors(al);
         }
+        this.slave = false;
         URI uri = getVmConnectorURI();
         Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
         map.put("network", "true");
@@ -2821,4 +2824,9 @@ public class BrokerService implements Service {
     public void setStartAsync(boolean startAsync) {
         this.startAsync = startAsync;
     }
+
+    public boolean isSlave() {
+        return this.slave;
+    }
+
 }

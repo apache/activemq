@@ -49,6 +49,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
     protected int failureCount = 50;
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false&useExponentialBackOff=false";
 
+    @Override
     protected void setUp() throws Exception {
         setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
         setAutoFail(true);
@@ -74,6 +75,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         return "org/apache/activemq/broker/ft/master.xml";
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         master.stop();
@@ -86,10 +88,12 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         master.stop();
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory(uriString);
     }
 
+    @Override
     protected void messageSent() throws Exception {
         if (++inflightMessageCount == failureCount) {
             Thread.sleep(1000);
@@ -123,13 +127,16 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         MessageConsumer qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
         assertNull("No message there yet", qConsumer.receive(1000));
         qConsumer.close();
+        assertTrue(!master.isSlave());
         master.stop();
         assertTrue("slave started", slaveStarted.await(15, TimeUnit.SECONDS));
+        assertTrue(!slave.get().isSlave());
 
         final String text = "ForUWhenSlaveKicksIn";
         producer.send(new ActiveMQTopic("VirtualTopic.TA1"), session.createTextMessage(text));
 
         qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
+
         javax.jms.Message message = qConsumer.receive(4000);
         assertNotNull("Get message after failover", message);
         assertEquals("correct message", text, ((TextMessage)message).getText());
