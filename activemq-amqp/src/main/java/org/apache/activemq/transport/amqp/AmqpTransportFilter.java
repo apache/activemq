@@ -33,7 +33,7 @@ import java.security.cert.X509Certificate;
 
 /**
  * The AMQPTransportFilter normally sits on top of a TcpTransport that has been
- * configured with the StompWireFormat and is used to convert AMQP commands to
+ * configured with the AmqpWireFormat and is used to convert AMQP commands to
  * ActiveMQ commands. All of the conversion work is done by delegating to the
  * AMQPProtocolConverter
  */
