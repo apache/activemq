@@ -18,30 +18,24 @@ package org.apache.activemq.security;
 
 import java.security.Principal;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * Handles authenticating a users against a simple user name/password map.
- *
- *
  */
-public class SimpleAuthenticationBroker extends BrokerFilter {
+public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
 
     private boolean anonymousAccessAllowed = false;
     private String anonymousUser;
     private String anonymousGroup;
     private final Map<String,String> userPasswords;
     private final Map<String,Set<Principal>> userGroups;
-    private final CopyOnWriteArrayList<SecurityContext> securityContexts = new CopyOnWriteArrayList<SecurityContext>();
 
     public SimpleAuthenticationBroker(Broker next, Map<String,String> userPasswords, Map<String,Set<Principal>> userGroups) {
         super(next);
@@ -61,6 +55,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
         this.anonymousGroup = anonymousGroup;
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
         SecurityContext s = context.getSecurityContext();
@@ -69,6 +64,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
             if (anonymousAccessAllowed && info.getUserName() == null && info.getPassword() == null) {
                 info.setUserName(anonymousUser);
                 s = new SecurityContext(info.getUserName()) {
+                    @Override
                     public Set<Principal> getPrincipals() {
                         Set<Principal> groups = new HashSet<Principal>();
                         groups.add(new GroupPrincipal(anonymousGroup));
@@ -84,6 +80,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
 
                 final Set<Principal> groups = userGroups.get(info.getUserName());
                 s = new SecurityContext(info.getUserName()) {
+                    @Override
                     public Set<Principal> getPrincipals() {
                         return groups;
                     }
@@ -93,6 +90,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
             context.setSecurityContext(s);
             securityContexts.add(s);
         }
+
         try {
             super.addConnection(context, info);
         } catch (Exception e) {
@@ -101,25 +99,4 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
             throw e;
         }
     }
-
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error)
-        throws Exception {
-        super.removeConnection(context, info, error);
-        if (securityContexts.remove(context.getSecurityContext())) {
-            context.setSecurityContext(null);
-        }
-    }
-
-    /**
-     * Previously logged in users may no longer have the same access anymore.
-     * Refresh all the logged into users.
-     */
-    public void refresh() {
-        for (Iterator<SecurityContext> iter = securityContexts.iterator(); iter.hasNext();) {
-            SecurityContext sc = iter.next();
-            sc.getAuthorizedReadDests().clear();
-            sc.getAuthorizedWriteDests().clear();
-        }
-    }
-
 }

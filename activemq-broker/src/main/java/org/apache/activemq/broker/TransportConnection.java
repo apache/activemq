@@ -1552,7 +1552,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return connectionStateRegister.lookupConnectionState(id);
     }
 
-    protected synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
+    // public only for testing
+    public synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
         return connectionStateRegister.lookupConnectionState(connectionId);
     }
 

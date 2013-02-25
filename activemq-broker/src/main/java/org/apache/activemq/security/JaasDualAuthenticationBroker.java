@@ -23,6 +23,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.transport.tcp.SslTransportServer;
 
@@ -83,6 +84,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
      * @param info The ConnectionInfo Command representing the incoming
      *                connection.
      */
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         if (context.getSecurityContext() == null) {
             boolean isSSL;
@@ -106,6 +108,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
     /**
      * Overriding removeConnection to make sure the security context is cleaned.
      */
+    @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         boolean isSSL;
         Connector connector = context.getConnector();
@@ -121,5 +124,12 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
         } else {
             this.nonSslBroker.removeConnection(context, info, error);
         }
+    }
+
+    @Override
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        // Give both a chance to clear out their contexts
+        this.sslBroker.removeDestination(context, destination, timeout);
+        this.nonSslBroker.removeDestination(context, destination, timeout);
     }
 }

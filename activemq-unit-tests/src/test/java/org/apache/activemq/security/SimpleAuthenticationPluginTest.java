@@ -21,18 +21,24 @@ import java.net.URI;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TemporaryTopic;
 import javax.management.ObjectName;
 
 import junit.framework.Test;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +60,7 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         return createBroker("org/apache/activemq/security/simple-auth-broker.xml");
     }
@@ -95,6 +102,34 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
             System.out.println(mbean.getName());
             fail("Shouldn't have created a temp topic");
         } catch (Exception ignore) {}
+    }
+
+    public void testSecurityContextClearedOnPurge() throws Exception {
+
+        connection.close();
+        ActiveMQConnectionFactory tcpFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
+        ActiveMQConnection conn = (ActiveMQConnection) tcpFactory.createConnection("user", "password");
+        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        conn.start();
+
+        final int numDests = broker.getRegionBroker().getDestinations().length;
+        for (int i=0; i<10; i++) {
+            MessageProducer p = sess.createProducer(new ActiveMQQueue("USERS.PURGE." + i));
+            p.close();
+        }
+
+        assertTrue("dests are purged", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("dests, orig: " + numDests + ", now: "+ broker.getRegionBroker().getDestinations().length);
+                return (numDests + 1) == broker.getRegionBroker().getDestinations().length;
+            }
+        }));
+
+        // verify removed from connection security context
+        TransportConnection brokerConnection = broker.getTransportConnectors().get(0).getConnections().get(0);
+        TransportConnectionState transportConnectionState = brokerConnection.lookupConnectionState(conn.getConnectionInfo().getConnectionId());
+        assertEquals("no destinations", 0, transportConnectionState.getContext().getSecurityContext().getAuthorizedWriteDests().size());
     }
 
 }

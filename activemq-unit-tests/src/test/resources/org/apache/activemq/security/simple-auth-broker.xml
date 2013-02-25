@@ -35,7 +35,7 @@
       <property name="location" value="classpath:credentials.properties"/> 
   </bean> 
 
-  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true">
+  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true" schedulePeriodForDestinationPurge="2000">
 
     <destinations>
       <queue physicalName="TEST.Q" />      
@@ -45,6 +45,18 @@
     <managementContext>
       <managementContext connectorPort="1199"/>
     </managementContext>
+
+    <destinationPolicy>
+        <policyMap>
+          <policyEntries>
+            <policyEntry queue="USERS.PURGE.>" gcInactiveDestinations="true" inactiveTimoutBeforeGC="500" />
+          </policyEntries>
+        </policyMap>
+    </destinationPolicy>
+
+    <transportConnectors>
+      <transportConnector uri="tcp://0.0.0.0:0" />
+    </transportConnectors>
 
     <plugins>
 		<simpleAuthenticationPlugin>

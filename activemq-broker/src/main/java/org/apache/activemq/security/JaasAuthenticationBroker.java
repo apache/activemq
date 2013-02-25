@@ -17,28 +17,24 @@
 package org.apache.activemq.security;
 
 import java.security.Principal;
-import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 
 /**
  * Logs a user in using JAAS.
- * 
- * 
+ *
+ *
  */
-public class JaasAuthenticationBroker extends BrokerFilter {
+public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
 
     private final String jassConfiguration;
-    private final CopyOnWriteArrayList<SecurityContext> securityContexts = new CopyOnWriteArrayList<SecurityContext>();
 
     public JaasAuthenticationBroker(Broker next, String jassConfiguration) {
         super(next);
@@ -54,12 +50,13 @@ public class JaasAuthenticationBroker extends BrokerFilter {
             this.subject = subject;
         }
 
+        @Override
         public Set<Principal> getPrincipals() {
             return subject.getPrincipals();
         }
-
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
         if (context.getSecurityContext() == null) {
@@ -88,25 +85,5 @@ public class JaasAuthenticationBroker extends BrokerFilter {
             }
         }
         super.addConnection(context, info);
-    }
-
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error)
-        throws Exception {
-        super.removeConnection(context, info, error);
-        if (securityContexts.remove(context.getSecurityContext())) {
-            context.setSecurityContext(null);
-        }
-    }
-
-    /**
-     * Previously logged in users may no longer have the same access anymore.
-     * Refresh all the logged into users.
-     */
-    public void refresh() {
-        for (Iterator<SecurityContext> iter = securityContexts.iterator(); iter.hasNext();) {
-            SecurityContext sc = iter.next();
-            sc.getAuthorizedReadDests().clear();
-            sc.getAuthorizedWriteDests().clear();
-        }
     }
 }
