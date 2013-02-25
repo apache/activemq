@@ -128,7 +128,7 @@ public class NIOSSLConcurrencyTest extends TestCase {
             public boolean isSatisified() throws Exception {
                 return failed || getReceived() == PRODUCER_COUNT * MESSAGE_COUNT;
             }
-        }, 60000);
+        }, 120000);
 
         assertEquals(PRODUCER_COUNT * MESSAGE_COUNT, getReceived());
 
