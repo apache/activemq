@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
-
 
 public class MQTTTest extends AbstractMQTTTest {
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testPingKeepsInactivityMonitorAlive() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -45,7 +45,7 @@ public class MQTTTest extends AbstractMQTTTest {
         connection.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testTurnOffInactivityMonitor()throws Exception{
         addMQTTConnector("?transport.useInactivityMonitor=false");
         brokerService.start();
@@ -64,7 +64,6 @@ public class MQTTTest extends AbstractMQTTTest {
 
         connection.disconnect();
     }
-
 
     @Test(timeout=30000)
     public void testDefaultKeepAliveWhenClientSpecifiesZero() throws Exception {
@@ -85,17 +84,19 @@ public class MQTTTest extends AbstractMQTTTest {
         }));
     }
 
-
+    @Override
     protected String getProtocolScheme() {
         return "mqtt";
     }
 
+    @Override
     protected void addMQTTConnector() throws Exception {
         addMQTTConnector("");
     }
 
+    @Override
     protected void addMQTTConnector(String config) throws Exception {
-        mqttConnector= brokerService.addConnector(getProtocolScheme()+"://localhost:0" + config);
+        mqttConnector = brokerService.addConnector(getProtocolScheme()+"://localhost:0" + config);
     }
 
     @Override

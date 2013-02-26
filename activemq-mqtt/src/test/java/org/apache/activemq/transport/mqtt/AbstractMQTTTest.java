@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.ProtectionDomain;
@@ -27,6 +31,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -36,8 +41,6 @@ import org.apache.activemq.util.ByteSequence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
-
 
 public abstract class AbstractMQTTTest {
     protected TransportConnector mqttConnector;
@@ -72,7 +75,7 @@ public abstract class AbstractMQTTTest {
         }
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAndReceiveMQTT() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -85,6 +88,7 @@ public abstract class AbstractMQTTTest {
         final CountDownLatch latch = new CountDownLatch(numberOfMessages);
 
         Thread thread = new Thread(new Runnable() {
+            @Override
             public void run() {
                 for (int i = 0; i < numberOfMessages; i++){
                     try {
@@ -115,7 +119,7 @@ public abstract class AbstractMQTTTest {
         publishProvider.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAtMostOnceReceiveExactlyOnce() throws Exception {
         /**
          * Although subscribing with EXACTLY ONCE, the message gets published
@@ -138,7 +142,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAtLeastOnceReceiveExactlyOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -156,7 +160,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAtLeastOnceReceiveAtMostOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -174,8 +178,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAndReceiveAtMostOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -193,7 +196,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAndReceiveAtLeastOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -211,7 +214,7 @@ public abstract class AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAndReceiveExactlyOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -221,8 +224,7 @@ public abstract class AbstractMQTTTest {
         final MQTTClientProvider subscriber = getMQTTClientProvider();
         initializeConnection(subscriber);
 
-
-            subscriber.subscribe("foo",EXACTLY_ONCE);
+        subscriber.subscribe("foo",EXACTLY_ONCE);
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
             publisher.publish("foo", payload.getBytes(), EXACTLY_ONCE);
@@ -234,7 +236,7 @@ public abstract class AbstractMQTTTest {
         publisher.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendAndReceiveLargeMessages() throws Exception {
         byte[] payload = new byte[1024 * 32];
         for (int i = 0; i < payload.length; i++){
@@ -261,8 +263,7 @@ public abstract class AbstractMQTTTest {
         publisher.disconnect();
     }
 
-
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendMQTTReceiveJMS() throws Exception {
         addMQTTConnector();
         TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
@@ -271,7 +272,6 @@ public abstract class AbstractMQTTTest {
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
         final String DESTINATION_NAME = "foo.*";
-
 
         ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory(openwireTransport.getConnectUri()).createConnection();
         activeMQConnection.start();
@@ -288,12 +288,11 @@ public abstract class AbstractMQTTTest {
             assertEquals(payload, new String(bs.data, bs.offset, bs.length));
         }
 
-
         activeMQConnection.close();
         provider.disconnect();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=300000)
     public void testSendJMSReceiveMQTT() throws Exception {
         addMQTTConnector();
         TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
