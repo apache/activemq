@@ -17,6 +17,7 @@
 
 package org.apache.activemq.broker;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
@@ -91,6 +92,14 @@ public class SpringTest extends TestCase {
         if (context != null) {
             context.destroy();
         }
+    }
+
+    protected void setUp() throws Exception {
+        if (System.getProperty("basedir") == null) {
+            File file = new File(".");
+            System.setProperty("basedir", file.getAbsolutePath());
+        }
+        super.setUp();
     }
 
 }
