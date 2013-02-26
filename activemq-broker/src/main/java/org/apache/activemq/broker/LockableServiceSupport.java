@@ -75,6 +75,11 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     }
 
     @Override
+    public long getLockKeepAlivePeriod() {
+        return lockKeepAlivePeriod;
+    }
+
+    @Override
     public void preStart() throws Exception {
         init();
         if (useLock) {

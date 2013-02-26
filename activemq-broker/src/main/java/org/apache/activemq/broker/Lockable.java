@@ -54,4 +54,5 @@ public interface Lockable {
      */
     public void setLockKeepAlivePeriod(long lockKeepAlivePeriod);
 
+    long getLockKeepAlivePeriod();
 }

@@ -64,6 +64,12 @@ public class LeaseDatabaseLocker extends AbstractLocker {
     public void doStart() throws Exception {
         stopping = false;
 
+        if (lockAcquireSleepInterval < persistenceAdapter.getLockKeepAlivePeriod()) {
+            LOG.warn("Persistence adapter keep alive period: " + persistenceAdapter.getLockKeepAlivePeriod()
+                    + ", which renews the lease, is less than lockAcquireSleepInterval: " + lockAcquireSleepInterval
+                    + ", the lease duration. These values will allow the lease to expire.");
+        }
+
         LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the Master broker");
         String sql = statements.getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
