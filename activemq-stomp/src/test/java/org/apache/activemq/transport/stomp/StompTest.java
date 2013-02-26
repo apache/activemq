@@ -43,7 +43,6 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.TransportConnector;
@@ -2164,21 +2163,6 @@ public class StompTest extends StompTestSupport {
         } else {
             assertEquals(1, broker.getTemporaryQueues().length);
         }
-    }
-
-    private BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
-        ObjectName brokerViewMBean = new ObjectName(
-            "org.apache.activemq:type=Broker,brokerName=localhost");
-        BrokerViewMBean proxy = (BrokerViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(brokerViewMBean, BrokerViewMBean.class, true);
-        return proxy;
-    }
-
-    private QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
-        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
-        return proxy;
     }
 
     protected void assertClients(final int expected) throws Exception {
