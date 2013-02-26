@@ -568,7 +568,7 @@
 
                 <!-- journal over journal is odd, but there may be some audit missing in leveldb, to investigate -->
                 <exclude>**/StoreQueueCursorJournalNoDuplicateTest.*</exclude>
-                <exclude>**/org.apache.activemq.usecases.ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
+                <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
                 <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
                 <!-- https://issues.apache.org/jira/browse/AMQ-4000 -->
                 <exclude>**/DurableSubInBrokerNetworkTest.*</exclude>
