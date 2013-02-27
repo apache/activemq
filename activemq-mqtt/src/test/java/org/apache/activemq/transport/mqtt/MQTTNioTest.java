@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-public class MTQQNioTest extends MQTTTest {
+public class MQTTNioTest extends MQTTTest {
 
     @Override
     protected String getProtocolScheme() {

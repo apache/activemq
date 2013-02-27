@@ -65,7 +65,7 @@ public abstract class AbstractMQTTTest {
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(false);
-        this.numberOfMessages = 3000;
+        this.numberOfMessages = 1000;
     }
 
     @After
