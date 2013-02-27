@@ -111,7 +111,6 @@
       <groupId>org.iq80.snappy</groupId>
       <artifactId>snappy</artifactId>
       <version>0.2</version>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>

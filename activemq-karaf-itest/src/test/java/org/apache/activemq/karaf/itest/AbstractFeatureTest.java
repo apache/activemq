@@ -18,6 +18,7 @@ package org.apache.activemq.karaf.itest;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
+import org.apache.karaf.features.FeaturesService;
 import org.junit.After;
 import org.junit.Before;
 import org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption;
@@ -47,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 import static org.ops4j.pax.exam.CoreOptions.*;
+import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractFeatureTest {
 
@@ -68,6 +70,9 @@ public abstract class AbstractFeatureTest {
 
     @Inject
     protected BundleContext bundleContext;
+
+	@Inject
+	FeaturesService featuresService;
 
     @Before
     public void setUp() throws Exception {
@@ -127,8 +132,20 @@ public abstract class AbstractFeatureTest {
         return executeCommand(command, COMMAND_TIMEOUT, false);
     }
 
+	/**
+	 * Installs a feature and asserts that feature is properly installed.
+	 * @param feature
+	 * @throws Exception
+	 */
+	public void installAndAssertFeature(String feature) throws Exception {
+		System.err.println(executeCommand("features:install " + feature));
+		System.err.println(executeCommand("osgi:list -t 0"));
+		assertTrue("Expected " + feature + " feature to be installed.", featuresService.isInstalled(featuresService.getFeature(feature)));
+	}
 
-    public static String karafVersion() {
+
+
+	public static String karafVersion() {
         return System.getProperty("karafVersion", "2.3.0");
     }
 

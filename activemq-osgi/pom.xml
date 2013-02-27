@@ -32,13 +32,50 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-
+  	  !org.apache.commons.daemon,
+  	  !org.apache.maven*,
+  	  sun.misc*;resolution:=optional,
+  	  sun.nio*;resolution:=optional,
+  	  javax.jmdns*;resolution:=optional,
+  	  javax.resource*;resolution:=optional,
+  	  javax.servlet*;resolution:=optional,
+  	  com.thoughtworks.xstream*;resolution:=optional,
+  	  org.apache.activeio*;resolution:=optional,
+  	  org.apache.camel*;resolution:=optional,
+  	  org.apache.derby.jdbc*;resolution:=optional,
+  	  org.apache.geronimo.transaction.manager*;resolution:=optional,
+  	  org.apache.hadoop*;resolution:=optional,
+  	  org.apache.http*;resolution:=optional,
+  	  org.apache.xpath*;resolution:=optional,
+  	  org.bouncycastle*;resolution:=optional,
+  	  org.codehaus.jackson*;resolution:=optional,
+  	  org.codehaus.jettison*;resolution:=optional,
+  	  org.jasypt*;resolution:=optional,
+  	  org.eclipse.jetty*;resolution:=optional,
+  	  org.springframework.jms*;version="[3,4]";resolution:=optional,
+  	  org.springframework.osgi*;version="[3,4]";resolution:=optional,
+  	  org.springframework.transaction*;version="[3,4]";resolution:=optional,
+  	  org.xmlpull*;resolution:=optional,
+  	  scala*;resolution:=optional,
+  	  javax.annotation*,
+  	  javax.jms*,
+  	  javax.management
+  	  javax.transaction*,
+  	  org.apache.commons.pool*,
+  	  org.apache.commons.net*,
+  	  org.apache.xbean.spring*,
+  	  org.springframework*;version="[3,4]";resolution:=optional,
+	  *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first,
-      org.iq80*;-noimport:=true;-split-package:=merge-first,
-      org.fusesource*;-noimport:=true;-split-package:=merge-first
     </activemq.osgi.export>
+	<activemq.osgi.private.pkg>
+   	  org.fusesource*,
+   	  org.apache.qpid*,
+   	  com.google.common*,
+   	  org.iq80*
+	</activemq.osgi.private.pkg>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
     <surefire.argLine>-Xmx512M</surefire.argLine>
   </properties>

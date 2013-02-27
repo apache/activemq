@@ -104,6 +104,7 @@
     <scala-version>2.10.0</scala-version>
     <scalatest-version>1.8</scalatest-version>
     <slf4j-version>1.6.6</slf4j-version>
+    <snappy-bundle-version>1.0.4.1_1</snappy-bundle-version>
     <spring-version>3.1.3.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
     <spring-oxm-version>1.5.10</spring-oxm-version>
