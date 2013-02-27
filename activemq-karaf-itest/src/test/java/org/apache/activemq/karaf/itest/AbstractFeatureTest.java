@@ -54,7 +54,7 @@ public abstract class AbstractFeatureTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
     private static final long ASSERTION_TIMEOUT = 20000L;
-    private static final long COMMAND_TIMEOUT = 10000L;
+    private static final long COMMAND_TIMEOUT = 30000L;
     public static final String USER = "karaf";
     public static final String PASSWORD = "karaf";
 
@@ -164,7 +164,14 @@ public abstract class AbstractFeatureTest {
         return mavenBundle().groupId("org.apache.activemq").
             artifactId("activemq-karaf").versionAsInProject().type(type);
     }
-    
+
+    // for use from a probe
+    public String getCamelFeatureUrl() {
+        return "mvn:org.apache.camel.karaf/apache-camel/"
+        + System.getProperty("camel.version", "unknown")
+        + "/xml/features";
+    }
+
     public static UrlReference getKarafFeatureUrl() {
         LOG.info("*** The karaf version is " + karafVersion() + " ***");
 
@@ -192,8 +199,6 @@ public abstract class AbstractFeatureTest {
     public static Option[] configure(String ...features) {
 
         ArrayList<String> f = new ArrayList<String>();
-        // install the cxf jaxb spec as the karaf doesn't provide it by default
-        // f.add("cxf-jaxb");
         f.addAll(Arrays.asList(features));
 
         Option[] options =
@@ -205,10 +210,9 @@ public abstract class AbstractFeatureTest {
                     .unpackDirectory(new File("target/paxexam/unpack/")),
                 
                 KarafDistributionOption.keepRuntimeFolder(),
-                // override the config.properties (to fix pax-exam bug)
+                //logLevel(LogLevelOption.LogLevel.DEBUG),
                 replaceConfigurationFile("etc/config.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/config.properties")),
                 replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
-                //replaceConfigurationFile("etc/org.ops4j.pax.logging.cfg", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/org.ops4j.pax.logging.cfg")),
                 scanFeatures(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
 
         return options;

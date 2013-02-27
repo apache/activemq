@@ -18,9 +18,13 @@ package org.apache.activemq.karaf.itest;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+
+
+import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 
 @RunWith(JUnit4TestRunner.class)
@@ -28,7 +32,9 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 
 	@Configuration
 	public static Option[] configure() {
-		return configure("obr");
+		return append(
+                editConfigurationFilePut("etc/system.properties", "camel.version", MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")),
+                configure("obr"));
 	}
 
 	@Test
@@ -36,8 +42,19 @@ public class ObrFeatureTest extends AbstractFeatureTest {
 		installAndAssertFeature("activemq-client");
 	}
 
-	//@Test
-	public void testBroker() throws Throwable {
-		installAndAssertFeature("activemq-broker");
+	@Test
+	public void testActiveMQ() throws Throwable {
+		installAndAssertFeature("activemq");
 	}
+
+    @Test
+   	public void testBroker() throws Throwable {
+   		installAndAssertFeature("activemq-broker");
+   	}
+
+    @Test
+   	public void testCamel() throws Throwable {
+        System.err.println(executeCommand("features:addurl " + getCamelFeatureUrl()));
+   		installAndAssertFeature("activemq-camel");
+   	}
 }

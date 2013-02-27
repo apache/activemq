@@ -49,7 +49,7 @@
         </managementContext>
 
         <persistenceAdapter>
-            <kahaDB directory="${data}/kahadb"/>
+            <levelDB directory="${data}/leveldb"/>
         </persistenceAdapter>
 
         <plugins>
@@ -72,6 +72,8 @@
 
         <transportConnectors>
             <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000"/>
+            <transportConnector name="http" uri="http://0.0.0.0:61666"/>
+            <transportConnector name="amqp" uri="amqp://0.0.0.0:61676"/>
         </transportConnectors>
     </broker>
 
