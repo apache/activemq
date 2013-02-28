@@ -1854,14 +1854,14 @@ public class StompTest extends StompTestSupport {
         stompConnection.connect("system", "manager");
 
         HashMap<String, String> headers = new HashMap<String, String>();
-        long timestamp = System.currentTimeMillis();
+        long timestamp = System.currentTimeMillis() - 100;
         headers.put(Stomp.Headers.Message.EXPIRATION_TIME, String.valueOf(timestamp));
         headers.put(Stomp.Headers.Send.PERSISTENT, "true");
 
         stompConnection.send("/queue/" + getQueueName(), "msg", null, headers);
 
         stompConnection.subscribe("/queue/ActiveMQ.DLQ");
-        StompFrame stompMessage = stompConnection.receive(10000);
+        StompFrame stompMessage = stompConnection.receive(35000);
         assertNotNull(stompMessage);
         assertEquals(stompMessage.getHeaders().get(Stomp.Headers.Message.ORIGINAL_DESTINATION), "/queue/" + getQueueName());
     }
