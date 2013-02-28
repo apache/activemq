@@ -1861,7 +1861,7 @@ public class StompTest extends StompTestSupport {
         stompConnection.send("/queue/" + getQueueName(), "msg", null, headers);
 
         stompConnection.subscribe("/queue/ActiveMQ.DLQ");
-        StompFrame stompMessage = stompConnection.receive(1000);
+        StompFrame stompMessage = stompConnection.receive(10000);
         assertNotNull(stompMessage);
         assertEquals(stompMessage.getHeaders().get(Stomp.Headers.Message.ORIGINAL_DESTINATION), "/queue/" + getQueueName());
     }
