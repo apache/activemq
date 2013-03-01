@@ -23,7 +23,9 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -32,7 +34,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RedeliveryRestartTest extends BrokerRestartTestSupport {
+
     private static final transient Logger LOG = LoggerFactory.getLogger(RedeliveryRestartTest.class);
+
+    @Override
+    protected void setUp() throws Exception {
+        setAutoFail(true);
+        setMaxTestTime(2 * 60 * 1000);
+        super.setUp();
+
+    }
 
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
@@ -45,8 +56,8 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
 
     public void testValidateRedeliveryFlagAfterRestart() throws Exception {
 
-        ConnectionFactory connectionFactory =
-                new ActiveMQConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getPublishableConnectString() + ")?jms.transactedIndividualAck=true");
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(" + broker.getTransportConnectors().get(0).getPublishableConnectString()
+            + ")?jms.transactedIndividualAck=true");
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
 
@@ -57,7 +68,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
 
         MessageConsumer consumer = session.createConsumer(destination);
         TextMessage msg = null;
-        for (int i=0; i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             msg = (TextMessage) consumer.receive(20000);
             LOG.info("not redelivered? got: " + msg);
             assertNotNull("got the message", msg);
@@ -70,10 +81,11 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         restartBroker();
 
         // make failover aware of the restarted auto assigned port
-        ((FailoverTransport) connection.getTransport().narrow(FailoverTransport.class)).add(true, broker.getTransportConnectors().get(0).getPublishableConnectString());
+        connection.getTransport().narrow(FailoverTransport.class).add(true, broker.getTransportConnectors().get(0)
+            .getPublishableConnectString());
 
         consumer = session.createConsumer(destination);
-        for (int i=0; i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             msg = (TextMessage) consumer.receive(4000);
             LOG.info("redelivered? got: " + msg);
             assertNotNull("got the message again", msg);
@@ -83,7 +95,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         session.commit();
 
         // consume the rest that were not redeliveries
-        for (int i=0; i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             msg = (TextMessage) consumer.receive(20000);
             LOG.info("not redelivered? got: " + msg);
             assertNotNull("got the message", msg);
@@ -96,8 +108,8 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
     }
 
     public void testValidateRedeliveryFlagAfterRecovery() throws Exception {
-        ConnectionFactory connectionFactory =
-                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString() + "?jms.transactedIndividualAck=true");
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString()
+            + "?jms.transactedIndividualAck=true");
         ActiveMQConnection connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
 
@@ -122,11 +134,10 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         broker = createRestartedBroker();
         broker.start();
 
-        connectionFactory =
-                new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString() + "?jms.transactedIndividualAck=true");
+        connectionFactory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString()
+            + "?jms.transactedIndividualAck=true");
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
-
 
         session = connection.createSession(true, Session.SESSION_TRANSACTED);
         consumer = session.createConsumer(destination);
@@ -139,9 +150,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         connection.close();
     }
 
-    private void populateDestination(final int nbMessages,
-                                     final String destinationName, javax.jms.Connection connection)
-            throws JMSException {
+    private void populateDestination(final int nbMessages, final String destinationName, javax.jms.Connection connection) throws JMSException {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = session.createQueue(destinationName);
         MessageProducer producer = session.createProducer(destination);
@@ -152,7 +161,6 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         session.close();
     }
 
-
     public static Test suite() {
         return suite(RedeliveryRestartTest.class);
     }
@@ -160,5 +168,4 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-
 }
