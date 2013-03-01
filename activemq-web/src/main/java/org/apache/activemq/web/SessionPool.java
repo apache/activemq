@@ -36,7 +36,7 @@ public class SessionPool {
 
     private ConnectionFactory connectionFactory;
     private Connection connection;
-    private LinkedList<Session> sessions = new LinkedList<Session>();
+    private final LinkedList<Session> sessions = new LinkedList<Session>();
 
     public Connection getConnection() throws JMSException {
         if (checkConnection()) {
@@ -44,9 +44,16 @@ public class SessionPool {
         }
 
         synchronized (this) {
-            connection = getConnectionFactory().createConnection();
-            connection.start();
-            return connection;
+            try {
+                connection = getConnectionFactory().createConnection();
+                connection.start();
+                return connection;
+            } catch (JMSException jmsEx) {
+                LOG.debug("Caught exception while attempting to get a new Connection.", jmsEx);
+                connection.close();
+                connection = null;
+                throw jmsEx;
+            }
         }
     }
 
@@ -106,5 +113,4 @@ public class SessionPool {
     protected Session createSession() throws JMSException {
         return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
-
 }
