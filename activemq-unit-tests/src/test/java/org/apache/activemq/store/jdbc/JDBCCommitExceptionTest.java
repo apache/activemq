@@ -27,16 +27,16 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.derby.jdbc.EmbeddedDataSource;
-
-import junit.framework.TestCase;
 
 // https://issues.apache.org/activemq/browse/AMQ-2880
 public class JDBCCommitExceptionTest extends TestCase {
@@ -44,20 +44,23 @@ public class JDBCCommitExceptionTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCCommitExceptionTest.class);
 
     protected static final int messagesExpected = 10;
-    protected ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
-            "tcp://localhost:61616?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected); 
+    protected ActiveMQConnectionFactory factory;
     protected BrokerService broker;
+    protected String connectionUri;
     protected EmbeddedDataSource dataSource;
     protected java.sql.Connection dbConnection;
     protected BrokenPersistenceAdapter jdbc;
 
-
+    @Override
     public void setUp() throws Exception {
         broker = createBroker();
         broker.start();
+
+        factory = new ActiveMQConnectionFactory(
+            connectionUri + "?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected);
     }
 
-
+    @Override
     public void tearDown() throws Exception {
         broker.stop();
     }
@@ -71,16 +74,14 @@ public class JDBCCommitExceptionTest extends TestCase {
         int messagesReceived = receiveMessages(messagesExpected);
 
         dumpMessages();
-
         assertEquals("Messages expected doesn't equal messages received", messagesExpected, messagesReceived);
-
         broker.stop();
     }
 
      protected void dumpMessages() throws Exception {
         WireFormat wireFormat = new OpenWireFormat();
         java.sql.Connection conn = ((JDBCPersistenceAdapter) broker.getPersistenceAdapter()).getDataSource().getConnection();
-        PreparedStatement statement = conn.prepareStatement("SELECT ID, MSG FROM ACTIVEMQ_MSGS");    
+        PreparedStatement statement = conn.prepareStatement("SELECT ID, MSG FROM ACTIVEMQ_MSGS");
         ResultSet result = statement.executeQuery();
         LOG.info("Messages left in broker after test");
         while(result.next()) {
@@ -139,7 +140,7 @@ public class JDBCCommitExceptionTest extends TestCase {
         javax.jms.Connection connection = factory.createConnection();
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createQueue("TEST");        
+        Destination destination = session.createQueue("TEST");
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
@@ -164,11 +165,10 @@ public class JDBCCommitExceptionTest extends TestCase {
 
         broker.setPersistenceAdapter(jdbc);
         broker.setPersistent(true);
-        broker.addConnector("tcp://localhost:61616");
+        connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
 
         return broker;
     }
-
 }
 
 
