@@ -20,10 +20,10 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:amq="http://activemq.apache.org/schema/core"
        xsi:schemaLocation="
-	   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-	   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
-	   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
-	   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <amq:broker brokerName="test" useJmx="true" persistent="false">
         <amq:managementContext>
@@ -38,7 +38,7 @@
 
     <bean id="connectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
         <property name="maxConnections" value="100"/>
-        <property name="maximumActive" value="50"/>
+        <property name="maximumActiveSessionPerConnection" value="50"/>
         <property name="connectionFactory">
             <bean class="org.apache.activemq.ActiveMQConnectionFactory">
                 <property name="brokerURL" value="tcp://localhost:61616"/>
@@ -66,4 +66,4 @@
         <property name="transactionManager" ref="transactionManager"/>
     </bean>
 
-</beans>   
+</beans>

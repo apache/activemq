@@ -23,7 +23,6 @@ import javax.transaction.TransactionManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.pool.ObjectPoolFactory;
 import org.springframework.beans.factory.FactoryBean;
 
 /**
@@ -55,7 +54,6 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     private int maximumActive = 500;
     private Object transactionManager;
     private String resourceName;
-    private ObjectPoolFactory poolFactory;
 
     public int getMaxConnections() {
         return maxConnections;
@@ -97,14 +95,6 @@ public class PooledConnectionFactoryBean implements FactoryBean {
         this.connectionFactory = connectionFactory;
     }
 
-    public ObjectPoolFactory getPoolFactory() {
-        return poolFactory;
-    }
-
-    public void setPoolFactory(ObjectPoolFactory poolFactory) {
-        this.poolFactory = poolFactory;
-    }
-
     /**
      *
      * @throws Exception
@@ -119,9 +109,8 @@ public class PooledConnectionFactoryBean implements FactoryBean {
                 f.setName(resourceName);
                 f.setTransactionManager((TransactionManager) transactionManager);
                 f.setMaxConnections(maxConnections);
-                f.setMaximumActive(maximumActive);
+                f.setMaximumActiveSessionPerConnection(maximumActive);
                 f.setConnectionFactory(connectionFactory);
-                f.setPoolFactory(poolFactory);
                 this.pooledConnectionFactory = f;
             } catch (Throwable t) {
                 LOGGER.debug("Could not create JCA enabled connection factory: " + t, t);
@@ -133,9 +122,8 @@ public class PooledConnectionFactoryBean implements FactoryBean {
                 XaPooledConnectionFactory f = new XaPooledConnectionFactory();
                 f.setTransactionManager((TransactionManager) transactionManager);
                 f.setMaxConnections(maxConnections);
-                f.setMaximumActive(maximumActive);
+                f.setMaximumActiveSessionPerConnection(maximumActive);
                 f.setConnectionFactory(connectionFactory);
-                f.setPoolFactory(poolFactory);
                 this.pooledConnectionFactory = f;
             } catch (Throwable t) {
                 LOGGER.debug("Could not create XA enabled connection factory: " + t, t);
@@ -146,9 +134,8 @@ public class PooledConnectionFactoryBean implements FactoryBean {
                 LOGGER.debug("Trying to build a PooledConnectionFactory");
                 PooledConnectionFactory f = new PooledConnectionFactory();
                 f.setMaxConnections(maxConnections);
-                f.setMaximumActive(maximumActive);
+                f.setMaximumActiveSessionPerConnection(maximumActive);
                 f.setConnectionFactory(connectionFactory);
-                f.setPoolFactory(poolFactory);
                 this.pooledConnectionFactory = f;
             } catch (Throwable t) {
                 LOGGER.debug("Could not create pooled connection factory: " + t, t);
@@ -173,14 +160,17 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     }
 
     // FactoryBean methods
+    @Override
     public Object getObject() throws Exception {
         return pooledConnectionFactory;
     }
 
+    @Override
     public Class getObjectType() {
         return ConnectionFactory.class;
     }
 
+    @Override
     public boolean isSingleton() {
         return true;
     }
