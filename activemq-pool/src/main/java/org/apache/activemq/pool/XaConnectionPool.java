@@ -25,7 +25,6 @@ import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.commons.pool.ObjectPoolFactory;
 
 /**
  * An XA-aware connection pool.  When a session is created and an xa transaction is active,
@@ -35,18 +34,11 @@ import org.apache.commons.pool.ObjectPoolFactory;
  */
 public class XaConnectionPool extends ConnectionPool {
 
-    private TransactionManager transactionManager;
+    private final TransactionManager transactionManager;
 
     public XaConnectionPool(ActiveMQConnection connection, TransactionManager transactionManager) {
         super(connection);
         this.transactionManager = transactionManager;
-    }
-
-    /**
-     * @deprecated
-     */
-    public XaConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager) {
-        this(connection, transactionManager);
     }
 
     @Override
@@ -90,9 +82,11 @@ public class XaConnectionPool extends ConnectionPool {
             this.session = session;
         }
 
+        @Override
         public void beforeCompletion() {
         }
 
+        @Override
         public void afterCompletion(int status) {
             try {
                 // This will return session to the pool.

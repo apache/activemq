@@ -28,7 +28,6 @@ import org.apache.activemq.Service;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.pool.KeyedObjectPool;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
-import org.apache.commons.pool.ObjectPoolFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,13 +234,6 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         return new PooledConnection(connection);
     }
 
-    /**
-     * @deprecated
-     */
-    public ObjectPoolFactory<?> getPoolFactory() {
-        return null;
-    }
-
     protected ActiveMQConnection createConnection(ConnectionKey key) throws JMSException {
         if (key.getUserName() == null && key.getPassword() == null) {
             return (ActiveMQConnection)connectionFactory.createConnection();
@@ -290,22 +282,6 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         }
 
         this.connectionsPool.clear();
-    }
-
-    /**
-     * @deprecated use {@link #getMaximumActiveSessionPerConnection()}
-     */
-    @Deprecated
-    public int getMaximumActive() {
-        return getMaximumActiveSessionPerConnection();
-    }
-
-    /**
-     * @deprecated use {@link #setMaximumActiveSessionPerConnection(int)}
-     */
-    @Deprecated
-    public void setMaximumActive(int maximumActive) {
-        setMaximumActiveSessionPerConnection(maximumActive);
     }
 
     /**
@@ -477,12 +453,6 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      */
     public int getNumConnections() {
         return this.connectionsPool.getNumIdle();
-    }
-
-    /**
-     * @deprecated
-     */
-    public void setPoolFactory(ObjectPoolFactory<?> factory) {
     }
 
     /**

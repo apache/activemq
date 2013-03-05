@@ -21,25 +21,18 @@ import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ra.LocalAndXATransaction;
-import org.apache.commons.pool.ObjectPoolFactory;
 import org.apache.geronimo.transaction.manager.WrapperNamedXAResource;
 
 public class JcaConnectionPool extends XaConnectionPool {
 
-    private String name;
+    private final String name;
 
     public JcaConnectionPool(ActiveMQConnection connection, TransactionManager transactionManager, String name) {
         super(connection, transactionManager);
         this.name = name;
     }
 
-    /**
-     * @deprecated
-     */
-    public JcaConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager, String name) {
-        this(connection, transactionManager, name);
-    }
-
+    @Override
     protected XAResource createXaResource(PooledSession session) throws JMSException {
         XAResource xares = new LocalAndXATransaction(session.getInternalSession().getTransactionContext());
         if (name != null) {
@@ -47,5 +40,4 @@ public class JcaConnectionPool extends XaConnectionPool {
         }
         return xares;
     }
-
 }
