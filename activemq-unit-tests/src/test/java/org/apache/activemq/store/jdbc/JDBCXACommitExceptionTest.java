@@ -40,10 +40,17 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
 
     private long txGenerator = System.currentTimeMillis();
 
-    protected ActiveMQXAConnectionFactory factory = new ActiveMQXAConnectionFactory(
-            "tcp://localhost:61616?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected);
+    protected ActiveMQXAConnectionFactory factory;
 
     boolean onePhase = true;
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        factory = new ActiveMQXAConnectionFactory(
+            connectionUri + "?jms.prefetchPolicy.all=0&jms.redeliveryPolicy.maximumRedeliveries="+messagesExpected);
+    }
 
     public void testTwoPhaseSqlException() throws Exception {
         onePhase = false;
