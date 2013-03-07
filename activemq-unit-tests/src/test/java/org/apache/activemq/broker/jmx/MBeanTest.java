@@ -24,19 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
+import javax.jms.*;
+import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import junit.textui.TestRunner;
@@ -1265,5 +1254,26 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
         consumer.close();
         session.close();
+    }
+
+    public void testDynamicProducers() throws Exception {
+        connection = connectionFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(null);
+
+        ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=localhost,endpoint=dynamicProducer,*");
+        Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
+        assertEquals(mbeans.size(), 1);
+    }
+
+    public void testDurableSubQuery() throws Exception  {
+        connection = connectionFactory.createConnection();
+        connection.setClientID("test");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicSubscriber sub = session.createDurableSubscriber(session.createTopic("test.topic"), "test.consumer");
+
+        ObjectName query = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Topic,destinationName=test.topic,endpoint=Consumer,consumerId=Durable(*),*");
+        Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
+        assertEquals(mbeans.size(), 1);
     }
 }
