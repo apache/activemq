@@ -387,6 +387,30 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         broker.stop();
     }
 
+    public void testExceptionAfterClose() throws Exception {
+
+        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection1 = (XAConnection)cf1.createConnection();
+        connection1.start();
+
+        XASession session = connection1.createXASession();
+        session.close();
+        try {
+            session.commit();
+            fail("expect exception after close");
+        } catch (javax.jms.IllegalStateException expected) {}
+
+        try {
+            session.rollback();
+            fail("expect exception after close");
+        } catch (javax.jms.IllegalStateException expected) {}
+
+        try {
+            session.getTransacted();
+            fail("expect exception after close");
+        } catch (javax.jms.IllegalStateException expected) {}
+    }
+
     private void assertTransactionGoneFromFailoverState(
             ActiveMQXAConnection connection1, Xid tid) throws Exception {
 

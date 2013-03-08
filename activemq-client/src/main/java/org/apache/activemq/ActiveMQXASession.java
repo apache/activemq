@@ -69,14 +69,17 @@ public class ActiveMQXASession extends ActiveMQSession implements QueueSession, 
     }
 
     public boolean getTransacted() throws JMSException {
+        checkClosed();
         return getTransactionContext().isInXATransaction();
     }
 
     public void rollback() throws JMSException {
+        checkClosed();
         throw new TransactionInProgressException("Cannot rollback() inside an XASession");
     }
 
     public void commit() throws JMSException {
+        checkClosed();
         throw new TransactionInProgressException("Cannot commit() inside an XASession");
     }
 
