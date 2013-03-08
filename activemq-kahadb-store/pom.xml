@@ -216,5 +216,48 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>activemq.tests.aix.excludes</id>
+      <activation>
+        <property>
+          <name>os.name</name>
+          <value>AIX</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes combine.children="append">
+                <exclude>**/PListImplTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>activemq.tests.solaris.excludes</id>
+      <activation>
+        <property>
+          <name>os.name</name>
+          <value>SunOS</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes combine.children="append">
+                <exclude>**/PListImplTest.*</exclude>
+                <exclude>**/BTreeIndexTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
