@@ -135,8 +135,9 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
                 Destination regionDestination = (Destination) messageReference.getRegionDestination();
                 final RedeliveryPolicy redeliveryPolicy = redeliveryPolicyMap.getEntryFor(regionDestination.getActiveMQDestination());
                 if (redeliveryPolicy != null) {
+                    final int maximumRedeliveries = redeliveryPolicy.getMaximumRedeliveries();
                     int redeliveryCount = messageReference.getRedeliveryCounter();
-                    if (redeliveryCount < redeliveryPolicy.getMaximumRedeliveries()) {
+                    if (RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES == maximumRedeliveries || redeliveryCount < maximumRedeliveries) {
 
                         long delay = ( redeliveryCount == 0 ?
                                 redeliveryPolicy.getInitialRedeliveryDelay() :
@@ -146,7 +147,7 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
                     } else if (isSendToDlqIfMaxRetriesExceeded()) {
                         super.sendToDeadLetterQueue(context, messageReference, subscription);
                     } else {
-                        LOG.debug("Discarding message that exceeds max redelivery count, " + messageReference.getMessageId());
+                        LOG.debug("Discarding message that exceeds max redelivery count( " + maximumRedeliveries + "), " + messageReference.getMessageId());
                     }
                 } else if (isFallbackToDeadLetter()) {
                     super.sendToDeadLetterQueue(context, messageReference, subscription);

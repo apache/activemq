@@ -32,11 +32,13 @@ import org.apache.activemq.util.IntrospectionSupport;
 public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, Serializable {
 
     public static final int NO_MAXIMUM_REDELIVERIES = -1;
+    public static final int DEFAULT_MAXIMUM_REDELIVERIES = 6;
+
     private static Random randomNumberGenerator;
 
     // +/-15% for a 30% spread -cgs
     protected double collisionAvoidanceFactor = 0.15d;
-    protected int maximumRedeliveries = 6;
+    protected int maximumRedeliveries = DEFAULT_MAXIMUM_REDELIVERIES;
     protected long maximumRedeliveryDelay = -1;
     protected long initialRedeliveryDelay = 1000L;
     protected boolean useCollisionAvoidance;

@@ -40,10 +40,20 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     final ActiveMQQueue destination = new ActiveMQQueue("Redelivery");
     final String data = "hi";
     final long redeliveryDelayMillis = 2000;
-    final int maxBrokerRedeliveries = 2;
+    int maxBrokerRedeliveries = 2;
 
     public void testScheduledRedelivery() throws Exception {
+        doTestScheduledRedelivery(maxBrokerRedeliveries, true);
+    }
 
+    public void testInfiniteRedelivery() throws Exception {
+        maxBrokerRedeliveries = RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES;
+        doTestScheduledRedelivery(RedeliveryPolicy.DEFAULT_MAXIMUM_REDELIVERIES + 1, false);
+    }
+
+    public void doTestScheduledRedelivery(int maxBrokerRedeliveriesToValidate, boolean validateDLQ) throws Exception {
+
+        startBroker(true);
         sendMessage(0);
 
         ActiveMQConnection consumerConnection = (ActiveMQConnection) createConnection();
@@ -59,7 +69,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         LOG.info("got: " + message);
         consumerSession.rollback();
 
-        for (int i=0;i<maxBrokerRedeliveries;i++) {
+        for (int i=0;i<maxBrokerRedeliveriesToValidate;i++) {
             Message shouldBeNull = consumer.receive(500);
             assertNull("did not get message after redelivery count exceeded: " + shouldBeNull, shouldBeNull);
 
@@ -74,15 +84,25 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
             consumerSession.rollback();
         }
 
-        // validate DLQ
-        MessageConsumer dlqConsumer = consumerSession.createConsumer(new ActiveMQQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
-        Message dlqMessage = dlqConsumer.receive(2000);
-        assertNotNull("Got message from dql", dlqMessage);
-        assertEquals("message matches", message.getStringProperty("data"), dlqMessage.getStringProperty("data"));
-        consumerSession.commit();
+        if (validateDLQ) {
+            MessageConsumer dlqConsumer = consumerSession.createConsumer(new ActiveMQQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
+            Message dlqMessage = dlqConsumer.receive(2000);
+            assertNotNull("Got message from dql", dlqMessage);
+            assertEquals("message matches", message.getStringProperty("data"), dlqMessage.getStringProperty("data"));
+            consumerSession.commit();
+        } else {
+            // consume/commit ok
+            message = consumer.receive(3000);
+            assertNotNull("got message", message);
+            assertEquals("redeliveries accounted for", maxBrokerRedeliveriesToValidate + 2, message.getLongProperty("JMSXDeliveryCount"));
+            consumerSession.commit();
+        }
+
+        consumerConnection.close();
     }
 
     public void testNoScheduledRedeliveryOfExpired() throws Exception {
+        startBroker(true);
         ActiveMQConnection consumerConnection = (ActiveMQConnection) createConnection();
         consumerConnection.start();
         Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
@@ -153,12 +173,6 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://localhost");
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        startBroker(true);
     }
 
     @Override
