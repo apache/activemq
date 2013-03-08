@@ -137,7 +137,7 @@ public class AdvisoryTopicCleanUpTest {
         for (ActiveMQDestination destination: dests) {
             String name = destination.getPhysicalName();
             if (name.contains(queue.getPhysicalName())) {
-                LOG.debug("Destination on Broker before removing the Queue: " + name);
+                LOG.info("Destination on Broker before removing the Queue: " + name);
             }
         }
 
@@ -153,7 +153,7 @@ public class AdvisoryTopicCleanUpTest {
         {
             for (ActiveMQDestination destination: dests) {
                 String name = destination.getPhysicalName();
-                LOG.debug("Destination on broker after removing the Queue: " + name);
+                LOG.info("Destination on broker after removing the Queue: " + name);
                 assertFalse("Advisory topic should not exist. " + name,
                             name.startsWith("ActiveMQ.Advisory") && name.contains(queue.getPhysicalName()));
             }
