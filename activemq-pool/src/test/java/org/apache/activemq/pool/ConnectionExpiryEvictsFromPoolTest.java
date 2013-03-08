@@ -73,7 +73,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         assertTrue("not equal", !amq1.equals(amq2));
     }
 
-    public void testRetainIdleWhenInUse() throws Exception {
+    public void testNotIdledWhenInUse() throws Exception {
         pooledFactory.setIdleTimeout(10);
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -81,8 +81,8 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         // let connection to get idle
         TimeUnit.SECONDS.sleep(1);
 
-        // get the same connection from pool again, it will get destroyed due to validation check
-        // it will be the same since maxIdle is set to 1 in implementation
+        // get a connection from pool again, it should be the same underlying connection
+        // as before and should not be idled out since an open session exists.
         PooledConnection connection2 = (PooledConnection) pooledFactory.createConnection();
         assertSame(connection.getConnection(), connection2.getConnection());
 
@@ -93,6 +93,19 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         } catch (javax.jms.IllegalStateException e) {
             assertTrue("Session should be fine, instead: " + e.getMessage(), false);
         }
+
+        ActiveMQConnection original = connection.getConnection();
+
+        connection.close();
+        connection2.close();
+
+        // let connection to get idle
+        TimeUnit.SECONDS.sleep(1);
+
+        // get a connection from pool again, it should be a new Connection instance as the
+        // old one should have been inactive and idled out.
+        PooledConnection connection3 = (PooledConnection) pooledFactory.createConnection();
+        assertNotSame(original, connection3.getConnection());
     }
 
     @Override
