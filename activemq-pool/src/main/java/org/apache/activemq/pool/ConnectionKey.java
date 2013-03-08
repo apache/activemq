@@ -38,16 +38,18 @@ public class ConnectionKey {
         }
     }
 
+    @Override
     public int hashCode() {
         return hash;
     }
 
+    @Override
     public boolean equals(Object that) {
         if (this == that) {
             return true;
         }
         if (that instanceof ConnectionKey) {
-            return equals((ConnectionKey)that);
+            return equals((ConnectionKey) that);
         }
         return false;
     }
@@ -70,5 +72,4 @@ public class ConnectionKey {
         }
         return o1 != null && o2 != null && o1.equals(o2);
     }
-
 }

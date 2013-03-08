@@ -359,20 +359,20 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      * The idle timeout is used determine if a Connection instance has sat to long in the pool unused
      * and if so is closed and removed from the pool.  The default value is 30 seconds.
      *
-     * @return
+     * @return idle timeout value (milliseconds)
      */
     public int getIdleTimeout() {
         return idleTimeout;
     }
 
     /**
-     * Sets the idle timeout value for Connection's that are created by this pool, defaults to 30 seconds.
+     * Sets the idle timeout  value for Connection's that are created by this pool in Milliseconds,
+     * defaults to 30 seconds.
      * <p/>
      * For a Connection that is in the pool but has no current users the idle timeout determines how
      * long the Connection can live before it is eligible for removal from the pool.  Normally the
      * connections are tested when an attempt to check one out occurs so a Connection instance can sit
      * in the pool much longer than its idle timeout if connections are used infrequently.
-     *
      *
      * @param idleTimeout
      *      The maximum time a pooled Connection can sit unused before it is eligible for removal.

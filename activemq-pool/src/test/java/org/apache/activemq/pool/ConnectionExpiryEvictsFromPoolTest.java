@@ -19,6 +19,7 @@ package org.apache.activemq.pool;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -32,6 +33,7 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
 
+    @Override
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setUseJmx(false);
@@ -57,7 +59,6 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         assertTrue("not equal", !amq1.equals(amq2));
     }
 
-
     public void testEvictionOfExpired() throws Exception {
         pooledFactory.setExpiryTimeout(10);
         Connection connection = pooledFactory.createConnection();
@@ -72,7 +73,29 @@ public class ConnectionExpiryEvictsFromPoolTest extends TestSupport {
         assertTrue("not equal", !amq1.equals(amq2));
     }
 
+    public void testRetainIdleWhenInUse() throws Exception {
+        pooledFactory.setIdleTimeout(10);
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+        Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
+        // let connection to get idle
+        TimeUnit.SECONDS.sleep(1);
+
+        // get the same connection from pool again, it will get destroyed due to validation check
+        // it will be the same since maxIdle is set to 1 in implementation
+        PooledConnection connection2 = (PooledConnection) pooledFactory.createConnection();
+        assertSame(connection.getConnection(), connection2.getConnection());
+
+        // now the session is closed even when it should not be
+        try {
+            // any operation on session first checks whether session is closed
+            s.getTransacted();
+        } catch (javax.jms.IllegalStateException e) {
+            assertTrue("Session should be fine, instead: " + e.getMessage(), false);
+        }
+    }
+
+    @Override
     protected void tearDown() throws Exception {
         broker.stop();
     }

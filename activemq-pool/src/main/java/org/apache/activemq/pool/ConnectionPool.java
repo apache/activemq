@@ -46,7 +46,7 @@ public class ConnectionPool {
     private ActiveMQConnection connection;
     private int referenceCount;
     private long lastUsed = System.currentTimeMillis();
-    private long firstUsed = lastUsed;
+    private final long firstUsed = lastUsed;
     private boolean hasFailed;
     private boolean hasExpired;
     private int idleTimeout = 30 * 1000;
@@ -63,18 +63,22 @@ public class ConnectionPool {
         // Add a transport Listener so that we can notice if this connection
         // should be expired due to a connection failure.
         connection.addTransportListener(new TransportListener() {
+            @Override
             public void onCommand(Object command) {
             }
 
+            @Override
             public void onException(IOException error) {
                 synchronized (ConnectionPool.this) {
                     hasFailed = true;
                 }
             }
 
+            @Override
             public void transportInterupted() {
             }
 
+            @Override
             public void transportResumed() {
             }
         });
@@ -171,8 +175,6 @@ public class ConnectionPool {
         referenceCount--;
         lastUsed = System.currentTimeMillis();
         if (referenceCount == 0) {
-            expiredCheck();
-
             // Loaned sessions are those that are active in the sessionPool and
             // have not been closed by the client before closing the connection.
             // These need to be closed so that all session's reflect the fact
@@ -190,6 +192,8 @@ public class ConnectionPool {
             if (getConnection() != null) {
                 getConnection().cleanUpTempDestinations();
             }
+
+            expiredCheck();
         }
     }
 
@@ -207,23 +211,27 @@ public class ConnectionPool {
             return true;
         }
 
-        if (hasExpired) {
+        if (hasExpired || hasFailed) {
             if (referenceCount == 0) {
                 close();
             }
             return true;
         }
 
-        if (hasFailed
-                || (idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout)
-                || expiryTimeout > 0 && System.currentTimeMillis() > firstUsed + expiryTimeout) {
-
+        if (expiryTimeout > 0 && System.currentTimeMillis() > firstUsed + expiryTimeout) {
             hasExpired = true;
             if (referenceCount == 0) {
                 close();
             }
             return true;
         }
+
+        if (referenceCount == 0 && idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout) {
+            hasExpired = true;
+            close();
+            return true;
+        }
+
         return false;
     }
 
