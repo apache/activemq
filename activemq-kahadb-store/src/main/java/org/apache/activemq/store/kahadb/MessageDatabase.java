@@ -85,13 +85,7 @@ import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.Callback;
-import org.apache.activemq.util.DataByteArrayInputStream;
-import org.apache.activemq.util.DataByteArrayOutputStream;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -231,6 +225,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean enableIndexDiskSyncs = true;
     private boolean enableIndexRecoveryFile = true;
     private boolean enableIndexPageCaching = true;
+    ReentrantReadWriteLock checkpointLock = new ReentrantReadWriteLock();
 
     public MessageDatabase() {
     }
@@ -393,20 +388,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void close() throws IOException, InterruptedException {
         if( opened.compareAndSet(true, false)) {
-            this.indexLock.writeLock().lock();
+            checkpointLock.writeLock().lock();
             try {
                 if (metadata.page != null) {
-                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                        @Override
-                        public void execute(Transaction tx) throws IOException {
-                            checkpointUpdate(tx, true);
-                        }
-                    });
+                    checkpointUpdate(true);
                 }
                 pageFile.unload();
                 metadata = new Metadata();
             } finally {
-                this.indexLock.writeLock().unlock();
+                checkpointLock.writeLock().unlock();
             }
             journal.close();
             synchronized (checkpointThreadLock) {
@@ -844,36 +834,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if( !opened.get() ) {
                 return;
             }
-            pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                @Override
-                public void execute(Transaction tx) throws IOException {
-                    checkpointUpdate(tx, cleanup);
-                }
-            });
         } finally {
             this.indexLock.writeLock().unlock();
         }
-
+        checkpointUpdate(cleanup);
         long end = System.currentTimeMillis();
         if (LOG_SLOW_ACCESS_TIME > 0 && end - start > LOG_SLOW_ACCESS_TIME) {
             if (LOG.isInfoEnabled()) {
                 LOG.info("Slow KahaDB access: cleanup took " + (end - start));
             }
-        }
-    }
-
-    public void checkpoint(Callback closure) throws Exception {
-        this.indexLock.writeLock().lock();
-        try {
-            pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                @Override
-                public void execute(Transaction tx) throws IOException {
-                    checkpointUpdate(tx, false);
-                }
-            });
-            closure.execute();
-        } finally {
-            this.indexLock.writeLock().unlock();
         }
     }
 
@@ -912,17 +881,26 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
         try {
             ByteSequence sequence = toByteSequence(data);
-            long start = System.currentTimeMillis();
-            Location location = onJournalStoreComplete == null ? journal.write(sequence, sync) :  journal.write(sequence, onJournalStoreComplete) ;
-            long start2 = System.currentTimeMillis();
-            process(data, location, after);
-            long end = System.currentTimeMillis();
-            if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
-                }
-            }
 
+            Location location;
+            checkpointLock.readLock().lock();
+            try {
+
+                long start = System.currentTimeMillis();
+                location = onJournalStoreComplete == null ? journal.write(sequence, sync) :  journal.write(sequence, onJournalStoreComplete) ;
+                long start2 = System.currentTimeMillis();
+                process(data, location, after);
+
+                long end = System.currentTimeMillis();
+                if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("Slow KahaDB access: Journal append took: "+(start2-start)+" ms, Index update took "+(end-start2)+" ms");
+                    }
+                }
+
+            } finally{
+                checkpointLock.readLock().unlock();
+            }
             if (after != null) {
                 Runnable afterCompletion = null;
                 synchronized (orderedTransactionAfters) {
@@ -1381,6 +1359,26 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 sd.locationIndex.clear(tx);
                 sd.orderIndex.clear(tx);
             }
+        }
+    }
+
+    private void checkpointUpdate(final boolean cleanup) throws IOException {
+        checkpointLock.writeLock().lock();
+        try {
+            this.indexLock.writeLock().lock();
+            try {
+                pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                    @Override
+                    public void execute(Transaction tx) throws IOException {
+                        checkpointUpdate(tx, cleanup);
+                    }
+                });
+            } finally {
+                this.indexLock.writeLock().unlock();
+            }
+
+        } finally {
+            checkpointLock.writeLock().unlock();
         }
     }
 
