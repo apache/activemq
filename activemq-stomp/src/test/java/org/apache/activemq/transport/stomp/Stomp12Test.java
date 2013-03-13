@@ -47,7 +47,7 @@ public class Stomp12Test extends StompTestSupport {
     }
 
     @Override
-	protected void addStompConnector() throws Exception {
+    protected void addStompConnector() throws Exception {
         TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
         port = connector.getConnectUri().getPort();
     }
@@ -125,6 +125,7 @@ public class Stomp12Test extends StompTestSupport {
 
         String subscribe = "SUBSCRIBE\n" +
                            "id:1\n" +
+                           "activemq.prefetchSize=1\n" +
                            "ack:client\n" +
                            "destination:/queue/" + getQueueName() + "\n" +
                            "receipt:1\n" +
@@ -145,6 +146,9 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(received.getAction().equals("MESSAGE"));
         assertTrue(received.getHeaders().containsKey(Stomp.Headers.Message.ACK_ID));
         assertEquals("1", received.getBody());
+
+        message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "2" + Stomp.NULL;
+        stompConnection.sendFrame(message);
 
         String frame = "ACK\n" + "message-id:" +
                 received.getHeaders().get(Stomp.Headers.Message.ACK_ID) + "\n\n" + Stomp.NULL;
