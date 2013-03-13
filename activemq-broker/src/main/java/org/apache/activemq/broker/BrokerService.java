@@ -648,11 +648,11 @@ public class BrokerService implements Service {
             adminView.setBroker(managedBroker);
         }
 
-        startAllConnectors();
-
         if (ioExceptionHandler == null) {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
+
+        startAllConnectors();
 
         if (LOG.isInfoEnabled()) {
             LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
