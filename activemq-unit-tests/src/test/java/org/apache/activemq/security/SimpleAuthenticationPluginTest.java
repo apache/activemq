@@ -20,6 +20,7 @@ import java.net.URI;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.JMSSecurityException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -102,6 +103,19 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
             System.out.println(mbean.getName());
             fail("Shouldn't have created a temp topic");
         } catch (Exception ignore) {}
+    }
+
+    public void testConnectionStartThrowsJMSSecurityException() throws Exception {
+
+        Connection connection = factory.createConnection("badUser", "password");
+        try {
+            connection.start();
+            fail("Should throw JMSSecurityException");
+        } catch (JMSSecurityException jmsEx) {
+        } catch (Exception e) {
+            LOG.info("Expected JMSSecurityException but was: {}", e.getClass());
+            fail("Should throw JMSSecurityException");
+        }
     }
 
     public void testSecurityContextClearedOnPurge() throws Exception {

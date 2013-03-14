@@ -17,6 +17,7 @@
 package org.apache.activemq.util;
 
 import javax.jms.JMSException;
+import javax.jms.JMSSecurityException;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
 
@@ -46,7 +47,12 @@ public final class JMSExceptionSupport {
         if (msg == null || msg.length() == 0) {
             msg = cause.toString();
         }
-        JMSException exception = new JMSException(msg);
+        JMSException exception;
+        if (cause instanceof SecurityException) {
+            exception = new JMSSecurityException(msg);
+        } else {
+            exception = new JMSException(msg);
+        }
         exception.initCause(cause);
         return exception;
     }
@@ -59,7 +65,12 @@ public final class JMSExceptionSupport {
         if (msg == null || msg.length() == 0) {
             msg = cause.toString();
         }
-        JMSException exception = new JMSException(msg);
+        JMSException exception;
+        if (cause instanceof SecurityException) {
+            exception = new JMSSecurityException(msg);
+        } else {
+            exception = new JMSException(msg);
+        }
         exception.setLinkedException(cause);
         exception.initCause(cause);
         return exception;
