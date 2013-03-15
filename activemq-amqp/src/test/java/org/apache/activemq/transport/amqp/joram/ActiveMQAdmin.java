@@ -58,7 +58,8 @@ public class ActiveMQAdmin implements Admin {
 
     static public void enableJMSFrameTracing() throws FileNotFoundException {
         final SimpleFormatter formatter = new SimpleFormatter();
-        final PrintStream out = new PrintStream(new FileOutputStream(new File("/tmp/amqp-trace.txt")));
+        String outputStreamName = System.getProperty("java.io.tmpdir") + "/amqp-trace.txt";
+        final PrintStream out = new PrintStream(new FileOutputStream(new File(outputStreamName)));
         Handler handler = new Handler() {
             @Override
             public void publish(LogRecord r) {
