@@ -26,6 +26,7 @@ import java.util.Map;
 
 import javax.jms.JMSException;
 
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerContextAware;
@@ -102,6 +103,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     @Override
     public StompFrame convertMessage(ProtocolConverter converter,
             ActiveMQMessage message) throws IOException, JMSException {
+
         if (message.getDataStructureType() == ActiveMQObjectMessage.DATA_STRUCTURE_TYPE) {
             StompFrame command = new StompFrame();
             command.setAction(Stomp.Responses.MESSAGE);
@@ -152,6 +154,10 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 
             FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
                     converter, message, command, this);
+
+            if (!headers.containsKey(Stomp.Headers.TRANSFORMATION)) {
+                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_JSON.toString());
+            }
 
             if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_XML.toString());
@@ -273,5 +279,17 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     @Override
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
+    }
+
+    /**
+     * Return an Advisory message as a JSON formatted string
+     * @param ds
+     * @return
+     */
+    protected String marshallAdvisory(final DataStructure ds) {
+        XStream xstream = new XStream(new JsonHierarchicalStreamDriver());
+        xstream.setMode(XStream.NO_REFERENCES);
+        xstream.aliasPackage("", "org.apache.activemq.command");
+        return xstream.toXML(ds);
     }
 }

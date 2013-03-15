@@ -16,25 +16,19 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
-
-import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements ActiveMQ 4.0 translations
@@ -127,15 +121,8 @@ public class LegacyFrameTranslator implements FrameTranslator {
 
             headers.put(Stomp.Headers.CONTENT_LENGTH, Integer.toString(data.length));
             command.setContent(data);
-        } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
-                AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
-
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
-
-            String body = marshallAdvisory(message.getDataStructure());
-            command.setContent(body.getBytes("UTF-8"));
         }
+
         return command;
     }
 
@@ -212,15 +199,5 @@ public class LegacyFrameTranslator implements FrameTranslator {
         }
     }
 
-    /**
-     * Return an Advisory message as a JSON formatted string
-     * @param ds
-     * @return
-     */
-    protected String marshallAdvisory(final DataStructure ds) {
-        XStream xstream = new XStream(new JsonHierarchicalStreamDriver());
-        xstream.setMode(XStream.NO_REFERENCES);
-        xstream.aliasPackage("", "org.apache.activemq.command");
-        return xstream.toXML(ds);
-    }
+
 }

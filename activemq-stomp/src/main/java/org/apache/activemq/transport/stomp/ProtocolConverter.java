@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerContextAware;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -200,17 +201,26 @@ public class ProtocolConverter {
     }
 
     protected FrameTranslator findTranslator(String header) {
+        return findTranslator(header, null);
+    }
+
+    protected FrameTranslator findTranslator(String header, ActiveMQDestination destination) {
         FrameTranslator translator = frameTranslator;
         try {
             if (header != null) {
                 translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER
                         .newInstance(header);
-                if (translator instanceof BrokerContextAware) {
-                    ((BrokerContextAware)translator).setBrokerContext(brokerContext);
+            } else {
+                if (destination != null && AdvisorySupport.isAdvisoryTopic(destination)) {
+                    translator = new JmsFrameTranslator();
                 }
             }
         } catch (Exception ignore) {
             // if anything goes wrong use the default translator
+        }
+
+        if (translator instanceof BrokerContextAware) {
+            ((BrokerContextAware)translator).setBrokerContext(brokerContext);
         }
 
         return translator;
@@ -879,7 +889,7 @@ public class ProtocolConverter {
         if (ignoreTransformation == true) {
             return frameTranslator.convertMessage(this, message);
         } else {
-            return findTranslator(message.getStringProperty(Stomp.Headers.TRANSFORMATION)).convertMessage(this, message);
+            return findTranslator(message.getStringProperty(Stomp.Headers.TRANSFORMATION), message.getDestination()).convertMessage(this, message);
         }
     }
 
