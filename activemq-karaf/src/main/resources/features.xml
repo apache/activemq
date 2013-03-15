@@ -81,5 +81,13 @@
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
 
+    <feature name="activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
+      <feature version="${project.version}">activemq</feature>
+      <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/${servicemix.specs.version}</bundle>
+      <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
+      <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean-version}</bundle>
+      <bundle>mvn:org.apache.activemq/activemq-blueprint/${project.version}</bundle>
+    </feature>
+
 </features>
 
