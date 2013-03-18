@@ -168,6 +168,14 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>target/extra-resources</directory>
+      </resource>
+    </resources>
     <plugins>
       <!-- Copy all necessary resources from other modules, like spring schema mapping, xbean resources, etc. -->
       <plugin>
@@ -180,7 +188,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/</outputDirectory>
+              <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
               <resources>
                 <resource>
                   <directory>${basedir}/../activemq-spring/target/classes/</directory>
@@ -198,7 +206,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/META-INF</outputDirectory>
+              <outputDirectory>${basedir}/target/extra-resources/META-INF</outputDirectory>
               <resources>
                 <resource>
                   <directory>${basedir}/../activemq-spring/target/classes/META-INF</directory>
