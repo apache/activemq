@@ -47,7 +47,6 @@ public class AMQ4126Test {
     protected String xbean = "xbean:";
     protected String confBase = "src/test/resources/org/apache/activemq/bugs/amq4126";
     protected String certBase = "src/test/resources/org/apache/activemq/security";
-    protected String sep  = File.separator;
     protected String JaasStompSSLBroker_xml = "JaasStompSSLBroker.xml";
     protected StompConnection stompConnection = new StompConnection();
 
@@ -58,8 +57,8 @@ public class AMQ4126Test {
         if (System.getProperty(java_security_auth_login_config) != null) {
             oldLoginConf = System.getProperty(java_security_auth_login_config);
         }
-        System.setProperty(java_security_auth_login_config, confBase + sep + "login.config");
-        broker = BrokerFactory.createBroker(xbean + confBase + sep + JaasStompSSLBroker_xml);
+        System.setProperty(java_security_auth_login_config, confBase + "/login.config");
+        broker = BrokerFactory.createBroker(xbean + confBase + "/" + JaasStompSSLBroker_xml);
 
         broker.start();
         broker.waitUntilStarted();
@@ -75,10 +74,10 @@ public class AMQ4126Test {
     }
 
     public Socket createSocket(String host, int port) throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", certBase + sep + "broker1.ks");
+        System.setProperty("javax.net.ssl.trustStore", certBase + "/broker1.ks");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
         System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", certBase + sep + "client.ks");
+        System.setProperty("javax.net.ssl.keyStore", certBase + "/client.ks");
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
@@ -122,9 +121,9 @@ public class AMQ4126Test {
         URI brokerURI = broker.getConnectorByName(connectorName).getConnectUri();
         String uri = "ssl://" + brokerURI.getHost() + ":" + brokerURI.getPort();
         ActiveMQSslConnectionFactory cf = new ActiveMQSslConnectionFactory(uri);
-        cf.setTrustStore("org/apache/activemq/security" + sep + "broker1.ks");
+        cf.setTrustStore("org/apache/activemq/security/broker1.ks");
         cf.setTrustStorePassword("password");
-        cf.setKeyStore("org/apache/activemq/security" + sep + "client.ks");
+        cf.setKeyStore("org/apache/activemq/security/client.ks");
         cf.setKeyStorePassword("password");
         ActiveMQConnection connection = null;
         if (username != null || password != null) {

@@ -49,7 +49,6 @@ public class AMQ3625Test {
     protected String base = "src/test/resources/org/apache/activemq/bugs/amq3625";
     protected String conf = "conf";
     protected String keys = "keys";
-    protected String sep  = File.separator;
     protected String JaasStompSSLBroker1_xml = "JaasStompSSLBroker1.xml";
     protected String JaasStompSSLBroker2_xml = "JaasStompSSLBroker2.xml";
     
@@ -60,9 +59,9 @@ public class AMQ3625Test {
         if (System.getProperty(java_security_auth_login_config) != null) {
             oldLoginConf = System.getProperty(java_security_auth_login_config);
         }
-        System.setProperty(java_security_auth_login_config, base + sep + conf + sep + "login.config");
-        broker1 = BrokerFactory.createBroker(xbean + base + sep + conf + sep + JaasStompSSLBroker1_xml);
-        broker2 = BrokerFactory.createBroker(xbean + base + sep + conf + sep + JaasStompSSLBroker2_xml);
+        System.setProperty(java_security_auth_login_config, base + "/" + conf + "/" + "login.config");
+        broker1 = BrokerFactory.createBroker(xbean + base + "/" + conf + "/" + JaasStompSSLBroker1_xml);
+        broker2 = BrokerFactory.createBroker(xbean + base + "/" + conf + "/" + JaasStompSSLBroker2_xml);
         
         broker1.start();
         broker1.waitUntilStarted();
