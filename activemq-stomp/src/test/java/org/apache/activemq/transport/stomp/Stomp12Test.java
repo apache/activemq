@@ -147,9 +147,6 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(received.getHeaders().containsKey(Stomp.Headers.Message.ACK_ID));
         assertEquals("1", received.getBody());
 
-        message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n\n" + "2" + Stomp.NULL;
-        stompConnection.sendFrame(message);
-
         String frame = "ACK\n" + "message-id:" +
                 received.getHeaders().get(Stomp.Headers.Message.ACK_ID) + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);

@@ -36,7 +36,6 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.Test;
@@ -576,10 +575,6 @@ public class Stomp11Test extends StompTestSupport {
         StompFrame received = stompConnection.receive();
         LOG.info("Received Frame: {}", received);
         assertTrue(received.getAction().equals("MESSAGE"));
-
-        message = "SEND\n" + "destination:/queue/" + getQueueName() +
-                "\n\n" + "Hello World" + Stomp.NULL;
-        stompConnection.sendFrame(message);
 
         String ack = "ACK\n" + "message-id:" +
                      received.getHeaders().get("message-id") + "\n\n" + Stomp.NULL;
