@@ -17,6 +17,7 @@
 package org.apache.activemq.store.kahadb;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
@@ -33,6 +34,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.commons.io.FileUtils;
 
 
 /**
@@ -41,15 +43,33 @@ import org.apache.activemq.command.SessionInfo;
  *
  */
 public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
+    public static final String KAHADB_DIR_BASE = "target/activemq-data/kahadb";
+    public static String kahaDbDirectoryName;
 
     enum CorruptionType { None, FailToLoad, LoadInvalid, LoadCorrupt };
     public CorruptionType  failTest = CorruptionType.None;
 
     @Override
+    protected void setUp() throws Exception {
+        kahaDbDirectoryName = KAHADB_DIR_BASE + "/" + System.currentTimeMillis();
+        super.setUp();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        try {
+            File kahaDbDir = new File(kahaDbDirectoryName);
+            FileUtils.deleteDirectory(kahaDbDir);
+        } catch (IOException e) {
+        }
+    }
+
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
-        kaha.setDirectory(new File("target/activemq-data/kahadb"));
+        kaha.setDirectory(new File(kahaDbDirectoryName));
         kaha.deleteAllMessages();
         broker.setPersistenceAdapter(kaha);
         return broker;
@@ -60,7 +80,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     protected BrokerService createRestartedBroker() throws Exception {
 
         // corrupting index
-        File index = new File("target/activemq-data/kahadb/db.data");
+        File index = new File(kahaDbDirectoryName + "/db.data");
         RandomAccessFile raf = new RandomAccessFile(index, "rw");
         switch (failTest) {
             case FailToLoad:
@@ -89,7 +109,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         KahaDBStore kaha = new KahaDBStore();
         // uncomment if you want to test archiving
         //kaha.setArchiveCorruptedIndex(true);
-        kaha.setDirectory(new File("target/activemq-data/kahadb"));
+        kaha.setDirectory(new File(kahaDbDirectoryName));
         broker.setPersistenceAdapter(kaha);
         return broker;
     }
