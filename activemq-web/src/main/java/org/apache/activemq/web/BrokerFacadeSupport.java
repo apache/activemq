@@ -22,23 +22,37 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.management.*;
+
+import javax.management.ObjectName;
+import javax.management.QueryExp;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
-import org.apache.activemq.broker.jmx.*;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.ConnectionViewMBean;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.springframework.util.StringUtils;
 
 /**
  * A useful base class for an implementation of {@link BrokerFacade}
- * 
- * 
+ *
+ *
  */
 public abstract class BrokerFacadeSupport implements BrokerFacade {
     public abstract ManagementContext getManagementContext();
     public abstract Set queryNames(ObjectName name, QueryExp query) throws Exception;
     public abstract Object newProxyInstance( ObjectName objectName, Class interfaceClass, boolean notificationBroadcaster) throws Exception;
 
+    @Override
     public Collection<QueueViewMBean> getQueues() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
@@ -48,6 +62,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, QueueViewMBean.class);
     }
 
+    @Override
     public Collection<TopicViewMBean> getTopics() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
@@ -57,6 +72,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, TopicViewMBean.class);
     }
 
+    @Override
     public Collection<DurableSubscriptionViewMBean> getDurableTopicSubscribers() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
@@ -66,6 +82,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
     }
 
+    @Override
     public Collection<DurableSubscriptionViewMBean> getInactiveDurableTopicSubscribers() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
@@ -75,10 +92,12 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
     }
 
+    @Override
     public QueueViewMBean getQueue(String name) throws Exception {
         return (QueueViewMBean) getDestinationByName(getQueues(), name);
     }
 
+    @Override
     public TopicViewMBean getTopic(String name) throws Exception {
         return (TopicViewMBean) getDestinationByName(getTopics(), name);
     }
@@ -108,6 +127,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return answer;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<ConnectionViewMBean> getConnections() throws Exception {
         String brokerName = getBrokerName();
@@ -117,12 +137,12 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ConnectionViewMBean.class);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<String> getConnections(String connectorName) throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
-                + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionName=*");
-        Set<ObjectName> queryResult = queryNames(query, null);
+            + ",connector=clientConnectors,connectorName=" + connectorName + ",connectionViewType=clientId" + ",connectionName=*");        Set<ObjectName> queryResult = queryNames(query, null);
         Collection<String> result = new ArrayList<String>(queryResult.size());
         for (ObjectName on : queryResult) {
             String name = StringUtils.replace(on.getKeyProperty("connectionName"), "_", ":");
@@ -131,6 +151,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return result;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public ConnectionViewMBean getConnection(String connectionName) throws Exception {
         connectionName = StringUtils.replace(connectionName, ":", "_");
@@ -145,6 +166,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
                 true);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<String> getConnectors() throws Exception {
         String brokerName = getBrokerName();
@@ -156,6 +178,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return result;
     }
 
+    @Override
     public ConnectorViewMBean getConnector(String name) throws Exception {
         String brokerName = getBrokerName();
         ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
@@ -163,6 +186,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return (ConnectorViewMBean) newProxyInstance(objectName, ConnectorViewMBean.class, true);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<NetworkConnectorViewMBean> getNetworkConnectors() throws Exception {
         String brokerName = getBrokerName();
@@ -172,6 +196,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
                 NetworkConnectorViewMBean.class);
     }
 
+    @Override
     public Collection<NetworkBridgeViewMBean> getNetworkBridges() throws Exception {
         String brokerName = getBrokerName();
         ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName + ",connector=networkConnectors,networkConnectorName=*,networkBridge=*");
@@ -180,6 +205,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
                 NetworkBridgeViewMBean.class);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<SubscriptionViewMBean> getQueueConsumers(String queueName) throws Exception {
         String brokerName = getBrokerName();
@@ -190,6 +216,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<SubscriptionViewMBean> getConsumersOnConnection(String connectionName) throws Exception {
         connectionName = StringUtils.replace(connectionName, ":", "_");
@@ -200,11 +227,13 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
     }
 
+    @Override
     public JobSchedulerViewMBean getJobScheduler() throws Exception {
         ObjectName name = getBrokerAdmin().getJMSJobScheduler();
         return (JobSchedulerViewMBean) newProxyInstance(name, JobSchedulerViewMBean.class, true);
     }
 
+    @Override
     public Collection<JobFacade> getScheduledJobs() throws Exception {
         JobSchedulerViewMBean jobScheduler = getJobScheduler();
         List<JobFacade> result = new ArrayList<JobFacade>();
@@ -218,6 +247,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
     }
 
 
+    @Override
     public boolean isJobSchedulerStarted() {
         try {
             JobSchedulerViewMBean jobScheduler = getJobScheduler();
