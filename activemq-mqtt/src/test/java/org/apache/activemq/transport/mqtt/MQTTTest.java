@@ -84,6 +84,28 @@ public class MQTTTest extends AbstractMQTTTest {
         }));
     }
 
+    @Test(timeout=300000)
+    public void testReuseConnection() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("Test-Client");
+
+        {
+            BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.disconnect();
+            Thread.sleep(1000);
+        }
+        {
+            BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.disconnect();
+            Thread.sleep(1000);
+        }
+    }
+
     @Override
     protected String getProtocolScheme() {
         return "mqtt";

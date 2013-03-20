@@ -50,6 +50,7 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -105,7 +106,7 @@ class MQTTProtocolConverter {
     private final Object commnadIdMutex = new Object();
     private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
-    private ConnectionInfo connectionInfo = new ConnectionInfo();
+    private final ConnectionInfo connectionInfo = new ConnectionInfo();
     private CONNECT connect;
     private String clientId;
     private long defaultKeepAlive;
@@ -159,7 +160,7 @@ class MQTTProtocolConverter {
             }
             case DISCONNECT.TYPE: {
                 LOG.debug("MQTT Client " + getClientId() + " disconnecting");
-                stopTransport();
+                onMQTTDisconnect();
                 break;
             }
             case SUBSCRIBE.TYPE: {
@@ -232,6 +233,7 @@ class MQTTProtocolConverter {
         connectionInfo.setTransportContext(mqttTransport.getPeerCertificates());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
+            @Override
             public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
 
                 if (response.isException()) {
@@ -250,6 +252,7 @@ class MQTTProtocolConverter {
 
                 final ProducerInfo producerInfo = new ProducerInfo(producerId);
                 sendToActiveMQ(producerInfo, new ResponseHandler() {
+                    @Override
                     public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
 
                         if (response.isException()) {
@@ -270,6 +273,14 @@ class MQTTProtocolConverter {
                 });
             }
         });
+    }
+
+    void onMQTTDisconnect() throws MQTTProtocolException {
+        if (connected.get()) {
+            sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
+            sendToActiveMQ(new ShutdownInfo(), null);
+        }
+        stopTransport();
     }
 
     void onSubscribe(SUBSCRIBE command) throws MQTTProtocolException {
@@ -516,6 +527,7 @@ class MQTTProtocolConverter {
                         bytesOut.write(data, 0, read);
                     }
                     byteSequence = bytesOut.toByteSequence();
+                    bytesOut.close();
                 }
                 result.payload(new Buffer(byteSequence.data, byteSequence.offset, byteSequence.length));
             }
@@ -555,7 +567,6 @@ class MQTTProtocolConverter {
             return;
         }
 
-
         long keepAliveMS = keepAliveSeconds * 1000;
 
         if (LOG.isDebugEnabled()) {
@@ -586,9 +597,6 @@ class MQTTProtocolConverter {
         } catch (Exception ex) {
             LOG.warn("Failed to start MQTT InactivityMonitor ", ex);
         }
-
-
-
     }
 
     void handleException(Throwable exception, MQTTFrame command) {
@@ -636,6 +644,7 @@ class MQTTProtocolConverter {
             switch (command.qos()) {
                 case AT_LEAST_ONCE:
                     return new ResponseHandler() {
+                        @Override
                         public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
                             if (response.isException()) {
                                 LOG.warn("Failed to send MQTT Publish: ", command, ((ExceptionResponse) response).getException());
@@ -648,6 +657,7 @@ class MQTTProtocolConverter {
                     };
                 case EXACTLY_ONCE:
                     return new ResponseHandler() {
+                        @Override
                         public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
                             if (response.isException()) {
                                 LOG.warn("Failed to send MQTT Publish: ", command, ((ExceptionResponse) response).getException());

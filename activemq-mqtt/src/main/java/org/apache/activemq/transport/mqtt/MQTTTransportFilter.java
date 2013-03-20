@@ -21,6 +21,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
@@ -58,6 +59,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         }
     }
 
+    @Override
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command) o;
@@ -67,6 +69,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         }
     }
 
+    @Override
     public void onCommand(Object command) {
         try {
             if (trace) {
@@ -81,6 +84,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         }
     }
 
+    @Override
     public void sendToActiveMQ(Command command) {
         TransportListener l = transportListener;
         if (l != null) {
@@ -88,6 +92,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         }
     }
 
+    @Override
     public void sendToMQTT(MQTTFrame command) throws IOException {
         if( !stopped.get() ) {
             if (trace) {
@@ -107,6 +112,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         }
     }
 
+    @Override
     public X509Certificate[] getPeerCertificates() {
         if (next instanceof SslTransport) {
             X509Certificate[] peerCerts = ((SslTransport) next).getPeerCertificates();
@@ -162,10 +168,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
      * The default = 1
      * @param activeMQSubscriptionPrefetch set the prefetch for the corresponding ActiveMQ subscription
      */
-
     public void setActiveMQSubscriptionPrefetch(int activeMQSubscriptionPrefetch) {
         protocolConverter.setActiveMQSubscriptionPrefetch(activeMQSubscriptionPrefetch);
     }
-
-
 }
