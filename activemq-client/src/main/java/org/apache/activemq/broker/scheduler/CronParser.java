@@ -42,7 +42,7 @@ public class CronParser {
 
         // Handle the once per minute case "* * * * *"
         // starting the next event at the top of the minute.
-        if (cronEntry.startsWith("* * * * *")) {
+        if (cronEntry.equals("* * * * *")) {
             result = currentTime + 60 * 1000;
             result = result / 1000 * 1000;
             return result;

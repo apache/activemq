@@ -40,13 +40,13 @@
 		<c:forEach items="${requestContext.brokerQuery.scheduledJobs}"
 		var="row">
 		<tr>
-		 <td>${row.jobId}</td>
-		 <td>${row.cronEntry}</td>
-		 <td>${row.nextExecutionTime}</td>
-		 <td>${row.start}</td>
-		 <td>${row.delay}</td>
-	 	 <td>${row.period}</td>
-	     <td>${row.repeat}</td>
+		 <td><c:out value="${row.jobId}"/></td>
+		 <td><c:out value="${row.cronEntry}"/></td>
+		 <td><c:out value="${row.nextExecutionTime}"/></td>
+		 <td><c:out value="${row.start}"/></td>
+		 <td><c:out value="${row.delay}"/></td>
+	 	 <td><c:out value="${row.period}"/></td>
+	     <td><c:out value="${row.repeat}"/></td>
 		<td>
 		    <a href="deleteJob.action?jobId=${row.jobId}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
 		</td>
