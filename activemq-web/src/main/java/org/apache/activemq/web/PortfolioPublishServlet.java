@@ -68,7 +68,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
                 if (refreshRate == null || refreshRate.length() == 0) {
                     refreshRate = "1";
                 }
-                out.print(refreshRate);
+                out.print(escape(refreshRate));
                 out.println("'/></head>");
                 out.println("<body>Published <b>" + escape(Integer.toString(count)) + "</b> of " + escape(Integer.toString(total))
                         + " price messages.  Refresh = " + escape(refreshRate) + "s");
