@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.security;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +41,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     private AuthorizationEntry defaultEntry;
 
     private TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry;
+
+    private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
 
     public DefaultAuthorizationMap() {
     }
@@ -184,6 +188,51 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
             entries.add(defaultEntry);
         }
         return entries;
+    }
+
+    public String getGroupClass() {
+        return groupClass;
+    }
+
+    public void setGroupClass(String groupClass) {
+        this.groupClass = groupClass;
+    }
+
+    public static Object createGroupPrincipal(String name, String groupClass) throws Exception {
+        Object[] param = new Object[]{name};
+
+        Class<?> cls = Class.forName(groupClass);
+
+        Constructor<?>[] constructors = cls.getConstructors();
+        int i;
+        Object instance;
+        for (i = 0; i < constructors.length; i++) {
+            Class<?>[] paramTypes = constructors[i].getParameterTypes();
+            if (paramTypes.length != 0 && paramTypes[0].equals(String.class)) {
+                break;
+            }
+        }
+        if (i < constructors.length) {
+            instance = constructors[i].newInstance(param);
+        } else {
+            instance = cls.newInstance();
+            Method[] methods = cls.getMethods();
+            i = 0;
+            for (i = 0; i < methods.length; i++) {
+                Class<?>[] paramTypes = methods[i].getParameterTypes();
+                if (paramTypes.length != 0 && methods[i].getName().equals("setName") && paramTypes[0].equals(String.class)) {
+                    break;
+                }
+            }
+
+            if (i < methods.length) {
+                methods[i].invoke(instance, param);
+            } else {
+                throw new NoSuchMethodException();
+            }
+        }
+
+        return instance;
     }
 
 }

@@ -111,45 +111,8 @@ public class AuthorizationEntry extends DestinationMapEntry {
         Set<Object> answer = new HashSet<Object>();
         StringTokenizer iter = new StringTokenizer(roles, ",");
         while (iter.hasMoreTokens()) {
-
             String name = iter.nextToken().trim();
-            Object[] param = new Object[]{name};
-
-            try {
-                Class<?> cls = Class.forName(groupClass);
-
-                Constructor<?>[] constructors = cls.getConstructors();
-                int i;
-                for (i = 0; i < constructors.length; i++) {
-                    Class<?>[] paramTypes = constructors[i].getParameterTypes();
-                    if (paramTypes.length != 0 && paramTypes[0].equals(String.class)) {
-                        break;
-                    }
-                }
-                if (i < constructors.length) {
-                    Object instance = constructors[i].newInstance(param);
-                    answer.add(instance);
-                } else {
-                    Object instance = cls.newInstance();
-                    Method[] methods = cls.getMethods();
-                    i = 0;
-                    for (i = 0; i < methods.length; i++) {
-                        Class<?>[] paramTypes = methods[i].getParameterTypes();
-                        if (paramTypes.length != 0 && methods[i].getName().equals("setName") && paramTypes[0].equals(String.class)) {
-                            break;
-                        }
-                    }
-
-                    if (i < methods.length) {
-                        methods[i].invoke(instance, param);
-                        answer.add(instance);
-                    } else {
-                        throw new NoSuchMethodException();
-                    }
-                }
-            } catch (Exception e) {
-                throw e;
-            }
+            DefaultAuthorizationMap.createGroupPrincipal(name, getGroupClass());
         }
         return answer;
     }

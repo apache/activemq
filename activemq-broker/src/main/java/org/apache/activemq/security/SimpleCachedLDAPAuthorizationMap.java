@@ -272,10 +272,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
      *             {@link DestinationType#TEMP} or if the policy entry DN is malformed
      */
     protected AuthorizationEntry getEntry(LdapName dn, DestinationType destinationType) {
-        
         AuthorizationEntry entry = null;
-        
-        
         switch (destinationType) {
             case TEMP:
                 // handle temp entry
@@ -405,7 +402,13 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                         + memberDn + " under entry " + result.getNameInNamespace());
             } else if (principalName != null){
                 if (group && !user) {
-                    members.add(new GroupPrincipal(principalName));
+                    try {
+                        members.add(createGroupPrincipal(principalName, getGroupClass()));
+                    } catch (Exception e) {
+                        NamingException ne = new NamingException("Can't create a group " + principalName + " of class " + getGroupClass());
+                        ne.initCause(e);
+                        throw ne;
+                    }
                 } else if (!group && user) {
                     members.add(new UserPrincipal(principalName));
                 }
