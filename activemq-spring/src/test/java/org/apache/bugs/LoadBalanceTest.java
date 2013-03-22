@@ -53,7 +53,7 @@ public class LoadBalanceTest {
     private static final String TESTING_QUEUE = "testingqueue";
     private static int networkBridgePrefetch = 1000;
 
-    @Test
+    @Test(timeout=120000)
     public void does_load_balance_between_consumers() throws Exception {
         BrokerService brokerService1 = null;
         BrokerService brokerService2 = null;
@@ -61,13 +61,13 @@ public class LoadBalanceTest {
         final AtomicInteger broker1Count = new AtomicInteger(0);
         final AtomicInteger broker2Count = new AtomicInteger(0);
         final CountDownLatch startProducer = new CountDownLatch(1);
+        final CountDownLatch consumer1Started = new CountDownLatch(1);
+        final CountDownLatch consumer2Started = new CountDownLatch(1);
 
         String broker1Uri;
         String broker2Uri;
 
         try {
-
-
             brokerService1 = new BrokerService();
             brokerService1.setBrokerName("one");
             brokerService1.setUseJmx(false);
@@ -118,6 +118,7 @@ public class LoadBalanceTest {
             });
             container1.afterPropertiesSet();
             container1.start();
+            consumer1Started.countDown();
             pool.submit(new Callable<Object>() {
 
                 @Override
@@ -143,6 +144,7 @@ public class LoadBalanceTest {
                         });
                         container2.afterPropertiesSet();
                         container2.start();
+                        consumer2Started.countDown();
 
                         assertTrue("wait for start signal", startProducer.await(20, TimeUnit.SECONDS));
 
@@ -185,9 +187,11 @@ public class LoadBalanceTest {
 
             waitForBridgeFormation();
             startProducer.countDown();
+            consumer1Started.await();
+            consumer2Started.await();
 
             pool.shutdown();
-            pool.awaitTermination(10, TimeUnit.SECONDS);
+            pool.awaitTermination(20, TimeUnit.SECONDS);
             LOG.info("broker1Count " + broker1Count.get() + ", broker2Count " + broker2Count.get());
 
             int count = 0;
