@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.filter.DestinationMapEntry;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -23,26 +27,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.filter.DestinationMap;
-import org.apache.activemq.filter.DestinationMapEntry;
-
 /**
  * Represents a destination based configuration of policies so that individual
  * destinations or wildcard hierarchies of destinations can be configured using
  * different policies. Each entry in the map represents the authorization ACLs
  * for each operation.
  *
- * @org.apache.xbean.XBean element="authorizationMap"
  *
  */
 public class DefaultAuthorizationMap extends DestinationMap implements AuthorizationMap {
+
+    public static final String DEFAULT_GROUP_CLASS = "org.apache.activemq.jaas.GroupPrincipal";
 
     private AuthorizationEntry defaultEntry;
 
     private TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry;
 
-    private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
+    protected String groupClass = DEFAULT_GROUP_CLASS;
 
     public DefaultAuthorizationMap() {
     }
@@ -160,8 +161,6 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
 
     /**
      * Sets the individual entries on the authorization map
-     *
-     * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthorizationEntry"
      */
     @SuppressWarnings("rawtypes")
     public void setAuthorizationEntries(List<DestinationMapEntry> entries) {

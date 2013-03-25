@@ -16,23 +16,17 @@
  */
 package org.apache.activemq.security;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+import org.apache.activemq.filter.DestinationMapEntry;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.annotation.PostConstruct;
-import org.apache.activemq.filter.DestinationMapEntry;
-
 /**
  * Represents an entry in a {@link DefaultAuthorizationMap} for assigning
  * different operations (read, write, admin) of user roles to a specific
  * destination or a hierarchical wildcard area of destinations.
- *
- * @org.apache.xbean.XBean
- *
  */
 @SuppressWarnings("rawtypes")
 public class AuthorizationEntry extends DestinationMapEntry {
@@ -41,11 +35,11 @@ public class AuthorizationEntry extends DestinationMapEntry {
     private Set<Object> writeACLs = emptySet();
     private Set<Object> adminACLs = emptySet();
 
-    private String adminRoles;
-    private String readRoles;
-    private String writeRoles;
+    protected String adminRoles;
+    protected String readRoles;
+    protected String writeRoles;
 
-    private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
+    private String groupClass;
 
     public String getGroupClass() {
         return groupClass;
@@ -112,29 +106,9 @@ public class AuthorizationEntry extends DestinationMapEntry {
         StringTokenizer iter = new StringTokenizer(roles, ",");
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken().trim();
-            DefaultAuthorizationMap.createGroupPrincipal(name, getGroupClass());
+            String groupClass = (this.groupClass != null ? this.groupClass : DefaultAuthorizationMap.DEFAULT_GROUP_CLASS);
+            answer.add(DefaultAuthorizationMap.createGroupPrincipal(name, groupClass));
         }
         return answer;
-    }
-
-    /**
-     *
-     * @org.apache.xbean.InitMethod
-     */
-    @PostConstruct
-    public void afterPropertiesSet() throws Exception {
-
-        if (adminRoles != null) {
-            setAdminACLs(parseACLs(adminRoles));
-        }
-
-        if (writeRoles != null) {
-            setWriteACLs(parseACLs(writeRoles));
-        }
-
-        if (readRoles != null) {
-            setReadACLs(parseACLs(readRoles));
-        }
-
     }
 }

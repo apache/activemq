@@ -54,6 +54,17 @@
 
         <plugins>
             <jaasAuthenticationPlugin configuration="karaf" />
+            <authorizationPlugin>
+              <map>
+                <authorizationMap groupClass="org.apache.karaf.jaas.boot.principal.RolePrincipal">
+                  <authorizationEntries>
+                    <authorizationEntry queue=">" read="admin" write="admin" admin="admin"/>
+                    <authorizationEntry topic=">" read="admin" write="admin" admin="admin"/>
+                    <authorizationEntry topic="ActiveMQ.Advisory.>" read="admin" write="admin" admin="admin"/>
+                  </authorizationEntries>
+                </authorizationMap>
+              </map>
+            </authorizationPlugin>
         </plugins>
 
         <systemUsage>
