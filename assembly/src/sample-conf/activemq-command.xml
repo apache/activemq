@@ -41,8 +41,6 @@
         </managementContext>
 
         <transportConnectors>
-            <!-- Create a XMPP transport for XMPP clients. -->
-            <transportConnector name="xmpp" uri="xmpp://localhost:61222"/>
             <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
         </transportConnectors>
     </broker>
