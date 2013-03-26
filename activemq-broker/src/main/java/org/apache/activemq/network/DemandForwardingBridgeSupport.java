@@ -365,6 +365,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
             // Before we try and build the bridge lets check if we are in a loop
             // and if so just stop now before registering anything.
+            remoteBrokerId = remoteBrokerInfo.getBrokerId();
             if (localBrokerId.equals(remoteBrokerId)) {
                  if (LOG.isTraceEnabled()) {
                      LOG.trace(configuration.getBrokerName() +
@@ -373,11 +374,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                  }
                  ServiceSupport.dispose(localBroker);
                  ServiceSupport.dispose(remoteBroker);
+                 // the bridge is left in a bit of limbo, but it won't get retried
+                 // in this state.
                  return;
             }
 
             // Fill in the remote broker's information now.
-            remoteBrokerId = remoteBrokerInfo.getBrokerId();
             remoteBrokerPath[0] = remoteBrokerId;
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
         } catch (Throwable e) {
