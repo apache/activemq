@@ -444,7 +444,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     /**
      * @return the number of milliseconds to sleep between runs of the idle connection eviction thread.
      */
-    public long setTimeBetweenExpirationCheckMillis() {
+    public long getTimeBetweenExpirationCheckMillis() {
         return this.connectionsPool.getTimeBetweenEvictionRunsMillis();
     }
 
