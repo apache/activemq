@@ -167,13 +167,13 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         }
         FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) result;
         if (filteredAdapter.getDestination() == matchAll && filteredAdapter.isPerDestination()) {
-            result = addAdapter(filteredAdapter, destination);
-            startAdapter(((FilteredKahaDBPersistenceAdapter) result).getPersistenceAdapter(), destination.getQualifiedName());
+            filteredAdapter = addAdapter(filteredAdapter, destination);
             if (LOG.isTraceEnabled()) {
                 LOG.info("created per destination adapter for: " + destination  + ", " + result);
             }
         }
-        return ((FilteredKahaDBPersistenceAdapter) result).getPersistenceAdapter();
+        startAdapter(filteredAdapter.getPersistenceAdapter(), destination.getQualifiedName());
+        return filteredAdapter.getPersistenceAdapter();
     }
 
     private void startAdapter(KahaDBPersistenceAdapter kahaDBPersistenceAdapter, String destination) {
