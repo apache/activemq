@@ -243,7 +243,8 @@
               org/xerial/snappy/native/Mac/i386/libsnappyjava.jnilib;osname=macosx;processor=x86,
               org/xerial/snappy/native/Mac/x86_64/libsnappyjava.jnilib;osname=macosx;processor=x86-64,
               org/xerial/snappy/native/Windows/amd64/snappyjava.dll;osname=Win32;processor=x86-64,
-              org/xerial/snappy/native/Windows/x86/snappyjava.dll;osname=Win32;processor=x86
+              org/xerial/snappy/native/Windows/x86/snappyjava.dll;osname=Win32;processor=x86,
+              *
             </Bundle-NativeCode>
          </instructions>
         </configuration>
