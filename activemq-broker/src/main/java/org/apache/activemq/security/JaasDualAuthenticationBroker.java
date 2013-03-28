@@ -131,5 +131,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
         // Give both a chance to clear out their contexts
         this.sslBroker.removeDestination(context, destination, timeout);
         this.nonSslBroker.removeDestination(context, destination, timeout);
+
+        super.removeDestination(context, destination, timeout);
     }
 }

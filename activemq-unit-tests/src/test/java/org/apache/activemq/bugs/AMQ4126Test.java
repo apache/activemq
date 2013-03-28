@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.bugs;
 
-import java.io.File;
 import java.net.Socket;
 import java.net.URI;
 
+import javax.management.ObjectName;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -49,7 +49,7 @@ public class AMQ4126Test {
     protected String certBase = "src/test/resources/org/apache/activemq/security";
     protected String JaasStompSSLBroker_xml = "JaasStompSSLBroker.xml";
     protected StompConnection stompConnection = new StompConnection();
-
+    private final static String destinationName = "TEST.QUEUE";
     protected String oldLoginConf = null;
 
     @Before
@@ -60,6 +60,8 @@ public class AMQ4126Test {
         System.setProperty(java_security_auth_login_config, confBase + "/login.config");
         broker = BrokerFactory.createBroker(xbean + confBase + "/" + JaasStompSSLBroker_xml);
 
+        broker.setDeleteAllMessagesOnStartup(true);
+        broker.setUseJmx(true);
         broker.start();
         broker.waitUntilStarted();
     }
@@ -155,4 +157,24 @@ public class AMQ4126Test {
     public void testOpenwireNIOSSLWithCertificate() throws Exception {
         openwireConnectTo("openwire+nio+ssl", null, null);
     }
+
+    @Test
+    public void testJmx() throws Exception {
+        TestCase.assertFalse(findDestination(destinationName));
+        broker.getAdminView().addQueue(destinationName);
+        TestCase.assertTrue(findDestination(destinationName));
+        broker.getAdminView().removeQueue(destinationName);
+        TestCase.assertFalse(findDestination(destinationName));
+    }
+
+    private boolean findDestination(String name) throws Exception {
+        ObjectName[] destinations = broker.getAdminView().getQueues();
+        for (ObjectName destination : destinations) {
+            if (destination.toString().contains(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
