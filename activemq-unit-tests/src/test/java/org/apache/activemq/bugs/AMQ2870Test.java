@@ -16,14 +16,18 @@
  */
 package org.apache.activemq.bugs;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TopicSubscriber;
-import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -32,10 +36,16 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.Wait;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AMQ2870Test extends org.apache.activemq.TestSupport {
+@RunWith(value = Parameterized.class)
+public class AMQ2870Test extends org.apache.activemq.TestSupport  {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ2870Test.class);
     BrokerService broker = null;
@@ -47,15 +57,28 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
     final int minPercentUsageForStore = 10;
     String data;
 
-    public static Test suite() {
-        return suite(AMQ2870Test.class);
+    private final PersistenceAdapterChoice persistenceAdapterChoice;
+
+    @Parameterized.Parameters
+    public static Collection<PersistenceAdapterChoice[]> getTestParameters() {
+        String osName = System.getProperty("os.name");
+        LOG.info("Running on [" + osName + "]");
+        PersistenceAdapterChoice[] kahaDb = {PersistenceAdapterChoice.KahaDB};
+        PersistenceAdapterChoice[] levelDb = {PersistenceAdapterChoice.LevelDB};
+        List<PersistenceAdapterChoice[]> choices = new ArrayList<PersistenceAdapterChoice[]>();
+        choices.add(kahaDb);
+        if (!osName.equalsIgnoreCase("AIX") && !osName.equalsIgnoreCase("SunOS")) {
+            choices.add(levelDb);
+        }
+
+        return choices;
     }
-    
-    public void initCombosForTestSize() throws Exception {
-        this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB});
+
+    public AMQ2870Test(PersistenceAdapterChoice choice) {
+        this.persistenceAdapterChoice = choice;
     }
-    
+
+    @Test(timeout = 300000)
     public void testSize() throws Exception {
         openConsumer();
 
@@ -70,6 +93,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         // wait for reclaim
         assertTrue("in range with consumer",
                 Wait.waitFor(new Wait.Condition() {
+                    @Override
                     public boolean isSatisified() throws Exception {
                         // usage percent updated only on send check for isFull so once
                         // sends complete it is no longer updated till next send via a call to isFull
@@ -80,11 +104,11 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
                     }
                 }));
 
-
         closeConsumer();
 
         assertTrue("in range with closed consumer",
                 Wait.waitFor(new Wait.Condition() {
+                    @Override
                     public boolean isSatisified() throws Exception {
                         broker.getSystemUsage().getStoreUsage().isFull();
                         LOG.info("store precent usage: "+brokerView.getStorePercentUsage());
@@ -101,13 +125,13 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
 
         assertTrue("in range after send with consumer",
                 Wait.waitFor(new Wait.Condition() {
+                    @Override
                     public boolean isSatisified() throws Exception {
                         broker.getSystemUsage().getStoreUsage().isFull();
-                        LOG.info("store precent usage: "+brokerView.getStorePercentUsage());                        
+                        LOG.info("store precent usage: "+brokerView.getStorePercentUsage());
                         return broker.getAdminView().getStorePercentUsage() < minPercentUsageForStore;
                     }
                 }));
-
     }
 
     private void openConsumer() throws Exception {
@@ -118,6 +142,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         TopicSubscriber subscriber = session.createDurableSubscriber(topic, "subName", "filter=true", false);
 
         subscriber.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 // received++;
             }
@@ -152,7 +177,8 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
         }
-        setDefaultPersistenceAdapter(broker);
+        LOG.info("Starting broker with persistenceAdapterChoice " + persistenceAdapterChoice.toString());
+        setPersistenceAdapter(broker, persistenceAdapterChoice);
         configurePersistenceAdapter(broker.getPersistenceAdapter());
         broker.getSystemUsage().getStoreUsage().setLimit(100 * 1000 * 1000);
         broker.start();
@@ -165,7 +191,7 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         properties.put("maxFileLength", maxFileLengthVal);
         properties.put("cleanupInterval", "2000");
         properties.put("checkpointInterval", "2000");
-       
+
         // leveldb
         properties.put("logSize", maxFileLengthVal);
 
@@ -178,14 +204,14 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
         broker = null;
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://testStoreSize?jms.watchTopicAdvisories=false&waitForStart=5000&create=false");
     }
 
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
         StringBuilder sb = new StringBuilder(5000);
         for (int i = 0; i < 5000; i++) {
             sb.append('a');
@@ -197,8 +223,8 @@ public class AMQ2870Test extends org.apache.activemq.TestSupport {
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         stopBroker();
-        super.tearDown();
     }
 }

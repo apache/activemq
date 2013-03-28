@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.bugs;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -27,10 +30,9 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -38,9 +40,15 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.Wait;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RunWith(value = Parameterized.class)
 public class AMQ2584Test extends org.apache.activemq.TestSupport {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ2584Test.class);
@@ -53,18 +61,24 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
     final int minPercentUsageForStore = 10;
     String data;
 
-    public static Test suite() {
-        return suite(AMQ2584Test.class);
+    private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
+
+    @Parameterized.Parameters
+    public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
+        TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
+        TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};
+        List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
+        choices.add(kahaDb);
+        choices.add(levelDb);
+
+        return choices;
     }
 
-    public void initCombosForTestSize() throws Exception {
-        this.addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{
-                        PersistenceAdapterChoice.LevelDB,
-                        PersistenceAdapterChoice.KahaDB
-                });
+    public AMQ2584Test(TestSupport.PersistenceAdapterChoice choice) {
+        this.persistenceAdapterChoice = choice;
     }
 
+    @Test(timeout = 120000)
     public void testSize() throws Exception {
         CountDownLatch redeliveryConsumerLatch = new CountDownLatch(15000 -1);
         openConsumer(redeliveryConsumerLatch);
@@ -167,7 +181,8 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
         if (deleteMessages) {
             broker.setDeleteAllMessagesOnStartup(true);
         }
-        setDefaultPersistenceAdapter(broker);
+        LOG.info("Starting broker with persistenceAdapterChoice " + persistenceAdapterChoice.toString());
+        setPersistenceAdapter(broker, persistenceAdapterChoice);
         configurePersistenceAdapter(broker.getPersistenceAdapter());
         broker.getSystemUsage().getStoreUsage().setLimit(200 * 1000 * 1000);
         broker.start();
@@ -196,9 +211,8 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
     }
 
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
         StringBuilder sb = new StringBuilder(5000);
         for (int i = 0; i < 5000; i++) {
             sb.append('a');
@@ -210,8 +224,8 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         stopBroker();
-        super.tearDown();
     }
 }

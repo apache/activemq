@@ -16,44 +16,65 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.management.ObjectName;
 
-import junit.framework.Test;
-
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.JMXSupport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RunWith(value = Parameterized.class)
 public class QueueMbeanRestartTest extends TestSupport {
     private static final transient Logger LOG = LoggerFactory.getLogger(QueueMbeanRestartTest.class);
 
     BrokerService broker;
 
-    public static Test suite() {
-        return suite(QueueMbeanRestartTest.class);
+    private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
+
+    @Parameterized.Parameters
+    public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
+        TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
+        TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};
+        TestSupport.PersistenceAdapterChoice[] jdbc = {TestSupport.PersistenceAdapterChoice.JDBC};
+        List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
+        choices.add(kahaDb);
+        choices.add(levelDb);
+        choices.add(jdbc);
+
+        return choices;
+    }
+
+    public QueueMbeanRestartTest(TestSupport.PersistenceAdapterChoice choice) {
+        this.persistenceAdapterChoice = choice;
     }
 
     @Override
+    @Before
     public void setUp() throws Exception {
         topic = false;
         super.setUp();
     }
 
     @Override
+    @After
     public void tearDown() throws Exception {
         super.tearDown();
         broker.stop();
     }
 
-    public void initCombosForTestMBeanPresenceOnRestart() {
-        addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
-    }
-
+    @Test(timeout = 60000)
     public void testMBeanPresenceOnRestart() throws Exception {
         createBroker(true);
 
@@ -95,7 +116,7 @@ public class QueueMbeanRestartTest extends TestSupport {
 
     private void createBroker(boolean deleteAll) throws Exception {
         broker = new BrokerService();
-        setDefaultPersistenceAdapter(broker);
+        setPersistenceAdapter(broker, persistenceAdapterChoice);
 
         broker.setDeleteAllMessagesOnStartup(deleteAll);
         broker.start();

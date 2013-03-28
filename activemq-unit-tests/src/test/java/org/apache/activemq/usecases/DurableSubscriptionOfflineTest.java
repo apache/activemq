@@ -87,6 +87,8 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
     @Override
     protected void setUp() throws Exception {
+        setAutoFail(true);
+        setMaxTestTime(2 * 60 * 1000);
         exceptions.clear();
         topic = (ActiveMQTopic) createDestination();
         createBroker();
@@ -225,7 +227,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
          assertEquals(sent, listener.count);
      }
-
 
     public void initCombosForTestVerifyAllConsumedAreAcked() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
@@ -454,7 +455,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                 return 10 == val;
             }
         }));
-
     }
 
     public void initCombosForTestOfflineSubscriptionCanConsumeAfterOnlineSubs() throws Exception {
@@ -534,7 +534,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals(sent, listener.count);
         assertEquals(sent, listener3.count);
     }
-
 
     public void initCombosForTestInterleavedOfflineSubscriptionCanConsume() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
@@ -989,7 +988,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         session.close();
         con.close();
 
-
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -1084,7 +1082,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                 }
             }
         }
-
 
         final String payLoad = new String(new byte[1000]);
         con = createConnection();
@@ -1268,7 +1265,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         session.close();
         con.close();
 
-
         con = createConnection("offCli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
@@ -1282,7 +1278,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         assertEquals(0, listener.count);
     }
-
 
     public void testAllConsumed() throws Exception {
         final String filter = "filter = 'true'";
@@ -1335,7 +1330,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertNotNull("got message", consumer.receive(2000));
         session.close();
         con.close();
-
 
         // send messages
         con = createConnection();
@@ -1399,7 +1393,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         }
         con.close();
         LOG.info("sent: " + sent);
-
 
         // new sub at id 10
         con = createConnection("cli2");
@@ -1529,7 +1522,6 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             session.close();
             con.close();
         }
-
 
         // populate ack locations
         con = createConnection();
@@ -1705,8 +1697,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
                 if (b != null) {
                     boolean c = message.getBooleanProperty("$c");
                     assertTrue("", c);
-                }
-                else {
+                } else {
                     String d = message.getStringProperty("$d");
                     assertTrue("", "D1".equals(d) || "D2".equals(d));
                 }

@@ -71,7 +71,7 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void setUp() throws Exception {
-        super.setMaxTestTime(20 * 60 * 1000); // some boxes can be real slow
+        super.setMaxTestTime(2 * 60 * 1000); // some boxes can be real slow
         super.setAutoFail(true);
         super.setUp();
     }

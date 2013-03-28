@@ -18,6 +18,7 @@ package org.apache.activemq.usecases;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,6 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
@@ -41,36 +43,54 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TopicSubscriber;
-import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-//import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
-//import org.apache.commons.dbcp.BasicDataSource;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RunWith(value = Parameterized.class)
 public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConcurrentProducerDurableConsumerTest.class);
-    private int consumerCount = 5;
+    private final int consumerCount = 5;
     BrokerService broker;
     protected List<Connection> connections = Collections.synchronizedList(new ArrayList<Connection>());
     protected Map<MessageConsumer, TimedMessageListener> consumers = new HashMap<MessageConsumer, TimedMessageListener>();
     protected MessageIdList allMessagesList = new MessageIdList();
-    private int messageSize = 1024;
+    private final int messageSize = 1024;
 
-    public void initCombosForTestSendRateWithActivatingConsumers() throws Exception {
-        addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB,  PersistenceAdapterChoice.MEM});
+    private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
+
+    @Parameterized.Parameters
+    public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
+        TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
+        TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};
+        TestSupport.PersistenceAdapterChoice[] mem = {TestSupport.PersistenceAdapterChoice.MEM};
+        List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
+        choices.add(kahaDb);
+        choices.add(levelDb);
+        choices.add(mem);
+        return choices;
     }
 
+    public ConcurrentProducerDurableConsumerTest(TestSupport.PersistenceAdapterChoice choice) {
+        this.persistenceAdapterChoice = choice;
+    }
+
+    @Test(timeout = 120000)
     public void testSendRateWithActivatingConsumers() throws Exception {
         final Destination destination = createDestination();
         final ConnectionFactory factory = createConnectionFactory();
@@ -115,7 +135,6 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             }
         });
 
-
         double[] statsWithActive = produceMessages(destination, 500, 10, session, producer, addConsumerSignal);
 
         LOG.info(" with concurrent activate, ave: " + statsWithActive[1] + ", max: " + statsWithActive[0] + ", multiplier: " + (statsWithActive[0]/ statsWithActive[1]));
@@ -150,12 +169,6 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                 statsWithActive[1] < 15 * inactiveConsumerStats[1]);
     }
 
-
-    public void x_initCombosForTestSendWithInactiveAndActiveConsumers() throws Exception {
-        addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
-    }
-
     public void x_testSendWithInactiveAndActiveConsumers() throws Exception {
         Destination destination = createDestination();
         ConnectionFactory factory = createConnectionFactory();
@@ -185,6 +198,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         final int toReceive = toSend * numIterations * consumerCount * 2;
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("count: " + allMessagesList.getMessageCount());
                 return toReceive == allMessagesList.getMessageCount();
@@ -194,13 +208,11 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         assertEquals("got all messages", toReceive, allMessagesList.getMessageCount());
     }
 
-
     private MessageProducer createMessageProducer(Session session, Destination destination) throws JMSException {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
         return producer;
     }
-
 
     private void startInactiveConsumers(ConnectionFactory factory, Destination destination) throws Exception {
         // create off line consumers
@@ -211,7 +223,6 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         connections.clear();
         consumers.clear();
     }
-
 
     protected void startConsumers(ConnectionFactory factory, Destination dest) throws Exception {
         MessageConsumer consumer;
@@ -263,8 +274,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                             LOG.info("Signalled add consumer");
                         }
                     }
-                }
-                ;
+                };
                 if (count % 5000 == 0) {
                     LOG.info("Sent " + count + ", singleSendMax:" + max);
                 }
@@ -300,7 +310,8 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     }
 
     @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         topic = true;
         super.setUp();
         broker = createBroker();
@@ -308,7 +319,8 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
             Connection conn = iter.next();
             try {
@@ -321,7 +333,6 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         consumers.clear();
         super.tearDown();
     }
-
 
     protected BrokerService createBroker() throws Exception {
         BrokerService brokerService = new BrokerService();
@@ -373,11 +384,12 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                     </dependency>
              */
 //        } else {
-            setDefaultPersistenceAdapter(brokerService);
+            setPersistenceAdapter(brokerService, persistenceAdapterChoice);
 //        }
         return brokerService;
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
             broker.getTransportConnectors().get(0).getPublishableConnectString());
@@ -387,10 +399,6 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         factory.setDispatchAsync(true);
         return factory;
-    }
-
-    public static Test suite() {
-        return suite(ConcurrentProducerDurableConsumerTest.class);
     }
 
     class TimedMessageListener implements MessageListener {
@@ -480,5 +488,4 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             return null;
         }
     }
-
 }
