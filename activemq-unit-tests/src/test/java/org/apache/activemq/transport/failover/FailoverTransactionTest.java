@@ -143,8 +143,14 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void initCombosForTestFailoverCommitReplyLost() {
-        addCombinationValues("defaultPersistenceAdapter",
-                new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
+        String osName = System.getProperty("os.name");
+        Object[] persistenceAdapters;
+        if (!osName.equalsIgnoreCase("AIX") && !osName.equalsIgnoreCase("SunOS")) {
+            persistenceAdapters = new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC};
+        } else {
+            persistenceAdapters = new Object[]{PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.JDBC};
+        }
+        addCombinationValues("defaultPersistenceAdapter",persistenceAdapters);
     }
 
     @SuppressWarnings("unchecked")
