@@ -426,28 +426,14 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
           <execution>
-            <id>unix-bin</id>
+            <id>bin</id>
             <phase>package</phase>
             <goals>
               <goal>attached</goal>
             </goals>
             <configuration>
               <descriptors>
-                 <descriptor>src/main/descriptors/unix-bin.xml</descriptor>
-              </descriptors>
-              <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
-              <!--<appendAssemblyId>false</appendAssemblyId>-->
-            </configuration>
-          </execution>
-          <execution>
-            <id>windows-bin</id>
-            <phase>package</phase>
-            <goals>
-              <goal>attached</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                 <descriptor>src/main/descriptors/windows-bin.xml</descriptor>
+                 <descriptor>src/main/descriptors/bin.xml</descriptor>
               </descriptors>
               <!--<finalName>${pom.artifactId}-${project.version}</finalName>-->
               <!--<appendAssemblyId>false</appendAssemblyId>-->
