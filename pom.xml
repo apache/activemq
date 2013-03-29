@@ -234,10 +234,10 @@
     <module>activemq-rar</module>
     <module>activemq-run</module>
     <module>activemq-spring</module>
-    <module>activemq-osgi</module>
-    <module>activemq-blueprint</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
+    <module>activemq-osgi</module>
+    <module>activemq-blueprint</module>
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
     <module>activemq-karaf-itest</module>

@@ -47,6 +47,8 @@ import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.MessageAvailableConsumer;
+import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.camel.component.ActiveMQConfiguration;
 import org.apache.activemq.pool.PooledConnectionFactory;
@@ -280,11 +282,18 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         if (factory == null) {
             String brokerURL = servletContext.getInitParameter(BROKER_URL_INIT_PARAM);
 
-            LOG.debug("Value of: " + BROKER_URL_INIT_PARAM + " is: " + brokerURL);
 
             if (brokerURL == null) {
-                throw new IllegalStateException("missing brokerURL (specified via " + BROKER_URL_INIT_PARAM + " init-Param");
+                LOG.debug("Couldn't find " + BROKER_URL_INIT_PARAM + " param, trying to find a broker embedded in a local VM");
+                BrokerService broker = BrokerRegistry.getInstance().findFirst();
+                if (broker == null) {
+                    throw new IllegalStateException("missing brokerURL (specified via " + BROKER_URL_INIT_PARAM + " init-Param) or embedded broker");
+                } else {
+                    brokerURL = "vm://" + broker.getBrokerName();
+                }
             }
+
+            LOG.debug("Using broker URL: " + brokerURL);
 
             ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(brokerURL);
 

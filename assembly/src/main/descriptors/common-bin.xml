@@ -67,6 +67,18 @@
         <exclude>**/webconsole-embedded.xml</exclude>
       </excludes>
     </fileSet>
+    <fileSet>
+      <directory>../activemq-web-console/src/main/webapp/styles/</directory>
+      <outputDirectory>/webapps-demo/demo/styles/</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>../activemq-web-console/src/main/webapp/images/</directory>
+      <outputDirectory>/webapps-demo/demo/images/</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>../activemq-web-console/src/main/webapp/js/</directory>
+      <outputDirectory>/webapps-demo/demo/js/</outputDirectory>
+    </fileSet>
 
     <!-- the file server -->
     <fileSet>

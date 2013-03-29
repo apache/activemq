@@ -65,10 +65,12 @@
       javax.transaction*,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
-	  *
+      com.sun.syndication*;resolution:=optional,
+	    *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first,
+      org.apache.activemq.web*;version=${project.version};-noimport:=true;-split-package:=merge-first,
     </activemq.osgi.export>
 	<activemq.osgi.private.pkg>
    	  org.fusesource*,
@@ -146,6 +148,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-web</artifactId>
     </dependency>
 
     <dependency>

@@ -25,11 +25,6 @@
 
     <!-- context config -->
     <context-param>
-        <param-name>org.apache.activemq.brokerURL</param-name>
-        <param-value>vm://amq-broker</param-value>
-        <description>The URL of the Message Broker to connect to</description>
-    </context-param>
-    <context-param>
         <param-name>org.apache.activemq.embeddedBroker</param-name>
         <param-value>true</param-value>
         <description>Whether we should include an embedded broker or not</description>
@@ -105,5 +100,10 @@
         <servlet-name>PortfolioPublishServlet</servlet-name>
         <url-pattern>/portfolioPublish</url-pattern>
     </servlet-mapping>
+
+    <welcome-file-list>
+      <welcome-file>index.html</welcome-file>
+      <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>

@@ -46,6 +46,96 @@
           <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <configuration>
+          <outputFileNameMapping>@{artifactId}@-@{baseVersion}@@{dashClassifier?}@.@{extension}@</outputFileNameMapping>
+          <packagingExcludes>
+            WEB-INF/lib/jetty*.jar,
+            WEB-INF/lib/servlet*.jar,
+            WEB-INF/lib/activemq*.jar
+          </packagingExcludes>
+          <webResources>
+            <resource>
+              <directory>${basedir}/../activemq-web-console/src/main/webapp/styles/</directory>
+              <targetPath>styles</targetPath>
+            </resource>
+            <resource>
+              <directory>${basedir}/../activemq-web-console/src/main/webapp/images/</directory>
+              <targetPath>images</targetPath>
+            </resource>
+            <resource>
+              <directory>${basedir}/../activemq-web-console/src/main/webapp/js/</directory>
+              <targetPath>js</targetPath>
+            </resource>
+          </webResources>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <supportedProjectTypes>
+            <supportedProjectType>jar</supportedProjectType>
+            <supportedProjectType>bundle</supportedProjectType>
+            <supportedProjectType>war</supportedProjectType>
+          </supportedProjectTypes>
+          <instructions>
+            <Webapp-Context>activemqdemo</Webapp-Context>
+            <Web-ContextPath>activemqdemo</Web-ContextPath>
+            <Bundle-ClassPath>.,WEB-INF/classes</Bundle-ClassPath>
+            <Embed-Directory>WEB-INF/lib</Embed-Directory>
+            <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
+            <Import-Package>
+              org.apache.activemq,
+              org.apache.activemq.web,
+              org.xml.sax,
+              org.xml.sax.helpers,
+              javax.xml.parsers,
+              javax.xml.transform,
+              javax.management.remote,
+              javax.naming,
+              org.w3c.dom,
+              javax.servlet,
+              javax.servlet.http,
+              javax.servlet.resources,
+              javax.servlet.jsp,
+              javax.servlet.jsp.tagext,
+              javax.servlet.jsp.el,
+              javax.management,
+              javax.management.openmbean,
+              javax.net,
+              org.osgi.framework,
+              org.osgi.service.cm,
+              org.apache.commons.logging;version="[1.1,2)";resolution:=optional,
+              org.slf4j;version="[1.6,2)";resolution:=optional,
+              org.slf4j.spi;version="[1.6,2)";resolution:=optional,
+              org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
+              org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional
+            </Import-Package>
+            <Export-Package>
+              !*
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 
