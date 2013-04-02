@@ -63,6 +63,7 @@
       javax.jms*,
       javax.management*,
       javax.transaction*,
+      javax.naming*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
       com.sun.syndication*;resolution:=optional,

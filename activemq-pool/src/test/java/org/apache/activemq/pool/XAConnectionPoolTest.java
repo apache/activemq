@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.pool;
 
+import java.util.Hashtable;
 import java.util.Vector;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.Session;
 import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
+import javax.naming.spi.ObjectFactory;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
@@ -140,4 +144,27 @@ public class XAConnectionPoolTest extends TestSupport {
         }
         connection.close();
     }
+
+    public void testInstanceOf() throws  Exception {
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        assertTrue(pcf instanceof QueueConnectionFactory);
+        assertTrue(pcf instanceof TopicConnectionFactory);
+    }
+
+    public void testBindable() throws Exception {
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        assertTrue(pcf  instanceof ObjectFactory);
+        assertTrue(((ObjectFactory)pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
+        assertTrue(pcf.isTmFromJndi());
+    }
+
+    public void testBindableEnvOverrides() throws Exception {
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        assertTrue(pcf  instanceof ObjectFactory);
+        Hashtable<String, String> environment = new Hashtable<String, String>();
+        environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
+        assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
+        assertFalse(pcf.isTmFromJndi());
+    }
+
 }

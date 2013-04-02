@@ -16,18 +16,53 @@
  */
 package org.apache.activemq.pool;
 
+import java.io.Serializable;
+import java.util.Hashtable;
+import javax.jms.JMSException;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.Name;
+import javax.naming.spi.ObjectFactory;
 import javax.transaction.TransactionManager;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * A pooled connection factory that automatically enlists
  * sessions in the current active XA transaction if any.
  */
-public class XaPooledConnectionFactory extends PooledConnectionFactory {
+public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory, Serializable, QueueConnectionFactory, TopicConnectionFactory
+{
 
     private TransactionManager transactionManager;
+    private boolean tmFromJndi = false;
+    private String tmJndiName = "java:/TransactionManager";
+
+    public String getTmJndiName() {
+        return tmJndiName;
+    }
+
+    public void setTmJndiName(String tmJndiName) {
+        this.tmJndiName = tmJndiName;
+    }
+
+    public boolean isTmFromJndi() {
+        return tmFromJndi;
+    }
+
+    /**
+     * Allow transaction manager resolution from JNDI (ee deployment)
+     * @param tmFromJndi
+     */
+    public void setTmFromJndi(boolean tmFromJndi) {
+        this.tmFromJndi = tmFromJndi;
+    }
 
     public XaPooledConnectionFactory() {
         super();
@@ -42,6 +77,13 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory {
     }
 
     public TransactionManager getTransactionManager() {
+        if (transactionManager == null && tmFromJndi) {
+            try {
+                transactionManager = (TransactionManager) new InitialContext().lookup(getTmJndiName());
+            } catch (Throwable ignored) {
+                ignored.printStackTrace();
+            }
+        }
         return transactionManager;
     }
 
@@ -52,5 +94,34 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory {
     @Override
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
         return new XaConnectionPool(connection, getTransactionManager());
+    }
+
+    @Override
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
+        setTmFromJndi(true);
+        if (environment != null) {
+            IntrospectionSupport.setProperties(this, environment);
+        }
+        return this;
+    }
+
+    @Override
+    public QueueConnection createQueueConnection() throws JMSException {
+        return (QueueConnection) createConnection();
+    }
+
+    @Override
+    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
+        return (QueueConnection) createConnection(userName, password);
+    }
+
+    @Override
+    public TopicConnection createTopicConnection() throws JMSException {
+        return (TopicConnection) createConnection();
+    }
+
+    @Override
+    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
+        return (TopicConnection) createConnection(userName, password);
     }
 }
