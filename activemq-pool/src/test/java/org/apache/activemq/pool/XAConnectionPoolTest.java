@@ -40,6 +40,7 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
 import org.apache.activemq.ActiveMQXASession;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -157,14 +158,14 @@ public class XAConnectionPoolTest extends TestSupport {
 
     public void testBindable() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        assertTrue(pcf  instanceof ObjectFactory);
+        assertTrue(pcf instanceof ObjectFactory);
         assertTrue(((ObjectFactory)pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
         assertTrue(pcf.isTmFromJndi());
     }
 
     public void testBindableEnvOverrides() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        assertTrue(pcf  instanceof ObjectFactory);
+        assertTrue(pcf instanceof ObjectFactory);
         Hashtable<String, String> environment = new Hashtable<String, String>();
         environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
         assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
@@ -173,7 +174,7 @@ public class XAConnectionPoolTest extends TestSupport {
 
     public void testSenderAndPublisherDest() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test?broker.persistent=false"));
 
         QueueConnection connection = pcf.createQueueConnection();
         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
