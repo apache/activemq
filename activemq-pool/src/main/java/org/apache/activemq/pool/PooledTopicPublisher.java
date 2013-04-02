@@ -35,7 +35,7 @@ public class PooledTopicPublisher extends PooledProducer implements TopicPublish
 
     @Override
     public Topic getTopic() throws JMSException {
-        return getTopicPublisher().getTopic();
+        return (Topic) getDestination();
     }
 
     @Override

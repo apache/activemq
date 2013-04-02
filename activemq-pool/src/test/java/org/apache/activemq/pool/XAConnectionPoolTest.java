@@ -18,7 +18,11 @@ package org.apache.activemq.pool;
 
 import java.util.Hashtable;
 import java.util.Vector;
+import javax.jms.BytesMessage;
+import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.QueueSender;
+import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
@@ -165,6 +169,25 @@ public class XAConnectionPoolTest extends TestSupport {
         environment.put("tmFromJndi", String.valueOf(Boolean.FALSE));
         assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, environment) instanceof XaPooledConnectionFactory);
         assertFalse(pcf.isTmFromJndi());
+    }
+
+    public void testSenderAndPublisherDest() throws Exception {
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
+
+        QueueConnection connection = pcf.createQueueConnection();
+        QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+        QueueSender sender = session.createSender(session.createQueue("AA"));
+        assertNotNull(sender.getQueue().getQueueName());
+
+        connection.close();
+
+        TopicConnection topicConnection = pcf.createTopicConnection();
+        TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+        TopicPublisher topicPublisher = topicSession.createPublisher(topicSession.createTopic("AA"));
+        assertNotNull(topicPublisher.getTopic().getTopicName());
+
+        topicConnection.close();
     }
 
 }

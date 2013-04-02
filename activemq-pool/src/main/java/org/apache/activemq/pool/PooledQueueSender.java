@@ -45,7 +45,7 @@ public class PooledQueueSender extends PooledProducer implements QueueSender {
 
     @Override
     public Queue getQueue() throws JMSException {
-        return getQueueSender().getQueue();
+        return (Queue) getDestination();
     }
 
     protected ActiveMQQueueSender getQueueSender() {

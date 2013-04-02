@@ -149,7 +149,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                 try {
                     sessionPool.invalidateObject(key, this);
                 } catch (Exception e) {
-                    throw JMSExceptionSupport.create(e);
+                    LOG.trace("Ignoring exception on invalidateObject as discarding session: " + e, e);
                 }
             } else {
                 try {
