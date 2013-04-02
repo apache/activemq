@@ -30,7 +30,7 @@
         <bundle dependency="false">mvn:commons-net/commons-net/${commons-net-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <feature version="[3,4)">spring</feature>
-        <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
+        <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
     </feature>
 
