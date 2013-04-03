@@ -47,6 +47,7 @@ public class ActiveMQBrokerNdWebConsoleFeatureTest extends ActiveMQBrokerFeature
     protected void produceMessage(String nameAndPayload) throws Exception {
         HttpClient client = new HttpClient();
 
+        System.err.println(executeCommand("activemq:bstat").trim());
         System.err.println("attempting publish via web console..");
 
         // set credentials
@@ -83,5 +84,7 @@ public class ActiveMQBrokerNdWebConsoleFeatureTest extends ActiveMQBrokerFeature
 
         // execute the send
         assertEquals("post succeeded, " + post, 302, client.executeMethod(post));
+
+        System.err.println(executeCommand("activemq:bstat").trim());
     }
 }

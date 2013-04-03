@@ -167,8 +167,12 @@ public abstract class AbstractFeatureTest {
 
     // for use from a probe
     public String getCamelFeatureUrl() {
+        return getCamelFeatureUrl(System.getProperty("camel.version", "unknown"));
+    }
+
+    public static String getCamelFeatureUrl(String ver) {
         return "mvn:org.apache.camel.karaf/apache-camel/"
-        + System.getProperty("camel.version", "unknown")
+        + ver
         + "/xml/features";
     }
 
@@ -180,13 +184,18 @@ public abstract class AbstractFeatureTest {
             artifactId("standard").version(karafVersion()).type(type);
     }
 
-    public static Option[] configureBrokerStart(Option[] existingOptions) {
+    public static Option[] configureBrokerStart(Option[] existingOptions, String xmlConfig) {
         existingOptions = append(
                 replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server-default.cfg")),
                 existingOptions);
         return append(
-                replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/activemq.xml")),
+                replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/" + xmlConfig + ".xml")),
                 existingOptions);
+    }
+
+    public static Option[] configureBrokerStart(Option[] existingOptions) {
+        final String xmlConfig = "activemq";
+        return configureBrokerStart(existingOptions, xmlConfig);
     }
 
     public static Option[] append(Option toAdd, Option[] existingOptions) {

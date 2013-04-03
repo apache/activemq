@@ -24,23 +24,31 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
+import static org.ops4j.pax.exam.CoreOptions.scanFeatures;
 
 @RunWith(JUnit4TestRunner.class)
-public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
+public class ActiveMQBrokerNdCamelFeatureTest extends AbstractFeatureTest {
 
     @Configuration
     public static Option[] configure() {
-        return configureBrokerStart(configure("activemq"));
+        Option[] baseOptions = configure("activemq");
+        return configureBrokerStart(append(scanFeatures(getCamelFeatureUrl(
+                MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")
+        ), "activemq-camel"), baseOptions), "activemq-nd-camel");
     }
 
     @Test
     public void test() throws Throwable {
+        System.err.println(executeCommand("features:list").trim());
 
         withinReason(new Callable<Boolean>() {
             @Override
@@ -59,13 +67,12 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
             }
         });
 
-        // produce and consume
-        final String nameAndPayload = String.valueOf(System.currentTimeMillis());
-        produceMessage(nameAndPayload);
-
         System.err.println(executeCommand("activemq:bstat").trim());
 
-        assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
+        // produce and consume
+        final String nameAndPayload = String.valueOf(System.currentTimeMillis());
+        produceMessage("camel_in");
+        assertEquals("got our message", "camel_in", consumeMessage("camel_out"));
     }
 
     protected String consumeMessage(String nameAndPayload) throws Exception {
@@ -74,7 +81,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
-        TextMessage message = (TextMessage) consumer.receive(4000);
+        TextMessage message = (TextMessage) consumer.receive(10000);
         System.err.println("message: " + message);
         connection.close();
         return message.getText();

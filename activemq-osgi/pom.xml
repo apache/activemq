@@ -221,6 +221,9 @@
                   <includes>
                     <include>spring.*</include>
                   </includes>
+                  <excludes>
+                      <exclude>spring.handlers</exclude>
+                  </excludes>
                 </resource>
               </resources>
             </configuration>
