@@ -185,6 +185,32 @@
       </resource>
     </resources>
     <plugins>
+      <!-- get camel core spring schema info -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.camel</groupId>
+                  <artifactId>camel-spring</artifactId>
+                  <version>${camel-version}</version>
+                  <type>jar</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${basedir}/target/extra-resources/</outputDirectory>
+                  <includes>camel-osgi.xsd,camel-spring.xsd</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Copy all necessary resources from other modules, like spring schema mapping, xbean resources, etc. -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
