@@ -48,6 +48,12 @@ public class XaConnectionPool extends ConnectionPool {
             if (isXa) {
                 transacted = true;
                 ackMode = Session.SESSION_TRANSACTED;
+            } else if (transactionManager != null) {
+                // cmt or transactionManager managed
+                transacted = false;
+                if (ackMode == Session.SESSION_TRANSACTED) {
+                    ackMode = Session.AUTO_ACKNOWLEDGE;
+                }
             }
             PooledSession session = (PooledSession) super.createSession(transacted, ackMode);
             if (isXa) {

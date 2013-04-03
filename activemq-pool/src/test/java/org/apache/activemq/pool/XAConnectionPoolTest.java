@@ -191,4 +191,60 @@ public class XAConnectionPoolTest extends TestSupport {
         topicConnection.close();
     }
 
+    public void testSessionArgsIgnoredWithTm() throws Exception {
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test?broker.persistent=false"));
+        // simple TM that with no tx
+        pcf.setTransactionManager(new TransactionManager() {
+            @Override
+            public void begin() throws NotSupportedException, SystemException {
+                throw new SystemException("NoTx");
+            }
+
+            @Override
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+                throw new IllegalStateException("NoTx");
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return Status.STATUS_NO_TRANSACTION;
+            }
+
+            @Override
+            public Transaction getTransaction() throws SystemException {
+                throw new SystemException("NoTx");
+            }
+
+            @Override
+            public void resume(Transaction tobj) throws IllegalStateException, InvalidTransactionException, SystemException {
+                throw new IllegalStateException("NoTx");
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SecurityException, SystemException {
+                throw new IllegalStateException("NoTx");
+            }
+
+            @Override
+            public void setRollbackOnly() throws IllegalStateException, SystemException {
+                throw new IllegalStateException("NoTx");
+            }
+
+            @Override
+            public void setTransactionTimeout(int seconds) throws SystemException {
+            }
+
+            @Override
+            public Transaction suspend() throws SystemException {
+                throw new SystemException("NoTx");
+            }
+        });
+
+        QueueConnection connection = pcf.createQueueConnection();
+        // like ee tck
+        assertNotNull("can create session(false, 0)", connection.createQueueSession(false, 0));
+
+        connection.close();
+    }
 }
