@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
  * Used to keep track of how much of something is being used so that a
  * productive working set usage can be controlled. Main use case is manage
  * memory usage.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public abstract class Usage<T extends Usage> implements Service {
 
@@ -74,7 +74,7 @@ public abstract class Usage<T extends Usage> implements Service {
     public boolean waitForSpace(long timeout) throws InterruptedException {
         return waitForSpace(timeout, 100);
     }
-    
+
     /**
      * @param timeout
      * @throws InterruptedException
@@ -108,7 +108,7 @@ public abstract class Usage<T extends Usage> implements Service {
     public boolean isFull() {
         return isFull(100);
     }
-    
+
     public boolean isFull(int highWaterMark) {
         if (parent != null && parent.isFull(highWaterMark)) {
             return true;
@@ -138,7 +138,7 @@ public abstract class Usage<T extends Usage> implements Service {
      * usagePortion to 0 since the UsageManager is not going to be portion based
      * off the parent.
      * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
-     * 
+     *
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setLimit(long limit) {
@@ -201,7 +201,7 @@ public abstract class Usage<T extends Usage> implements Service {
     /**
      * Sets the minimum number of percentage points the usage has to change
      * before a UsageListener event is fired by the manager.
-     * 
+     *
      * @param percentUsageMinDelta
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
@@ -242,9 +242,9 @@ public abstract class Usage<T extends Usage> implements Service {
 
     private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
-            LOG.debug(getName() + ": usage change from: " + oldPercentUsage + "% of available memory, to: " 
+            LOG.debug(getName() + ": usage change from: " + oldPercentUsage + "% of available memory, to: "
                 + newPercentUsage + "% of available memory");
-        }   
+        }
         if (started.get()) {
             // Switching from being full to not being full..
             if (oldPercentUsage >= 100 && newPercentUsage < 100) {
@@ -262,6 +262,7 @@ public abstract class Usage<T extends Usage> implements Service {
             if (!listeners.isEmpty()) {
                 // Let the listeners know on a separate thread
                 Runnable listenerNotifier = new Runnable() {
+                    @Override
                     public void run() {
                         for (Iterator<UsageListener> iter = listeners.iterator(); iter.hasNext();) {
                             UsageListener l = iter.next();
@@ -290,14 +291,15 @@ public abstract class Usage<T extends Usage> implements Service {
                 + (parent != null ? ";Parent:" + parent.toString() : "");
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void start() {
         if (started.compareAndSet(false, true)){
             if (parent != null) {
                 parent.addChild(this);
                 if(getLimit() > parent.getLimit()) {
-                	LOG.info("Usage({}) limit={} should be smaller than its parent limit={}", 
-                			 new Object[]{getName(), getLimit(), parent.getLimit()});
+                    LOG.info("Usage({}) limit={} should be smaller than its parent limit={}",
+                             new Object[]{getName(), getLimit(), parent.getLimit()});
                 }
             }
             for (T t:children) {
@@ -306,13 +308,14 @@ public abstract class Usage<T extends Usage> implements Service {
         }
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void stop() {
         if (started.compareAndSet(true, false)){
             if (parent != null) {
                 parent.removeChild(this);
             }
-            
+
             //clear down any callbacks
             synchronized (usageMutex) {
                 usageMutex.notifyAll();
@@ -348,6 +351,7 @@ public abstract class Usage<T extends Usage> implements Service {
         if (parent != null) {
             Runnable r = new Runnable() {
 
+                @Override
                 public void run() {
                     synchronized (usageMutex) {
                         if (percentUsage >= 100) {
@@ -411,11 +415,16 @@ public abstract class Usage<T extends Usage> implements Service {
     public void setParent(T parent) {
         this.parent = parent;
     }
-    
+
     public void setExecutor (ThreadPoolExecutor executor) {
         this.executor = executor;
     }
+
     public ThreadPoolExecutor getExecutor() {
         return executor;
+    }
+
+    public boolean isStarted() {
+        return started.get();
     }
 }

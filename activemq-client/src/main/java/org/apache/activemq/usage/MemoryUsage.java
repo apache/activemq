@@ -20,9 +20,9 @@ package org.apache.activemq.usage;
  * Used to keep track of how much of something is being used so that a
  * productive working set usage can be controlled. Main use case is manage
  * memory usage.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class MemoryUsage extends Usage<MemoryUsage> {
 
@@ -36,7 +36,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
      * Create the memory manager linked to a parent. When the memory manager is
      * linked to a parent then when usage increased or decreased, the parent's
      * usage is also increased or decreased.
-     * 
+     *
      * @param parent
      */
     public MemoryUsage(MemoryUsage parent) {
@@ -58,13 +58,18 @@ public class MemoryUsage extends Usage<MemoryUsage> {
     /**
      * @throws InterruptedException
      */
+    @Override
     public void waitForSpace() throws InterruptedException {
         if (parent != null) {
             parent.waitForSpace();
         }
         synchronized (usageMutex) {
-            for (int i = 0; percentUsage >= 100; i++) {
+            while (percentUsage >= 100 && isStarted()) {
                 usageMutex.wait();
+            }
+
+            if (percentUsage >= 100 && !isStarted()) {
+                throw new InterruptedException("waitForSpace stopped during wait.");
             }
         }
     }
@@ -74,6 +79,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
      * @throws InterruptedException
      * @return true if space
      */
+    @Override
     public boolean waitForSpace(long timeout) throws InterruptedException {
         if (parent != null) {
             if (!parent.waitForSpace(timeout)) {
@@ -88,6 +94,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         }
     }
 
+    @Override
     public boolean isFull() {
         if (parent != null && parent.isFull()) {
             return true;
@@ -100,7 +107,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
     /**
      * Tries to increase the usage by value amount but blocks if this object is
      * currently full.
-     * 
+     *
      * @param value
      * @throws InterruptedException
      */
@@ -111,7 +118,7 @@ public class MemoryUsage extends Usage<MemoryUsage> {
 
     /**
      * Increases the usage by the value amount.
-     * 
+     *
      * @param value
      */
     public void increaseUsage(long value) {
@@ -125,13 +132,13 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         }
         setPercentUsage(percentUsage);
         if (parent != null) {
-            ((MemoryUsage)parent).increaseUsage(value);
+            parent.increaseUsage(value);
         }
     }
 
     /**
      * Decreases the usage by the value amount.
-     * 
+     *
      * @param value
      */
     public void decreaseUsage(long value) {
@@ -149,10 +156,12 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         }
     }
 
+    @Override
     protected long retrieveUsage() {
         return usage;
     }
 
+    @Override
     public long getUsage() {
         return usage;
     }
