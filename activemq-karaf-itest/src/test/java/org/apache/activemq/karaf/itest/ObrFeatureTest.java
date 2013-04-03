@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.karaf.itest;
 
+import javax.jms.Destination;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.MavenUtils;

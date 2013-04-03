@@ -17,11 +17,6 @@
 package org.apache.activemq.karaf.itest;
 
 import java.util.concurrent.Callable;
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -32,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4TestRunner.class)
-public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
+public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
 
     @Configuration
     public static Option[] configure() {
@@ -66,27 +61,6 @@ public class ActiveMQBrokerFeatureTest extends AbstractFeatureTest {
         System.err.println(executeCommand("activemq:bstat").trim());
 
         assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
-    }
-
-    protected String consumeMessage(String nameAndPayload) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        Connection connection = factory.createConnection(USER,PASSWORD);
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
-        TextMessage message = (TextMessage) consumer.receive(4000);
-        System.err.println("message: " + message);
-        connection.close();
-        return message.getText();
-    }
-
-    protected void produceMessage(String nameAndPayload) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        Connection connection = factory.createConnection(USER,PASSWORD);
-        connection.start();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        session.createProducer(session.createQueue(nameAndPayload)).send(session.createTextMessage(nameAndPayload));
-        connection.close();
     }
 
 }

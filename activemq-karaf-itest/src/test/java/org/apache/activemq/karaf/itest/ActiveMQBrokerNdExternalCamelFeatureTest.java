@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.karaf.itest;
 
+import java.io.File;
 import java.util.concurrent.Callable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,25 +25,29 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 import static org.ops4j.pax.exam.CoreOptions.scanFeatures;
 
 @RunWith(JUnit4TestRunner.class)
-public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
+public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeatureTest {
 
     @Configuration
     public static Option[] configure() {
-        Option[] baseOptions = configure("activemq");
+        Option[] baseOptions = append(
+                replaceConfigurationFile("deploy/camel.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/camel.xml")),
+                configure("activemq"));
         return configureBrokerStart(append(scanFeatures(getCamelFeatureUrl(
                 MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")
-        ), "activemq-camel"), baseOptions), "activemq-nd-camel");
+        ), "activemq-camel"), baseOptions));
     }
 
     @Test
     public void test() throws Throwable {
         System.err.println(executeCommand("features:list").trim());
+        System.err.println(executeCommand("osgi:ls").trim());
+        System.err.println(executeCommand("osgi:list").trim());
 
         withinReason(new Callable<Boolean>() {
             @Override
@@ -68,4 +73,5 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
         produceMessage("camel_in");
         assertEquals("got our message", "camel_in", consumeMessage("camel_out"));
     }
+
 }
