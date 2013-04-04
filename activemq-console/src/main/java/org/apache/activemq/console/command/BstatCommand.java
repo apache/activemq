@@ -29,7 +29,7 @@ public class BstatCommand extends QueryCommand {
         "",
         "Bstat Options:",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
-        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
+        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
         "    --jmxlocal                    Use the local JMX server instead of a remote one.",
@@ -56,12 +56,13 @@ public class BstatCommand extends QueryCommand {
      * @param tokens - command arguments
      * @throws Exception
      */
+    @Override
     protected void runTask(List<String> tokens) throws Exception {
         List<String> queryTokens = new ArrayList<String>();
         // Find the first non-option token
         String brokerName = "*";
-        for (Iterator i = tokens.iterator(); i.hasNext();) {
-            String token = (String)i.next();
+        for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
+            String token = i.next();
             if (!token.startsWith("-")) {
                 brokerName = token;
                 break;
@@ -78,7 +79,7 @@ public class BstatCommand extends QueryCommand {
         queryTokens.add("--view");
         queryTokens.add("BrokerName,Name,connectorName,networkConnectorName,destinationName,destinationType,EnqueueCount,"
                         + "DequeueCount,TotalEnqueueCount,TotalDequeueCount,Messages,"
-                        + "TotalMessageCount,ConsumerCount,TotalConsumerCount,DispatchCount,Duplex,NetworkTTL");
+                        + "TotalMessageCount,ConsumerCount,TotalConsumerCount,DispatchCount,Duplex,NetworkTTL,Uptime");
 
         // Call the query command
         super.parseOptions(queryTokens);
@@ -88,6 +89,7 @@ public class BstatCommand extends QueryCommand {
     /**
      * Print the help messages for the browse command
      */
+    @Override
     protected void printHelp() {
         context.printHelp(helpFile);
     }
