@@ -16,14 +16,13 @@
  */
 package org.apache.activemq.network;
 
-import org.apache.activemq.util.Wait;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import org.apache.activemq.util.Wait;
+import org.junit.Test;
 
 public class NetworkLoopBackTest {
     @Test

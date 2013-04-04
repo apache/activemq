@@ -17,16 +17,13 @@
 
 package org.apache.activemq.transport.stomp;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
-import javax.jms.Connection;
+
 import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import org.apache.activemq.ActiveMQConnection;
+
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -36,9 +33,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static org.junit.Assert.*;
 
 public class StompPrefetchTest extends StompTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(StompPrefetchTest.class);

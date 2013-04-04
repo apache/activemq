@@ -34,9 +34,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.*;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -241,6 +239,7 @@ public class AMQDeadlockTestW4Brokers extends org.apache.activemq.test.TestSuppo
             this.waitTime = waitTime;
         }
 
+        @Override
         public void onMessage(Message msg) {
 
             try {
@@ -276,6 +275,7 @@ public class AMQDeadlockTestW4Brokers extends org.apache.activemq.test.TestSuppo
             this.producerName = producerName;
         }
 
+        @Override
         public void run() {
 
             try {
@@ -294,6 +294,7 @@ public class AMQDeadlockTestW4Brokers extends org.apache.activemq.test.TestSuppo
                 for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
                     final int count = i;
                     jmsTemplate.send(queueName, new MessageCreator() {
+                        @Override
                         public Message createMessage(Session session) throws JMSException {
 
                             final BytesMessage message = session.createBytesMessage();

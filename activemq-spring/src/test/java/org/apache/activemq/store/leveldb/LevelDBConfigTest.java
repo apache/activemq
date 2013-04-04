@@ -21,7 +21,6 @@ import java.io.File;
 import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.slf4j.Logger;
@@ -34,21 +33,15 @@ import org.springframework.core.io.Resource;
  */
 public class LevelDBConfigTest extends TestCase {
 
-
     protected static final String CONF_ROOT = "src/test/resources/org/apache/activemq/store/leveldb/";
     private static final Logger LOG = LoggerFactory.getLogger(LevelDBConfigTest.class);
-
-
-
 
     /*
      * This tests configuring the different broker properties using
      * xbeans-spring
      */
     public void testBrokerConfig() throws Exception {
-        ActiveMQTopic dest;
         BrokerService broker;
-
 
         // Create broker from resource
         // System.out.print("Creating broker... ");
@@ -94,8 +87,6 @@ public class LevelDBConfigTest extends TestCase {
             }
         }
     }
-
-
 
     /*
      * TODO: Create additional tests for forwarding bridges

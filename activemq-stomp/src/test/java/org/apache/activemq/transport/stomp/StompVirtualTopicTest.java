@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URI;
@@ -27,8 +29,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import javax.management.ObjectName;
-
-import junit.framework.Assert;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -130,7 +130,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
         // check if consumer set failMsg, then let the test fail.
         if (null != failMsg) {
             LOG.error(failMsg);
-            Assert.fail(failMsg);
+            fail(failMsg);
         }
     }
 
@@ -189,7 +189,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
                 // another receive should not return any more msgs
                 try {
                     frame = stompConnection.receive(3000);
-                    Assert.assertNull(frame);
+                    assertNull(frame);
                 } catch (Exception e) {
                     LOG.info("Correctly received " + e + " while trying to consume an additional msg." +
                             " This is expected as the queue should be empty now.");

@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import static org.junit.Assert.assertTrue;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Vector;
+
 import javax.net.ServerSocketFactory;
+
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.JaasDualAuthenticationPlugin;
@@ -30,9 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static junit.framework.Assert.assertTrue;
 
 // https://issues.apache.org/jira/browse/AMQ-3393
 public class ConnectTest {
@@ -64,6 +65,7 @@ public class ConnectTest {
         Thread t1 = new Thread() {
             StompConnection connection = new StompConnection();
 
+            @Override
             public void run() {
                 try {
                     connection.open("localhost", brokerService.getTransportConnectors().get(0).getConnectUri().getPort());
@@ -105,6 +107,7 @@ public class ConnectTest {
         Thread t1 = new Thread() {
             StompConnection connection = new StompConnection();
 
+            @Override
             public void run() {
                 try {
                     connection.open("localhost", listenPort);
@@ -146,6 +149,7 @@ public class ConnectTest {
         Thread t1 = new Thread() {
             StompConnection connection = new StompConnection();
 
+            @Override
             public void run() {
                 try {
                     connection.open("localhost",  brokerService.getTransportConnectors().get(0).getConnectUri().getPort());

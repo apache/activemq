@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.BytesMessage;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
@@ -32,10 +33,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Session;
-import junit.framework.Assert;
-import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.*;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -57,7 +56,7 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
     private static final int NUM_MESSAGE_TO_SEND = 10000;
     private static final int TOTAL_MESSAGES = MAX_PRODUCERS * NUM_MESSAGE_TO_SEND;
     private static final boolean USE_FAILOVER = true;
-    private AtomicInteger messageCount = new AtomicInteger();
+    private final AtomicInteger messageCount = new AtomicInteger();
     private CountDownLatch doneLatch;
 
     @Override
@@ -92,7 +91,7 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(45, TimeUnit.SECONDS));
             executor.shutdown();
             // Thread.sleep(30000);
-            Assert.assertEquals(TOTAL_MESSAGES, messageCount.get());
+            assertEquals(TOTAL_MESSAGES, messageCount.get());
         } finally {
             container1.stop();
             container1.destroy();
@@ -165,13 +164,13 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
             this.waitTime = waitTime;
         }
 
+        @Override
         public void onMessage(Message msg) {
             try {
                 messageCount.incrementAndGet();
                 doneLatch.countDown();
                 Thread.sleep(waitTime);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -187,6 +186,7 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
             this.queueName = queueName;
         }
 
+        @Override
         public void run() {
             try {
                 final JmsTemplate jmsTemplate = new JmsTemplate(pcf);
@@ -203,6 +203,7 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
                 for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
                     jmsTemplate.send(queueName, new MessageCreator() {
 
+                        @Override
                         public Message createMessage(Session session) throws JMSException {
                             final BytesMessage message = session.createBytesMessage();
                             message.writeBytes(bytes);

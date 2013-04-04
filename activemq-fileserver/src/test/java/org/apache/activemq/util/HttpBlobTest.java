@@ -26,14 +26,12 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.Assert;
-
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 
 public class HttpBlobTest extends HttpTestSupport {
-    
+
     public void testBlobFile() throws Exception {
         // first create Message
         File file = File.createTempFile("amq-data-file-", ".dat");
@@ -54,7 +52,7 @@ public class HttpBlobTest extends HttpTestSupport {
 
         // check message send
         Message msg = consumer.receive(1000);
-        Assert.assertTrue(msg instanceof ActiveMQBlobMessage);
+        assertTrue(msg instanceof ActiveMQBlobMessage);
 
         InputStream input = ((ActiveMQBlobMessage) msg).getInputStream();
         StringBuilder b = new StringBuilder();
@@ -64,11 +62,11 @@ public class HttpBlobTest extends HttpTestSupport {
             i = input.read();
         }
         input.close();
-        File uploaded = new File(homeDir, msg.getJMSMessageID().toString().replace(":", "_")); 
-        Assert.assertEquals(content, b.toString());
+        File uploaded = new File(homeDir, msg.getJMSMessageID().toString().replace(":", "_"));
+        assertEquals(content, b.toString());
         assertTrue(uploaded.exists());
         ((ActiveMQBlobMessage)msg).deleteFile();
         assertFalse(uploaded.exists());
     }
-    
+
 }

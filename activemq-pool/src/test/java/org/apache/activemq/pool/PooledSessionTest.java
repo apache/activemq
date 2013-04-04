@@ -23,14 +23,11 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class PooledSessionTest {
-
-    private Logger LOG = Logger.getLogger(getClass());
 
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
@@ -70,5 +67,4 @@ public class PooledSessionTest {
         assertEquals(1, connection.getNumtIdleSessions());
         assertEquals(1, connection.getNumSessions());
     }
-
 }

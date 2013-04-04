@@ -27,7 +27,6 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
-import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -176,7 +175,6 @@ public class PooledConnectionFactoryTest extends TestCase {
         }
 
         assertTrue("", Wait.waitFor(new Wait.Condition() {
-
             @Override
             public boolean isSatisified() throws Exception {
                 return connections.size() == numConnections;
@@ -203,17 +201,19 @@ public class PooledConnectionFactoryTest extends TestCase {
 
         // start test runner thread
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> result = (Future<Boolean>) executor.submit(new TestRunner());
+        Future<Boolean> result = executor.submit(new TestRunner());
 
         // test should not take > 5secs, so test fails i
         Thread.sleep(5 * 1000);
 
         if (!result.isDone() || !result.get().booleanValue()) {
-            PooledConnectionFactoryTest.LOG.error("2nd call to createSession()" + " is blocking but should have returned an error instead.");
+            PooledConnectionFactoryTest.LOG.error("2nd call to createSession() " +
+                                                  "is blocking but should have returned an error instead.");
 
             executor.shutdownNow();
 
-            Assert.fail("SessionPool inside PooledConnectionFactory is blocking if " + "limit is exceeded but should return an exception instead.");
+            fail("SessionPool inside PooledConnectionFactory is blocking if " +
+                 "limit is exceeded but should return an exception instead.");
         }
     }
 
@@ -224,6 +224,7 @@ public class PooledConnectionFactoryTest extends TestCase {
         /**
          * @return true if test succeeded, false otherwise
          */
+        @Override
         public Boolean call() {
 
             Connection conn = null;
@@ -248,8 +249,9 @@ public class PooledConnectionFactoryTest extends TestCase {
                     two.close();
 
                     LOG.error("Expected JMSException wasn't thrown.");
-                    Assert.fail("seconds call to Connection.createSession() was supposed" + "to raise an JMSException as internal session pool"
-                            + "is exhausted. This did not happen and indiates a problem");
+                    fail("seconds call to Connection.createSession() was supposed" +
+                         "to raise an JMSException as internal session pool" +
+                         "is exhausted. This did not happen and indiates a problem");
                     return new Boolean(false);
                 } catch (JMSException ex) {
                     if (ex.getCause().getClass() == java.util.NoSuchElementException.class) {
@@ -275,5 +277,3 @@ public class PooledConnectionFactoryTest extends TestCase {
         }
     }
 }
-
-

@@ -34,8 +34,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
-import junit.framework.Assert;
-
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -44,7 +43,6 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jms.core.JmsTemplate;
@@ -69,12 +67,14 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
 
     private static final int NUM_MESSAGE_TO_SEND = 10;
 
-    private AtomicInteger messageCount = new AtomicInteger();
+    private final AtomicInteger messageCount = new AtomicInteger();
     private CountDownLatch doneLatch;
 
+    @Override
     public void setUp() throws Exception {
     }
 
+    @Override
     public void tearDown() throws Exception {
     }
 
@@ -111,18 +111,15 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(20, TimeUnit.SECONDS));
             executor.shutdownNow();
 
-            Assert.assertEquals(NUM_MESSAGE_TO_SEND, messageCount.get());
+            assertEquals(NUM_MESSAGE_TO_SEND, messageCount.get());
 
         } finally {
-
             container1.stop();
             container1.destroy();
             container1 = null;
             brokerService1.stop();
             brokerService1 = null;
-
         }
-
     }
 
     // This should fail with incubator-activemq-fuse-4.1.0.5
@@ -162,7 +159,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(20, TimeUnit.SECONDS));
             executor.shutdownNow();
 
-            Assert.assertEquals(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND, messageCount.get());
+            assertEquals(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND, messageCount.get());
         } finally {
 
             container1.stop();
@@ -214,9 +211,8 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             assertTrue(doneLatch.await(20, TimeUnit.SECONDS));
             executor.shutdownNow();
 
-            Assert.assertEquals(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND, messageCount.get());
+            assertEquals(MAX_PRODUCERS * NUM_MESSAGE_TO_SEND, messageCount.get());
         } finally {
-
             container1.stop();
             container1.destroy();
             container1 = null;
@@ -268,7 +264,6 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
         }
 
         return brokerService;
-
     }
 
     public DefaultMessageListenerContainer createDefaultMessageListenerContainer(final ConnectionFactory acf, final MessageListener listener, final String queue) {
@@ -300,26 +295,21 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
 
         public TestMessageListener1(long waitTime) {
             this.waitTime = waitTime;
-
         }
 
+        @Override
         public void onMessage(Message msg) {
 
             try {
                 LOG.info("Listener1 Consumed message " + msg.getIntProperty("count"));
-
                 messageCount.incrementAndGet();
                 doneLatch.countDown();
-
                 Thread.sleep(waitTime);
             } catch (JMSException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -334,6 +324,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             this.queueName = queueName;
         }
 
+        @Override
         public void run() {
 
             try {
@@ -355,6 +346,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
                 for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
                     jmsTemplate.send(queueName, new MessageCreator() {
 
+                        @Override
                         public Message createMessage(Session session) throws JMSException {
 
                             final BytesMessage message = session.createBytesMessage();
@@ -387,6 +379,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             this.queueName = queueName;
         }
 
+        @Override
         public void run() {
 
             try {
@@ -408,6 +401,7 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
                 for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
                     jmsTemplate.send(queueName, new MessageCreator() {
 
+                        @Override
                         public Message createMessage(Session session) throws JMSException {
 
                             final BytesMessage message = session.createBytesMessage();
@@ -429,5 +423,4 @@ public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
             }
         }
     }
-
 }
