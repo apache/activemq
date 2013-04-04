@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region.virtual;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
+import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.Message;
@@ -27,15 +28,13 @@ import org.apache.activemq.util.LRUCache;
 /**
  * A Destination which implements <a
  * href="http://activemq.org/site/virtual-destinations.html">Virtual Topic</a>
- * 
- * 
  */
 public class VirtualTopicInterceptor extends DestinationFilter {
 
-    private String prefix;
-    private String postfix;
-    private boolean local;
-    private LRUCache<ActiveMQDestination,ActiveMQQueue> cache = new LRUCache<ActiveMQDestination,ActiveMQQueue>();
+    private final String prefix;
+    private final String postfix;
+    private final boolean local;
+    private final LRUCache<ActiveMQDestination,ActiveMQQueue> cache = new LRUCache<ActiveMQDestination,ActiveMQQueue>();
 
     public VirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
         super(next);
@@ -44,6 +43,11 @@ public class VirtualTopicInterceptor extends DestinationFilter {
         this.local = local;
     }
 
+    public Topic getTopic() {
+        return (Topic) this.next;
+    }
+
+    @Override
     public void send(ProducerBrokerExchange context, Message message) throws Exception {
         if (!message.isAdvisory() && !(local && message.getBrokerPath() != null)) {
             ActiveMQDestination queueConsumers = getQueueConsumersWildcard(message.getDestination());
