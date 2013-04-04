@@ -180,6 +180,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * @return Returns the Connection.
      */
+    @Override
     public Connection createConnection() throws JMSException {
         return createActiveMQConnection();
     }
@@ -187,6 +188,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * @return Returns the Connection.
      */
+    @Override
     public Connection createConnection(String userName, String password) throws JMSException {
         return createActiveMQConnection(userName, password);
     }
@@ -195,6 +197,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return Returns the QueueConnection.
      * @throws JMSException
      */
+    @Override
     public QueueConnection createQueueConnection() throws JMSException {
         return createActiveMQConnection().enforceQueueOnlyConnection();
     }
@@ -202,6 +205,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * @return Returns the QueueConnection.
      */
+    @Override
     public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
         return createActiveMQConnection(userName, password).enforceQueueOnlyConnection();
     }
@@ -210,6 +214,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * @return Returns the TopicConnection.
      * @throws JMSException
      */
+    @Override
     public TopicConnection createTopicConnection() throws JMSException {
         return createActiveMQConnection();
     }
@@ -217,6 +222,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * @return Returns the TopicConnection.
      */
+    @Override
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
         return createActiveMQConnection(userName, password);
     }
@@ -224,6 +230,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * @returns the StatsImpl associated with this ConnectionFactory.
      */
+    @Override
     public StatsImpl getStats() {
         return this.factoryStats;
     }
@@ -756,6 +763,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("nonBlockingRedelivery", Boolean.toString(isNonBlockingRedelivery()));
         props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
+        props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
     }
 
     public boolean isUseCompression() {
