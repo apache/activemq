@@ -1169,9 +1169,11 @@ public class FailoverTransport implements CompositeTransport {
                                 t.setTransportListener(bt);
                                 t.start();
                                 bt.setTransport(t);
-                                backups.add(bt);
                                 if (priorityBackup && isPriority(uri)) {
                                    priorityBackupAvailable = true;
+                                   backups.add(0, bt);
+                                } else {
+                                    backups.add(bt);
                                 }
                             }
                         } catch (Exception e) {
