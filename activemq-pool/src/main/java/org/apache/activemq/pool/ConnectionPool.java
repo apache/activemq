@@ -32,6 +32,8 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.
@@ -42,6 +44,8 @@ import org.apache.commons.pool.impl.GenericObjectPool;
  * to this ConnectionPool are released.
  */
 public class ConnectionPool {
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(ConnectionPool.class);
 
     private ActiveMQConnection connection;
     private int referenceCount;
@@ -207,6 +211,9 @@ public class ConnectionPool {
      * @return true if this connection has expired.
      */
     public synchronized boolean expiredCheck() {
+
+        boolean expired = false;
+
         if (connection == null) {
             return true;
         }
@@ -214,25 +221,27 @@ public class ConnectionPool {
         if (hasExpired || hasFailed) {
             if (referenceCount == 0) {
                 close();
+                expired = true;
             }
-            return true;
         }
 
         if (expiryTimeout > 0 && System.currentTimeMillis() > firstUsed + expiryTimeout) {
             hasExpired = true;
             if (referenceCount == 0) {
                 close();
+                expired = true;
             }
-            return true;
         }
 
+        // Only set hasExpired here is no references, as a Connection with references is by
+        // definition not idle at this time.
         if (referenceCount == 0 && idleTimeout > 0 && System.currentTimeMillis() > lastUsed + idleTimeout) {
             hasExpired = true;
             close();
-            return true;
+            expired = true;
         }
 
-        return false;
+        return expired;
     }
 
     public int getIdleTimeout() {

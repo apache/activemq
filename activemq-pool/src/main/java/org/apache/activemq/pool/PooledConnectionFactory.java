@@ -220,7 +220,25 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         }
 
         try {
-            connection = connectionsPool.borrowObject(key);
+
+            // We can race against other threads returning the connection when there is an
+            // expiration or idle timeout.  We keep pulling out ConnectionPool instances until
+            // we win and get a non-closed instance and then increment the reference count
+            // under lock to prevent another thread from triggering an expiration check and
+            // pulling the rug out from under us.
+            while (connection == null) {
+                connection = connectionsPool.borrowObject(key);
+                synchronized (connection) {
+                    if (connection.getConnection() != null) {
+                        connection.incrementReferenceCount();
+                        break;
+                    }
+
+                    // Return the bad one to the pool and let if get destroyed as normal.
+                    connectionsPool.returnObject(key, connection);
+                    connection = null;
+                }
+            }
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Error while attempting to retrieve a connection from the pool", e);
         }

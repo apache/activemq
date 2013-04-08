@@ -74,7 +74,6 @@ public class PooledConnection implements TopicConnection, QueueConnection, Enhan
      */
     public PooledConnection(ConnectionPool pool) {
         this.pool = pool;
-        this.pool.incrementReferenceCount();
     }
 
     /**
