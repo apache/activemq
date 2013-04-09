@@ -18,6 +18,7 @@ package org.apache.activemq;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -289,6 +290,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         return session.isDupsOkAcknowledge() && !getDestination().isQueue() ;
     }
 
+    @Override
     public StatsImpl getStats() {
         return stats;
     }
@@ -380,6 +382,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException if the JMS provider fails to receive the next
      *                 message due to some internal error.
      */
+    @Override
     public String getMessageSelector() throws JMSException {
         checkClosed();
         return selector;
@@ -394,6 +397,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *                 listener due to some internal error.
      * @see javax.jms.MessageConsumer#setMessageListener(javax.jms.MessageListener)
      */
+    @Override
     public MessageListener getMessageListener() throws JMSException {
         checkClosed();
         return this.messageListener.get();
@@ -414,6 +418,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *                 message due to some internal error.
      * @see javax.jms.MessageConsumer#getMessageListener
      */
+    @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
         if (info.getPrefetchSize() == 0) {
@@ -436,6 +441,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
 
+    @Override
     public MessageAvailableListener getAvailableListener() {
         return availableListener;
     }
@@ -445,6 +451,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * message available so that the {@link MessageConsumer#receiveNoWait()} can
      * be called.
      */
+    @Override
     public void setAvailableListener(MessageAvailableListener availableListener) {
         this.availableListener = availableListener;
     }
@@ -514,6 +521,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @return the next message produced for this message consumer, or null if
      *         this message consumer is concurrently closed
      */
+    @Override
     public Message receive() throws JMSException {
         checkClosed();
         checkMessageListener();
@@ -547,6 +555,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
         if (session.isClientAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
+                @Override
                 public void execute() throws Exception {
                     session.checkClosed();
                     session.acknowledge();
@@ -554,6 +563,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             });
         } else if (session.isIndividualAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
+                @Override
                 public void execute() throws Exception {
                     session.checkClosed();
                     acknowledge(md);
@@ -577,6 +587,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *         the timeout expires or this message consumer is concurrently
      *         closed
      */
+    @Override
     public Message receive(long timeout) throws JMSException {
         checkClosed();
         checkMessageListener();
@@ -613,6 +624,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException if the JMS provider fails to receive the next
      *                 message due to some internal error.
      */
+    @Override
     public Message receiveNoWait() throws JMSException {
         checkClosed();
         checkMessageListener();
@@ -651,6 +663,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException if the JMS provider fails to close the consumer due
      *                 to some internal error.
      */
+    @Override
     public void close() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
             if (session.getTransactionContext().isInTransaction()) {
@@ -743,6 +756,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     executorService = Executors.newSingleThreadExecutor();
                 }
                 executorService.submit(new Runnable() {
+                    @Override
                     public void run() {
                         try {
                             session.sendAck(ackToSend,true);
@@ -1197,6 +1211,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // Adjust the window size.
                     additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
                     redeliveryDelay = 0;
+
+                    deliveredCounter -= deliveredMessages.size();
+                    deliveredMessages.clear();
+
                 } else {
 
                     // only redelivery_ack after first delivery
@@ -1213,8 +1231,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             final LinkedList<MessageDispatch> pendingRedeliveries =
                                 new LinkedList<MessageDispatch>(deliveredMessages);
 
+                            Collections.reverse(pendingRedeliveries);
+
+                            deliveredCounter -= deliveredMessages.size();
+                            deliveredMessages.clear();
+
                             // Start up the delivery again a little later.
                             session.getScheduler().executeAfterDelay(new Runnable() {
+                                @Override
                                 public void run() {
                                     try {
                                         if (!unconsumedMessages.isClosed()) {
@@ -1236,9 +1260,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             unconsumedMessages.enqueueFirst(md);
                         }
 
+                        deliveredCounter -= deliveredMessages.size();
+                        deliveredMessages.clear();
+
                         if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
                             // Start up the delivery again a little later.
                             session.getScheduler().executeAfterDelay(new Runnable() {
+                                @Override
                                 public void run() {
                                     try {
                                         if (started.get()) {
@@ -1254,8 +1282,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         }
                     }
                 }
-                deliveredCounter -= deliveredMessages.size();
-                deliveredMessages.clear();
             }
         }
         if (messageListener.get() != null) {
@@ -1304,6 +1330,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
 
+    @Override
     public void dispatch(MessageDispatch md) {
         MessageListener listener = this.messageListener.get();
         try {
