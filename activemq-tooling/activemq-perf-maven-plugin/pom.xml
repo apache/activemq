@@ -39,6 +39,10 @@
       <artifactId>activemq-broker</artifactId>
     </dependency>
     <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-spring</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>

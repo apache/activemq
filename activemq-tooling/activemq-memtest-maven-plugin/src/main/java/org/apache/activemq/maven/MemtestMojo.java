@@ -29,79 +29,79 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class MemtestMojo extends AbstractMojo {
 
     /**
-     * @parameter property="${url}
+     * @parameter property="url"
      */
     private String url;
 
     /**
-     * @parameter property="${topic}" default-value="true"
+     * @parameter property="topic" default-value="true"
      * @required
      */
     private String topic;
 
     /**
-     * @parameter property="${connectionCheckpointSize}" default-value="-1"
+     * @parameter property="connectionCheckpointSize" default-value="-1"
      * @required
      */
     private String connectionCheckpointSize;
 
     /**
-     * @parameter property="${durable}" default-value="false"
+     * @parameter property="durable" default-value="false"
      * @required
      */
     private String durable;
 
     /**
-     * @parameter property="${producerCount}" default-value="1"
+     * @parameter property="producerCount" default-value="1"
      * @required
      */
     private String producerCount;
 
     /**
-     * @parameter property="${prefetchSize}" default-value="-1"
+     * @parameter property="prefetchSize" default-value="-1"
      * @required
      */
     private String prefetchSize;
 
     /**
-     * @parameter property="${consumerCount}" default-value="1"
+     * @parameter property="consumerCount" default-value="1"
      * @required
      */
     private String consumerCount;
 
     /**
-     * @parameter property="${messageCount}" default-value="100000"
+     * @parameter property="messageCount" default-value="100000"
      * @required
      */
     private String messageCount;
 
     /**
-     * @parameter property="${messageSize}" default-value="10240"
+     * @parameter property="messageSize" default-value="10240"
      * @required
      */
     private String messageSize;
 
     /**
-     * @parameter property="${checkpointInterval}" default-value="2"
+     * @parameter property="checkpointInterval" default-value="2"
      * @required
      */
     private String checkpointInterval;
 
     /**
-     * @parameter property="${destinationName}" default-value="FOO.BAR"
+     * @parameter property="destinationName" default-value="FOO.BAR"
      * @required
      */
     private String destinationName;
 
     /**
-     * @parameter property="${reportName}"
+     * @parameter property="$reportName"
      *            default-value="activemq-memory-usage-report"
      * @required
      */
     private String reportName;
 
     /**
-     * @parameter property="${reportDirectory}"
+     * @parameter property="reportDirectory"
      *            default-value="${project.build.directory}/test-memtest"
      * @required
      */

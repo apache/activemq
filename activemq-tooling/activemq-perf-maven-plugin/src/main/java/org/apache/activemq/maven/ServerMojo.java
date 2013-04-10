@@ -37,7 +37,7 @@ public class ServerMojo extends AbstractMojo {
     /**
      * Location of the output directory. Defaults to target.
      *
-     * @parameter property="${project.build.directory}"
+     * @parameter property="project.build.directory"
      * @required
      */
     private File outputDirectory;
@@ -45,7 +45,7 @@ public class ServerMojo extends AbstractMojo {
     /**
      * Location of the predefined config files.
      *
-     * @parameter property="${configDirectory}"
+     * @parameter property="configDirectory"
      *            default-value="${basedir}/src/main/resources/broker-conf"
      * @required
      */
@@ -54,7 +54,7 @@ public class ServerMojo extends AbstractMojo {
     /**
      * Type of activemq configuration to use. This is also the filename used.
      *
-     * @parameter property="${configType}" default-value="activemq"
+     * @parameter property="configType" default-value="activemq"
      * @required
      */
     private String configType;
@@ -62,14 +62,14 @@ public class ServerMojo extends AbstractMojo {
     /**
      * Location of activemq config file other those found in resources/config.
      *
-     * @parameter property="${configFile}"
+     * @parameter property="configFile"
      */
     private File configFile;
 
     /**
      * Broker URL.
      *
-     * @parameter property="${url}"
+     * @parameter property="url"
      */
     private String url;
 
@@ -105,6 +105,7 @@ public class ServerMojo extends AbstractMojo {
             args[1] = "xbean:" + (config.toURI()).toString();
         }
 
+        getLog().info("Starting broker with configuration in:  " + args[1]);
         Main.main(args);
     }
 
