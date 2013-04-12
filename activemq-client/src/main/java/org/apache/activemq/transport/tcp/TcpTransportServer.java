@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ServerSocketFactory;
 
@@ -113,7 +114,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * The maximum number of sockets allowed for this server
      */
     protected int maximumConnections = Integer.MAX_VALUE;
-    protected int currentTransportCount=0;
+    protected AtomicInteger currentTransportCount = new AtomicInteger();
 
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
@@ -177,6 +178,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      *
      * @param brokerInfo
      */
+    @Override
     public void setBrokerInfo(BrokerInfo brokerInfo) {
     }
 
@@ -267,6 +269,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     /**
      * pull Sockets from the ServerSocket
      */
+    @Override
     public void run() {
         while (!isStopped()) {
             Socket socket = null;
@@ -312,6 +315,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     /**
      * @return pretty print of this
      */
+    @Override
     public String toString() {
         return "" + getBindLocation();
     }
@@ -337,9 +341,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return result;
     }
 
+    @Override
     protected void doStart() throws Exception {
         if(useQueueForAccept) {
             Runnable run = new Runnable() {
+                @Override
                 public void run() {
                     try {
                         while (!isStopped() && !isStopping()) {
@@ -355,9 +361,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                             onAcceptError(e);
                         }
                     }
-
                 }
-
             };
             socketHandlerThread = new Thread(null, run,
                     "ActiveMQ Transport Server Thread Handler: " + toString(),
@@ -367,9 +371,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             socketHandlerThread.start();
         }
         super.doStart();
-
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         super.doStop(stopper);
         if (serverSocket != null) {
@@ -377,13 +381,14 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         }
     }
 
+    @Override
     public InetSocketAddress getSocketAddress() {
         return (InetSocketAddress)serverSocket.getLocalSocketAddress();
     }
 
     protected final void handleSocket(Socket socket) {
         try {
-            if (this.currentTransportCount >= this.maximumConnections) {
+            if (this.currentTransportCount.get() >= this.maximumConnections) {
                 throw new ExceededMaximumConnectionsException("Exceeded the maximum " +
                     "number of allowed client connections. See the 'maximumConnections' " +
                     "property on the TCP transport configuration URI in the ActiveMQ " +
@@ -416,6 +421,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     transportFactory.serverConfigure( transport, format, options);
 
                 getAcceptListener().onAccept(configuredTransport);
+                currentTransportCount.incrementAndGet();
             }
         } catch (SocketTimeoutException ste) {
             // expect this to happen
@@ -427,7 +433,6 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 onAcceptError(e);
             }
         }
-
     }
 
     public int getSoTimeout() {
@@ -468,12 +473,13 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         this.maximumConnections = maximumConnections;
     }
 
+    @Override
     public void started(Service service) {
-       this.currentTransportCount++;
     }
 
+    @Override
     public void stopped(Service service) {
-        this.currentTransportCount--;
+        this.currentTransportCount.decrementAndGet();
     }
 
     @Override
