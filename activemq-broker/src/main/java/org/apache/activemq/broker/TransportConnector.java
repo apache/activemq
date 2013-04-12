@@ -391,8 +391,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 }
 
                 if (rebalance) {
-                    String shuffle = getPeerBrokers().removeFirst();
-                    getPeerBrokers().addLast(shuffle);
+                    String shuffle = peerBrokers.removeFirst();
+                    peerBrokers.addLast(shuffle);
                 }
             }
         }

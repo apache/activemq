@@ -757,12 +757,6 @@ public class FailoverTransport implements CompositeTransport {
 
     private List<URI> getConnectList() {
         if (!updated.isEmpty()) {
-            if (failedConnectTransportURI != null) {
-                boolean removed = updated.remove(failedConnectTransportURI);
-                if (removed) {
-                    updated.add(failedConnectTransportURI);
-                }
-            }
             return updated;
         }
         ArrayList<URI> l = new ArrayList<URI>(uris);
