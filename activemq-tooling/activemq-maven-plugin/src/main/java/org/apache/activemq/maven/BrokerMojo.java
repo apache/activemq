@@ -51,7 +51,7 @@ public class BrokerMojo extends AbstractMojo {
     /**
      * The maven project.
      *
-     * @parameter property="project"
+     * @parameter property="project" default-value="${project}"
      * @required
      * @readonly
      */

@@ -41,7 +41,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-broker</artifactId>
+      <artifactId>activemq-all</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
