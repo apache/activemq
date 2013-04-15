@@ -30,6 +30,7 @@ enum KahaEntryType {
   KAHA_REMOVE_DESTINATION_COMMAND = 6;
   KAHA_SUBSCRIPTION_COMMAND = 7;
   KAHA_PRODUCER_AUDIT_COMMAND = 8;
+  KAHA_ACK_MESSAGE_FILE_MAP_COMMAND = 9;
 }
 
 message KahaTraceCommand {
@@ -40,7 +41,7 @@ message KahaTraceCommand {
   //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaTraceCommand>";
   //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
-  
+
   required string message = 1;
 }
 
@@ -48,7 +49,7 @@ message KahaAddMessageCommand {
   //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaAddMessageCommand>";
   //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
-  
+
   optional KahaTransactionInfo transaction_info=1;
   required KahaDestination destination = 2;
   required string messageId = 3;
@@ -120,8 +121,20 @@ message KahaProducerAuditCommand {
   //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaProducerAuditCommand>";
   //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
-  
+
   required bytes audit = 1;
+}
+
+message KahaAckMessageFileMapCommand {
+  // We make use of the wonky comment style bellow because the following options
+  // are not valid for protoc, but they are valid for the ActiveMQ proto compiler.
+  // In the ActiveMQ proto compiler, comments terminate with the pipe character: |
+
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaAckMessageFileMapCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required bytes ackMessageFileMap = 1;
 }
 
 message KahaDestination {
@@ -154,8 +167,8 @@ message KahaXATransactionId {
 }
 
 message KahaLocation {
-  required int32 log_id = 1;  
-  required int32 offset = 2;  
+  required int32 log_id = 1;
+  required int32 offset = 2;
 }
 
 // TODO things to ponder

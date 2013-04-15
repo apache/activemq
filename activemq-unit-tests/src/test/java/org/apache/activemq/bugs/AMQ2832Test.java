@@ -16,14 +16,13 @@
  */
 package org.apache.activemq.bugs;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -31,51 +30,95 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
+import javax.jms.Topic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.store.kahadb.disk.journal.DataFile;
+import org.apache.activemq.util.Wait;
+import org.junit.After;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ2832Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2832Test.class);
 
     BrokerService broker = null;
+    private ActiveMQConnectionFactory cf;
     private final Destination destination = new ActiveMQQueue("AMQ2832Test");
+    private String connectionUri;
 
-    protected void startBroker(boolean delete) throws Exception {
+    protected void startBroker() throws Exception {
+        doStartBroker(true, false);
+    }
+
+    protected void restartBroker() throws Exception {
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
+        doStartBroker(false, false);
+    }
+
+    protected void recoverBroker() throws Exception {
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
+        doStartBroker(false, true);
+    }
+
+    private void doStartBroker(boolean delete, boolean recover) throws Exception {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(delete);
         broker.setPersistent(true);
-        broker.setUseJmx(false);
+        broker.setUseJmx(true);
         broker.addConnector("tcp://localhost:0");
 
-        configurePersistence(broker, delete);
+        configurePersistence(broker, recover);
+
+        connectionUri = "vm://localhost?create=false";
+        cf = new ActiveMQConnectionFactory(connectionUri);
 
         broker.start();
         LOG.info("Starting broker..");
     }
 
-    protected void configurePersistence(BrokerService brokerService, boolean deleteAllOnStart) throws Exception {
+    protected void configurePersistence(BrokerService brokerService, boolean recover) throws Exception {
         KahaDBPersistenceAdapter adapter = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
 
         // ensure there are a bunch of data files but multiple entries in each
         adapter.setJournalMaxFileLength(1024 * 20);
 
         // speed up the test case, checkpoint an cleanup early and often
-        adapter.setCheckpointInterval(500);
-        adapter.setCleanupInterval(500);
+        adapter.setCheckpointInterval(5000);
+        adapter.setCleanupInterval(5000);
 
-        if (!deleteAllOnStart) {
+        if (recover) {
             adapter.setForceRecoverIndex(true);
         }
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
     @Test
     public void testAckRemovedMessageReplayedAfterRecovery() throws Exception {
 
-        startBroker(true);
+        startBroker();
 
         StagedConsumer consumer = new StagedConsumer();
         int numMessagesAvailable = produceMessagesToConsumeMultipleDataFiles(20);
@@ -102,9 +145,9 @@ public class AMQ2832Test {
         broker.stop();
         broker.waitUntilStopped();
 
-        startBroker(false);
+        recoverBroker();
 
-        consumer = new StagedConsumer();     
+        consumer = new StagedConsumer();
         // need to force recovery?
 
         Message msg = consumer.receive(1, 5);
@@ -115,10 +158,99 @@ public class AMQ2832Test {
         msg = consumer.receive(1, 5);
         assertEquals("Only one messages left after recovery: " + msg, null, msg);
         consumer.close();
-
     }
 
-    private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {
+    @Test
+    public void testAlternateLossScenario() throws Exception {
+
+        startBroker();
+
+        ActiveMQQueue queue = new ActiveMQQueue("MyQueue");
+        ActiveMQQueue disposable = new ActiveMQQueue("MyDisposableQueue");
+        ActiveMQTopic topic = new ActiveMQTopic("MyDurableTopic");
+
+        // This ensure that data file 1 never goes away.
+        createInactiveDurableSub(topic);
+        assertEquals(1, getNumberOfJournalFiles());
+
+        // One Queue Message that will be acked in another data file.
+        produceMessages(queue, 1);
+        assertEquals(1, getNumberOfJournalFiles());
+
+        // Add some messages to consume space
+        produceMessages(disposable, 50);
+
+        int dataFilesCount = getNumberOfJournalFiles();
+        assertTrue(dataFilesCount > 1);
+
+        // Create an ack for the single message on this queue
+        drainQueue(queue);
+
+        // Add some more messages to consume space beyond tha data file with the ack
+        produceMessages(disposable, 50);
+
+        assertTrue(dataFilesCount < getNumberOfJournalFiles());
+        dataFilesCount = getNumberOfJournalFiles();
+
+        restartBroker();
+
+        // Clear out all queue data
+        broker.getAdminView().removeQueue(disposable.getQueueName());
+
+        // Once this becomes true our ack could be lost.
+        assertTrue("Less than three journal file expected, was " + getNumberOfJournalFiles(), Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getNumberOfJournalFiles() <= 3;
+            }
+        }, TimeUnit.MINUTES.toMillis(3)));
+
+        // Recover and the Message should not be replayed but if the old MessageAck is lost
+        // then it could be.
+        recoverBroker();
+
+        assertTrue(drainQueue(queue) == 0);
+    }
+
+    private int getNumberOfJournalFiles() throws IOException {
+        Collection<DataFile> files =
+            ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+        int reality = 0;
+        for (DataFile file : files) {
+            if (file != null) {
+                reality++;
+            }
+        }
+
+        return reality;
+    }
+
+    private void createInactiveDurableSub(Topic topic) throws Exception {
+        Connection connection = cf.createConnection();
+        connection.setClientID("Inactive");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "Inactive");
+        consumer.close();
+        connection.close();
+        produceMessages(topic, 1);
+    }
+
+    private int drainQueue(Queue queue) throws Exception {
+        Connection connection = cf.createConnection();
+        connection.setClientID("Inactive");
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(queue);
+        int count = 0;
+        while (consumer.receive(5000) != null) {
+            count++;
+        }
+        consumer.close();
+        connection.close();
+        return count;
+    }
+
+    private int produceMessages(Destination destination, int numToSend) throws Exception {
         int sent = 0;
         Connection connection = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
@@ -133,8 +265,12 @@ public class AMQ2832Test {
         } finally {
             connection.close();
         }
-        
+
         return sent;
+    }
+
+    private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {
+        return produceMessages(destination, numToSend);
     }
 
     final String payload = new String(new byte[1024]);

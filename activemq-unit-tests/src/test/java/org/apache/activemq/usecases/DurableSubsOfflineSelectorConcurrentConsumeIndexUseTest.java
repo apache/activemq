@@ -20,13 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -44,8 +47,9 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
     public int messageCount = 10000;
     private BrokerService broker;
     private ActiveMQTopic topic;
-    private List<Throwable> exceptions = new ArrayList<Throwable>();
+    private final List<Throwable> exceptions = new ArrayList<Throwable>();
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
         connectionFactory.setWatchTopicAdvisories(false);
@@ -68,6 +72,7 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
         return suite(DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest.class);
     }
 
+    @Override
     protected void setUp() throws Exception {
         exceptions.clear();
         topic = (ActiveMQTopic) createDestination();
@@ -75,6 +80,7 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         destroyBroker();
@@ -128,6 +134,7 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
 
         final CountDownLatch goOn = new CountDownLatch(1);
         Thread sendThread = new Thread() {
+            @Override
             public void run() {
                 try {
 
@@ -208,10 +215,10 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
             LOG.info("Store free page count: " + store.getPageFile().getFreePageCount());
             LOG.info("Store page in-use: " + (store.getPageFile().getPageCount() - store.getPageFile().getFreePageCount()));
 
-            assertTrue("no leak of pages, always use just 10", Wait.waitFor(new Wait.Condition() {
+            assertTrue("no leak of pages, always use just 11", Wait.waitFor(new Wait.Condition() {
                 @Override
                 public boolean isSatisified() throws Exception {
-                    return 10 == store.getPageFile().getPageCount() -
+                    return 11 == store.getPageFile().getPageCount() -
                             store.getPageFile().getFreePageCount();
                 }
             }, TimeUnit.SECONDS.toMillis(10)));
@@ -236,6 +243,7 @@ public class DurableSubsOfflineSelectorConcurrentConsumeIndexUseTest extends org
         Listener() {
         }
 
+        @Override
         public void onMessage(Message message) {
             count++;
             if (id != null) {

@@ -54,9 +54,9 @@ import org.apache.activemq.ActiveMQMessageAuditNoSync;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.protobuf.Buffer;
+import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
@@ -85,7 +85,12 @@ import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.store.kahadb.disk.util.StringMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
-import org.apache.activemq.util.*;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.DataByteArrayInputStream;
+import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,13 +106,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         UNMATCHED = new Buffer(new byte[]{});
     }
     private static final Logger LOG = LoggerFactory.getLogger(MessageDatabase.class);
-    private static final int DEFAULT_DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
     static final int CLOSED_STATE = 1;
     static final int OPEN_STATE = 2;
     static final long NOT_ACKED = -1;
 
-    static final int VERSION = 4;
+    static final int VERSION = 5;
 
     protected class Metadata {
         protected Page<Metadata> page;
@@ -116,7 +120,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         protected Location lastUpdate;
         protected Location firstInProgressTransactionLocation;
         protected Location producerSequenceIdTrackerLocation = null;
+        protected Location ackMessageFileMapLocation = null;
         protected transient ActiveMQMessageAuditNoSync producerSequenceIdTracker = new ActiveMQMessageAuditNoSync();
+        protected transient Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<Integer, Set<Integer>>();
         protected int version = VERSION;
         public void read(DataInput is) throws IOException {
             state = is.readInt();
@@ -143,6 +149,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                version = is.readInt();
             } catch (EOFException expectedOnUpgrade) {
                 version=1;
+            }
+            if (version >= 5 && is.readBoolean()) {
+                ackMessageFileMapLocation = LocationMarshaller.INSTANCE.readPayload(is);
+            } else {
+                ackMessageFileMapLocation = null;
             }
             LOG.info("KahaDB is version " + version);
         }
@@ -172,6 +183,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 os.writeBoolean(false);
             }
             os.writeInt(VERSION);
+            if (ackMessageFileMapLocation != null) {
+                os.writeBoolean(true);
+                LocationMarshaller.INSTANCE.writePayload(ackMessageFileMapLocation, os);
+            } else {
+                os.writeBoolean(false);
+            }
         }
     }
 
@@ -452,6 +469,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return range;
     }
 
+    @SuppressWarnings("rawtypes")
     private void trackMaxAndMin(Location[] range, List<Operation> ops) {
         Location t = ops.get(0).getLocation();
         if (range[0]==null || t.compareTo(range[0]) <= 0) {
@@ -473,6 +491,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
         HashMap<KahaDestination, opCount> destinationOpCount = new HashMap<KahaDestination, opCount>();
 
+        @SuppressWarnings("rawtypes")
         public void track(Operation operation) {
             if (location == null ) {
                 location = operation.getLocation();
@@ -543,9 +562,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             long start = System.currentTimeMillis();
             Location producerAuditPosition = recoverProducerAudit();
+            Location ackMessageFileLocation = recoverAckMessageFileMap();
             Location lastIndoubtPosition = getRecoveryPosition();
 
-            Location recoveryPosition = minimum(producerAuditPosition, lastIndoubtPosition);
+            Location recoveryPosition = minimum(producerAuditPosition, ackMessageFileLocation);
+            recoveryPosition = minimum(recoveryPosition, lastIndoubtPosition);
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
@@ -627,6 +648,24 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         } else {
             // got no audit stored so got to recreate via replay from start of the journal
+            return journal.getNextLocation(null);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Location recoverAckMessageFileMap() throws IOException {
+        if (metadata.ackMessageFileMapLocation != null) {
+            KahaAckMessageFileMapCommand audit = (KahaAckMessageFileMapCommand) load(metadata.ackMessageFileMapLocation);
+            try {
+                ObjectInputStream objectIn = new ObjectInputStream(audit.getAckMessageFileMap().newInput());
+                metadata.ackMessageFileMap = (Map<Integer, Set<Integer>>) objectIn.readObject();
+                return journal.getNextLocation(metadata.ackMessageFileMapLocation);
+            } catch (Exception e) {
+                LOG.warn("Cannot recover ackMessageFileMap", e);
+                return journal.getNextLocation(null);
+            }
+        } else {
+            // got no ackMessageFileMap stored so got to recreate via replay from start of the journal
             return journal.getNextLocation(null);
         }
     }
@@ -760,7 +799,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             undoCounter++;
                             // TODO: do we need to modify the ack positions for the pub sub case?
                         }
-
                     } else {
                         throw new IOException("Detected missing/corrupt journal files. "+matches.size()+" messages affected.");
                     }
@@ -947,6 +985,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         byte readByte = is.readByte();
         KahaEntryType type = KahaEntryType.valueOf(readByte);
         if( type == null ) {
+            try {
+                is.close();
+            } catch (IOException e) {}
             throw new IOException("Could not load journal record. Invalid location: "+location);
         }
         JournalCommand<?> message = (JournalCommand<?>)type.createMessage();
@@ -1020,6 +1061,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             @Override
             public void visit(KahaProducerAuditCommand command) throws IOException {
+                processLocation(location);
+            }
+
+            @Override
+            public void visit(KahaAckMessageFileMapCommand command) throws IOException {
                 processLocation(location);
             }
 
@@ -1223,20 +1269,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             } else {
                 // If the message ID as indexed, then the broker asked us to
-                // store a DUP
-                // message. Bad BOY! Don't do it, and log a warning.
+                // store a DUP message. Bad BOY! Don't do it, and log a warning.
                 LOG.warn("Duplicate message add attempt rejected. Destination: " + command.getDestination().getName() + ", Message id: " + command.getMessageId());
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
                 sd.locationIndex.remove(tx, location);
                 rollbackStatsOnDuplicate(command.getDestination());
             }
         } else {
-            // restore the previous value.. Looks like this was a redo of a
-            // previously
-            // added message. We don't want to assign it a new id as the other
-            // indexes would
+            // restore the previous value.. Looks like this was a redo of a previously
+            // added message. We don't want to assign it a new id as the other indexes would
             // be wrong..
-            //
             sd.locationIndex.put(tx, location, previous);
         }
         // record this id in any event, initial send or recovery
@@ -1276,6 +1318,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     byte priority = sd.orderIndex.lastGetPriority();
                     sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(sequence, priority));
                 }
+
+                MessageKeys keys = sd.orderIndex.get(tx, sequence);
+                if (keys != null) {
+                    recordAckMessageReferenceLocation(ackLocation, keys.location);
+                }
                 // The following method handles deleting un-referenced messages.
                 removeAckLocation(tx, sd, subscriptionKey, sequence);
             } else if (LOG.isDebugEnabled()) {
@@ -1286,13 +1333,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         metadata.lastUpdate = ackLocation;
     }
 
-    Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<Integer, Set<Integer>>();
     private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
-        Set<Integer> referenceFileIds = ackMessageFileMap.get(Integer.valueOf(ackLocation.getDataFileId()));
+        Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(Integer.valueOf(ackLocation.getDataFileId()));
         if (referenceFileIds == null) {
             referenceFileIds = new HashSet<Integer>();
             referenceFileIds.add(messageLocation.getDataFileId());
-            ackMessageFileMap.put(ackLocation.getDataFileId(), referenceFileIds);
+            metadata.ackMessageFileMap.put(ackLocation.getDataFileId(), referenceFileIds);
         } else {
             Integer id = Integer.valueOf(messageLocation.getDataFileId());
             if (!referenceFileIds.contains(id)) {
@@ -1325,6 +1371,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             sd.ackPositions.clear(tx);
             sd.ackPositions.unload(tx);
             tx.free(sd.ackPositions.getHeadPageId());
+
+            sd.subLocations.clear(tx);
+            sd.subLocations.unload(tx);
+            tx.free(sd.subLocations.getHeadPageId());
         }
 
         String key = key(command.getDestination());
@@ -1339,6 +1389,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         // If set then we are creating it.. otherwise we are destroying the sub
         if (command.hasSubscriptionInfo()) {
             sd.subscriptions.put(tx, subscriptionKey, command);
+            sd.subLocations.put(tx, subscriptionKey, location);
             long ackLocation=NOT_ACKED;
             if (!command.getRetroactive()) {
                 ackLocation = sd.orderIndex.nextMessageId-1;
@@ -1350,6 +1401,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         } else {
             // delete the sub...
             sd.subscriptions.remove(tx, subscriptionKey);
+            sd.subLocations.remove(tx, subscriptionKey);
             sd.subscriptionAcks.remove(tx, subscriptionKey);
             sd.subscriptionCache.remove(subscriptionKey);
             removeAckLocationsForSub(tx, sd, subscriptionKey);
@@ -1394,6 +1446,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         metadata.state = OPEN_STATE;
         metadata.producerSequenceIdTrackerLocation = checkpointProducerAudit();
+        metadata.ackMessageFileMapLocation = checkpointAckMessageFileMap();
         Location[] inProgressTxRange = getInProgressTxLocationRange();
         metadata.firstInProgressTransactionLocation = inProgressTxRange[0];
         tx.store(metadata.page, metadataMarshaller, true);
@@ -1429,6 +1482,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 gcCandidateSet.remove(dataFileId);
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("gc candidates after producerSequenceIdTrackerLocation:" + dataFileId + ", " + gcCandidateSet);
+                }
+            }
+
+            if (metadata.ackMessageFileMapLocation != null) {
+                int dataFileId = metadata.ackMessageFileMapLocation.getDataFileId();
+                gcCandidateSet.remove(dataFileId);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("gc candidates after ackMessageFileMapLocation:" + dataFileId + ", " + gcCandidateSet);
                 }
             }
 
@@ -1488,6 +1549,45 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         }
                     }
                 });
+
+                // Durable Subscription
+                if (entry.getValue().subLocations != null) {
+                    Iterator<Entry<String, Location>> iter = entry.getValue().subLocations.iterator(tx);
+                    while (iter.hasNext()) {
+                        Entry<String, Location> subscription = iter.next();
+                        int dataFileId = subscription.getValue().getDataFileId();
+
+                        // Move subscription along if it has no outstanding messages that need ack'd
+                        // and its in the last log file in the journal.
+                        if (!gcCandidateSet.isEmpty() && gcCandidateSet.first() == dataFileId) {
+                            final StoredDestination destination = entry.getValue();
+                            final String subscriptionKey = subscription.getKey();
+                            SequenceSet pendingAcks = destination.ackPositions.get(tx, subscriptionKey);
+
+                            // When pending is size one that is the next message Id meaning there
+                            // are no pending messages currently.
+                            if (pendingAcks == null || pendingAcks.size() <= 1) {
+                                if (LOG.isTraceEnabled()) {
+                                    LOG.trace("Found candidate for rewrite: {} from file {}", entry.getKey(), dataFileId);
+                                }
+
+                                final KahaSubscriptionCommand kahaSub =
+                                    destination.subscriptions.get(tx, subscriptionKey);
+                                destination.subLocations.put(
+                                    tx, subscriptionKey, checkpointSubscriptionCommand(kahaSub));
+
+                                // Skips the remove from candidates if we rewrote the subscription
+                                // in order to prevent duplicate subscription commands on recover.
+                                // If another subscription is on the same file and isn't rewritten
+                                // than it will remove the file from the set.
+                                continue;
+                            }
+                        }
+
+                        gcCandidateSet.remove(dataFileId);
+                    }
+                }
+
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("gc candidates after dest:" + entry.getKey() + ", " + gcCandidateSet);
                 }
@@ -1501,7 +1601,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             Iterator<Integer> candidates = gcCandidateSet.iterator();
             while (candidates.hasNext()) {
                 Integer candidate = candidates.next();
-                Set<Integer> referencedFileIds = ackMessageFileMap.get(candidate);
+                Set<Integer> referencedFileIds = metadata.ackMessageFileMap.get(candidate);
                 if (referencedFileIds != null) {
                     for (Integer referencedFileId : referencedFileIds) {
                         if (completeFileSet.contains(referencedFileId) && !gcCandidates.contains(referencedFileId)) {
@@ -1511,7 +1611,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         }
                     }
                     if (gcCandidateSet.contains(candidate)) {
-                        ackMessageFileMap.remove(candidate);
+                        metadata.ackMessageFileMap.remove(candidate);
                     } else {
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("not removing data file: " + candidate
@@ -1537,6 +1637,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         public void run() {
         }
     };
+
     private Location checkpointProducerAudit() throws IOException {
         if (metadata.producerSequenceIdTracker == null || metadata.producerSequenceIdTracker.modified()) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1556,6 +1657,35 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return metadata.producerSequenceIdTrackerLocation;
     }
 
+    private Location checkpointAckMessageFileMap() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oout = new ObjectOutputStream(baos);
+        oout.writeObject(metadata.ackMessageFileMap);
+        oout.flush();
+        oout.close();
+        // using completion callback allows a disk sync to be avoided when enableJournalDiskSyncs = false
+        Location location = store(new KahaAckMessageFileMapCommand().setAckMessageFileMap(new Buffer(baos.toByteArray())), nullCompletionCallback);
+        try {
+            location.getLatch().await();
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException(e.toString());
+        }
+        return location;
+    }
+
+    private Location checkpointSubscriptionCommand(KahaSubscriptionCommand subscription) throws IOException {
+
+        ByteSequence sequence = toByteSequence(subscription);
+        Location location = journal.write(sequence, nullCompletionCallback) ;
+
+        try {
+            location.getLatch().await();
+        } catch (InterruptedException e) {
+            throw new InterruptedIOException(e.toString());
+        }
+        return location;
+    }
+
     public HashSet<Integer> getJournalFilesBeingReplicated() {
         return journalFilesBeingReplicated;
     }
@@ -1565,13 +1695,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // /////////////////////////////////////////////////////////////////
 
     private final HashMap<String, StoredDestination> storedDestinations = new HashMap<String, StoredDestination>();
-
-    class StoredSubscription {
-        SubscriptionInfo subscriptionInfo;
-        String lastAckId;
-        Location lastAckLocation;
-        Location cursor;
-    }
 
     static class MessageKeys {
         final String messageId;
@@ -1677,6 +1800,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         BTreeIndex<String, LastAck> subscriptionAcks;
         HashMap<String, MessageOrderCursor> subscriptionCursors;
         ListIndex<String, SequenceSet> ackPositions;
+        ListIndex<String, Location> subLocations;
 
         // Transient data used to track which Messages are no longer needed.
         final TreeMap<Long, Long> messageReferences = new TreeMap<Long, Long>();
@@ -1730,10 +1854,28 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             // Now move the pending messages to ack data into the store backed
                             // structure.
                             value.ackPositions = new ListIndex<String, SequenceSet>(pageFile, tx.allocate());
+                            value.ackPositions.setKeyMarshaller(StringMarshaller.INSTANCE);
+                            value.ackPositions.setValueMarshaller(SequenceSet.Marshaller.INSTANCE);
+                            value.ackPositions.load(tx);
                             for(String subscriptionKey : temp.keySet()) {
                                 value.ackPositions.put(tx, subscriptionKey, temp.get(subscriptionKey));
                             }
 
+                        }
+                    });
+                }
+
+                if (metadata.version >= 5) {
+                    value.subLocations = new ListIndex<String, Location>(pageFile, dataIn.readLong());
+                } else {
+                    // upgrade
+                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                        @Override
+                        public void execute(Transaction tx) throws IOException {
+                            value.subLocations = new ListIndex<String, Location>(pageFile, tx.allocate());
+                            value.subLocations.setKeyMarshaller(StringMarshaller.INSTANCE);
+                            value.subLocations.setValueMarshaller(LocationMarshaller.INSTANCE);
+                            value.subLocations.load(tx);
                         }
                     });
                 }
@@ -1742,21 +1884,21 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 value.orderIndex.lowPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
                 value.orderIndex.highPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, dataIn.readLong());
             } else {
-                    // upgrade
-                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                        @Override
-                        public void execute(Transaction tx) throws IOException {
-                            value.orderIndex.lowPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
-                            value.orderIndex.lowPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
-                            value.orderIndex.lowPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
-                            value.orderIndex.lowPriorityIndex.load(tx);
+                // upgrade
+                pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                    @Override
+                    public void execute(Transaction tx) throws IOException {
+                        value.orderIndex.lowPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
+                        value.orderIndex.lowPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
+                        value.orderIndex.lowPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
+                        value.orderIndex.lowPriorityIndex.load(tx);
 
-                            value.orderIndex.highPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
-                            value.orderIndex.highPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
-                            value.orderIndex.highPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
-                            value.orderIndex.highPriorityIndex.load(tx);
-                        }
-                    });
+                        value.orderIndex.highPriorityIndex = new BTreeIndex<Long, MessageKeys>(pageFile, tx.allocate());
+                        value.orderIndex.highPriorityIndex.setKeyMarshaller(LongMarshaller.INSTANCE);
+                        value.orderIndex.highPriorityIndex.setValueMarshaller(MessageKeysMarshaller.INSTANCE);
+                        value.orderIndex.highPriorityIndex.load(tx);
+                    }
+                });
             }
 
             return value;
@@ -1772,6 +1914,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 dataOut.writeLong(value.subscriptions.getPageId());
                 dataOut.writeLong(value.subscriptionAcks.getPageId());
                 dataOut.writeLong(value.ackPositions.getHeadPageId());
+                dataOut.writeLong(value.subLocations.getHeadPageId());
             } else {
                 dataOut.writeBoolean(false);
             }
@@ -1840,6 +1983,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 rc.subscriptions = new BTreeIndex<String, KahaSubscriptionCommand>(pageFile, tx.allocate());
                 rc.subscriptionAcks = new BTreeIndex<String, LastAck>(pageFile, tx.allocate());
                 rc.ackPositions = new ListIndex<String, SequenceSet>(pageFile, tx.allocate());
+                rc.subLocations = new ListIndex<String, Location>(pageFile, tx.allocate());
             }
             metadata.destinations.put(tx, key, rc);
         }
@@ -1872,6 +2016,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             rc.ackPositions.setKeyMarshaller(StringMarshaller.INSTANCE);
             rc.ackPositions.setValueMarshaller(SequenceSet.Marshaller.INSTANCE);
             rc.ackPositions.load(tx);
+
+            rc.subLocations.setKeyMarshaller(StringMarshaller.INSTANCE);
+            rc.subLocations.setValueMarshaller(LocationMarshaller.INSTANCE);
+            rc.subLocations.load(tx);
 
             rc.subscriptionCursors = new HashMap<String, MessageOrderCursor>();
 

@@ -18,6 +18,7 @@ package org.apache.activemq.store.kahadb;
 
 import java.io.IOException;
 
+import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
@@ -53,8 +54,10 @@ public class Visitor {
 
     public void visit(KahaSubscriptionCommand kahaUpdateSubscriptionCommand) throws IOException {
     }
-    
+
     public void visit(KahaProducerAuditCommand kahaProducerAuditCommand) throws IOException {
     }
 
+    public void visit(KahaAckMessageFileMapCommand kahaProducerAuditCommand) throws IOException {
+    }
 }
