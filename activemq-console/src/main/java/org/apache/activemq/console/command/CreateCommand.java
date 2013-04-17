@@ -282,6 +282,8 @@ public class CreateCommand extends AbstractCommand {
        res.append("ACTIVEMQ_BASE=`dirname \"$PRG\"`/..\n");
        res.append("cd \"$saveddir\"\n\n");
        res.append("ACTIVEMQ_BASE=`cd \"$ACTIVEMQ_BASE\" && pwd`\n\n");
+       res.append("## Enable remote debugging\n");
+       res.append("#export ACTIVEMQ_DEBUG_OPTS=\"-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005\"\n\n");
        res.append("## Add system properties for this instance here (if needed), e.g\n");
        res.append("#export ACTIVEMQ_OPTS_MEMORY=\"-Xms256M -Xmx1G\"\n");
        res.append("#export ACTIVEMQ_OPTS=\"$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties\"\n\n");
