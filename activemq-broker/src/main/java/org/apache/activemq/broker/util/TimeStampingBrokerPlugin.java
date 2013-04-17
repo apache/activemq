@@ -140,7 +140,7 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
         Destination regionDestination = (Destination) message.getRegionDestination();
         if (message != null && regionDestination != null) {
             deadLetterStrategy = regionDestination.getDeadLetterStrategy();
-            if (deadLetterStrategy != null) {
+            if (deadLetterStrategy != null && message.getOriginalDestination() != null) {
                 // Cheap copy, since we only need two fields
                 tmp = new ActiveMQMessage();
                 tmp.setDestination(message.getOriginalDestination());
