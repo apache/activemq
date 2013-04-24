@@ -60,4 +60,6 @@ public interface DeadLetterStrategy {
      */
     public void setProcessNonPersistent(boolean processNonPersistent);
 
+    public boolean isDLQ(ActiveMQDestination destination);
+
 }

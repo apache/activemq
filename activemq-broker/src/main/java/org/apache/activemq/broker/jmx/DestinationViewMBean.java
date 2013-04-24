@@ -365,4 +365,10 @@ public interface DestinationViewMBean {
     @MBeanInfo("returns the destination options, name value pairs as URL queryString")
     String getOptions();
 
+    /**
+     * @return true if this is dead letter queue
+     */
+    @MBeanInfo("Dead Letter Queue")
+    boolean isDLQ();
+
 }

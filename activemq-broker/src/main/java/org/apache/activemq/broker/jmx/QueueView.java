@@ -102,6 +102,11 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
 
+    public int retryMessages() throws Exception {
+        ConnectionContext context = BrokerSupport.getConnectionContext(broker.getContextBroker());
+        return ((Queue)destination).retryMessages(context, Integer.MAX_VALUE);
+    }
+
     /**
      * Moves a message back to its original destination
      */

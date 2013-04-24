@@ -1404,6 +1404,35 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         return movedCounter;
     }
 
+    public int retryMessages(ConnectionContext context, int maximumMessages) throws Exception {
+        if (!isDLQ()) {
+            throw new Exception("Retry of message is only possible on Dead Letter Queues!");
+        }
+        int restoredCounter = 0;
+        Set<QueueMessageReference> set = new LinkedHashSet<QueueMessageReference>();
+        do {
+            doPageIn(true);
+            pagedInMessagesLock.readLock().lock();
+            try{
+                set.addAll(pagedInMessages.values());
+            }finally {
+                pagedInMessagesLock.readLock().unlock();
+            }
+            List<QueueMessageReference> list = new ArrayList<QueueMessageReference>(set);
+            for (QueueMessageReference ref : list) {
+                if (ref.getMessage().getOriginalDestination() != null) {
+
+                    moveMessageTo(context, ref, ref.getMessage().getOriginalDestination());
+                    set.remove(ref);
+                    if (++restoredCounter >= maximumMessages && maximumMessages > 0) {
+                        return restoredCounter;
+                    }
+                }
+            }
+        } while (set.size() < this.destinationStatistics.getMessages().getCount() && set.size() < maximumMessages);
+        return restoredCounter;
+    }
+
     /**
      * @return true if we would like to iterate again
      * @see org.apache.activemq.thread.Task#iterate()
@@ -1672,6 +1701,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         destinationStatistics.getExpired().increment();
         try {
             removeMessage(context, subs, (QueueMessageReference) reference);
+            messagesLock.writeLock().lock();
+            try {
+                messages.rollback(reference.getMessageId());
+            } finally {
+                messagesLock.writeLock().unlock();
+            }
         } catch (IOException e) {
             LOG.error("Failed to remove expired Message from the store ", e);
         }

@@ -473,4 +473,9 @@ public class DestinationView implements DestinationViewMBean {
         return optionsString;
     }
 
+    @Override
+    public boolean isDLQ() {
+        return destination.isDLQ();
+    }
+
 }

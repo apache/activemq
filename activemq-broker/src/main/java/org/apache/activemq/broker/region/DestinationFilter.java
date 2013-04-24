@@ -382,4 +382,8 @@ public class DestinationFilter implements Destination {
         next.clearPendingMessages();
     }
 
+    @Override
+    public boolean isDLQ() {
+        return next.isDLQ();
+    }
 }

@@ -129,6 +129,12 @@ public interface QueueViewMBean extends DestinationViewMBean {
      */
     @MBeanInfo("Moves up to a specified number of messages based on an SQL-92 selecton on the message headers or XPATH on the body into the specified destination.")
     int moveMatchingMessagesTo(@MBeanInfo("selector") String selector, @MBeanInfo("destinationName") String destinationName, @MBeanInfo("maximumMessages") int maximumMessages) throws Exception;
+
+    /**
+     * Retries messages sent to the DLQ
+     */
+    @MBeanInfo("Retries messages sent to the DLQ")
+    public int retryMessages() throws Exception;
     
     /**
      * @return true if the message cursor has memory space available

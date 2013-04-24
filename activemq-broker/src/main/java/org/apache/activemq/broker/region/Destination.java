@@ -237,4 +237,6 @@ public interface Destination extends Service, Task, Message.MessageDestination {
     void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage);
 
     public void clearPendingMessages();
+
+    public boolean isDLQ();
 }

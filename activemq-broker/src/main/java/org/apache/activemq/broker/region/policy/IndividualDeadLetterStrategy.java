@@ -167,4 +167,19 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
             return new ActiveMQTopic(name);
         }
     }
+
+    @Override
+    public boolean isDLQ(ActiveMQDestination destination) {
+        String name = destination.getPhysicalName();
+        if (destination.isQueue()) {
+            if ((queuePrefix != null && name.startsWith(queuePrefix)) || (queueSuffix != null && name.endsWith(queueSuffix))) {
+                return true;
+            }
+        } else {
+            if ((topicPrefix != null && name.startsWith(topicPrefix)) || (topicSuffix != null && name.endsWith(topicSuffix))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

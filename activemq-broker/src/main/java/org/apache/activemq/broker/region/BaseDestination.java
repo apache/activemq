@@ -779,4 +779,8 @@ public abstract class BaseDestination implements Destination {
         return ack;
     }
 
+    public boolean isDLQ() {
+        return getDeadLetterStrategy().isDLQ(this.getActiveMQDestination());
+    }
+
 }
