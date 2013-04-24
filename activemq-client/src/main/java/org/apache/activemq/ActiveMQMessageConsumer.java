@@ -666,7 +666,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     @Override
     public void close() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
-            if (session.getTransactionContext().isInTransaction()) {
+            if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
                 session.getTransactionContext().addSynchronization(new Synchronization() {
                     @Override
                     public void afterCommit() throws Exception {

@@ -40,7 +40,7 @@ public class AMQ4472Test {
     public void testLostMessage() {
         Connection connection = null;
         try {
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.useJmx=false&jms.prefetchPolicy.all=0");
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.useJmx=false");
             connection = connectionFactory.createConnection();
             connection.start();
 
