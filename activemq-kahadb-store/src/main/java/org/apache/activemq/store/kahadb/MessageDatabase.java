@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -833,7 +832,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 lastRecoveryPosition = nextRecoveryPosition;
                 metadata.lastUpdate = lastRecoveryPosition;
                 JournalCommand<?> message = load(lastRecoveryPosition);
-                process(message, lastRecoveryPosition, (Runnable)null);
+                process(message, lastRecoveryPosition, (Runnable)null, (Runnable)null);
                 nextRecoveryPosition = journal.getNextLocation(lastRecoveryPosition);
             }
         } finally {
@@ -913,10 +912,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      * the JournalMessage is used to update the index just like it would be done
      * during a recovery process.
      */
-    public Location store(JournalCommand<?> data, boolean sync, Runnable before,Runnable after, Runnable onJournalStoreComplete) throws IOException {
-        if (before != null) {
-            before.run();
-        }
+    public Location store(JournalCommand<?> data, boolean sync, Runnable before, Runnable after, Runnable onJournalStoreComplete) throws IOException {
         try {
             ByteSequence sequence = toByteSequence(data);
 
@@ -927,7 +923,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 long start = System.currentTimeMillis();
                 location = onJournalStoreComplete == null ? journal.write(sequence, sync) :  journal.write(sequence, onJournalStoreComplete) ;
                 long start2 = System.currentTimeMillis();
-                process(data, location, after);
+                process(data, location, before, after);
 
                 long end = System.currentTimeMillis();
                 if( LOG_SLOW_ACCESS_TIME>0 && end-start > LOG_SLOW_ACCESS_TIME) {
@@ -940,18 +936,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 checkpointLock.readLock().unlock();
             }
             if (after != null) {
-                Runnable afterCompletion = null;
-                synchronized (orderedTransactionAfters) {
-                    if (!orderedTransactionAfters.empty()) {
-                        afterCompletion = orderedTransactionAfters.pop();
-                    }
-                }
-                if (afterCompletion != null) {
-                    afterCompletion.run();
-                } else {
-                    // non persistent message case
-                    after.run();
-                }
+                after.run();
             }
 
             if (checkpointThread != null && !checkpointThread.isAlive()) {
@@ -1004,7 +989,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
         if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
-            process(data, location, (Runnable) null);
+            process(data, location, (Runnable) null, (Runnable) null);
         } else {
             // just recover producer audit
             data.visit(new Visitor() {
@@ -1022,7 +1007,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // from the recovery method too so they need to be idempotent
     // /////////////////////////////////////////////////////////////////
 
-    void process(JournalCommand<?> data, final Location location, final Runnable after) throws IOException {
+    void process(JournalCommand<?> data, final Location location, final Runnable before, final Runnable after) throws IOException {
         data.visit(new Visitor() {
             @Override
             public void visit(KahaAddMessageCommand command) throws IOException {
@@ -1041,7 +1026,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             @Override
             public void visit(KahaCommitCommand command) throws IOException {
-                process(command, location, after);
+                process(command, location, before, after);
             }
 
             @Override
@@ -1153,17 +1138,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    private final Stack<Runnable> orderedTransactionAfters = new Stack<Runnable>();
-    private void push(Runnable after) {
-        if (after != null) {
-            synchronized (orderedTransactionAfters) {
-                orderedTransactionAfters.push(after);
-            }
-        }
-    }
-
     @SuppressWarnings("rawtypes")
-    protected void process(KahaCommitCommand command, Location location, final Runnable after) throws IOException {
+    protected void process(KahaCommitCommand command, Location location, final Runnable before, final Runnable after) throws IOException {
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
         List<Operation> inflightTx;
         synchronized (inflightTransactions) {
@@ -1173,9 +1149,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
         if (inflightTx == null) {
-            if (after != null) {
-                // since we don't push this after and we may find another, lets run it now
-                after.run();
+            // only non persistent messages in this tx
+            if (before != null) {
+                before.run();
             }
             return;
         }
@@ -1183,6 +1159,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         final List<Operation> messagingTx = inflightTx;
         this.indexLock.writeLock().lock();
         try {
+            // run before with the index lock so that queue can order cursor updates with index updates
+            if (before != null) {
+                before.run();
+            }
             pageFile.tx().execute(new Transaction.Closure<IOException>() {
                 @Override
                 public void execute(Transaction tx) throws IOException {
@@ -1192,7 +1172,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             });
             metadata.lastUpdate = location;
-            push(after);
         } finally {
             this.indexLock.writeLock().unlock();
         }

@@ -145,14 +145,8 @@ public class MessageExpirationTest extends BrokerTestSupport {
         connection.send(closeConnectionInfo(connectionInfo2));
     }
 
-    /**
-     * Small regression. Looks like persistent messages to a queue are not being
-     * timedout when in a long transaction. See:
-     * http://issues.apache.org/activemq/browse/AMQ-1269 Commenting out the
-     * DeliveryMode.PERSISTENT test combination for now.
-     */
     public void initCombosForTestMessagesInLongTransactionExpire() {
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT)});
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.PERSISTENT), Integer.valueOf(DeliveryMode.NON_PERSISTENT)});
         addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),
                                                               Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)});
     }

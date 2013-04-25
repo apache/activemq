@@ -128,7 +128,7 @@ public abstract class Transaction {
 
     @Override
     public String toString() {
-        return super.toString() + "[synchronizations=" + synchronizations + "]";
+        return "Local-" + getTransactionId() + "[synchronizations=" + synchronizations + "]";
     }
 
     public abstract void commit(boolean onePhase) throws XAException, IOException;

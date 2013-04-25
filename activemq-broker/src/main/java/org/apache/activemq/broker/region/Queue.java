@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.DelayQueue;
@@ -83,6 +84,7 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
@@ -734,6 +736,120 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
+    final ConcurrentHashMap<Transaction, SendSync> sendSyncs = new ConcurrentHashMap<Transaction, SendSync>();
+    private volatile LinkedList<Transaction> orderIndexUpdates = new LinkedList<Transaction>();
+
+    // roll up all message sends
+    class SendSync extends Synchronization {
+
+        class MessageContext {
+            public Message message;
+            public ConnectionContext context;
+
+            public MessageContext(ConnectionContext context, Message message) {
+                this.context = context;
+                this.message = message;
+            }
+        }
+
+        final Transaction transaction;
+        List<MessageContext> additions = new ArrayList<MessageContext>();
+
+        public SendSync(Transaction transaction) {
+            this.transaction = transaction;
+        }
+
+        public void add(ConnectionContext context, Message message) {
+            additions.add(new MessageContext(context, message));
+        }
+
+        @Override
+        public void beforeCommit() throws Exception {
+            synchronized (sendLock) {
+                orderIndexUpdates.addLast(transaction);
+            }
+        }
+
+        @Override
+        public void afterCommit() throws Exception {
+            LinkedList<Transaction> orderedWork = null;
+            // use existing object to sync orderIndexUpdates that can be reassigned
+            synchronized (sendLock) {
+                if (transaction == orderIndexUpdates.peek()) {
+                    orderedWork = orderIndexUpdates;
+                    orderIndexUpdates = new LinkedList<Transaction>();
+
+                    // talking all the ordered work means that earlier
+                    // and later threads do nothing.
+                    // this avoids contention/race on the sendLock that
+                    // guards the actual work.
+                }
+            }
+            // do the ordered work
+            if (orderedWork != null) {
+                sendLock.lockInterruptibly();
+                try {
+                    for (Transaction tx : orderedWork) {
+                        sendSyncs.get(tx).processSend();
+                    }
+                } finally {
+                    sendLock.unlock();
+                }
+                for (Transaction tx : orderedWork) {
+                    sendSyncs.get(tx).processSent();
+                }
+                sendSyncs.remove(transaction);
+            }
+        }
+
+        // called with sendLock
+        private void processSend() throws Exception {
+
+            for (Iterator<MessageContext> iterator = additions.iterator(); iterator.hasNext(); ) {
+                MessageContext messageContext = iterator.next();
+                // It could take while before we receive the commit
+                // op, by that time the message could have expired..
+                if (broker.isExpired(messageContext.message)) {
+                    broker.messageExpired(messageContext.context, messageContext.message, null);
+                    destinationStatistics.getExpired().increment();
+                    iterator.remove();
+                    continue;
+                }
+                sendMessage(messageContext.message);
+                messageContext.message.decrementReferenceCount();
+            }
+        }
+
+        private void processSent() throws Exception {
+            for (MessageContext messageContext : additions) {
+                messageSent(messageContext.context, messageContext.message);
+            }
+        }
+
+        @Override
+        public void afterRollback() throws Exception {
+            try {
+                for (MessageContext messageContext : additions) {
+                    messageContext.message.decrementReferenceCount();
+                }
+            } finally {
+                sendSyncs.remove(transaction);
+            }
+        }
+    }
+
+    // called while holding the sendLock
+    private void registerSendSync(Message message, ConnectionContext context) {
+        final Transaction transaction = context.getTransaction();
+        Queue.SendSync currentSync = sendSyncs.get(transaction);
+        if (currentSync == null) {
+            currentSync = new Queue.SendSync(transaction);
+            transaction.addSynchronization(currentSync);
+            sendSyncs.put(transaction, currentSync);
+        }
+        currentSync.add(context, message);
+    }
+
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException,
             Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -759,30 +875,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 // our memory. This increment is decremented once the tx finishes..
                 message.incrementReferenceCount();
 
-                context.getTransaction().addSynchronization(new Synchronization() {
-                    @Override
-                    public void afterCommit() throws Exception {
-                        sendLock.lockInterruptibly();
-                        try {
-                            // It could take while before we receive the commit
-                            // op, by that time the message could have expired..
-                            if (broker.isExpired(message)) {
-                                broker.messageExpired(context, message, null);
-                                destinationStatistics.getExpired().increment();
-                                return;
-                            }
-                            sendMessage(message);
-                        } finally {
-                            sendLock.unlock();
-                            message.decrementReferenceCount();
-                        }
-                        messageSent(context, message);
-                    }
-                    @Override
-                    public void afterRollback() throws Exception {
-                        message.decrementReferenceCount();
-                    }
-                });
+                registerSendSync(message, context);
             } else {
                 // Add to the pending list, this takes care of incrementing the
                 // usage manager.

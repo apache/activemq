@@ -88,7 +88,8 @@ public class NegativeQueueTest extends AutoFailTestSupport {
     private static final long MEMORY_USAGE = 400000000;
     private static final long TEMP_USAGE = 200000000;
     private static final long STORE_USAGE = 1000000000;
-    private static final int MESSAGE_COUNT = 1100;
+    // ensure we exceed the cache 70%
+    private static final int MESSAGE_COUNT = 2100;
 
     protected static final boolean TRANSACTED = true;
     protected static final boolean DEBUG = true;
