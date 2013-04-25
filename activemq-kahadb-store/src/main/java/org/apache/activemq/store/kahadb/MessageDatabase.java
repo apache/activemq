@@ -610,6 +610,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     store(new KahaRollbackCommand().setTransactionInfo(TransactionIdConversion.convertToLocal(tx)), false, null, null);
                 }
             }
+
+            synchronized (preparedTransactions) {
+                for (TransactionId txId : preparedTransactions.keySet()) {
+                    LOG.warn("Recovered prepared XA TX: [{}]", txId);
+                }
+            }
+
         } finally {
             this.indexLock.writeLock().unlock();
         }
