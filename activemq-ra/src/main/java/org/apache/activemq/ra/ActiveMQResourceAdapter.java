@@ -34,6 +34,7 @@ import javax.transaction.xa.XAResource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.TransactionContext;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ServiceSupport;
@@ -233,25 +234,20 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      * @see javax.resource.spi.ResourceAdapter#getXAResources(javax.resource.spi.ActivationSpec[])
      */
     public XAResource[] getXAResources(ActivationSpec[] activationSpecs) throws ResourceException {
-        Connection connection = null;
         try {
-            connection = makeConnection();
-            if (connection instanceof XAConnection) {
-                XASession session = ((XAConnection)connection).createXASession();
-                XAResource xaResource = session.getXAResource();
-                return new XAResource[] {
-                    xaResource
-                };
-            }
-            return new XAResource[] {};
+            final ActiveMQConnection connection = makeConnection();
+            return new XAResource[]{new LocalAndXATransaction(new TransactionContext(connection)) {
+                public void finalize() throws Throwable {
+                    try {
+                        connection.close();
+                    } catch (Throwable ignore) {
+                    } finally {
+                        super.finalize();
+                    }
+                }
+            }};
         } catch (JMSException e) {
             throw new ResourceException(e);
-        } finally {
-            try {
-                connection.close();
-            } catch (Throwable ignore) {
-                //
-            }
         }
     }
 

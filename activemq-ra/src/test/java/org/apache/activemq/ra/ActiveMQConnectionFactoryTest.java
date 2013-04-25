@@ -30,6 +30,7 @@ import javax.resource.spi.UnavailableException;
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 
+import javax.transaction.xa.XAResource;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQTopicSubscriber;
@@ -105,4 +106,16 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
         assertEquals(0, ((ActiveMQTopicSubscriber)sub).getPrefetchNumber());
     }
 
+    public void testGetXAResource() throws Exception {
+
+        ActiveMQResourceAdapter ra = new ActiveMQResourceAdapter();
+        ra.setServerUrl(url);
+        ra.setUserName(user);
+        ra.setPassword(pwd);
+
+        XAResource[] resoruces = ra.getXAResources(null);
+        assertEquals("one resource", 1, resoruces.length);
+
+        assertEquals("no pending transactions", 0, resoruces[0].recover(100).length);
+    }
 }
