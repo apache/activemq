@@ -582,7 +582,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
     }
 
-   @Override
+    @Override
     public void add(ConnectionContext context, Destination destination) throws Exception {
         synchronized(pendingLock) {
             super.add(context, destination);
@@ -592,6 +592,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     @Override
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+        return remove(context, destination, dispatched);
+    }
+
+    public List<MessageReference> remove(ConnectionContext context, Destination destination, List<MessageReference> dispatched) throws Exception {
         List<MessageReference> rc = new ArrayList<MessageReference>();
         synchronized(pendingLock) {
             super.remove(context, destination);
@@ -600,21 +604,33 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             // Except if each commit or rollback callback action comes before remove of subscriber.
             rc.addAll(pending.remove(context, destination));
 
-            // Synchronized to DispatchLock
-            synchronized(dispatchLock) {
-                ArrayList<MessageReference> references = new ArrayList<MessageReference>();
-                for (MessageReference r : dispatched) {
-                    if( r.getRegionDestination() == destination) {
-                        references.add(r);
-                    }
+            if (dispatched == null) {
+                return rc;
+            }
+
+            // Synchronized to DispatchLock if necessary
+            if (dispatched == this.dispatched) {
+                synchronized(dispatchLock) {
+                    updateDestinationStats(rc, destination, dispatched);
                 }
-                rc.addAll(references);
-                destination.getDestinationStatistics().getDispatched().subtract(references.size());
-                destination.getDestinationStatistics().getInflight().subtract(references.size());
-                dispatched.removeAll(references);
+            } else {
+                updateDestinationStats(rc, destination, dispatched);
             }
         }
         return rc;
+    }
+
+    private void updateDestinationStats(List<MessageReference> rc, Destination destination, List<MessageReference> dispatched) {
+        ArrayList<MessageReference> references = new ArrayList<MessageReference>();
+        for (MessageReference r : dispatched) {
+            if (r.getRegionDestination() == destination) {
+                references.add(r);
+            }
+        }
+        rc.addAll(references);
+        destination.getDestinationStatistics().getDispatched().subtract(references.size());
+        destination.getDestinationStatistics().getInflight().subtract(references.size());
+        dispatched.removeAll(references);
     }
 
     protected void dispatchPending() throws IOException {

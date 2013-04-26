@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -191,6 +192,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         this.usageManager.getMemoryUsage().removeUsageListener(this);
 
         ArrayList<Topic> topicsToDeactivate = new ArrayList<Topic>();
+        List<MessageReference> savedDispateched = null;
+
         synchronized (pendingLock) {
             pending.stop();
 
@@ -224,6 +227,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     }
                 }
 
+                if (!topicsToDeactivate.isEmpty()) {
+                    savedDispateched = new ArrayList<MessageReference>(dispatched);
+                }
                 dispatched.clear();
             }
             if (!keepDurableSubsActive && pending.isTransient()) {
@@ -240,7 +246,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
         }
         for(Topic topic: topicsToDeactivate) {
-            topic.deactivate(context, this);
+            topic.deactivate(context, this, savedDispateched);
         }
         prefetchExtension.set(0);
     }
