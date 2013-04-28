@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.test
 
 import junit.framework.TestCase
 import org.apache.activemq.broker._
@@ -23,6 +23,7 @@ import java.io.File
 import junit.framework.Assert._
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics
 import region.policy.{PolicyEntry, PolicyMap}
+import org.apache.activemq.leveldb.{LevelDBStore}
 
 /**
  * <p>

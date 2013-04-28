@@ -14,28 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
 
-import org.apache.activemq.store.PersistenceAdapter
-import org.apache.activemq.store.PersistenceAdapterTestSupport
-import java.io.File
+package org.apache.activemq.leveldb.replicated.dto;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * <p>
- * </p>
- *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class LevelDBStoreTest extends PersistenceAdapterTestSupport {
-  override def testStoreCanHandleDupMessages: Unit = {
-  }
+@XmlRootElement(name="login")
+@XmlAccessorType(XmlAccessType.FIELD)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Login {
 
-  protected def createPersistenceAdapter(delete: Boolean): PersistenceAdapter = {
-    var store: LevelDBStore = new LevelDBStore
-    store.setDirectory(new File("target/activemq-data/haleveldb"))
-    if (delete) {
-      store.deleteAllMessages
-    }
-    return store
-  }
+    @XmlAttribute(name="slave_id")
+    public String slave_id;
+
+    @XmlAttribute(name="security_token")
+    public String security_token;
+
 }

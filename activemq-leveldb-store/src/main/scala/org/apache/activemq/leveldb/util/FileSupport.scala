@@ -22,6 +22,7 @@ import org.fusesource.hawtdispatch._
 import org.apache.activemq.leveldb.LevelDBClient
 import org.fusesource.leveldbjni.internal.Util
 import org.apache.activemq.leveldb.util.ProcessSupport._
+import java.util.zip.CRC32
 
 object FileSupport {
 
@@ -106,6 +107,32 @@ object FileSupport {
         using(new FileInputStream(self)){ is=>
           FileSupport.copy(is, os)
         }
+      }
+    }
+
+    def crc32(limit:Long=Long.MaxValue) = {
+      val checksum =  new CRC32();
+      var remaining = limit;
+      using(new FileInputStream(self)) { in =>
+        val data = new Array[Byte](1024*4)
+        var count = in.read(data, 0, remaining.min(data.length).toInt)
+        while( count > 0 ) {
+          remaining -= count
+          checksum.update(data, 0, count);
+          count = in.read(data, 0, remaining.min(data.length).toInt)
+        }
+      }
+      checksum.getValue()
+    }
+
+    def cached_crc32 = {
+      val crc32_file = new File(self.getParentFile, self.getName+".crc32")
+      if( crc32_file.exists() && crc32_file.lastModified() > self.lastModified() ) {
+        crc32_file.readText().trim.toLong
+      } else {
+        val rc = crc32()
+        crc32_file.writeText(rc.toString)
+        rc
       }
     }
 

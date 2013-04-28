@@ -40,11 +40,13 @@
       <version>${scala-version}</version>
       <scope>compile</scope>
     </dependency>
+
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -99,6 +101,28 @@
       <groupId>org.fusesource.leveldbjni</groupId>
       <artifactId>leveldbjni-win64</artifactId>
       <version>1.5</version>
+    </dependency>
+
+    <!-- For Replication -->
+    <dependency>
+      <groupId>org.fusesource.hawtdispatch</groupId>
+      <artifactId>hawtdispatch-transport</artifactId>
+      <version>${hawtdispatch-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.fabric</groupId>
+      <artifactId>fabric-groups</artifactId>
+      <version>7.2.0.redhat-024</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.fabric</groupId>
+      <artifactId>fabric-linkedin-zookeeper</artifactId>
+      <version>7.2.0.redhat-024</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.fabric</groupId>
+      <artifactId>fabric-zookeeper</artifactId>
+      <version>7.2.0.redhat-024</version>
     </dependency>
 
     <!-- For Optional Snappy Compression -->
@@ -316,11 +340,11 @@
             <arg>-deprecation</arg>
           </args>
           <compilerPlugins>
-            <compilerPlugin>
+            <!-- <compilerPlugin>
               <groupId>org.fusesource.jvmassert</groupId>
               <artifactId>jvmassert</artifactId>
               <version>1.4</version>
-            </compilerPlugin>
+            </compilerPlugin> -->
           </compilerPlugins>
         </configuration>
       </plugin>
@@ -336,7 +360,7 @@
           <failIfNoTests>false</failIfNoTests>
           <excludes>
             <exclude>**/EnqueueRateScenariosTest.*</exclude>
-            <exclude>**/HALevelDB*.*</exclude>
+            <exclude>**/DFSLevelDB*.*</exclude>
           </excludes>
         </configuration>
       </plugin>

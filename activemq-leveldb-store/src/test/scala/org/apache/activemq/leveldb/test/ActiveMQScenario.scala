@@ -14,38 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.test
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.hdfs.MiniDFSCluster
-import java.io.IOException
+import org.apache.activemq.ActiveMQConnectionFactory
+import javax.jms.{Destination, ConnectionFactory}
+import org.apache.activemq.command.{ActiveMQTopic, ActiveMQQueue}
+import org.apache.activemq.leveldb.test.JMSClientScenario
 
 /**
  * <p>
+ * ActiveMQ implementation of the JMS Scenario class.
  * </p>
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-object TestingHDFSServer {
-  private[leveldb] def start: Unit = {
-    var conf: Configuration = new Configuration
-    cluster = new MiniDFSCluster(conf, 1, true, null)
-    cluster.waitActive
-    fs = cluster.getFileSystem
+class ActiveMQScenario extends JMSClientScenario {
+
+  override protected def factory:ConnectionFactory = {
+    val rc = new ActiveMQConnectionFactory
+    rc.setBrokerURL(url)
+    rc
   }
 
-  private[leveldb] def stop: Unit = {
-    try {
-      cluster.shutdown
-    }
-    catch {
-      case e: Throwable => {
-        e.printStackTrace
-      }
-    }
+  override protected def destination(i:Int):Destination = destination_type match {
+    case "queue" => new ActiveMQQueue(indexed_destination_name(i))
+    case "topic" => new ActiveMQTopic(indexed_destination_name(i))
+    case _ => sys.error("Unsuported destination type: "+destination_type)
   }
 
-  private[leveldb] var cluster: MiniDFSCluster = null
-  private[leveldb] var fs: FileSystem = null
 }

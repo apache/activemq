@@ -15,62 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.dfs
 
 import org.apache.activemq.leveldb.util._
 
 import org.fusesource.leveldbjni.internal.Util
 import FileSupport._
-import org.codehaus.jackson.map.ObjectMapper
 import java.io._
 import scala.collection.mutable._
 import scala.collection.immutable.TreeMap
-import org.fusesource.hawtbuf.{ByteArrayOutputStream, Buffer}
+import org.fusesource.hawtbuf.Buffer
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.activemq.leveldb.{RecordLog, LevelDBClient}
+import scala.Some
 
-/**
- *
- *
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
-object JsonCodec {
-
-  final val mapper: ObjectMapper = new ObjectMapper
-
-  def decode[T](buffer: Buffer, clazz: Class[T]): T = {
-    val original = Thread.currentThread.getContextClassLoader
-    Thread.currentThread.setContextClassLoader(this.getClass.getClassLoader)
-    try {
-      return mapper.readValue(buffer.in, clazz)
-    } finally {
-      Thread.currentThread.setContextClassLoader(original)
-    }
-  }
-
-  def decode[T](is: InputStream, clazz : Class[T]): T = {
-    var original: ClassLoader = Thread.currentThread.getContextClassLoader
-    Thread.currentThread.setContextClassLoader(this.getClass.getClassLoader)
-    try {
-      return JsonCodec.mapper.readValue(is, clazz)
-    }
-    finally {
-      Thread.currentThread.setContextClassLoader(original)
-    }
-  }
-
-
-  def encode(value: AnyRef): Buffer = {
-    var baos = new ByteArrayOutputStream
-    mapper.writeValue(baos, value)
-    return baos.toBuffer
-  }
-
-}
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-object HALevelDBClient extends Log {
+object DFSLevelDBClient extends Log {
 
   val MANIFEST_SUFFIX = ".mf"
   val LOG_SUFFIX = LevelDBClient.LOG_SUFFIX
@@ -102,8 +65,8 @@ object HALevelDBClient extends Log {
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class HALevelDBClient(val store:HALevelDBStore) extends LevelDBClient(store) {
-  import HALevelDBClient._
+class DFSLevelDBClient(val store:DFSLevelDBStore) extends LevelDBClient(store) {
+  import DFSLevelDBClient._
 
   case class Snapshot(current_manifest:String, files:Set[String])
   var snapshots = TreeMap[Long, Snapshot]()
@@ -352,8 +315,8 @@ class HALevelDBClient(val store:HALevelDBStore) extends LevelDBClient(store) {
       dfs.delete(new Path(dfsDirectory, file.getName), false)
     }
 
-    override def create_log_appender(position: Long) = {
-      new LogAppender(next_log(position), position) {
+    override def create_log_appender(position: Long, offset:Long) = {
+      new LogAppender(next_log(position), position, offset) {
 
         val dfs_path = new Path(dfsDirectory, file.getName)
         debug("Opening DFS log file for append: "+dfs_path.getName)

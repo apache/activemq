@@ -14,30 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.activemq.leveldb.test
 
-package org.apache.activemq.leveldb;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashSet;
-import java.util.Set;
+import org.apache.activemq.store.PersistenceAdapter
+import java.io.File
+import org.apache.activemq.leveldb.dfs.DFSLevelDBStore
 
 /**
+ * <p>
+ * </p>
+ *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-@XmlRootElement(name="index_files")
-@XmlAccessorType(XmlAccessType.FIELD)
-public class IndexManifestDTO {
+class DFSLevelDBStoreTest extends LevelDBStoreTest {
+  override protected def setUp: Unit = {
+    TestingHDFSServer.start
+    super.setUp
+  }
 
-    @XmlAttribute(name = "snapshot_id")
-    public long snapshot_id;
+  override protected def tearDown: Unit = {
+    super.tearDown
+    TestingHDFSServer.stop
+  }
 
-    @XmlAttribute(name = "current_manifest")
-    public String current_manifest;
-
-    @XmlAttribute(name = "file")
-    public Set<String> files = new HashSet<String>();
-
+  override protected def createPersistenceAdapter(delete: Boolean): PersistenceAdapter = {
+    var store: DFSLevelDBStore = new DFSLevelDBStore
+    store.setDirectory(new File("target/activemq-data/haleveldb"))
+    store.setDfsDirectory("localhost")
+    if (delete) {
+      store.deleteAllMessages
+    }
+    return store
+  }
 }

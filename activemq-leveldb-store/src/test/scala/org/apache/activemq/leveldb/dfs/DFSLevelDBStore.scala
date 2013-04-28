@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.dfs
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.activemq.util.ServiceStopper
 import org.apache.hadoop.fs.FileSystem
 import scala.reflect.BeanProperty
 import java.net.InetAddress
+import org.apache.activemq.leveldb.LevelDBStore
 
 /**
  * <p>
@@ -29,7 +30,7 @@ import java.net.InetAddress
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class HALevelDBStore extends LevelDBStore {
+class DFSLevelDBStore extends LevelDBStore {
 
   @BeanProperty
   var dfsUrl:String = _
@@ -70,5 +71,5 @@ class HALevelDBStore extends LevelDBStore {
     }
   }
 
-  override def createClient = new HALevelDBClient(this)
+  override def createClient = new DFSLevelDBClient(this)
 }

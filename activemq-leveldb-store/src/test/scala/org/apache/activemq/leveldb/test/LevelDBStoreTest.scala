@@ -14,31 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.test
 
-import org.apache.activemq.ActiveMQConnectionFactory
-import javax.jms.{Destination, ConnectionFactory}
-import org.apache.activemq.command.{ActiveMQTopic, ActiveMQQueue}
+import org.apache.activemq.store.PersistenceAdapter
+import org.apache.activemq.store.PersistenceAdapterTestSupport
+import java.io.File
+import org.apache.activemq.leveldb.LevelDBStore
 
 /**
  * <p>
- * ActiveMQ implementation of the JMS Scenario class.
  * </p>
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class ActiveMQScenario extends JMSClientScenario {
-
-  override protected def factory:ConnectionFactory = {
-    val rc = new ActiveMQConnectionFactory
-    rc.setBrokerURL(url)
-    rc
+class LevelDBStoreTest extends PersistenceAdapterTestSupport {
+  override def testStoreCanHandleDupMessages: Unit = {
   }
 
-  override protected def destination(i:Int):Destination = destination_type match {
-    case "queue" => new ActiveMQQueue(indexed_destination_name(i))
-    case "topic" => new ActiveMQTopic(indexed_destination_name(i))
-    case _ => sys.error("Unsuported destination type: "+destination_type)
+  protected def createPersistenceAdapter(delete: Boolean): PersistenceAdapter = {
+    var store: LevelDBStore = new LevelDBStore
+    store.setDirectory(new File("target/activemq-data/haleveldb"))
+    if (delete) {
+      store.deleteAllMessages
+    }
+    return store
   }
-
 }

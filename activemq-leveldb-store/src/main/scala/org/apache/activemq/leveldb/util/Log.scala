@@ -35,9 +35,6 @@ object Log {
   def apply(value:Logger):Log = new Log {
     override val log = value
   }
-
-  val exception_id_generator = new AtomicLong(System.currentTimeMillis)
-  def next_exception_id = exception_id_generator.incrementAndGet.toHexString
 }
 
 /**
@@ -46,25 +43,6 @@ object Log {
 trait Log {
   import Log._
   val log = LoggerFactory.getLogger(getClass.getName.stripSuffix("$"))
-
-  private def with_throwable(e:Throwable)(func: =>Unit) = {
-    if( e!=null ) {
-      val stack_ref = if( log.isDebugEnabled ) {
-        val id = next_exception_id
-        MDC.put("stackref", id.toString);
-        Some(id)
-      } else {
-        None
-      }
-      func
-      stack_ref.foreach { id=>
-        log.debug(e.toString, e)
-        MDC.remove("stackref")
-      }
-    } else {
-      func
-    }
-  }
 
   private def format(message:String, args:Seq[Any]) = {
     if( args.isEmpty ) {
@@ -81,18 +59,14 @@ trait Log {
   }
 
   def error(e: Throwable, m: => String, args:Any*): Unit = {
-    with_throwable(e) {
-      if( log.isErrorEnabled ) {
-        log.error(format(m, args.toSeq))
-      }
+    if( log.isErrorEnabled ) {
+      log.error(format(m, args.toSeq), e)
     }
   }
 
   def error(e: Throwable): Unit = {
-    with_throwable(e) {
-      if( log.isErrorEnabled ) {
-        log.error(e.getMessage)
-      }
+    if( log.isErrorEnabled ) {
+      log.error(e.getMessage, e)
     }
   }
 
@@ -103,18 +77,14 @@ trait Log {
   }
 
   def warn(e: Throwable, m: => String, args:Any*): Unit = {
-    with_throwable(e) {
-      if( log.isWarnEnabled ) {
-        log.warn(format(m, args.toSeq))
-      }
+    if( log.isWarnEnabled ) {
+      log.warn(format(m, args.toSeq), e)
     }
   }
 
   def warn(e: Throwable): Unit = {
-    with_throwable(e) {
-      if( log.isWarnEnabled ) {
-        log.warn(e.toString)
-      }
+    if( log.isWarnEnabled ) {
+      log.warn(e.toString, e)
     }
   }
 
@@ -125,18 +95,14 @@ trait Log {
   }
 
   def info(e: Throwable, m: => String, args:Any*): Unit = {
-    with_throwable(e) {
-      if( log.isInfoEnabled ) {
-        log.info(format(m, args.toSeq))
-      }
+    if( log.isInfoEnabled ) {
+      log.info(format(m, args.toSeq), e)
     }
   }
 
   def info(e: Throwable): Unit = {
-    with_throwable(e) {
-      if( log.isInfoEnabled ) {
-        log.info(e.toString)
-      }
+    if( log.isInfoEnabled ) {
+      log.info(e.toString, e)
     }
   }
 

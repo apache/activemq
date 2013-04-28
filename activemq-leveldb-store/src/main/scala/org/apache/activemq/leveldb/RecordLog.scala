@@ -104,7 +104,7 @@ case class RecordLog(directory: File, logSuffix:String) {
     (checksum.getValue & 0xFFFFFFFF).toInt
   }
 
-  class LogAppender(file:File, position:Long) extends LogReader(file, position) {
+  class LogAppender(file:File, position:Long, var append_offset:Long=0L) extends LogReader(file, position) {
 
     val info = new LogInfo(file, position, 0)
 
@@ -115,7 +115,7 @@ case class RecordLog(directory: File, logSuffix:String) {
       super.dispose()
     }
 
-    var append_offset = 0L
+
     val flushed_offset = new AtomicLong(0)
 
     def append_position = {
@@ -124,11 +124,13 @@ case class RecordLog(directory: File, logSuffix:String) {
 
     // set the file size ahead of time so that we don't have to sync the file
     // meta-data on every log sync.
-    channel.position(logSize-1)
-    channel.write(new Buffer(1).toByteBuffer)
-    channel.force(true)
-    if( sync ) {
-      channel.position(0)
+    if( append_offset==0 ) {
+      channel.position(logSize-1)
+      channel.write(new Buffer(1).toByteBuffer)
+      channel.force(true)
+      if( sync ) {
+        channel.position(0)
+      }
     }
 
     val write_buffer = new DataByteArrayOutputStream(BUFFER_SIZE+LOG_HEADER_SIZE)
@@ -141,6 +143,12 @@ case class RecordLog(directory: File, logSuffix:String) {
           channel.force(append_offset > logSize)
         }
       }
+    }
+
+    def skip(length:Long) = this.synchronized {
+      flush
+      append_offset += length
+      flushed_offset.addAndGet(length)
     }
 
     /**
@@ -375,16 +383,16 @@ case class RecordLog(directory: File, logSuffix:String) {
     }
   }
 
-  def create_log_appender(position: Long) = {
-    new LogAppender(next_log(position), position)
+  def create_log_appender(position: Long, offset:Long) = {
+    new LogAppender(next_log(position), position, offset)
   }
 
-  def create_appender(position: Long): Any = {
+  def create_appender(position: Long, offset:Long): Any = {
     log_mutex.synchronized {
       if(current_appender!=null) {
         log_infos.put (position, new LogInfo(current_appender.file, current_appender.position, current_appender.append_offset))
       }
-      current_appender = create_log_appender(position)
+      current_appender = create_log_appender(position, offset)
       log_infos.put(position, new LogInfo(current_appender.file, position, 0))
     }
   }
@@ -393,7 +401,7 @@ case class RecordLog(directory: File, logSuffix:String) {
   val max_log_flush_latency = TimeMetric()
   val max_log_rotate_latency = TimeMetric()
 
-  def open = {
+  def open(append_size:Long= -1) = {
     log_mutex.synchronized {
       log_infos.clear()
       LevelDBClient.find_sequence_files(directory, logSuffix).foreach { case (position,file) =>
@@ -401,31 +409,41 @@ case class RecordLog(directory: File, logSuffix:String) {
       }
 
       val appendPos = if( log_infos.isEmpty ) {
-        0L
+        create_appender(0,0)
       } else {
         val file = log_infos.lastEntry().getValue
-        val r = LogReader(file.file, file.position)
-        try {
-          val actualLength = r.verifyAndGetEndPosition
-          val updated = file.copy(length = actualLength - file.position)
-          log_infos.put(updated.position, updated)
-          if( updated.file.length != file.length ) {
-            // we need to truncate.
-            using(new RandomAccessFile(file.file, "rw")) ( _.setLength(updated.length))
+        if( append_size == -1 ) {
+          val r = LogReader(file.file, file.position)
+          try {
+            val actualLength = r.verifyAndGetEndPosition
+            val updated = file.copy(length = actualLength - file.position)
+            log_infos.put(updated.position, updated)
+            if( updated.file.length != file.length ) {
+              // we need to truncate.
+              using(new RandomAccessFile(file.file, "rw")) ( _.setLength(updated.length))
+            }
+            create_appender(actualLength,0)
+          } finally {
+            r.release()
           }
-          actualLength
-        } finally {
-          r.release()
+        } else {
+          create_appender(file.position,append_size)
         }
       }
+    }
+  }
 
-      create_appender(appendPos)
+  def isOpen = {
+    log_mutex.synchronized {
+      current_appender!=null;
     }
   }
 
   def close = {
     log_mutex.synchronized {
-      current_appender.release
+      if( current_appender!=null ) {
+        current_appender.release
+      }
     }
   }
 
@@ -450,13 +468,18 @@ case class RecordLog(directory: File, logSuffix:String) {
       max_log_rotate_latency {
         log_mutex.synchronized {
           if ( current_appender.append_offset >= logSize ) {
-            current_appender.release()
-            on_log_rotate()
-            create_appender(current_appender.append_position)
+            rotate
           }
         }
       }
     }
+  }
+
+
+  def rotate[T] = log_mutex.synchronized {
+    current_appender.release()
+    on_log_rotate()
+    create_appender(current_appender.append_position, 0)
   }
 
   var on_log_rotate: ()=>Unit = ()=>{}

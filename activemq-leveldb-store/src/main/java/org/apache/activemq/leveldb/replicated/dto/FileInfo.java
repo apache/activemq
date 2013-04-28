@@ -14,37 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb;
 
-import org.apache.activemq.store.PListTestSupport;
+package org.apache.activemq.leveldb.replicated.dto;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class LevelDBPlistTest extends PListTestSupport {
+@XmlRootElement(name="file_info")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class FileInfo {
 
-    @Override
-    protected LevelDBStore createPListStore() {
-        return new LevelDBStore();
-    }
+    @XmlAttribute(name = "file")
+    public String file;
 
-    protected LevelDBStore createConcurrentAddIteratePListStore() {
-        return new LevelDBStore();
-    }
+    @XmlAttribute(name = "length")
+    public long length;
 
-    @Override
-    protected LevelDBStore createConcurrentAddRemovePListStore() {
-        return new LevelDBStore();
-    }
-
-    @Override
-    protected LevelDBStore createConcurrentAddRemoveWithPreloadPListStore() {
-        return new LevelDBStore();
-    }
-
-    @Override
-    protected LevelDBStore createConcurrentAddIterateRemovePListStore(boolean enablePageCache) {
-        return new LevelDBStore();
-    }
-
+    @XmlAttribute(name = "crc32")
+    public long crc32;
 }

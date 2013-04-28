@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.test
 
 import org.apache.hadoop.fs.FileUtil
 import java.io.File
 import java.util.concurrent.TimeUnit
+import org.apache.activemq.leveldb.{LevelDBStore}
+import org.apache.activemq.leveldb.dfs.DFSLevelDBStore
 
 /**
  * <p>
@@ -26,7 +28,7 @@ import java.util.concurrent.TimeUnit
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class HALevelDBFastEnqueueTest extends LevelDBFastEnqueueTest {
+class DFSLevelDBFastEnqueueTest extends LevelDBFastEnqueueTest {
 
   override def setUp: Unit = {
     TestingHDFSServer.start
@@ -39,7 +41,7 @@ class HALevelDBFastEnqueueTest extends LevelDBFastEnqueueTest {
   }
 
   override protected def createStore: LevelDBStore = {
-    var store: HALevelDBStore = new HALevelDBStore
+    var store: DFSLevelDBStore = new DFSLevelDBStore
     store.setDirectory(dataDirectory)
     store.setDfsDirectory("target/activemq-data/hdfs-leveldb")
     return store

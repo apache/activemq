@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.test
 
 import org.apache.activemq.ActiveMQConnection
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong
 import junit.framework.Assert._
 import org.apache.activemq.leveldb.util.Log
 import junit.framework.TestCase
+import org.apache.activemq.leveldb.LevelDBStore
 
 object LevelDBFastEnqueueTest extends Log
 class LevelDBFastEnqueueTest extends TestCase {

@@ -457,6 +457,15 @@ class LevelDBClient(store: LevelDBStore) {
   def retry[T](func : =>T):T = RetrySupport.retry(LevelDBClient, store.isStarted, func _)
 
   def start() = {
+    init()
+    replay_init()
+    retry {
+      log.open()
+    }
+    replay_from(lastIndexSnapshotPos, log.appender_limit)
+  }
+
+  def init() ={
 
     // Lets check store compatibility...
     directory.mkdirs()
@@ -530,11 +539,9 @@ class LevelDBClient(store: LevelDBStore) {
         snapshotIndex(false)
       }
     }
+  }
 
-    retry {
-      log.open
-    }
-
+  def replay_init() = {
     // Find out what was the last snapshot.
     val snapshots = find_sequence_files(directory, INDEX_SUFFIX)
     var lastSnapshotIndex = snapshots.lastOption
@@ -545,7 +552,6 @@ class LevelDBClient(store: LevelDBStore) {
     tempIndexFile.recursiveDelete
 
     retry {
-
       // Setup the plist index.
       plistIndexFile.recursiveDelete
       plistIndexFile.mkdirs()
@@ -567,22 +573,26 @@ class LevelDBClient(store: LevelDBStore) {
             lastSnapshotIndex  = None
         }
       }
-
       index = new RichDB(factory.open(dirtyIndexFile, indexOptions));
+      loadCounters
+      index.put(DIRTY_INDEX_KEY, TRUE)
+    }
+  }
+
+  def replay_from(from:Long, limit:Long) = {
+    retry {
       try {
-        loadCounters
-        index.put(DIRTY_INDEX_KEY, TRUE)
         // Update the index /w what was stored on the logs..
-        var pos = lastIndexSnapshotPos;
+        var pos = from;
         var last_reported_at = System.currentTimeMillis();
         var showing_progress = false
         var last_reported_pos = 0L
         try {
-          while (pos < log.appender_limit) {
+          while (pos < limit) {
             val now = System.currentTimeMillis();
             if( now > last_reported_at+1000 ) {
-              val at = pos-lastIndexSnapshotPos
-              val total = log.appender_limit-lastIndexSnapshotPos
+              val at = pos-from
+              val total = limit-from
               val rate = (pos-last_reported_pos)*1000.0 / (now - last_reported_at)
               val eta = (total-at)/rate
               val remaining = if(eta > 60*60) {
@@ -711,7 +721,12 @@ class LevelDBClient(store: LevelDBStore) {
         os.writeObject(v)
       }
       os.close()
-      index.put(key, baos.toByteArray)
+      try {
+        index.put(key, baos.toByteArray)
+      }
+      catch {
+        case e => throw e
+      }
     }
     storeMap(LOG_REF_INDEX_KEY, logRefs)
     storeMap(COLLECTION_META_KEY, collectionMeta)
@@ -742,13 +757,19 @@ class LevelDBClient(store: LevelDBStore) {
 
       // this blocks until all io completes..
       // Suspend also deletes the index.
-      suspend()
-
-      if (log != null) {
-        log.close
+      if( index!=null ) {
+        suspend()
+        index = null
       }
-      copyDirtyIndexToSnapshot
-      plist.close
+
+      if (log.isOpen) {
+        log.close
+        copyDirtyIndexToSnapshot
+      }
+      if( plist!=null ) {
+        plist.close
+        plist=null
+      }
       log = null
     }
   }
@@ -793,12 +814,15 @@ class LevelDBClient(store: LevelDBStore) {
     snapshotRwLock.writeLock().unlock()
   }
 
-  def copyDirtyIndexToSnapshot {
+  def copyDirtyIndexToSnapshot:Unit = {
     if( log.appender_limit == lastIndexSnapshotPos  ) {
       // no need to snapshot again...
       return
     }
+    copyDirtyIndexToSnapshot(log.appender_limit)
+  }
 
+  def copyDirtyIndexToSnapshot(walPosition:Long):Unit = {
     // Where we start copying files into.  Delete this on
     // restart.
     val tmpDir = tempIndexFile
@@ -812,10 +836,8 @@ class LevelDBClient(store: LevelDBStore) {
       }
 
       // Rename to signal that the snapshot is complete.
-      val newSnapshotIndexPos = log.appender_limit
-      tmpDir.renameTo(snapshotIndexFile(newSnapshotIndexPos))
-      snapshotIndexFile(lastIndexSnapshotPos).recursiveDelete
-      lastIndexSnapshotPos = newSnapshotIndexPos
+      tmpDir.renameTo(snapshotIndexFile(walPosition))
+      replaceLatestSnapshotDirectory(walPosition)
 
     } catch {
       case e: Exception =>
@@ -826,15 +848,16 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
+  def replaceLatestSnapshotDirectory(newSnapshotIndexPos: Long) {
+    snapshotIndexFile(lastIndexSnapshotPos).recursiveDelete
+    lastIndexSnapshotPos = newSnapshotIndexPos
+  }
+
   def snapshotIndex(sync:Boolean=false):Unit = {
     suspend()
     try {
       if( sync ) {
         log.current_appender.force
-      }
-      if( log.appender_limit == lastIndexSnapshotPos  ) {
-        // no need to snapshot again...
-        return
       }
       copyDirtyIndexToSnapshot
     } finally {
@@ -849,7 +872,7 @@ class LevelDBClient(store: LevelDBStore) {
       locked_purge
     } finally {
       retry {
-        log.open
+        log.open()
       }
       resume()
     }
@@ -1290,8 +1313,9 @@ class LevelDBClient(store: LevelDBStore) {
 
     // We don't want to delete any journals that the index has not snapshot'ed or
     // the the
-    val deleteLimit = log.log_info(lastIndexSnapshotPos).map(_.position).
-          getOrElse(lastIndexSnapshotPos).min(log.appender_start)
+
+    var limit = oldest_retained_snapshot
+    val deleteLimit = log.log_info(limit).map(_.position).getOrElse(limit).min(log.appender_start)
 
     emptyJournals.foreach { id =>
       if ( id < deleteLimit ) {
@@ -1299,6 +1323,8 @@ class LevelDBClient(store: LevelDBStore) {
       }
     }
   }
+
+  def oldest_retained_snapshot = lastIndexSnapshotPos
 
   def removePlist(collectionKey: Long) = {
     val entryKeyPrefix = encodeLong(collectionKey)

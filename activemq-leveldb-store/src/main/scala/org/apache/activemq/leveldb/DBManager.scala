@@ -311,7 +311,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       if( manager.asyncCapacityRemaining.addAndGet(-s) > 0 ) {
         asyncCapacityUsed = s
         countDownFuture.countDown
-        manager.parent.broker_service.getTaskRunnerFactory.execute(^{
+        manager.parent.blocking_executor.execute(^{
           complete_listeners.foreach(_())
         })
       } else {
@@ -333,7 +333,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       } else {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
         countDownFuture.countDown
-        manager.parent.broker_service.getTaskRunnerFactory.execute(^{
+        manager.parent.blocking_executor.execute(^{
           complete_listeners.foreach(_())
         })
       }
@@ -361,7 +361,7 @@ class DBManager(val parent:LevelDBStore) {
 
   var lastCollectionKey = new AtomicLong(0)
   var lastPListKey = new AtomicLong(0)
-  val client:LevelDBClient = parent.createClient
+  def client = parent.client
 
   def writeExecutor = client.writeExecutor
   def flushDelay = parent.flushDelay

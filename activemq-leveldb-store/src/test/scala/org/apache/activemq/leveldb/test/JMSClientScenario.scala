@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb
+package org.apache.activemq.leveldb.test
 
 import java.lang.Thread
 import javax.jms._
+import org.apache.activemq.leveldb.test.Scenario
 
 /**
  * <p>

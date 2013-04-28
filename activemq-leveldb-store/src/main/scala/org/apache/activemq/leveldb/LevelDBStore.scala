@@ -23,13 +23,12 @@ import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.{ExecutionException, Future}
+import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
 import reflect.BeanProperty
 import org.apache.activemq.store._
 import java.util._
 import collection.mutable.ListBuffer
-import concurrent.CountDownLatch
 import javax.management.ObjectName
 import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
 import org.apache.activemq.util._
@@ -37,9 +36,33 @@ import org.apache.activemq.leveldb.util.{RetrySupport, FileSupport, Log}
 import org.apache.activemq.store.PList.PListIterator
 import java.lang
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream, Buffer}
+import scala.Some
+import org.apache.activemq.leveldb.CountDownFuture
+import org.apache.activemq.leveldb.XaAckRecord
+import org.apache.activemq.leveldb.DurableSubscription
+import scala.Some
+import org.apache.activemq.leveldb.CountDownFuture
+import org.apache.activemq.leveldb.XaAckRecord
+import org.apache.activemq.leveldb.DurableSubscription
+import scala.Some
+import org.apache.activemq.leveldb.CountDownFuture
+import org.apache.activemq.leveldb.XaAckRecord
+import org.apache.activemq.leveldb.DurableSubscription
+import scala.Some
+import org.apache.activemq.leveldb.CountDownFuture
+import org.apache.activemq.leveldb.XaAckRecord
+import org.apache.activemq.leveldb.DurableSubscription
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
+
+  lazy val BLOCKING_EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue[Runnable](), new ThreadFactory() {
+      def newThread(r:Runnable) = {
+          val rc = new Thread(null, r, "ActiveMQ Task");
+          rc.setDaemon(true);
+          rc
+      }
+  })
 
   val DONE = new CountDownFuture();
   DONE.countDown
@@ -118,6 +141,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   final val wireFormat = new OpenWireFormat
   final val db = new DBManager(this)
+  final val client = createClient
 
   @BeanProperty
   var directory = DEFAULT_DIRECTORY
@@ -245,6 +269,14 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   }
 
   def broker_service = brokerService
+
+  def blocking_executor:Executor = {
+    if( broker_service != null ) {
+      broker_service.getTaskRunnerFactory
+    } else {
+      BLOCKING_EXECUTOR
+    }
+  }
 
   def setBrokerName(brokerName: String): Unit = {
   }
