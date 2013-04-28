@@ -20,7 +20,6 @@ import org.apache.activemq.leveldb.LevelDBStore
 import org.apache.activemq.util.ServiceStopper
 import org.apache.activemq.leveldb.util.FileSupport._
 import org.apache.activemq.leveldb.util.{JsonCodec, Log}
-import java.util
 import org.fusesource.hawtdispatch._
 import org.apache.activemq.leveldb.replicated.dto._
 import org.fusesource.hawtdispatch.transport._
@@ -191,7 +190,7 @@ class MasterLevelDBStore extends LevelDBStore {
         sendError("Not logged in")
         return;
       }
-      info("handle_sync")
+      debug("handle_sync")
       slave_state = slaves.get(login.slave_id)
       if ( slave_state == null ) {
         slave_state = new SlaveState(login.slave_id)
@@ -245,7 +244,7 @@ class MasterLevelDBStore extends LevelDBStore {
     var position = new AtomicLong(0)
 
     def start(session:Session) = {
-      info("SlaveState:start")
+      debug("SlaveState:start")
 
       val resp = this.synchronized {
         if( this.session!=null ) {
@@ -309,6 +308,10 @@ class MasterLevelDBStore extends LevelDBStore {
         }
       }
     }
+
+    def status = {
+      "{slave: "+slave_id+", position: "+position.get()+"}"
+    }
   }
 
   @volatile
@@ -323,11 +326,10 @@ class MasterLevelDBStore extends LevelDBStore {
     for( slave <- slaves.values() ) {
       slave.check_position_sync
     }
+
     while( !position_sync.await(1, TimeUnit.SECONDS) ) {
-      println("Waiting for slaves to ack log position: "+position_sync.position)
-      for( slave <- slaves.values() ) {
-        slave.check_position_sync
-      }
+      val status = slaves.values().map(_.status).mkString(", ")
+      warn("Store update waiting on %d replica(s) to catch up to log position %d. Connected slaves: [%s]", minReplica, position, status)
     }
   }
 

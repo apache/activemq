@@ -87,7 +87,7 @@ class SlaveLevelDBStore extends LevelDBStore {
 
     info("Connecting to master...")
     wal_session = new Session(transport, (session)=>{
-      info("Connected to master.  Syncing")
+      debug("Connected to master.  Syncing")
       session.request_then(SYNC_ACTION, null) { body =>
         val response = JsonCodec.decode(body, classOf[SyncResponse])
         transfer_missing(response)

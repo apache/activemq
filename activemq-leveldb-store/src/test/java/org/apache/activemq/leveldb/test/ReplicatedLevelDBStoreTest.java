@@ -22,6 +22,8 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.leveldb.CountDownFuture;
+import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
 import org.apache.activemq.leveldb.replicated.SlaveLevelDBStore;
 import org.apache.activemq.leveldb.util.FileSupport;
@@ -34,15 +36,79 @@ import javax.jms.JMSException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  */
 public class ReplicatedLevelDBStoreTest extends TestCase {
     protected static final Logger LOG = LoggerFactory.getLogger(ReplicatedLevelDBStoreTest.class);
 
+    public void testMinReplicaEnforced() throws Exception {
+
+        File masterDir = new File("target/activemq-data/leveldb-node1");
+        File slaveDir = new File("target/activemq-data/leveldb-node2");
+        FileSupport.toRichFile(masterDir).recursiveDelete();
+        FileSupport.toRichFile(slaveDir).recursiveDelete();
+
+        MasterLevelDBStore master = createMaster(masterDir);
+        master.setMinReplica(1);
+        master.start();
+
+        MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
+
+        // Updating the store should not complete since we don't have enough
+        // replicas.
+        CountDownFuture f = asyncAddMessage(ms, "m1");
+        assertFalse(f.completed().await(2, TimeUnit.SECONDS));
+
+        // Adding a slave should allow that update to complete.
+        SlaveLevelDBStore slave = createSlave(master, slaveDir);
+        slave.start();
+
+        assertTrue(f.completed().await(2, TimeUnit.SECONDS));
+
+        // New updates should complete quickly now..
+        f = asyncAddMessage(ms, "m2");
+        assertTrue(f.completed().await(1, TimeUnit.SECONDS));
+
+        // If the slave goes offline, then updates should once again
+        // not complete.
+        slave.stop();
+
+        f = asyncAddMessage(ms, "m3");
+        assertFalse(f.completed().await(2, TimeUnit.SECONDS));
+
+        // Restart and the op should complete.
+        slave = createSlave(master, slaveDir);
+        slave.start();
+        assertTrue(f.completed().await(2, TimeUnit.SECONDS));
+
+        master.stop();
+        slave.stop();
+
+    }
+
+    private CountDownFuture asyncAddMessage(final MessageStore ms, final String body) {
+        final CountDownFuture f = new CountDownFuture(new CountDownLatch(1));
+        LevelDBStore.BLOCKING_EXECUTOR().execute(new Runnable() {
+            public void run() {
+                try {
+                    addMessage(ms, body);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    f.countDown();
+                }
+            }
+        });
+        return f;
+    }
+
+
     public void testReplication() throws Exception {
+
         LinkedList<File> directories = new LinkedList<File>();
         directories.add(new File("target/activemq-data/leveldb-node1"));
         directories.add(new File("target/activemq-data/leveldb-node2"));
@@ -53,32 +119,14 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         }
 
         ArrayList<String> expected_list = new ArrayList<String>();
-        final int LOG_SIZE = 1023*200;
         // We will rotate between 3 nodes the task of being the master.
         for( int j=0; j < 10; j++) {
 
-            MasterLevelDBStore master = new MasterLevelDBStore();
-            master.setDirectory(directories.get(0));
-            master.setBind("tcp://0.0.0.0:0");
-            master.setSecurityToken("foo");
-            master.setMinReplica(1);
-            master.setLogSize(LOG_SIZE);
-            LOG.info("Starting master: "+master.replicaId());
+            MasterLevelDBStore master = createMaster(directories.get(0));
             master.start();
-
-            SlaveLevelDBStore slave1 = new SlaveLevelDBStore();
-            slave1.setDirectory(directories.get(1));
-            slave1.setConnect("tcp://127.0.0.1:" + master.getPort());
-            slave1.setSecurityToken("foo");
-            slave1.setLogSize(LOG_SIZE);
-            LOG.info("Starting slave: "+slave1.replicaId());
-            slave1.start();
-
-            SlaveLevelDBStore slave2 = new SlaveLevelDBStore();
-            slave2.setDirectory(directories.get(2));
-            slave2.setConnect("tcp://127.0.0.1:" + master.getPort());
-            slave2.setSecurityToken("foo");
-            slave2.setLogSize(LOG_SIZE);
+            SlaveLevelDBStore slave1 = createSlave(master, directories.get(1));
+            SlaveLevelDBStore slave2 = createSlave(master, directories.get(2));
+            slave2.start();
 
             LOG.info("Adding messages...");
             MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
@@ -88,13 +136,8 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
                     LOG.info("" + (100*i/TOTAL) + "% done");
                 }
 
-                if( i == 100 ) {
-                    LOG.info("Starting slave: "+slave2.replicaId());
-                    slave2.start();
-                }
-
-                if( i == 200 ) {
-                    LOG.info("Stopping slave: "+slave2.replicaId());
+                if( i == 250 ) {
+                    slave1.start();
                     slave2.stop();
                 }
 
@@ -114,6 +157,25 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
             // Rotate the dir order so that slave1 becomes the master next.
             directories.addLast(directories.removeFirst());
         }
+    }
+
+    private SlaveLevelDBStore createSlave(MasterLevelDBStore master, File directory) {
+        SlaveLevelDBStore slave1 = new SlaveLevelDBStore();
+        slave1.setDirectory(directory);
+        slave1.setConnect("tcp://127.0.0.1:" + master.getPort());
+        slave1.setSecurityToken("foo");
+        slave1.setLogSize(1023*200);
+        return slave1;
+    }
+
+    private MasterLevelDBStore createMaster(File directory) {
+        MasterLevelDBStore master = new MasterLevelDBStore();
+        master.setDirectory(directory);
+        master.setBind("tcp://0.0.0.0:0");
+        master.setSecurityToken("foo");
+        master.setMinReplica(1);
+        master.setLogSize(1023 * 200);
+        return master;
     }
 
     long id_counter = 0L;
