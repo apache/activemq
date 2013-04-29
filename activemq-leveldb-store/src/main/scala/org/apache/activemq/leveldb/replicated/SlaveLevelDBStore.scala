@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.replicated
 
-import org.apache.activemq.leveldb.{LevelDBClient, LevelDBStore}
+import org.apache.activemq.leveldb.LevelDBStore
 import org.apache.activemq.util.ServiceStopper
 import java.util
 import org.fusesource.hawtdispatch._
@@ -29,13 +29,12 @@ import org.apache.activemq.leveldb.util._
 import FileSupport._
 import java.io.{IOException, RandomAccessFile, File}
 import scala.reflect.BeanProperty
-import java.util.UUID
 
 object SlaveLevelDBStore extends Log
 
 /**
  */
-class SlaveLevelDBStore extends LevelDBStore {
+class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   import SlaveLevelDBStore._
   import ReplicationSupport._
@@ -43,33 +42,13 @@ class SlaveLevelDBStore extends LevelDBStore {
 
   @BeanProperty
   var connect = "tcp://0.0.0.0:61619"
-  @BeanProperty
-  var securityToken = ""
 
   val queue = createQueue("leveldb replication slave")
   var replay_from = 0L
   var caughtUp = false
 
-  override def createClient = new SlaveLevelDBClient(this)
-  def slave_client = client.asInstanceOf[SlaveLevelDBClient]
-
-  class SlaveLevelDBClient(val store:SlaveLevelDBStore) extends LevelDBClient(store) {
-  }
-
   var wal_session:Session = _
   var transfer_session:Session = _
-
-  def replicaId:String = {
-    val replicaid_file = directory / "replicaid.txt"
-    if( replicaid_file.exists() ) {
-      replicaid_file.readText()
-    } else {
-      val rc = UUID.randomUUID().toString
-      replicaid_file.getParentFile.mkdirs()
-      replicaid_file.writeText(rc)
-      rc
-    }
-  }
 
   override def doStart() = {
     client.init()

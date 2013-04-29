@@ -124,6 +124,18 @@
       <artifactId>fabric-zookeeper</artifactId>
       <version>7.2.0.redhat-024</version>
     </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>4.3.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>4.3.1</version>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- For Optional Snappy Compression -->
     <dependency>

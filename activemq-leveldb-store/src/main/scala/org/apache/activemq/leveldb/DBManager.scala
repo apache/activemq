@@ -91,25 +91,39 @@ object UowCompleted extends UowState {
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-case class CountDownFuture(completed:CountDownLatch=new CountDownLatch(1)) extends java.util.concurrent.Future[Object] {
-  def countDown = completed.countDown()
+class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
+
+  private val latch:CountDownLatch=new CountDownLatch(1)
+  @volatile
+  var value:T = _
+
   def cancel(mayInterruptIfRunning: Boolean) = false
   def isCancelled = false
 
+
+  def completed = latch.getCount()==0
+  def await() = latch.await()
+  def await(p1: Long, p2: TimeUnit) = latch.await(p1, p2)
+
+  def set(v:T) = {
+    value = v
+    latch.countDown()
+  }
+
   def get() = {
-    completed.await()
-    null
+    latch.await()
+    value
   }
 
   def get(p1: Long, p2: TimeUnit) = {
-    if(completed.await(p1, p2)) {
-      null
+    if(latch.await(p1, p2)) {
+      value
     } else {
       throw new TimeoutException
     }
   }
 
-  def isDone = completed.await(0, TimeUnit.SECONDS);
+  def isDone = latch.await(0, TimeUnit.SECONDS);
 }
 
 object UowManagerConstants {
@@ -125,7 +139,7 @@ object UowManagerConstants {
 import UowManagerConstants._
 
 class DelayableUOW(val manager:DBManager) extends BaseRetained {
-  val countDownFuture = CountDownFuture()
+  val countDownFuture = new CountDownFuture[AnyRef]()
   var canceled = false;
 
   val uowId:Int = manager.lastUowId.incrementAndGet()
@@ -310,7 +324,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       val s = size
       if( manager.asyncCapacityRemaining.addAndGet(-s) > 0 ) {
         asyncCapacityUsed = s
-        countDownFuture.countDown
+        countDownFuture.set(null)
         manager.parent.blocking_executor.execute(^{
           complete_listeners.foreach(_())
         })
@@ -332,7 +346,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         asyncCapacityUsed = 0
       } else {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
-        countDownFuture.countDown
+        countDownFuture.set(null)
         manager.parent.blocking_executor.execute(^{
           complete_listeners.foreach(_())
         })

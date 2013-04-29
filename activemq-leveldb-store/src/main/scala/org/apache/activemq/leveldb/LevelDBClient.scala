@@ -748,7 +748,9 @@ class LevelDBClient(store: LevelDBStore) {
     loadMap(LOG_REF_INDEX_KEY, logRefs)
     loadMap(COLLECTION_META_KEY, collectionMeta)
   }
-  
+
+  var wal_append_position = 0L
+
   def stop() = {
     if( writeExecutor!=null ) {
       writeExecutor.shutdown
@@ -765,6 +767,7 @@ class LevelDBClient(store: LevelDBStore) {
       if (log.isOpen) {
         log.close
         copyDirtyIndexToSnapshot
+        wal_append_position = log.appender_limit
       }
       if( plist!=null ) {
         plist.close

@@ -37,8 +37,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import static org.apache.activemq.leveldb.test.ReplicationTestSupport.*;
 
 /**
  */
@@ -61,29 +61,29 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         // Updating the store should not complete since we don't have enough
         // replicas.
         CountDownFuture f = asyncAddMessage(ms, "m1");
-        assertFalse(f.completed().await(2, TimeUnit.SECONDS));
+        assertFalse(f.await(2, TimeUnit.SECONDS));
 
         // Adding a slave should allow that update to complete.
         SlaveLevelDBStore slave = createSlave(master, slaveDir);
         slave.start();
 
-        assertTrue(f.completed().await(2, TimeUnit.SECONDS));
+        assertTrue(f.await(2, TimeUnit.SECONDS));
 
         // New updates should complete quickly now..
         f = asyncAddMessage(ms, "m2");
-        assertTrue(f.completed().await(1, TimeUnit.SECONDS));
+        assertTrue(f.await(1, TimeUnit.SECONDS));
 
         // If the slave goes offline, then updates should once again
         // not complete.
         slave.stop();
 
         f = asyncAddMessage(ms, "m3");
-        assertFalse(f.completed().await(2, TimeUnit.SECONDS));
+        assertFalse(f.await(2, TimeUnit.SECONDS));
 
         // Restart and the op should complete.
         slave = createSlave(master, slaveDir);
         slave.start();
-        assertTrue(f.completed().await(2, TimeUnit.SECONDS));
+        assertTrue(f.await(2, TimeUnit.SECONDS));
 
         master.stop();
         slave.stop();
@@ -91,15 +91,14 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
     }
 
     private CountDownFuture asyncAddMessage(final MessageStore ms, final String body) {
-        final CountDownFuture f = new CountDownFuture(new CountDownLatch(1));
+        final CountDownFuture<Throwable> f = new CountDownFuture<Throwable>();
         LevelDBStore.BLOCKING_EXECUTOR().execute(new Runnable() {
             public void run() {
                 try {
                     addMessage(ms, body);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    f.countDown();
+                    f.set(null);
+                } catch (Throwable e) {
+                    f.set(e);
                 }
             }
         });
@@ -114,13 +113,13 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         directories.add(new File("target/activemq-data/leveldb-node2"));
         directories.add(new File("target/activemq-data/leveldb-node3"));
 
-        for( File f: directories) {
+        for (File f : directories) {
             FileSupport.toRichFile(f).recursiveDelete();
         }
 
         ArrayList<String> expected_list = new ArrayList<String>();
         // We will rotate between 3 nodes the task of being the master.
-        for( int j=0; j < 10; j++) {
+        for (int j = 0; j < 10; j++) {
 
             MasterLevelDBStore master = createMaster(directories.get(0));
             master.start();
@@ -132,11 +131,11 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
             MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
             final int TOTAL = 500;
             for (int i = 0; i < TOTAL; i++) {
-                if (  i % ((int) (TOTAL * 0.10)) == 0) {
-                    LOG.info("" + (100*i/TOTAL) + "% done");
+                if (i % ((int) (TOTAL * 0.10)) == 0) {
+                    LOG.info("" + (100 * i / TOTAL) + "% done");
                 }
 
-                if( i == 250 ) {
+                if (i == 250) {
                     slave1.start();
                     slave2.stop();
                 }
@@ -149,9 +148,9 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
             LOG.info("Checking master state");
             assertEquals(expected_list, getMessages(ms));
 
-            LOG.info("Stopping master: "+master.replicaId());
+            LOG.info("Stopping master: " + master.replicaId());
             master.stop();
-            LOG.info("Stopping slave: "+slave1.replicaId());
+            LOG.info("Stopping slave: " + slave1.replicaId());
             slave1.stop();
 
             // Rotate the dir order so that slave1 becomes the master next.
@@ -164,7 +163,7 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         slave1.setDirectory(directory);
         slave1.setConnect("tcp://127.0.0.1:" + master.getPort());
         slave1.setSecurityToken("foo");
-        slave1.setLogSize(1023*200);
+        slave1.setLogSize(1023 * 200);
         return slave1;
     }
 
@@ -178,49 +177,5 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         return master;
     }
 
-    long id_counter = 0L;
-    String payload = "";
-    {
-        for (int i = 0; i < 1024; i++) {
-            payload += "x";
-        }
-    }
-
-    public ActiveMQTextMessage addMessage(MessageStore ms, String body) throws JMSException, IOException {
-        ActiveMQTextMessage message = new ActiveMQTextMessage();
-        message.setPersistent(true);
-        message.setResponseRequired(true);
-        message.setStringProperty("id", body);
-        message.setText(payload);
-        id_counter += 1;
-        MessageId messageId = new MessageId("ID:localhost-56913-1254499826208-0:0:1:1:" + id_counter);
-        messageId.setBrokerSequenceId(id_counter);
-        message.setMessageId(messageId);
-        ms.addMessage(new ConnectionContext(), message);
-        return message;
-    }
-
-    public ArrayList<String> getMessages(MessageStore ms) throws Exception {
-        final ArrayList<String> rc = new ArrayList<String>();
-        ms.recover(new MessageRecoveryListener() {
-            public boolean recoverMessage(Message message) throws Exception {
-                rc.add(((ActiveMQTextMessage) message).getStringProperty("id"));
-                return true;
-            }
-
-            public boolean hasSpace() {
-                return true;
-            }
-
-            public boolean recoverMessageReference(MessageId ref) throws Exception {
-                return true;
-            }
-
-            public boolean isDuplicate(MessageId ref) {
-                return false;
-            }
-        });
-        return rc;
-    }
 
 }

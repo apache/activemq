@@ -17,41 +17,24 @@
 
 package org.apache.activemq.leveldb
 
-import org.apache.activemq.broker.{LockableServiceSupport, BrokerService, BrokerServiceAware, ConnectionContext}
+import org.apache.activemq.broker.{LockableServiceSupport, BrokerServiceAware, ConnectionContext}
 import org.apache.activemq.command._
 import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
 import java.io.File
 import java.io.IOException
 import java.util.concurrent._
-import java.util.concurrent.atomic.{AtomicLong, AtomicInteger}
+import java.util.concurrent.atomic.AtomicLong
 import reflect.BeanProperty
 import org.apache.activemq.store._
 import java.util._
 import collection.mutable.ListBuffer
-import javax.management.ObjectName
 import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
 import org.apache.activemq.util._
-import org.apache.activemq.leveldb.util.{RetrySupport, FileSupport, Log}
+import org.apache.activemq.leveldb.util.{RetrySupport, Log}
 import org.apache.activemq.store.PList.PListIterator
 import java.lang
-import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream, Buffer}
-import scala.Some
-import org.apache.activemq.leveldb.CountDownFuture
-import org.apache.activemq.leveldb.XaAckRecord
-import org.apache.activemq.leveldb.DurableSubscription
-import scala.Some
-import org.apache.activemq.leveldb.CountDownFuture
-import org.apache.activemq.leveldb.XaAckRecord
-import org.apache.activemq.leveldb.DurableSubscription
-import scala.Some
-import org.apache.activemq.leveldb.CountDownFuture
-import org.apache.activemq.leveldb.XaAckRecord
-import org.apache.activemq.leveldb.DurableSubscription
-import scala.Some
-import org.apache.activemq.leveldb.CountDownFuture
-import org.apache.activemq.leveldb.XaAckRecord
-import org.apache.activemq.leveldb.DurableSubscription
+import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -64,8 +47,8 @@ object LevelDBStore extends Log {
       }
   })
 
-  val DONE = new CountDownFuture();
-  DONE.countDown
+  val DONE = new CountDownFuture[AnyRef]();
+  DONE.set(null)
   
   def toIOException(e: Throwable): IOException = {
     if (e.isInstanceOf[ExecutionException]) {
@@ -208,7 +191,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   var snappyCompressLogs = false
 
   def doStart: Unit = {
-    import FileSupport._
 
     snappyCompressLogs = logCompression.toLowerCase == "snappy" && Snappy != null
     debug("starting")
@@ -583,7 +565,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     lastSeq.set(db.getLastQueueEntrySeq(key))
 
-    def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture = {
+    def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       uow.enqueue(key, lastSeq.incrementAndGet, message, delay)
     }
 
@@ -606,7 +588,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       waitOn(asyncAddQueueMessage(context, message, delay))
     }
 
-    def doRemove(uow: DelayableUOW, id: MessageId): CountDownFuture = {
+    def doRemove(uow: DelayableUOW, id: MessageId): CountDownFuture[AnyRef] = {
       uow.dequeue(key, id)
     }
 

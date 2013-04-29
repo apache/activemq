@@ -28,7 +28,6 @@ import java.io.{IOException, File}
 import java.net.{InetSocketAddress, URI}
 import java.util.concurrent.atomic.AtomicLong
 import scala.reflect.BeanProperty
-import java.util.UUID
 
 class PositionSync(val position:Long, count:Int) extends CountDownLatch(count)
 
@@ -36,7 +35,7 @@ object MasterLevelDBStore extends Log
 
 /**
  */
-class MasterLevelDBStore extends LevelDBStore {
+class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   import MasterLevelDBStore._
   import collection.JavaConversions._
@@ -45,23 +44,9 @@ class MasterLevelDBStore extends LevelDBStore {
   @BeanProperty
   var bind = "tcp://0.0.0.0:61619"
   @BeanProperty
-  var securityToken = ""
-  @BeanProperty
   var minReplica = 1
 
   val slaves = new ConcurrentHashMap[String,SlaveState]()
-
-  def replicaId:String = {
-    val replicaid_file = directory / "replicaid.txt"
-    if( replicaid_file.exists() ) {
-      replicaid_file.readText()
-    } else {
-      val rc = UUID.randomUUID().toString
-      replicaid_file.getParentFile.mkdirs()
-      replicaid_file.writeText(rc)
-      rc
-    }
-  }
 
   override def doStart = {
     super.doStart
@@ -78,7 +63,6 @@ class MasterLevelDBStore extends LevelDBStore {
 
   override def createClient = new MasterLevelDBClient(this)
   def master_client = client.asInstanceOf[MasterLevelDBClient]
-
 
   //////////////////////////////////////
   // Replication Protocol Stuff
@@ -110,20 +94,6 @@ class MasterLevelDBStore extends LevelDBStore {
 
   def stop_protocol_server = {
     transport_server.stop(NOOP)
-  }
-
-
-  case class HawtCallback[T](cb:(T)=>Unit) extends Function1[T, Unit] {
-    val queue = getCurrentQueue
-    def apply(value:T) = {
-      if( queue==null || queue.isExecuting ) {
-        cb(value)
-      } else {
-        queue {
-          cb(value)
-        }
-      }
-    }
   }
 
   class Session(transport: Transport) extends TransportHandler(transport) {
@@ -346,5 +316,7 @@ class MasterLevelDBStore extends LevelDBStore {
       }
     }
   }
+
+  def wal_append_position = client.wal_append_position
 
 }
