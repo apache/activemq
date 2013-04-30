@@ -90,7 +90,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
             info("Not enough cluster members connected to elect a new master.")
           case Some(members) =>
 
-            if (members.size < store.cluster_size_quorum) {
+            if (members.size < store.clusterSizeQuorum) {
               info("Not enough cluster members connected to elect a new master.")
             } else {
 

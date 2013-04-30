@@ -30,6 +30,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.activemq.leveldb.util.Log
 import java.io.File
+import org.apache.activemq.usage.SystemUsage
 
 object ElectingLevelDBStore extends Log {
 
@@ -58,7 +59,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   def proxy_target = master
 
   @BeanProperty
-  var zkAddress = "tcp://127.0.0.1:2888"
+  var zkAddress = "127.0.0.1:2181"
   @BeanProperty
   var zkPassword:String = _
   @BeanProperty
@@ -72,8 +73,12 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var hostname: String = _
   @BeanProperty
   var bind = "tcp://0.0.0.0:61619"
+
   @BeanProperty
-  var minReplica = 1
+  var replicas = 2
+
+  def clusterSizeQuorum = (replicas/2) + 1
+
   @BeanProperty
   var securityToken = ""
 
@@ -116,10 +121,6 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   @BeanProperty
   var monitorStats = false
 
-  def cluster_size_quorum = minReplica + 1
-
-  def cluster_size_max = (minReplica << 2) + 1
-
   var master: MasterLevelDBStore = _
   var slave: SlaveLevelDBStore = _
 
@@ -128,6 +129,11 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var master_elector: MasterElector = _
 
   var position: Long = -1L
+
+  var usageManager: SystemUsage = _
+  override def setUsageManager(usageManager: SystemUsage) {
+    this.usageManager = usageManager
+  }
 
   def init() {
 
@@ -250,7 +256,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   def create_master() = {
     val master = new MasterLevelDBStore
     configure(master)
-    master.minReplica = minReplica
+    master.replicas = replicas
     master.bind = bind
     master
   }
@@ -278,6 +284,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     store.securityToken = securityToken
     store.setBrokerName(brokerName)
     store.setBrokerService(brokerService)
+    store.setUsageManager(usageManager)
   }
 
   def address(port: Int) = {
@@ -287,4 +294,21 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     "tcp://" + hostname + ":" + port
   }
 
+  override def size: Long = {
+    if( master !=null ) {
+      master.size
+    } else if( slave !=null ) {
+      slave.size
+    } else {
+      var rc = 0L
+      if( directory.exists() ) {
+        for( f <- directory.list() ) {
+          if( f.endsWith(LevelDBClient.LOG_SUFFIX)) {
+            rc += f.length
+          }
+        }
+      }
+      rc
+    }
+  }
 }

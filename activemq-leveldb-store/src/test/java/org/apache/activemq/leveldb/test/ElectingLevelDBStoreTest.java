@@ -215,7 +215,7 @@ public class ElectingLevelDBStoreTest extends TestCase {
         ElectingLevelDBStore store = new ElectingLevelDBStore();
         store.setSecurityToken("foo");
         store.setLogSize(1023 * 200);
-        store.setMinReplica(1);
+        store.setReplicas(2);
         store.setZkAddress("localhost:" + connector.getLocalPort());
         store.setZkPath("/broker-stores");
         store.setBrokerName("foo");

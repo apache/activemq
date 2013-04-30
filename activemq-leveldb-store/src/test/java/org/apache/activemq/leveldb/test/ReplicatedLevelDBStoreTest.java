@@ -17,24 +17,17 @@
 package org.apache.activemq.leveldb.test;
 
 import junit.framework.TestCase;
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
 import org.apache.activemq.leveldb.replicated.SlaveLevelDBStore;
 import org.apache.activemq.leveldb.util.FileSupport;
-import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +46,7 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         FileSupport.toRichFile(slaveDir).recursiveDelete();
 
         MasterLevelDBStore master = createMaster(masterDir);
-        master.setMinReplica(1);
+        master.setReplicas(2);
         master.start();
 
         MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
@@ -172,7 +165,7 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
         master.setDirectory(directory);
         master.setBind("tcp://0.0.0.0:0");
         master.setSecurityToken("foo");
-        master.setMinReplica(1);
+        master.setReplicas(2);
         master.setLogSize(1023 * 200);
         return master;
     }

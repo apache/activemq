@@ -194,6 +194,20 @@
         <include>org.apache.qpid:proton</include>
         <include>org.apache.qpid:proton-api</include>
         <include>org.apache.qpid:proton-jms</include>
+        
+        <!-- activemq-leveldb-store dependencies -->
+        <include>org.scala-lang:scala-library</include>
+        <include>org.fusesource.hawtbuf:hawtbuf-proto</include>
+        <include>org.fusesource.hawtdispatch:*</include>
+        <include>org.iq80.leveldb:*</include>
+        <include>com.google.guava:guava</include>
+        <include>org.fusesource.leveldbjni:*</include>
+        <include>org.fusesource.hawtjni:hawtjni-runtime</include>
+        <include>org.xerial.snappy:*</include>
+        <include>org.iq80.snappy:*</include>
+        <include>org.codehaus.jackson:*</include>
+        <include>org.fusesource.fabric:*</include>
+
       </includes>
     </dependencySet>
     <dependencySet>

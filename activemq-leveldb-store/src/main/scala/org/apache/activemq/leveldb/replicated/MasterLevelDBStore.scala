@@ -43,8 +43,10 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   @BeanProperty
   var bind = "tcp://0.0.0.0:61619"
+
   @BeanProperty
-  var minReplica = 1
+  var replicas = 2
+  def minSlaveAcks = replicas/2
 
   val slaves = new ConcurrentHashMap[String,SlaveState]()
 
@@ -288,10 +290,10 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   var position_sync = new PositionSync(0L, 0)
 
   def wal_sync_to(position:Long):Unit = {
-    if( minReplica<1 ) {
+    if( minSlaveAcks<1 ) {
       return
     }
-    val position_sync = new PositionSync(position, minReplica)
+    val position_sync = new PositionSync(position, minSlaveAcks)
     this.position_sync = position_sync
     for( slave <- slaves.values() ) {
       slave.check_position_sync
@@ -299,7 +301,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
     while( !position_sync.await(1, TimeUnit.SECONDS) ) {
       val status = slaves.values().map(_.status).mkString(", ")
-      warn("Store update waiting on %d replica(s) to catch up to log position %d. Connected slaves: [%s]", minReplica, position, status)
+      warn("Store update waiting on %d replica(s) to catch up to log position %d. Connected slaves: [%s]", minSlaveAcks, position, status)
     }
   }
 
