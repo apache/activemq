@@ -16,12 +16,10 @@
  */
 package org.apache.activemq.transport.failover;
 
-import org.apache.activemq.broker.BrokerService;
+import java.util.HashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
@@ -30,7 +28,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
     private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61616";
     private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61617";
     private static final String BROKER_C_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61618";
-    private HashMap<String,String> urls = new HashMap<String,String>();
+    private final HashMap<String,String> urls = new HashMap<String,String>();
 
     @Override
     public void setUp() throws Exception {
@@ -42,8 +40,8 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
     private static final String BROKER_A_NAME = "BROKERA";
     private static final String BROKER_B_NAME = "BROKERB";
     private static final String BROKER_C_NAME = "BROKERC";
-    
-    
+
+
     public void testPriorityBackup() throws Exception {
         createBrokerA();
         createBrokerB();
@@ -57,7 +55,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
 
         restart(false, BROKER_A_NAME, BROKER_B_NAME);
-        
+
         for (int i = 0; i < 3; i++) {
             restart(true, BROKER_A_NAME, BROKER_B_NAME);
         }
@@ -126,7 +124,36 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         restart(true, BROKER_A_NAME, BROKER_B_NAME);
 
     }
-    
+
+    public void testPriorityBackupAndUpdateClients() throws Exception {
+        // Broker A
+        addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
+        addTransportConnector(getBroker(BROKER_A_NAME), "openwire", BROKER_A_CLIENT_TC_ADDRESS, true);
+        addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+        getBroker(BROKER_A_NAME).start();
+
+        // Broker B
+        addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
+        addTransportConnector(getBroker(BROKER_B_NAME), "openwire", BROKER_B_CLIENT_TC_ADDRESS, true);
+        addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+        getBroker(BROKER_B_NAME).start();
+
+        getBroker(BROKER_B_NAME).waitUntilStarted();
+        Thread.sleep(1000);
+
+        setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?randomize=false&priorityBackup=true&initialReconnectDelay=1000&useExponentialBackOff=false");
+
+        LOG.info("Client URI will be: " + getClientUrl());
+
+        createClients(5);
+
+        // Let's wait a little bit longer just in case it takes a while to realize that the
+        // Broker A is the one with higher priority.
+        Thread.sleep(5000);
+
+        assertAllConnectedTo(urls.get(BROKER_A_NAME));
+    }
+
     private void restart(boolean primary, String primaryName, String secondaryName) throws Exception {
 
         Thread.sleep(1000);
@@ -159,9 +186,9 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         assertAllConnectedTo(urls.get(primaryName));
-        
+
     }
-    
+
     private void createBrokerByName(String name) throws Exception {
         if (name.equals(BROKER_A_NAME)) {
             createBrokerA();

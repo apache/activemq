@@ -143,7 +143,6 @@ public class FailoverTransport implements CompositeTransport {
                     if ((connectedTransport.get() == null || doRebalance || priorityBackupAvailable) && !disposed) {
                         result = doReconnect();
                         buildBackup = false;
-                        connectedToPriority = isPriority(connectedTransportURI);
                     }
                 }
                 if (buildBackup) {
@@ -264,6 +263,7 @@ public class FailoverTransport implements CompositeTransport {
                 failedConnectTransportURI = connectedTransportURI;
                 connectedTransportURI = null;
                 connected = false;
+                connectedToPriority = false;
 
                 // notify before any reconnect attempt so ack state can be whacked
                 if (transportListener != null) {
@@ -922,7 +922,7 @@ public class FailoverTransport implements CompositeTransport {
                     failure = new IOException("No uris available to connect to.");
                 } else {
                     if (doRebalance) {
-                        if (compareURIs(connectList.get(0), connectedTransportURI)) {
+                        if (connectedToPriority || compareURIs(connectList.get(0), connectedTransportURI)) {
                             // already connected to first in the list, no need to rebalance
                             doRebalance = false;
                             return false;
@@ -930,6 +930,7 @@ public class FailoverTransport implements CompositeTransport {
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("Doing rebalance from: " + connectedTransportURI + " to " + connectList);
                             }
+
                             try {
                                 Transport transport = this.connectedTransport.getAndSet(null);
                                 if (transport != null) {
@@ -1008,12 +1009,13 @@ public class FailoverTransport implements CompositeTransport {
                                 restoreTransport(transport);
                             }
 
-                             if (LOG.isDebugEnabled()) {
+                            if (LOG.isDebugEnabled()) {
                                 LOG.debug("Connection established");
-                             }
+                            }
                             reconnectDelay = initialReconnectDelay;
                             connectedTransportURI = uri;
                             connectedTransport.set(transport);
+                            connectedToPriority = isPriority(connectedTransportURI);
                             reconnectMutex.notifyAll();
                             connectFailures = 0;
 
@@ -1201,6 +1203,10 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     protected boolean isPriority(URI uri) {
+        if (!priorityBackup) {
+            return false;
+        }
+
         if (!priorityList.isEmpty()) {
             return priorityList.contains(uri);
         }
@@ -1326,8 +1332,9 @@ public class FailoverTransport implements CompositeTransport {
 
     private boolean compareURIs(final URI first, final URI second) {
 
+        boolean result = false;
         if (first == null || second == null) {
-            return false;
+            return result;
         }
 
         if (first.getPort() == second.getPort()) {
@@ -1336,25 +1343,26 @@ public class FailoverTransport implements CompositeTransport {
             try {
                 firstAddr = InetAddress.getByName(first.getHost());
                 secondAddr = InetAddress.getByName(second.getHost());
+
+                if (firstAddr.equals(secondAddr)) {
+                    result = true;
+                }
+
             } catch(IOException e) {
 
                 if (firstAddr == null) {
-                    LOG.error("Failed to Lookup INetAddress for URI[ " + firstAddr + " ] : " + e);
+                    LOG.error("Failed to Lookup INetAddress for URI[ " + first + " ] : " + e);
                 } else {
-                    LOG.error("Failed to Lookup INetAddress for URI[ " + secondAddr + " ] : " + e);
+                    LOG.error("Failed to Lookup INetAddress for URI[ " + second + " ] : " + e);
                 }
 
                 if (first.getHost().equalsIgnoreCase(second.getHost())) {
-                    return true;
+                    result = true;
                 }
-            }
-
-            if (firstAddr.equals(secondAddr)) {
-                return true;
             }
         }
 
-        return false;
+        return result;
     }
 
     private InputStreamReader getURLStream(String path) throws IOException {
