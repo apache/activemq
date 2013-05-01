@@ -415,6 +415,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (callDispatchMatched && destination != null) {
             destination.wakeup();
             dispatchPending();
+
+            if (pending.isEmpty()) {
+                for (Destination dest : destinations) {
+                    dest.wakeup();
+                }
+            }
         } else {
             LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
                     + ack);
