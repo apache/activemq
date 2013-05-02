@@ -89,8 +89,8 @@ public class FailoverClusterTestSupport extends TestCase {
         }
         Set<String> keys = clientConnectionCounts.keySet();
         for(String key: keys){
-            double count = (double)clientConnectionCounts.get(key);
-            double percentage = count / (double)total;
+            double count = clientConnectionCounts.get(key);
+            double percentage = count / total;
             logger.info(count + " of " + total + " connections for " + key + " = " + percentage);
             assertTrue("Connections distribution expected to be >= than " + minimumPercentage
                     + ".  Actuall distribution was " + percentage + " for connection " + key,
@@ -100,7 +100,7 @@ public class FailoverClusterTestSupport extends TestCase {
 
     protected void assertAllConnectedTo(String url) throws Exception {
         for (ActiveMQConnection c : connections) {
-            assertEquals(c.getTransportChannel().getRemoteAddress(), url);
+            assertEquals(url, c.getTransportChannel().getRemoteAddress());
         }
     }
 
