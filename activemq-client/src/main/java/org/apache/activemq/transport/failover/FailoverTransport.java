@@ -963,7 +963,7 @@ public class FailoverTransport implements CompositeTransport {
                             uri = bt.getUri();
                             if (priorityBackup && priorityBackupAvailable) {
                                 Transport old = this.connectedTransport.getAndSet(null);
-                                if (transport != null) {
+                                if (old != null) {
                                     disposeTransport(old);
                                 }
                                 priorityBackupAvailable = false;
