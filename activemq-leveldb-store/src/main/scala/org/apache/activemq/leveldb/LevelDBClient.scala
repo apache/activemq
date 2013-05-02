@@ -366,7 +366,7 @@ object LevelDBClient extends Log {
   def create_sequence_file(directory:File, id:Long, suffix:String) = directory / ("%016x%s".format(id, suffix))
 
   def find_sequence_files(directory:File, suffix:String):TreeMap[Long, File] = {
-    TreeMap((directory.listFiles.flatMap { f=>
+    TreeMap((directory.list_files.flatMap { f=>
       if( f.getName.endsWith(suffix) ) {
         try {
           val base = f.getName.stripSuffix(suffix)
@@ -384,6 +384,19 @@ object LevelDBClient extends Log {
   class CollectionMeta extends Serializable {
     var size = 0L
     var last_key:Array[Byte] = _
+  }
+
+  def copy_index(from:File, to:File) = {
+    for( file <- from.list_files ) {
+      val name = file.getName
+      if( name == "CURRENT" || name.startsWith("MANIFEST-") ) {
+        /// These might not be append only files, so avoid hard linking just to be safe.
+        file.copyTo(to / file.getName)
+      } else {
+        // These are append only files, so they are safe to hard link.
+        file.linkTo(to / file.getName)
+      }
+    }
   }
 }
 
@@ -564,7 +577,7 @@ class LevelDBClient(store: LevelDBStore) {
       lastSnapshotIndex.foreach { case (id, file) =>
         // Resume log replay from a snapshot of the index..
         try {
-          file.listFiles.foreach { file =>
+          for( file <- file.list_files) {
             file.linkTo(dirtyIndexFile / file.getName)
           }
         } catch {
@@ -834,7 +847,7 @@ class LevelDBClient(store: LevelDBStore) {
     try {
 
       // Hard link all the index files.
-      dirtyIndexFile.listFiles.foreach { file =>
+      for( file <- dirtyIndexFile.list_files) {
         file.linkTo(tmpDir / file.getName)
       }
 
@@ -882,12 +895,12 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def locked_purge {
-    logDirectory.listFiles.foreach {x =>
+    for( x <- logDirectory.list_files) {
       if (x.getName.endsWith(".log")) {
         x.delete()
       }
     }
-    directory.listFiles.foreach {x =>
+    for( x <- directory.list_files) {
       if (x.getName.endsWith(".index")) {
         x.recursiveDelete
       }

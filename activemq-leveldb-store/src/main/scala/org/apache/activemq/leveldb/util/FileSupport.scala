@@ -136,7 +136,7 @@ object FileSupport {
       }
     }
 
-    def listFiles:Array[File] = {
+    def list_files:Array[File] = {
       Option(self.listFiles()).getOrElse(Array())
     }
 

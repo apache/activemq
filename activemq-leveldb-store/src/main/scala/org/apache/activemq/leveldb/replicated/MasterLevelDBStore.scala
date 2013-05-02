@@ -26,7 +26,7 @@ import org.fusesource.hawtdispatch.transport._
 import java.util.concurrent._
 import java.io.{IOException, File}
 import java.net.{InetSocketAddress, URI}
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 import scala.reflect.BeanProperty
 
 class PositionSync(val position:Long, count:Int) extends CountDownLatch(count)
@@ -51,6 +51,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   val slaves = new ConcurrentHashMap[String,SlaveState]()
 
   override def doStart = {
+    unstash(directory)
     super.doStart
     start_protocol_server
   }
@@ -214,6 +215,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     var held_snapshot:Option[Long] = None
     var session:Session = _
     var position = new AtomicLong(0)
+    var caughtUp = new AtomicBoolean(false)
 
     def start(session:Session) = {
       debug("SlaveState:start")
@@ -261,7 +263,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     def position_update(position:Long) = {
       val was = this.position.getAndSet(position)
       if( was == 0 ) {
-        info("Slave has finished synchronizing: "+slave_id)
+        info("Slave has finished state transfer: "+slave_id)
         this.synchronized {
           this.held_snapshot = None
         }
@@ -275,6 +277,9 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       val p = position_sync
       if( last_position_sync!=p ) {
         if( position.get >= p.position ) {
+          if( caughtUp.compareAndSet(false, true) ) {
+            info("Slave has now caught up: "+slave_id)
+          }
           p.countDown
           last_position_sync = p
         }

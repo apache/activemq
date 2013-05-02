@@ -29,6 +29,7 @@ import org.apache.activemq.leveldb.util._
 import FileSupport._
 import java.io.{IOException, RandomAccessFile, File}
 import scala.reflect.BeanProperty
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 object SlaveLevelDBStore extends Log
 
@@ -52,13 +53,38 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   override def doStart() = {
     client.init()
-
     if (purgeOnStatup) {
       purgeOnStatup = false
       db.client.locked_purge
       info("Purged: "+this)
     }
+    db.client.dirtyIndexFile.recursiveDelete
+    db.client.plistIndexFile.recursiveDelete
+    start_slave_connections
+  }
 
+  var stopped = false
+  override def doStop(stopper: ServiceStopper) = {
+    val latch = new CountDownLatch(1)
+    stop_connections(^{
+      latch.countDown
+    })
+    // Make sure the sessions are stopped before we close the client.
+    latch.await()
+    client.stop()
+  }
+
+
+  def restart_slave_connections = {
+    stop_connections(^{
+      client.stop()
+      client = createClient
+      client.init()
+      start_slave_connections
+    })
+  }
+
+  def start_slave_connections = {
     val transport = new TcpTransport()
     transport.setBlockingExecutor(blocking_executor)
     transport.setDispatchQueue(queue)
@@ -66,6 +92,11 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
     info("Connecting to master...")
     wal_session = new Session(transport, (session)=>{
+      // lets stash away our current state so that we can unstash it
+      // in case we don't get caught up..  If the master dies,
+      // the stashed data might be the best option to become the master.
+      stash(directory)
+      delete_store(directory)
       debug("Connected to master.  Syncing")
       session.request_then(SYNC_ACTION, null) { body =>
         val response = JsonCodec.decode(body, classOf[SyncResponse])
@@ -74,25 +105,29 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       }
     })
   }
-  var stopped = false
-  override def doStop(stopper: ServiceStopper) = {
-    val latch = RetainedLatch()
+
+  def stop_connections(cb:Task) = {
+    var then = ^{
+      unstash(directory)
+      cb.run()
+    }
     if( wal_session !=null ) {
-      wal_session.disconnect(latch.retain)
-      wal_session = null
+      val next = then
+      then = ^{
+        wal_session.transport.stop(next)
+        wal_session = null
+      }
     }
     if( transfer_session !=null ) {
-      transfer_session.disconnect(latch.retain)
-      transfer_session = null
+      val next = then
+      then = ^{
+        transfer_session.transport.stop(next)
+        transfer_session = null
+      }
     }
-    queue {
-      stopped = true
-      latch.release
-    }
-    // Make sure the sessions are stopped before we close the client.
-    latch.await()
-    db.client.stop()
+    then.run();
   }
+
 
   var wal_append_position = 0L
   var wal_append_offset = 0L
@@ -149,6 +184,11 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     override def onTransportFailure(error: IOException) {
       if( isStarted ) {
         warn("Unexpected session error: "+error)
+        queue.after(1, TimeUnit.SECONDS) {
+          if( isStarted ) {
+            restart_slave_connections
+          }
+        }
       }
       super.onTransportFailure(error)
     }
@@ -210,9 +250,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   }
 
   def transfer_missing(state:SyncResponse) = {
-    // Start up another connection to catch sync
-    // up the missing data
-    val log_dir = client.logDirectory
+
     val dirty_index = client.dirtyIndexFile
     dirty_index.recursiveDelete
 
@@ -230,27 +268,29 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       // Transfer the log files..
       var append_offset = 0L
       for( x <- state.log_files ) {
+
         if( x.file == state.append_log ) {
           append_offset = x.length
         }
 
-        val target_file: File = log_dir / x.file
+        val stashed_file: File = directory / "stash" / x.file
+        val target_file: File = directory / x.file
 
         def previously_downloaded:Boolean = {
-          if( !target_file.exists() )
+          if( !stashed_file.exists() )
             return false
 
-          if (target_file.length() < x.length )
+          if (stashed_file.length() < x.length )
             return false
 
-          if (target_file.length() == x.length )
-            return target_file.cached_crc32 == x.crc32
+          if (stashed_file.length() == x.length )
+            return stashed_file.cached_crc32 == x.crc32
 
-          if ( target_file.crc32(x.length) == x.crc32 ) {
+          if ( stashed_file.crc32(x.length) == x.crc32 ) {
             // we don't want to truncate the log file currently being appended to.
             if( x.file != state.append_log ) {
               // Our log file might be longer. lets truncate to match.
-              val raf = new RandomAccessFile(target_file, "rw")
+              val raf = new RandomAccessFile(stashed_file, "rw")
               try {
                 raf.setLength(x.length)
               } finally {
@@ -264,7 +304,13 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
         // We don't have to transfer log files that have been previously transferred.
         if( previously_downloaded ) {
+          // lets link it from the stash directory..
           info("Slave skipping download of: log/"+x.file)
+          if( x.file == state.append_log ) {
+            stashed_file.copyTo(target_file) // let not link a file that's going to be modified..
+          } else {
+            stashed_file.linkTo(target_file)
+          }
         } else {
           val transfer = new Transfer()
           transfer.file = "log/"+x.file
@@ -303,6 +349,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       session.request_then(DISCONNECT_ACTION, null) { body =>
         // Ok we are now caught up.
         info("Slave has now caught up")
+        stash_clear(directory) // we don't need the stash anymore.
         transport.stop(NOOP)
         transfer_session = null
         replay_from = state.snapshot_position

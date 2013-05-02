@@ -124,7 +124,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   final val wireFormat = new OpenWireFormat
   final val db = new DBManager(this)
-  final val client = createClient
+  final var client = createClient
 
   @BeanProperty
   var directory = DEFAULT_DIRECTORY
