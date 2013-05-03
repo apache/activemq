@@ -279,15 +279,12 @@ public class JDBCMessageStore extends AbstractMessageStore {
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    if (listener.hasSpace()) {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         listener.recoverMessage(msg);
                         lastRecoveredSequenceId.set(sequenceId);
                         lastRecoveredPriority.set(msg.getPriority());
                         return true;
-                    }
-                    return false;
                 }
 
                 public boolean recoverMessageReference(String reference) throws Exception {

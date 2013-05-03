@@ -45,7 +45,7 @@ public class ConsumerThread extends Thread {
             while (received < messageCount) {
                 Message msg = consumer.receive(3000);
                 if (msg != null) {
-                    LOG.info("Received " + ((TextMessage)msg).getText());
+                    LOG.info("Received " + received + ": " + ((TextMessage)msg).getText());
                     received++;
                 } else {
                     if (breakOnNull) {

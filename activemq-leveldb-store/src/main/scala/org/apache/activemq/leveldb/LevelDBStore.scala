@@ -665,7 +665,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   case class LimitingRecoveryListener(max: Int, listener: MessageRecoveryListener) extends MessageRecoveryListener {
     private var recovered: Int = 0
-    def hasSpace = recovered < max && listener.hasSpace
+    def hasSpace = recovered < max
     def recoverMessage(message: Message) = {
       recovered += 1;
       listener.recoverMessage(message)

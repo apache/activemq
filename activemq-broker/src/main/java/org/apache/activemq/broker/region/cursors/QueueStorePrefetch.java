@@ -17,10 +17,15 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
+
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.memory.MemoryMessageStore;
+import org.apache.activemq.store.memory.MemoryTransactionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +38,16 @@ import org.slf4j.LoggerFactory;
 class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Logger LOG = LoggerFactory.getLogger(QueueStorePrefetch.class);
     private final MessageStore store;
+    private final Broker broker;
    
     /**
      * Construct it
      * @param queue
      */
-    public QueueStorePrefetch(Queue queue) {
+    public QueueStorePrefetch(Queue queue, Broker broker) {
         super(queue);
         this.store = queue.getMessageStore();
+        this.broker = broker;
 
     }
 
@@ -94,7 +101,10 @@ class QueueStorePrefetch extends AbstractStoreCursor {
     
     @Override
     protected void doFillBatch() throws Exception {
-        this.store.recoverNextMessages(this.maxBatchSize, this);
+        hadSpace = this.hasSpace();
+        if (!broker.getBrokerService().isPersistent() || hadSpace) {
+            this.store.recoverNextMessages(this.maxBatchSize, this);
+        }
     }
 
 }

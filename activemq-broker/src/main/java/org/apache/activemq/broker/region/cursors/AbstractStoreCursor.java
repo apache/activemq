@@ -38,7 +38,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private boolean storeHasMessages = false;
     protected int size;
     private MessageId lastCachedId;
-    private boolean hadSpace = false;
+    protected boolean hadSpace = false;
 
     protected AbstractStoreCursor(Destination destination) {
         super((destination != null ? destination.isPrioritizedMessages():false));
@@ -251,12 +251,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         clearIterator(false);
         batchResetNeeded = true;
         setCacheEnabled(false);
-    }
-
-    @Override
-    public boolean hasSpace() {
-        hadSpace = super.hasSpace();
-        return hadSpace;
     }
 
     protected final synchronized void fillBatch() {

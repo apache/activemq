@@ -76,7 +76,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
 
         queueMessageStore.start();
 
-        QueueStorePrefetch underTest = new QueueStorePrefetch(queue);
+        QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();
         // ensure memory limit is reached
         systemUsage.getMemoryUsage().setLimit(messageBytesSize * (count + 2));
