@@ -56,6 +56,7 @@ import java.util.*;
 import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.filter.*;
+import org.apache.activemq.filter.FunctionCallExpression.invalidFunctionExpressionException;
 import org.apache.activemq.util.LRUCache;
 
 /** 
@@ -129,7 +130,6 @@ public class SelectorParser {
         }
         throw new ParseException("Expression will not result in a boolean value: " + value);
     }
-    
 
 }
 
@@ -490,12 +490,51 @@ Expression unaryExpr() :
 		    left = UnaryExpression.createXQuery( s );
 	    }
 	    |
+            LOOKAHEAD( <ID> "(" )
+            left = functionCallExpr()
+	    |
 	    left = primaryExpr()
     )
     {
         return left;
     }
 
+}
+
+Expression functionCallExpr () :
+{
+    Token      func_name;
+    FunctionCallExpression func_call = null;
+    Expression arg = null;
+    ArrayList arg_list = new ArrayList();
+}
+{
+    func_name = <ID> "("
+    (
+        arg = unaryExpr()
+        {
+            arg_list.add(arg);
+        }
+        (
+            ","
+            arg = unaryExpr()
+            {
+            	arg_list.add(arg);
+            }
+        ) *
+    )
+    ")"
+    {
+        try
+        {
+            return FunctionCallExpression.createFunctionCall(func_name.image, arg_list);
+        }
+        catch ( invalidFunctionExpressionException inv_exc )
+        {
+            // Re-throw as an error to avoid the need to propogate the throws declaration.
+            throw new Error("invalid function call expression", inv_exc);
+        }
+    }
 }
 
 Expression primaryExpr() :

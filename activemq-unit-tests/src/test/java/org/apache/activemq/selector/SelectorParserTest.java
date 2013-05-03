@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.selector;
 
+import javax.jms.InvalidSelectorException;
 import junit.framework.TestCase;
 
 import org.apache.activemq.filter.BooleanExpression;
+import org.apache.activemq.filter.BooleanFunctionCallExpr;
 import org.apache.activemq.filter.ComparisonExpression;
 import org.apache.activemq.filter.Expression;
 import org.apache.activemq.filter.LogicExpression;
@@ -32,6 +34,19 @@ import org.slf4j.LoggerFactory;
  */
 public class SelectorParserTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorParserTest.class);
+
+    public void testFunctionCall() throws Exception {
+        Object filter = parse("REGEX('sales.*', group)");
+        assertTrue("expected type", filter instanceof BooleanFunctionCallExpr);
+        LOG.info("function exp:" + filter);
+
+        // non existent function
+        try {
+            parse("DoesNotExist('sales.*', group)");
+            fail("expect ex on non existent function");
+        } catch (InvalidSelectorException expected) {}
+
+    }
 
     public void testParseXPath() throws Exception {
         BooleanExpression filter = parse("XPATH '//title[@lang=''eng'']'");

@@ -329,6 +329,24 @@ public class SelectorTest extends TestCase {
         assertInvalidSelector(message, "=TEST 'test'");
     }
 
+    public void testFunctionSelector() throws Exception {
+        Message message = createMessage();
+        assertSelector(message, "REGEX('1870414179', SessionserverId)", false);
+        message.setLongProperty("SessionserverId", 1870414179);
+        assertSelector(message, "REGEX('1870414179', SessionserverId)", true);
+        assertSelector(message, "REGEX('[0-9]*', SessionserverId)", true);
+        assertSelector(message, "REGEX('^[1-8]*$', SessionserverId)", false);
+        assertSelector(message, "REGEX('^[1-8]*$', SessionserverId)", false);
+
+        assertSelector(message, "INLIST(SPLIT('Tom,Dick,George',','), name)", false);
+        assertSelector(message, "INLIST(SPLIT('Tom,James,George',','), name)", true);
+
+        assertSelector(message, "INLIST(MAKELIST('Tom','Dick','George'), name)", false);
+        assertSelector(message, "INLIST(MAKELIST('Tom','James','George'), name)", true);
+
+        assertSelector(message, "REGEX('connection1111', REPLACE(JMSMessageID,':',''))", true);
+    }
+
     protected Message createMessage() throws JMSException {
         Message message = createMessage("FOO.BAR");
         message.setJMSType("selector-test");
