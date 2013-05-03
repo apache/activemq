@@ -1843,7 +1843,7 @@ public class StompTest extends StompTestSupport {
 
         assertFalse("Thisisnotallowed".equals(mess_headers.get(Stomp.Headers.Message.MESSAGE_ID)
                 ));
-        assertFalse("1234".equals(mess_headers.get(Stomp.Headers.Message.TIMESTAMP)));
+        assertTrue("1234".equals(mess_headers.get(Stomp.Headers.Message.TIMESTAMP)));
         assertNull(mess_headers.get(Stomp.Headers.Message.REDELIVERED));
         assertNull(mess_headers.get(Stomp.Headers.Message.SUBSCRIPTION));
         assertEquals("system", mess_headers.get(Stomp.Headers.Message.USERID));

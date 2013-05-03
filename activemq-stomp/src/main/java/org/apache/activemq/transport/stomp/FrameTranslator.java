@@ -16,14 +16,15 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-
-import javax.jms.Destination;
-import javax.jms.JMSException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 
 /**
  * Implementations of this interface are used to map back and forth from Stomp
@@ -107,6 +108,13 @@ public interface FrameTranslator {
                 msg.setJMSExpiration(Long.parseLong((String)o));
             }
 
+            o = headers.remove(Stomp.Headers.Message.TIMESTAMP);
+            if (o != null) {
+                msg.setJMSTimestamp(Long.parseLong((String)o));
+            } else {
+                msg.setJMSTimestamp(System.currentTimeMillis());
+            }
+
             o = headers.remove(Stomp.Headers.Send.PRIORITY);
             if (o != null) {
                 msg.setJMSPriority(Integer.parseInt((String)o));
@@ -141,7 +149,6 @@ public interface FrameTranslator {
             // be sent back to a STOMP consumer we need to sanitize anything which could be in
             // Stomp.Headers.Message and might get passed through to the consumer
             headers.remove(Stomp.Headers.Message.MESSAGE_ID);
-            headers.remove(Stomp.Headers.Message.TIMESTAMP);
             headers.remove(Stomp.Headers.Message.REDELIVERED);
             headers.remove(Stomp.Headers.Message.SUBSCRIPTION);
             headers.remove(Stomp.Headers.Message.USERID);

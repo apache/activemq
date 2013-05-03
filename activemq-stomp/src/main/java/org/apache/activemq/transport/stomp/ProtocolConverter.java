@@ -128,8 +128,8 @@ public class ProtocolConverter {
 
     private static class AckEntry {
 
-        private String messageId;
-        private StompSubscription subscription;
+        private final String messageId;
+        private final StompSubscription subscription;
 
         public AckEntry(String messageId, StompSubscription subscription) {
             this.messageId = messageId;
@@ -148,6 +148,7 @@ public class ProtocolConverter {
             return this.messageId;
         }
 
+        @SuppressWarnings("unused")
         public StompSubscription getSubscription() {
             return this.subscription;
         }
@@ -168,6 +169,7 @@ public class ProtocolConverter {
         final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
         if (receiptId != null) {
             return new ResponseHandler() {
+                @Override
                 public void onResponse(ProtocolConverter converter, Response response) throws IOException {
                     if (response.isException()) {
                         // Generally a command can fail.. but that does not invalidate the connection.
@@ -317,7 +319,6 @@ public class ProtocolConverter {
         message.setProducerId(producerId);
         MessageId id = new MessageId(producerId, messageIdGenerator.getNextSequenceId());
         message.setMessageId(id);
-        message.setJMSTimestamp(System.currentTimeMillis());
 
         if (stompTx != null) {
             TransactionId activemqTx = transactions.get(stompTx);
@@ -634,6 +635,7 @@ public class ProtocolConverter {
             consumerInfo.setPrefetchSize(0);
 
             final ResponseHandler handler = new ResponseHandler() {
+                @Override
                 public void onResponse(ProtocolConverter converter, Response response) throws IOException {
                     if (response.isException()) {
                         // Generally a command can fail.. but that does not invalidate the connection.
@@ -761,6 +763,7 @@ public class ProtocolConverter {
         connectionInfo.setTransportContext(command.getTransportContext());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
+            @Override
             public void onResponse(ProtocolConverter converter, Response response) throws IOException {
 
                 if (response.isException()) {
@@ -776,6 +779,7 @@ public class ProtocolConverter {
 
                 final ProducerInfo producerInfo = new ProducerInfo(producerId);
                 sendToActiveMQ(producerInfo, new ResponseHandler() {
+                    @Override
                     public void onResponse(ProtocolConverter converter, Response response) throws IOException {
 
                         if (response.isException()) {
