@@ -286,6 +286,10 @@ public class FailoverTransport implements CompositeTransport {
 
     public final void handleConnectionControl(ConnectionControl control) {
         String reconnectStr = control.getReconnectTo();
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Received ConnectionControl: {}", control);
+        }
+
         if (reconnectStr != null) {
             reconnectStr = reconnectStr.trim();
             if (reconnectStr.length() > 0) {

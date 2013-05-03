@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.failover;
 
+import org.apache.activemq.broker.TransportConnector;
+import org.mortbay.log.Log;
+
 
 /**
  * Complex cluster test that will exercise the dynamic failover capabilities of
@@ -26,21 +29,19 @@ package org.apache.activemq.transport.failover;
  */
 public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
-    private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://localhost:61616";
-    private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://localhost:61617";
-    private static final String BROKER_C_CLIENT_TC_ADDRESS = "tcp://localhost:61618";
-    private static final String BROKER_A_NOB_TC_ADDRESS = "tcp://localhost:61626";
-    private static final String BROKER_B_NOB_TC_ADDRESS = "tcp://localhost:61627";
-    private static final String BROKER_C_NOB_TC_ADDRESS = "tcp://localhost:61628";
+    private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61616";
+    private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61617";
+    private static final String BROKER_C_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61618";
+    private static final String BROKER_A_NOB_TC_ADDRESS = "tcp://127.0.0.1:61626";
+    private static final String BROKER_B_NOB_TC_ADDRESS = "tcp://127.0.0.1:61627";
+    private static final String BROKER_C_NOB_TC_ADDRESS = "tcp://127.0.0.1:61628";
     private static final String BROKER_A_NAME = "BROKERA";
     private static final String BROKER_B_NAME = "BROKERB";
     private static final String BROKER_C_NAME = "BROKERC";
-    
-    
 
     /**
-     * Basic dynamic failover 3 broker test 
-     * 
+     * Basic dynamic failover 3 broker test
+     *
      * @throws Exception
      */
     public void testThreeBrokerClusterSingleConnectorBasic() throws Exception {
@@ -56,14 +57,14 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runTests(false, null, null, null);
     }
 
-	/**
-	 * Tests a 3 broker configuration to ensure that the backup is random and
-	 * supported in a cluster. useExponentialBackOff is set to false and
-	 * maxReconnectAttempts is set to 1 to move through the list quickly for
-	 * this test.
-	 * 
-	 * @throws Exception
-	 */
+    /**
+     * Tests a 3 broker configuration to ensure that the backup is random and
+     * supported in a cluster. useExponentialBackOff is set to false and
+     * maxReconnectAttempts is set to 1 to move through the list quickly for
+     * this test.
+     *
+     * @throws Exception
+     */
     public void testThreeBrokerClusterSingleConnectorBackupFailoverConfig() throws Exception {
 
         initSingleTcBroker("", null, null);
@@ -77,14 +78,14 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runTests(false, null, null, null);
     }
 
-	/**
-	 * Tests a 3 broker cluster that passes in connection params on the
-	 * transport connector. Prior versions of AMQ passed the TC connection
-	 * params to the client and this should not happen. The chosen param is not
-	 * compatible with the client and will throw an error if used.
-	 * 
-	 * @throws Exception
-	 */
+    /**
+     * Tests a 3 broker cluster that passes in connection params on the
+     * transport connector. Prior versions of AMQ passed the TC connection
+     * params to the client and this should not happen. The chosen param is not
+     * compatible with the client and will throw an error if used.
+     *
+     * @throws Exception
+     */
     public void testThreeBrokerClusterSingleConnectorWithParams() throws Exception {
 
         initSingleTcBroker("?transport.closeAsync=false", null, null);
@@ -97,10 +98,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runTests(false, null, null, null);
     }
 
-
     /**
      * Tests a 3 broker cluster using a cluster filter of *
-     * 
+     *
      * @throws Exception
      */
     public void testThreeBrokerClusterWithClusterFilter() throws Exception {
@@ -114,12 +114,12 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runTests(false, null, "*", null);
     }
 
-	/**
-	 * Test to verify that a broker with multiple transport connections only the
-	 * one marked to update clients is propagate
-	 * 
-	 * @throws Exception
-	 */
+    /**
+     * Test to verify that a broker with multiple transport connections only the
+     * one marked to update clients is propagate
+     *
+     * @throws Exception
+     */
     public void testThreeBrokerClusterMultipleConnectorBasic() throws Exception {
 
         initMultiTcCluster("", null);
@@ -133,11 +133,11 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runTests(true, null, null, null);
     }
 
-	/**
-	 * Test to verify the reintroduction of the A Broker
-	 * 
-	 * @throws Exception
-	 */
+    /**
+     * Test to verify the reintroduction of the A Broker
+     *
+     * @throws Exception
+     */
     public void testOriginalBrokerRestart() throws Exception {
         initSingleTcBroker("", null, null);
 
@@ -164,12 +164,12 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         assertClientsConnectedToThreeBrokers();
     }
 
-	/**
-	 * Test to ensure clients are evenly to all available brokers in the
-	 * network.
-	 * 
-	 * @throws Exception
-	 */
+    /**
+     * Test to ensure clients are evenly to all available brokers in the
+     * network.
+     *
+     * @throws Exception
+     */
     public void testThreeBrokerClusterClientDistributions() throws Exception {
 
         initSingleTcBroker("", null, null);
@@ -182,12 +182,12 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runClientDistributionTests(false, null, null, null);
     }
 
-	/**
-	 * Test to verify that clients are distributed with no less than 20% of the
-	 * clients on any one broker.
-	 * 
-	 * @throws Exception
-	 */
+    /**
+     * Test to verify that clients are distributed with no less than 20% of the
+     * clients on any one broker.
+     *
+     * @throws Exception
+     */
     public void testThreeBrokerClusterDestinationFilter() throws Exception {
 
         initSingleTcBroker("", null, null);
@@ -199,23 +199,61 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         runTests(false, null, null, "Queue.TEST.FOO.>");
     }
 
+    public void testFailOverWithUpdateClientsOnRemove() throws Exception{
+        // Broker A
+        addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
+        TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(BROKER_A_CLIENT_TC_ADDRESS);
+        connectorA.setName("openwire");
+        connectorA.setRebalanceClusterClients(true);
+        connectorA.setUpdateClusterClients(true);
+        connectorA.setUpdateClusterClientsOnRemove(true); //If set to false the test succeeds.
+        addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+        getBroker(BROKER_A_NAME).start();
 
-	/**
-	 * Runs a 3 Broker dynamic failover test: <br/>
-	 * <ul>
-	 * <li>asserts clients are distributed across all 3 brokers</li>
-	 * <li>asserts clients are distributed across 2 brokers after removing the 3rd</li>
-	 * <li>asserts clients are distributed across all 3 brokers after
-	 * reintroducing the 3rd broker</li>
-	 * </ul>
-	 * 
-	 * @param multi
-	 * @param tcParams
-	 * @param clusterFilter
-	 * @param destinationFilter
-	 * @throws Exception
-	 * @throws InterruptedException
-	 */
+        // Broker B
+        addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
+        TransportConnector connectorB = getBroker(BROKER_B_NAME).addConnector(BROKER_B_CLIENT_TC_ADDRESS);
+        connectorB.setName("openwire");
+        connectorB.setRebalanceClusterClients(true);
+        connectorB.setUpdateClusterClients(true);
+        connectorB.setUpdateClusterClientsOnRemove(true); //If set to false the test succeeds.
+        addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+        getBroker(BROKER_B_NAME).start();
+
+        getBroker(BROKER_B_NAME).waitUntilStarted();
+        Thread.sleep(1000);
+
+        // create client connecting only to A. It should receive broker B address whet it connects to A.
+        setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=true");
+        createClients(1);
+        Thread.sleep(5000);
+
+        // We stop broker A.
+        Log.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
+        getBroker(BROKER_A_NAME).stop();
+        getBroker(BROKER_A_NAME).waitUntilStopped();
+        Thread.sleep(5000);
+
+        // Client should failover to B.
+        assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
+    }
+
+    /**
+     * Runs a 3 Broker dynamic failover test: <br/>
+     * <ul>
+     * <li>asserts clients are distributed across all 3 brokers</li>
+     * <li>asserts clients are distributed across 2 brokers after removing the 3rd</li>
+     * <li>asserts clients are distributed across all 3 brokers after
+     * reintroducing the 3rd broker</li>
+     * </ul>
+     *
+     * @param multi
+     * @param tcParams
+     * @param clusterFilter
+     * @param destinationFilter
+     * @throws Exception
+     * @throws InterruptedException
+     */
     private void runTests(boolean multi, String tcParams, String clusterFilter, String destinationFilter) throws Exception, InterruptedException {
         assertClientsConnectedToThreeBrokers();
 
@@ -226,14 +264,13 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         assertClientsConnectedToTwoBrokers();
-        
+
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
         Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
     }
-    
 
     /**
      * @param multi
@@ -288,9 +325,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         createBrokerC(true, params, clusterFilter, null);
         getBroker(BROKER_C_NAME).waitUntilStarted();
     }
-    
+
     private void createBrokerA(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
-    	final String tcParams = (params == null)?"":params;
+        final String tcParams = (params == null)?"":params;
         if (getBroker(BROKER_A_NAME) == null) {
             addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
             addTransportConnector(getBroker(BROKER_A_NAME), "openwire", BROKER_A_CLIENT_TC_ADDRESS + tcParams, true);
@@ -307,7 +344,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     }
 
     private void createBrokerB(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
-    	final String tcParams = (params == null)?"":params;
+        final String tcParams = (params == null)?"":params;
         if (getBroker(BROKER_B_NAME) == null) {
             addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
             addTransportConnector(getBroker(BROKER_B_NAME), "openwire", BROKER_B_CLIENT_TC_ADDRESS + tcParams, true);
@@ -324,7 +361,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     }
 
     private void createBrokerC(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
-    	final String tcParams = (params == null)?"":params;
+        final String tcParams = (params == null)?"":params;
         if (getBroker(BROKER_C_NAME) == null) {
             addBroker(BROKER_C_NAME, createBroker(BROKER_C_NAME));
             addTransportConnector(getBroker(BROKER_C_NAME), "openwire", BROKER_C_CLIENT_TC_ADDRESS + tcParams, true);
@@ -339,5 +376,4 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
             getBroker(BROKER_C_NAME).start();
         }
     }
-    
 }

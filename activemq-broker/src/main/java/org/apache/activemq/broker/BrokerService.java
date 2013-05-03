@@ -2829,4 +2829,7 @@ public class BrokerService implements Service {
         return this.slave;
     }
 
+    public boolean isStopping() {
+        return this.stopping.get();
+    }
 }

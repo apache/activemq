@@ -16,6 +16,23 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.jms.InvalidClientIDException;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
@@ -39,22 +56,6 @@ import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.InvalidClientIDException;
-import javax.jms.JMSException;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -94,6 +95,7 @@ public class RegionBroker extends EmptyBroker {
 
     private final ReentrantReadWriteLock inactiveDestinationsPurgeLock = new ReentrantReadWriteLock();
     private final Runnable purgeInactiveDestinationsTask = new Runnable() {
+        @Override
         public void run() {
             purgeInactiveDestinations();
         }
@@ -526,7 +528,11 @@ public class RegionBroker extends EmptyBroker {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(getBrokerName() + " removeBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
             }
-            removeBrokerInClusterUpdate(info);
+            // When stopping don't send cluster updates since we are the one's tearing down
+            // our own bridges.
+            if (!brokerService.isStopping()) {
+                removeBrokerInClusterUpdate(info);
+            }
         }
     }
 
@@ -730,6 +736,7 @@ public class RegionBroker extends EmptyBroker {
         return this.scheduler;
     }
 
+    @Override
     public ThreadPoolExecutor getExecutor() {
         return this.executor;
     }
