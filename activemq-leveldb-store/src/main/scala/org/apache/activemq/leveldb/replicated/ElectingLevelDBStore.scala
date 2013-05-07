@@ -126,7 +126,6 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   var zk_client: ZKClient = _
   var zk_group: Group = _
-  var master_elector: MasterElector = _
 
   var position: Long = -1L
 

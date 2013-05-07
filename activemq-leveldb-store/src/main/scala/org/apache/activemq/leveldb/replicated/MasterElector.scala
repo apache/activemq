@@ -54,7 +54,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
   def join: Unit = this.synchronized {
     last_state = create_state
     join(last_state)
-    add(changle_listener)
+    add(change_listener)
   }
 
   def elector  = this
@@ -76,7 +76,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
     rc
   }
 
-  object changle_listener extends ChangeListener {
+  object change_listener extends ChangeListener {
 
     def connected = changed
     def disconnected = changed
