@@ -731,7 +731,6 @@ public class Topic extends BaseDestination implements Task {
         // AMQ-2586: Better to leave this stat at zero than to give the user
         // misleading metrics.
         // destinationStatistics.getMessages().decrement();
-        destinationStatistics.getEnqueues().decrement();
         destinationStatistics.getExpired().increment();
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
