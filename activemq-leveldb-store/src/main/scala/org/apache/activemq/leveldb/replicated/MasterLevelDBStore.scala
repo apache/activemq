@@ -58,7 +58,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   override def doStop(stopper: ServiceStopper): Unit = {
     if( transport_server!=null ) {
-      transport_server.start(NOOP)
+      stop_protocol_server
       transport_server = null
     }
     super.doStop(stopper)
