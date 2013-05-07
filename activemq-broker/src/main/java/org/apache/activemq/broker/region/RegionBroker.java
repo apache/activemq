@@ -701,7 +701,7 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference node, Subscription subscription) {
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference node, Subscription subscription) {
         try {
             if (node != null) {
                 Message message = node.getMessage();
@@ -726,6 +726,7 @@ public class RegionBroker extends EmptyBroker {
                                 context.setBroker(getRoot());
                             }
                             BrokerSupport.resendNoCopy(context, message, deadLetterDestination);
+                            return true;
                         }
                     } else {
                         if (LOG.isDebugEnabled()) {
@@ -738,6 +739,8 @@ public class RegionBroker extends EmptyBroker {
         } catch (Exception e) {
             LOG.warn("Caught an exception sending to DLQ: " + node, e);
         }
+
+        return false;
     }
 
     @Override

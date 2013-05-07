@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.net.URI;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -40,14 +41,14 @@ import org.apache.activemq.usage.Usage;
 /**
  * The Message Broker which routes messages, maintains subscriptions and
  * connections, acknowledges messages and handles transactions.
- * 
- * 
+ *
+ *
  */
 public interface Broker extends Region, Service {
 
     /**
      * Get a Broker from the Broker Stack that is a particular class
-     * 
+     *
      * @param type
      * @return
      */
@@ -70,7 +71,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Remove a BrokerInfo
-     * 
+     *
      * @param connection
      * @param info
      */
@@ -78,14 +79,14 @@ public interface Broker extends Region, Service {
 
     /**
      * A client is establishing a connection with the broker.
-     * 
+     *
      * @throws Exception TODO
      */
     void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception;
 
     /**
      * A client is disconnecting from the broker.
-     * 
+     *
      * @param context the environment the operation is being executed under.
      * @param info
      * @param error null if the client requested the disconnect or the error
@@ -96,7 +97,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Adds a session.
-     * 
+     *
      * @param context
      * @param info
      * @throws Exception TODO
@@ -105,7 +106,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Removes a session.
-     * 
+     *
      * @param context
      * @param info
      * @throws Exception TODO
@@ -114,18 +115,20 @@ public interface Broker extends Region, Service {
 
     /**
      * Adds a producer.
-     * 
+     *
      * @param context the enviorment the operation is being executed under.
      * @throws Exception TODO
      */
+    @Override
     void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     /**
      * Removes a producer.
-     * 
+     *
      * @param context the enviorment the operation is being executed under.
      * @throws Exception TODO
      */
+    @Override
     void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     /**
@@ -142,7 +145,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Gets a list of all the prepared xa transactions.
-     * 
+     *
      * @param context transaction ids
      * @return
      * @throws Exception TODO
@@ -151,7 +154,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Starts a transaction.
-     * 
+     *
      * @param context
      * @param xid
      * @throws Exception TODO
@@ -160,7 +163,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Prepares a transaction. Only valid for xa transactions.
-     * 
+     *
      * @param context
      * @param xid
      * @return id
@@ -170,7 +173,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Rollsback a transaction.
-     * 
+     *
      * @param context
      * @param xid
      * @throws Exception TODO
@@ -180,7 +183,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Commits a transaction.
-     * 
+     *
      * @param context
      * @param xid
      * @param onePhase
@@ -190,7 +193,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Forgets a transaction.
-     * 
+     *
      * @param context
      * @param transactionId
      * @throws Exception
@@ -199,21 +202,21 @@ public interface Broker extends Region, Service {
 
     /**
      * Get the BrokerInfo's of any connected Brokers
-     * 
+     *
      * @return array of peer BrokerInfos
      */
     BrokerInfo[] getPeerBrokerInfos();
 
     /**
      * Notify the Broker that a dispatch is going to happen
-     * 
+     *
      * @param messageDispatch
      */
     void preProcessDispatch(MessageDispatch messageDispatch);
 
     /**
      * Notify the Broker that a dispatch has happened
-     * 
+     *
      * @param messageDispatch
      */
     void postProcessDispatch(MessageDispatch messageDispatch);
@@ -230,7 +233,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Add and process a DestinationInfo object
-     * 
+     *
      * @param context
      * @param info
      * @throws Exception
@@ -239,7 +242,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Remove and process a DestinationInfo object
-     * 
+     *
      * @param context
      * @param info
      * @throws Exception
@@ -260,7 +263,7 @@ public interface Broker extends Region, Service {
     /**
      * Sets the default administration connection context used when configuring
      * the broker on startup or via JMX
-     * 
+     *
      * @param adminConnectionContext
      */
     void setAdminConnectionContext(ConnectionContext adminConnectionContext);
@@ -287,7 +290,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Ensure we get the Broker at the top of the Stack
-     * 
+     *
      * @return the broker at the top of the Stack
      */
     Broker getRoot();
@@ -296,7 +299,7 @@ public interface Broker extends Region, Service {
      * Determine if a message has expired -allows default behaviour to be
      * overriden - as the timestamp set by the producer can be out of sync with
      * the broker
-     * 
+     *
      * @param messageReference
      * @return true if the message is expired
      */
@@ -313,49 +316,51 @@ public interface Broker extends Region, Service {
 
     /**
      * A message needs to go the a DLQ
-     * 
+     *
      * @param context
      * @param messageReference
      * @param subscription, may be null
+     *
+     * @return true if Message was placed in a DLQ false if discarded.
      */
-    void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription);
-    
+    boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription);
+
     /**
      * @return the broker sequence id
      */
     long getBrokerSequenceId();
-    
+
     /**
      * called when message is consumed
      * @param context
      * @param messageReference
      */
     void messageConsumed(ConnectionContext context, MessageReference messageReference);
-    
+
     /**
      * Called when message is delivered to the broker
      * @param context
      * @param messageReference
      */
     void messageDelivered(ConnectionContext context, MessageReference messageReference);
-    
+
     /**
      * Called when a message is discarded - e.g. running low on memory
      * This will happen only if the policy is enabled - e.g. non durable topics
      * @param context
-     * @param sub 
+     * @param sub
      * @param messageReference
      */
     void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
-    
+
     /**
      * Called when there is a slow consumer
      * @param context
-     * @param destination 
+     * @param destination
      * @param subs
      */
     void slowConsumer(ConnectionContext context,Destination destination, Subscription subs);
-    
+
     /**
      * Called to notify a producer is too fast
      * @param context
@@ -363,23 +368,23 @@ public interface Broker extends Region, Service {
      * @param destination
      */
     void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination);
-    
+
     /**
      * Called when a Usage reaches a limit
      * @param context
-     * @param destination 
+     * @param destination
      * @param usage
      */
     void isFull(ConnectionContext context,Destination destination,Usage usage);
-    
+
     /**
      *  called when the broker becomes the master in a master/slave
      *  configuration
      */
     void nowMasterBroker();
-    
+
     Scheduler getScheduler();
-    
+
     ThreadPoolExecutor getExecutor();
 
     void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp);

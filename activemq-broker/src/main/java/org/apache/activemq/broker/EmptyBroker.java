@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
+
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -47,19 +48,22 @@ import org.apache.activemq.usage.Usage;
 
 /**
  * Dumb implementation - used to be overriden by listeners
- * 
- * 
+ *
+ *
  */
 public class EmptyBroker implements Broker {
 
+    @Override
     public BrokerId getBrokerId() {
         return null;
     }
 
+    @Override
     public String getBrokerName() {
         return null;
     }
 
+    @Override
     public Broker getAdaptor(Class type) {
         if (type.isInstance(this)) {
             return this;
@@ -67,237 +71,298 @@ public class EmptyBroker implements Broker {
         return null;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return Collections.EMPTY_MAP;
     }
 
+    @Override
     public Set getDestinations(ActiveMQDestination destination) {
         return Collections.EMPTY_SET;
     }
 
+    @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
     }
 
+    @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
 
     }
 
+    @Override
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
 
     }
 
+    @Override
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
 
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
 
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
 
     }
 
+    @Override
     public Connection[] getClients() throws Exception {
 
         return null;
     }
 
+    @Override
     public ActiveMQDestination[] getDestinations() throws Exception {
 
         return null;
     }
 
+    @Override
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
 
         return null;
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
 
     }
 
+    @Override
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
 
         return 0;
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
 
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
 
     }
 
+    @Override
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
 
     }
 
+    @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean flag) throws Exception {
 
         return null;
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
 
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         return null;
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
 
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
 
     }
 
+    @Override
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
 
     }
 
+    @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
 
     }
 
+    @Override
     public void gc() {
 
     }
 
+    @Override
     public void start() throws Exception {
 
     }
 
+    @Override
     public void stop() throws Exception {
 
     }
 
+    @Override
     public void addBroker(Connection connection, BrokerInfo info) {
 
     }
 
+    @Override
     public void removeBroker(Connection connection, BrokerInfo info) {
 
     }
 
+    @Override
     public BrokerInfo[] getPeerBrokerInfos() {
         return null;
     }
 
+    @Override
     public void preProcessDispatch(MessageDispatch messageDispatch) {
     }
 
+    @Override
     public void postProcessDispatch(MessageDispatch messageDispatch) {
     }
 
+    @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
 
     }
 
+    @Override
     public boolean isStopped() {
         return false;
     }
 
+    @Override
     public Set<ActiveMQDestination> getDurableDestinations() {
         return null;
     }
 
+    @Override
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
     }
 
+    @Override
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
     }
 
+    @Override
     public boolean isFaultTolerantConfiguration() {
         return false;
     }
 
+    @Override
     public ConnectionContext getAdminConnectionContext() {
         return null;
     }
 
+    @Override
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
     }
 
+    @Override
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         return null;
     }
 
+    @Override
     public PListStore getTempDataStore() {
         return null;
     }
 
+    @Override
     public URI getVmConnectorURI() {
         return null;
     }
 
+    @Override
     public void brokerServiceStarted() {
     }
 
+    @Override
     public BrokerService getBrokerService() {
         return null;
     }
 
+    @Override
     public boolean isExpired(MessageReference messageReference) {
         return false;
     }
 
+    @Override
     public void messageExpired(ConnectionContext context, MessageReference message, Subscription subscription) {
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context,
-                                      MessageReference messageReference,
-                                      Subscription subscription) {
+    @Override
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                         Subscription subscription) {
+        return false;
     }
 
+    @Override
     public Broker getRoot() {
         return null;
     }
-    
+
+    @Override
     public long getBrokerSequenceId() {
         return -1l;
     }
-    
+
+    @Override
     public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
     }
 
+    @Override
     public void isFull(ConnectionContext context, Destination destination,Usage usage) {
     }
 
+    @Override
     public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
     }
 
+    @Override
     public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
     }
 
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
     }
 
+    @Override
     public void slowConsumer(ConnectionContext context,Destination destination, Subscription subs) {
     }
 
-    public void nowMasterBroker() {        
+    @Override
+    public void nowMasterBroker() {
     }
 
+    @Override
     public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
     }
 
+    @Override
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
     }
 
+    @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
-            ConsumerControl control) {     
+            ConsumerControl control) {
     }
 
+    @Override
     public Scheduler getScheduler() {
         return null;
     }
 
+    @Override
     public ThreadPoolExecutor getExecutor() {
         return null;
     }

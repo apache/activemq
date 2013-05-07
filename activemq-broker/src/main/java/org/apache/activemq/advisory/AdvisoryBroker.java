@@ -408,19 +408,23 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                      Subscription subscription){
-        super.sendToDeadLetterQueue(context, messageReference, subscription);
-        try {
-            if(!messageReference.isAdvisory()) {
-                ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(messageReference.getMessage().getDestination());
-                Message payload = messageReference.getMessage().copy();
-                payload.clearBody();
-                fireAdvisory(context, topic,payload);
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
+                                         Subscription subscription) {
+        boolean wasDLQd = super.sendToDeadLetterQueue(context, messageReference, subscription);
+        if (wasDLQd) {
+            try {
+                if(!messageReference.isAdvisory()) {
+                    ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(messageReference.getMessage().getDestination());
+                    Message payload = messageReference.getMessage().copy();
+                    payload.clearBody();
+                    fireAdvisory(context, topic,payload);
+                }
+            } catch (Exception e) {
+                handleFireFailure("add to DLQ", e);
             }
-        } catch (Exception e) {
-            handleFireFailure("add to DLQ", e);
         }
+
+        return wasDLQd;
     }
 
     @Override

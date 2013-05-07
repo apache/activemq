@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.util;
 
 import java.io.IOException;
+
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.Broker;
@@ -126,10 +127,10 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription) {
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription) {
         if (messageReference.isExpired()) {
             // there are two uses of  sendToDeadLetterQueue, we are only interested in valid messages
-            super.sendToDeadLetterQueue(context, messageReference, subscription);
+            return super.sendToDeadLetterQueue(context, messageReference, subscription);
         } else {
             try {
                 Destination regionDestination = (Destination) messageReference.getRegionDestination();
@@ -145,15 +146,17 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
                         scheduleRedelivery(context, messageReference, delay, ++redeliveryCount);
                     } else if (isSendToDlqIfMaxRetriesExceeded()) {
-                        super.sendToDeadLetterQueue(context, messageReference, subscription);
+                        return super.sendToDeadLetterQueue(context, messageReference, subscription);
                     } else {
                         LOG.debug("Discarding message that exceeds max redelivery count( " + maximumRedeliveries + "), " + messageReference.getMessageId());
                     }
                 } else if (isFallbackToDeadLetter()) {
-                    super.sendToDeadLetterQueue(context, messageReference, subscription);
+                    return super.sendToDeadLetterQueue(context, messageReference, subscription);
                 } else {
                     LOG.debug("Ignoring dlq request for:" + messageReference.getMessageId() + ", RedeliveryPolicy not found (and no fallback) for: " + regionDestination.getActiveMQDestination());
                 }
+
+                return false;
             } catch (Exception exception) {
                 // abort the ack, will be effective if client use transactions or individual ack with sync send
                 RuntimeException toThrow =  new RuntimeException("Failed to schedule redelivery for: " + messageReference.getMessageId(), exception);
@@ -203,5 +206,4 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
         }
         return 0;
     }
-
 }

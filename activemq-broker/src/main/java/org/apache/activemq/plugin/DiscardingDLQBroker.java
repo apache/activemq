@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package org.apache.activemq.plugin;
+package org.apache.activemq.plugin;
 
 import java.util.regex.Pattern;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -28,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Filip Hanik
- * @version 1.0
  */
 public class DiscardingDLQBroker extends BrokerFilter {
     public static Logger log = LoggerFactory.getLogger(DiscardingDLQBroker.class);
@@ -45,8 +44,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
     }
 
     @Override
-    public void sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef,
-                                      Subscription subscription) {
+    public boolean sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef, Subscription subscription) {
         if (log.isTraceEnabled()) {
             log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null));
         }
@@ -58,35 +56,38 @@ public class DiscardingDLQBroker extends BrokerFilter {
         dest = msg.getDestination();
         destName = dest.getPhysicalName();
 
-        if (dest == null || destName == null ) {
-            //do nothing, no need to forward it
-            skipMessage("NULL DESTINATION",msgRef);
+        if (dest == null || destName == null) {
+            // do nothing, no need to forward it
+            skipMessage("NULL DESTINATION", msgRef);
         } else if (dropAll) {
-            //do nothing
-            skipMessage("dropAll",msgRef);
+            // do nothing
+            skipMessage("dropAll", msgRef);
         } else if (dropTemporaryTopics && dest.isTemporary() && dest.isTopic()) {
-            //do nothing
-            skipMessage("dropTemporaryTopics",msgRef);
+            // do nothing
+            skipMessage("dropTemporaryTopics", msgRef);
         } else if (dropTemporaryQueues && dest.isTemporary() && dest.isQueue()) {
-            //do nothing
-            skipMessage("dropTemporaryQueues",msgRef);
-        } else if (destFilter!=null && matches(destName)) {
-            //do nothing
-            skipMessage("dropOnly",msgRef);
+            // do nothing
+            skipMessage("dropTemporaryQueues", msgRef);
+        } else if (destFilter != null && matches(destName)) {
+            // do nothing
+            skipMessage("dropOnly", msgRef);
         } else {
             dropped = false;
-            next.sendToDeadLetterQueue(ctx, msgRef, subscription);
+            return next.sendToDeadLetterQueue(ctx, msgRef, subscription);
         }
-        if (dropped && getReportInterval()>0) {
-            if ((++dropCount)%getReportInterval() == 0 ) {
-                log.info("Total of "+dropCount+" messages were discarded, since their destination was the dead letter queue");
+
+        if (dropped && getReportInterval() > 0) {
+            if ((++dropCount) % getReportInterval() == 0) {
+                log.info("Total of " + dropCount + " messages were discarded, since their destination was the dead letter queue");
             }
         }
+
+        return false;
     }
 
     public boolean matches(String destName) {
-        for (int i=0; destFilter!=null && i<destFilter.length; i++) {
-            if (destFilter[i]!=null && destFilter[i].matcher(destName).matches()) {
+        for (int i = 0; destFilter != null && i < destFilter.length; i++) {
+            if (destFilter[i] != null && destFilter[i].matcher(destName).matches()) {
                 return true;
             }
         }
@@ -95,7 +96,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
 
     private void skipMessage(String prefix, MessageReference msgRef) {
         if (log.isDebugEnabled()) {
-            String lmsg = "Discarding DLQ BrokerFilter["+prefix+"] - skipping message:" + (msgRef!=null?msgRef.getMessage():null);
+            String lmsg = "Discarding DLQ BrokerFilter[" + prefix + "] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null);
             log.debug(lmsg);
         }
     }
@@ -139,5 +140,4 @@ public class DiscardingDLQBroker extends BrokerFilter {
     public int getReportInterval() {
         return reportInterval;
     }
-
 }
