@@ -24,6 +24,8 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.Provider;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -235,6 +237,17 @@ public class BrokerService implements Service {
     private boolean slave = true;
 
     static {
+
+        try {
+            ClassLoader loader = BrokerService.class.getClassLoader();
+            Class<?> clazz = loader.loadClass("org.bouncycastle.jce.provider.BouncyCastleProvider");
+            Provider bouncycastle = (Provider) clazz.newInstance();
+            Security.insertProviderAt(bouncycastle, 2);
+            LOG.info("Loaded the Bouncy Castle security provider.");
+        } catch(Throwable e) {
+            // No BouncyCastle found so we use the default Java Security Provider
+        }
+
         String localHostName = "localhost";
         try {
             localHostName =  InetAddressUtil.getLocalHostName();
@@ -545,6 +558,7 @@ public class BrokerService implements Service {
                     MDC.put("activemq.broker", brokerName);
                 }
             }
+
             // in jvm master slave, lets not publish over existing broker till we get the lock
             final BrokerRegistry brokerRegistry = BrokerRegistry.getInstance();
             if (brokerRegistry.lookup(getBrokerName()) == null) {
