@@ -79,7 +79,7 @@ public class SecurityJMXTest extends TestCase {
                 "destinationType=Queue,destinationName=TEST.Q");
         QueueViewMBean queueMbean = MBeanServerInvocationHandler.newProxyInstance(connection, name, QueueViewMBean.class, true);
         HashMap<String, String> headers = new HashMap<String, String>();
-        headers.put("JMSExpiration", Long.toString(System.currentTimeMillis() + 2000));
+        headers.put("timeToLive", Long.toString(2000));
         headers.put("JMSDeliveryMode", Integer.toString(DeliveryMode.PERSISTENT));
         queueMbean.sendTextMessage(headers, "test", "system", "manager");
         // allow message to expire on the queue

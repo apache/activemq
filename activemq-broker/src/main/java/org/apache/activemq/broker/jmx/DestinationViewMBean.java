@@ -181,7 +181,7 @@ public interface DestinationViewMBean {
      * @throws Exception
      */
     @MBeanInfo("Sends a TextMessage to a password-protected destination.")
-    String sendTextMessage(@MBeanInfo("headers") Map<?,?> headers, @MBeanInfo("body") String body, @MBeanInfo("user") String user, @MBeanInfo("password") String password) throws Exception;
+    String sendTextMessage(@MBeanInfo("headers") Map<String,String> headers, @MBeanInfo("body") String body, @MBeanInfo("user") String user, @MBeanInfo("password") String password) throws Exception;
     /**
      * @return the percentage of amount of memory used
      */

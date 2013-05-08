@@ -299,7 +299,7 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
-    public String sendTextMessage(Map headers, String body, String userName, String password) throws Exception {
+    public String sendTextMessage(Map<String, String> headers, String body, String userName, String password) throws Exception {
 
         String brokerUrl = "vm://" + broker.getBrokerName();
         ActiveMQDestination dest = destination.getActiveMQDestination();
@@ -320,7 +320,15 @@ public class DestinationView implements DestinationViewMBean {
 
             producer.setDeliveryMode(msg.getJMSDeliveryMode());
             producer.setPriority(msg.getPriority());
-            long ttl = msg.getExpiration() - System.currentTimeMillis();
+            long ttl = 0;
+            if (msg.getExpiration() != 0) {
+                ttl = msg.getExpiration() - System.currentTimeMillis();
+            } else {
+                String timeToLive = headers.get("timeToLive");
+                if (timeToLive != null) {
+                    ttl = Integer.valueOf(timeToLive);
+                }
+            }
             producer.setTimeToLive(ttl > 0 ? ttl : 0);
             producer.send(msg);
 
