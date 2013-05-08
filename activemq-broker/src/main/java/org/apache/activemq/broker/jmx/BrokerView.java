@@ -109,6 +109,12 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
+    public void restart() throws Exception {
+        brokerService.requestRestart();
+        brokerService.stop();
+    }
+
+    @Override
     public void stopGracefully(String connectorName, String queueName, long timeout, long pollInterval)
             throws Exception {
         brokerService.stopGracefully(connectorName, queueName, timeout, pollInterval);

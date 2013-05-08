@@ -236,6 +236,9 @@ public class BrokerService implements Service {
     private Date startDate;
     private boolean slave = true;
 
+    private boolean restartAllowed = true;
+    private boolean restartRequested = false;
+
     static {
 
         try {
@@ -2845,5 +2848,36 @@ public class BrokerService implements Service {
 
     public boolean isStopping() {
         return this.stopping.get();
+    }
+
+    /**
+     * @return true if the broker allowed to restart on shutdown.
+     */
+    public boolean isRestartAllowed() {
+        return restartAllowed;
+    }
+
+    /**
+     * Sets if the broker allowed to restart on shutdown.
+     * @return
+     */
+    public void setRestartAllowed(boolean restartAllowed) {
+        this.restartAllowed = restartAllowed;
+    }
+
+    /**
+     * A lifecycle manager of the BrokerService should
+     * inspect this property after a broker shutdown has occurred
+     * to find out if the broker needs to be re-created and started
+     * again.
+     *
+     * @return true if the broker wants to be restarted after it shuts down.
+     */
+    public boolean isRestartRequested() {
+        return restartRequested;
+    }
+
+    public void requestRestart() {
+        this.restartRequested = true;
     }
 }

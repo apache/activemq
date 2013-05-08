@@ -18,11 +18,8 @@
 package org.apache.activemq.console.command;
 
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -58,9 +55,6 @@ public class StartCommand extends AbstractCommand {
         ""
     };
 
-    private URI configURI;
-    private List<BrokerService> brokers = new ArrayList<BrokerService>(5);
-
     @Override
     public String getName() {
         return "start";
@@ -77,124 +71,57 @@ public class StartCommand extends AbstractCommand {
      * @param brokerURIs
      */
     protected void runTask(List<String> brokerURIs) throws Exception {
-        try {
-            // If no config uri, use default setting
-            if (brokerURIs.isEmpty()) {
-                setConfigUri(new URI(DEFAULT_CONFIG_URI));
-                startBroker(getConfigUri());
+        URI configURI;
 
-                // Set configuration data, if available, which in this case
-                // would be the config URI
-            } else {
-                String strConfigURI;
-
-                while (!brokerURIs.isEmpty()) {
-                    strConfigURI = (String)brokerURIs.remove(0);
-
-                    try {
-                        setConfigUri(new URI(strConfigURI));
-                    } catch (URISyntaxException e) {
-                        context.printException(e);
-                        return;
-                    }
-
-                    startBroker(getConfigUri());
+        while( true ) {
+            final BrokerService broker;
+            try {
+                // If no config uri, use default setting
+                if (brokerURIs.isEmpty()) {
+                    configURI = new URI(DEFAULT_CONFIG_URI);
+                } else {
+                    configURI = new URI(brokerURIs.get(0));
                 }
+
+                System.out.println("Loading message broker from: " + configURI);
+                broker = BrokerFactory.createBroker(configURI);
+                broker.start();
+
+            } catch (Exception e) {
+                context.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
+                throw e;
             }
 
-            // Prevent the main thread from exiting unless it is terminated
-            // elsewhere
-        } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
-            throw new Exception(e);
-        }
-        
-        // The broker start up fine.  If this unblocks it's cause they were stopped
-        // and this would occur because of an internal error (like the DB going offline)
-        waitForShutdown();
-    }
+            if (!broker.waitUntilStarted()) {
+                throw new Exception(broker.getStartException());
+            }
 
-    /**
-     * Create and run a broker specified by the given configuration URI
-     * 
-     * @param configURI
-     * @throws Exception
-     */
-    public void startBroker(URI configURI) throws Exception {
-        System.out.println("Loading message broker from: " + configURI);
-        BrokerService broker = BrokerFactory.createBroker(configURI);
-        brokers.add(broker);
-        broker.start();
-        if (!broker.waitUntilStarted()) {
-            throw new Exception(broker.getStartException());
-        }
-    }
-
-    /**
-     * Wait for a shutdown invocation elsewhere
-     * 
-     * @throws Exception
-     */
-    protected void waitForShutdown() throws Exception {
-        final boolean[] shutdown = new boolean[] {
-            false
-        };
-        
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                for (Iterator<BrokerService> i = brokers.iterator(); i.hasNext();) {
+            // The broker started up fine.  Now lets wait for it to stop...
+            final CountDownLatch shutdownLatch = new CountDownLatch(1);
+            final Thread jvmShutdownHook = new Thread() {
+                public void run() {
                     try {
-                        BrokerService broker = i.next();
                         broker.stop();
                     } catch (Exception e) {
                     }
                 }
-            }
-        });
-        
-        final AtomicInteger brokerCounter = new AtomicInteger(brokers.size());
-        for (BrokerService bs : brokers) {
-            bs.addShutdownHook(new Runnable() {
+            };
+
+            Runtime.getRuntime().addShutdownHook(jvmShutdownHook);
+            broker.addShutdownHook(new Runnable() {
                 public void run() {
-                    // When the last broker lets us know he is closed....
-                    if( brokerCounter.decrementAndGet() == 0 ) {
-                        synchronized (shutdown) {
-                            shutdown[0] = true;
-                            shutdown.notify();
-                        }
-                    }
+                    shutdownLatch.countDown();
                 }
             });
-        }
 
-        // Wait for any shutdown event
-        synchronized (shutdown) {
-            while (!shutdown[0]) {
-                try {
-                    shutdown.wait();
-                } catch (InterruptedException e) {
-                }
+            // The broker has stopped..
+            shutdownLatch.await();
+            Runtime.getRuntime().removeShutdownHook(jvmShutdownHook);
+            if( !broker.isRestartRequested() ) {
+                break;
             }
+            System.out.println("Restarting broker");
         }
-
-    }
-
-    /**
-     * Sets the current configuration URI used by the start task
-     * 
-     * @param uri
-     */
-    public void setConfigUri(URI uri) {
-        configURI = uri;
-    }
-
-    /**
-     * Gets the current configuration URI used by the start task
-     * 
-     * @return current configuration URI
-     */
-    public URI getConfigUri() {
-        return configURI;
     }
 
     /**

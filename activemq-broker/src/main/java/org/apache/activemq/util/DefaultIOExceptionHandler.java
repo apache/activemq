@@ -128,6 +128,9 @@ import org.slf4j.LoggerFactory;
         new Thread("Stopping the broker due to IO exception") {
             public void run() {
                 try {
+                    if( broker.isRestartAllowed() ) {
+                        broker.requestRestart();
+                    }
                     broker.stop();
                 } catch (Exception e) {
                     LOG.warn("Failure occurred while stopping broker", e);
