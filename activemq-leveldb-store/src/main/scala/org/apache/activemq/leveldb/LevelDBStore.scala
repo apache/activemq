@@ -33,8 +33,8 @@ import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
 import org.apache.activemq.util._
 import org.apache.activemq.leveldb.util.{RetrySupport, Log}
 import org.apache.activemq.store.PList.PListIterator
-import java.lang
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
+import org.fusesource.hawtdispatch;
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -63,7 +63,7 @@ object LevelDBStore extends Log {
     return IOExceptionSupport.create(e)
   }
 
-  def waitOn(future: Future[AnyRef]): Unit = {
+  def waitOn(future: java.util.concurrent.Future[AnyRef]): Unit = {
     try {
       future.get
     }
@@ -116,6 +116,18 @@ class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
   def resetMaxLogRotateLatency = db.client.log.max_log_rotate_latency.reset
 
   def getIndexStats = db.client.index.getProperty("leveldb.stats")
+
+  def compact() {
+    import hawtdispatch._
+    var done = new CountDownLatch(1)
+    val positions = getTopicGCPositions
+    client.writeExecutor {
+      client.index.compact_needed = true
+      client.gc(positions)
+      done.countDown()
+    }
+    done.await()
+  }
 }
 
 import LevelDBStore._
@@ -161,6 +173,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   var asyncBufferSize = 1024*1024*4
   @BeanProperty
   var monitorStats = false
+  @BeanProperty
+  var autoCompactionRatio = 100
 
   var purgeOnStatup: Boolean = false
 
@@ -822,14 +836,14 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       var pos = lastSeq.decrementAndGet()
       add(pos, id, bs)
       listSize.incrementAndGet()
-      new lang.Long(pos)
+      new java.lang.Long(pos)
     }
 
     def addLast(id: String, bs: ByteSequence): AnyRef = {
       var pos = lastSeq.incrementAndGet()
       add(pos, id, bs)
       listSize.incrementAndGet()
-      new lang.Long(pos)
+      new java.lang.Long(pos)
     }
 
     def add(pos:Long, id: String, bs: ByteSequence) = {
@@ -843,7 +857,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
 
     def remove(position: AnyRef): Boolean = {
-      val pos = position.asInstanceOf[lang.Long].longValue()
+      val pos = position.asInstanceOf[java.lang.Long].longValue()
       val encoded_key = encodeLongLong(key, pos)
       db.plistGet(encoded_key) match {
         case Some(value) =>

@@ -38,7 +38,7 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Collections}
 import org.apache.activemq.leveldb.util.TimeMetric
 import org.apache.activemq.leveldb.RecordLog.LogInfo
-import scala.Some
+import org.fusesource.leveldbjni.internal.JniDB
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -252,7 +252,7 @@ object LevelDBClient extends Log {
 
     def cursorKeysPrefixed(prefix:Array[Byte], ro:ReadOptions=new ReadOptions)(func: Array[Byte] => Boolean): Unit = {
       val iterator = db.iterator(ro)
-      iterator.seek(prefix);
+      might_trigger_compaction(iterator.seek(prefix));
       try {
         def check(key:Buffer) = {
           key.startsWith(prefix) && func(key)
@@ -267,7 +267,7 @@ object LevelDBClient extends Log {
 
     def cursorPrefixed(prefix:Array[Byte], ro:ReadOptions=new ReadOptions)(func: (Array[Byte],Array[Byte]) => Boolean): Unit = {
       val iterator = db.iterator(ro)
-      iterator.seek(prefix);
+      might_trigger_compaction(iterator.seek(prefix));
       try {
         def check(key:Buffer) = {
           key.startsWith(prefix) && func(key, iterator.peekNext.getValue)
@@ -286,7 +286,7 @@ object LevelDBClient extends Log {
 
     def cursorRangeKeys(startIncluded:Array[Byte], endExcluded:Array[Byte], ro:ReadOptions=new ReadOptions)(func: Array[Byte] => Boolean): Unit = {
       val iterator = db.iterator(ro)
-      iterator.seek(startIncluded);
+      might_trigger_compaction(iterator.seek(startIncluded));
       try {
         def check(key:Array[Byte]) = {
           if ( compare(key,endExcluded) < 0) {
@@ -305,7 +305,7 @@ object LevelDBClient extends Log {
 
     def cursorRange(startIncluded:Array[Byte], endExcluded:Array[Byte], ro:ReadOptions=new ReadOptions)(func: (Array[Byte],Array[Byte]) => Boolean): Unit = {
       val iterator = db.iterator(ro)
-      iterator.seek(startIncluded);
+      might_trigger_compaction(iterator.seek(startIncluded));
       try {
         def check(key:Array[Byte]) = {
           (compare(key,endExcluded) < 0) && func(key, iterator.peekNext.getValue)
@@ -337,7 +337,7 @@ object LevelDBClient extends Log {
         val iterator = db.iterator(ro)
         try {
 
-          iterator.seek(last);
+          might_trigger_compaction(iterator.seek(last));
           if ( iterator.hasPrev ) {
             iterator.prev()
           } else {
@@ -359,6 +359,35 @@ object LevelDBClient extends Log {
         }
       }
     }
+
+    def compact = {
+      compact_needed = false
+      db match {
+        case db:JniDB =>
+          db.compactRange(null, null)
+//        case db:DbImpl =>
+//          val start = new Slice(Array[Byte]('a'.toByte))
+//          val end = new Slice(Array[Byte]('z'.toByte))
+//          db.compactRange(2, start, end)
+        case _ =>
+      }
+    }
+
+    private def might_trigger_compaction[T](func: => T): T = {
+      val start = System.nanoTime()
+      try {
+        func
+      } finally {
+        val duration = System.nanoTime() - start
+        // If it takes longer than 100 ms..
+        if( duration > 1000000*100 ) {
+          compact_needed = true
+        }
+      }
+    }
+
+    @volatile
+    var compact_needed = false
   }
 
 
@@ -1365,7 +1394,55 @@ class LevelDBClient(store: LevelDBStore) {
     collectionMeta.get(collectionKey).flatMap(x=> Option(x.last_key)).map(new Buffer(_))
   }
 
+  // APLO-245: lets try to detect when leveldb needs a compaction..
+  private def detect_if_compact_needed:Unit = {
+
+    // auto compaction might be disabled...
+    if ( store.autoCompactionRatio <= 0 ) {
+      return
+    }
+
+    // How much space is the dirty index using??
+    var index_usage = 0L
+    for( file <- dirtyIndexFile.recursiveList ) {
+      if(!file.isDirectory) {
+        index_usage += file.length()
+      }
+    }
+    // Lets use the log_refs to get a rough estimate on how many entries are store in leveldb.
+    var index_queue_entries=0L
+    for ( (_, count) <- logRefs ) {
+      index_queue_entries += count.get()
+    }
+
+    if ( index_queue_entries > 0 ) {
+      val ratio = (index_usage*1.0f/index_queue_entries)
+      // println("usage: index_usage:%d, index_queue_entries:%d, ratio: %f".format(index_usage, index_queue_entries, ratio))
+
+      // After running some load we empirically found that a healthy ratio is between 12 and 25 bytes per entry.
+      // lets compact if we go way over the healthy ratio.
+      if( ratio > store.autoCompactionRatio ) {
+        index.compact_needed = true
+      }
+    } else if( index_usage > 1024*1024*5 )  {
+      // at most the index should have 1 full level file.
+      index.compact_needed = true
+    }
+
+  }
+
   def gc(topicPositions:Seq[(Long, Long)]):Unit = {
+
+    detect_if_compact_needed
+
+    // Lets compact the leveldb index if it looks like we need to.
+    if( index.compact_needed ) {
+      debug("Compacting the leveldb index at: %s", dirtyIndexFile)
+      val start = System.nanoTime()
+      index.compact
+      val duration = System.nanoTime() - start;
+      info("Compacted the leveldb index at: %s in %.2f ms", dirtyIndexFile, (duration / 1000000.0))
+    }
 
     // Delete message refs for topics who's consumers have advanced..
     if( !topicPositions.isEmpty ) {

@@ -104,4 +104,8 @@ public interface LevelDBStoreViewMBean {
 
     @MBeanInfo("Gets the index statistics.")
     String getIndexStats();
+
+    @MBeanInfo("Compacts disk usage")
+    void compact();
+
 }
