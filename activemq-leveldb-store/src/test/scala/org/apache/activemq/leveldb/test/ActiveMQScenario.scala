@@ -19,7 +19,6 @@ package org.apache.activemq.leveldb.test
 import org.apache.activemq.ActiveMQConnectionFactory
 import javax.jms.{Destination, ConnectionFactory}
 import org.apache.activemq.command.{ActiveMQTopic, ActiveMQQueue}
-import org.apache.activemq.leveldb.test.JMSClientScenario
 
 /**
  * <p>

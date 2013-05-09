@@ -18,7 +18,6 @@ package org.apache.activemq.leveldb.test
 
 import java.lang.Thread
 import javax.jms._
-import org.apache.activemq.leveldb.test.Scenario
 
 /**
  * <p>

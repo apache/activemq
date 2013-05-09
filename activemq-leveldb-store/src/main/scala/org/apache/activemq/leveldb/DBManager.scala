@@ -34,10 +34,11 @@ import org.apache.activemq.util.ByteSequence
 import util.TimeMetric
 import scala.Some
 
+case class EntryLocator(qid:Long, seq:Long)
+case class DataLocator(pos:Long, len:Int)
 case class MessageRecord(id:MessageId, data:Buffer, syncNeeded:Boolean) {
-  var locator:(Long, Int) = _
+  var locator:DataLocator = _
 }
-
 case class QueueEntryRecord(id:MessageId, queueKey:Long, queueSeq:Long)
 case class QueueRecord(id:ActiveMQDestination, queue_key:Long)
 case class QueueEntryRange()
@@ -266,13 +267,13 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         record
       case record:MessageRecord =>
         record
-      case x:(Long, Int) =>
+      case x:DataLocator =>
         null
     }
 
     val entry = QueueEntryRecord(id, queueKey, queueSeq)
     assert(id.getEntryLocator == null)
-    id.setEntryLocator((queueKey, queueSeq))
+    id.setEntryLocator(EntryLocator(queueKey, queueSeq))
 
     val a = this.synchronized {
       if( !delay )
@@ -293,7 +294,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   }
 
   def dequeue(expectedQueueKey:Long, id:MessageId) = {
-    val (queueKey, queueSeq) = id.getEntryLocator.asInstanceOf[(Long, Long)];
+    val EntryLocator(queueKey, queueSeq) = id.getEntryLocator.asInstanceOf[EntryLocator];
     assert(queueKey == expectedQueueKey)
     val entry = QueueEntryRecord(id, queueKey, queueSeq)
     this.synchronized {
@@ -670,7 +671,7 @@ class DBManager(val parent:LevelDBStore) {
   }
 
   def queuePosition(id: MessageId):Long = {
-    id.getEntryLocator.asInstanceOf[(Long, Long)]._2
+    id.getEntryLocator.asInstanceOf[EntryLocator].seq
   }
 
   def createQueueStore(dest:ActiveMQQueue):LevelDBStore#LevelDBMessageStore = {
