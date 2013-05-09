@@ -87,7 +87,7 @@ object ReplicationSupport {
       val index_file = index_dirs.last._2
       var target = to / index_file.getName
       target.mkdirs()
-      LevelDBClient.copy_index(index_file, target)
+      LevelDBClient.copyIndex(index_file, target)
     }
   }
 

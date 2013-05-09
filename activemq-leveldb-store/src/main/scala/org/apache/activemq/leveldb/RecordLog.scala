@@ -492,6 +492,11 @@ case class RecordLog(directory: File, logSuffix:String) {
 
   def log_info(pos:Long) = log_mutex.synchronized { Option(log_infos.floorEntry(pos)).map(_.getValue) }
 
+  def log_file_positions = log_mutex.synchronized {
+    import collection.JavaConversions._
+    log_infos.map(_._2.position).toArray
+  }
+
   private def get_reader[T](record_position:Long)(func: (LogReader)=>T) = {
 
     val lookup = log_mutex.synchronized {
