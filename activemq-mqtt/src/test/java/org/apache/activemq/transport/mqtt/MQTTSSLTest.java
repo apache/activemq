@@ -28,7 +28,7 @@ import org.fusesource.mqtt.client.MQTT;
 
 public class MQTTSSLTest extends MQTTTest {
 
-    public void startBroker() throws Exception {
+    public void setUp() throws Exception {
         String basedir = basedir().getPath();
         System.setProperty("javax.net.ssl.trustStore", basedir+"/src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
@@ -36,7 +36,7 @@ public class MQTTSSLTest extends MQTTTest {
         System.setProperty("javax.net.ssl.keyStore", basedir+"/src/test/resources/server.keystore");
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        super.startBroker();
+        super.setUp();
     }
 
     @Override
@@ -46,6 +46,8 @@ public class MQTTSSLTest extends MQTTTest {
 
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
+        mqtt.setConnectAttemptsMax(1);
+        mqtt.setTracer(createTracer());
         mqtt.setHost("ssl://localhost:"+mqttConnector.getConnectUri().getPort());
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());

@@ -16,14 +16,18 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import static org.junit.Assert.assertTrue;
-
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
+import org.fusesource.mqtt.client.Tracer;
+import org.fusesource.mqtt.codec.MQTTFrame;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MQTTTest extends AbstractMQTTTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MQTTTest.class);
 
     @Test(timeout=300000)
     public void testPingKeepsInactivityMonitorAlive() throws Exception {
@@ -128,10 +132,32 @@ public class MQTTTest extends AbstractMQTTTest {
 
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
+        mqtt.setConnectAttemptsMax(1);
+        mqtt.setTracer(createTracer());
         mqtt.setHost("localhost", mqttConnector.getConnectUri().getPort());
         // shut off connect retry
         mqtt.setConnectAttemptsMax(0);
         mqtt.setReconnectAttemptsMax(0);
         return mqtt;
     }
+
+    protected Tracer createTracer() {
+        return new Tracer(){
+            @Override
+            public void onReceive(MQTTFrame frame) {
+                LOG.info("recv: "+frame);
+            }
+
+            @Override
+            public void onSend(MQTTFrame frame) {
+                LOG.info("send: " + frame);
+            }
+
+            @Override
+            public void debug(String message, Object... args) {
+                LOG.info(message, args);
+            }
+        };
+    }
+
 }

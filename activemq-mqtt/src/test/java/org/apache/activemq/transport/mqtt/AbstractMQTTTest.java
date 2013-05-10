@@ -34,6 +34,7 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -42,7 +43,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public abstract class AbstractMQTTTest {
+public abstract class AbstractMQTTTest extends AutoFailTestSupport {
     protected TransportConnector mqttConnector;
 
     public static final int AT_MOST_ONCE =0;
@@ -59,7 +60,8 @@ public abstract class AbstractMQTTTest {
     protected int numberOfMessages;
 
     @Before
-    public void startBroker() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         exceptions.clear();
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -69,10 +71,11 @@ public abstract class AbstractMQTTTest {
     }
 
     @After
-    public void stopBroker() throws Exception {
+    public void tearDown() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
         }
+        super.tearDown();
     }
 
     @Test(timeout=300000)
