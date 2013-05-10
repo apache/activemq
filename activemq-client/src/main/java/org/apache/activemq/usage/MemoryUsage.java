@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.usage;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Used to keep track of how much of something is being used so that a
  * productive working set usage can be controlled. Main use case is manage
@@ -63,14 +65,26 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (parent != null) {
             parent.waitForSpace();
         }
-        synchronized (usageMutex) {
-            while (percentUsage >= 100 && isStarted()) {
-                usageMutex.wait();
+        usageLock.readLock().lock();
+        try {
+            if (percentUsage >= 100 && isStarted()) {
+                usageLock.readLock().unlock();
+                usageLock.writeLock().lock();
+                try {
+                    while (percentUsage >= 100 && isStarted()) {
+                        waitForSpaceCondition.await();
+                    }
+                    usageLock.readLock().lock();
+                } finally {
+                    usageLock.writeLock().unlock();
+                }
             }
 
             if (percentUsage >= 100 && !isStarted()) {
                 throw new InterruptedException("waitForSpace stopped during wait.");
             }
+        } finally {
+            usageLock.readLock().unlock();
         }
     }
 
@@ -86,11 +100,24 @@ public class MemoryUsage extends Usage<MemoryUsage> {
                 return false;
             }
         }
-        synchronized (usageMutex) {
+        usageLock.readLock().lock();
+        try {
             if (percentUsage >= 100) {
-                usageMutex.wait(timeout);
+                usageLock.readLock().unlock();
+                usageLock.writeLock().lock();
+                try {
+                    while (percentUsage >= 100 ) {
+                        waitForSpaceCondition.await(timeout, TimeUnit.MILLISECONDS);
+                    }
+                    usageLock.readLock().lock();
+                } finally {
+                    usageLock.writeLock().unlock();
+                }
             }
+
             return percentUsage < 100;
+        } finally {
+            usageLock.readLock().unlock();
         }
     }
 
@@ -99,8 +126,11 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (parent != null && parent.isFull()) {
             return true;
         }
-        synchronized (usageMutex) {
+        usageLock.readLock().lock();
+        try {
             return percentUsage >= 100;
+        } finally {
+            usageLock.readLock().unlock();
         }
     }
 
@@ -125,12 +155,15 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (value == 0) {
             return;
         }
-        int percentUsage;
-        synchronized (usageMutex) {
+
+        usageLock.writeLock().lock();
+        try {
             usage += value;
-            percentUsage = caclPercentUsage();
+            setPercentUsage(caclPercentUsage());
+        } finally {
+            usageLock.writeLock().unlock();
         }
-        setPercentUsage(percentUsage);
+
         if (parent != null) {
             parent.increaseUsage(value);
         }
@@ -145,12 +178,15 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (value == 0) {
             return;
         }
-        int percentUsage;
-        synchronized (usageMutex) {
+
+        usageLock.writeLock().lock();
+        try {
             usage -= value;
-            percentUsage = caclPercentUsage();
+            setPercentUsage(caclPercentUsage());
+        } finally {
+            usageLock.writeLock().unlock();
         }
-        setPercentUsage(percentUsage);
+
         if (parent != null) {
             parent.decreaseUsage(value);
         }

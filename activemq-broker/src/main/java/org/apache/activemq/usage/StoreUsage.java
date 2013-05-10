@@ -22,9 +22,9 @@ import org.apache.activemq.store.PersistenceAdapter;
  * Used to keep track of how much of something is being used so that a
  * productive working set usage can be controlled. Main use case is manage
  * memory usage.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class StoreUsage extends Usage<StoreUsage> {
 
@@ -44,6 +44,7 @@ public class StoreUsage extends Usage<StoreUsage> {
         this.store = parent.store;
     }
 
+    @Override
     protected long retrieveUsage() {
         if (store == null)
             return 0;
@@ -61,9 +62,12 @@ public class StoreUsage extends Usage<StoreUsage> {
 
     @Override
     public int getPercentUsage() {
-        synchronized (usageMutex) {
+        usageLock.writeLock().lock();
+        try {
             percentUsage = caclPercentUsage();
             return super.getPercentUsage();
+        } finally {
+            usageLock.writeLock().unlock();
         }
     }
 
