@@ -1422,7 +1422,6 @@ class LevelDBClient(store: LevelDBStore) {
       val ratio = (index_usage*1.0f/index_queue_entries)
       // println("usage: index_usage:%d, index_queue_entries:%d, ratio: %f".format(index_usage, index_queue_entries, ratio))
 
-      // After running some load we empirically found that a healthy ratio is between 12 and 25 bytes per entry.
       // lets compact if we go way over the healthy ratio.
       if( ratio > store.autoCompactionRatio ) {
         index.compact_needed = true

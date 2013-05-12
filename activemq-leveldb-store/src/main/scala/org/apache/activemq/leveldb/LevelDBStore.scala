@@ -174,7 +174,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   @BeanProperty
   var monitorStats = false
   @BeanProperty
-  var autoCompactionRatio = 100
+  var autoCompactionRatio = 250
 
   var purgeOnStatup: Boolean = false
 
