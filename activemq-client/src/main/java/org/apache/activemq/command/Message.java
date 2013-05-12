@@ -104,6 +104,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public abstract Message copy();
     public abstract void clearBody() throws JMSException;
     public abstract void storeContent();
+    public abstract void storeContentAndClear();
 
     // useful to reduce the memory footprint of a persisted message
     public void clearMarshalledState() throws JMSException {

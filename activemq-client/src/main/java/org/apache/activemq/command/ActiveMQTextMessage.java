@@ -74,6 +74,16 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public String getText() throws JMSException {
         if (text == null && getContent() != null) {
+            text = decodeContent();
+            setContent(null);
+            setCompressed(false);
+        }
+        return text;
+    }
+
+    private String decodeContent() throws JMSException {
+        String text = null;
+        if (getContent() != null) {
             InputStream is = null;
             try {
                 ByteSequence bodyAsBytes = getContent();
@@ -85,8 +95,6 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                     DataInputStream dataIn = new DataInputStream(is);
                     text = MarshallingSupport.readUTF8(dataIn);
                     dataIn.close();
-                    setContent(null);
-                    setCompressed(false);
                 }
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
@@ -106,6 +114,12 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
         storeContent();
+    }
+
+    @Override
+    public void storeContentAndClear() {
+        storeContent();
+        text=null;
     }
 
     @Override
@@ -166,7 +180,10 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public String toString() {
         try {
-            String text = getText();
+            String text = this.text;
+            if( text == null ) {
+                text = decodeContent();
+            }
             if (text != null) {
                 text = MarshallingSupport.truncate64(text);
                 HashMap<String, Object> overrideFields = new HashMap<String, Object>();

@@ -136,6 +136,12 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     }
 
     @Override
+    public void storeContentAndClear() {
+        storeContent();
+        map.clear();
+    }
+
+    @Override
     public void storeContent() {
         try {
             if (getContent() == null && !map.isEmpty()) {

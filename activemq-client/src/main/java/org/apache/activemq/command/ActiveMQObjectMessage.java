@@ -90,6 +90,12 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     @Override
+    public void storeContentAndClear() {
+        storeContent();
+        object = null;
+    }
+
+    @Override
     public void storeContent() {
         ByteSequence bodyAsBytes = getContent();
         if (bodyAsBytes == null && object != null) {

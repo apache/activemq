@@ -257,6 +257,9 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
 
     val messageRecord = id.getDataLocator match {
       case null =>
+        // encodes body and release object bodies, in case message was sent from
+        // a VM connection.  Releases additional memory.
+        message.storeContentAndClear()
         var packet = manager.parent.wireFormat.marshal(message)
         var data = new Buffer(packet.data, packet.offset, packet.length)
         if( manager.snappyCompressLogs ) {

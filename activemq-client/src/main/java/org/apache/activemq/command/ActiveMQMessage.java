@@ -752,4 +752,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     @Override
     public void storeContent() {
     }
+
+    @Override
+    public void storeContentAndClear() {
+        storeContent();
+    }
 }
