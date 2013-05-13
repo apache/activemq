@@ -39,13 +39,19 @@ public class StringToListOfActiveMQDestinationConverter {
 
         String text = value.toString();
         if (text.startsWith("[") && text.endsWith("]")) {
-            text = text.substring(1, text.length() - 1);
+            text = text.substring(1, text.length() - 1).trim();
+
+            if (text.isEmpty()) {
+                return null;
+            }
+
             String[] array = text.split(",");
 
             List<ActiveMQDestination> list = new ArrayList<ActiveMQDestination>();
             for (String item : array) {
                 list.add(ActiveMQDestination.createDestination(item.trim(), ActiveMQDestination.QUEUE_TYPE));
             }
+
             return list;
         } else {
             return null;
