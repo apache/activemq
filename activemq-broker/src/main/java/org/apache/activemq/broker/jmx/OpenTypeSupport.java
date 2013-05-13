@@ -16,13 +16,16 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.apache.activemq.broker.region.policy.SlowConsumerEntry;
+import org.apache.activemq.broker.scheduler.Job;
+import org.apache.activemq.command.ActiveMQBlobMessage;
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQMapMessage;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQStreamMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -35,16 +38,13 @@ import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
-
-import org.apache.activemq.broker.region.policy.SlowConsumerEntry;
-import org.apache.activemq.broker.scheduler.Job;
-import org.apache.activemq.command.ActiveMQBlobMessage;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQMapMessage;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQObjectMessage;
-import org.apache.activemq.command.ActiveMQStreamMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public final class OpenTypeSupport {
 
@@ -239,6 +239,11 @@ public final class OpenTypeSupport {
             Set<Map.Entry<String,Object>> entries = m.getProperties().entrySet();
             for (Map.Entry<String, Object> entry : entries) {
                 Object value = entry.getValue();
+                if (value instanceof UTF8Buffer && valueType.equals(String.class)) {
+                    String actual = value.toString();
+                    CompositeDataSupport compositeData = createTabularRowValue(type, entry.getKey(), actual);
+                    answer.put(compositeData);
+                }
                 if (valueType.isInstance(value)) {
                     CompositeDataSupport compositeData = createTabularRowValue(type, entry.getKey(), value);
                     answer.put(compositeData);

@@ -70,6 +70,7 @@ public class ActiveMQMessageTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         this.jmsMessageID = "testid";
@@ -92,6 +93,7 @@ public class ActiveMQMessageTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -432,18 +434,22 @@ public class ActiveMQMessageTest extends TestCase {
 
     public void testConvertProperties() throws Exception {
         org.apache.activemq.command.Message msg = new org.apache.activemq.command.Message() {
+            @Override
             public org.apache.activemq.command.Message copy() {
                 return null;
             }
 
+            @Override
             public void beforeMarshall(WireFormat wireFormat) throws IOException {
                 super.beforeMarshall(wireFormat);
             }
 
+            @Override
             public byte getDataStructureType() {
                 return 0;
             }
 
+            @Override
             public Response visit(CommandVisitor visitor) throws Exception {
                 return null;
             }
@@ -454,6 +460,11 @@ public class ActiveMQMessageTest extends TestCase {
 
             @Override
             public void storeContent() {
+            }
+
+            @Override
+            public void storeContentAndClear() {
+
             }
         };
 
@@ -630,7 +641,7 @@ public class ActiveMQMessageTest extends TestCase {
     public void testIntPropertyConversion() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String propertyName = "property";
-        msg.setIntProperty(propertyName, (int)1);
+        msg.setIntProperty(propertyName, 1);
 
         assertEquals(((Integer)msg.getObjectProperty(propertyName)).intValue(), 1);
         assertEquals(msg.getIntProperty(propertyName), 1);
