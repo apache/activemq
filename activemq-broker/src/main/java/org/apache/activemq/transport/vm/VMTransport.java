@@ -200,6 +200,12 @@ public class VMTransport implements Transport, Task {
             } catch (Exception ignore) {
             }
 
+            // let any requests pending a response see an exception
+            try {
+                peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
+            } catch (Exception ignore) {
+            }
+
             // shutdown task runner factory
             if (taskRunnerFactory != null) {
                 taskRunnerFactory.shutdownNow();

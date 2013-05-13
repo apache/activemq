@@ -109,7 +109,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         		originalThreadCount + 
         		" threadCountAfterStop=" + 
         		threadCountAfterStop,
-            threadCountAfterStop == originalThreadCount);
+            threadCountAfterStop <= originalThreadCount);
     }
     
     

@@ -29,10 +29,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.BaseCommand;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.state.CommandVisitor;
+import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.MutexTransport;
+import org.apache.activemq.transport.ResponseCallback;
+import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
@@ -281,6 +285,47 @@ public class VMTransportThreadSafeTest {
                 return remoteListener.shutdownReceived;
             }
         }));
+    }
+
+    @Test(timeout=60000)
+    public void testRemoteStopSendsExceptionToPendingRequests() throws Exception {
+
+        final VMTransport local = new VMTransport(new URI(location1));
+        final VMTransport remote = new VMTransport(new URI(location2));
+
+        local.setPeer(remote);
+        remote.setPeer(local);
+
+        final VMTestTransportListener remoteListener = new VMTestTransportListener(remoteReceived);
+        remote.setTransportListener(remoteListener);
+
+        final Response[] answer = new Response[1];
+        ResponseCorrelator responseCorrelator = new ResponseCorrelator(local);
+        responseCorrelator.setTransportListener(new VMTestTransportListener(localReceived));
+        responseCorrelator.start();
+        responseCorrelator.asyncRequest(new DummyCommand(), new ResponseCallback() {
+            @Override
+            public void onCompletion(FutureResponse resp) {
+                try {
+                    answer[0] = resp.getResult();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // simulate broker stop
+        remote.stop();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("answer: " + answer[0]);
+                return answer[0] instanceof ExceptionResponse && ((ExceptionResponse)answer[0]).getException() instanceof TransportDisposedIOException;
+            }
+        }));
+
+        local.stop();
     }
 
     @Test(timeout=60000)
