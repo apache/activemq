@@ -129,7 +129,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             c.close();
         }
         if (context != null && context.getXid() != null) {
-            message.getMessageId().setDataLocator(sequenceId);
+            message.getMessageId().setEntryLocator(sequenceId);
         } else {
             onAdd(messageId, sequenceId, message.getPriority());
         }
@@ -204,7 +204,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             c.close();
         }
         if (context != null && context.getXid() != null) {
-            ack.getLastMessageId().setDataLocator(seq);
+            ack.getLastMessageId().setEntryLocator(seq);
         }
     }
 

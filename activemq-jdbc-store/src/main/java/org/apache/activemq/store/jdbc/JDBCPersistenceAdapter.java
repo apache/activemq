@@ -737,7 +737,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitAdd(ConnectionContext context, MessageId messageId) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            long sequence = (Long)messageId.getDataLocator();
+            long sequence = (Long)messageId.getEntryLocator();
             getAdapter().doCommitAddOp(c, sequence);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
@@ -750,7 +750,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     public void commitRemove(ConnectionContext context, MessageAck ack) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getDataLocator(), null);
+            getAdapter().doRemoveMessage(c, (Long)ack.getLastMessageId().getEntryLocator(), null);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit last ack: " + ack + ". Reason: " + e,e);
