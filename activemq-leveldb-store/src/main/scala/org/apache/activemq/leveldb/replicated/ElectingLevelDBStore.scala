@@ -264,6 +264,15 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     this.brokerName = brokerName
   }
 
+
+  override def deleteAllMessages {
+    if(proxy_target != null) proxy_target.deleteAllMessages
+    else {
+      info("You instructed the broker to delete all messages (on startup?). " +
+        "Cannot delete all messages from an ElectingLevelDBStore because we need to decide who the master is first")
+    }
+  }
+
   def configure(store: ReplicatedLevelDBStoreTrait) {
     store.directory = directory
     store.indexFactory = indexFactory
