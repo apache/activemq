@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.activemq.leveldb.util.Log
 import java.io.File
 import org.apache.activemq.usage.SystemUsage
+import org.apache.activemq.ActiveMQMessageAuditNoSync
 
 object ElectingLevelDBStore extends Log {
 
@@ -120,6 +121,10 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var asyncBufferSize = 1024 * 1024 * 4
   @BeanProperty
   var monitorStats = false
+  @BeanProperty
+  var failoverProducersAuditDepth = ActiveMQMessageAuditNoSync.DEFAULT_WINDOW_SIZE;
+  @BeanProperty
+  var maxFailoverProducersToTrack = ActiveMQMessageAuditNoSync.MAXIMUM_PRODUCER_COUNT;
 
   var master: MasterLevelDBStore = _
   var slave: SlaveLevelDBStore = _
@@ -290,6 +295,8 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     store.asyncBufferSize = asyncBufferSize
     store.monitorStats = monitorStats
     store.securityToken = securityToken
+    store.setFailoverProducersAuditDepth(failoverProducersAuditDepth)
+    store.setMaxFailoverProducersToTrack(maxFailoverProducersToTrack)
     store.setBrokerName(brokerName)
     store.setBrokerService(brokerService)
     store.setUsageManager(usageManager)

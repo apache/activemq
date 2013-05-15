@@ -548,8 +548,22 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     return rc
   }
 
-  def getLastProducerSequenceId(id: ProducerId): Long = {
-    return -1
+  def getLastProducerSequenceId(id: ProducerId) = db.getLastProducerSequenceId(id)
+
+  def setMaxFailoverProducersToTrack(maxFailoverProducersToTrack:Int ) = {
+      db.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(maxFailoverProducersToTrack);
+  }
+
+  def getMaxFailoverProducersToTrack() = {
+    db.producerSequenceIdTracker.getMaximumNumberOfProducersToTrack()
+  }
+
+  def setFailoverProducersAuditDepth(failoverProducersAuditDepth:Int) = {
+      db.producerSequenceIdTracker.setAuditDepth(failoverProducersAuditDepth);
+  }
+
+  def getFailoverProducersAuditDepth() = {
+      db.producerSequenceIdTracker.getAuditDepth();
   }
 
   def size: Long = {

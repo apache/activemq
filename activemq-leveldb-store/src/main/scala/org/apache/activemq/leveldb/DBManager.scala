@@ -33,6 +33,8 @@ import collection.mutable.{HashSet, ListBuffer}
 import org.apache.activemq.util.ByteSequence
 import util.TimeMetric
 import scala.Some
+import org.apache.activemq.ActiveMQMessageAuditNoSync
+import org.fusesource.hawtdispatch
 
 case class EntryLocator(qid:Long, seq:Long)
 case class DataLocator(pos:Long, len:Int)
@@ -254,7 +256,6 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
 
     val id = message.getMessageId
 
-
     val messageRecord = id.getDataLocator match {
       case null =>
         // encodes body and release object bodies, in case message was sent from
@@ -414,9 +415,22 @@ class DBManager(val parent:LevelDBStore) {
 
   val lastUowId = new AtomicInteger(1)
 
+  val producerSequenceIdTracker = new ActiveMQMessageAuditNoSync
+
+  def getLastProducerSequenceId(id: ProducerId): Long = dispatchQueue.sync {
+    producerSequenceIdTracker.getLastSeqId(id)
+  }
+
   def processClosed(uow:DelayableUOW) = {
     dispatchQueue.assertExecuting()
     uowClosedCounter += 1
+
+    // track the producer seq positions.
+    for( (_, action) <- uow.actions ) {
+      if( action.messageRecord!=null ) {
+        producerSequenceIdTracker.isDuplicate(action.messageRecord.id)
+      }
+    }
 
     // Broker could issue a flush_message call before
     // this stage runs.. which make the stage jump over UowDelayed
@@ -425,6 +439,10 @@ class DBManager(val parent:LevelDBStore) {
     }
     if( uow.state.stage < UowFlushing.stage ) {
       uow.actions.foreach { case (id, action) =>
+
+        if( action.messageRecord!=null ) {
+          producerSequenceIdTracker.isDuplicate(action.messageRecord.id)
+        }
 
         // The UoW may have been canceled.
         if( action.messageRecord!=null && action.enqueues.isEmpty ) {
