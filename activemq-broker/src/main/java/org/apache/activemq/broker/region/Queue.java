@@ -786,33 +786,26 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
         @Override
         public void afterCommit() throws Exception {
-            LinkedList<Transaction> orderedWork = null;
+            LinkedList<Transaction> orderedWork = new LinkedList<Transaction>();;
             // use existing object to sync orderIndexUpdates that can be reassigned
             synchronized (sendLock) {
-                if (transaction == orderIndexUpdates.peek()) {
-                    orderedWork = orderIndexUpdates;
-                    orderIndexUpdates = new LinkedList<Transaction>();
-
-                    // talking all the ordered work means that earlier
-                    // and later threads do nothing.
-                    // this avoids contention/race on the sendLock that
-                    // guards the actual work.
+                Transaction next = orderIndexUpdates.peek();
+                while( next!=null && next.isCommitted() ) {
+                    orderedWork.addLast(orderIndexUpdates.removeFirst());
+                    next = orderIndexUpdates.peek();
                 }
             }
             // do the ordered work
-            if (orderedWork != null) {
+            if (!orderedWork.isEmpty()) {
                 sendLock.lockInterruptibly();
                 try {
                     for (Transaction tx : orderedWork) {
                         sendSyncs.get(tx).processSend();
+                        sendSyncs.remove(tx);
                     }
                 } finally {
                     sendLock.unlock();
                 }
-                for (Transaction tx : orderedWork) {
-                    sendSyncs.get(tx).processSent();
-                }
-                sendSyncs.remove(transaction);
             }
         }
 

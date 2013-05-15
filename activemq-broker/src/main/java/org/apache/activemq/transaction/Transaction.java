@@ -40,6 +40,7 @@ public abstract class Transaction {
     public static final byte IN_USE_STATE = 1; // can go to: 2,3
     public static final byte PREPARED_STATE = 2; // can go to: 3
     public static final byte FINISHED_STATE = 3;
+    boolean committed = false;
 
     private final ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
     private byte state = START_STATE;
@@ -62,6 +63,14 @@ public abstract class Transaction {
 
     public void setState(byte state) {
         this.state = state;
+    }
+
+    public boolean isCommitted() {
+        return committed;
+    }
+
+    public void setCommitted(boolean committed) {
+        this.committed = committed;
     }
 
     public void addSynchronization(Synchronization r) {
@@ -182,6 +191,7 @@ public abstract class Transaction {
 
     protected void doPostCommit() throws XAException {
         try {
+            setCommitted(true);
             fireAfterCommit();
         } catch (Throwable e) {
             // I guess this could happen. Post commit task failed

@@ -298,11 +298,13 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   }
 
   def dequeue(expectedQueueKey:Long, id:MessageId) = {
-    val EntryLocator(queueKey, queueSeq) = id.getEntryLocator.asInstanceOf[EntryLocator];
-    assert(queueKey == expectedQueueKey)
-    val entry = QueueEntryRecord(id, queueKey, queueSeq)
-    this.synchronized {
-      getAction(id).dequeues += entry
+    if( id.getEntryLocator != null ) {
+      val EntryLocator(queueKey, queueSeq) = id.getEntryLocator.asInstanceOf[EntryLocator];
+      assert(queueKey == expectedQueueKey)
+      val entry = QueueEntryRecord(id, queueKey, queueSeq)
+      this.synchronized {
+        getAction(id).dequeues += entry
+      }
     }
     countDownFuture
   }
