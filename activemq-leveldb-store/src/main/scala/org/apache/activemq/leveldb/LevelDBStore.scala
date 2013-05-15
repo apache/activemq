@@ -168,7 +168,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   @BeanProperty
   var indexCacheSize: Long = 1024 * 1024 * 256L
   @BeanProperty
-  var flushDelay = 1000*5
+  var flushDelay = 0
   @BeanProperty
   var asyncBufferSize = 1024*1024*4
   @BeanProperty

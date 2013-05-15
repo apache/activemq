@@ -207,7 +207,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
   }
 
   def completeAsap() = this.synchronized { disableDelay=true }
-  def delayable = !disableDelay && delayableActions>0 && manager.flushDelay>=0
+  def delayable = !disableDelay && delayableActions>0 && manager.flushDelay>0
 
   def rm(msg:MessageId) = {
     actions -= msg
