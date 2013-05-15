@@ -799,12 +799,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (!orderedWork.isEmpty()) {
 
                 ArrayList<SendSync> syncs = new ArrayList<SendSync>(orderedWork.size());;
+                for (Transaction tx : orderedWork) {
+                    syncs.add(sendSyncs.remove(tx));
+                }
                 sendLock.lockInterruptibly();
                 try {
-                    for (Transaction tx : orderedWork) {
-                        SendSync sync = sendSyncs.remove(tx);
+                    for (SendSync sync : syncs) {
                         sync.processSend();
-                        syncs.add(sync);
                     }
                 } finally {
                     sendLock.unlock();
