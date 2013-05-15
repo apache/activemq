@@ -800,18 +800,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
                 ArrayList<SendSync> syncs = new ArrayList<SendSync>(orderedWork.size());;
                 sendLock.lockInterruptibly();
-
                 try {
                     for (Transaction tx : orderedWork) {
-                        SendSync sync = sendSyncs.get(tx);
+                        SendSync sync = sendSyncs.remove(tx);
                         sync.processSend();
                         syncs.add(sync);
-                        sendSyncs.remove(tx);
                     }
                 } finally {
                     sendLock.unlock();
                 }
-
                 for (SendSync sync : syncs) {
                     sync.processSent();
                 }
