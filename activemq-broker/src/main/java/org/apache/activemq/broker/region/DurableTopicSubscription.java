@@ -305,7 +305,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     protected boolean canDispatch(MessageReference node) {
-        return isActive();
+        return true;  // let them go, our dispatchPending gates the active / inactive state.
     }
 
     @Override
