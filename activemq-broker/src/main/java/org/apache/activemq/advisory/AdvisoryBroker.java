@@ -25,29 +25,14 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.TopicSubscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.broker.region.*;
+import org.apache.activemq.command.*;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -261,6 +246,29 @@ public class AdvisoryBroker extends BrokerFilter {
                 fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
             }
         }
+    }
+
+    @Override
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
+        SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
+
+        DurableTopicSubscription sub = ((TopicRegion)((RegionBroker)next).getTopicRegion()).getDurableSubscription(key);
+
+        if (sub == null) {
+            LOG.warn("We cannot send an advisory message for a durable sub removal when we don't know about the durable sub");
+            return;
+        }
+
+        ActiveMQDestination dest = sub.getConsumerInfo().getDestination();
+
+        super.removeSubscription(context, info);
+
+        // Don't advise advisory topics.
+        if (!AdvisorySupport.isAdvisoryTopic(dest)) {
+            ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
+            fireConsumerAdvisory(context, dest, topic, info);
+        }
+
     }
 
     @Override

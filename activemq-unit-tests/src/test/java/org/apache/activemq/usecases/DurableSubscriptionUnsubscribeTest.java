@@ -18,15 +18,16 @@ package org.apache.activemq.usecases;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.Connection;
-import javax.jms.Session;
+import javax.jms.*;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -34,6 +35,7 @@ import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -70,12 +72,14 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
     public void doJMXUnsubscribe(boolean restart) throws Exception {
         createSubscriptions();
+        createAdvisorySubscription();
 
         Thread.sleep(1000);
         assertCount(100, 0);
 
         if (restart) {
             restartBroker();
+            createAdvisorySubscription();
             assertCount(100, 0);
         }
 
@@ -97,12 +101,14 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+            createAdvisorySubscription();
             assertCount(0, 0);
         }
     }
 
     public void doConnectionUnsubscribe(boolean restart) throws Exception {
         createSubscriptions();
+        createAdvisorySubscription();
 
         Thread.sleep(1000);
         assertCount(100, 0);
@@ -131,6 +137,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+            createAdvisorySubscription();
             assertCount(100, 0);
         }
 
@@ -150,18 +157,21 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+            createAdvisorySubscription();
             assertCount(0, 0);
         }
     }
 
     public void doDirectUnsubscribe(boolean restart) throws Exception {
         createSubscriptions();
+        createAdvisorySubscription();
 
         Thread.sleep(1000);
         assertCount(100, 0);
 
         if (restart) {
             restartBroker();
+            createAdvisorySubscription();
             assertCount(100, 0);
         }
 
@@ -172,9 +182,10 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             ConnectionContext context = new ConnectionContext();
             context.setBroker(broker.getRegionBroker());
             context.setClientId(getName());
-            broker.getRegionBroker().removeSubscription(context, info);
+            broker.getBroker().removeSubscription(context, info);
 
             if (i % 20 == 0) {
+                Thread.sleep(1000);
                 assertCount(100 - i - 1, 0);
             }
         }
@@ -183,6 +194,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
         if (restart) {
             restartBroker();
+            createAdvisorySubscription();
             assertCount(0, 0);
         }
     }
@@ -195,6 +207,20 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         }
     }
 
+    private final AtomicInteger advisories = new AtomicInteger(0);
+
+    private void createAdvisorySubscription() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer advisoryConsumer = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(topic));
+        advisoryConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                if (((ActiveMQMessage)message).getDataStructure() instanceof RemoveSubscriptionInfo) {
+                    advisories.incrementAndGet();
+                }
+            }
+        });
+    }
 
     private void assertCount(int all, int active) throws Exception {
         int inactive = all - active;
@@ -224,6 +250,9 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         // check the strange false MBean
         if (all == 0)
             assertEquals(0, countMBean());
+
+        // check if we got all advisories
+        assertEquals(100, all + advisories.get());
     }
 
     private int countMBean() throws MalformedObjectNameException, InstanceNotFoundException {

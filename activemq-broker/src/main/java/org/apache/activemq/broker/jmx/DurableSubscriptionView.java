@@ -20,6 +20,7 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
@@ -31,6 +32,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 public class DurableSubscriptionView extends SubscriptionView implements DurableSubscriptionViewMBean {
 
     protected ManagedRegionBroker broker;
+    protected BrokerService brokerService;
     protected String subscriptionName;
     protected DurableTopicSubscription durableSub;
 
@@ -40,9 +42,10 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
      * @param clientId
      * @param sub
      */
-    public DurableSubscriptionView(ManagedRegionBroker broker, String clientId, String userName, Subscription sub) {
+    public DurableSubscriptionView(ManagedRegionBroker broker, BrokerService brokerService, String clientId, String userName, Subscription sub) {
         super(clientId, userName, sub);
         this.broker = broker;
+        this.brokerService = brokerService;
         this.durableSub=(DurableTopicSubscription) sub;
         if (sub != null) {
             this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
@@ -87,7 +90,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);
-        broker.removeSubscription(context, info);
+        brokerService.getBroker().removeSubscription(context, info);
     }
 
     public String toString() {

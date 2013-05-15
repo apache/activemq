@@ -206,7 +206,7 @@ public class ManagedRegionBroker extends RegionBroker {
             } else {
                 String userName = brokerService.isPopulateUserNameInMBeans() ? context.getUserName() : null;
                 if (sub.getConsumerInfo().isDurable()) {
-                    view = new DurableSubscriptionView(this, context.getClientId(), userName, sub);
+                    view = new DurableSubscriptionView(this, brokerService, context.getClientId(), userName, sub);
                 } else {
                     if (sub instanceof TopicSubscription) {
                         view = new TopicSubscriptionView(context.getClientId(), userName, (TopicSubscription) sub);
@@ -509,7 +509,7 @@ public class ManagedRegionBroker extends RegionBroker {
         try {
             ConsumerInfo offlineConsumerInfo = subscription != null ? subscription.getConsumerInfo() : ((TopicRegion)getTopicRegion()).createInactiveConsumerInfo(info);
             ObjectName objectName = BrokerMBeanSupport.createSubscriptionName(brokerObjectName, info.getClientId(), offlineConsumerInfo);
-            SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info, subscription);
+            SubscriptionView view = new InactiveDurableSubscriptionView(this, brokerService, key.getClientId(), info, subscription);
 
             try {
                 AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);

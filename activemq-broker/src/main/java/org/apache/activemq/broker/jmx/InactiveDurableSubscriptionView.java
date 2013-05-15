@@ -20,6 +20,7 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerInfo;
@@ -41,8 +42,8 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      * @param userName
      * @param subInfo
      */
-    public InactiveDurableSubscriptionView(ManagedRegionBroker broker, String clientId, SubscriptionInfo subInfo, Subscription subscription) {
-        super(broker, clientId, null, subscription);
+    public InactiveDurableSubscriptionView(ManagedRegionBroker broker, BrokerService brokerService, String clientId, SubscriptionInfo subInfo, Subscription subscription) {
+        super(broker, brokerService, clientId, null, subscription);
         this.broker = broker;
         this.subscriptionInfo = subInfo;
     }
@@ -134,7 +135,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);
-        broker.removeSubscription(context, info);
+        brokerService.getBroker().removeSubscription(context, info);
     }
 
     public String toString() {

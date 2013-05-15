@@ -378,4 +378,8 @@ public class TopicRegion extends AbstractRegion {
     public boolean durableSubscriptionExists(SubscriptionKey key) {
         return this.durableSubscriptions.containsKey(key);
     }
+
+    public DurableTopicSubscription getDurableSubscription(SubscriptionKey key) {
+        return durableSubscriptions.get(key);
+    }
 }

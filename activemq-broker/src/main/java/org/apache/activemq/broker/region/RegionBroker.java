@@ -411,6 +411,7 @@ public class RegionBroker extends EmptyBroker {
             topicRegion.removeSubscription(context, info);
         } finally {
             inactiveDestinationsPurgeLock.readLock().unlock();
+
         }
     }
 

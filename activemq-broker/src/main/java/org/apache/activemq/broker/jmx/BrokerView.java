@@ -405,7 +405,7 @@ public class BrokerView implements BrokerViewMBean {
         ConnectionContext context = new ConnectionContext();
         context.setBroker(safeGetBroker());
         context.setClientId(clientId);
-        safeGetBroker().removeSubscription(context, info);
+        brokerService.getBroker().removeSubscription(context, info);
     }
 
     //  doc comment inherited from BrokerViewMBean
