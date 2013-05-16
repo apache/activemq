@@ -17,32 +17,24 @@
 
 package org.apache.activemq.broker.region.cursors;
 
-import java.io.File;
-
 import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 
+import java.io.File;
+
 /**
  * @author gtully
  * @see https://issues.apache.org/activemq/browse/AMQ-2020
  **/
-public class StoreQueueCursorJournalNoDuplicateTest extends StoreQueueCursorNoDuplicateTest {
+public class StoreQueueCursorLevelDBNoDuplicateTest extends StoreQueueCursorNoDuplicateTest {
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
-        
-        File dataFileDir = new File("target/activemq-data/StoreQueueCursorJournalNoDuplicateTest");
-        File journalDir = new File(dataFileDir, "journal").getCanonicalFile();
-        JournalImpl journal = new JournalImpl(journalDir, 3, 1024 * 1024 * 20);
-
         LevelDBStore store = new LevelDBStore();
-        store.setDirectory(dataFileDir);
-        JournalPersistenceAdapter journalAdaptor = new JournalPersistenceAdapter(journal, store, broker.getTaskRunnerFactory());
-        journalAdaptor.setMaxCheckpointWorkers(1);
-
-        broker.setPersistenceAdapter(journalAdaptor);
+        store.setDirectory(new File("target/activemq-data/leveldb"));
+        broker.setPersistenceAdapter(store);
         return broker;
     }
 }
