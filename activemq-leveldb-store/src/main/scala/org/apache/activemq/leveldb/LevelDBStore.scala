@@ -76,6 +76,7 @@ object LevelDBStore extends Log {
 }
 
 case class DurableSubscription(subKey:Long, topicKey:Long, info: SubscriptionInfo) {
+  var gcPosition = 0L
   var lastAckPosition = 0L
   var cursorPosition = 0L
 }
@@ -381,6 +382,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
         def commit(uow:DelayableUOW) = {
           store.doUpdateAckPosition(uow, sub, position)
+          sub.gcPosition = position
         }
         def prepare(uow:DelayableUOW) = {
           prev_position = sub.lastAckPosition
@@ -756,8 +758,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       var pos = lastSeq.get()
       subscriptions.synchronized {
         subscriptions.values.foreach { sub =>
-          if( sub.lastAckPosition < pos ) {
-            pos = sub.lastAckPosition
+          if( sub.gcPosition < pos ) {
+            pos = sub.gcPosition
           }
         }
         if( firstSeq != pos+1) {
@@ -775,6 +777,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         subscriptions.put((info.getClientId, info.getSubcriptionName), sub)
       }
       sub.lastAckPosition = if (retroactive) 0 else lastSeq.get()
+      sub.gcPosition = sub.lastAckPosition
       waitOn(withUow{ uow=>
         uow.updateAckPosition(sub.subKey, sub.lastAckPosition)
         uow.countDownFuture
@@ -801,6 +804,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def doUpdateAckPosition(uow: DelayableUOW, sub: DurableSubscription, position: Long) = {
       sub.lastAckPosition = position
+      sub.gcPosition = position
       uow.updateAckPosition(sub.subKey, sub.lastAckPosition)
     }
 

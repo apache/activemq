@@ -1297,10 +1297,7 @@ class LevelDBClient(store: LevelDBStore) {
           index_record.setValueLength(dataLocator.len)
           batch.put(key, encodeEntryRecord(index_record.freeze()).toByteArray)
 
-          val log_data = encodeEntryRecord(log_record.freeze())
           val index_data = encodeEntryRecord(index_record.freeze()).toByteArray
-
-          appender.append(LOG_ADD_ENTRY, log_data)
           batch.put(key, index_data)
 
           for (key <- logRefKey(dataLocator.pos, log_info)) {
@@ -1322,7 +1319,7 @@ class LevelDBClient(store: LevelDBStore) {
                 throw new RuntimeException("Unexpected locator type")
             }
           }
-          println(dataLocator)
+//          println(dataLocator)
 
           val el = ack.getLastMessageId.getEntryLocator.asInstanceOf[EntryLocator];
           val os = new DataByteArrayOutputStream()

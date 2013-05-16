@@ -792,6 +792,7 @@ class DBManager(val parent:LevelDBStore) {
 
           var sub = DurableSubscription(key, sr.getTopicKey, info)
           sub.lastAckPosition = client.getAckPosition(key);
+          sub.gcPosition = sub.lastAckPosition
           parent.createSubscription(sub)
         case TRANSACTION_COLLECTION_TYPE =>
           val meta = record.getMeta
