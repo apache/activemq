@@ -201,7 +201,7 @@
           <forkMode>always</forkMode>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
-
+          <redirectTestOutputToFile>false</redirectTestOutputToFile>
            <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
