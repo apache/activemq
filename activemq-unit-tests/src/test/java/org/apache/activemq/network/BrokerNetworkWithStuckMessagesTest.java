@@ -41,6 +41,7 @@ import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.management.ObjectName;
 
+import javax.management.openmbean.CompositeData;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTestSupport;
@@ -51,6 +52,7 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
@@ -223,6 +225,8 @@ public class BrokerNetworkWithStuckMessagesTest {
             assertNotNull(message1);
             LOG.info("on remote, got: " + message1.getMessageId());
             connection2.send(createAck(consumerInfo2, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
+            assertTrue("JMSActiveMQBrokerPath property present and correct",
+                    ((ActiveMQMessage)message1).getStringProperty(ActiveMQMessage.BROKER_PATH_PROPERTY).contains(localBroker.getBroker().getBrokerId().toString()));
         }
 
         // Ensure that there are zero messages on the local broker. This tells
@@ -273,7 +277,10 @@ public class BrokerNetworkWithStuckMessagesTest {
         messages = browseQueueWithJmx(remoteBroker);
         assertEquals(5, messages.length);
 
-         LOG.info("Messages now stuck on remote");
+        assertTrue("can see broker path property",
+                ((String)((CompositeData)messages[1]).get("BrokerPath")).contains(localBroker.getBroker().getBrokerId().toString()));
+
+        LOG.info("Messages now stuck on remote");
 
         // receive again on the origin broker
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destinationInfo1);

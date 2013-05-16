@@ -40,6 +40,7 @@ import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -129,6 +130,7 @@ public final class OpenTypeSupport {
             addItem("JMSTimestamp", "JMSTimestamp", SimpleType.DATE);
             addItem(CompositeDataConstants.JMSXGROUP_ID, "Message Group ID", SimpleType.STRING);
             addItem(CompositeDataConstants.JMSXGROUP_SEQ, "Message Group Sequence Number", SimpleType.INTEGER);
+            addItem(CompositeDataConstants.BROKER_PATH, "Brokers traversed", SimpleType.STRING);
             addItem(CompositeDataConstants.ORIGINAL_DESTINATION, "Original Destination Before Senting To DLQ", SimpleType.STRING);
             addItem(CompositeDataConstants.PROPERTIES, "User Properties Text", SimpleType.STRING);
 
@@ -168,6 +170,7 @@ public final class OpenTypeSupport {
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
             rc.put(CompositeDataConstants.JMSXGROUP_ID, m.getGroupID());
             rc.put(CompositeDataConstants.JMSXGROUP_SEQ, m.getGroupSequence());
+            rc.put(CompositeDataConstants.BROKER_PATH, Arrays.toString(m.getBrokerPath()));
             rc.put(CompositeDataConstants.ORIGINAL_DESTINATION, toString(m.getOriginalDestination()));
             try {
                 rc.put(CompositeDataConstants.PROPERTIES, "" + m.getProperties());

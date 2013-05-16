@@ -18,6 +18,7 @@
 package org.apache.activemq.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -157,6 +158,12 @@ public class PropertyExpression implements Expression {
 
             public Object evaluate(Message message) {
                 return Long.valueOf(message.getBrokerOutTime());
+            }
+        });
+        JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerPath", new SubExpression() {
+
+            public Object evaluate(Message message) {
+                return Arrays.toString(message.getBrokerPath());
             }
         });
     }
