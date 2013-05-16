@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -101,13 +102,13 @@ public class DemandSubscription {
             if (dispatched.get() > 0) {
                 synchronized (activeWaiter) {
                     try {
-                        activeWaiter.wait();
+                        activeWaiter.wait(TimeUnit.SECONDS.toMillis(30));
                     } catch (InterruptedException ignored) {
                     }
                 }
                 if (this.dispatched.get() > 0) {
                     LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, " +
-                             "expect potentially " + this.dispatched.get() + " duplicate deliveried");
+                             "expect potentially " + this.dispatched.get() + " duplicate forwards");
                 }
             }
         }
