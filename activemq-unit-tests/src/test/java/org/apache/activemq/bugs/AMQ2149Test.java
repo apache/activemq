@@ -79,7 +79,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
-    private File dataDirFile;
+    protected File dataDirFile;
     final LoggingBrokerPlugin[] plugins = new LoggingBrokerPlugin[]{new LoggingBrokerPlugin()};
     
     
@@ -99,14 +99,6 @@ public class AMQ2149Test extends AutoFailTestSupport {
     }
     
     protected void configurePersistenceAdapter(BrokerService brokerService) throws Exception {
-/*
-        https://issues.apache.org/jira/browse/AMQ-4296
-
-        a leveldb variant will fail. needs to have this test exercise all stores
-        LevelDBStore persistenceFactory = new LevelDBStore();
-        persistenceFactory.setDirectory(dataDirFile);
-        brokerService.setPersistenceAdapter(persistenceFactory);
-*/
     }
 
     public void setUp() throws Exception {
