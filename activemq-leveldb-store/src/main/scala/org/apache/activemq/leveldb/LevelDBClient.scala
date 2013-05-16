@@ -1408,27 +1408,32 @@ class LevelDBClient(store: LevelDBStore) {
     // How much space is the dirty index using??
     var index_usage = 0L
     for( file <- dirtyIndexFile.recursiveList ) {
-      if(!file.isDirectory) {
+      if(!file.isDirectory && file.getName.endsWith(".sst") ) {
         index_usage += file.length()
       }
     }
+
     // Lets use the log_refs to get a rough estimate on how many entries are store in leveldb.
     var index_queue_entries=0L
     for ( (_, count) <- logRefs ) {
       index_queue_entries += count.get()
     }
 
-    if ( index_queue_entries > 0 ) {
-      val ratio = (index_usage*1.0f/index_queue_entries)
-      // println("usage: index_usage:%d, index_queue_entries:%d, ratio: %f".format(index_usage, index_queue_entries, ratio))
+    // Don't force compactions until level 0 is full.
+    val SSL_FILE_SIZE = 1024*1024*4L
+    if( index_usage > SSL_FILE_SIZE*10 ) {
+      if ( index_queue_entries > 0 ) {
+        val ratio = (index_usage*1.0f/index_queue_entries)
+        // println("usage: index_usage:%d, index_queue_entries:%d, ratio: %f".format(index_usage, index_queue_entries, ratio))
 
-      // lets compact if we go way over the healthy ratio.
-      if( ratio > store.autoCompactionRatio ) {
+        // lets compact if we go way over the healthy ratio.
+        if( ratio > store.autoCompactionRatio ) {
+          index.compact_needed = true
+        }
+      } else {
+        // at most the index should have 1 full level file.
         index.compact_needed = true
       }
-    } else if( index_usage > 1024*1024*5 )  {
-      // at most the index should have 1 full level file.
-      index.compact_needed = true
     }
 
   }
