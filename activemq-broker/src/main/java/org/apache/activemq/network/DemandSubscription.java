@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.NetworkBridgeFilter;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,8 @@ public class DemandSubscription {
     private final Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
     private final AtomicInteger dispatched = new AtomicInteger(0);
     private final AtomicBoolean activeWaiter = new AtomicBoolean();
+    private final Set<SubscriptionInfo> durableRemoteSubs = new CopyOnWriteArraySet<SubscriptionInfo>();
+    private SubscriptionInfo localDurableSubscriber;
 
     private NetworkBridgeFilter networkBridgeFilter;
 
@@ -67,6 +70,10 @@ public class DemandSubscription {
      */
     public boolean remove(ConsumerId id) {
         return remoteSubsIds.remove(id);
+    }
+
+    public Set<SubscriptionInfo> getDurableRemoteSubs() {
+        return durableRemoteSubs;
     }
 
     /**
@@ -137,5 +144,13 @@ public class DemandSubscription {
 
     public void setNetworkBridgeFilter(NetworkBridgeFilter networkBridgeFilter) {
         this.networkBridgeFilter = networkBridgeFilter;
+    }
+
+    public SubscriptionInfo getLocalDurableSubscriber() {
+        return localDurableSubscriber;
+    }
+
+    public void setLocalDurableSubscriber(SubscriptionInfo localDurableSubscriber) {
+        this.localDurableSubscriber = localDurableSubscriber;
     }
 }

@@ -34,6 +34,13 @@ public class SubscriptionInfo implements DataStructure {
     protected String subscriptionName;
     protected String selector;
 
+    public SubscriptionInfo() {}
+
+    public SubscriptionInfo(String clientId, String subscriptionName) {
+        this.clientId = clientId;
+        this.subscriptionName = subscriptionName;
+    }
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }

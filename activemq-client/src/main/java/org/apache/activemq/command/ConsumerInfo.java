@@ -42,6 +42,7 @@ public class ConsumerInfo extends BaseCommand {
     protected boolean browser;
     protected boolean dispatchAsync;
     protected String selector;
+    protected String clientId;
     protected String subscriptionName;
     protected boolean noLocal;
     protected boolean exclusive;
@@ -93,6 +94,7 @@ public class ConsumerInfo extends BaseCommand {
         info.browser = browser;
         info.dispatchAsync = dispatchAsync;
         info.selector = selector;
+        info.clientId = clientId;
         info.subscriptionName = subscriptionName;
         info.noLocal = noLocal;
         info.exclusive = exclusive;
@@ -214,6 +216,19 @@ public class ConsumerInfo extends BaseCommand {
 
     public void setSelector(String selector) {
         this.selector = selector;
+    }
+
+    /**
+     * Used to identify the id of a client connection.
+     *
+     * @openwire:property version=1
+     */
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     /**

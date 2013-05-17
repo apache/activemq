@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.transport.Transport;
 import org.slf4j.Logger;
@@ -84,7 +85,11 @@ public class ConduitBridge extends DemandForwardingBridge {
                 }
                 // add the interest in the subscription
                 if (checkPaths(info.getBrokerPath(), ds.getRemoteInfo().getBrokerPath())) {
-                    ds.add(info.getConsumerId());
+                    if (!info.isDurable()) {
+                        ds.add(info.getConsumerId());
+                    } else {
+                       ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
+                    }
                 }
                 matched = true;
                 // continue - we want interest to any existing DemandSubscriptions

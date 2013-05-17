@@ -19,10 +19,7 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -50,32 +47,7 @@ import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTempDestination;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.BrokerId;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionError;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.KeepAliveInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.NetworkBridgeFilter;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.SecurityContext;
@@ -147,7 +119,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private final AtomicBoolean started = new AtomicBoolean();
     private TransportConnection duplexInitiatingConnection;
-    private BrokerService brokerService = null;
+    protected BrokerService brokerService = null;
     private ObjectName mbeanObjectName;
     private final ExecutorService serialExecutor = Executors.newSingleThreadExecutor();
     private Transport duplexInboundLocalBroker = null;
@@ -818,6 +790,28 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         } else if (data.getClass() == RemoveInfo.class) {
             ConsumerId id = (ConsumerId) ((RemoveInfo) data).getObjectId();
             removeDemandSubscription(id);
+        } else if (data.getClass() == RemoveSubscriptionInfo.class) {
+            RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
+            SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
+            for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
+                DemandSubscription ds = (DemandSubscription) i.next();
+                boolean removed = ds.getDurableRemoteSubs().remove(subscriptionInfo);
+                if (removed) {
+                    if (ds.getDurableRemoteSubs().isEmpty()) {
+
+                        // deactivate subscriber
+                        RemoveInfo removeInfo = new RemoveInfo(ds.getLocalInfo().getConsumerId());
+                        localBroker.oneway(removeInfo);
+
+                        // remove subscriber
+                        RemoveSubscriptionInfo sending = new RemoveSubscriptionInfo();
+                        sending.setClientId(localClientId);
+                        sending.setSubscriptionName(ds.getLocalDurableSubscriber().getSubscriptionName());
+                        sending.setConnectionId(this.localConnectionInfo.getConnectionId());
+                        localBroker.oneway(sending);
+                    }
+                }
+            }
         }
     }
 
@@ -1180,6 +1174,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (duplicateSuppressionIsRequired(sub)) {
                 undoMapRegistration(sub);
             } else {
+                if (consumerInfo.isDurable()) {
+                    sub.getDurableRemoteSubs().add(new SubscriptionInfo(sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName()));
+                }
                 addSubscription(sub);
                 consumerAdded = true;
             }
@@ -1274,7 +1271,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return found;
     }
 
-    private final Collection<Subscription> getRegionSubscriptions(ActiveMQDestination dest) {
+    protected final Collection<Subscription> getRegionSubscriptions(ActiveMQDestination dest) {
         RegionBroker region_broker = (RegionBroker) brokerService.getRegionBroker();
         Region region;
         Collection<Subscription> subs;
@@ -1370,8 +1367,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // may need to change if we ever subscribe to a remote broker.
             sub.getLocalInfo().setAdditionalPredicate(sub.getNetworkBridgeFilter());
         } else {
-            // need to ack this message if it is ignored as it is durable so
-            // we check before we send. see: suppressMessageDispatch()
+            sub.setLocalDurableSubscriber(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
         }
     }
 

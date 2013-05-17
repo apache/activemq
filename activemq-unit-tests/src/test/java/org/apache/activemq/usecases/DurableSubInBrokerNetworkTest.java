@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NetworkConnector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DurableSubInBrokerNetworkTest.class);
     // protected BrokerService localBroker;
     private final String subName = "Subscriber1";
     private final String subName2 = "Subscriber2";
@@ -150,6 +150,16 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         assertTrue(foundSubInLocalBroker(subName2));
 
         assertTrue("Durable subscription should still be on remote broker",
+                foundSubInRemoteBrokerByTopicName(topicName));
+
+        sub2.close();
+        session.unsubscribe(subName2);
+
+        Thread.sleep(100);
+
+        assertFalse(foundSubInLocalBroker(subName2));
+
+        assertFalse("Durable subscription not unregistered on remote broker",
                 foundSubInRemoteBrokerByTopicName(topicName));
 
     }

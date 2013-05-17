@@ -214,6 +214,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         this.info = new ConsumerInfo(consumerId);
         this.info.setExclusive(this.session.connection.isExclusiveConsumer());
+        this.info.setClientId(this.session.connection.getClientID());
         this.info.setSubscriptionName(name);
         this.info.setPrefetchSize(prefetch);
         this.info.setCurrentPrefetchSize(prefetch);
