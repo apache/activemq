@@ -332,7 +332,7 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
     }
 
     protected void addMQTTConnector(String config) throws Exception {
-        mqttConnector= brokerService.addConnector(getProtocolScheme()+"://localhost:0" + config);
+        mqttConnector = brokerService.addConnector(getProtocolScheme()+"://localhost:0?trace=true&" + config);
     }
 
     protected void initializeConnection(MQTTClientProvider provider) throws Exception {

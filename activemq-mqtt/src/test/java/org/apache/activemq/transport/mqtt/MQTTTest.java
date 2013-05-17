@@ -51,7 +51,7 @@ public class MQTTTest extends AbstractMQTTTest {
 
     @Test(timeout=300000)
     public void testTurnOffInactivityMonitor()throws Exception{
-        addMQTTConnector("?transport.useInactivityMonitor=false");
+        addMQTTConnector("transport.useInactivityMonitor=false");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short)2);
@@ -72,7 +72,7 @@ public class MQTTTest extends AbstractMQTTTest {
     @Test(timeout=30000)
     public void testDefaultKeepAliveWhenClientSpecifiesZero() throws Exception {
         // default keep alive in milliseconds
-        addMQTTConnector("?transport.defaultKeepAlive=2000");
+        addMQTTConnector("transport.defaultKeepAlive=2000");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short)0);
@@ -121,11 +121,6 @@ public class MQTTTest extends AbstractMQTTTest {
     }
 
     @Override
-    protected void addMQTTConnector(String config) throws Exception {
-        mqttConnector = brokerService.addConnector(getProtocolScheme()+"://localhost:0" + config);
-    }
-
-    @Override
     protected MQTTClientProvider getMQTTClientProvider() {
         return new FuseMQQTTClientProvider();
     }
@@ -145,12 +140,12 @@ public class MQTTTest extends AbstractMQTTTest {
         return new Tracer(){
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("recv: "+frame);
+                LOG.info("Client Received:\n"+frame);
             }
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("send: " + frame);
+                LOG.info("Client Sent:\n" + frame);
             }
 
             @Override

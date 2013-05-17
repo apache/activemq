@@ -32,7 +32,7 @@ public class MQTTNioTest extends MQTTTest {
 
     @Test
     public void testPingOnMQTTNIO() throws Exception {
-        addMQTTConnector("?maxInactivityDuration=-1");
+        addMQTTConnector("maxInactivityDuration=-1");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short)2);
