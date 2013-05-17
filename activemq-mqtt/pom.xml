@@ -207,6 +207,10 @@
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
+            <property>
+              <name>javax.net.debug</name>
+              <value>all/</value>
+            </property>
             <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
                  while running mvn:test
                  Note: if you want to see log messages on the console window remove
