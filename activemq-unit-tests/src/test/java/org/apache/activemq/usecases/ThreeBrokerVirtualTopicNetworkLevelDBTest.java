@@ -23,10 +23,10 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.leveldb.LevelDBStore;
 
 
-public class ThreeBrokerVirtualTopicNetworkAMQPATest extends ThreeBrokerVirtualTopicNetworkTest {
+public class ThreeBrokerVirtualTopicNetworkLevelDBTest extends ThreeBrokerVirtualTopicNetworkTest {
     
      protected void configurePersistenceAdapter(BrokerService broker) throws IOException {
-        File dataFileDir = new File("target/test-amq-data/amq/" + broker.getBrokerName());
+        File dataFileDir = new File("target/test-data/leveldb/" + broker.getBrokerName());
         LevelDBStore adapter = new LevelDBStore();
         adapter.setDirectory(dataFileDir);
         broker.setPersistenceAdapter(adapter);
