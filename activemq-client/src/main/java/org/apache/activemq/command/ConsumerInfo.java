@@ -221,7 +221,7 @@ public class ConsumerInfo extends BaseCommand {
     /**
      * Used to identify the id of a client connection.
      *
-     * @openwire:property version=1
+     * @openwire:property version=10
      */
     public String getClientId() {
         return clientId;

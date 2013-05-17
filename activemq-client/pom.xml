@@ -272,9 +272,18 @@
               <tasks>
                 <echo>Running OpenWire Generator</echo>
                 <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath" />
-                <generate version="9" basedir="${basedir}" generateTests="false" />
+                <generate version="10" basedir="${basedir}" generateTests="false" />
               </tasks>
             </configuration>
+            <dependencies>
+              <dependency>
+                <groupId>com.sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.6.0</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
           </plugin>
         </plugins>
       </build>
