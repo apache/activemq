@@ -54,6 +54,11 @@
       <groupId>org.fusesource.mqtt-client</groupId>
       <artifactId>mqtt-client</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.fusesource.hawtdispatch</groupId>
+      <artifactId>hawtdispatch-transport</artifactId>
+      <version>${hawtdispatch-version}</version>
+    </dependency>
 
     <!-- =============================== -->
     <!-- Optional Dependencies           -->
@@ -201,20 +206,15 @@
           <forkMode>always</forkMode>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
+          <!-- Note: if you want to see log messages on the console window remove the following comment -->
           <redirectTestOutputToFile>false</redirectTestOutputToFile>
            <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
-            <property>
-              <name>javax.net.debug</name>
-              <value>all/</value>
-            </property>
             <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
                  while running mvn:test
-                 Note: if you want to see log messages on the console window remove
-                       "redirectTestOutputToFile" from the parent pom
             -->
             <!--
             <property>

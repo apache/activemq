@@ -47,6 +47,7 @@ public class MQTTSSLTest extends MQTTTest {
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
         mqtt.setConnectAttemptsMax(1);
+        mqtt.setReconnectAttemptsMax(0);
         mqtt.setTracer(createTracer());
         mqtt.setHost("ssl://localhost:"+mqttConnector.getConnectUri().getPort());
         SSLContext ctx = SSLContext.getInstance("TLS");

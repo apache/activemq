@@ -128,11 +128,10 @@ public class MQTTTest extends AbstractMQTTTest {
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
         mqtt.setConnectAttemptsMax(1);
+        mqtt.setReconnectAttemptsMax(0);
         mqtt.setTracer(createTracer());
         mqtt.setHost("localhost", mqttConnector.getConnectUri().getPort());
         // shut off connect retry
-        mqtt.setConnectAttemptsMax(0);
-        mqtt.setReconnectAttemptsMax(0);
         return mqtt;
     }
 
@@ -140,12 +139,12 @@ public class MQTTTest extends AbstractMQTTTest {
         return new Tracer(){
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("Client Received:\n"+frame);
+//                LOG.info("Client Received:\n"+frame);
             }
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("Client Sent:\n" + frame);
+//                LOG.info("Client Sent:\n" + frame);
             }
 
             @Override
