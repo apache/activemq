@@ -31,7 +31,14 @@ import scala.reflect.BeanProperty
 
 class PositionSync(val position:Long, count:Int) extends CountDownLatch(count)
 
-object MasterLevelDBStore extends Log
+object MasterLevelDBStore extends Log {
+
+  val SYNC_TO_DISK = 0x01
+  val SYNC_TO_REMOTE = 0x02
+  val SYNC_TO_REMOTE_MEMORY = 0x04 | SYNC_TO_REMOTE
+  val SYNC_TO_REMOTE_DISK = 0x08 | SYNC_TO_REMOTE
+
+}
 
 /**
  */
@@ -47,6 +54,29 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   @BeanProperty
   var replicas = 2
   def minSlaveAcks = replicas/2
+
+  var _syncTo="quorum_mem"
+  var syncToMask=SYNC_TO_REMOTE_MEMORY
+
+  @BeanProperty
+  def syncTo = _syncTo
+  @BeanProperty
+  def syncTo_=(value:String) {
+    _syncTo = value
+    syncToMask = 0
+    for( v <- value.split(",").map(_.trim.toLowerCase) ) {
+      v match {
+        case "" =>
+        case "local_mem" =>
+        case "local_disk" => syncToMask |= SYNC_TO_DISK
+        case "remote_mem" => syncToMask |= SYNC_TO_REMOTE_MEMORY
+        case "remote_disk" => syncToMask |= SYNC_TO_REMOTE_DISK
+        case "quorum_mem" => syncToMask |= SYNC_TO_REMOTE_MEMORY
+        case "quorum_disk" => syncToMask |= SYNC_TO_REMOTE_DISK | SYNC_TO_DISK
+        case x => warn("Unknown syncTo value: [%s]", x)
+      }
+    }
+  }
 
   val slaves = new ConcurrentHashMap[String,SlaveState]()
 
@@ -316,6 +346,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       value.file = position;
       value.offset = offset;
       value.length = length
+      value.sync = (syncToMask & SYNC_TO_REMOTE_DISK)!=0
       val frame1 = ReplicationFrame(WAL_ACTION, JsonCodec.encode(value))
       val frame2 = FileTransferFrame(file, offset, length)
       for( slave <- slaves.values() ) {

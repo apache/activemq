@@ -77,6 +77,8 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   @BeanProperty
   var replicas = 2
+  @BeanProperty
+  var sync="quorum_mem"
 
   def clusterSizeQuorum = (replicas/2) + 1
 
@@ -95,8 +97,6 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var logSize: Long = 1024 * 1024 * 100
   @BeanProperty
   var indexFactory: String = "org.fusesource.leveldbjni.JniDBFactory, org.iq80.leveldb.impl.Iq80DBFactory"
-  @BeanProperty
-  var sync: Boolean = true
   @BeanProperty
   var verifyChecksums: Boolean = false
   @BeanProperty
@@ -262,6 +262,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     configure(master)
     master.replicas = replicas
     master.bind = bind
+    master.syncTo = sync
     master
   }
 
@@ -281,7 +282,6 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   def configure(store: ReplicatedLevelDBStoreTrait) {
     store.directory = directory
     store.indexFactory = indexFactory
-    store.sync = sync
     store.verifyChecksums = verifyChecksums
     store.indexMaxOpenFiles = indexMaxOpenFiles
     store.indexBlockRestartInterval = indexBlockRestartInterval

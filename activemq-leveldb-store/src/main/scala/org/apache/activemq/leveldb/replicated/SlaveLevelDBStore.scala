@@ -161,6 +161,9 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
             val file = client.log.next_log(value.file)
             val buffer = map(file, value.offset, value.length, false)
             session.codec.readData(buffer, ^{
+              if( value.sync ) {
+                buffer.force()
+              }
               unmap(buffer)
 //              info("Slave WAL update: %s, (offset: %d, length: %d), sending ack:%s", file, value.offset, value.length, caughtUp)
               wal_append_offset = value.offset+value.length

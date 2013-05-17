@@ -40,4 +40,7 @@ public class LogWrite {
     @XmlAttribute(name="length")
     public long length;
 
+    @XmlAttribute(name="sync")
+    public boolean sync=false;
+
 }

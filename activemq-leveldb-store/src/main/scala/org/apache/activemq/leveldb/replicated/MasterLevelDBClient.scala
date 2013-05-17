@@ -138,8 +138,14 @@ class MasterLevelDBClient(val store:MasterLevelDBStore) extends LevelDBClient(st
         }
 
         override def force = {
-          flush
-          store.wal_sync_to(position+flushed_offset.get())
+          import MasterLevelDBStore._
+          if( (store.syncToMask & SYNC_TO_DISK) != 0) {
+            super.force
+          }
+          if( (store.syncToMask & SYNC_TO_REMOTE) != 0) {
+            flush
+            store.wal_sync_to(position+flushed_offset.get())
+          }
         }
 
       }
