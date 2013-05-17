@@ -255,6 +255,14 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         }
       }
     }
+
+    // Remove topics that don't have subs..
+    for( (name, topic) <- topics.toArray ) {
+      if( topic.subscription_count == 0 ) {
+        removeTopicMessageStore(name)
+      }
+    }
+
     debug("started")
   }
 
@@ -752,6 +760,10 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): Future[AnyRef] = {
       super.asyncAddQueueMessage(context, message, false)
+    }
+
+    def subscription_count = subscriptions.synchronized {
+      subscriptions.size
     }
 
     def gcPosition:Option[(Long, Long)] = {
