@@ -58,7 +58,7 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
     ActiveMQConnection consumerConnection = null, producerConnection = null;
     Session producerSession;
     MessageProducer producer;
-    final int minPercentUsageForStore = 10;
+    final int minPercentUsageForStore = 3;
     String data;
 
     private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
@@ -80,12 +80,13 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
 
     @Test(timeout = 120000)
     public void testSize() throws Exception {
-        CountDownLatch redeliveryConsumerLatch = new CountDownLatch(15000 -1);
+        int messages = 1000;
+        CountDownLatch redeliveryConsumerLatch = new CountDownLatch((messages*3) -1);
         openConsumer(redeliveryConsumerLatch);
 
         assertEquals(0, broker.getAdminView().getStorePercentUsage());
 
-        for (int i = 0; i < 5000; i++) {
+        for (int i = 0; i < messages; i++) {
             sendMessage(false);
         }
 
@@ -93,13 +94,14 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
 
         broker.getSystemUsage().getStoreUsage().isFull();
         LOG.info("store percent usage: "+brokerView.getStorePercentUsage());
-        assertTrue("some store in use", broker.getAdminView().getStorePercentUsage() > minPercentUsageForStore);
+        int storePercentUsage = broker.getAdminView().getStorePercentUsage();
+        assertTrue("some store in use", storePercentUsage > minPercentUsageForStore);
 
         assertTrue("redelivery consumer got all it needs", redeliveryConsumerLatch.await(60, TimeUnit.SECONDS));
         closeConsumer();
 
         // consume from DLQ
-        final CountDownLatch received = new CountDownLatch(5000 -1);
+        final CountDownLatch received = new CountDownLatch(messages -1);
         consumerConnection = (ActiveMQConnection) createConnection();
         Session dlqSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer dlqConsumer = dlqSession.createConsumer(new ActiveMQQueue("ActiveMQ.DLQ"));
