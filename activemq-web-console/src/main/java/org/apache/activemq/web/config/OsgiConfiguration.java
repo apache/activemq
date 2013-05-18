@@ -22,7 +22,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
-import sun.util.LocaleServiceProviderPool;
 
 import javax.jms.ConnectionFactory;
 import javax.management.remote.JMXServiceURL;
