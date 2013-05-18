@@ -35,8 +35,7 @@ import javax.management.openmbean.TabularData;
 
 import java.util.concurrent.TimeUnit;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
