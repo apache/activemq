@@ -184,6 +184,8 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   class Session(transport:Transport, on_login: (Session)=>Unit) extends TransportHandler(transport) {
 
+    val response_callbacks = new util.LinkedList[(ReplicationFrame)=>Unit]()
+
     override def onTransportFailure(error: IOException) {
       if( isStarted ) {
         warn("Unexpected session error: "+error)
@@ -237,7 +239,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       response_callbacks.addLast(cb)
       send(action, body)
     }
-    val response_callbacks = new util.LinkedList[(ReplicationFrame)=>Unit]()
+
     def response_handler: (AnyRef)=>Unit = (command)=> {
       command match {
         case command:ReplicationFrame =>
