@@ -207,7 +207,7 @@
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
           <!-- Note: if you want to see log messages on the console window remove the following comment -->
-          <redirectTestOutputToFile>false</redirectTestOutputToFile>
+          <!-- <redirectTestOutputToFile>false</redirectTestOutputToFile> -->
            <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
