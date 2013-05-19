@@ -16,19 +16,6 @@
  */
 package org.apache.activemq.usecases;
 
-import static org.junit.Assert.assertEquals;
-
-import java.net.URI;
-import java.util.Enumeration;
-
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.QueueBrowser;
-import javax.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -38,6 +25,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Enumeration;
+
+import static org.junit.Assert.assertEquals;
 
 public class QueueBrowsingTest {
 
@@ -50,13 +44,17 @@ public class QueueBrowsingTest {
 
     @Before
     public void startBroker() throws Exception {
-        broker = new BrokerService();
+        broker = createBroker();
         TransportConnector connector = broker.addConnector("tcp://0.0.0.0:0");
         broker.deleteAllMessages();
         broker.start();
         broker.waitUntilStarted();
         connectUri = connector.getConnectUri();
         factory = new ActiveMQConnectionFactory(connectUri);
+    }
+
+    public BrokerService createBroker() throws IOException {
+        return new BrokerService();
     }
 
     @After
