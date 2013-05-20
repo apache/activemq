@@ -1431,6 +1431,32 @@
   </reporting>
 
   <profiles>
+    
+    <!-- If you enable this profile, the console message will have a timestamp -->
+    <profile>
+      <id>consolets</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.fusesource.mvnplugins</groupId>
+            <artifactId>maven-consolets-plugin</artifactId>
+            <version>1.30</version>
+            <configuration>
+              <enabled>true</enabled>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>validate</phase>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
     <profile>
       <id>unstable</id>
       <modules>
