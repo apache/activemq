@@ -27,6 +27,9 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +39,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import static org.apache.activemq.leveldb.test.ReplicationTestSupport.*;
+import static org.junit.Assert.*;
 
 /**
  */
-public class ElectingLevelDBStoreTest extends TestCase {
+public class ElectingLevelDBStoreTest {
     protected static final Logger LOG = LoggerFactory.getLogger(ElectingLevelDBStoreTest.class);
 
     NIOServerCnxnFactory connector;
@@ -49,8 +53,8 @@ public class ElectingLevelDBStoreTest extends TestCase {
     }
 
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         FileSupport.toRichFile(data_dir()).recursiveDelete();
 
         System.out.println("Starting ZooKeeper");
@@ -63,14 +67,15 @@ public class ElectingLevelDBStoreTest extends TestCase {
         System.out.println("ZooKeeper Started");
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if( connector!=null ) {
           connector.shutdown();
           connector = null;
         }
     }
 
+    @Test(timeout = 1000*60*60)
     public void testElection() throws Exception {
 
         ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();

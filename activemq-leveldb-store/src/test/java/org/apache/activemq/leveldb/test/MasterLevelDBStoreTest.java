@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.leveldb.test;
 
-import junit.framework.TestCase;
 import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
+import org.junit.Test;
 
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -26,11 +26,15 @@ import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.junit.Assert.*;
+
+
 /**
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
  */
-public class MasterLevelDBStoreTest extends TestCase {
+public class MasterLevelDBStoreTest {
 
+    @Test(timeout = 1000*60*60)
     public void testStoppingStoreStopsTransport() throws Exception {
         final MasterLevelDBStore store = new MasterLevelDBStore();
         store.setReplicas(0);

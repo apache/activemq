@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.leveldb.test;
 
-import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
@@ -24,6 +23,7 @@ import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
 import org.apache.activemq.leveldb.replicated.SlaveLevelDBStore;
 import org.apache.activemq.leveldb.util.FileSupport;
 import org.apache.activemq.store.MessageStore;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +31,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
-import static org.apache.activemq.leveldb.test.ReplicationTestSupport.*;
+
+import static org.apache.activemq.leveldb.test.ReplicationTestSupport.addMessage;
+import static org.apache.activemq.leveldb.test.ReplicationTestSupport.getMessages;
+import static org.junit.Assert.*;
 
 /**
  */
-public class ReplicatedLevelDBStoreTest extends TestCase {
+public class ReplicatedLevelDBStoreTest {
     protected static final Logger LOG = LoggerFactory.getLogger(ReplicatedLevelDBStoreTest.class);
 
+    @Test(timeout = 1000*60*60)
     public void testMinReplicaEnforced() throws Exception {
 
         File masterDir = new File("target/activemq-data/leveldb-node1");
@@ -99,6 +103,7 @@ public class ReplicatedLevelDBStoreTest extends TestCase {
     }
 
 
+    @Test(timeout = 1000*60*60)
     public void testReplication() throws Exception {
 
         LinkedList<File> directories = new LinkedList<File>();
