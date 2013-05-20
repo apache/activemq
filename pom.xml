@@ -1455,6 +1455,14 @@
           </plugin>
         </plugins>
       </build>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>com.fusesource.m2</id>
+          <url>http://repo.fusesource.com/nexus/content/groups/public/</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </pluginRepository>
+      </pluginRepositories>
     </profile>
     
     <profile>
