@@ -325,7 +325,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   var position_sync = new PositionSync(0L, 0)
 
   def wal_sync_to(position:Long):Unit = {
-    if( minSlaveAcks<1 ) {
+    if( minSlaveAcks<1 || (syncToMask & SYNC_TO_REMOTE)==0) {
       return
     }
     val position_sync = new PositionSync(position, minSlaveAcks)
