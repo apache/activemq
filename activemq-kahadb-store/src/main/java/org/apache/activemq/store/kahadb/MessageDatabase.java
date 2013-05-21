@@ -594,13 +594,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
             });
 
-            // rollback any recovered inflight local transactions
+            // rollback any recovered inflight local transactions, and discard any inflight XA transactions.
             Set<TransactionId> toRollback = new HashSet<TransactionId>();
+            Set<TransactionId> toDiscard = new HashSet<TransactionId>();
             synchronized (inflightTransactions) {
                 for (Iterator<TransactionId> it = inflightTransactions.keySet().iterator(); it.hasNext(); ) {
                     TransactionId id = it.next();
                     if (id.isLocalTransaction()) {
                         toRollback.add(id);
+                    } else {
+                        toDiscard.add(id);
                     }
                 }
                 for (TransactionId tx: toRollback) {
@@ -608,6 +611,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         LOG.debug("rolling back recovered indoubt local transaction " + tx);
                     }
                     store(new KahaRollbackCommand().setTransactionInfo(TransactionIdConversion.convertToLocal(tx)), false, null, null);
+                }
+                for (TransactionId tx: toDiscard) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("discarding recovered in-flight XA transaction " + tx);
+                    }
+                    inflightTransactions.remove(tx);
                 }
             }
 
