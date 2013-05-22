@@ -540,7 +540,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         LOG.info("expired=" + view.getExpiredCount() + " " +  view.getEnqueueCount());
         assertEquals(10, view.getExpiredCount());
-        assertEquals(0, view.getEnqueueCount());
+        assertEquals(10, view.getEnqueueCount());
 
         final AtomicLong received = new AtomicLong();
         sub = session.createDurableSubscriber(destination, "mySub");
