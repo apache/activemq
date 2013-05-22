@@ -16,22 +16,31 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Enumeration;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Enumeration;
-
-import static org.junit.Assert.assertEquals;
 
 public class QueueBrowsingTest {
 
@@ -40,7 +49,7 @@ public class QueueBrowsingTest {
     private BrokerService broker;
     private URI connectUri;
     private ActiveMQConnectionFactory factory;
-
+    private final int maxPageSize = 100;
 
     @Before
     public void startBroker() throws Exception {
@@ -49,6 +58,12 @@ public class QueueBrowsingTest {
         broker.deleteAllMessages();
         broker.start();
         broker.waitUntilStarted();
+
+        PolicyEntry policy = new PolicyEntry();
+        policy.setMaxPageSize(maxPageSize);
+        broker.setDestinationPolicy(new PolicyMap());
+        broker.getDestinationPolicy().setDefaultEntry(policy);
+
         connectUri = connector.getConnectUri();
         factory = new ActiveMQConnectionFactory(connectUri);
     }
@@ -194,6 +209,6 @@ public class QueueBrowsingTest {
         }
 
         browser.close();
-        assertEquals(3, received);
+        assertEquals(maxPageSize + 2, received);
     }
 }
