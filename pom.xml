@@ -102,6 +102,7 @@
     <saxon-bundle-version>9.4.0.1_2</saxon-bundle-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
     <scala-version>2.9.1</scala-version>
+    <scala-bundle-version>2.9.1_3</scala-bundle-version>
     <scalatest-version>1.8</scalatest-version>
     <slf4j-version>1.6.6</slf4j-version>
     <snappy-bundle-version>1.0.4.1_1</snappy-bundle-version>
@@ -119,7 +120,7 @@
     <xstream-version>1.4.4</xstream-version>
     <xbean-version>3.13</xbean-version>
     <xerces-version>2.9.1</xerces-version>
-    <zookeeper-version>3.3.5</zookeeper-version>
+    <zookeeper-version>3.4.5</zookeeper-version>
 
     <pax-exam-version>2.6.0</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
