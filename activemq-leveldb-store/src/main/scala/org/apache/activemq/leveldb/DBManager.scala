@@ -667,17 +667,24 @@ class DBManager(val parent:LevelDBStore) {
   }
   
   def cursorMessages(key:Long, listener:MessageRecoveryListener, startPos:Long) = {
-    var nextPos = startPos;
-    client.queueCursor(key, nextPos) { msg =>
+    var lastmsgid:MessageId = null
+    client.queueCursor(key, startPos) { msg =>
       if( listener.hasSpace ) {
-        listener.recoverMessage(msg)
-        nextPos += 1
-        true
+        if( listener.recoverMessage(msg) ) {
+          lastmsgid = msg.getMessageId
+          true
+        } else {
+          false
+        }
       } else {
         false
       }
     }
-    nextPos
+    if( lastmsgid==null ) {
+      startPos
+    } else {
+      lastmsgid.getEntryLocator.asInstanceOf[EntryLocator].seq+1
+    }
   }
 
   def getXAActions(key:Long) = {

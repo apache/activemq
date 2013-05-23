@@ -678,24 +678,26 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
 
     def recover(listener: MessageRecoveryListener): Unit = {
-      cursorPosition = db.cursorMessages(key, preparedExcluding(listener), 0)
+      cursorPosition = db.cursorMessages(key, PreparedExcluding(listener), 0)
     }
 
-    def preparedExcluding(listener: MessageRecoveryListener) = new MessageRecoveryListener {
+    case class PreparedExcluding(listener: MessageRecoveryListener) extends MessageRecoveryListener {
       def isDuplicate(ref: MessageId) = listener.isDuplicate(ref)
       def hasSpace = listener.hasSpace
       def recoverMessageReference(ref: MessageId) = {
         if (!preparedAcks.contains(ref)) {
           listener.recoverMessageReference(ref)
+        } else {
+          true
         }
-        true
       }
 
       def recoverMessage(message: Message) = {
         if (!preparedAcks.contains(message.getMessageId)) {
           listener.recoverMessage(message)
+        } else {
+          true
         }
-        true
       }
     }
 
@@ -704,7 +706,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
-      cursorPosition = db.cursorMessages(key, preparedExcluding(LimitingRecoveryListener(maxReturned, listener)), cursorPosition)
+      val excluding = PreparedExcluding(LimitingRecoveryListener(maxReturned, listener))
+      cursorPosition = db.cursorMessages(key, excluding, cursorPosition)
     }
 
     override def setBatch(id: MessageId): Unit = {
@@ -714,7 +717,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   }
 
   case class LimitingRecoveryListener(max: Int, listener: MessageRecoveryListener) extends MessageRecoveryListener {
-    private var recovered: Int = 0
+    var recovered: Int = 0
     def hasSpace = recovered < max
     def recoverMessage(message: Message) = {
       recovered += 1;
@@ -849,7 +852,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     
     def recoverNextMessages(clientId: String, subscriptionName: String, maxReturned: Int, listener: MessageRecoveryListener): Unit = {
       lookup(clientId, subscriptionName).foreach { sub =>
-        sub.cursorPosition = db.cursorMessages(key,  preparedExcluding(LimitingRecoveryListener(maxReturned, listener)), sub.cursorPosition.max(sub.lastAckPosition+1))
+        sub.cursorPosition = db.cursorMessages(key,  PreparedExcluding(LimitingRecoveryListener(maxReturned, listener)), sub.cursorPosition.max(sub.lastAckPosition+1))
       }
     }
     
