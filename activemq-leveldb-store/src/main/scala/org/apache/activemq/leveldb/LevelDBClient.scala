@@ -491,6 +491,10 @@ class LevelDBClient(store: LevelDBStore) {
 
   var writeExecutor:ExecutorService = _
 
+  def writeExecutorExec(func: =>Unit ) = writeExecutor {
+    func
+  }
+
   def storeTrace(ascii:String, force:Boolean=false) = {
     val time = new SimpleDateFormat("dd/MMM/yyyy:HH:mm::ss Z").format(new Date)
     log.appender { appender =>
