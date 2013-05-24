@@ -106,9 +106,9 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
         new ConcurrentHashMap<ActiveMQDestination, AuthorizationEntry>();
 
     public SimpleCachedLDAPAuthorizationMap() {
-        // Allow for only a couple outstanding update requests, they can be slow so we
+        // Allow for only a couple outstanding update request, they can be slow so we
         // don't want a bunch to pile up for no reason.
-        updaterService = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
+        updaterService = new ThreadPoolExecutor(0, 1, 60, TimeUnit.SECONDS,
             new LinkedBlockingQueue<Runnable>(2),
             new ThreadFactory() {
 
