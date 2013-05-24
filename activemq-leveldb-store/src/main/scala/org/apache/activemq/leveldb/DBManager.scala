@@ -331,7 +331,6 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       val s = size
       if( manager.asyncCapacityRemaining.addAndGet(-s) > 0 ) {
         asyncCapacityUsed = s
-        countDownFuture.set(null)
         manager.parent.blocking_executor.execute(^{
           complete_listeners.foreach(_())
         })
@@ -353,11 +352,11 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         asyncCapacityUsed = 0
       } else {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
-        countDownFuture.set(null)
         manager.parent.blocking_executor.execute(^{
           complete_listeners.foreach(_())
         })
       }
+      countDownFuture.set(null)
 
       for( (id, action) <- actions ) {
         if( !action.enqueues.isEmpty ) {

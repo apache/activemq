@@ -108,7 +108,4 @@ public interface LevelDBStoreViewMBean {
     @MBeanInfo("Compacts disk usage")
     void compact();
 
-    @MBeanInfo("Are delayed index updates occurring?")
-    boolean getDelayedIndexUpdates();
-
 }

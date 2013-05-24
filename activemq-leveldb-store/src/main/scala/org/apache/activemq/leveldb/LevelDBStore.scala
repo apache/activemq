@@ -98,7 +98,6 @@ class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
   def getParanoidChecks = paranoidChecks
   def getSync = sync
   def getVerifyChecksums = verifyChecksums
-  def getDelayedIndexUpdates = delayedIndexUpdates
 
   def getUowClosedCounter = db.uowClosedCounter
   def getUowCanceledCounter = db.uowCanceledCounter
@@ -184,7 +183,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   val topics = collection.mutable.HashMap[ActiveMQTopic, LevelDBStore#LevelDBTopicMessageStore]()
   val topicsById = collection.mutable.HashMap[Long, LevelDBStore#LevelDBTopicMessageStore]()
   val plists = collection.mutable.HashMap[String, LevelDBStore#LevelDBPList]()
-  var delayedIndexUpdates = false
 
   def init() = {}
 
@@ -708,35 +706,9 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
-      var found = false
-      var counter = 0;
-      while( !found ) {
         val limiting = LimitingRecoveryListener(maxReturned, listener)
         val excluding = PreparedExcluding(limiting)
         cursorPosition = db.cursorMessages(key, excluding, cursorPosition)
-        if( limiting.recovered > 0 ) {
-          if( !delayedIndexUpdates && counter>0 ) {
-            info("This machine seems to have delayed index updates.")
-            delayedIndexUpdates = true
-          }
-          found = true
-        } else {
-          // Seems like on some systems it takes a while for leveldb index updates
-          // to become visible for read.  Need to figure out why this is, but until
-          // then, lets loop until we can read it.
-          if( counter > 10 ) {
-            found = true
-          } else {
-            counter+=1
-            // lets try to sync up /w the write thread..
-            val t = new CountDownLatch(1)
-            client.writeExecutorExec {
-              t.countDown()
-            }
-            t.await()
-          }
-        }
-      }
     }
 
     override def setBatch(id: MessageId): Unit = {
