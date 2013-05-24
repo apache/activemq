@@ -112,8 +112,13 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         reader.close();
 
-        failedACLs = map.getReadACLs(new ActiveMQQueue("TEST.FOO"));
-        assertEquals("set size: " + failedACLs, 0, failedACLs.size());
+        assertTrue("did not get expected size. ", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return map.getReadACLs(new ActiveMQQueue("TEST.FOO")).size() == 0;
+            }
+        }));
 
         assertNull(map.getTempDestinationReadACLs());
         assertNull(map.getTempDestinationWriteACLs());
@@ -335,10 +340,14 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
         }
 
         reader.close();
-        Thread.sleep(2000);
 
-        failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
-        assertEquals("set size: " + failedACLs, 2, failedACLs.size());
+        assertTrue("did not get expected size. ", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return map.getReadACLs(new ActiveMQQueue("FAILED")).size() == 2;
+            }
+        }));
     }
 
     protected SimpleCachedLDAPAuthorizationMap createMap() {

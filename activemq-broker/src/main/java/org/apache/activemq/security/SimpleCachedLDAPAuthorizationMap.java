@@ -16,62 +16,80 @@
  */
 package org.apache.activemq.security;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.naming.Binding;
+import javax.naming.Context;
+import javax.naming.InvalidNameException;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.event.EventDirContext;
+import javax.naming.event.NamespaceChangeListener;
+import javax.naming.event.NamingEvent;
+import javax.naming.event.NamingExceptionEvent;
+import javax.naming.event.ObjectChangeListener;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.naming.*;
-import javax.naming.directory.*;
-import javax.naming.event.*;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
-import java.util.*;
-
-/**
- */
-public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
+public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleCachedLDAPAuthorizationMap.class);
 
     // Configuration Options
-    private String initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
+    private final String initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
     private String connectionURL = "ldap://localhost:1024";
     private String connectionUsername = "uid=admin,ou=system";
     private String connectionPassword = "secret";
     private String connectionProtocol = "s";
     private String authentication = "simple";
 
-    
     private int queuePrefixLength = 4;
     private int topicPrefixLength = 4;
     private int tempPrefixLength = 4;
-    
+
     private String queueSearchBase = "ou=Queue,ou=Destination,ou=ActiveMQ,ou=system";
     private String topicSearchBase = "ou=Topic,ou=Destination,ou=ActiveMQ,ou=system";
     private String tempSearchBase = "ou=Temp,ou=Destination,ou=ActiveMQ,ou=system";
-    
-    
+
     private String permissionGroupMemberAttribute = "member";
-    
+
     private String adminPermissionGroupSearchFilter = "(cn=Admin)";
     private String readPermissionGroupSearchFilter = "(cn=Read)";
     private String writePermissionGroupSearchFilter = "(cn=Write)";
-    
+
     private boolean legacyGroupMapping = true;
     private String groupObjectClass = "groupOfNames";
     private String userObjectClass = "person";
     private String groupNameAttribute = "cn";
     private String userNameAttribute = "uid";
 
-    
     private int refreshInterval = -1;
     private boolean refreshDisabled = false;
-    
+
     // Internal State
     private long lastUpdated;
 
@@ -79,9 +97,28 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
 
     protected DirContext context;
     private EventDirContext eventContext;
-    
-    protected HashMap<ActiveMQDestination, AuthorizationEntry> entries = 
-            new HashMap<ActiveMQDestination, AuthorizationEntry>();
+
+    private final AtomicReference<DefaultAuthorizationMap> map =
+        new AtomicReference<DefaultAuthorizationMap>(new DefaultAuthorizationMap());
+    private final ThreadPoolExecutor updaterService;
+
+    protected Map<ActiveMQDestination, AuthorizationEntry> entries =
+        new ConcurrentHashMap<ActiveMQDestination, AuthorizationEntry>();
+
+    public SimpleCachedLDAPAuthorizationMap() {
+        // Allow for only a couple outstanding update requests, they can be slow so we
+        // don't want a bunch to pile up for no reason.
+        updaterService = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<Runnable>(2),
+            new ThreadFactory() {
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "SimpleCachedLDAPAuthorizationMap update thread");
+                }
+            });
+        updaterService.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+    }
 
     protected DirContext createContext() throws NamingException {
         Hashtable<String, String> env = new Hashtable<String, String>();
@@ -104,19 +141,20 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
             try {
                 context.getAttributes("");
                 alive = true;
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         return alive;
     }
 
     /**
-     * Returns the existing open context or creates a new one and registers listeners for
-     * push notifications if such an update style is enabled.  This implementation should not
-     * be invoked concurrently.
+     * Returns the existing open context or creates a new one and registers listeners for push notifications if such an
+     * update style is enabled. This implementation should not be invoked concurrently.
      *
      * @return the current context
      *
-     * @throws NamingException if there is an error setting things up
+     * @throws NamingException
+     *             if there is an error setting things up
      */
     protected DirContext open() throws NamingException {
         if (isContextAlive()) {
@@ -126,39 +164,39 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
         try {
             context = createContext();
             if (refreshInterval == -1 && !refreshDisabled) {
-                eventContext = ((EventDirContext)context.lookup(""));
-                
+                eventContext = ((EventDirContext) context.lookup(""));
+
                 final SearchControls constraints = new SearchControls();
                 constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
                 // Listeners for Queue policy //
-                
+
                 // Listeners for each type of permission
                 for (PermissionType permissionType : PermissionType.values()) {
                     eventContext.addNamingListener(queueSearchBase, getFilterForPermissionType(permissionType), constraints,
-                            this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.QUEUE, permissionType));
+                        this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.QUEUE, permissionType));
                 }
                 // Listener for changes to the destination pattern entry itself and not a permission entry.
-                eventContext.addNamingListener(queueSearchBase, "cn=*", new SearchControls(),
-                        this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.QUEUE, null));
-                
+                eventContext.addNamingListener(queueSearchBase, "cn=*", new SearchControls(), this.new CachedLDAPAuthorizationMapNamespaceChangeListener(
+                    DestinationType.QUEUE, null));
+
                 // Listeners for Topic policy //
-                
+
                 // Listeners for each type of permission
                 for (PermissionType permissionType : PermissionType.values()) {
                     eventContext.addNamingListener(topicSearchBase, getFilterForPermissionType(permissionType), constraints,
-                            this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.TOPIC, permissionType));
+                        this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.TOPIC, permissionType));
                 }
                 // Listener for changes to the destination pattern entry itself and not a permission entry.
-                eventContext.addNamingListener(topicSearchBase, "cn=*", new SearchControls(),
-                        this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.TOPIC, null));
-                
+                eventContext.addNamingListener(topicSearchBase, "cn=*", new SearchControls(), this.new CachedLDAPAuthorizationMapNamespaceChangeListener(
+                    DestinationType.TOPIC, null));
+
                 // Listeners for Temp policy //
-                
+
                 // Listeners for each type of permission
                 for (PermissionType permissionType : PermissionType.values()) {
                     eventContext.addNamingListener(tempSearchBase, getFilterForPermissionType(permissionType), constraints,
-                            this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.TEMP, permissionType));
+                        this.new CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType.TEMP, permissionType));
                 }
 
             }
@@ -168,110 +206,121 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
         }
 
         return context;
-    } 
+    }
 
     /**
-     * Queries the directory and initializes the policy based on the data in the directory.
-     * This implementation should not be invoked concurrently.
-     * 
-     * @throws Exception if there is an unrecoverable error processing the directory contents
+     * Queries the directory and initializes the policy based on the data in the directory. This implementation should
+     * not be invoked concurrently.
+     *
+     * @throws Exception
+     *             if there is an unrecoverable error processing the directory contents
      */
     @SuppressWarnings("rawtypes")
     protected void query() throws Exception {
         DirContext currentContext = open();
-    
+
         final SearchControls constraints = new SearchControls();
         constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
-       
+
+        DefaultAuthorizationMap newMap = new DefaultAuthorizationMap();
         for (PermissionType permissionType : PermissionType.values()) {
             try {
-                processQueryResults(
-                        currentContext.search(queueSearchBase, getFilterForPermissionType(permissionType), constraints),
-                        DestinationType.QUEUE, permissionType);
+                processQueryResults(newMap,
+                    currentContext.search(queueSearchBase, getFilterForPermissionType(permissionType),
+                    constraints), DestinationType.QUEUE, permissionType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!.  Error processing policy under '" + queueSearchBase + "' with filter '" 
-                        + getFilterForPermissionType(permissionType) + "'", e);
+                LOG.error("Policy not applied!.  Error processing policy under '" + queueSearchBase +
+                          "' with filter '" + getFilterForPermissionType(permissionType) + "'", e);
             }
         }
-        
+
         for (PermissionType permissionType : PermissionType.values()) {
             try {
-                processQueryResults(
-                        currentContext.search(topicSearchBase, getFilterForPermissionType(permissionType), constraints),
-                        DestinationType.TOPIC, permissionType);
+                processQueryResults(newMap,
+                    currentContext.search(topicSearchBase, getFilterForPermissionType(permissionType),
+                    constraints), DestinationType.TOPIC, permissionType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!.  Error processing policy under '" + topicSearchBase + "' with filter '" 
-                        + getFilterForPermissionType(permissionType) + "'", e);
+                LOG.error("Policy not applied!.  Error processing policy under '" + topicSearchBase +
+                          "' with filter '" + getFilterForPermissionType(permissionType) + "'", e);
             }
         }
-        
+
         for (PermissionType permissionType : PermissionType.values()) {
             try {
-                processQueryResults(
-                        currentContext.search(tempSearchBase, getFilterForPermissionType(permissionType), constraints),
-                        DestinationType.TEMP, permissionType);
+                processQueryResults(newMap,
+                    currentContext.search(tempSearchBase, getFilterForPermissionType(permissionType),
+                    constraints), DestinationType.TEMP, permissionType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!.  Error processing policy under '" + tempSearchBase + "' with filter '" 
-                        + getFilterForPermissionType(permissionType) + "'", e);
+                LOG.error("Policy not applied!.  Error processing policy under '" + tempSearchBase +
+                          "' with filter '" + getFilterForPermissionType(permissionType) + "'", e);
             }
         }
-        
-        setEntries(new ArrayList<DestinationMapEntry>(entries.values()));
+
+        // Create and swap in the new instance with updated LDAP data.
+        newMap.setAuthorizationEntries(new ArrayList<DestinationMapEntry>(entries.values()));
+        this.map.set(newMap);
+
         updated();
     }
-    
+
     /**
-     * Processes results from a directory query in the context of a given destination type and permission type.
-     * This implementation should not be invoked concurrently.
+     * Processes results from a directory query in the context of a given destination type and permission type. This
+     * implementation should not be invoked concurrently.
      *
-     * @param results the results to process
-     * @param destinationType the type of the destination for which the directory results apply
-     * @param permissionType the type of the permission for which the directory results apply
+     * @param results
+     *            the results to process
+     * @param destinationType
+     *            the type of the destination for which the directory results apply
+     * @param permissionType
+     *            the type of the permission for which the directory results apply
      *
-     * @throws Exception if there is an error processing the results
+     * @throws Exception
+     *             if there is an error processing the results
      */
-    protected void processQueryResults(NamingEnumeration<SearchResult> results,
-            DestinationType destinationType, PermissionType permissionType) throws Exception {
-        
+    protected void processQueryResults(DefaultAuthorizationMap map, NamingEnumeration<SearchResult> results, DestinationType destinationType, PermissionType permissionType)
+        throws Exception {
+
         while (results.hasMore()) {
             SearchResult result = results.next();
             AuthorizationEntry entry = null;
-            
+
             try {
-                entry = getEntry(new LdapName(result.getNameInNamespace()), destinationType);
+                entry = getEntry(map, new LdapName(result.getNameInNamespace()), destinationType);
             } catch (Exception e) {
-                LOG.error("Policy not applied!  Error parsing authorization policy entry under "
-                        + result.getNameInNamespace(), e);
+                LOG.error("Policy not applied!  Error parsing authorization policy entry under " + result.getNameInNamespace(), e);
                 continue;
             }
-                
+
             applyACL(entry, result, permissionType);
         }
     }
 
     /**
-     * Marks the time at which the authorization state was last refreshed.  Relevant for synchronous policy updates.
-     * This implementation should not be invoked concurrently.
+     * Marks the time at which the authorization state was last refreshed. Relevant for synchronous
+     * policy updates. This implementation should not be invoked concurrently.
      */
     protected void updated() {
         lastUpdated = System.currentTimeMillis();
     }
 
     /**
-     * Retrieves or creates the {@link AuthorizationEntry} that corresponds to
-     * the DN in {@code dn}.  This implementation should not be invoked concurrently.
-     * 
+     * Retrieves or creates the {@link AuthorizationEntry} that corresponds to the DN in {@code dn}. This implementation
+     * should not be invoked concurrently.
+     *
+     * @param map
+     *            the DefaultAuthorizationMap to operate on.
      * @param dn
      *            the DN representing the policy entry in the directory
-     * @param destinationType the type of the destination to get/create the entry for
-     * 
+     * @param destinationType
+     *            the type of the destination to get/create the entry for
+     *
      * @return the corresponding authorization entry for the DN
-     * 
+     *
      * @throws IllegalArgumentException
      *             if destination type is not one of {@link DestinationType#QUEUE}, {@link DestinationType#TOPIC},
      *             {@link DestinationType#TEMP} or if the policy entry DN is malformed
      */
-    protected AuthorizationEntry getEntry(LdapName dn, DestinationType destinationType) {
+    protected AuthorizationEntry getEntry(DefaultAuthorizationMap map, LdapName dn, DestinationType destinationType) {
         AuthorizationEntry entry = null;
         switch (destinationType) {
             case TEMP:
@@ -279,26 +328,24 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                 if (dn.size() != getPrefixLengthForDestinationType(destinationType) + 1) {
                     // handle unknown entry
                     throw new IllegalArgumentException("Malformed policy structure for a temporary destination "
-                            + "policy entry.  The permission group entries should be immediately below the "
-                            + "temporary policy base DN.");
+                        + "policy entry.  The permission group entries should be immediately below the " + "temporary policy base DN.");
                 }
-                entry = getTempDestinationAuthorizationEntry();
+                entry = map.getTempDestinationAuthorizationEntry();
                 if (entry == null) {
                     entry = new TempDestinationAuthorizationEntry();
-                    setTempDestinationAuthorizationEntry((TempDestinationAuthorizationEntry) entry);
+                    map.setTempDestinationAuthorizationEntry((TempDestinationAuthorizationEntry) entry);
                 }
-                
+
                 break;
-                
+
             case QUEUE:
             case TOPIC:
                 // handle regular destinations
                 if (dn.size() != getPrefixLengthForDestinationType(destinationType) + 2) {
                     throw new IllegalArgumentException("Malformed policy structure for a queue or topic destination "
-                            + "policy entry.  The destination pattern and permission group entries should be "
-                            + "nested below the queue or topic policy base DN.");
+                        + "policy entry.  The destination pattern and permission group entries should be " + "nested below the queue or topic policy base DN.");
                 }
-                
+
                 ActiveMQDestination dest = formatDestination(dn, destinationType);
 
                 if (dest != null) {
@@ -309,103 +356,99 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                         entries.put(dest, entry);
                     }
                 }
-                
+
                 break;
             default:
                 // handle unknown entry
                 throw new IllegalArgumentException("Unknown destination type " + destinationType);
         }
-        
+
         return entry;
     }
 
     /**
-     * Applies the policy from the directory to the given entry within the context of the provided
-     * permission type.
+     * Applies the policy from the directory to the given entry within the context of the provided permission type.
      *
-     * @param entry the policy entry to apply the policy to
-     * @param result the results from the directory to apply to the policy entry
-     * @param permissionType the permission type of the data in the directory
+     * @param entry
+     *            the policy entry to apply the policy to
+     * @param result
+     *            the results from the directory to apply to the policy entry
+     * @param permissionType
+     *            the permission type of the data in the directory
      *
-     * @throws NamingException if there is an error applying the ACL
+     * @throws NamingException
+     *             if there is an error applying the ACL
      */
-    protected void applyACL(AuthorizationEntry entry, SearchResult result,
-            PermissionType permissionType) throws NamingException {
-        
+    protected void applyACL(AuthorizationEntry entry, SearchResult result, PermissionType permissionType) throws NamingException {
+
         // Find members
         Attribute memberAttribute = result.getAttributes().get(permissionGroupMemberAttribute);
         NamingEnumeration<?> memberAttributeEnum = memberAttribute.getAll();
-        
+
         HashSet<Object> members = new HashSet<Object>();
-        
+
         while (memberAttributeEnum.hasMoreElements()) {
             String memberDn = (String) memberAttributeEnum.nextElement();
             boolean group = false;
             boolean user = false;
             String principalName = null;
-            
+
             if (!legacyGroupMapping) {
                 // Lookup of member to determine principal type (group or user) and name.
                 Attributes memberAttributes;
                 try {
-                    memberAttributes = context.getAttributes(memberDn, 
-                            new String[] {"objectClass", groupNameAttribute, userNameAttribute});
+                    memberAttributes = context.getAttributes(memberDn, new String[] { "objectClass", groupNameAttribute, userNameAttribute });
                 } catch (NamingException e) {
-                    LOG.error(
-                            "Policy not applied! Unknown member " + memberDn
-                                    + " in policy entry "
-                                    + result.getNameInNamespace(), e);
+                    LOG.error("Policy not applied! Unknown member " + memberDn + " in policy entry " + result.getNameInNamespace(), e);
                     continue;
                 }
-                
+
                 Attribute memberEntryObjectClassAttribute = memberAttributes.get("objectClass");
                 NamingEnumeration<?> memberEntryObjectClassAttributeEnum = memberEntryObjectClassAttribute.getAll();
-                
+
                 while (memberEntryObjectClassAttributeEnum.hasMoreElements()) {
                     String objectClass = (String) memberEntryObjectClassAttributeEnum.nextElement();
-                    
+
                     if (objectClass.equalsIgnoreCase(groupObjectClass)) {
                         group = true;
                         Attribute name = memberAttributes.get(groupNameAttribute);
                         if (name == null) {
-                            LOG.error("Policy not applied! Group "
-                                    + memberDn
-                                    + "does not have name attribute "
-                                    + groupNameAttribute + " under entry " + result.getNameInNamespace());
+                            LOG.error("Policy not applied! Group " + memberDn + "does not have name attribute " + groupNameAttribute + " under entry "
+                                + result.getNameInNamespace());
                             break;
                         }
-                        
+
                         principalName = (String) name.get();
                     }
-                    
+
                     if (objectClass.equalsIgnoreCase(userObjectClass)) {
                         user = true;
                         Attribute name = memberAttributes.get(userNameAttribute);
                         if (name == null) {
-                            LOG.error("Policy not applied! User "
-                                    + memberDn + " does not have name attribute "
-                                    + userNameAttribute + " under entry " + result.getNameInNamespace());
+                            LOG.error("Policy not applied! User " + memberDn + " does not have name attribute " + userNameAttribute + " under entry "
+                                + result.getNameInNamespace());
                             break;
                         }
-                        
+
                         principalName = (String) name.get();
                     }
                 }
-                
+
             } else {
                 group = true;
                 principalName = memberDn.replaceAll("(cn|CN)=", "");
             }
-            
+
             if ((!group && !user) || (group && user)) {
-                LOG.error("Policy not applied! Can't determine type of member "
-                        + memberDn + " under entry " + result.getNameInNamespace());
-            } else if (principalName != null){
+                LOG.error("Policy not applied! Can't determine type of member " + memberDn + " under entry " + result.getNameInNamespace());
+            } else if (principalName != null) {
+                DefaultAuthorizationMap map = this.map.get();
                 if (group && !user) {
                     try {
-                        members.add(createGroupPrincipal(principalName, getGroupClass()));
+                        members.add(DefaultAuthorizationMap.createGroupPrincipal(principalName, map.getGroupClass()));
                     } catch (Exception e) {
-                        NamingException ne = new NamingException("Can't create a group " + principalName + " of class " + getGroupClass());
+                        NamingException ne = new NamingException(
+                            "Can't create a group " + principalName + " of class " + map.getGroupClass());
                         ne.initCause(e);
                         throw ne;
                     }
@@ -414,27 +457,28 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                 }
             }
         }
-        
+
         try {
             applyAcl(entry, permissionType, members);
         } catch (Exception e) {
-            LOG.error(
-                    "Policy not applied! Error adding principals to ACL under "
-                            + result.getNameInNamespace(), e);
+            LOG.error("Policy not applied! Error adding principals to ACL under " + result.getNameInNamespace(), e);
         }
     }
-    
+
     /**
      * Applies policy to the entry given the actual principals that will be applied to the policy entry.
      *
-     * @param entry the policy entry to which the policy should be applied
-     * @param permissionType the type of the permission that the policy will be applied to
-     * @param acls the principals that represent the actual policy
+     * @param entry
+     *            the policy entry to which the policy should be applied
+     * @param permissionType
+     *            the type of the permission that the policy will be applied to
+     * @param acls
+     *            the principals that represent the actual policy
      *
      * @throw IllegalArgumentException if {@code permissionType} is unsupported
      */
     protected void applyAcl(AuthorizationEntry entry, PermissionType permissionType, Set<Object> acls) {
-        
+
         switch (permissionType) {
             case READ:
                 entry.setReadACLs(acls);
@@ -449,70 +493,70 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                 throw new IllegalArgumentException("Unknown permission " + permissionType + ".");
         }
     }
-    
+
     /**
-     * Parses a DN into the equivalent {@link ActiveMQDestination}.  The default implementation
-     * expects a format of cn=<PERMISSION_NAME>,ou=<DESTINATION_PATTERN>,.... or 
-     * ou=<DESTINATION_PATTERN>,.... for permission and destination entries, respectively.
-     * For example {@code cn=admin,ou=$,ou=...} or {@code ou=$,ou=...}. 
+     * Parses a DN into the equivalent {@link ActiveMQDestination}. The default implementation expects a format of
+     * cn=<PERMISSION_NAME>,ou=<DESTINATION_PATTERN>,.... or ou=<DESTINATION_PATTERN>,.... for permission and
+     * destination entries, respectively. For example {@code cn=admin,ou=$,ou=...} or {@code ou=$,ou=...}.
      *
-     * @param dn the DN to parse
-     * @param destinationType the type of the destination that we are parsing
+     * @param dn
+     *            the DN to parse
+     * @param destinationType
+     *            the type of the destination that we are parsing
      *
      * @return the destination that the DN represents
      *
-     * @throws IllegalArgumentException if {@code destinationType} is {@link DestinationType#TEMP} or
-     * if the format of {@code dn} is incorrect for for a topic or queue
+     * @throws IllegalArgumentException
+     *             if {@code destinationType} is {@link DestinationType#TEMP} or if the format of {@code dn} is
+     *             incorrect for for a topic or queue
      *
      * @see #formatDestination(Rdn, DestinationType)
      */
     protected ActiveMQDestination formatDestination(LdapName dn, DestinationType destinationType) {
         ActiveMQDestination destination = null;
-        
+
         switch (destinationType) {
             case QUEUE:
             case TOPIC:
                 // There exists a need to deal with both names representing a permission or simply a
-                // destination.  As such, we need to determine the proper RDN to work with based
+                // destination. As such, we need to determine the proper RDN to work with based
                 // on the destination type and the DN size.
                 if (dn.size() == (getPrefixLengthForDestinationType(destinationType) + 2)) {
                     destination = formatDestination(dn.getRdn(dn.size() - 2), destinationType);
-                } else if (dn.size() == (getPrefixLengthForDestinationType(destinationType) + 1)){
+                } else if (dn.size() == (getPrefixLengthForDestinationType(destinationType) + 1)) {
                     destination = formatDestination(dn.getRdn(dn.size() - 1), destinationType);
                 } else {
-                    throw new IllegalArgumentException(
-                            "Malformed DN for representing a permission or destination entry.");
+                    throw new IllegalArgumentException("Malformed DN for representing a permission or destination entry.");
                 }
                 break;
             default:
-                throw new IllegalArgumentException(
-                        "Cannot format destination for destination type " + destinationType);
+                throw new IllegalArgumentException("Cannot format destination for destination type " + destinationType);
         }
-        
+
         return destination;
     }
-    
+
     /**
-     * Parses RDN values representing the destination name/pattern and
-     * destination type into the equivalent {@link ActiveMQDestination}.
-     * 
+     * Parses RDN values representing the destination name/pattern and destination type into the equivalent
+     * {@link ActiveMQDestination}.
+     *
      * @param destinationName
      *            the RDN representing the name or pattern for the destination
      * @param destinationType
      *            the type of the destination
-     * 
+     *
      * @return the destination that the RDN represent
-     * 
+     *
      * @throws IllegalArgumentException
      *             if {@code destinationType} is not one of {@link DestinationType#TOPIC} or
      *             {@link DestinationType#QUEUE}.
-     * 
+     *
      * @see #formatDestinationName(Rdn)
      * @see #formatDestination(LdapName, DestinationType)
      */
     protected ActiveMQDestination formatDestination(Rdn destinationName, DestinationType destinationType) {
         ActiveMQDestination dest = null;
-        
+
         switch (destinationType) {
             case QUEUE:
                 dest = new ActiveMQQueue(formatDestinationName(destinationName));
@@ -521,35 +565,33 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                 dest = new ActiveMQTopic(formatDestinationName(destinationName));
                 break;
             default:
-                throw new IllegalArgumentException("Unknown destination type: "
-                        + destinationType);
+                throw new IllegalArgumentException("Unknown destination type: " + destinationType);
         }
 
         return dest;
     }
 
     /**
-     * Parses the RDN representing a destination name/pattern into the standard string representation
-     * of the name/pattern.  This implementation does not care about the type of the RDN such that the RDN could
-     * be a CN or OU.
+     * Parses the RDN representing a destination name/pattern into the standard string representation of the
+     * name/pattern. This implementation does not care about the type of the RDN such that the RDN could be a CN or OU.
      *
-     * @param destinationName the RDN representing the name or pattern for the destination
+     * @param destinationName
+     *            the RDN representing the name or pattern for the destination
      *
      * @see #formatDestination(Rdn, Rdn)
      */
     protected String formatDestinationName(Rdn destinationName) {
         return destinationName.getValue().toString().replaceAll(ANY_DESCENDANT, ">");
     }
-    
+
     /**
-     * Transcribes an existing set into a new set. Used to make defensive copies
-     * for concurrent access.
-     * 
+     * Transcribes an existing set into a new set. Used to make defensive copies for concurrent access.
+     *
      * @param source
      *            the source set or {@code null}
-     * 
-     * @return a new set containing the same elements as {@code source} or
-     *         {@code null} if {@code source} is {@code null}
+     *
+     * @return a new set containing the same elements as {@code source} or {@code null} if {@code source} is
+     *         {@code null}
      */
     protected <T> Set<T> transcribeSet(Set<T> source) {
         if (source != null) {
@@ -558,11 +600,12 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
             return null;
         }
     }
-    
+
     /**
      * Returns the filter string for the given permission type.
-     * 
-     * @throws IllegalArgumentException if {@code permissionType} is not supported
+     *
+     * @throws IllegalArgumentException
+     *             if {@code permissionType} is not supported
      *
      * @see #setAdminPermissionGroupSearchFilter(String)
      * @see #setReadPermissionGroupSearchFilter(String)
@@ -570,7 +613,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
      */
     protected String getFilterForPermissionType(PermissionType permissionType) {
         String filter = null;
-        
+
         switch (permissionType) {
             case ADMIN:
                 filter = adminPermissionGroupSearchFilter;
@@ -584,14 +627,15 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
             default:
                 throw new IllegalArgumentException("Unknown permission type " + permissionType);
         }
-        
+
         return filter;
     }
-    
+
     /**
      * Returns the DN prefix size based on the given destination type.
      *
-     * @throws IllegalArgumentException if {@code destinationType} is not supported
+     * @throws IllegalArgumentException
+     *             if {@code destinationType} is not supported
      *
      * @see #setQueueSearchBase(String)
      * @see #setTopicSearchBase(String)
@@ -599,7 +643,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
      */
     protected int getPrefixLengthForDestinationType(DestinationType destinationType) {
         int filter = 0;
-        
+
         switch (destinationType) {
             case QUEUE:
                 filter = queuePrefixLength;
@@ -613,177 +657,191 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
             default:
                 throw new IllegalArgumentException("Unknown permission type " + destinationType);
         }
-        
+
         return filter;
     }
-    
+
     /**
-     * Performs a check for updates from the server in the event that synchronous updates are enabled 
-     * and are the refresh interval has elapsed.
+     * Performs a check for updates from the server in the event that synchronous updates are enabled and are the
+     * refresh interval has elapsed.
      */
     protected void checkForUpdates() {
-        if (context == null || (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
-            if (!isContextAlive()) {
-                try {
-                    context = createContext();
-                } catch (NamingException ne) {
-                    // LDAP is down, use already cached values
-                    return;
-                }
-            }
-            reset();
-            setTempDestinationAuthorizationEntry(null);
-            entries.clear();
 
-            LOG.debug("Updating authorization map!");
-            try {
-                query();
-            } catch (Exception e) {
-                LOG.error("Error updating authorization map.  Partial policy "
-                        + "may be applied until the next successful update.", e);
-            }
+        if (context != null && refreshDisabled) {
+            return;
+        }
+
+        if (context == null || (!refreshDisabled && (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
+            this.updaterService.execute(new Runnable() {
+                @Override
+                public void run() {
+
+                    // Check again in case of stacked update request.
+                    if (context == null || (!refreshDisabled &&
+                        (refreshInterval != -1 && System.currentTimeMillis() >= lastUpdated + refreshInterval))) {
+
+                        if (!isContextAlive()) {
+                            try {
+                                context = createContext();
+                            } catch (NamingException ne) {
+                                // LDAP is down, use already cached values
+                                return;
+                            }
+                        }
+
+                        entries.clear();
+
+                        LOG.debug("Updating authorization map!");
+                        try {
+                            query();
+                        } catch (Exception e) {
+                            LOG.error("Error updating authorization map.  Partial policy " +
+                                      "may be applied until the next successful update.", e);
+                        }
+                    }
+                }
+            });
         }
     }
-    
+
     // Authorization Map
-    
+
     /**
-     * Provides synchronous refresh capabilities if so configured before delegating to the super implementation,
-     * and otherwise simply delegates to the super implementation.
+     * Provides synchronized and defensive access to the admin ACLs for temp destinations as the super implementation
+     * returns live copies of the ACLs and {@link AuthorizationEntry} is not setup for concurrent access.
      */
     @Override
-    protected synchronized Set<AuthorizationEntry> getAllEntries(ActiveMQDestination destination) {
+    public Set<Object> getTempDestinationAdminACLs() {
         checkForUpdates();
-        return super.getAllEntries(destination);
+        DefaultAuthorizationMap map = this.map.get();
+        return transcribeSet(map.getTempDestinationAdminACLs());
     }
-    
+
     /**
-     * Provides synchronized and defensive access to the admin ACLs for temp destinations as the super
-     * implementation returns live copies of the ACLs and {@link AuthorizationEntry} is not
-     * setup for concurrent access.
+     * Provides synchronized and defensive access to the read ACLs for temp destinations as the super implementation
+     * returns live copies of the ACLs and {@link AuthorizationEntry} is not setup for concurrent access.
      */
     @Override
-    public synchronized Set<Object> getTempDestinationAdminACLs() {
+    public Set<Object> getTempDestinationReadACLs() {
         checkForUpdates();
-        return transcribeSet(super.getTempDestinationAdminACLs());
-    }
-    
-    /**
-     * Provides synchronized and defensive access to the read ACLs for temp destinations as the super
-     * implementation returns live copies of the ACLs and {@link AuthorizationEntry} is not
-     * setup for concurrent access.
-     */
-    public synchronized Set<Object> getTempDestinationReadACLs() {
-        checkForUpdates();
-        return transcribeSet(super.getTempDestinationReadACLs());
+        DefaultAuthorizationMap map = this.map.get();
+        return transcribeSet(map.getTempDestinationReadACLs());
     }
 
     /**
-     * Provides synchronized and defensive access to the write ACLs for temp destinations as the super
-     * implementation returns live copies of the ACLs and {@link AuthorizationEntry} is not
-     * setup for concurrent access.
+     * Provides synchronized and defensive access to the write ACLs for temp destinations as the super implementation
+     * returns live copies of the ACLs and {@link AuthorizationEntry} is not setup for concurrent access.
      */
-    public synchronized Set<Object> getTempDestinationWriteACLs() {
+    @Override
+    public Set<Object> getTempDestinationWriteACLs() {
         checkForUpdates();
-        return transcribeSet(super.getTempDestinationWriteACLs());
-    }
-    
-    /**
-     * Provides synchronized access to the admin ACLs for the destinations as 
-     * {@link AuthorizationEntry} is not setup for concurrent access.
-     */
-    public synchronized Set<Object> getAdminACLs(ActiveMQDestination destination) {
-        return super.getAdminACLs(destination);
+        DefaultAuthorizationMap map = this.map.get();
+        return transcribeSet(map.getTempDestinationWriteACLs());
     }
 
     /**
-     * Provides synchronized access to the read ACLs for the destinations as 
-     * {@link AuthorizationEntry} is not setup for concurrent access.
+     * Provides synchronized access to the admin ACLs for the destinations as {@link AuthorizationEntry}
+     * is not setup for concurrent access.
      */
-    public synchronized Set<Object> getReadACLs(ActiveMQDestination destination) {
+    @Override
+    public Set<Object> getAdminACLs(ActiveMQDestination destination) {
         checkForUpdates();
-        return super.getReadACLs(destination);
+        DefaultAuthorizationMap map = this.map.get();
+        return map.getAdminACLs(destination);
     }
 
     /**
-     * Provides synchronized access to the write ACLs for the destinations as 
-     * {@link AuthorizationEntry} is not setup for concurrent access.
+     * Provides synchronized access to the read ACLs for the destinations as {@link AuthorizationEntry} is not setup for
+     * concurrent access.
      */
-    public synchronized Set<Object> getWriteACLs(ActiveMQDestination destination) {
+    @Override
+    public Set<Object> getReadACLs(ActiveMQDestination destination) {
         checkForUpdates();
-        return super.getWriteACLs(destination);
+        DefaultAuthorizationMap map = this.map.get();
+        return map.getReadACLs(destination);
+    }
+
+    /**
+     * Provides synchronized access to the write ACLs for the destinations as {@link AuthorizationEntry} is not setup
+     * for concurrent access.
+     */
+    @Override
+    public Set<Object> getWriteACLs(ActiveMQDestination destination) {
+        checkForUpdates();
+        DefaultAuthorizationMap map = this.map.get();
+        return map.getWriteACLs(destination);
     }
 
     /**
      * Handler for new policy entries in the directory.
      *
-     * @param namingEvent the new entry event that occurred 
-     * @param destinationType the type of the destination to which the event applies
-     * @param permissionType the permission type to which the event applies
+     * @param namingEvent
+     *            the new entry event that occurred
+     * @param destinationType
+     *            the type of the destination to which the event applies
+     * @param permissionType
+     *            the permission type to which the event applies
      */
-    public synchronized void objectAdded(NamingEvent namingEvent, DestinationType destinationType,
-            PermissionType permissionType) {
+    public void objectAdded(NamingEvent namingEvent, DestinationType destinationType, PermissionType permissionType) {
         LOG.debug("Adding object: " + namingEvent.getNewBinding());
         SearchResult result = (SearchResult) namingEvent.getNewBinding();
-        
+
         try {
+            DefaultAuthorizationMap map = this.map.get();
             LdapName name = new LdapName(result.getName());
-            
-            AuthorizationEntry entry = getEntry(name, destinationType);
-               
+            AuthorizationEntry entry = getEntry(map, name, destinationType);
+
             applyACL(entry, result, permissionType);
             if (!(entry instanceof TempDestinationAuthorizationEntry)) {
-                put(entry.getDestination(), entry);
+                map.put(entry.getDestination(), entry);
             }
-            
         } catch (InvalidNameException e) {
-            LOG.error("Policy not applied!  Error parsing DN for addition of "
-                    + result.getName(), e);
+            LOG.error("Policy not applied!  Error parsing DN for addition of " + result.getName(), e);
         } catch (Exception e) {
-            LOG.error("Policy not applied!  Error processing object addition for addition of "
-                    + result.getName(), e);
+            LOG.error("Policy not applied!  Error processing object addition for addition of " + result.getName(), e);
         }
     }
 
     /**
      * Handler for removed policy entries in the directory.
      *
-     * @param namingEvent the removed entry event that occurred 
-     * @param destinationType the type of the destination to which the event applies
-     * @param permissionType the permission type to which the event applies
+     * @param namingEvent
+     *            the removed entry event that occurred
+     * @param destinationType
+     *            the type of the destination to which the event applies
+     * @param permissionType
+     *            the permission type to which the event applies
      */
-    public synchronized void objectRemoved(NamingEvent namingEvent, DestinationType destinationType,
-            PermissionType permissionType) {
+    public void objectRemoved(NamingEvent namingEvent, DestinationType destinationType, PermissionType permissionType) {
         LOG.debug("Removing object: " + namingEvent.getOldBinding());
         Binding result = namingEvent.getOldBinding();
-        
-        try {
-            LdapName name = new LdapName(result.getName());
-            
-            AuthorizationEntry entry = getEntry(name, destinationType);
 
+        try {
+            DefaultAuthorizationMap map = this.map.get();
+            LdapName name = new LdapName(result.getName());
+            AuthorizationEntry entry = getEntry(map, name, destinationType);
             applyAcl(entry, permissionType, new HashSet<Object>());
         } catch (InvalidNameException e) {
-            LOG.error("Policy not applied!  Error parsing DN for object removal for removal of "
-                    + result.getName(), e);
+            LOG.error("Policy not applied!  Error parsing DN for object removal for removal of " + result.getName(), e);
         } catch (Exception e) {
-            LOG.error("Policy not applied!  Error processing object removal for removal of "
-                    + result.getName(), e);
+            LOG.error("Policy not applied!  Error processing object removal for removal of " + result.getName(), e);
         }
     }
 
     /**
-     * Handler for renamed policy entries in the directory.  This handler deals with the renaming
-     * of destination entries as well as permission entries.  If the permission type is not null, it is
-     * assumed that we are dealing with the renaming of a permission entry.  Otherwise, it is assumed
-     * that we are dealing with the renaming of a destination entry.
+     * Handler for renamed policy entries in the directory. This handler deals with the renaming of destination entries
+     * as well as permission entries. If the permission type is not null, it is assumed that we are dealing with the
+     * renaming of a permission entry. Otherwise, it is assumed that we are dealing with the renaming of a destination
+     * entry.
      *
-     * @param namingEvent the renaming entry event that occurred 
-     * @param destinationType the type of the destination to which the event applies
-     * @param permissionType the permission type to which the event applies
+     * @param namingEvent
+     *            the renaming entry event that occurred
+     * @param destinationType
+     *            the type of the destination to which the event applies
+     * @param permissionType
+     *            the permission type to which the event applies
      */
-    public synchronized void objectRenamed(NamingEvent namingEvent, DestinationType destinationType,
-            PermissionType permissionType) {
+    public void objectRenamed(NamingEvent namingEvent, DestinationType destinationType, PermissionType permissionType) {
         Binding oldBinding = namingEvent.getOldBinding();
         Binding newBinding = namingEvent.getNewBinding();
         LOG.debug("Renaming object: " + oldBinding + " to " + newBinding);
@@ -791,45 +849,42 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
         try {
             LdapName oldName = new LdapName(oldBinding.getName());
             ActiveMQDestination oldDest = formatDestination(oldName, destinationType);
-    
+
             LdapName newName = new LdapName(newBinding.getName());
             ActiveMQDestination newDest = formatDestination(newName, destinationType);
-            
+
             if (permissionType != null) {
                 // Handle the case where a permission entry is being renamed.
                 objectRemoved(namingEvent, destinationType, permissionType);
-                
+
                 SearchControls controls = new SearchControls();
                 controls.setSearchScope(SearchControls.OBJECT_SCOPE);
-                
+
                 boolean matchedToType = false;
-                
+
                 for (PermissionType newPermissionType : PermissionType.values()) {
-                    NamingEnumeration<SearchResult> results = context.search(
-                            newName,
-                            getFilterForPermissionType(newPermissionType), controls);
-                    
+                    NamingEnumeration<SearchResult> results = context.search(newName, getFilterForPermissionType(newPermissionType), controls);
+
                     if (results.hasMore()) {
                         objectAdded(namingEvent, destinationType, newPermissionType);
                         matchedToType = true;
                         break;
                     }
                 }
-                
+
                 if (!matchedToType) {
-                    LOG.error("Policy not applied!  Error processing object rename for rename of "
-                            + oldBinding.getName() + " to " + newBinding.getName()
-                            + ".  Could not determine permission type of new object.");
+                    LOG.error("Policy not applied!  Error processing object rename for rename of " + oldBinding.getName() + " to " + newBinding.getName()
+                        + ".  Could not determine permission type of new object.");
                 }
-                
             } else {
                 // Handle the case where a destination entry is being renamed.
                 if (oldDest != null && newDest != null) {
                     AuthorizationEntry entry = entries.remove(oldDest);
                     if (entry != null) {
                         entry.setDestination(newDest);
-                        put(newDest, entry);
-                        remove(oldDest, entry);
+                        DefaultAuthorizationMap map = this.map.get();
+                        map.put(newDest, entry);
+                        map.remove(oldDest, entry);
                         entries.put(newDest, entry);
                     } else {
                         LOG.warn("No authorization entry for " + oldDest);
@@ -837,23 +892,23 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
                 }
             }
         } catch (InvalidNameException e) {
-            LOG.error("Policy not applied!  Error parsing DN for object rename for rename of "
-                    + oldBinding.getName() + " to " + newBinding.getName(), e);
+            LOG.error("Policy not applied!  Error parsing DN for object rename for rename of " + oldBinding.getName() + " to " + newBinding.getName(), e);
         } catch (Exception e) {
-            LOG.error("Policy not applied!  Error processing object rename for rename of "
-                    + oldBinding.getName() + " to " + newBinding.getName(), e);
+            LOG.error("Policy not applied!  Error processing object rename for rename of " + oldBinding.getName() + " to " + newBinding.getName(), e);
         }
     }
 
     /**
      * Handler for changed policy entries in the directory.
      *
-     * @param namingEvent the changed entry event that occurred 
-     * @param destinationType the type of the destination to which the event applies
-     * @param permissionType the permission type to which the event applies
+     * @param namingEvent
+     *            the changed entry event that occurred
+     * @param destinationType
+     *            the type of the destination to which the event applies
+     * @param permissionType
+     *            the permission type to which the event applies
      */
-    public synchronized void objectChanged(NamingEvent namingEvent,
-            DestinationType destinationType, PermissionType permissionType) {
+    public void objectChanged(NamingEvent namingEvent, DestinationType destinationType, PermissionType permissionType) {
         LOG.debug("Changing object " + namingEvent.getOldBinding() + " to " + namingEvent.getNewBinding());
         objectRemoved(namingEvent, destinationType, permissionType);
         objectAdded(namingEvent, destinationType, permissionType);
@@ -862,7 +917,8 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
     /**
      * Handler for exception events from the registry.
      *
-     * @param namingExceptionEvent the exception event
+     * @param namingExceptionEvent
+     *            the exception event
      */
     public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
         context = null;
@@ -927,7 +983,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
     public void setAuthentication(String authentication) {
         this.authentication = authentication;
     }
-    
+
     public String getQueueSearchBase() {
         return queueSearchBase;
     }
@@ -974,17 +1030,15 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
         return permissionGroupMemberAttribute;
     }
 
-    public void setPermissionGroupMemberAttribute(
-            String permissionGroupMemberAttribute) {
+    public void setPermissionGroupMemberAttribute(String permissionGroupMemberAttribute) {
         this.permissionGroupMemberAttribute = permissionGroupMemberAttribute;
     }
-    
+
     public String getAdminPermissionGroupSearchFilter() {
         return adminPermissionGroupSearchFilter;
     }
 
-    public void setAdminPermissionGroupSearchFilter(
-            String adminPermissionGroupSearchFilter) {
+    public void setAdminPermissionGroupSearchFilter(String adminPermissionGroupSearchFilter) {
         this.adminPermissionGroupSearchFilter = adminPermissionGroupSearchFilter;
     }
 
@@ -992,8 +1046,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
         return readPermissionGroupSearchFilter;
     }
 
-    public void setReadPermissionGroupSearchFilter(
-            String readPermissionGroupSearchFilter) {
+    public void setReadPermissionGroupSearchFilter(String readPermissionGroupSearchFilter) {
         this.readPermissionGroupSearchFilter = readPermissionGroupSearchFilter;
     }
 
@@ -1001,11 +1054,10 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
         return writePermissionGroupSearchFilter;
     }
 
-    public void setWritePermissionGroupSearchFilter(
-            String writePermissionGroupSearchFilter) {
+    public void setWritePermissionGroupSearchFilter(String writePermissionGroupSearchFilter) {
         this.writePermissionGroupSearchFilter = writePermissionGroupSearchFilter;
     }
-    
+
     public boolean isLegacyGroupMapping() {
         return legacyGroupMapping;
     }
@@ -1029,7 +1081,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
     public void setUserObjectClass(String userObjectClass) {
         this.userObjectClass = userObjectClass;
     }
-    
+
     public String getGroupNameAttribute() {
         return groupNameAttribute;
     }
@@ -1053,7 +1105,7 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
     public void setRefreshDisabled(boolean refreshDisabled) {
         this.refreshDisabled = refreshDisabled;
     }
-    
+
     public int getRefreshInterval() {
         return refreshInterval;
     }
@@ -1061,40 +1113,34 @@ public class SimpleCachedLDAPAuthorizationMap extends DefaultAuthorizationMap {
     public void setRefreshInterval(int refreshInterval) {
         this.refreshInterval = refreshInterval;
     }
-    
+
     protected static enum DestinationType {
-        QUEUE,
-        TOPIC,
-        TEMP;
+        QUEUE, TOPIC, TEMP;
     }
-    
+
     protected static enum PermissionType {
-        READ,
-        WRITE,
-        ADMIN;
+        READ, WRITE, ADMIN;
     }
-    
+
     /**
-     * Listener implementation for directory changes that maps change events to
-     * destination types.
+     * Listener implementation for directory changes that maps change events to destination types.
      */
-    protected class CachedLDAPAuthorizationMapNamespaceChangeListener implements
-            NamespaceChangeListener, ObjectChangeListener {
-        
+    protected class CachedLDAPAuthorizationMapNamespaceChangeListener implements NamespaceChangeListener, ObjectChangeListener {
+
         private final DestinationType destinationType;
         private final PermissionType permissionType;
-        
+
         /**
-         * Creates a new listener.  If {@code permissionType} is {@code null}, add
-         * and remove events are ignored as they do not directly affect policy state.
-         * This configuration is used when listening for changes on entries that represent
-         * destination patterns and not for entries that represent permissions.
+         * Creates a new listener. If {@code permissionType} is {@code null}, add and remove events are ignored as they
+         * do not directly affect policy state. This configuration is used when listening for changes on entries that
+         * represent destination patterns and not for entries that represent permissions.
          *
-         * @param destinationType the type of the destination being listened for
-         * @param permissionType the optional permission type being listened for
+         * @param destinationType
+         *            the type of the destination being listened for
+         * @param permissionType
+         *            the optional permission type being listened for
          */
-        public CachedLDAPAuthorizationMapNamespaceChangeListener(
-                DestinationType destinationType, PermissionType permissionType) {
+        public CachedLDAPAuthorizationMapNamespaceChangeListener(DestinationType destinationType, PermissionType permissionType) {
             this.destinationType = destinationType;
             this.permissionType = permissionType;
         }
