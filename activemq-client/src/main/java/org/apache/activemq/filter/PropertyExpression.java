@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -32,8 +31,6 @@ import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * Represents a property expression
- * 
- * 
  */
 public class PropertyExpression implements Expression {
 
@@ -46,6 +43,7 @@ public class PropertyExpression implements Expression {
     static {
         JMS_PROPERTY_EXPRESSIONS.put("JMSDestination", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 ActiveMQDestination dest = message.getOriginalDestination();
                 if (dest == null) {
@@ -59,6 +57,7 @@ public class PropertyExpression implements Expression {
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSReplyTo", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 if (message.getReplyTo() == null) {
                     return null;
@@ -68,24 +67,28 @@ public class PropertyExpression implements Expression {
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSType", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return message.getType();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSDeliveryMode", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return message.isPersistent() ? "PERSISTENT" : "NON_PERSISTENT";
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSPriority", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Integer.valueOf(message.getPriority());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSMessageID", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 if (message.getMessageId() == null) {
                     return null;
@@ -95,48 +98,56 @@ public class PropertyExpression implements Expression {
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSTimestamp", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Long.valueOf(message.getTimestamp());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSCorrelationID", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return message.getCorrelationId();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSExpiration", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Long.valueOf(message.getExpiration());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSRedelivered", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Boolean.valueOf(message.isRedelivered());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXDeliveryCount", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Integer.valueOf(message.getRedeliveryCounter() + 1);
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupID", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return message.getGroupID();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupSeq", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return new Integer(message.getGroupSequence());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXProducerTXID", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 TransactionId txId = message.getOriginalTransactionId();
                 if (txId == null) {
@@ -145,23 +156,26 @@ public class PropertyExpression implements Expression {
                 if (txId == null) {
                     return null;
                 }
-                return new Integer(txId.toString());
+                return txId.toString();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerInTime", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Long.valueOf(message.getBrokerInTime());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerOutTime", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Long.valueOf(message.getBrokerOutTime());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSActiveMQBrokerPath", new SubExpression() {
 
+            @Override
             public Object evaluate(Message message) {
                 return Arrays.toString(message.getBrokerPath());
             }
@@ -176,6 +190,7 @@ public class PropertyExpression implements Expression {
         jmsPropertyExpression = JMS_PROPERTY_EXPRESSIONS.get(name);
     }
 
+    @Override
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
         try {
             if (message.isDropped()) {
@@ -214,6 +229,7 @@ public class PropertyExpression implements Expression {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return name;
     }
@@ -221,6 +237,7 @@ public class PropertyExpression implements Expression {
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return name.hashCode();
     }
@@ -228,13 +245,12 @@ public class PropertyExpression implements Expression {
     /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(Object o) {
 
         if (o == null || !this.getClass().equals(o.getClass())) {
             return false;
         }
-        return name.equals(((PropertyExpression)o).name);
-
+        return name.equals(((PropertyExpression) o).name);
     }
-
 }
