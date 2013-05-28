@@ -16,19 +16,26 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Enumeration;
+
+import javax.jms.Connection;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
-
-import javax.jms.*;
-
-import java.util.Enumeration;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -58,7 +65,8 @@ public class JMSClientTest extends AmqpTestSupport {
 
             MessageConsumer consumer = session.createConsumer(queue);
             Message msg = consumer.receive(TestConfig.TIMEOUT);
-            assertTrue(message instanceof TextMessage);
+            assertNotNull(msg);
+            assertTrue(msg instanceof TextMessage);
         }
         connection.close();
 
