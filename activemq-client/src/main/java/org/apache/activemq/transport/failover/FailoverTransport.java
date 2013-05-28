@@ -1156,9 +1156,13 @@ public class FailoverTransport implements CompositeTransport {
         return maxReconnectValue;
     }
 
+    private boolean shouldBuildBackups() {
+       return (backup && backups.size() < backupPoolSize) || (priorityBackup && !(priorityBackupAvailable || connectedToPriority));
+    }
+
     final boolean buildBackups() {
         synchronized (backupMutex) {
-            if (!disposed && (backup || priorityBackup) && backups.size() < backupPoolSize) {
+            if (!disposed && shouldBuildBackups()) {
                 ArrayList<URI> backupList = new ArrayList<URI>(priorityList);
                 List<URI> connectList = getConnectList();
                 for (URI uri: connectList) {
@@ -1175,7 +1179,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 backups.removeAll(disposedList);
                 disposedList.clear();
-                for (Iterator<URI> iter = backupList.iterator(); !disposed && iter.hasNext() && backups.size() < backupPoolSize; ) {
+                for (Iterator<URI> iter = backupList.iterator(); !disposed && iter.hasNext() && shouldBuildBackups(); ) {
                     URI uri = iter.next();
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
                         try {
@@ -1190,6 +1194,17 @@ public class FailoverTransport implements CompositeTransport {
                                 if (priorityBackup && isPriority(uri)) {
                                    priorityBackupAvailable = true;
                                    backups.add(0, bt);
+                                   // if this priority backup overflows the pool
+                                   // remove the backup with the lowest priority
+                                   if (backups.size() > backupPoolSize) {
+                                       BackupTransport disposeTransport = backups.remove(backups.size() - 1);
+                                       disposeTransport.setDisposed(true);
+                                       Transport transport = disposeTransport.getTransport();
+                                       if (transport != null) {
+                                           transport.setTransportListener(disposedListener);
+                                           disposeTransport(transport);
+                                       }
+                                   }
                                 } else {
                                     backups.add(bt);
                                 }
