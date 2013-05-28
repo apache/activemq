@@ -138,6 +138,13 @@ public class PropertyExpression implements Expression {
                 return message.getGroupID();
             }
         });
+        JMS_PROPERTY_EXPRESSIONS.put("JMSXUserID", new SubExpression() {
+
+            @Override
+            public Object evaluate(Message message) {
+                return message.getUserID();
+            }
+        });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupSeq", new SubExpression() {
 
             @Override

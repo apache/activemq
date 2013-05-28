@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.test;
 
-import java.util.Iterator;
 import java.util.List;
 
 import javax.jms.JMSException;
@@ -24,39 +23,54 @@ import javax.jms.Message;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.security.SimpleSecurityBrokerSystemTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest.class);
 
     protected String userName = "James";
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory answer = super.createConnectionFactory();
         answer.setUserName(userName);
         return answer;
     }
 
+    @Override
     protected void configureBroker(BrokerService answer) throws Exception {
         answer.setPopulateJMSXUserID(true);
         super.configureBroker(answer);
     }
 
-    protected void assertMessagesReceivedAreValid(List receivedMessages) throws JMSException {
+    @Override
+    protected void assertMessagesReceivedAreValid(List<Message> receivedMessages) throws JMSException {
         super.assertMessagesReceivedAreValid(receivedMessages);
 
         // lets assert that the user ID is set
-        for (Iterator iter = receivedMessages.iterator(); iter.hasNext();) {
-            Message message = (Message)iter.next();
+        for (Message message : receivedMessages) {
             String userID = message.getStringProperty("JMSXUserID");
-
             LOG.info("Received message with userID: " + userID);
+            assertEquals("JMSXUserID header", userName, userID);
+        }
+    }
 
+    protected void assertMessagesAreReceived2() throws JMSException {
+        waitForMessagesToBeDelivered();
+        assertMessagesReceivedAreValid2(messages);
+    }
+
+    protected void assertMessagesReceivedAreValid2(List<Message> receivedMessages) throws JMSException {
+        super.assertMessagesReceivedAreValid(receivedMessages);
+
+        // lets assert that the user ID is set
+        for (Message message : receivedMessages) {
+            String userID = (String) message.getObjectProperty("JMSXUserID");
+            LOG.info("Received message with userID: " + userID);
             assertEquals("JMSXUserID header", userName, userID);
         }
     }
@@ -75,6 +89,23 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
             sendMessage(i, message);
         }
         assertMessagesAreReceived();
+        LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
+
+    public void testSpoofedJMSXUserIdIsIgnoredAsObjectProperty() throws Exception {
+        Thread.sleep(1000);
+        messages.clear();
+
+        for (int i = 0; i < data.length; i++) {
+            Message message = createMessage(i);
+            configureMessage(message);
+            message.setStringProperty("JMSXUserID", "spoofedId");
+            if (verbose) {
+                LOG.info("About to send a message: " + message + " with text: " + data[i]);
+            }
+            sendMessage(i, message);
+        }
+        assertMessagesAreReceived2();
         LOG.info("" + data.length + " messages(s) received, closing down connections");
     }
 }
