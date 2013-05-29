@@ -142,7 +142,15 @@ public class PropertyExpression implements Expression {
 
             @Override
             public Object evaluate(Message message) {
-                return message.getUserID();
+                Object userId = message.getUserID();
+                if (userId == null) {
+                    try {
+                        userId = message.getProperty("JMSXUserID");
+                    } catch (IOException e) {
+                    }
+                }
+
+                return userId;
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupSeq", new SubExpression() {
