@@ -565,7 +565,7 @@ public class ExpiredMessagesWithNoConsumerTest extends CombinationTestSupport {
 
         assertEquals(0, received.get());
         assertEquals(10, view.getExpiredCount());
-        assertEquals(0, view.getEnqueueCount());
+        assertEquals(10, view.getEnqueueCount());
     }
 
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
