@@ -1505,8 +1505,15 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
 
         destroyBroker();
         createBroker(false);
-        KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        assertEquals("only two journal file(s) left after restart", 2, pa.getStore().getJournal().getFileMap().size());
+        final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+        assertTrue("Should have three journal files left but was: " +
+            pa.getStore().getJournal().getFileMap().size(), Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return pa.getStore().getJournal().getFileMap().size() == 3;
+            }
+        }));
     }
 
     // https://issues.apache.org/jira/browse/AMQ-3768
