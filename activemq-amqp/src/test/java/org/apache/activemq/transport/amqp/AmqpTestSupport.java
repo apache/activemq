@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.File;
+import java.util.Vector;
+
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -25,31 +28,23 @@ import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.Vector;
-
-import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
-
 public class AmqpTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpTestSupport.class);
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
     protected int numberOfMessages;
-    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
+    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {
+    };
     protected int port;
     protected int sslPort;
-
 
     public static void main(String[] args) throws Exception {
         final AmqpTestSupport s = new AmqpTestSupport();
         s.sslPort = 5671;
         s.port = 5672;
         s.startBroker();
-        while(true) {
+        while (true) {
             Thread.sleep(100000);
         }
     }
@@ -83,12 +78,11 @@ public class AmqpTestSupport {
     }
 
     protected void addAMQPConnector() throws Exception {
-        TransportConnector connector =brokerService.addConnector("amqp+ssl://0.0.0.0:"+sslPort);
+        TransportConnector connector = brokerService.addConnector("amqp+ssl://0.0.0.0:" + sslPort);
         sslPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("amqp://0.0.0.0:"+port);
+        connector = brokerService.addConnector("amqp://0.0.0.0:" + port);
         port = connector.getConnectUri().getPort();
     }
-
 
     @After
     public void stopBroker() throws Exception {
@@ -98,5 +92,4 @@ public class AmqpTestSupport {
         }
         autoFailTestSupport.stopAutoFailThread();
     }
-
 }

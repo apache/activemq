@@ -58,6 +58,11 @@
       <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-kahadb-store</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <!--  Joram JMS conformance tests -->
     <dependency>
