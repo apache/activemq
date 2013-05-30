@@ -516,6 +516,10 @@ class AmqpProtocolConverter {
                 message.setMessageId(new MessageId(producerId, messageIdGenerator.getNextSequenceId()));
             }
 
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Inbound Message:{} from Producer:{}", message.getMessageId(), producerId);
+            }
+
             DeliveryState remoteState = delivery.getRemoteState();
             if (remoteState != null && remoteState instanceof TransactionalState) {
                 TransactionalState s = (TransactionalState) remoteState;
