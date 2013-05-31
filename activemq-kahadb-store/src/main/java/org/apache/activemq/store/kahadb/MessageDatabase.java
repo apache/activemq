@@ -2268,7 +2268,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         this.indexLock.writeLock().lock();
         try {
             for (MessageAck ack : acks) {
-                ackedAndPrepared.add(ack.getLastMessageId().toString());
+                ackedAndPrepared.add(ack.getLastMessageId().toProducerKey());
             }
         } finally {
             this.indexLock.writeLock().unlock();
@@ -2280,7 +2280,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             this.indexLock.writeLock().lock();
             try {
                 for (MessageAck ack : acks) {
-                    ackedAndPrepared.remove(ack.getLastMessageId().toString());
+                    ackedAndPrepared.remove(ack.getLastMessageId().toProducerKey());
                 }
             } finally {
                 this.indexLock.writeLock().unlock();

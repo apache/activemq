@@ -141,7 +141,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
                 // so lets set the IDs to be 1
                 MessageId id = new MessageId();
                 id.setTextView(value);
-                this.setMessageId(messageId);
+                this.setMessageId(id);
             }
         } else {
             this.setMessageId(null);

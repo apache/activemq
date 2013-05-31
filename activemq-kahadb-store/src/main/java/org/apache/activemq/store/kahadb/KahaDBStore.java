@@ -423,7 +423,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public void addMessage(ConnectionContext context, Message message) throws IOException {
             KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
-            command.setMessageId(message.getMessageId().toString());
+            command.setMessageId(message.getMessageId().toProducerKey());
             command.setTransactionInfo(transactionIdTransformer.transform(message.getTransactionId()));
             command.setPriority(message.getPriority());
             command.setPrioritySupported(isPrioritizedMessages());
@@ -436,7 +436,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
-            command.setMessageId(ack.getLastMessageId().toString());
+            command.setMessageId(ack.getLastMessageId().toProducerKey());
             command.setTransactionInfo(transactionIdTransformer.transform(ack.getTransactionId()));
 
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(ack);
@@ -451,7 +451,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         public Message getMessage(MessageId identity) throws IOException {
-            final String key = identity.toString();
+            final String key = identity.toProducerKey();
 
             // Hopefully one day the page file supports concurrent read
             // operations... but for now we must
@@ -590,7 +590,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         @Override
         public void setBatch(MessageId identity) throws IOException {
             try {
-                final String key = identity.toString();
+                final String key = identity.toProducerKey();
                 lockAsyncJobQueue();
 
                 // Hopefully one day the page file supports concurrent read
@@ -707,7 +707,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey);
-            command.setMessageId(messageId.toString());
+            command.setMessageId(messageId.toProducerKey());
             command.setTransactionInfo(ack != null ? transactionIdTransformer.transform(ack.getTransactionId()) : null);
             if (ack != null && ack.isUnmatchedAck()) {
                 command.setAck(UNMATCHED);

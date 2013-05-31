@@ -26,6 +26,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.MESSAGE_ID;
 
+    protected String textView;
     protected ProducerId producerId;
     protected long producerSequenceId;
     protected long brokerSequenceId;
@@ -69,6 +70,8 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         if (p >= 0) {
             producerSequenceId = Long.parseLong(messageKey.substring(p + 1));
             messageKey = messageKey.substring(0, p);
+        } else {
+            throw new NumberFormatException();
         }
         producerId = new ProducerId(messageKey);
     }
@@ -79,7 +82,15 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
      * accommodate foreign JMS message IDs
      */
     public void setTextView(String key) {
+        this.textView = key;
         this.key = key;
+    }
+
+    /**
+     * @return
+     */
+    public String getTextView() {
+        return textView;
     }
 
     public byte getDataStructureType() {
@@ -105,9 +116,21 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         return hashCode;
     }
 
+    public String toProducerKey() {
+        if( textView==null ) {
+            return toString();
+        } else {
+            return producerId.toString() + ":" + producerSequenceId;
+        }
+    }
+
     public String toString() {
         if (key == null) {
-            key = producerId.toString() + ":" + producerSequenceId;
+            if( textView!=null ) {
+                key = textView;
+            } else {
+                key = producerId.toString() + ":" + producerSequenceId;
+            }
         }
         return key;
     }

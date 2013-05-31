@@ -512,9 +512,10 @@ class AmqpProtocolConverter {
                 message.setJMSDestination(destination);
             }
             message.setProducerId(producerId);
-            if (message.getMessageId() == null) {
-                message.setMessageId(new MessageId(producerId, messageIdGenerator.getNextSequenceId()));
-            }
+
+            MessageId messageId = message.getMessageId();
+            messageId.setProducerId(producerId);
+            messageId.setProducerSequenceId(messageIdGenerator.getNextSequenceId());
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Inbound Message:{} from Producer:{}", message.getMessageId(), producerId);

@@ -135,14 +135,14 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         public void addMessage(ConnectionContext context, Message message) throws IOException {
             KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
-            command.setMessageId(message.getMessageId().toString());
+            command.setMessageId(message.getMessageId().toProducerKey());
             processAdd(command, message.getTransactionId(), wireFormat.marshal(message));
         }
         
         public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
-            command.setMessageId(ack.getLastMessageId().toString());
+            command.setMessageId(ack.getLastMessageId().toProducerKey());
             processRemove(command, ack.getTransactionId());
         }
 
@@ -153,7 +153,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         public Message getMessage(MessageId identity) throws IOException {
-            final String key = identity.toString();
+            final String key = identity.toProducerKey();
             
             // Hopefully one day the page file supports concurrent read operations... but for now we must
             // externally synchronize...
@@ -241,7 +241,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         
         @Override
         public void setBatch(MessageId identity) throws IOException {
-            final String key = identity.toString();
+            final String key = identity.toProducerKey();
             
             // Hopefully one day the page file supports concurrent read operations... but for now we must
             // externally synchronize...
@@ -282,7 +282,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey(clientId, subscriptionName));
-            command.setMessageId(messageId.toString());
+            command.setMessageId(messageId.toProducerKey());
             // We are not passed a transaction info.. so we can't participate in a transaction.
             // Looks like a design issue with the TopicMessageStore interface.  Also we can't recover the original ack
             // to pass back to the XA recover method.
