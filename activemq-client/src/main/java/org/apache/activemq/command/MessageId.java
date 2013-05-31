@@ -83,7 +83,6 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
      */
     public void setTextView(String key) {
         this.textView = key;
-        this.key = key;
     }
 
     /**
@@ -128,7 +127,11 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     public String toString() {
         if (key == null) {
             if( textView!=null ) {
-                key = textView;
+                if( textView.startsWith("ID:") ) {
+                    key = textView;
+                } else {
+                    key = "ID:"+textView;
+                }
             } else {
                 key = producerId.toString() + ":" + producerSequenceId;
             }

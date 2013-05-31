@@ -80,6 +80,52 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testSelectingOnAMQPMessageID() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
+        assertTrue(brokerService.isPersistent());
+
+        Connection connection = createAMQPConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createQueue("txqueue");
+        MessageProducer p = session.createProducer(destination);
+        TextMessage message = session.createTextMessage();
+        String messageText = "Hello sent at " + new java.util.Date().toString();
+        message.setText(messageText);
+        p.send(message);
+
+        // Restart broker.
+        restartBroker(connection, session);
+        String selector = "JMSMessageID = '" + message.getJMSMessageID() + "'";
+        LOG.info("Using selector: "+selector);
+        int messagesReceived = readAllMessages(queue, selector);
+        assertEquals(1, messagesReceived);
+    }
+
+    @Test(timeout = 60000)
+    public void testSelectingOnActiveMQMessageID() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
+        assertTrue(brokerService.isPersistent());
+
+        Connection connection = createAMQConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = session.createQueue("txqueue");
+        MessageProducer p = session.createProducer(destination);
+        TextMessage message = session.createTextMessage();
+        String messageText = "Hello sent at " + new java.util.Date().toString();
+        message.setText(messageText);
+        p.send(message);
+
+        // Restart broker.
+        restartBroker(connection, session);
+        String selector = "JMSMessageID = '" + message.getJMSMessageID() + "'";
+        LOG.info("Using selector: "+selector);
+        int messagesReceived = readAllMessages(queue, selector);
+        assertEquals(1, messagesReceived);
+    }
+
+    @Test(timeout = 60000)
     public void testMessagesAreAckedAMQPProducer() throws Exception {
         int messagesSent = 3;
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -110,11 +156,20 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     private int readAllMessages(QueueImpl queue) throws JMSException {
+        return readAllMessages(queue, null);
+    }
+
+    private int readAllMessages(QueueImpl queue, String selector) throws JMSException {
         Connection connection = createAMQPConnection();
         try {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             int messagesReceived = 0;
-            MessageConsumer consumer = session.createConsumer(queue);
+            MessageConsumer consumer;
+            if( selector==null ) {
+                consumer = session.createConsumer(queue);
+            } else {
+                consumer = session.createConsumer(queue, selector);
+            }
             Message msg = consumer.receive(5000);
             while(msg != null) {
                 assertNotNull(msg);
@@ -186,6 +241,7 @@ public class AMQ4563Test extends AmqpTestSupport {
         brokerService.setPersistenceAdapter(kaha);
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(false);
+        brokerService.setStoreOpenWireVersion(10);
         openwireUri = brokerService.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
 
         // Setup SSL context...
