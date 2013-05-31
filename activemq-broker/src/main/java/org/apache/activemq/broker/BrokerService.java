@@ -92,6 +92,7 @@ import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.jms.JmsConnector;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.selector.SelectorParser;
@@ -238,6 +239,8 @@ public class BrokerService implements Service {
 
     private boolean restartAllowed = true;
     private boolean restartRequested = false;
+
+    private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
 
     static {
 
@@ -2879,5 +2882,13 @@ public class BrokerService implements Service {
 
     public void requestRestart() {
         this.restartRequested = true;
+    }
+
+    public int getStoreOpenWireVersion() {
+        return storeOpenWireVersion;
+    }
+
+    public void setStoreOpenWireVersion(int storeOpenWireVersion) {
+        this.storeOpenWireVersion = storeOpenWireVersion;
     }
 }

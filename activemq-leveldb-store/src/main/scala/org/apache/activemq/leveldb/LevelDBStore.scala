@@ -206,7 +206,9 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   var snappyCompressLogs = false
 
   def doStart: Unit = {
-
+    if( brokerService!=null ) {
+      wireFormat.setVersion(brokerService.getStoreOpenWireVersion)
+    }
     snappyCompressLogs = logCompression.toLowerCase == "snappy" && Snappy != null
     debug("starting")
 

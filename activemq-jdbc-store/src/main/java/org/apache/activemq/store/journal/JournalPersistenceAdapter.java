@@ -241,6 +241,10 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             return;
         }
 
+        if( brokerService!=null ) {
+          wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
+        }
+
         checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
             public boolean iterate() {
                 return doCheckpoint();

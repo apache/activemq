@@ -62,11 +62,14 @@ import org.slf4j.LoggerFactory;
 public class KahaDBTransactionStore implements TransactionStore {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBTransactionStore.class);
     ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
-    private final WireFormat wireFormat = new OpenWireFormat();
     private final KahaDBStore theStore;
 
     public KahaDBTransactionStore(KahaDBStore theStore) {
         this.theStore = theStore;
+    }
+
+    private WireFormat wireFormat(){
+      return this.theStore.wireFormat;
     }
 
     public class Tx {
@@ -335,13 +338,13 @@ public class KahaDBTransactionStore implements TransactionStore {
             for (Operation op : entry.getValue()) {
                 if (op.getClass() == AddOpperation.class) {
                     AddOpperation addOp = (AddOpperation) op;
-                    Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addOp.getCommand().getMessage()
+                    Message msg = (Message) wireFormat().unmarshal(new DataInputStream(addOp.getCommand().getMessage()
                             .newInput()));
                     messageList.add(msg);
                 } else {
                     RemoveOpperation rmOp = (RemoveOpperation) op;
                     Buffer ackb = rmOp.getCommand().getAck();
-                    MessageAck ack = (MessageAck) wireFormat.unmarshal(new DataInputStream(ackb.newInput()));
+                    MessageAck ack = (MessageAck) wireFormat().unmarshal(new DataInputStream(ackb.newInput()));
                     ackList.add(ack);
                 }
             }

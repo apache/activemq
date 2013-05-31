@@ -304,6 +304,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public void doStart() throws Exception {
+
+        if( brokerService!=null ) {
+          wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
+        }
+
         // Cleanup the db periodically.
         if (cleanupPeriod > 0) {
             cleanupTicket = getScheduledThreadPoolExecutor().scheduleWithFixedDelay(new Runnable() {

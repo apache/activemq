@@ -177,6 +177,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     @Override
     public void doStart() throws Exception {
+        if( brokerService!=null ) {
+            wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
+        }
         super.doStart();
         this.globalQueueSemaphore = new Semaphore(getMaxAsyncJobs());
         this.globalTopicSemaphore = new Semaphore(getMaxAsyncJobs());

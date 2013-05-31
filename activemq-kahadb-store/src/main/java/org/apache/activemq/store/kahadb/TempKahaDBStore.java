@@ -24,6 +24,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -60,9 +63,10 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 
-public class TempKahaDBStore extends TempMessageDatabase implements PersistenceAdapter {
+public class TempKahaDBStore extends TempMessageDatabase implements PersistenceAdapter, BrokerServiceAware {
 
     private final WireFormat wireFormat = new OpenWireFormat();
+    private BrokerService brokerService;
 
     public void setBrokerName(String brokerName) {
     }
@@ -575,5 +579,17 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
     public long getLastProducerSequenceId(ProducerId id) {
         return -1;
     }
-        
+
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
+
+    @Override
+    public void load() throws IOException {
+        if( brokerService!=null ) {
+            wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
+        }
+        super.load();
+    }
 }

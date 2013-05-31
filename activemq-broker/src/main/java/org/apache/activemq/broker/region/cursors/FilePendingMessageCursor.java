@@ -83,6 +83,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     @Override
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
+            if( this.broker != null) {
+                wireFormat.setVersion(this.broker.getBrokerService().getStoreOpenWireVersion());
+            }
             super.start();
             if (systemUsage != null) {
                 systemUsage.getMemoryUsage().addUsageListener(this);

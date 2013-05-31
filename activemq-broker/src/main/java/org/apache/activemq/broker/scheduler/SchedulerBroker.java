@@ -65,6 +65,8 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         this.context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
         this.context.setBroker(next);
         this.systemUsage = brokerService.getSystemUsage();
+
+        wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
     }
 
     public synchronized JobScheduler getJobScheduler() throws Exception {
