@@ -87,6 +87,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     /**
+     * @openwire:property version=10
      * @return
      */
     public String getTextView() {
