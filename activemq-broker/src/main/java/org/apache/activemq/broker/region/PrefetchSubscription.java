@@ -834,6 +834,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         this.maxProducersToAudit = maxProducersToAudit;
+        if (this.pending != null) {
+            this.pending.setMaxProducersToAudit(maxProducersToAudit);
+        }
     }
 
     public int getMaxAuditDepth() {
@@ -842,6 +845,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
+        if (this.pending != null) {
+            this.pending.setMaxAuditDepth(maxAuditDepth);
+        }
     }
 
     public boolean isUsePrefetchExtension() {
