@@ -17,7 +17,7 @@
 package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.leveldb.LevelDBStore;
+// import org.apache.activemq.leveldb.LevelDBStore;
 
 import java.io.File;
 
@@ -26,10 +26,10 @@ public class IDERunner {
     public static void main(String[]args) throws Exception {
         BrokerService bs = new BrokerService();
         bs.addConnector("tcp://localhost:61616");
-        LevelDBStore store = new LevelDBStore();
-        store.setDirectory(new File("target/activemq-data/haleveldb"));
-        bs.setPersistenceAdapter(store);
-        bs.deleteAllMessages();
+        // LevelDBStore store = new LevelDBStore();
+        // store.setDirectory(new File("target/activemq-data/haleveldb"));
+        // bs.setPersistenceAdapter(store);
+        // bs.deleteAllMessages();
         bs.start();
         bs.waitUntilStopped();
     }
