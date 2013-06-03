@@ -283,8 +283,17 @@ case class RecordLog(directory: File, logSuffix:String) {
         data
       } else {
         val data = new Buffer(length)
-        if( channel.read(data.toByteBuffer, offset+LOG_HEADER_SIZE) != data.length ) {
-          throw new IOException("short record at position: "+record_position+" in file: "+file+", offset: "+offset)
+        var bb = data.toByteBuffer
+        var position = offset+LOG_HEADER_SIZE
+        while( bb.hasRemaining  ) {
+          var count = channel.read(bb, position)
+          if( count == 0 ) {
+            throw new IOException("zero read at file '%s' offset: %d".format(file, position))
+          }
+          if( count < 0 ) {
+            throw new EOFException("File '%s' offset: %d".format(file, position))
+          }
+          position += count
         }
         data
       }
