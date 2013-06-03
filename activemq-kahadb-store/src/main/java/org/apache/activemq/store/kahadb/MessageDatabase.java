@@ -54,6 +54,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
@@ -123,6 +124,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         protected transient ActiveMQMessageAuditNoSync producerSequenceIdTracker = new ActiveMQMessageAuditNoSync();
         protected transient Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<Integer, Set<Integer>>();
         protected int version = VERSION;
+        protected int openwireVersion = OpenWireFormat.DEFAULT_VERSION;
+
         public void read(DataInput is) throws IOException {
             state = is.readInt();
             destinations = new BTreeIndex<String, StoredDestination>(pageFile, is.readLong());
@@ -145,14 +148,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             } catch (EOFException expectedOnUpgrade) {
             }
             try {
-               version = is.readInt();
+                version = is.readInt();
             } catch (EOFException expectedOnUpgrade) {
-                version=1;
+                version = 1;
             }
             if (version >= 5 && is.readBoolean()) {
                 ackMessageFileMapLocation = LocationMarshaller.INSTANCE.readPayload(is);
             } else {
                 ackMessageFileMapLocation = null;
+            }
+            try {
+                openwireVersion = is.readInt();
+            } catch (EOFException expectedOnUpgrade) {
+                openwireVersion = OpenWireFormat.DEFAULT_VERSION;
             }
             LOG.info("KahaDB is version " + version);
         }
@@ -188,6 +196,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             } else {
                 os.writeBoolean(false);
             }
+            os.writeInt(this.openwireVersion);
         }
     }
 
