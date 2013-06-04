@@ -33,6 +33,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.Usage;
+import org.apache.activemq.util.SubscriptionKey;
 
 /**
  *
@@ -385,5 +386,11 @@ public class DestinationFilter implements Destination {
     @Override
     public boolean isDLQ() {
         return next.isDLQ();
+    }
+
+    public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
+        if (next instanceof Topic) {
+            ((Topic) next).deleteSubscription(context, key);
+        }
     }
 }

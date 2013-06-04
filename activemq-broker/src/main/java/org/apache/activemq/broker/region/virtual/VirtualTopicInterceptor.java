@@ -26,15 +26,14 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.util.LRUCache;
 
 /**
- * A Destination which implements <a
- * href="http://activemq.org/site/virtual-destinations.html">Virtual Topic</a>
+ * A Destination which implements <a href="http://activemq.org/site/virtual-destinations.html">Virtual Topic</a>
  */
 public class VirtualTopicInterceptor extends DestinationFilter {
 
     private final String prefix;
     private final String postfix;
     private final boolean local;
-    private final LRUCache<ActiveMQDestination,ActiveMQQueue> cache = new LRUCache<ActiveMQDestination,ActiveMQQueue>();
+    private final LRUCache<ActiveMQDestination, ActiveMQQueue> cache = new LRUCache<ActiveMQDestination, ActiveMQQueue>();
 
     public VirtualTopicInterceptor(Destination next, String prefix, String postfix, boolean local) {
         super(next);
@@ -58,11 +57,11 @@ public class VirtualTopicInterceptor extends DestinationFilter {
 
     protected ActiveMQDestination getQueueConsumersWildcard(ActiveMQDestination original) {
         ActiveMQQueue queue;
-        synchronized(cache){
+        synchronized (cache) {
             queue = cache.get(original);
-            if (queue==null){
+            if (queue == null) {
                 queue = new ActiveMQQueue(prefix + original.getPhysicalName() + postfix);
-                cache.put(original,queue);
+                cache.put(original, queue);
             }
         }
         return queue;

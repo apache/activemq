@@ -31,7 +31,6 @@ import javax.jms.JMSException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.virtual.VirtualTopicInterceptor;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
@@ -198,9 +197,9 @@ public class TopicRegion extends AbstractRegion {
                 if (dest instanceof Topic){
                     Topic topic = (Topic)dest;
                     topic.deleteSubscription(context, key);
-                } else if (dest instanceof VirtualTopicInterceptor) {
-                    VirtualTopicInterceptor virtualTopic = (VirtualTopicInterceptor) dest;
-                    virtualTopic.getTopic().deleteSubscription(context, key);
+                } else if (dest instanceof DestinationFilter) {
+                    DestinationFilter filter = (DestinationFilter) dest;
+                    filter.deleteSubscription(context, key);
                 }
             }
         } finally {
