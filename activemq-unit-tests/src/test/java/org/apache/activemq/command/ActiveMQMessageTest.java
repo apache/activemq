@@ -34,9 +34,6 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class ActiveMQMessageTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageTest.class);
@@ -144,7 +141,7 @@ public class ActiveMQMessageTest extends TestCase {
     public void testShallowCopy() throws Exception {
         ActiveMQMessage msg1 = new ActiveMQMessage();
         msg1.setJMSMessageID(jmsMessageID);
-        ActiveMQMessage msg2 = (ActiveMQMessage)msg1.copy();
+        ActiveMQMessage msg2 = (ActiveMQMessage) msg1.copy();
         assertTrue(msg1 != msg2 && msg1.equals(msg2));
     }
 
@@ -175,7 +172,7 @@ public class ActiveMQMessageTest extends TestCase {
         msg1.setReadOnlyProperties(true);
         ActiveMQMessage msg2 = new ActiveMQMessage();
         msg1.copy(msg2);
-        assertTrue(msg1.getJMSMessageID().equals(msg2.getJMSMessageID()));
+        assertEquals(msg1.getJMSMessageID(), msg2.getJMSMessageID());
         assertTrue(msg1.getJMSCorrelationID().equals(msg2.getJMSCorrelationID()));
         assertTrue(msg1.getJMSDestination().equals(msg2.getJMSDestination()));
         assertTrue(msg1.getJMSReplyTo().equals(msg2.getJMSReplyTo()));
@@ -302,14 +299,14 @@ public class ActiveMQMessageTest extends TestCase {
     public void testGetByteProperty() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String name = "byteProperty";
-        msg.setByteProperty(name, (byte)1);
+        msg.setByteProperty(name, (byte) 1);
         assertTrue(msg.getByteProperty(name) == 1);
     }
 
     public void testGetShortProperty() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String name = "shortProperty";
-        msg.setShortProperty(name, (short)1);
+        msg.setShortProperty(name, (short) 1);
         assertTrue(msg.getShortProperty(name) == 1);
     }
 
@@ -353,7 +350,7 @@ public class ActiveMQMessageTest extends TestCase {
         String name = "floatProperty";
         msg.setFloatProperty(name, 1.3f);
         assertTrue(msg.getObjectProperty(name) instanceof Float);
-        assertTrue(((Float)msg.getObjectProperty(name)).floatValue() == 1.3f);
+        assertTrue(((Float) msg.getObjectProperty(name)).floatValue() == 1.3f);
     }
 
     @SuppressWarnings("rawtypes")
@@ -482,13 +479,13 @@ public class ActiveMQMessageTest extends TestCase {
 
         Map<String, Object> properties = msg.getProperties();
         assertEquals(properties.get("stringProperty"), "string");
-        assertEquals(((Byte)properties.get("byteProperty")).byteValue(), 1);
-        assertEquals(((Short)properties.get("shortProperty")).shortValue(), 1);
-        assertEquals(((Integer)properties.get("intProperty")).intValue(), 1);
-        assertEquals(((Long)properties.get("longProperty")).longValue(), 1);
-        assertEquals(((Float)properties.get("floatProperty")).floatValue(), 1.1f, 0);
-        assertEquals(((Double)properties.get("doubleProperty")).doubleValue(), 1.1, 0);
-        assertEquals(((Boolean)properties.get("booleanProperty")).booleanValue(), true);
+        assertEquals(((Byte) properties.get("byteProperty")).byteValue(), 1);
+        assertEquals(((Short) properties.get("shortProperty")).shortValue(), 1);
+        assertEquals(((Integer) properties.get("intProperty")).intValue(), 1);
+        assertEquals(((Long) properties.get("longProperty")).longValue(), 1);
+        assertEquals(((Float) properties.get("floatProperty")).floatValue(), 1.1f, 0);
+        assertEquals(((Double) properties.get("doubleProperty")).doubleValue(), 1.1, 0);
+        assertEquals(((Boolean) properties.get("booleanProperty")).booleanValue(), true);
         assertNull(properties.get("nullProperty"));
     }
 
@@ -543,7 +540,7 @@ public class ActiveMQMessageTest extends TestCase {
         String propertyName = "property";
         msg.setBooleanProperty(propertyName, true);
 
-        assertEquals(((Boolean)msg.getObjectProperty(propertyName)).booleanValue(), true);
+        assertEquals(((Boolean) msg.getObjectProperty(propertyName)).booleanValue(), true);
         assertTrue(msg.getBooleanProperty(propertyName));
         assertEquals(msg.getStringProperty(propertyName), "true");
         try {
@@ -581,9 +578,9 @@ public class ActiveMQMessageTest extends TestCase {
     public void testBytePropertyConversion() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String propertyName = "property";
-        msg.setByteProperty(propertyName, (byte)1);
+        msg.setByteProperty(propertyName, (byte) 1);
 
-        assertEquals(((Byte)msg.getObjectProperty(propertyName)).byteValue(), 1);
+        assertEquals(((Byte) msg.getObjectProperty(propertyName)).byteValue(), 1);
         assertEquals(msg.getByteProperty(propertyName), 1);
         assertEquals(msg.getShortProperty(propertyName), 1);
         assertEquals(msg.getIntProperty(propertyName), 1);
@@ -609,9 +606,9 @@ public class ActiveMQMessageTest extends TestCase {
     public void testShortPropertyConversion() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String propertyName = "property";
-        msg.setShortProperty(propertyName, (short)1);
+        msg.setShortProperty(propertyName, (short) 1);
 
-        assertEquals(((Short)msg.getObjectProperty(propertyName)).shortValue(), 1);
+        assertEquals(((Short) msg.getObjectProperty(propertyName)).shortValue(), 1);
         assertEquals(msg.getShortProperty(propertyName), 1);
         assertEquals(msg.getIntProperty(propertyName), 1);
         assertEquals(msg.getLongProperty(propertyName), 1);
@@ -643,7 +640,7 @@ public class ActiveMQMessageTest extends TestCase {
         String propertyName = "property";
         msg.setIntProperty(propertyName, 1);
 
-        assertEquals(((Integer)msg.getObjectProperty(propertyName)).intValue(), 1);
+        assertEquals(((Integer) msg.getObjectProperty(propertyName)).intValue(), 1);
         assertEquals(msg.getIntProperty(propertyName), 1);
         assertEquals(msg.getLongProperty(propertyName), 1);
         assertEquals(msg.getStringProperty(propertyName), "1");
@@ -679,7 +676,7 @@ public class ActiveMQMessageTest extends TestCase {
         String propertyName = "property";
         msg.setLongProperty(propertyName, 1);
 
-        assertEquals(((Long)msg.getObjectProperty(propertyName)).longValue(), 1);
+        assertEquals(((Long) msg.getObjectProperty(propertyName)).longValue(), 1);
         assertEquals(msg.getLongProperty(propertyName), 1);
         assertEquals(msg.getStringProperty(propertyName), "1");
         try {
@@ -717,8 +714,8 @@ public class ActiveMQMessageTest extends TestCase {
     public void testFloatPropertyConversion() throws JMSException {
         ActiveMQMessage msg = new ActiveMQMessage();
         String propertyName = "property";
-        msg.setFloatProperty(propertyName, (float)1.5);
-        assertEquals(((Float)msg.getObjectProperty(propertyName)).floatValue(), 1.5, 0);
+        msg.setFloatProperty(propertyName, (float) 1.5);
+        assertEquals(((Float) msg.getObjectProperty(propertyName)).floatValue(), 1.5, 0);
         assertEquals(msg.getFloatProperty(propertyName), 1.5, 0);
         assertEquals(msg.getDoubleProperty(propertyName), 1.5, 0);
         assertEquals(msg.getStringProperty(propertyName), "1.5");
@@ -753,7 +750,7 @@ public class ActiveMQMessageTest extends TestCase {
         ActiveMQMessage msg = new ActiveMQMessage();
         String propertyName = "property";
         msg.setDoubleProperty(propertyName, 1.5);
-        assertEquals(((Double)msg.getObjectProperty(propertyName)).doubleValue(), 1.5, 0);
+        assertEquals(((Double) msg.getObjectProperty(propertyName)).doubleValue(), 1.5, 0);
         assertEquals(msg.getDoubleProperty(propertyName), 1.5, 0);
         assertEquals(msg.getStringProperty(propertyName), "1.5");
         try {
@@ -794,7 +791,7 @@ public class ActiveMQMessageTest extends TestCase {
         String stringValue = "true";
         msg.setStringProperty(propertyName, stringValue);
         assertEquals(msg.getStringProperty(propertyName), stringValue);
-        assertEquals((String)msg.getObjectProperty(propertyName), stringValue);
+        assertEquals((String) msg.getObjectProperty(propertyName), stringValue);
         assertEquals(msg.getBooleanProperty(propertyName), true);
 
         stringValue = "1";
@@ -849,7 +846,7 @@ public class ActiveMQMessageTest extends TestCase {
         String propertyName = "property";
         Object obj = new Object();
         try {
-            ((org.apache.activemq.command.Message)msg).setProperty(propertyName, obj); // bypass
+            ((org.apache.activemq.command.Message) msg).setProperty(propertyName, obj); // bypass
             // object
             // check
         } catch (IOException e) {
@@ -918,12 +915,12 @@ public class ActiveMQMessageTest extends TestCase {
         } catch (MessageNotWriteableException e) {
         }
         try {
-            msg.setByteProperty(propertyName, (byte)1);
+            msg.setByteProperty(propertyName, (byte) 1);
             fail("Should have thrown exception");
         } catch (MessageNotWriteableException e) {
         }
         try {
-            msg.setShortProperty(propertyName, (short)1);
+            msg.setShortProperty(propertyName, (short) 1);
             fail("Should have thrown exception");
         } catch (MessageNotWriteableException e) {
         }
@@ -938,7 +935,7 @@ public class ActiveMQMessageTest extends TestCase {
         } catch (MessageNotWriteableException e) {
         }
         try {
-            msg.setFloatProperty(propertyName, (float)1.5);
+            msg.setFloatProperty(propertyName, (float) 1.5);
             fail("Should have thrown exception");
         } catch (MessageNotWriteableException e) {
         }

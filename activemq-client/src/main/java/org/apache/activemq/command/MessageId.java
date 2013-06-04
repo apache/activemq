@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @openwire:marshaller code="110"
- * 
+ *
  */
 public class MessageId implements DataStructure, Comparable<MessageId> {
 
@@ -93,10 +93,12 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         return textView;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -109,6 +111,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         return producerSequenceId == id.producerSequenceId && producerId.equals(id.producerId);
     }
 
+    @Override
     public int hashCode() {
         if (hashCode == 0) {
             hashCode = producerId.hashCode() ^ (int)producerSequenceId;
@@ -124,6 +127,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         }
     }
 
+    @Override
     public String toString() {
         if (key == null) {
             if( textView!=null ) {
@@ -172,6 +176,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         this.brokerSequenceId = brokerSequenceId;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return false;
     }
@@ -183,6 +188,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         copy.dataLocator = dataLocator;
         copy.entryLocator = entryLocator;
         copy.plistLocator = plistLocator;
+        copy.textView = textView;
         return copy;
     }
 
@@ -191,6 +197,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
      * @return
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+    @Override
     public int compareTo(MessageId other) {
         int result = -1;
         if (other != null) {
