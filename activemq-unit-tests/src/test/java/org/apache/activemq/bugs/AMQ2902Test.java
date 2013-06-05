@@ -17,10 +17,13 @@
 package org.apache.activemq.bugs;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.transport.TransportDisposedIOException;
@@ -36,12 +39,18 @@ public class AMQ2902Test extends TestCase {
 
     final AtomicBoolean gotExceptionInLog = new AtomicBoolean(Boolean.FALSE);
     final AtomicBoolean failedToFindMDC = new AtomicBoolean(Boolean.FALSE);
-    
+
     Appender appender = new DefaultTestAppender() {
         @Override
         public void doAppend(LoggingEvent event) {
             if (event.getThrowableInformation() != null
                     && event.getThrowableInformation().getThrowable() instanceof TransportDisposedIOException) {
+
+                // Prevent StackOverflowException so we can see a sane stack trace.
+                if (gotExceptionInLog.get()) {
+                    return;
+                }
+
                 LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
                 gotExceptionInLog.set(Boolean.TRUE);
             }
@@ -70,6 +79,7 @@ public class AMQ2902Test extends TestCase {
         connection.close();
     }
 
+    @Override
     public void setUp() throws Exception {
         gotExceptionInLog.set(Boolean.FALSE);
         failedToFindMDC.set(Boolean.FALSE);
@@ -78,6 +88,7 @@ public class AMQ2902Test extends TestCase {
         Logger.getLogger(TransportConnection.class.getName()).setLevel(Level.DEBUG);
     }
 
+    @Override
     public void tearDown() throws Exception {
         Logger.getRootLogger().removeAppender(appender);
         assertFalse("got unexpected ex in log on graceful close", gotExceptionInLog.get());
