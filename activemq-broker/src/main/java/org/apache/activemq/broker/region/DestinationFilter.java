@@ -389,12 +389,11 @@ public class DestinationFilter implements Destination {
     }
 
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
-        Destination target = next;
-        while (target instanceof DestinationFilter) {
-            target = ((DestinationFilter) target).next;
-        }
-        if (target instanceof Topic) {
-            Topic topic = (Topic)target;
+        if (next instanceof DestinationFilter) {
+            DestinationFilter filter = (DestinationFilter) next;
+            filter.deleteSubscription(context, key);
+        } else if (next instanceof Topic) {
+            Topic topic = (Topic)next;
             topic.deleteSubscription(context, key);
         }
     }
