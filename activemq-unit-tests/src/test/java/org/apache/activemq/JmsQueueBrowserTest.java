@@ -38,13 +38,12 @@ import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class JmsQueueBrowserTest extends JmsTestSupport {
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
-            .getLog(JmsQueueBrowserTest.class);
+
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQXAConnectionFactoryTest.class);
     public boolean isUseCache = false;
 
     public static Test suite() throws Exception {
@@ -79,7 +78,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         // Get the first.
         assertEquals(outbound[0], consumer.receive(1000));
         consumer.close();
-        //Thread.sleep(200);
 
         QueueBrowser browser = session.createBrowser(destination);
         Enumeration<?> enumeration = browser.getEnumeration();
@@ -108,7 +106,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         // Receive the third.
         assertEquals(outbound[2], consumer.receive(1000));
         consumer.close();
-
     }
 
     public void initCombosForTestBatchSendBrowseReceive() {
@@ -166,7 +163,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         }
         consumer.close();
     }
-
 
     public void initCombosForTestBatchSendJmxBrowseReceive() {
         addCombinationValues("isUseCache", new Boolean[]{Boolean.TRUE, Boolean.FALSE});
@@ -286,7 +282,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
                                            session.createTextMessage("Second Message"),
                                            session.createTextMessage("Third Message")};
 
-
         MessageProducer producer = session.createProducer(destination);
         producer.send(outbound[0]);
 
@@ -303,7 +298,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         consumer.close();
         browser.close();
         producer.close();
-
     }
 
     public void testLargeNumberOfMessages() throws Exception {
@@ -325,7 +319,12 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         int numberBrowsed = 0;
 
         while (enumeration.hasMoreElements()) {
-            enumeration.nextElement();
+            Message browsed = (Message) enumeration.nextElement();
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Browsed Message [{}]", browsed.getJMSMessageID());
+            }
+
             numberBrowsed++;
         }
 
@@ -333,7 +332,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         assertEquals(1000, numberBrowsed);
         browser.close();
         producer.close();
-
     }
 
     public void testQueueBrowserWith2Consumers() throws Exception {
@@ -400,7 +398,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
                                            session.createTextMessage("Second Message"),
                                            session.createTextMessage("Third Message")};
 
-
         // create consumer
         MessageConsumer consumer = session.createConsumer(destination);
         // lets consume any outstanding messages from previous test runs
@@ -411,7 +408,6 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         producer.send(outbound[0]);
         producer.send(outbound[1]);
         producer.send(outbound[2]);
-
 
         // create browser first
         QueueBrowser browser = session.createBrowser(destination);
