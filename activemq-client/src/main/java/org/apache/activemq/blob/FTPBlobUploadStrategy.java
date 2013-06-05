@@ -32,41 +32,43 @@ import org.apache.commons.net.ftp.FTPClient;
  * A FTP implementation of {@link BlobUploadStrategy}.
  */
 public class FTPBlobUploadStrategy extends FTPStrategy implements BlobUploadStrategy {
-	
-	public FTPBlobUploadStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
-		super(transferPolicy);
-	}
 
-	public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
-		return uploadStream(message, new FileInputStream(file));
-	}
+    public FTPBlobUploadStrategy(BlobTransferPolicy transferPolicy) throws MalformedURLException {
+        super(transferPolicy);
+    }
 
-	public URL uploadStream(ActiveMQBlobMessage message, InputStream in)
-			throws JMSException, IOException {
+    @Override
+    public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
+        return uploadStream(message, new FileInputStream(file));
+    }
 
-	    FTPClient ftp = createFTP();
-	    try {
-    		String path = url.getPath();
+    @Override
+    public URL uploadStream(ActiveMQBlobMessage message, InputStream in)
+            throws JMSException, IOException {
+
+        FTPClient ftp = createFTP();
+        try {
+            String path = url.getPath();
             String workingDir = path.substring(0, path.lastIndexOf("/"));
-    		String filename = message.getMessageId().toString().replaceAll(":", "_");
+            String filename = message.getMessageId().toString().replaceAll(":", "_");
             ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
-            
+
             String url;
             if(!ftp.changeWorkingDirectory(workingDir)) {
-            	url = this.url.toString().replaceFirst(this.url.getPath(), "")+"/";
+                url = this.url.toString().replaceFirst(this.url.getPath(), "")+"/";
             } else {
-            	url = this.url.toString();
+                url = this.url.toString();
             }
-            
-    		if (!ftp.storeFile(filename, in)) {
-    		    throw new JMSException("FTP store failed: " + ftp.getReplyString());
-    		}
-    		return new URL(url + filename);
-	    } finally {
-    		ftp.quit();
-    		ftp.disconnect();
-	    }
-		
-	}
+
+            if (!ftp.storeFile(filename, in)) {
+                throw new JMSException("FTP store failed: " + ftp.getReplyString());
+            }
+            return new URL(url + filename);
+        } finally {
+            ftp.quit();
+            ftp.disconnect();
+        }
+
+    }
 
 }

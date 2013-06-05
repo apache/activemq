@@ -26,7 +26,6 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.command.ActiveMQBlobMessage;
-import org.apache.activemq.command.MessageId;
 
 
 public class FTPBlobUploadStrategyTest extends FTPTestSupport {
@@ -43,10 +42,10 @@ public class FTPBlobUploadStrategyTest extends FTPTestSupport {
         ((ActiveMQConnection)connection).setCopyMessageOnSend(false);
 
         ActiveMQBlobMessage message = (ActiveMQBlobMessage) ((ActiveMQSession)session).createBlobMessage(file);
-        message.setMessageId(new MessageId("testmessage"));
+        message.setJMSMessageID("testmessage");
         message.onSend();
-        assertEquals(ftpUrl + "testmessage", message.getURL().toString());
-        File uploaded = new File(ftpHomeDirFile, "testmessage");
+        assertEquals(ftpUrl + "ID_testmessage", message.getURL().toString());
+        File uploaded = new File(ftpHomeDirFile, "ID_testmessage");
         assertTrue("File doesn't exists", uploaded.exists());
     }
 
@@ -63,7 +62,7 @@ public class FTPBlobUploadStrategyTest extends FTPTestSupport {
         ((ActiveMQConnection)connection).setCopyMessageOnSend(false);
 
         ActiveMQBlobMessage message = (ActiveMQBlobMessage) ((ActiveMQSession)session).createBlobMessage(file);
-        message.setMessageId(new MessageId("testmessage"));
+        message.setJMSMessageID("testmessage");
         try {
             message.onSend();
         } catch (JMSException e) {

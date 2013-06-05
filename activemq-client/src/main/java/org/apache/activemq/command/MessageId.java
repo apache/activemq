@@ -77,9 +77,8 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     /**
-     * Sets the transient text view of the message which will be ignored if the
-     * message is marshaled on a transport; so is only for in-JVM changes to
-     * accommodate foreign JMS message IDs
+     * Sets the transient text view of the message which will be ignored if the message is marshaled on a transport; so
+     * is only for in-JVM changes to accommodate foreign JMS message IDs
      */
     public void setTextView(String key) {
         this.textView = key;
@@ -107,20 +106,20 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
             return false;
         }
 
-        MessageId id = (MessageId)o;
+        MessageId id = (MessageId) o;
         return producerSequenceId == id.producerSequenceId && producerId.equals(id.producerId);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = producerId.hashCode() ^ (int)producerSequenceId;
+            hashCode = producerId.hashCode() ^ (int) producerSequenceId;
         }
         return hashCode;
     }
 
     public String toProducerKey() {
-        if( textView==null ) {
+        if (textView == null) {
             return toString();
         } else {
             return producerId.toString() + ":" + producerSequenceId;
@@ -130,11 +129,11 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     @Override
     public String toString() {
         if (key == null) {
-            if( textView!=null ) {
-                if( textView.startsWith("ID:") ) {
+            if (textView != null) {
+                if (textView.startsWith("ID:")) {
                     key = textView;
                 } else {
-                    key = "ID:"+textView;
+                    key = "ID:" + textView;
                 }
             } else {
                 key = producerId.toString() + ":" + producerSequenceId;
@@ -207,16 +206,14 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     /**
-     * @return a locator which aids a message store in loading a message faster.  Only used
-     * by the message stores.
+     * @return a locator which aids a message store in loading a message faster. Only used by the message stores.
      */
     public Object getDataLocator() {
         return dataLocator.get();
     }
 
     /**
-     * Sets a locator which aids a message store in loading a message faster.  Only used
-     * by the message stores.
+     * Sets a locator which aids a message store in loading a message faster. Only used by the message stores.
      */
     public void setDataLocator(Object value) {
         this.dataLocator.set(value);
