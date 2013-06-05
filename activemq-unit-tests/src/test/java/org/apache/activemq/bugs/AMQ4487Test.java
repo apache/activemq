@@ -19,7 +19,6 @@ package org.apache.activemq.bugs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.net.URI;
 import java.util.Enumeration;
 
 import javax.jms.Connection;
@@ -31,7 +30,6 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.After;
@@ -46,14 +44,14 @@ public class AMQ4487Test {
 
     private final String destinationName = "TEST.QUEUE";
     private BrokerService broker;
-    private URI connectUri;
     private ActiveMQConnectionFactory factory;
 
     @Before
     public void startBroker() throws Exception {
         broker = new BrokerService();
-        TransportConnector connector = broker.addConnector("tcp://0.0.0.0:0");
         broker.deleteAllMessages();
+        broker.setUseJmx(false);
+        broker.setAdvisorySupport(false);
 
         PolicyEntry policy = new PolicyEntry();
         policy.setQueue(">");
@@ -64,8 +62,7 @@ public class AMQ4487Test {
 
         broker.start();
         broker.waitUntilStarted();
-        connectUri = connector.getConnectUri();
-        factory = new ActiveMQConnectionFactory(connectUri);
+        factory = new ActiveMQConnectionFactory("vm://localhost");
     }
 
     @After
@@ -101,7 +98,7 @@ public class AMQ4487Test {
 
     @Test
     public void testBrowsingWithMoreThanMaxAuditDepth() throws Exception {
-        doTestBrowsing(76);
+        doTestBrowsing(300);
     }
 
     @SuppressWarnings("rawtypes")
@@ -124,7 +121,6 @@ public class AMQ4487Test {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Browsed Message: {}", m.getJMSMessageID());
             }
-            LOG.info("Browsed Message: {}", m.getJMSMessageID());
 
             received++;
             if (received > messagesToSend) {

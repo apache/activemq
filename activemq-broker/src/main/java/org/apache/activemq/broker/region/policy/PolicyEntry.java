@@ -238,7 +238,13 @@ public class PolicyEntry extends DestinationMapEntry {
         configurePrefetch(sub);
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
-        sub.setMaxProducersToAudit(getMaxProducersToAudit());
+
+        // TODO
+        // We currently need an infinite audit because of the way that browser dispatch
+        // is done.  We should refactor the browsers to better handle message dispatch so
+        // we can remove this and perform a more efficient dispatch.
+        sub.setMaxProducersToAudit(Integer.MAX_VALUE);
+        sub.setMaxAuditDepth(Integer.MAX_VALUE);
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {

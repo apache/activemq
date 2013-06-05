@@ -19,12 +19,11 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.jms.InvalidSelectorException;
+
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -36,19 +35,20 @@ public class QueueBrowserSubscription extends QueueSubscription {
     boolean browseDone;
     boolean destinationsAdded;
 
-    public QueueBrowserSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info)
-        throws JMSException {
-        super(broker,usageManager, context, info);
+    public QueueBrowserSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
+        super(broker, usageManager, context, info);
     }
 
+    @Override
     protected boolean canDispatch(MessageReference node) {
-        return !((QueueMessageReference)node).isAcked();
+        return !((QueueMessageReference) node).isAcked();
     }
 
+    @Override
     public synchronized String toString() {
-        return "QueueBrowserSubscription:" + " consumer=" + info.getConsumerId() + ", destinations="
-               + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
-               + this.prefetchExtension + ", pending=" + getPendingQueueSize();
+        return "QueueBrowserSubscription:" + " consumer=" + info.getConsumerId() +
+               ", destinations=" + destinations.size() + ", dispatched=" + dispatched.size() +
+               ", delivered=" + this.prefetchExtension + ", pending=" + getPendingQueueSize();
     }
 
     synchronized public void destinationsAdded() throws Exception {
@@ -57,12 +57,13 @@ public class QueueBrowserSubscription extends QueueSubscription {
     }
 
     private void checkDone() throws Exception {
-        if( !browseDone && queueRefs == 0 && destinationsAdded) {
-            browseDone=true;
+        if (!browseDone && queueRefs == 0 && destinationsAdded) {
+            browseDone = true;
             add(QueueMessageReference.NULL_MESSAGE);
         }
     }
 
+    @Override
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         return !browseDone && super.matches(node, context);
     }
@@ -70,15 +71,15 @@ public class QueueBrowserSubscription extends QueueSubscription {
     /**
      * Since we are a browser we don't really remove the message from the queue.
      */
-    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n)
-        throws IOException {
-    	if (info.isNetworkSubscription()) {
-    		super.acknowledge(context, ack, n);
-    	}
+    @Override
+    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
+        if (info.isNetworkSubscription()) {
+            super.acknowledge(context, ack, n);
+        }
     }
 
     synchronized public void incrementQueueRef() {
-        queueRefs++;        
+        queueRefs++;
     }
 
     synchronized public void decrementQueueRef() throws Exception {
@@ -87,7 +88,6 @@ public class QueueBrowserSubscription extends QueueSubscription {
         }
         checkDone();
     }
-
 
     @Override
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
