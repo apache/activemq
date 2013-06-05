@@ -103,7 +103,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-leveldb-store</artifactId>
       <version>${project.version}</version>
-      <classifier>uber</classifier>
     </dependency>
 
     <!-- Additional protocol impls -->
