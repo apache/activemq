@@ -48,7 +48,7 @@ public class ActiveMQMessageAuditNotSyncTest {
     @Test
     public void testAuditDepth() {
 
-        int maxAuditDepth = Integer.MAX_VALUE;
+        int maxAuditDepth = Short.MAX_VALUE;
 
         ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
         SessionId sessionId = new SessionId(connectionId, sessionIdGenerator.getNextSequenceId());
