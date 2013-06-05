@@ -331,9 +331,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
       val s = size
       if( manager.asyncCapacityRemaining.addAndGet(-s) > 0 ) {
         asyncCapacityUsed = s
-        manager.parent.blocking_executor.execute(^{
-          complete_listeners.foreach(_())
-        })
+        complete_listeners.foreach(_())
       } else {
         manager.asyncCapacityRemaining.addAndGet(s)
       }
@@ -352,9 +350,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         asyncCapacityUsed = 0
       } else {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
-        manager.parent.blocking_executor.execute(^{
-          complete_listeners.foreach(_())
-        })
+        complete_listeners.foreach(_())
       }
       countDownFuture.set(null)
 
@@ -665,19 +661,15 @@ class DBManager(val parent:LevelDBStore) {
     client.collectionIsEmpty(key)
   }
   
-  def cursorMessages(key:Long, listener:MessageRecoveryListener, startPos:Long) = {
+  def cursorMessages(preparedAcks:java.util.HashSet[MessageId], key:Long, listener:MessageRecoveryListener, startPos:Long, max:Long=Long.MaxValue) = {
     var lastmsgid:MessageId = null
+    var count = 0L
     client.queueCursor(key, startPos) { msg =>
-      if( listener.hasSpace ) {
-        if( listener.recoverMessage(msg) ) {
-          lastmsgid = msg.getMessageId
-          true
-        } else {
-          false
-        }
-      } else {
-        false
+      if( !preparedAcks.contains(msg.getMessageId) && listener.recoverMessage(msg) ) {
+        lastmsgid = msg.getMessageId
+        count += 1
       }
+      count < max
     }
     if( lastmsgid==null ) {
       startPos
