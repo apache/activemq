@@ -17,31 +17,43 @@
 package org.apache.activemq.camel.component;
 
 import java.net.URISyntaxException;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.Service;
+import org.apache.activemq.advisory.DestinationSource;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ComponentConfiguration;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
+import org.apache.camel.spi.EndpointCompleter;
 import org.apache.camel.util.IntrospectionSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
 import org.springframework.jms.connection.SingleConnectionFactory;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 
 /**
  * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
  *
  * 
  */
-public class ActiveMQComponent extends JmsComponent {
+public class ActiveMQComponent extends JmsComponent implements EndpointCompleter {
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList =
         new CopyOnWriteArrayList<SingleConnectionFactory>();
     private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList =
         new CopyOnWriteArrayList<Service>();
     private boolean exposeAllQueues;
     private CamelEndpointLoader endpointLoader;
+
+    private EnhancedConnection connection;
+    private ConnectionFactory connectionFactory;
+    DestinationSource source;
 
     /**
      * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a>
@@ -160,17 +172,30 @@ public class ActiveMQComponent extends JmsComponent {
     @Override
     protected void doStart() throws Exception {
         super.doStart();
+
+        if (connection == null) {
+            Connection value = getConnectionFactory().createConnection();
+            if (value instanceof EnhancedConnection) {
+                connection = (EnhancedConnection) value;
+            }
+            else {
+                throw new IllegalArgumentException("Created JMS Connection is not an EnhancedConnection: " + value);
+            }
+        }
+        connection.start();
+        source = connection.getDestinationSource();
+
         if (isExposeAllQueues()) {
-            endpointLoader = new CamelEndpointLoader(getCamelContext());
+            endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
             endpointLoader.afterPropertiesSet();
         }
     }
 
     @Override
     protected void doStop() throws Exception {
-        if (endpointLoader != null) {
-            endpointLoader.destroy();
-            endpointLoader = null;
+        if (connection != null) {
+            connection.close();
+            connection = null;
         }
         for (Service s : pooledConnectionFactoryServiceList) {
             s.stop();
@@ -195,6 +220,36 @@ public class ActiveMQComponent extends JmsComponent {
     protected JmsConfiguration createConfiguration() {
         ActiveMQConfiguration answer = new ActiveMQConfiguration();
         answer.setActiveMQComponent(this);
+        return answer;
+    }
+
+    public ConnectionFactory getConnectionFactory() {
+        if (connectionFactory == null
+                && getConfiguration() instanceof ActiveMQConfiguration) {
+            connectionFactory = ((ActiveMQConfiguration)getConfiguration()).createConnectionFactory();
+        }
+        return connectionFactory;
+    }
+
+    @Override
+    public List<String> completeEndpointPath(ComponentConfiguration componentConfiguration, String completionText) {
+        Set candidates = source.getQueues();
+        String destinationName = completionText;
+        if (completionText.startsWith("topic:")) {
+            candidates = source.getTopics();
+            destinationName = completionText.substring(6);
+        } else if (completionText.startsWith("queue:")) {
+            destinationName = completionText.substring(6);
+        }
+
+        Iterator it = candidates.iterator();
+        ArrayList<String> answer = new ArrayList<String>();
+        while (it.hasNext()) {
+           ActiveMQDestination destination = (ActiveMQDestination)it.next();
+           if (destination.getPhysicalName().startsWith(destinationName)) {
+               answer.add(destination.getPhysicalName());
+           }
+        }
         return answer;
     }
 }

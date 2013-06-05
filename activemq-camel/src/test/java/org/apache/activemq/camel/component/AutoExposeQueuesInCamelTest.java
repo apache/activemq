@@ -16,22 +16,25 @@
  */
 package org.apache.activemq.camel.component;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.BrowsableEndpoint;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Shows that we can see the queues inside ActiveMQ via Camel
@@ -46,17 +49,44 @@ public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
     protected ActiveMQTopic sampleTopic = new ActiveMQTopic("cheese");
 
     protected CamelContext camelContext = new DefaultCamelContext();
+    ActiveMQComponent component;
 
     public void testWorks() throws Exception {
         Thread.sleep(2000);
         LOG.debug("Looking for endpoints...");
+        broker.getAdminView().addQueue("runtime");
+
+        Thread.sleep(1000);
         // Changed from using CamelContextHelper.getSingletonEndpoints here because JMS Endpoints in Camel
         // are always non-singleton
         List<BrowsableEndpoint> endpoints = getEndpoints(camelContext, BrowsableEndpoint.class);
         for (BrowsableEndpoint endpoint : endpoints) {
             LOG.debug("Endpoint: " + endpoint);
         }
-        assertEquals("Should have found an endpoint: "+ endpoints, 1, endpoints.size());
+        assertEquals("Should have found an endpoint: "+ endpoints, 2, endpoints.size());
+    }
+
+    public void testCompleter() throws Exception {
+        Thread.sleep(1000);
+        List<String> result = component.completeEndpointPath(null, "foo");
+        assertThat(result, is(Arrays.asList("foo.bar")));
+        result = component.completeEndpointPath(null, "queue:foo");
+        assertThat(result, is(Arrays.asList("foo.bar")));
+        result = component.completeEndpointPath(null, "topic:ch");
+        assertThat(result, is(Arrays.asList("cheese")));
+        result = component.completeEndpointPath(null, "ch");
+        assertTrue(result.isEmpty());
+        result = component.completeEndpointPath(null, "queue:ch");
+        assertTrue(result.isEmpty());
+        result = component.completeEndpointPath(null, "topic:foo");
+        assertTrue(result.isEmpty());
+
+        broker.getAdminView().addQueue("runtime");
+
+        Thread.sleep(1000);
+
+        result = component.completeEndpointPath(null, "run");
+        assertThat(result, is(Arrays.asList("runtime")));
     }
 
     public <T> List<T> getEndpoints(CamelContext camelContext, Class<T> type) {
@@ -76,7 +106,7 @@ public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
         super.setUp();
 
         // lets configure the ActiveMQ component for Camel
-        ActiveMQComponent component = new ActiveMQComponent();
+        component = new ActiveMQComponent();
         component.setBrokerURL(bindAddress);
         component.setExposeAllQueues(true);
 

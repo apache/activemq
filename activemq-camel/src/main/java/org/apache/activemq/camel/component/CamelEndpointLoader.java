@@ -49,15 +49,15 @@ import org.slf4j.LoggerFactory;
 public class CamelEndpointLoader implements CamelContextAware {
     private static final transient Logger LOG = LoggerFactory.getLogger(CamelEndpointLoader.class);
     private CamelContext camelContext;
-    private EnhancedConnection connection;
-    private ConnectionFactory connectionFactory;
     private ActiveMQComponent component;
+    DestinationSource source;
 
     public CamelEndpointLoader() {
     }
 
-    public CamelEndpointLoader(CamelContext camelContext) {
+    public CamelEndpointLoader(CamelContext camelContext, DestinationSource source) {
         this.camelContext = camelContext;
+        this.source = source;
     }
 
     /**
@@ -67,18 +67,6 @@ public class CamelEndpointLoader implements CamelContextAware {
      */
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
-        ObjectHelper.notNull(camelContext, "camelContext");
-        if (connection == null) {
-            Connection value = getConnectionFactory().createConnection();
-            if (value instanceof EnhancedConnection) {
-                connection = (EnhancedConnection) value;
-            }
-            else {
-                throw new IllegalArgumentException("Created JMS Connection is not an EnhancedConnection: " + value);
-            }
-        }
-        connection.start();
-        DestinationSource source = connection.getDestinationSource();
         source.setDestinationListener(new DestinationListener() {
             public void onDestinationEvent(DestinationEvent event) {
                 try {
@@ -119,20 +107,6 @@ public class CamelEndpointLoader implements CamelContextAware {
         }
     }
 
-
-    /**
-     *
-     * @throws Exception
-     * @org.apache.xbean.DestroyMethod
-     */
-    @PreDestroy
-    public void destroy() throws Exception {
-        if (connection != null) {
-            connection.close();
-            connection = null;
-        }
-    }
-
     // Properties
     //-------------------------------------------------------------------------
     public CamelContext getCamelContext() {
@@ -141,23 +115,6 @@ public class CamelEndpointLoader implements CamelContextAware {
 
     public void setCamelContext(CamelContext camelContext) {
         this.camelContext = camelContext;
-    }
-
-    public EnhancedConnection getConnection() {
-        return connection;
-    }
-
-    public ConnectionFactory getConnectionFactory() {
-        if (connectionFactory == null
-                && getComponent().getConfiguration() instanceof ActiveMQConfiguration) {
-            connectionFactory = ((ActiveMQConfiguration) getComponent()
-                    .getConfiguration()).createConnectionFactory();
-        }
-        return connectionFactory;
-    }
-
-    public void setConnectionFactory(ConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
     }
 
     public ActiveMQComponent getComponent() {
