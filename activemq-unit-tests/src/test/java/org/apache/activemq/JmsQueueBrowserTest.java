@@ -307,7 +307,9 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
 
         MessageProducer producer = session.createProducer(destination);
 
-        for (int i = 0; i < 1000; i++) {
+        int numberOfMessages = 4096;
+
+        for (int i = 0; i < numberOfMessages; i++) {
             producer.send(session.createTextMessage("Message: "  + i));
         }
 
@@ -329,7 +331,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         }
 
         System.out.println("Number browsed:  " + numberBrowsed);
-        assertEquals(1000, numberBrowsed);
+        assertEquals(numberOfMessages, numberBrowsed);
         browser.close();
         producer.close();
     }
