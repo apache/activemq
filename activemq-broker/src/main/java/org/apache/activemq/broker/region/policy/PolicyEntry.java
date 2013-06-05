@@ -244,7 +244,6 @@ public class PolicyEntry extends DestinationMapEntry {
         // is done.  We should refactor the browsers to better handle message dispatch so
         // we can remove this and perform a more efficient dispatch.
         sub.setMaxProducersToAudit(Integer.MAX_VALUE);
-        sub.setMaxAuditDepth(Integer.MAX_VALUE);
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
