@@ -1977,6 +1977,10 @@ public class BrokerService implements Service {
         }
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
+            try {
+                unregisterConnectorMBean(connector);
+            } catch (IOException e) {
+            }
             stopper.stop(connector);
         }
     }
