@@ -514,6 +514,10 @@ class AmqpProtocolConverter {
             message.setProducerId(producerId);
 
             MessageId messageId = message.getMessageId();
+            if (messageId == null) {
+                messageId = new MessageId();
+            }
+
             messageId.setProducerId(producerId);
             messageId.setProducerSequenceId(messageIdGenerator.getNextSequenceId());
 
