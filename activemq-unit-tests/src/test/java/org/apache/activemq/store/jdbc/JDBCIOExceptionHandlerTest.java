@@ -224,7 +224,6 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
             }
         }
 
-        @Override
         public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
             return null;
         }
