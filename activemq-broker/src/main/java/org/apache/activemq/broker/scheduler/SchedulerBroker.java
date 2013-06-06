@@ -34,6 +34,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
+import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.JobSchedulerUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
@@ -96,15 +97,13 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     }
 
     @Override
-    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        long delay = 0;
-        long period = 0;
-        int repeat = 0;
-        String cronEntry = "";
-        String jobId = (String) messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
-        Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
-        Object periodValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
-        Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
+    public void send(ProducerBrokerExchange producerExchange, final Message messageSend) throws Exception {
+        ConnectionContext context = producerExchange.getConnectionContext();
+
+        final String jobId = (String) messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
+        final Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
+        final Object periodValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
+        final Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
 
         String physicalName = messageSend.getDestination().getPhysicalName();
         boolean schedularManage = physicalName.regionMatches(true, 0, ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
@@ -155,29 +154,48 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             }
 
         } else if ((cronValue != null || periodValue != null || delayValue != null) && jobId == null) {
-            // clear transaction context
-            Message msg = messageSend.copy();
-            msg.setTransactionId(null);
-            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(msg);
-            if (cronValue != null) {
-                cronEntry = cronValue.toString();
-            }
-            if (periodValue != null) {
-                period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
-            }
-            if (delayValue != null) {
-                delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
-            }
-            Object repeatValue = msg.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
-            if (repeatValue != null) {
-                repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
-            }
-            getInternalScheduler().schedule(msg.getMessageId().toString(), new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay,
-                period, repeat);
 
+            if (context.isInTransaction()) {
+                context.getTransaction().addSynchronization(new Synchronization() {
+                    @Override
+                    public void afterCommit() throws Exception {
+                        doSchedule(messageSend, cronValue, periodValue, delayValue);
+                    }
+                });
+            } else {
+                doSchedule(messageSend, cronValue, periodValue, delayValue);
+            }
         } else {
             super.send(producerExchange, messageSend);
         }
+    }
+
+    private void doSchedule(Message messageSend, Object cronValue, Object periodValue, Object delayValue) throws Exception {
+        long delay = 0;
+        long period = 0;
+        int repeat = 0;
+        String cronEntry = "";
+
+        // clear transaction context
+        Message msg = messageSend.copy();
+        msg.setTransactionId(null);
+        org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(msg);
+        if (cronValue != null) {
+            cronEntry = cronValue.toString();
+        }
+        if (periodValue != null) {
+            period = (Long) TypeConversionSupport.convert(periodValue, Long.class);
+        }
+        if (delayValue != null) {
+            delay = (Long) TypeConversionSupport.convert(delayValue, Long.class);
+        }
+        Object repeatValue = msg.getProperty(ScheduledMessage.AMQ_SCHEDULED_REPEAT);
+        if (repeatValue != null) {
+            repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
+        }
+
+        getInternalScheduler().schedule(msg.getMessageId().toString(),
+            new ByteSequence(packet.data, packet.offset, packet.length), cronEntry, delay, period, repeat);
     }
 
     @Override
