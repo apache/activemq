@@ -70,7 +70,7 @@ public class ActiveMQMessageTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        this.jmsMessageID = "testid";
+        this.jmsMessageID = "ID:TEST-ID:0:0:0:1";
         this.jmsCorrelationID = "testcorrelationid";
         this.jmsDestination = new ActiveMQTopic("test.topic");
         this.jmsReplyTo = new ActiveMQTempTopic("test.replyto.topic:001");
@@ -103,7 +103,7 @@ public class ActiveMQMessageTest extends TestCase {
     public void testHashCode() throws Exception {
         ActiveMQMessage msg = new ActiveMQMessage();
         msg.setJMSMessageID(this.jmsMessageID);
-        assertTrue(msg.hashCode() == jmsMessageID.hashCode());
+        assertTrue(msg.getJMSMessageID().hashCode() == jmsMessageID.hashCode());
     }
 
     public void testSetReadOnly() {
