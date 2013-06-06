@@ -108,21 +108,25 @@
       <groupId>org.fusesource.hawtdispatch</groupId>
       <artifactId>hawtdispatch-transport</artifactId>
       <version>${hawtdispatch-version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.fusesource.fabric</groupId>
       <artifactId>fabric-groups</artifactId>
       <version>7.2.0.redhat-024</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.fusesource.fabric</groupId>
       <artifactId>fabric-linkedin-zookeeper</artifactId>
       <version>7.2.0.redhat-024</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.fusesource.fabric</groupId>
       <artifactId>fabric-zookeeper</artifactId>
       <version>7.2.0.redhat-024</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
