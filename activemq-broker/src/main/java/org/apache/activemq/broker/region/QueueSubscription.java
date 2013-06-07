@@ -17,8 +17,9 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-import javax.jms.InvalidSelectorException;
+
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
@@ -41,24 +42,28 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     /**
      * In the queue case, mark the node as dropped and then a gc cycle will
      * remove it from the queue.
-     * 
+     *
      * @throws IOException
      */
+    @Override
     protected void acknowledge(final ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
         final Destination q = (Destination) n.getRegionDestination();
         final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;
-        
+
         if (n.isExpired()) {
             // sync with message expiry processing
             if (!broker.isExpired(n)) {
-                LOG.warn("ignoring ack " + ack + ", for already expired message: " + n);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("ignoring ack {}, for already expired message: {}", ack, n);
+                }
                 return;
             }
         }
         queue.removeMessage(context, this, node, ack);
     }
 
+    @Override
     protected boolean canDispatch(MessageReference n) throws IOException {
         boolean result = true;
         QueueMessageReference node = (QueueMessageReference)n;
@@ -86,26 +91,31 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         }
     }
 
+    @Override
     public synchronized String toString() {
         return "QueueSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
                + this.prefetchExtension + ", pending=" + getPendingQueueSize();
     }
 
+    @Override
     public int getLockPriority() {
         return info.getPriority();
     }
 
+    @Override
     public boolean isLockExclusive() {
         return info.isExclusive();
     }
 
     /**
      */
+    @Override
     public void destroy() {
         setSlowConsumer(false);
     }
 
-   
+
+    @Override
     protected boolean isDropped(MessageReference node) {
        boolean result = false;
        if(node instanceof IndirectMessageReference) {
