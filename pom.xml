@@ -94,6 +94,7 @@
     <opensymphony-version>2.4.2</opensymphony-version>
     <org-apache-derby-version>10.9.1.0</org-apache-derby-version>
     <org.osgi.core-version>4.3.1</org.osgi.core-version>
+    <fabric-version>7.2.0.redhat-024</fabric-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <qpid-proton-version>0.3.0-fuse-3</qpid-proton-version>
     <qpid-jms-version>0.20</qpid-jms-version>

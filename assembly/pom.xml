@@ -75,6 +75,39 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-leveldb-store</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.fusesource.hawtdispatch</groupId>
+      <artifactId>hawtdispatch-transport</artifactId>
+      <version>${hawtdispatch-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.fabric</groupId>
+      <artifactId>fabric-groups</artifactId>
+      <version>${fabric-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.fabric</groupId>
+      <artifactId>fabric-linkedin-zookeeper</artifactId>
+      <version>${fabric-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.fabric</groupId>
+      <artifactId>fabric-zookeeper</artifactId>
+      <version>${fabric-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>${org.osgi.core-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>${org.osgi.core-version}</version>
+    </dependency>    
+    
+    
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-kahadb-store</artifactId>
