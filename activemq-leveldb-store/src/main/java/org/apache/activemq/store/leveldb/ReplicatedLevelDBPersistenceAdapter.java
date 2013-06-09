@@ -17,6 +17,7 @@
 package org.apache.activemq.store.leveldb;
 
 import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
+import org.apache.activemq.store.PersistenceAdapter;
 
 
 /**
@@ -26,5 +27,5 @@ import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
  * @org.apache.xbean.XBean element="replicatedLevelDB"
  *
  */
-public class ReplicatedLevelDBPersistenceAdapter extends ElectingLevelDBStore {
+public class ReplicatedLevelDBPersistenceAdapter extends ElectingLevelDBStore implements PersistenceAdapter {
 }
