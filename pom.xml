@@ -60,6 +60,7 @@
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>3.2</commons-net-version>
     <directory-version>2.0.0-M6</directory-version>
+    <hawtio-version>1.2-M1</hawtio-version>
 
     <ftpserver-version>1.0.6</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>

@@ -95,6 +95,21 @@
   </fileSets>
 
   <dependencySets>
+    <dependencySet>
+      <outputDirectory>/webapps/hawtio</outputDirectory>
+      <unpack>true</unpack>
+      <unpackOptions>
+        <excludes>
+          <exclude>WEB-INF/lib/slf4j-api-1.6.1.jar</exclude>
+          <exclude>WEB-INF/lib/log4j-1.2.16.jar</exclude>
+          <exclude>WEB-INF/lib/commons-codec-1.2.jar</exclude>
+        </excludes>
+      </unpackOptions>      
+      <scope>runtime</scope>
+      <includes>
+        <include>io.hawt:hawtio-web:war</include>
+      </includes>
+    </dependencySet>
 
     <!-- Copy over jar files -->
     <dependencySet>

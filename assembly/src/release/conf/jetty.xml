@@ -49,6 +49,11 @@
                 <property name="handlers">
                     <list>
                         <bean class="org.eclipse.jetty.webapp.WebAppContext">
+                            <property name="contextPath" value="/hawtio" />
+                            <property name="war" value="${activemq.home}/webapps/hawtio" />
+                            <property name="logUrlOnStart" value="true" />
+                        </bean>
+                        <bean class="org.eclipse.jetty.webapp.WebAppContext">
                             <property name="contextPath" value="/admin" />
                             <property name="resourceBase" value="${activemq.home}/webapps/admin" />
                             <property name="logUrlOnStart" value="true" />
