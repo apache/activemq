@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import javax.jms.BytesMessage;
@@ -38,11 +39,15 @@ import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.junit.After;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
  */
 public class AmqpTransformerTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpTransformerTest.class);
 
     private static final String AMQP_URL = "amqp://0.0.0.0:0%s";
     private BrokerService brokerService;
@@ -127,8 +132,10 @@ public class AmqpTransformerTest {
 
         MessageConsumer c = session.createConsumer(jmsDest);
 
-        Message message = c.receive(1000);
+        Message message = c.receive(2000);
 
+        assertNotNull("Should have received a message", message);
+        LOG.info("Recieved message: ", message);
         assertTrue(message instanceof BytesMessage);
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
         Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
