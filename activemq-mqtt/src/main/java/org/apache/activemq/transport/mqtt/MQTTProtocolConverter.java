@@ -314,7 +314,8 @@ class MQTTProtocolConverter {
         consumerInfo.setDispatchAsync(true);
         if (!connect.cleanSession() && (connect.clientId() != null)) {
             //by default subscribers are persistent
-            consumerInfo.setSubscriptionName(connect.clientId().toString());
+            consumerInfo.setSubscriptionName(
+                connect.clientId().toString() + topic.name().toString());
         }
         MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
 

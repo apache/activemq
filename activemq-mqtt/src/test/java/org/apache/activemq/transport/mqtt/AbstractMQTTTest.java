@@ -17,8 +17,6 @@
 package org.apache.activemq.transport.mqtt;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +57,7 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
     protected LinkedList<Throwable> exceptions = new LinkedList<Throwable>();
     protected int numberOfMessages;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -70,6 +69,7 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
         this.numberOfMessages = 1000;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         if (brokerService != null) {

@@ -19,6 +19,9 @@ package org.apache.activemq.transport.mqtt;
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
+import org.fusesource.mqtt.client.Message;
+import org.fusesource.mqtt.client.QoS;
+import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.junit.Test;
@@ -67,6 +70,43 @@ public class MQTTTest extends AbstractMQTTTest {
         }));
 
         connection.disconnect();
+    }
+
+    public void testSubscribeMultipleTopics() throws Exception {
+        byte[] payload = new byte[1024 * 32];
+        for (int i = 0; i < payload.length; i++){
+            payload[i] = '2';
+        }
+
+        addMQTTConnector();
+        brokerService.start();
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("MQTT-Client");
+        mqtt.setCleanSession(false);
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        Topic[] topics = {new Topic("TopicA", QoS.EXACTLY_ONCE), new Topic("TopicB", QoS.EXACTLY_ONCE)};
+        connection.subscribe(topics);
+
+        for (Topic topic : topics) {
+            connection.publish(topic.name().toString(), payload, QoS.AT_LEAST_ONCE, false);
+        }
+
+        int received = 0;
+        for (int i = 0; i < topics.length; ++i) {
+            Message message = connection.receive();
+            assertNotNull(message);
+            received++;
+            payload = message.getPayload();
+            String messageContent = new String(payload);
+            LOG.info("Received message from topic: " + message.getTopic() +
+                     " Message content: " + messageContent);
+            message.ack();
+        }
+
+        assertEquals("Should have received " + topics.length + " messages", topics.length, received);
     }
 
     @Test(timeout=30000)
