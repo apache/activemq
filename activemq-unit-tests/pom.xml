@@ -442,6 +442,9 @@
           <filesets>
             <fileset>
               <directory>${basedir}/activemq-data</directory>
+              <directory>${basedir}/KahaDB</directory>
+              <directory>${basedir}/LeveDB</directory>
+              <directory>${basedir}/shared</directory>
             </fileset>
           </filesets>
         </configuration>

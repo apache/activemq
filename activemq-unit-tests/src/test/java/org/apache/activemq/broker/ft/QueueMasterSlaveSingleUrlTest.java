@@ -35,10 +35,12 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
         super.setUp();
     }
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory(singleUriString);
     }
 
+    @Override
     protected void createMaster() throws Exception {
         master = new BrokerService();
         master.setBrokerName("shared-master");
@@ -46,25 +48,27 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
         master.addConnector(brokerUrl);
         master.start();
     }
-    
+
     private void configureSharedPersistenceAdapter(BrokerService broker) throws Exception {
        LevelDBStore adapter = new LevelDBStore();
        adapter.setDirectory(new File("shared"));
-       broker.setPersistenceAdapter(adapter); 
+       broker.setPersistenceAdapter(adapter);
     }
 
-    protected void createSlave() throws Exception {      
+    @Override
+    protected void createSlave() throws Exception {
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     BrokerService broker = new BrokerService();
                     broker.setBrokerName("shared-slave");
                     configureSharedPersistenceAdapter(broker);
-                    // add transport as a service so that it is bound on start, after store started                
+                    // add transport as a service so that it is bound on start, after store started
                     final TransportConnector tConnector = new TransportConnector();
                     tConnector.setUri(new URI(brokerUrl));
                     broker.addConnector(tConnector);
-                    
+
                     broker.start();
                     slave.set(broker);
                     slaveStarted.countDown();
@@ -75,5 +79,5 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
 
         }).start();
     }
-        
+
 }
