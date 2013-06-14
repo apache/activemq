@@ -348,8 +348,11 @@ class AmqpProtocolConverter {
             MessageDispatch md = (MessageDispatch) command;
             ConsumerContext consumerContext = subscriptionsByConsumerId.get(md.getConsumerId());
             if (consumerContext != null) {
-                if (LOG.isTraceEnabled()) {
+                // End of Queue Browse will have no Message object.
+                if (LOG.isTraceEnabled() && md.getMessage() != null) {
                     LOG.trace("Dispatching MessageId:{} to consumer", md.getMessage().getMessageId());
+                } else {
+                    LOG.trace("Dispatching End of Browse Command to consumer {}", md.getConsumerId());
                 }
                 consumerContext.onMessageDispatch(md);
             }
