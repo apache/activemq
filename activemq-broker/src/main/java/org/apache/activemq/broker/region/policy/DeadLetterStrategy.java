@@ -22,11 +22,11 @@ import org.apache.activemq.command.Message;
 
 /**
  * A strategy for choosing which destination is used for dead letter queue messages.
- * 
- * 
+ *
+ *
  */
 public interface DeadLetterStrategy {
-    
+
     /**
      * Allow pluggable strategy for deciding if message should be sent to a dead letter queue
      * for example, you might not want to ignore expired or non-persistent messages
@@ -61,5 +61,14 @@ public interface DeadLetterStrategy {
     public void setProcessNonPersistent(boolean processNonPersistent);
 
     public boolean isDLQ(ActiveMQDestination destination);
+
+    /**
+     * Allows for a Message that was already processed by a DLQ to be rolled back in case
+     * of a move or a retry of that message, otherwise the Message would be considered a
+     * duplicate if this strategy is doing Message Auditing.
+     *
+     * @param message
+     */
+    public void rollback(Message message);
 
 }

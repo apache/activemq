@@ -59,6 +59,7 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.util.InsertionCountList;
@@ -1451,9 +1452,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         BrokerSupport.resend(context, m.getMessage(), dest);
         removeMessage(context, m);
         messagesLock.writeLock().lock();
-        try{
+        try {
             messages.rollback(m.getMessageId());
-        }finally {
+            if (isDLQ()) {
+                DeadLetterStrategy stratagy = getDeadLetterStrategy();
+                stratagy.rollback(m.getMessage());
+            }
+        } finally {
             messagesLock.writeLock().unlock();
         }
         return true;

@@ -39,7 +39,6 @@ import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.broker.region.policy.AbstractDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -79,11 +78,9 @@ public class AMQ3405Test extends TestSupport {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         PolicyEntry policy = new PolicyEntry();
-        policy.setEnableAudit(false);
         DeadLetterStrategy defaultDeadLetterStrategy = policy.getDeadLetterStrategy();
         if(defaultDeadLetterStrategy!=null) {
             defaultDeadLetterStrategy.setProcessNonPersistent(true);
-            ((AbstractDeadLetterStrategy) defaultDeadLetterStrategy).setEnableAudit(false);
         }
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);

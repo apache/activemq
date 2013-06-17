@@ -24,16 +24,23 @@ import org.slf4j.LoggerFactory;
 /**
  * A strategy for choosing which destination is used for dead letter queue
  * messages.
- * 
- * 
+ *
  */
 public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDeadLetterStrategy.class);
     private boolean processNonPersistent = false;
     private boolean processExpired = true;
     private boolean enableAudit = true;
-    private ActiveMQMessageAudit messageAudit = new ActiveMQMessageAudit();
+    private final ActiveMQMessageAudit messageAudit = new ActiveMQMessageAudit();
 
+    @Override
+    public void rollback(Message message) {
+        if (message != null && this.enableAudit) {
+            messageAudit.rollback(message);
+        }
+    }
+
+    @Override
     public boolean isSendToDeadLetterQueue(Message message) {
         boolean result = false;
         if (message != null) {
@@ -57,6 +64,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     /**
      * @return the processExpired
      */
+    @Override
     public boolean isProcessExpired() {
         return this.processExpired;
     }
@@ -64,6 +72,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     /**
      * @param processExpired the processExpired to set
      */
+    @Override
     public void setProcessExpired(boolean processExpired) {
         this.processExpired = processExpired;
     }
@@ -71,6 +80,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     /**
      * @return the processNonPersistent
      */
+    @Override
     public boolean isProcessNonPersistent() {
         return this.processNonPersistent;
     }
@@ -78,6 +88,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
     /**
      * @param processNonPersistent the processNonPersistent to set
      */
+    @Override
     public void setProcessNonPersistent(boolean processNonPersistent) {
         this.processNonPersistent = processNonPersistent;
     }
