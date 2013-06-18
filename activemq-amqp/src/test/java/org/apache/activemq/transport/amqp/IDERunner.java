@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 // import org.apache.activemq.leveldb.LevelDBStore;
 
 import java.io.File;
@@ -25,11 +26,11 @@ public class IDERunner {
 
     public static void main(String[]args) throws Exception {
         BrokerService bs = new BrokerService();
-        bs.addConnector("tcp://localhost:61616");
-        // LevelDBStore store = new LevelDBStore();
-        // store.setDirectory(new File("target/activemq-data/haleveldb"));
-        // bs.setPersistenceAdapter(store);
-        // bs.deleteAllMessages();
+        bs.addConnector("amqp://0.0.0.0:5672?trace=true");
+        KahaDBStore store = new KahaDBStore();
+        store.setDirectory(new File("target/activemq-data/kahadb"));
+        bs.setPersistenceAdapter(store);
+        bs.deleteAllMessages();
         bs.start();
         bs.waitUntilStopped();
     }
