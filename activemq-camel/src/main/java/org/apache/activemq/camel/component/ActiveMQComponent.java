@@ -33,10 +33,11 @@ import org.apache.camel.spi.EndpointCompleter;
 import org.apache.camel.util.IntrospectionSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
 
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 
 /**
  * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
@@ -48,12 +49,13 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         new CopyOnWriteArrayList<SingleConnectionFactory>();
     private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList =
         new CopyOnWriteArrayList<Service>();
+    private static final transient Logger LOG = LoggerFactory.getLogger(ActiveMQComponent.class);
     private boolean exposeAllQueues;
     private CamelEndpointLoader endpointLoader;
 
     private EnhancedConnection connection;
-    private ConnectionFactory connectionFactory;
     DestinationSource source;
+    boolean sourceInitialized = false;
 
     /**
      * Creates an <a href="http://camel.apache.org/activemq.html">ActiveMQ Component</a>
@@ -173,26 +175,38 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
     protected void doStart() throws Exception {
         super.doStart();
 
-        if (connection == null) {
-            Connection value = getConnectionFactory().createConnection();
-            if (value instanceof EnhancedConnection) {
-                connection = (EnhancedConnection) value;
-            }
-            else {
-                throw new IllegalArgumentException("Created JMS Connection is not an EnhancedConnection: " + value);
-            }
-        }
-        connection.start();
-        source = connection.getDestinationSource();
-
         if (isExposeAllQueues()) {
+            createDestinationSource();
             endpointLoader = new CamelEndpointLoader(getCamelContext(), source);
             endpointLoader.afterPropertiesSet();
         }
     }
 
+    protected void createDestinationSource() {
+        try {
+            if (source == null) {
+                if (connection == null) {
+                    Connection value = getConfiguration().getConnectionFactory().createConnection();
+                    if (value instanceof EnhancedConnection) {
+                        connection = (EnhancedConnection) value;
+                    } else {
+                        throw new IllegalArgumentException("Created JMS Connection is not an EnhancedConnection: " + value);
+                    }
+                    connection.start();
+                }
+                source = connection.getDestinationSource();
+            }
+        } catch (Throwable t) {
+            LOG.info("Can't get destination source, endpoint completer will not work", t);
+        }
+    }
+
     @Override
     protected void doStop() throws Exception {
+        if (source != null) {
+            source.stop();
+            source = null;
+        }
         if (connection != null) {
             connection.close();
             connection = null;
@@ -223,32 +237,32 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
         return answer;
     }
 
-    public ConnectionFactory getConnectionFactory() {
-        if (connectionFactory == null
-                && getConfiguration() instanceof ActiveMQConfiguration) {
-            connectionFactory = ((ActiveMQConfiguration)getConfiguration()).createConnectionFactory();
-        }
-        return connectionFactory;
-    }
-
     @Override
     public List<String> completeEndpointPath(ComponentConfiguration componentConfiguration, String completionText) {
-        Set candidates = source.getQueues();
-        String destinationName = completionText;
-        if (completionText.startsWith("topic:")) {
-            candidates = source.getTopics();
-            destinationName = completionText.substring(6);
-        } else if (completionText.startsWith("queue:")) {
-            destinationName = completionText.substring(6);
+        // try to initialize destination source only the first time
+        if (!sourceInitialized) {
+            createDestinationSource();
+            sourceInitialized = true;
         }
-
-        Iterator it = candidates.iterator();
         ArrayList<String> answer = new ArrayList<String>();
-        while (it.hasNext()) {
-           ActiveMQDestination destination = (ActiveMQDestination)it.next();
-           if (destination.getPhysicalName().startsWith(destinationName)) {
-               answer.add(destination.getPhysicalName());
-           }
+        if (source != null) {
+            Set candidates = source.getQueues();
+            String destinationName = completionText;
+            if (completionText.startsWith("topic:")) {
+                candidates = source.getTopics();
+                destinationName = completionText.substring(6);
+            } else if (completionText.startsWith("queue:")) {
+                destinationName = completionText.substring(6);
+            }
+
+            Iterator it = candidates.iterator();
+
+            while (it.hasNext()) {
+                ActiveMQDestination destination = (ActiveMQDestination) it.next();
+                if (destination.getPhysicalName().startsWith(destinationName)) {
+                    answer.add(destination.getPhysicalName());
+                }
+            }
         }
         return answer;
     }

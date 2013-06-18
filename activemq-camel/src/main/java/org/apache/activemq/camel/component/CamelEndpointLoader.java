@@ -67,43 +67,41 @@ public class CamelEndpointLoader implements CamelContextAware {
      */
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
-        source.setDestinationListener(new DestinationListener() {
-            public void onDestinationEvent(DestinationEvent event) {
-                try {
-                    ActiveMQDestination destination = event.getDestination();
-                    if (destination instanceof ActiveMQQueue) {
-                        ActiveMQQueue queue = (ActiveMQQueue) destination;
-                        if (event.isAddOperation()) {
-                            addQueue(queue);
+        if (source != null) {
+            source.setDestinationListener(new DestinationListener() {
+                public void onDestinationEvent(DestinationEvent event) {
+                    try {
+                        ActiveMQDestination destination = event.getDestination();
+                        if (destination instanceof ActiveMQQueue) {
+                            ActiveMQQueue queue = (ActiveMQQueue) destination;
+                            if (event.isAddOperation()) {
+                                addQueue(queue);
+                            } else {
+                                removeQueue(queue);
+                            }
+                        } else if (destination instanceof ActiveMQTopic) {
+                            ActiveMQTopic topic = (ActiveMQTopic) destination;
+                            if (event.isAddOperation()) {
+                                addTopic(topic);
+                            } else {
+                                removeTopic(topic);
+                            }
                         }
-                        else {
-                            removeQueue(queue);
-                        }
-                    }
-                    else if (destination instanceof ActiveMQTopic) {
-                      ActiveMQTopic topic = (ActiveMQTopic) destination;
-                      if (event.isAddOperation()) {
-                          addTopic(topic);
-                      }
-                      else {
-                          removeTopic(topic);
-                      }
+                    } catch (Exception e) {
+                        LOG.warn("Caught: " + e, e);
                     }
                 }
-                catch (Exception e) {
-                    LOG.warn("Caught: " + e, e);
-                }
+            });
+
+            Set<ActiveMQQueue> queues = source.getQueues();
+            for (ActiveMQQueue queue : queues) {
+                addQueue(queue);
             }
-        });
 
-        Set<ActiveMQQueue> queues = source.getQueues();
-        for (ActiveMQQueue queue : queues) {
-            addQueue(queue);
-        }
-
-        Set<ActiveMQTopic> topics = source.getTopics();
-        for (ActiveMQTopic topic : topics) {
-            addTopic(topic);
+            Set<ActiveMQTopic> topics = source.getTopics();
+            for (ActiveMQTopic topic : topics) {
+                addTopic(topic);
+            }
         }
     }
 
