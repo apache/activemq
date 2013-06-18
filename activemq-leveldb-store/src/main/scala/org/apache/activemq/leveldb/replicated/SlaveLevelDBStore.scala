@@ -90,7 +90,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     transport.setDispatchQueue(queue)
     transport.connecting(new URI(connect), null)
 
-    info("Connecting to master...")
+    info("Connecting to master: "+connect)
     wal_session = new Session(transport, (session)=>{
       // lets stash away our current state so that we can unstash it
       // in case we don't get caught up..  If the master dies,
