@@ -313,20 +313,20 @@ public class MessageListenerServlet extends MessageServletSupport {
                 Continuation continuation = ContinuationSupport.getContinuation(request);
 
                 // Add a listener to the continuation to make sure it actually
-                // will expire (seems like a bug in Jetty Servlet 3 continuations, 
+                // will expire (seems like a bug in Jetty Servlet 3 continuations,
                 // see https://issues.apache.org/jira/browse/AMQ-3447
                 continuation.addContinuationListener(new ContinuationListener() {
                     @Override
                     public void onTimeout(Continuation cont) {
                         if (LOG.isDebugEnabled()) {
-                             LOG.debug("Continuation " + cont.toString() + " expired.");
+                            LOG.debug("Continuation " + cont.toString() + " expired.");
                         }
                     }
 
                     @Override
                     public void onComplete(Continuation cont) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Continuation " + cont.toString() + " completed.");
+                           LOG.debug("Continuation " + cont.toString() + " completed.");
                         }
                     }
                 });
@@ -381,7 +381,7 @@ public class MessageListenerServlet extends MessageServletSupport {
             LinkedList<UndeliveredAjaxMessage> undeliveredMessages = ((AjaxListener)consumer.getAvailableListener()).getUndeliveredMessages();
             LOG.debug("Send " + undeliveredMessages.size() + " unconsumed messages");
             synchronized( undeliveredMessages ) {
-                for (Iterator<UndeliveredAjaxMessage> it = undeliveredMessages.iterator(); it.hasNext(); ) {
+                for (Iterator<UndeliveredAjaxMessage> it = undeliveredMessages.iterator(); it.hasNext();) {
                     messages++;
                     UndeliveredAjaxMessage undelivered = it.next();
                     Message msg = undelivered.getMessage();
@@ -425,7 +425,6 @@ public class MessageListenerServlet extends MessageServletSupport {
             String m = swriter.toString();
             response.getWriter().println(m);
         }
-
     }
 
     protected void writeMessageResponse(PrintWriter writer, Message message, String id, String destinationName) throws JMSException, IOException {
