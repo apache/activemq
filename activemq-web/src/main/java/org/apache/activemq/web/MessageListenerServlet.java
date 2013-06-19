@@ -41,6 +41,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.activemq.MessageAvailableConsumer;
 import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,13 +71,14 @@ import org.slf4j.LoggerFactory;
 public class MessageListenerServlet extends MessageServletSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MessageListenerServlet.class);
 
-    private String readTimeoutParameter = "timeout";
+    private final String readTimeoutParameter = "timeout";
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 25000;
     private int maximumMessages = 100;
-    private Timer clientCleanupTimer = new Timer("ActiveMQ Ajax Client Cleanup Timer", true);
-    private HashMap<String,AjaxWebClient> ajaxWebClients = new HashMap<String,AjaxWebClient>();
+    private final Timer clientCleanupTimer = new Timer("ActiveMQ Ajax Client Cleanup Timer", true);
+    private final HashMap<String,AjaxWebClient> ajaxWebClients = new HashMap<String,AjaxWebClient>();
 
+    @Override
     public void init() throws ServletException {
         ServletConfig servletConfig = getServletConfig();
         String name = servletConfig.getInitParameter("defaultReadTimeout");
@@ -113,6 +115,7 @@ public class MessageListenerServlet extends MessageServletSupport {
      * @throws ServletException
      * @throws IOException
      */
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         // lets turn the HTTP post into a JMS Message
@@ -236,6 +239,7 @@ public class MessageListenerServlet extends MessageServletSupport {
      * Supports a HTTP DELETE to be equivlanent of consuming a singe message
      * from a queue
      */
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             AjaxWebClient client = getAjaxWebClient(request);
@@ -274,7 +278,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         Message message = null;
         undelivered_message = (UndeliveredAjaxMessage)request.getAttribute("undelivered_message");
         if( undelivered_message != null ) {
-            message = (Message)undelivered_message.getMessage();
+            message = undelivered_message.getMessage();
         }
 
         synchronized (client) {
@@ -307,6 +311,25 @@ public class MessageListenerServlet extends MessageServletSupport {
 
             if (message == null && client.getListener().getUndeliveredMessages().size() == 0) {
                 Continuation continuation = ContinuationSupport.getContinuation(request);
+
+                // Add a listener to the continuation to make sure it actually
+                // will expire (seems like a bug in Jetty Servlet 3 continuations, 
+                // see https://issues.apache.org/jira/browse/AMQ-3447
+                continuation.addContinuationListener(new ContinuationListener() {
+                    @Override
+                    public void onTimeout(Continuation cont) {
+                        if (LOG.isDebugEnabled()) {
+                             LOG.debug("Continuation " + cont.toString() + " expired.");
+                        }
+                    }
+
+                    @Override
+                    public void onComplete(Continuation cont) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Continuation " + cont.toString() + " completed.");
+                        }
+                    }
+                });
 
                 if (continuation.isExpired()) {
                     response.setStatus(HttpServletResponse.SC_OK);
@@ -361,7 +384,7 @@ public class MessageListenerServlet extends MessageServletSupport {
                 for (Iterator<UndeliveredAjaxMessage> it = undeliveredMessages.iterator(); it.hasNext(); ) {
                     messages++;
                     UndeliveredAjaxMessage undelivered = it.next();
-                    Message msg = (Message)undelivered.getMessage();
+                    Message msg = undelivered.getMessage();
                     consumer = (MessageAvailableConsumer)undelivered.getConsumer();
                     String id = consumerIdMap.get(consumer);
                     String destinationName = consumerDestinationNameMap.get(consumer);
@@ -483,6 +506,7 @@ public class MessageListenerServlet extends MessageServletSupport {
      * an instance of this class runs every minute (started in init), to clean up old web clients & free resources.
      */
     private class ClientCleaner extends TimerTask {
+        @Override
         public void run() {
             if( LOG.isDebugEnabled() ) {
                 LOG.debug( "Cleaning up expired web clients." );
@@ -509,6 +533,7 @@ public class MessageListenerServlet extends MessageServletSupport {
         }
     }
 
+    @Override
     public void destroy() {
         // make sure we cancel the timer
         clientCleanupTimer.cancel();
