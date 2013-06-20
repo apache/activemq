@@ -66,6 +66,13 @@
 -->
     </feature>
 
+    <!-- Starts the broker with default configuration -->
+    <feature name="activemq-broker-noweb" description="Full ActiveMQ broker with default configuration" version="${project.version}" resolver="(obr)" start-level="50">
+        <feature version="${project.version}">activemq</feature>
+        <configfile finalname="/etc/activemq.xml">mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/activemq</configfile>
+        <configfile finalname="/etc/org.apache.activemq.server-default.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq</configfile>
+    </feature>
+
     <!-- Starts the broker with default configuration and web console -->
     <feature name="activemq-broker" description="Full ActiveMQ broker with default configuration and web console" version="${project.version}" resolver="(obr)" start-level="50">
         <feature version="${project.version}">activemq</feature>
