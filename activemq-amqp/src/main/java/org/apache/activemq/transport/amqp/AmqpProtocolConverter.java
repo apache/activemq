@@ -102,7 +102,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class AmqpProtocolConverter {
-
+    static final Logger TRACE_FRAMES = AmqpTransportFilter.TRACE_FRAMES;
     public static final EnumSet<EndpointState> UNINITIALIZED_SET = EnumSet.of(EndpointState.UNINITIALIZED);
     public static final EnumSet<EndpointState> INITIALIZED_SET = EnumSet.complementOf(UNINITIALIZED_SET);
     public static final EnumSet<EndpointState> ACTIVE_STATE = EnumSet.of(EndpointState.ACTIVE);
@@ -126,26 +126,31 @@ class AmqpProtocolConverter {
     public AmqpProtocolConverter(AmqpTransport transport, BrokerContext brokerContext) {
         this.amqpTransport = transport;
         this.protonTransport.bind(this.protonConnection);
-        if (transport.isTrace()) {
+        updateTracer();
+    }
+
+    void updateTracer() {
+        if (amqpTransport.isTrace()) {
             this.protonTransport.setProtocolTracer(new ProtocolTracer() {
                 @Override
                 public void receivedFrame(TransportFrame transportFrame) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(String.format("%s | RECV: %s",
-                            amqpTransport.getRemoteAddress(), transportFrame.getBody()));
+                    if (TRACE_FRAMES.isTraceEnabled()) {
+                        TRACE_FRAMES.trace(String.format("%s | RECV: %s",
+                            AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
                     }
                 }
 
                 @Override
                 public void sentFrame(TransportFrame transportFrame) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(String.format("%s | SENT: %s",
-                            amqpTransport.getRemoteAddress(), transportFrame.getBody()));
+                    if (TRACE_FRAMES.isTraceEnabled()) {
+                        TRACE_FRAMES.trace(String.format("%s | SENT: %s",
+                            AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
                     }
                 }
             });
         }
     }
+
 
     void pumpProtonToSocket() {
         try {

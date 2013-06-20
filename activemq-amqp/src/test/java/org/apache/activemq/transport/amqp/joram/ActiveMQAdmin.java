@@ -56,29 +56,33 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
-    static public void enableJMSFrameTracing() throws FileNotFoundException {
-        final SimpleFormatter formatter = new SimpleFormatter();
-        String outputStreamName = System.getProperty("java.io.tmpdir") + "/amqp-trace.txt";
-        final PrintStream out = new PrintStream(new FileOutputStream(new File(outputStreamName)));
-        Handler handler = new Handler() {
-            @Override
-            public void publish(LogRecord r) {
-                out.println(String.format("%s:%s", r.getLoggerName(), r.getMessage()));
-            }
+    static public void enableJMSFrameTracing() {
+        try {
+            final SimpleFormatter formatter = new SimpleFormatter();
+            String outputStreamName = "amqp-trace.txt";
+            final PrintStream out = new PrintStream(new FileOutputStream(new File(outputStreamName)));
+            Handler handler = new Handler() {
+                @Override
+                public void publish(LogRecord r) {
+                    out.println(String.format("%s:%s", r.getLoggerName(), r.getMessage()));
+                }
 
-            @Override
-            public void flush() {
-                out.flush();
-            }
+                @Override
+                public void flush() {
+                    out.flush();
+                }
 
-            @Override
-            public void close() throws SecurityException {
-            }
-        };
+                @Override
+                public void close() throws SecurityException {
+                }
+            };
 
-        Logger log = Logger.getLogger("FRM");
-        log.addHandler(handler);
-        log.setLevel(Level.FINEST);
+            Logger log = Logger.getLogger("FRM");
+            log.addHandler(handler);
+            log.setLevel(Level.FINEST);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected BrokerService createBroker() throws Exception {

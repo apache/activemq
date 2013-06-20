@@ -39,7 +39,8 @@ import java.security.cert.X509Certificate;
  */
 public class AmqpTransportFilter extends TransportFilter implements AmqpTransport {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransportFilter.class);
-    private static final Logger TRACE = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".AMQPIO");
+    static final Logger TRACE_BYTES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".BYTES");
+    static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
     private final AmqpProtocolConverter protocolConverter;
 //    private AmqpInactivityMonitor monitor;
     private AmqpWireFormat wireFormat;
@@ -86,8 +87,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public void onCommand(Object command) {
         try {
-            if (trace) {
-                TRACE.trace("Received: \n" + command);
+            if (trace && TRACE_BYTES.isTraceEnabled()) {
+                TRACE_BYTES.trace("Received: \n" + command);
             }
             protocolConverter.lock.lock();
             try {
@@ -112,8 +113,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public void sendToAmqp(Object command) throws IOException {
         assert protocolConverter.lock.isHeldByCurrentThread();
-        if (trace) {
-            TRACE.trace("Sending: \n" + command);
+        if (trace && TRACE_BYTES.isTraceEnabled()) {
+            TRACE_BYTES.trace("Sending: \n" + command);
         }
         Transport n = next;
         if (n != null) {
@@ -138,6 +139,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public void setTrace(boolean trace) {
         this.trace = trace;
+        this.protocolConverter.updateTracer();
     }
 
 //    @Override
