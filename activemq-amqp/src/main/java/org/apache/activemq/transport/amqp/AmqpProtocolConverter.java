@@ -136,7 +136,7 @@ class AmqpProtocolConverter {
                 public void receivedFrame(TransportFrame transportFrame) {
                     if (TRACE_FRAMES.isTraceEnabled()) {
                         TRACE_FRAMES.trace(String.format("%s | RECV: %s",
-                            AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
+                                AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
                     }
                 }
 
@@ -144,7 +144,7 @@ class AmqpProtocolConverter {
                 public void sentFrame(TransportFrame transportFrame) {
                     if (TRACE_FRAMES.isTraceEnabled()) {
                         TRACE_FRAMES.trace(String.format("%s | SENT: %s",
-                            AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
+                                AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
                     }
                 }
             });
@@ -741,6 +741,9 @@ class AmqpProtocolConverter {
         private final Sender sender;
         private final boolean presettle;
         private boolean closed;
+        public ConsumerInfo info;
+        private boolean endOfBrowse = false;
+
 
         public ConsumerContext(ConsumerId consumerId, Sender sender) {
             this.consumerId = consumerId;
@@ -825,7 +828,8 @@ class AmqpProtocolConverter {
                     final ActiveMQMessage jms = (ActiveMQMessage) md.getMessage();
                     if (jms == null) {
                         // It's the end of browse signal.
-                        sender.drained();
+                        endOfBrowse = true;
+                        drainCheck();
                     } else {
                         jms.setRedeliveryCounter(md.getRedeliveryCounter());
                         jms.setReadOnlyBody(true);
@@ -900,6 +904,11 @@ class AmqpProtocolConverter {
 
         @Override
         public void drainCheck() {
+            // If we are a browser.. lets not say we are drained until
+            // we hit the end of browse message.
+            if( info.isBrowser() && !endOfBrowse)
+                return;
+
             if (outbound.isEmpty()) {
                 sender.drained();
             }
@@ -1018,6 +1027,7 @@ class AmqpProtocolConverter {
 
             subscriptionsByConsumerId.put(id, consumerContext);
             ConsumerInfo consumerInfo = new ConsumerInfo(id);
+            consumerContext.info = consumerInfo;
             consumerInfo.setSelector(selector);
             consumerInfo.setNoRangeAcks(true);
             consumerInfo.setDestination(dest);
