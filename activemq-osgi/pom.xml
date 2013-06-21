@@ -280,11 +280,12 @@
               META-INF/native/osx/libleveldbjni.jnilib;osname=macosx,
               META-INF/native/linux32/libleveldbjni.so;osname=Linux;processor=x86,
               META-INF/native/linux64/libleveldbjni.so;osname=Linux;processor=x86-64,
-              org/xerial/snappy/native/Linux/i386/libsnappyjava.so;osname=Linux;processor=x86,
-              org/xerial/snappy/native/Mac/i386/libsnappyjava.jnilib;osname=macosx;processor=x86,
+              org/xerial/snappy/native/Windows/amd64/snappyjava.dll;osname=win32;processor=x86-64,
+              org/xerial/snappy/native/Windows/x86/snappyjava.dll;osname=win32;processor=x86,
               org/xerial/snappy/native/Mac/x86_64/libsnappyjava.jnilib;osname=macosx;processor=x86-64,
-              org/xerial/snappy/native/Windows/amd64/snappyjava.dll;osname=Win32;processor=x86-64,
-              org/xerial/snappy/native/Windows/x86/snappyjava.dll;osname=Win32;processor=x86,
+              org/xerial/snappy/native/Linux/amd64/libsnappyjava.so;osname=linux;processor=x86-64,
+              org/xerial/snappy/native/Linux/i386/libsnappyjava.so;osname=linux;processor=x86,
+              org/xerial/snappy/native/Linux/arm/libsnappyjava.so;osname=linux;processor=arm,
               *
             </Bundle-NativeCode>
          </instructions>

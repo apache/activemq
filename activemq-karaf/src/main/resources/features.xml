@@ -49,7 +49,6 @@
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/${xpp3-bundle-version}</bundle>
       <bundle dependency="true">mvn:joda-time/joda-time/${jodatime-bundle-version}</bundle>
       <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/${xstream-bundle-version}</bundle>
-      <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.snappy-java/${snappy-bundle-version}</bundle>
       <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/${aries-version}</bundle>
       <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
       <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries-version}</bundle>
