@@ -134,6 +134,14 @@ public class QueuePurgeTest extends CombinationTestSupport {
         assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
                 proxy.getQueueSize());
         assertEquals("usage goes to duck", 0, proxy.getMemoryPercentUsage());
+        Message msg;
+        do {
+            msg = consumer.receive(1000);
+            if (msg != null) {
+                msg.acknowledge();
+            }
+        } while (msg != null);
+        assertEquals("Queue size not valid", 0, proxy.getQueueSize());
     }
 
     private QueueViewMBean getProxyToQueueViewMBean()

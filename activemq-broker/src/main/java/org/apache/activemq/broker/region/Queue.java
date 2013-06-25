@@ -563,6 +563,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         }
                     }
                 }
+
                 for (MessageReference ref : unAckedMessages) {
                     QueueMessageReference qmr = (QueueMessageReference) ref;
                     if (qmr.getLockOwner() == sub) {
@@ -581,7 +582,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             }
                         }
                     }
-                    redeliveredWaitingDispatch.addMessageLast(qmr);
+                    if (!qmr.isDropped()) {
+                        redeliveredWaitingDispatch.addMessageLast(qmr);
+                    }
                 }
                 if (sub instanceof QueueBrowserSubscription) {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
@@ -1800,13 +1803,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     private void dropMessage(QueueMessageReference reference) {
-        reference.drop();
-        destinationStatistics.getMessages().decrement();
-        pagedInMessagesLock.writeLock().lock();
-        try{
-            pagedInMessages.remove(reference.getMessageId());
-        }finally {
-            pagedInMessagesLock.writeLock().unlock();
+        if (!reference.isDropped()) {
+            reference.drop();
+            destinationStatistics.getMessages().decrement();
+            pagedInMessagesLock.writeLock().lock();
+            try {
+                pagedInMessages.remove(reference.getMessageId());
+            } finally {
+                pagedInMessagesLock.writeLock().unlock();
+            }
         }
     }
 
