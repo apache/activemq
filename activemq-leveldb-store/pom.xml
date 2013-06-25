@@ -77,6 +77,9 @@
       <artifactId>leveldbjni</artifactId>
       <version>${leveldbjni-version}</version>
     </dependency>
+    
+    <!-- Lets not include the JNI libs for now so that we can harden the pure java driver more -->
+    <!--
     <dependency>
       <groupId>org.fusesource.leveldbjni</groupId>
       <artifactId>leveldbjni-osx</artifactId>
@@ -102,7 +105,8 @@
       <artifactId>leveldbjni-win64</artifactId>
       <version>1.5</version>
     </dependency>
-
+    -->
+    
     <!-- For Replication -->
     <dependency>
       <groupId>org.fusesource.hawtdispatch</groupId>

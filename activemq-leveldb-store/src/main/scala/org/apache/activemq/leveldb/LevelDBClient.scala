@@ -559,7 +559,10 @@ class LevelDBClient(store: LevelDBStore) {
     }.headOption.getOrElse(throw new Exception("Could not load any of the index factory classes: "+factoryNames))
 
     if( factory.getClass.getName == "org.iq80.leveldb.impl.Iq80DBFactory") {
-      warn("Using the pure java LevelDB implementation which is still experimental.  Production users should use the JNI based LevelDB implementation instead.")
+      info("Using the pure java LevelDB implementation.")
+    }
+    if( factory.getClass.getName == "org.fusesource.leveldbjni.JniDBFactory") {
+      info("Using the JNI LevelDB implementation.")
     }
 
     indexOptions = new Options();
