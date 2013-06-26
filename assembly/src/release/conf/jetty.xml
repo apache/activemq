@@ -87,6 +87,17 @@
         </property>
     </bean>
 
+    <bean id="rewrite" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
+      <property name="rules">
+          <set>
+              <bean class="org.eclipse.jetty.rewrite.handler.RedirectRegexRule">
+                  <property name="regex" value="/api/jolokia(.*)"/>
+                  <property name="replacement" value="/hawtio/jolokia$1"/>
+              </bean>
+          </set>
+      </property>
+    </bean>
+
     <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection">
     </bean>
 
@@ -115,6 +126,7 @@
             <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
                 <property name="handlers">
                     <list>
+                        <ref bean="rewrite"/>
                         <ref bean="contexts" />
                         <ref bean="securityHandler" />
                     </list>

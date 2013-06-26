@@ -36,20 +36,9 @@
         -->
     </servlet>
 
-    <servlet>
-        <servlet-name>jolokia-agent</servlet-name>
-        <servlet-class>org.jolokia.http.AgentServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-
     <servlet-mapping>
         <servlet-name>MessageServlet</servlet-name>
         <url-pattern>/message/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
-        <servlet-name>jolokia-agent</servlet-name>
-        <url-pattern>/jolokia/*</url-pattern>
     </servlet-mapping>
 
 </web-app>
