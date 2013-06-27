@@ -35,6 +35,7 @@
         <exclude>conf/*.cert</exclude>
         <exclude>example/**/*.sh</exclude>
         <exclude>example/**/*.rb</exclude>
+        <exclude>webapps/*.ico</exclude>
       </excludes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>

@@ -32,6 +32,7 @@
         <exclude>conf/*.ts</exclude>
         <exclude>conf/*.ks</exclude>
         <exclude>conf/*.cert</exclude>
+        <exclude>webapps/*.ico</exclude>
       </excludes>
       <lineEnding>dos</lineEnding>
     </fileSet>
