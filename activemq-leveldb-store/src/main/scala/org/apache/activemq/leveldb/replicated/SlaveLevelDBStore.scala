@@ -51,6 +51,8 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   var wal_session:Session = _
   var transfer_session:Session = _
 
+  var status = "initialized"
+
   override def doStart() = {
     client.init()
     if (purgeOnStatup) {
@@ -90,14 +92,16 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     transport.setDispatchQueue(queue)
     transport.connecting(new URI(connect), null)
 
-    info("Connecting to master: "+connect)
+    status = "Connecting to master: "+connect
+    info(status)
     wal_session = new Session(transport, (session)=>{
       // lets stash away our current state so that we can unstash it
       // in case we don't get caught up..  If the master dies,
       // the stashed data might be the best option to become the master.
       stash(directory)
       delete_store(directory)
-      debug("Connected to master.  Syncing")
+      status = "Connected to master.  Syncing"
+      debug(status)
       session.request_then(SYNC_ACTION, null) { body =>
         val response = JsonCodec.decode(body, classOf[SyncResponse])
         transfer_missing(response)
@@ -266,9 +270,22 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     transport.setDispatchQueue(queue)
     transport.connecting(new URI(connect), null)
 
-    info("Connecting catchup session...")
+    status = "Connecting catchup session."
+    info(status)
     transfer_session = new Session(transport, (session)=> {
-      info("Catchup session connected...")
+
+      var total_files = 0
+      var total_size = 0L
+      var downloaded_size = 0L
+      var downloaded_files = 0
+
+      def update_download_status = {
+        status = "Slave catching up. Downloaded %.2f/%.2f kb and %d/%d files".format(downloaded_size/1024f, total_size/1024f, downloaded_files, total_files)
+        info(status)
+      }
+
+      status = "Catchup session connected..."
+      info(status)
 
       // Transfer the log files..
       var append_offset = 0L
@@ -322,11 +339,15 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
           transfer.offset = 0
           transfer.length = x.length
           debug("Slave requested: "+transfer.file)
+          total_size += x.length
+          total_files += 1
           session.request_then(GET_ACTION, transfer) { body =>
             val buffer = map(target_file, 0, x.length, false)
             session.codec.readData(buffer, ^{
               unmap(buffer)
-              info("Slave downloaded: "+transfer.file+" ("+x.length+" bytes)")
+              downloaded_size += x.length
+              downloaded_files += 1
+              update_download_status
             })
           }
         }
@@ -342,18 +363,23 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         transfer.offset = 0
         transfer.length = x.length
         info("Slave requested: "+transfer.file)
+        total_size += x.length
+        total_files += 1
         session.request_then(GET_ACTION, transfer) { body =>
           val buffer = map(dirty_index / x.file, 0, x.length, false)
           session.codec.readData(buffer, ^{
             unmap(buffer)
-            info("Slave downloaded: "+transfer.file+" ("+x.length+" bytes)")
+            downloaded_size += x.length
+            downloaded_files += 1
+            update_download_status
           })
         }
       }
 
       session.request_then(DISCONNECT_ACTION, null) { body =>
         // Ok we are now caught up.
-        info("Slave has now caught up")
+        status = "Synchronize"
+        info(status)
         stash_clear(directory) // we don't need the stash anymore.
         transport.stop(NOOP)
         transfer_session = null

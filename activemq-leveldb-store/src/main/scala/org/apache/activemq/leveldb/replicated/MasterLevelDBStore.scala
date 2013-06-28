@@ -80,6 +80,8 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   val slaves = new ConcurrentHashMap[String,SlaveState]()
 
+  def status = slaves.values().map(_.status).mkString(", ")
+
   override def doStart = {
     unstash(directory)
     super.doStart

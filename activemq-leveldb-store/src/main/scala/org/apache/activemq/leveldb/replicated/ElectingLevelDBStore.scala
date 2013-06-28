@@ -20,8 +20,8 @@ import org.fusesource.fabric.groups._
 import org.fusesource.fabric.zookeeper.internal.ZKClient
 import org.linkedin.util.clock.Timespan
 import scala.reflect.BeanProperty
-import org.apache.activemq.util.{ServiceStopper, ServiceSupport}
-import org.apache.activemq.leveldb.{LevelDBClient, RecordLog, LevelDBStore}
+import org.apache.activemq.util.{JMXSupport, ServiceStopper, ServiceSupport}
+import org.apache.activemq.leveldb.{LevelDBStoreViewMBean, LevelDBClient, RecordLog, LevelDBStore}
 import java.net.{NetworkInterface, InetAddress}
 import org.fusesource.hawtdispatch._
 import org.apache.activemq.broker.Locker
@@ -32,6 +32,10 @@ import org.apache.activemq.leveldb.util.Log
 import java.io.File
 import org.apache.activemq.usage.SystemUsage
 import org.apache.activemq.ActiveMQMessageAuditNoSync
+import org.fusesource.hawtdispatch
+import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
+import org.apache.activemq.leveldb.LevelDBStore._
+import javax.management.ObjectName
 
 object ElectingLevelDBStore extends Log {
 
@@ -141,6 +145,16 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   def init() {
 
+    if(brokerService!=null){
+      try {
+        AnnotatedMBean.registerMBean(brokerService.getManagementContext, new ReplicatedLevelDBStoreView(this), objectName)
+      } catch {
+        case e: Throwable => {
+          warn(e, "PersistenceAdapterReplication could not be registered in JMX: " + e.getMessage)
+        }
+      }
+    }
+
     // Figure out our position in the store.
     directory.mkdirs()
     val log = new RecordLog(directory, LevelDBClient.LOG_SUFFIX)
@@ -217,11 +231,21 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     })
   }
 
+  def objectName = {
+    var objectNameStr = brokerService.getBrokerObjectName.toString;
+    objectNameStr += "," + "Service=PersistenceAdapterReplication";
+    objectNameStr += "," + "InstanceName=" + JMXSupport.encodeObjectNamePart("LevelDB[" + directory.getAbsolutePath + "]");
+    new ObjectName(objectNameStr);
+  }
+
   protected def doStart() = {
     master_started_latch.await()
   }
 
   protected def doStop(stopper: ServiceStopper) {
+    if(brokerService!=null){
+      brokerService.getManagementContext().unregisterMBean(objectName);
+    }
     zk_client.close()
     zk_client = null
     if( master_started.get() ) {
@@ -326,4 +350,60 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       rc
     }
   }
+}
+
+
+class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends ReplicatedLevelDBStoreViewMBean {
+  import store._
+
+  def getZkAddress = zkAddress
+  def getZkPath = zkPath
+  def getZkSessionTmeout = zkSessionTmeout
+  def getBind = bind
+  def getReplicas = replicas
+
+  def getNodeRole:String = {
+    if( slave!=null ) {
+      return "slave"
+    }
+    if( master!=null ) {
+      return "master"
+    }
+    "electing"
+  }
+
+  def getStatus:String = {
+    if( slave!=null ) {
+      return slave.status
+    }
+    if( master!=null ) {
+      return master.status
+    }
+    ""
+  }
+
+  def getPosition:java.lang.Long = {
+    if( slave!=null ) {
+      return new java.lang.Long(slave.wal_append_position)
+    }
+    if( master!=null ) {
+      return new java.lang.Long(master.wal_append_position)
+    }
+    null
+  }
+
+  def getAsyncBufferSize = asyncBufferSize
+  def getDirectory = directory.getCanonicalPath
+  def getIndexBlockRestartInterval = indexBlockRestartInterval
+  def getIndexBlockSize = indexBlockSize
+  def getIndexCacheSize = indexCacheSize
+  def getIndexCompression = indexCompression
+  def getIndexFactory = indexFactory
+  def getIndexMaxOpenFiles = indexMaxOpenFiles
+  def getIndexWriteBufferSize = indexWriteBufferSize
+  def getLogSize = logSize
+  def getParanoidChecks = paranoidChecks
+  def getSync = sync
+  def getVerifyChecksums = verifyChecksums
+
 }
