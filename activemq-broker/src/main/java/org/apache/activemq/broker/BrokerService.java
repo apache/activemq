@@ -418,9 +418,6 @@ public class BrokerService implements Service {
             }
         });
         networkConnectors.add(connector);
-        if (isUseJmx()) {
-            registerNetworkConnectorMBean(connector);
-        }
         return connector;
     }
 
@@ -560,6 +557,9 @@ public class BrokerService implements Service {
                 MDC.remove("activemq.broker");
                 try {
                     startManagementContext();
+                    for (NetworkConnector connector : getNetworkConnectors()) {
+                        registerNetworkConnectorMBean(connector);
+                    }
                 } finally {
                     MDC.put("activemq.broker", brokerName);
                 }
