@@ -503,6 +503,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     // set our properties
                     Properties props = new Properties();
                     IntrospectionSupport.getProperties(configuration, props, null);
+                    props.remove("networkTTL");
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
                     brokerInfo.setBrokerId(this.localBrokerId);
@@ -634,15 +635,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 case ConsumerInfo.DATA_STRUCTURE_TYPE:
                                     localStartedLatch.await();
                                     if (started.get()) {
-                                        if (!addConsumerInfo((ConsumerInfo) command)) {
-                                            if (LOG.isDebugEnabled()) {
-                                                LOG.debug("Ignoring ConsumerInfo: " + command);
-                                            }
-                                        } else {
-                                            if (LOG.isTraceEnabled()) {
-                                                LOG.trace("Adding ConsumerInfo: " + command);
-                                            }
-                                        }
+                                        addConsumerInfo((ConsumerInfo) command);
                                     } else {
                                         // received a subscription whilst stopping
                                         LOG.warn("Stopping - ignoring ConsumerInfo: " + command);
@@ -691,7 +684,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
-        final int networkTTL = configuration.getNetworkTTL();
+        final int networkTTL = configuration.getConsumerTTL();
         if (data.getClass() == ConsumerInfo.class) {
             // Create a new local subscription
             ConsumerInfo info = (ConsumerInfo) data;
@@ -704,7 +697,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 return;
             }
 
-            if (path != null && path.length >= networkTTL) {
+            if (path != null && networkTTL > -1 && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", restricted to " + networkTTL
                         + " network hops only : " + info);
@@ -732,29 +725,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // in a cyclic network there can be multiple bridges per broker that can propagate
             // a network subscription so there is a need to synchronize on a shared entity
             synchronized (brokerService.getVmConnectorURI()) {
-                if (addConsumerInfo(info)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(configuration.getBrokerName() + " bridged sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
-                    }
-                } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName
-                            + " as already subscribed to matching destination : " + info);
-                    }
-                }
+                addConsumerInfo(info);
             }
         } else if (data.getClass() == DestinationInfo.class) {
             // It's a destination info - we want to pass up information about temporary destinations
             final DestinationInfo destInfo = (DestinationInfo) data;
             BrokerId[] path = destInfo.getBrokerPath();
-            if (path != null && path.length >= networkTTL) {
+            if (path != null && networkTTL > -1 && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " Ignoring destination " + destInfo + " restricted to " + networkTTL + " network hops only");
                 }
                 return;
             }
             if (contains(destInfo.getBrokerPath(), localBrokerPath[0])) {
-                // Ignore this consumer as it's a consumer we locally sent to the broker.
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " Ignoring destination " + destInfo + " already routed through this broker once");
                 }
@@ -958,7 +941,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         if (suppressMessageDispatch(md, sub)) {
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug(configuration.getBrokerName() + " message not forwarded to " + remoteBrokerName
-                                    + " because message came from there or fails networkTTL, brokerPath: " + Arrays.toString(md.getMessage().getBrokerPath())
+                                    + " because message came from there or fails TTL, brokerPath: " + Arrays.toString(md.getMessage().getBrokerPath())
                                     + ", message: " + md.getMessage());
                             }
                             // still ack as it may be durable
@@ -1165,8 +1148,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    protected boolean addConsumerInfo(final ConsumerInfo consumerInfo) throws IOException {
-        boolean consumerAdded = false;
+    protected void addConsumerInfo(final ConsumerInfo consumerInfo) throws IOException {
         ConsumerInfo info = consumerInfo.copy();
         addRemoteBrokerToBrokerPath(info);
         DemandSubscription sub = createDemandSubscription(info);
@@ -1178,10 +1160,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     sub.getDurableRemoteSubs().add(new SubscriptionInfo(sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName()));
                 }
                 addSubscription(sub);
-                consumerAdded = true;
+                LOG.debug(configuration.getBrokerName() + " new demand subscription: " + sub);
             }
         }
-        return consumerAdded;
     }
 
     private void undoMapRegistration(DemandSubscription sub) {
@@ -1421,7 +1402,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 filterFactory = entry.getNetworkBridgeFilterFactory();
             }
         }
-        return filterFactory.create(info, getRemoteBrokerPath(), configuration.getNetworkTTL());
+        return filterFactory.create(info, getRemoteBrokerPath(), configuration.getMessageTTL(), configuration.getConsumerTTL());
     }
 
     protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException {

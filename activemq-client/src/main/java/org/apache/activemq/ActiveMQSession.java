@@ -2033,7 +2033,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 } catch (JMSException e) {
                     LOG.warn("Exception closing consumer", e);
                 }
-                LOG.warn("Closed consumer on Command");
+                LOG.warn("Closed consumer on Command, " + id);
                 break;
             }
         }

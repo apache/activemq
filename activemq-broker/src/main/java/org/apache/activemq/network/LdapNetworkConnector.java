@@ -302,6 +302,8 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         connector.setDynamicOnly(isDynamicOnly());
         connector.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
         connector.setNetworkTTL(getNetworkTTL());
+        connector.setConsumerTTL(getConsumerTTL());
+        connector.setMessageTTL(getMessageTTL());
         connector.setConduitSubscriptions(isConduitSubscriptions());
         connector.setExcludedDestinations(getExcludedDestinations());
         connector.setDynamicallyIncludedDestinations(getDynamicallyIncludedDestinations());

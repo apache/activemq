@@ -107,7 +107,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                 try {
                     LOG.info("aborting "
                             + (abortSubscriberConnection ? "connection" : "consumer") 
-                            + ", slow consumer: " + entry.getKey().getConsumerInfo().getConsumerId());
+                            + ", slow consumer: " + entry.getKey());
 
                     final Connection connection = connectionContext.getConnection();
                     if (connection != null) {

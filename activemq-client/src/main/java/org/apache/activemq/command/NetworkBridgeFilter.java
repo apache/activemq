@@ -28,7 +28,7 @@ import java.util.Arrays;
 
 /**
  * @openwire:marshaller code="91"
- * 
+ *
  */
 public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
@@ -36,15 +36,17 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     static final Logger LOG = LoggerFactory.getLogger(NetworkBridgeFilter.class);
 
     protected BrokerId networkBrokerId;
-    protected int networkTTL;
+    protected int messageTTL;
+    protected int consumerTTL;
     transient ConsumerInfo consumerInfo;
 
     public NetworkBridgeFilter() {
     }
 
-    public NetworkBridgeFilter(ConsumerInfo consumerInfo, BrokerId networkBrokerId, int networkTTL) {
+    public NetworkBridgeFilter(ConsumerInfo consumerInfo, BrokerId networkBrokerId, int messageTTL, int consumerTTL) {
         this.networkBrokerId = networkBrokerId;
-        this.networkTTL = networkTTL;
+        this.messageTTL = messageTTL;
+        this.consumerTTL = consumerTTL;
         this.consumerInfo = consumerInfo;
     }
 
@@ -86,9 +88,9 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
         int hops = message.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
 
-        if (hops >= networkTTL) {
+        if (messageTTL > -1 && hops >= messageTTL) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Message restricted to " + networkTTL + " network hops ignoring: " + message);
+                LOG.trace("Message restricted to " + messageTTL + " network hops ignoring: " + message);
             }
             return false;
         }
@@ -103,9 +105,9 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             } else if ( message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
                 ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
                 hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
-                if (hops >= networkTTL) {
+                if (consumerTTL > -1 && hops >= consumerTTL) {
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
+                        LOG.trace("ConsumerInfo advisory restricted to " + consumerTTL + " network hops ignoring: " + message);
                     }
                     return false;
                 }
@@ -132,15 +134,15 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         return false;
     }
 
-    /**
-     * @openwire:property version=1
-     */
+    // keep for backward compat with older
+    // wire formats
     public int getNetworkTTL() {
-        return networkTTL;
+        return messageTTL;
     }
 
     public void setNetworkTTL(int networkTTL) {
-        this.networkTTL = networkTTL;
+        messageTTL = networkTTL;
+        consumerTTL = networkTTL;
     }
 
     /**
@@ -154,4 +156,25 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         this.networkBrokerId = remoteBrokerPath;
     }
 
+    public void setMessageTTL(int messageTTL) {
+        this.messageTTL = messageTTL;
+    }
+
+    /**
+     * @openwire:property version=10
+     */
+    public int getMessageTTL() {
+        return this.messageTTL;
+    }
+
+    public void setConsumerTTL(int consumerTTL) {
+        this.consumerTTL = consumerTTL;
+    }
+
+    /**
+     * @openwire:property version=10
+     */
+    public int getConsumerTTL() {
+        return this.consumerTTL;
+    }
 }

@@ -24,5 +24,5 @@ import org.apache.activemq.command.NetworkBridgeFilter;
 public interface NetworkBridgeFilterFactory {
     // create a dispatch filter for network consumers, default impl will not send a message back to
     // its origin to prevent looping, the down side is that messages can get stuck
-    NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int networkTimeToLive);
+    NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int messageTTL, int consumerTTL);
 }

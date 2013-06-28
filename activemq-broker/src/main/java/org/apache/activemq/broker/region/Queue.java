@@ -1790,7 +1790,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 });
             }
         }
-        if (ack.isPoisonAck()) {
+        if (ack.isPoisonAck() || (sub != null && sub.getConsumerInfo().isNetworkSubscription())) {
             // message gone to DLQ, is ok to allow redelivery
             messagesLock.writeLock().lock();
             try{

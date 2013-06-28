@@ -52,6 +52,11 @@ public class DemandSubscription {
         remoteSubsIds.add(info.getConsumerId());
     }
 
+    @Override
+    public String toString() {
+        return "DemandSub{" + localInfo.getConsumerId() + ",remotes:" + remoteSubsIds + "}";
+    }
+
     /**
      * Increment the consumers associated with this subscription
      *

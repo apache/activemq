@@ -27,7 +27,7 @@ import org.apache.activemq.command.NetworkBridgeFilter;
  *  @org.apache.xbean.XBean
  */
 public class DefaultNetworkBridgeFilterFactory implements NetworkBridgeFilterFactory {
-    public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int networkTimeToLive) {
-        return new NetworkBridgeFilter(info, remoteBrokerPath[0], networkTimeToLive);
+    public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int messageTTL, int consumerTTL) {
+        return new NetworkBridgeFilter(info, remoteBrokerPath[0], messageTTL, consumerTTL);
     }
 }

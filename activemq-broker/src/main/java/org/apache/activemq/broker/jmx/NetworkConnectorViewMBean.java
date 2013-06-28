@@ -22,7 +22,9 @@ public interface NetworkConnectorViewMBean extends Service {
 
     String getName();
 
-    int getNetworkTTL();
+    int getMessageTTL();
+
+    int getConsumerTTL();
 
     int getPrefetchSize();
 
@@ -52,7 +54,9 @@ public interface NetworkConnectorViewMBean extends Service {
 
     void setDynamicOnly(boolean dynamicOnly);
 
-    void setNetworkTTL(int networkTTL);
+    void setMessageTTL(int messageTTL);
+
+    void setConsumerTTL(int consumerTTL);
 
     void setPassword(String password);
 

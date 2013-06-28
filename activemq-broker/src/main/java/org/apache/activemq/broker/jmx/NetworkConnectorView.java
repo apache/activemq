@@ -38,8 +38,12 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
         return connector.getName();
     }
 
-    public int getNetworkTTL() {
-        return connector.getNetworkTTL();
+    public int getMessageTTL() {
+        return connector.getMessageTTL();
+    }
+
+    public int getConsumerTTL() {
+        return connector.getConsumerTTL();
     }
 
     public int getPrefetchSize() {
@@ -98,8 +102,12 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
         connector.setDynamicOnly(dynamicOnly);
     }
 
-    public void setNetworkTTL(int networkTTL) {
-        connector.setNetworkTTL(networkTTL);
+    public void setMessageTTL(int messageTTL) {
+        connector.setMessageTTL(messageTTL);
+    }
+
+    public void setConsumerTTL(int consumerTTL) {
+        connector.setConsumerTTL(consumerTTL);
     }
 
     public void setPassword(String password) {

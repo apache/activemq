@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.activemq.broker.region.Destination;
@@ -31,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * implement conditional behavior for queue consumers, allows replaying back to
  * origin if no consumers are present on the local broker after a configurable
- * delay, irrespective of the networkTTL Also allows rate limiting of messages
+ * delay, irrespective of the TTL. Also allows rate limiting of messages
  * through the network, useful for static includes
  *
  * @org.apache.xbean.XBean
@@ -44,10 +45,11 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
     int rateDuration = 1000;
 
     @Override
-    public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int networkTimeToLive) {
+    public NetworkBridgeFilter create(ConsumerInfo info, BrokerId[] remoteBrokerPath, int messageTTL, int consumerTTL) {
         ConditionalNetworkBridgeFilter filter = new ConditionalNetworkBridgeFilter();
         filter.setNetworkBrokerId(remoteBrokerPath[0]);
-        filter.setNetworkTTL(networkTimeToLive);
+        filter.setMessageTTL(messageTTL);
+        filter.setConsumerTTL(consumerTTL);
         filter.setAllowReplayWhenNoConsumers(isReplayWhenNoConsumers());
         filter.setRateLimit(getRateLimit());
         filter.setRateDuration(getRateDuration());
@@ -104,9 +106,15 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
                 // potential replay back to origin
                 match = allowReplayWhenNoConsumers && hasNoLocalConsumers(message, mec) && hasNotJustArrived(message);
 
-                if (match && LOG.isTraceEnabled()) {
-                    LOG.trace("Replaying  [" + message.getMessageId() + "] for [" + message.getDestination()
-                            + "] back to origin in the absence of a local consumer");
+                if (LOG.isTraceEnabled()) {
+                    if (match) {
+                        LOG.trace("Replaying [" + message.getMessageId() + "] for [" + message.getDestination()
+                                + "] back to origin in the absence of a local consumer");
+                    } else {
+                        LOG.trace("Suppressing replay of [" + message.getMessageId() + "] for [" + message.getDestination()
+                                + "] back to origin " + Arrays.asList(message.getBrokerPath()));
+
+                    }
                 }
 
             } else {

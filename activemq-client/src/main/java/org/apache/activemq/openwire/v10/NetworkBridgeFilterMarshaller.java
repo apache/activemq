@@ -66,8 +66,9 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         NetworkBridgeFilter info = (NetworkBridgeFilter)o;
-        info.setNetworkTTL(dataIn.readInt());
         info.setNetworkBrokerId((org.apache.activemq.command.BrokerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setMessageTTL(dataIn.readInt());
+        info.setConsumerTTL(dataIn.readInt());
 
     }
 
@@ -82,7 +83,7 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getNetworkBrokerId(), bs);
 
-        return rc + 4;
+        return rc + 8;
     }
 
     /**
@@ -96,8 +97,9 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         NetworkBridgeFilter info = (NetworkBridgeFilter)o;
-        dataOut.writeInt(info.getNetworkTTL());
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getNetworkBrokerId(), dataOut, bs);
+        dataOut.writeInt(info.getMessageTTL());
+        dataOut.writeInt(info.getConsumerTTL());
 
     }
 
@@ -112,8 +114,9 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         NetworkBridgeFilter info = (NetworkBridgeFilter)o;
-        info.setNetworkTTL(dataIn.readInt());
         info.setNetworkBrokerId((org.apache.activemq.command.BrokerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setMessageTTL(dataIn.readInt());
+        info.setConsumerTTL(dataIn.readInt());
 
     }
 
@@ -126,8 +129,9 @@ public class NetworkBridgeFilterMarshaller extends BaseDataStreamMarshaller {
         NetworkBridgeFilter info = (NetworkBridgeFilter)o;
 
         super.looseMarshal(wireFormat, o, dataOut);
-        dataOut.writeInt(info.getNetworkTTL());
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getNetworkBrokerId(), dataOut);
+        dataOut.writeInt(info.getMessageTTL());
+        dataOut.writeInt(info.getConsumerTTL());
 
     }
 }

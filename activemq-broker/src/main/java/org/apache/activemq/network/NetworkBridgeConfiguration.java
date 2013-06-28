@@ -40,6 +40,9 @@ public class NetworkBridgeConfiguration {
     private boolean bridgeTempDestinations = true;
     private int prefetchSize = 1000;
     private int networkTTL = 1;
+    private int consumerTTL = networkTTL;
+    private int messageTTL = networkTTL;
+
     private String brokerName = "localhost";
     private String brokerURL = "";
     private String userName;
@@ -170,6 +173,8 @@ public class NetworkBridgeConfiguration {
      */
     public void setNetworkTTL(int networkTTL) {
         this.networkTTL = networkTTL;
+        setConsumerTTL(networkTTL);
+        setMessageTTL(networkTTL);
     }
 
     /**
@@ -393,5 +398,21 @@ public class NetworkBridgeConfiguration {
 
     public void setAdvisoryForFailedForward(boolean advisoryForFailedForward) {
         this.advisoryForFailedForward = advisoryForFailedForward;
+    }
+
+    public void setConsumerTTL(int consumerTTL) {
+        this.consumerTTL = consumerTTL;
+    }
+
+    public int getConsumerTTL() {
+        return  consumerTTL;
+    }
+
+    public void setMessageTTL(int messageTTL) {
+        this.messageTTL = messageTTL;
+    }
+
+    public int getMessageTTL() {
+        return messageTTL;
     }
 }

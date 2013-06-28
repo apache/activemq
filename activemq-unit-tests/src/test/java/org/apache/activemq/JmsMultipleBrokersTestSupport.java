@@ -389,7 +389,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
         return null;
     }
-    
+
     protected void assertConsumersConnect(String brokerName, Destination destination, final int count, long timeout) throws Exception {
         BrokerItem brokerItem = brokers.get(brokerName);
         Connection conn = brokerItem.createConnection();
@@ -528,6 +528,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             this.broker = broker;
 
             factory = new ActiveMQConnectionFactory(broker.getVmConnectorURI());
+            factory.setConnectionIDPrefix(broker.getBrokerName());
             consumers = Collections.synchronizedMap(new HashMap<MessageConsumer, MessageIdList>());
             connections = Collections.synchronizedList(new ArrayList<Connection>());
             allMessages.setVerbose(verbose);
