@@ -111,7 +111,7 @@ case class RecordLog(directory: File, logSuffix:String) {
     override def open = new RandomAccessFile(file, "rw")
 
     override def dispose() = {
-      force
+      flush
       super.dispose()
     }
 

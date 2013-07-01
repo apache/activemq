@@ -378,7 +378,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
       session.request_then(DISCONNECT_ACTION, null) { body =>
         // Ok we are now caught up.
-        status = "Synchronize"
+        status = "Synchronized"
         info(status)
         stash_clear(directory) // we don't need the stash anymore.
         transport.stop(NOOP)

@@ -84,7 +84,7 @@ class DFSLevelDBClient(val store:DFSLevelDBStore) extends LevelDBClient(store) {
   def remoteIndexPath = new Path(dfsDirectory, "index")
 
   override def start() = {
-    retry {
+    might_fail {
       directory.mkdirs()
       dfs.mkdirs(dfsDirectory)
       downloadLogFiles

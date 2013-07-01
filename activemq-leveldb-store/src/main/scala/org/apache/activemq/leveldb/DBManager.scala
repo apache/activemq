@@ -99,6 +99,7 @@ class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
   private val latch:CountDownLatch=new CountDownLatch(1)
   @volatile
   var value:T = _
+  var error:Throwable = _
 
   def cancel(mayInterruptIfRunning: Boolean) = false
   def isCancelled = false
@@ -112,14 +113,24 @@ class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
     value = v
     latch.countDown()
   }
+  def failed(v:Throwable) = {
+    error = v
+    latch.countDown()
+  }
 
   def get() = {
     latch.await()
+    if( error!=null ) {
+      throw error;
+    }
     value
   }
 
   def get(p1: Long, p2: TimeUnit) = {
     if(latch.await(p1, p2)) {
+      if( error!=null ) {
+        throw error;
+      }
       value
     } else {
       throw new TimeoutException
@@ -221,7 +232,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     manager.uowCanceledCounter += 1
     canceled = true
     manager.flush_queue.remove(uowId)
-    onCompleted
+    onCompleted()
   }
 
   def getAction(id:MessageId) = {
@@ -342,7 +353,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     }
   }
 
-  def onCompleted() = this.synchronized {
+  def onCompleted(error:Throwable=null) = this.synchronized {
     if ( state.stage < UowCompleted.stage ) {
       state = UowCompleted
       if( asyncCapacityUsed != 0 ) {
@@ -352,7 +363,11 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         manager.uow_complete_latency.add(System.nanoTime() - disposed_at)
         complete_listeners.foreach(_())
       }
-      countDownFuture.set(null)
+      if( error == null ) {
+        countDownFuture.set(null)
+      } else {
+        countDownFuture.failed(error)
+      }
 
       for( (id, action) <- actions ) {
         if( !action.enqueues.isEmpty ) {
@@ -560,12 +575,17 @@ class DBManager(val parent:LevelDBStore) {
       uowStoringCounter += uows.size
       flushSource.suspend
       writeExecutor {
-        client.store(uows)
+        val e = try {
+          client.store(uows)
+          null
+        } catch {
+          case e:Throwable => e
+        }
         flushSource.resume
         dispatchQueue {
           uowStoredCounter += uows.size
           uows.foreach { uow=>
-            uow.onCompleted
+            uow.onCompleted(e)
           }
         }
       }

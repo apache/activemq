@@ -86,6 +86,8 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     unstash(directory)
     super.doStart
     start_protocol_server
+    // Lets not complete the startup until at least one slave is synced up.
+    wal_sync_to(wal_append_position)
   }
 
   override def doStop(stopper: ServiceStopper): Unit = {
@@ -103,6 +105,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   // Replication Protocol Stuff
   //////////////////////////////////////
   var transport_server:TransportServer = _
+  val start_latch = new CountDownLatch(1)
 
   def start_protocol_server = {
     transport_server = new TcpTransportServer(new URI(bind))
@@ -118,14 +121,16 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         warn(error)
       }
     })
-    val start_latch = new CountDownLatch(1)
     transport_server.start(^{
       start_latch.countDown()
     })
     start_latch.await()
   }
 
-  def getPort = transport_server.getSocketAddress.asInstanceOf[InetSocketAddress].getPort
+  def getPort = {
+    start_latch.await()
+    transport_server.getSocketAddress.asInstanceOf[InetSocketAddress].getPort
+  }
 
   def stop_protocol_server = {
     transport_server.stop(NOOP)
@@ -330,6 +335,11 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     if( minSlaveAcks<1 || (syncToMask & SYNC_TO_REMOTE)==0) {
       return
     }
+
+    if( isStopped ) {
+      throw new IllegalStateException("Store replication stopped")
+    }
+
     val position_sync = new PositionSync(position, minSlaveAcks)
     this.position_sync = position_sync
     for( slave <- slaves.values() ) {
@@ -337,6 +347,9 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     }
 
     while( !position_sync.await(1, TimeUnit.SECONDS) ) {
+      if( isStopped ) {
+        throw new IllegalStateException("Store replication stopped")
+      }
       val status = slaves.values().map(_.status).mkString(", ")
       warn("Store update waiting on %d replica(s) to catch up to log position %d. Connected slaves: [%s]", minSlaveAcks, position, status)
     }

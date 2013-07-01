@@ -31,7 +31,7 @@ import java.util._
 import collection.mutable.ListBuffer
 import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
 import org.apache.activemq.util._
-import org.apache.activemq.leveldb.util.{RetrySupport, Log}
+import org.apache.activemq.leveldb.util.Log
 import org.apache.activemq.store.PList.PListIterator
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 import org.fusesource.hawtdispatch;
@@ -200,8 +200,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     var brokerON = brokerService.getBrokerObjectName
     BrokerMBeanSupport.createPersistenceAdapterName(brokerON.toString, this.toString)
   }
-
-  def retry[T](func : =>T):T = RetrySupport.retry(LevelDBStore, isStarted, func _)
 
   var snappyCompressLogs = false
 

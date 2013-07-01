@@ -207,10 +207,12 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   def start_master(func: (Int) => Unit) = {
     assert(master==null)
     master = create_master()
+    master_started.set(true)
     master.blocking_executor.execute(^{
-      master_started.set(true)
       master.start();
       master_started_latch.countDown()
+    })
+    master.blocking_executor.execute(^{
       func(master.getPort)
     })
   }

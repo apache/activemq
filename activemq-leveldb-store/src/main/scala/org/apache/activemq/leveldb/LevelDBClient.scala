@@ -21,6 +21,7 @@ import java.{lang=>jl}
 import java.{util=>ju}
 
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.atomic.AtomicBoolean
 import collection.immutable.TreeMap
 import collection.mutable.{HashMap, ListBuffer}
 import org.iq80.leveldb._
@@ -30,10 +31,10 @@ import record.{CollectionKey, EntryKey, EntryRecord, CollectionRecord}
 import org.apache.activemq.leveldb.util._
 import java.util.concurrent._
 import org.fusesource.hawtbuf._
-import java.io.{ObjectInputStream, ObjectOutputStream, File}
+import java.io.{IOException, ObjectInputStream, ObjectOutputStream, File}
 import scala.Option._
 import org.apache.activemq.command.{MessageAck, Message}
-import org.apache.activemq.util.ByteSequence
+import org.apache.activemq.util.{IOExceptionSupport, ByteSequence}
 import java.text.SimpleDateFormat
 import java.util.{Date, Collections}
 import org.apache.activemq.leveldb.util.TimeMetric
@@ -505,12 +506,26 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  def retry[T](func : =>T):T = RetrySupport.retry(LevelDBClient, store.isStarted, func _)
+  def might_fail[T](func : =>T):T = {
+    def handleFailure(e:IOException) = {
+      store.stop()
+      if( store.broker_service !=null ) {
+        store.broker_service.handleIOException(e);
+      }
+      throw e;
+    }
+    try {
+      func
+    } catch {
+      case e:IOException => handleFailure(e)
+      case e:Throwable => handleFailure(IOExceptionSupport.create(e))
+    }
+  }
 
   def start() = {
     init()
     replay_init()
-    retry {
+    might_fail {
       log.open()
     }
     replay_from(lastIndexSnapshotPos, log.appender_limit)
@@ -605,7 +620,7 @@ class LevelDBClient(store: LevelDBStore) {
     snapshots.filterNot(_._1 == lastIndexSnapshotPos).foreach( _._2.recursiveDelete )
     tempIndexFile.recursiveDelete
 
-    retry {
+    might_fail {
       // Setup the plist index.
       plistIndexFile.recursiveDelete
       plistIndexFile.mkdirs()
@@ -638,7 +653,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def replay_from(from:Long, limit:Long) = {
-    retry {
+    might_fail {
       try {
         // Update the index /w what was stored on the logs..
         var pos = from;
@@ -906,7 +921,7 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  def retryUsingIndex[T](func: =>T):T = retry(usingIndex( func ))
+  def might_fail_using_index[T](func: =>T):T = might_fail(usingIndex( func ))
 
   /**
    * TODO: expose this via management APIs, handy if you want to
@@ -988,7 +1003,7 @@ class LevelDBClient(store: LevelDBStore) {
       log.close
       locked_purge
     } finally {
-      retry {
+      might_fail {
         log.open()
       }
       resume()
@@ -1011,7 +1026,7 @@ class LevelDBClient(store: LevelDBStore) {
   def addCollection(record: CollectionRecord.Buffer) = {
     val key = encodeLongKey(COLLECTION_PREFIX, record.getKey)
     val value = record.toUnframedBuffer
-    retryUsingIndex {
+    might_fail_using_index {
       log.appender { appender =>
         appender.append(LOG_ADD_COLLECTION, value)
         index.put(key, value.toByteArray)
@@ -1024,7 +1039,7 @@ class LevelDBClient(store: LevelDBStore) {
 
   def listCollections: Seq[(Long, CollectionRecord.Buffer)] = {
     val rc = ListBuffer[(Long, CollectionRecord.Buffer)]()
-    retryUsingIndex {
+    might_fail_using_index {
       val ro = new ReadOptions
       ro.verifyChecksums(verifyChecksums)
       ro.fillCache(false)
@@ -1041,7 +1056,7 @@ class LevelDBClient(store: LevelDBStore) {
     val value = encodeVLong(collectionKey)
     val entryKeyPrefix = encodeLongKey(ENTRY_PREFIX, collectionKey)
     collectionMeta.remove(collectionKey)
-    retryUsingIndex {
+    might_fail_using_index {
       log.appender { appender =>
         appender.append(LOG_REMOVE_COLLECTION, new Buffer(value))
       }
@@ -1073,7 +1088,7 @@ class LevelDBClient(store: LevelDBStore) {
     meta.size = 0
     meta.last_key = null
     
-    retryUsingIndex {
+    might_fail_using_index {
       index.get(key).foreach { collectionData =>
         log.appender { appender =>
           appender.append(LOG_REMOVE_COLLECTION, new Buffer(value))
@@ -1136,7 +1151,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def getAckPosition(subKey: Long): Long = {
-    retryUsingIndex {
+    might_fail_using_index {
       index.get(encodeEntryKey(ENTRY_PREFIX, subKey, ACK_POSITION)).map{ value=>
         val record = decodeEntryRecord(value)
         record.getValueLocation()
@@ -1173,7 +1188,7 @@ class LevelDBClient(store: LevelDBStore) {
     ro.verifyChecksums(verifyChecksums)
     val start = encodeEntryKey(ENTRY_PREFIX, collectionKey, cursorPosition)
     val end = encodeLongKey(ENTRY_PREFIX, collectionKey+1)
-    retryUsingIndex {
+    might_fail_using_index {
       index.cursorRange(start, end, ro) { case (key, value) =>
         func(key.buffer.moveHead(9), EntryRecord.FACTORY.parseUnframed(value))
       }
@@ -1187,7 +1202,7 @@ class LevelDBClient(store: LevelDBStore) {
   def collectionIsEmpty(collectionKey: Long) = {
     val entryKeyPrefix = encodeLongKey(ENTRY_PREFIX, collectionKey)
     var empty = true
-    retryUsingIndex {
+    might_fail_using_index {
       val ro = new ReadOptions
       ro.fillCache(false)
       ro.verifyChecksums(verifyChecksums)
@@ -1205,7 +1220,7 @@ class LevelDBClient(store: LevelDBStore) {
   val max_index_write_latency = TimeMetric()
 
   def store(uows: Array[DelayableUOW]) {
-    retryUsingIndex {
+    might_fail_using_index {
       log.appender { appender =>
         val syncNeeded = index.write(new WriteOptions, max_index_write_latency) { batch =>
           write_uows(uows, appender, batch)
@@ -1378,7 +1393,7 @@ class LevelDBClient(store: LevelDBStore) {
     val ro = new ReadOptions
     ro.verifyChecksums(verifyChecksums)
     ro.fillCache(true)
-    retryUsingIndex {
+    might_fail_using_index {
       index.snapshot { snapshot =>
         ro.snapshot(snapshot)
         val start = encodeEntryKey(ENTRY_PREFIX, collectionKey, firstSeq)
@@ -1457,7 +1472,7 @@ class LevelDBClient(store: LevelDBStore) {
 
     // Delete message refs for topics who's consumers have advanced..
     if( !topicPositions.isEmpty ) {
-      retryUsingIndex {
+      might_fail_using_index {
         index.write(new WriteOptions, max_index_write_latency) { batch =>
           for( (topic, first) <- topicPositions ) {
             val ro = new ReadOptions
@@ -1498,7 +1513,7 @@ class LevelDBClient(store: LevelDBStore) {
   def removePlist(collectionKey: Long) = {
     val entryKeyPrefix = encodeLong(collectionKey)
     collectionMeta.remove(collectionKey)
-    retry {
+    might_fail {
       val ro = new ReadOptions
       ro.fillCache(false)
       ro.verifyChecksums(false)
