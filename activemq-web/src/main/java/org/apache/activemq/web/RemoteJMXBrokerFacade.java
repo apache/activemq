@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -204,7 +205,12 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 		}
 
 		Set<ObjectName> brokers = connection.queryNames(name, null);
-		return brokers;
+		Set<ObjectName> masterBrokers = new HashSet<ObjectName>();
+		for (ObjectName objectName : brokers) {
+			BrokerViewMBean mbean = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(connection, objectName, BrokerViewMBean.class, true);
+			if (!mbean.isSlave()) masterBrokers.add(objectName);
+		}
+		return masterBrokers;
 	}
 	
 	public void purgeQueue(ActiveMQDestination destination) throws Exception {
