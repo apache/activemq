@@ -27,12 +27,21 @@
 
     <bean id="securityConstraint" class="org.eclipse.jetty.util.security.Constraint">
         <property name="name" value="BASIC" />
+        <property name="roles" value="user,admin" />
+        <property name="authenticate" value="true" />
+    </bean>
+    <bean id="adminSecurityConstraint" class="org.eclipse.jetty.util.security.Constraint">
+        <property name="name" value="BASIC" />
         <property name="roles" value="admin" />
         <property name="authenticate" value="true" />
     </bean>
     <bean id="securityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="securityConstraint" />
-        <property name="pathSpec" value="/*" />
+        <property name="pathSpec" value="/,*.jsp" />
+    </bean>
+    <bean id="adminSecurityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
+        <property name="constraint" ref="adminSecurityConstraint" />
+        <property name="pathSpec" value="*.action" />
     </bean>
     <bean id="securityHandler" class="org.eclipse.jetty.security.ConstraintSecurityHandler">
         <property name="loginService" ref="securityLoginService" />
@@ -41,6 +50,7 @@
         </property>
         <property name="constraintMappings">
             <list>
+                <ref bean="adminSecurityConstraintMapping" />
                 <ref bean="securityConstraintMapping" />
             </list>
         </property>
