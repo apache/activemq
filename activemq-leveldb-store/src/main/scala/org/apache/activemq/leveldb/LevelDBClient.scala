@@ -508,10 +508,22 @@ class LevelDBClient(store: LevelDBStore) {
 
   def might_fail[T](func : =>T):T = {
     def handleFailure(e:IOException) = {
-      store.stop()
       if( store.broker_service !=null ) {
-        store.broker_service.handleIOException(e);
+        // This should start stopping the broker but it might block,
+        // so do it on another thread...
+        new Thread("LevelDB IOException handler.") {
+          override def run() {
+            store.broker_service.handleIOException(e);
+          }
+        }.start()
+        // Lets wait until the broker service has started stopping.  Once the
+        // stopping flag is raised, errors caused by stopping the store should
+        // not get propagated to the client.
+        while( !store.broker_service.isStopping ) {
+          Thread.sleep(100);
+        }
       }
+      store.stop()
       throw e;
     }
     try {

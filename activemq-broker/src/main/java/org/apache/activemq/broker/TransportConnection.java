@@ -172,6 +172,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.taskRunnerFactory = taskRunnerFactory;
         this.stopTaskRunnerFactory = stopTaskRunnerFactory;
         this.transport = transport;
+        final BrokerService brokerService = this.broker.getBrokerService();
         this.transport.setTransportListener(new DefaultTransportListener() {
             @Override
             public void onCommand(Object o) {
@@ -182,7 +183,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     }
                     Command command = (Command) o;
                     Response response = service(command);
-                    if (response != null) {
+                    if (response != null && !brokerService.isStopping() ) {
                         dispatchSync(response);
                     }
                 } finally {

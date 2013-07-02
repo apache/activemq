@@ -696,7 +696,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                     }
 
                                 } catch (Exception e) {
-                                    if (!sendProducerAck && !context.isInRecoveryMode()) {
+                                    if (!sendProducerAck && !context.isInRecoveryMode() && !brokerService.isStopping()) {
                                         ExceptionResponse response = new ExceptionResponse(e);
                                         response.setCorrelationId(message.getCommandId());
                                         context.getConnection().dispatchAsync(response);
