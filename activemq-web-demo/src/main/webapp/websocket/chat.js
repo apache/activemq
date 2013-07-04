@@ -39,7 +39,10 @@ $(document).ready(function(){
       $('#send_form_input').removeAttr('disabled');
 
       client.subscribe(destination, function(message) {
-        $("#messages").append(document.createTextNode("<p>" + message.body + "</p>\n"));
+        var p = document.createElement("p");
+        var t = document.createTextNode(message.body);
+        p.appendChild(t);
+        $("#messages").append(p);
       });
     };
     client.connect(login, passcode, onconnect);

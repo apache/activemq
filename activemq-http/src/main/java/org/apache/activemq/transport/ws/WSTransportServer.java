@@ -65,7 +65,7 @@ public class WSTransportServer extends WebTransportServerSupport {
             }
         }
 
-        holder.setServlet(new StompServlet());
+        holder.setServlet(new WSServlet());
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());

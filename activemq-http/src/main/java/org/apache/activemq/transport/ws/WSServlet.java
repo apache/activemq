@@ -22,6 +22,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
@@ -29,7 +30,7 @@ import org.eclipse.jetty.websocket.WebSocketServlet;
 /**
  * Handle connection upgrade requests and creates web sockets
  */
-public class StompServlet extends WebSocketServlet {
+public class WSServlet extends WebSocketServlet {
     private static final long serialVersionUID = -4716657876092884139L;
 
     private TransportAcceptListener listener;
@@ -49,8 +50,13 @@ public class StompServlet extends WebSocketServlet {
 
     @Override
     public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
-        StompSocket socket = new StompSocket();
-        listener.onAccept(socket);
+        WebSocket socket;
+        if (protocol.startsWith("mqtt")) {
+            socket = new MQTTSocket();
+        } else {
+            socket = new StompSocket();
+        }
+        listener.onAccept((Transport)socket);
         return socket;
     }
 }

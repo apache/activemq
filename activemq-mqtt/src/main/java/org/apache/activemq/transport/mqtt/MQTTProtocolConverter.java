@@ -79,7 +79,7 @@ import org.fusesource.mqtt.codec.UNSUBSCRIBE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class MQTTProtocolConverter {
+public class MQTTProtocolConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTProtocolConverter.class);
 
