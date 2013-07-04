@@ -23,5 +23,7 @@ public interface  MQTTClientProvider {
     void subscribe(String topic,int qos) throws Exception;
     byte[] receive(int timeout) throws Exception;
     void setSslContext(javax.net.ssl.SSLContext sslContext);
+    void setWillMessage(String string);
+    void setWillTopic(String topic);
 
 }

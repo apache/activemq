@@ -72,4 +72,14 @@ class FuseMQQTTClientProvider implements MQTTClientProvider {
     public void setSslContext(SSLContext sslContext) {
         mqtt.setSslContext(sslContext);
     }
+
+    @Override
+    public void setWillMessage(String string) {
+        mqtt.setWillMessage(string);
+    }
+
+    @Override
+    public void setWillTopic(String topic) {
+        mqtt.setWillTopic(topic);
+    }
 }

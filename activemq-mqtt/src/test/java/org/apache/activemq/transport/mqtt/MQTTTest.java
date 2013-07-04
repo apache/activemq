@@ -39,6 +39,7 @@ public class MQTTTest extends AbstractMQTTTest {
         addMQTTConnector();
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo");
         mqtt.setKeepAlive((short)2);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -59,6 +60,7 @@ public class MQTTTest extends AbstractMQTTTest {
         addMQTTConnector("transport.useInactivityMonitor=false");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo3");
         mqtt.setKeepAlive((short)2);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -192,6 +194,7 @@ public class MQTTTest extends AbstractMQTTTest {
         addMQTTConnector("transport.defaultKeepAlive=2000");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo");
         mqtt.setKeepAlive((short)0);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -232,10 +235,6 @@ public class MQTTTest extends AbstractMQTTTest {
         return "mqtt";
     }
 
-    @Override
-    protected void addMQTTConnector() throws Exception {
-        addMQTTConnector();
-    }
 
     @Override
     protected MQTTClientProvider getMQTTClientProvider() {
