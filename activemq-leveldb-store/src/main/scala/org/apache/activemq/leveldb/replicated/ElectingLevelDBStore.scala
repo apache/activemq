@@ -33,9 +33,11 @@ import java.io.File
 import org.apache.activemq.usage.SystemUsage
 import org.apache.activemq.ActiveMQMessageAuditNoSync
 import org.fusesource.hawtdispatch
-import org.apache.activemq.broker.jmx.{BrokerMBeanSupport, AnnotatedMBean}
+import org.apache.activemq.broker.jmx.{OpenTypeSupport, BrokerMBeanSupport, AnnotatedMBean}
 import org.apache.activemq.leveldb.LevelDBStore._
 import javax.management.ObjectName
+import javax.management.openmbean.{CompositeDataSupport, SimpleType, CompositeType, CompositeData}
+import java.util
 
 object ElectingLevelDBStore extends Log {
 
@@ -80,7 +82,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var bind = "tcp://0.0.0.0:61619"
 
   @BeanProperty
-  var replicas = 2
+  var replicas = 3
   @BeanProperty
   var sync="quorum_mem"
 
@@ -142,6 +144,8 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   override def setUsageManager(usageManager: SystemUsage) {
     this.usageManager = usageManager
   }
+
+  def node_id = ReplicatedLevelDBStoreTrait.node_id(directory)
 
   def init() {
 
@@ -234,9 +238,8 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   }
 
   def objectName = {
-    var objectNameStr = brokerService.getBrokerObjectName.toString;
-    objectNameStr += "," + "Service=PersistenceAdapterReplication";
-    objectNameStr += "," + "InstanceName=" + JMXSupport.encodeObjectNamePart("LevelDB[" + directory.getAbsolutePath + "]");
+    var objectNameStr = BrokerMBeanSupport.createPersistenceAdapterName(brokerService.getBrokerObjectName.toString, "LevelDB[" + directory.getAbsolutePath + "]").toString
+    objectNameStr += "," + "view=Replication";
     new ObjectName(objectNameStr);
   }
 
@@ -384,6 +387,39 @@ class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends Replica
     ""
   }
 
+  object SlaveStatusOTF extends OpenTypeSupport.AbstractOpenTypeFactory {
+    protected def getTypeName: String = classOf[SlaveStatus].getName
+
+    protected override def init() = {
+      super.init();
+      addItem("nodeId", "nodeId", SimpleType.STRING);
+      addItem("remoteAddress", "remoteAddress", SimpleType.STRING);
+      addItem("attached", "attached", SimpleType.BOOLEAN);
+      addItem("position", "position", SimpleType.LONG);
+    }
+
+    override def getFields(o: Any): util.Map[String, AnyRef] = {
+      val status = o.asInstanceOf[SlaveStatus]
+      val rc = super.getFields(o);
+      rc.put("nodeId", status.nodeId);
+      rc.put("remoteAddress", status.remoteAddress);
+      rc.put("attached", status.attached.asInstanceOf[java.lang.Boolean]);
+      rc.put("position", status.position.asInstanceOf[java.lang.Long]);
+      rc
+    }
+  }
+
+  def getSlaves():Array[CompositeData] =  {
+    if( master!=null ) {
+      master.slaves_status.map { status =>
+        val fields = SlaveStatusOTF.getFields(status);
+        new CompositeDataSupport(SlaveStatusOTF.getCompositeType(), fields).asInstanceOf[CompositeData]
+      }.toArray
+    } else {
+      Array()
+    }
+  }
+
   def getPosition:java.lang.Long = {
     if( slave!=null ) {
       return new java.lang.Long(slave.wal_append_position)
@@ -394,18 +430,8 @@ class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends Replica
     null
   }
 
-  def getAsyncBufferSize = asyncBufferSize
   def getDirectory = directory.getCanonicalPath
-  def getIndexBlockRestartInterval = indexBlockRestartInterval
-  def getIndexBlockSize = indexBlockSize
-  def getIndexCacheSize = indexCacheSize
-  def getIndexCompression = indexCompression
-  def getIndexFactory = indexFactory
-  def getIndexMaxOpenFiles = indexMaxOpenFiles
-  def getIndexWriteBufferSize = indexWriteBufferSize
-  def getLogSize = logSize
-  def getParanoidChecks = paranoidChecks
   def getSync = sync
-  def getVerifyChecksums = verifyChecksums
 
+  def getNodeId: String = node_id
 }

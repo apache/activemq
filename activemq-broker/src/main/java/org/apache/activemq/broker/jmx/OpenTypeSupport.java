@@ -49,7 +49,7 @@ import java.util.Set;
 
 public final class OpenTypeSupport {
 
-    interface OpenTypeFactory {
+    public interface OpenTypeFactory {
         CompositeType getCompositeType() throws OpenDataException;
 
         Map<String, Object> getFields(Object o) throws OpenDataException;
@@ -57,7 +57,7 @@ public final class OpenTypeSupport {
 
     private static final Map<Class, AbstractOpenTypeFactory> OPEN_TYPE_FACTORIES = new HashMap<Class, AbstractOpenTypeFactory>();
 
-    abstract static class AbstractOpenTypeFactory implements OpenTypeFactory {
+    public abstract static class AbstractOpenTypeFactory implements OpenTypeFactory {
 
         private CompositeType compositeType;
         private final List<String> itemNamesList = new ArrayList<String>();

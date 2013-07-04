@@ -19,6 +19,8 @@ package org.apache.activemq.leveldb.replicated;
 
 import org.apache.activemq.broker.jmx.MBeanInfo;
 
+import javax.management.openmbean.CompositeData;
+
 /**
  * <p>
  * </p>
@@ -44,46 +46,18 @@ public interface ReplicatedLevelDBStoreViewMBean {
     @MBeanInfo("The replication status.")
     String getStatus();
 
+    @MBeanInfo("The status of the connected slaves.")
+    CompositeData[] getSlaves();
+
     @MBeanInfo("The current position of the replication log.")
     Long getPosition();
 
     @MBeanInfo("The directory holding the data.")
     String getDirectory();
 
-    @MBeanInfo("The size the log files are allowed to grow to.")
-    long getLogSize();
-
-    @MBeanInfo("The implementation of the LevelDB index being used.")
-    String getIndexFactory();
-
-    @MBeanInfo("Is data verified against checksums as it's loaded back from disk.")
-    boolean getVerifyChecksums();
-
-    @MBeanInfo("The maximum number of open files the index will open at one time.")
-    int getIndexMaxOpenFiles();
-
-    @MBeanInfo("Number of keys between restart points for delta encoding of keys in the index")
-    int getIndexBlockRestartInterval();
-
-    @MBeanInfo("Do aggressive checking of store data")
-    boolean getParanoidChecks();
-
-    @MBeanInfo("Amount of data to build up in memory for the index before converting to a sorted on-disk file.")
-    int getIndexWriteBufferSize();
-
-    @MBeanInfo("Approximate size of user data packed per block for the index")
-    int getIndexBlockSize();
-
-    @MBeanInfo("The type of compression to use for the index")
-    String getIndexCompression();
-
-    @MBeanInfo("The size of the cache index")
-    long getIndexCacheSize();
-
-    @MBeanInfo("The maximum amount of async writes to buffer up")
-    int getAsyncBufferSize();
-
     @MBeanInfo("The sync strategy to use.")
     String getSync();
 
+    @MBeanInfo("The node id of this replication node.")
+    String getNodeId();
 }

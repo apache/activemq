@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.activemq.leveldb.test.ReplicationTestSupport.addMessage;
@@ -161,9 +160,9 @@ public class ReplicatedLevelDBStoreTest {
             LOG.info("Checking master state");
             assertEquals(expected_list, getMessages(ms));
 
-            LOG.info("Stopping master: " + master.replicaId());
+            LOG.info("Stopping master: " + master.node_id());
             master.stop();
-            LOG.info("Stopping slave: " + slave1.replicaId());
+            LOG.info("Stopping slave: " + slave1.node_id());
             slave1.stop();
 
             // Rotate the dir order so that slave1 becomes the master next.

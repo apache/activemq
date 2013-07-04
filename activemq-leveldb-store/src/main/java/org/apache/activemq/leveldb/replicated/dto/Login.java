@@ -32,8 +32,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Login {
 
-    @XmlAttribute(name="slave_id")
-    public String slave_id;
+    @XmlAttribute(name="node_id")
+    public String node_id;
 
     @XmlAttribute(name="security_token")
     public String security_token;

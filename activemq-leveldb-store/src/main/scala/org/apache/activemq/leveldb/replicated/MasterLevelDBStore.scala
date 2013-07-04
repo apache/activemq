@@ -25,7 +25,7 @@ import org.apache.activemq.leveldb.replicated.dto._
 import org.fusesource.hawtdispatch.transport._
 import java.util.concurrent._
 import java.io.{IOException, File}
-import java.net.{InetSocketAddress, URI}
+import java.net.{SocketAddress, InetSocketAddress, URI}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 import scala.reflect.BeanProperty
 
@@ -40,6 +40,8 @@ object MasterLevelDBStore extends Log {
 
 }
 
+case class SlaveStatus(nodeId:String, remoteAddress:String, attached:Boolean, position:Long)
+
 /**
  */
 class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
@@ -52,7 +54,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   var bind = "tcp://0.0.0.0:61619"
 
   @BeanProperty
-  var replicas = 2
+  var replicas = 3
   def minSlaveAcks = replicas/2
 
   var _syncTo="quorum_mem"
@@ -80,7 +82,27 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   val slaves = new ConcurrentHashMap[String,SlaveState]()
 
-  def status = slaves.values().map(_.status).mkString(", ")
+  def slaves_status = slaves.values().map(_.status)
+
+  def status = {
+    var caughtUpCounter = 0
+    var notCaughtUpCounter = 0
+    for( slave <- slaves.values() ) {
+      if( slave.isCaughtUp ) {
+        caughtUpCounter += 1
+      } else {
+        notCaughtUpCounter += 1
+      }
+    }
+    var rc = ""
+    if( notCaughtUpCounter > 0 ) {
+      rc += "%d slave nodes attaching. ".format(notCaughtUpCounter)
+    }
+    if( caughtUpCounter > 0 ) {
+      rc += "%d slave nodes attached. ".format(caughtUpCounter)
+    }
+    rc
+  }
 
   override def doStart = {
     unstash(directory)
@@ -201,10 +223,10 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         return;
       }
       debug("handle_sync")
-      slave_state = slaves.get(login.slave_id)
+      slave_state = slaves.get(login.node_id)
       if ( slave_state == null ) {
-        slave_state = new SlaveState(login.slave_id)
-        slaves.put(login.slave_id, slave_state)
+        slave_state = new SlaveState(login.node_id)
+        slaves.put(login.node_id, slave_state)
       }
       slave_state.start(Session.this)
     }
@@ -253,9 +275,11 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     var session:Session = _
     var position = new AtomicLong(0)
     var caughtUp = new AtomicBoolean(false)
+    var socketAddress:SocketAddress = _
 
     def start(session:Session) = {
       debug("SlaveState:start")
+      socketAddress = session.transport.getRemoteAddress
 
       val resp = this.synchronized {
         if( this.session!=null ) {
@@ -298,13 +322,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     }
 
     def position_update(position:Long) = {
-      val was = this.position.getAndSet(position)
-      if( was == 0 ) {
-        info("Slave has finished state transfer: "+slave_id)
-        this.synchronized {
-          this.held_snapshot = None
-        }
-      }
+      this.position.getAndSet(position)
       check_position_sync
     }
 
@@ -316,6 +334,9 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         if( position.get >= p.position ) {
           if( caughtUp.compareAndSet(false, true) ) {
             info("Slave has now caught up: "+slave_id)
+            this.synchronized {
+              this.held_snapshot = None
+            }
           }
           p.countDown
           last_position_sync = p
@@ -323,9 +344,9 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       }
     }
 
-    def status = {
-      "{slave: "+slave_id+", position: "+position.get()+"}"
-    }
+    def isCaughtUp = caughtUp.get()
+
+    def status = SlaveStatus(slave_id, socketAddress.toString, isCaughtUp, position.get())
   }
 
   @volatile
@@ -350,8 +371,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       if( isStopped ) {
         throw new IllegalStateException("Store replication stopped")
       }
-      val status = slaves.values().map(_.status).mkString(", ")
-      warn("Store update waiting on %d replica(s) to catch up to log position %d. Connected slaves: [%s]", minSlaveAcks, position, status)
+      warn("Store update waiting on %d replica(s) to catch up to log position %d. %s", minSlaveAcks, position, status)
     }
   }
 
