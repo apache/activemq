@@ -58,6 +58,11 @@ class FuseMQQTTClientProvider implements MQTTClientProvider {
     }
 
     @Override
+    public void unsubscribe(String topic) throws Exception {
+        connection.unsubscribe(new String[]{topic});
+    }
+
+    @Override
     public byte[] receive(int timeout) throws Exception {
         byte[] result = null;
         Message message = connection.receive(timeout, TimeUnit.MILLISECONDS);
@@ -81,5 +86,20 @@ class FuseMQQTTClientProvider implements MQTTClientProvider {
     @Override
     public void setWillTopic(String topic) {
         mqtt.setWillTopic(topic);
+    }
+
+    @Override
+    public void setClientId(String clientId) {
+        mqtt.setClientId(clientId);
+    }
+
+    @Override
+    public void kill() throws Exception {
+        connection.kill();
+    }
+
+    @Override
+    public void setKeepAlive(int keepAlive) throws Exception {
+        mqtt.setKeepAlive((short) keepAlive);
     }
 }

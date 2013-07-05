@@ -22,7 +22,6 @@ import java.security.ProtectionDomain;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -77,49 +76,6 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
         super.tearDown();
     }
 
-    @Test(timeout=300000)
-    public void testWillNotSentOnClose() throws Exception {
-        addMQTTConnector();
-        brokerService.start();
-        final MQTTClientProvider subscriptionProvider = getMQTTClientProvider();
-        initializeConnection(subscriptionProvider);
-
-        String willTopic = "lastWillAndTestament";
-
-        subscriptionProvider.subscribe(willTopic,AT_MOST_ONCE);
-
-        final AtomicInteger count = new AtomicInteger();
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < 1; i++){
-                    try {
-                        byte[] payload = subscriptionProvider.receive(10000);
-                        assertNull("Should get a message", payload);
-                        count.incrementAndGet();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        break;
-                    }
-
-                }
-            }
-        });
-        thread.start();
-
-        final MQTTClientProvider publishProvider = getMQTTClientProvider();
-        publishProvider.setWillTopic(willTopic);
-        publishProvider.setWillMessage("EverythingGoesToRob");
-        initializeConnection(publishProvider);
-
-        Thread.sleep(1000);
-        publishProvider.disconnect();
-
-        assertEquals(0, count.get());
-        subscriptionProvider.disconnect();
-        publishProvider.disconnect();
-    }
 
     @Test(timeout=300000)
     public void testSendAndReceiveMQTT() throws Exception {
@@ -157,6 +113,54 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
         for (int i = 0; i < numberOfMessages; i++){
             String payload = "Message " + i;
             publishProvider.publish("foo/bah",payload.getBytes(),AT_LEAST_ONCE);
+        }
+
+        latch.await(10, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
+        subscriptionProvider.disconnect();
+        publishProvider.disconnect();
+    }
+
+    @Test(timeout=300000)
+    public void testUnsubscribeMQTT() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+        final MQTTClientProvider subscriptionProvider = getMQTTClientProvider();
+        initializeConnection(subscriptionProvider);
+
+        String topic = "foo/bah";
+
+        subscriptionProvider.subscribe(topic,AT_MOST_ONCE);
+
+        final CountDownLatch latch = new CountDownLatch(numberOfMessages/2);
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < numberOfMessages; i++){
+                    try {
+                        byte[] payload = subscriptionProvider.receive(10000);
+                        assertNotNull("Should get a message", payload);
+                        latch.countDown();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        break;
+                    }
+
+                }
+            }
+        });
+        thread.start();
+
+        final MQTTClientProvider publishProvider = getMQTTClientProvider();
+        initializeConnection(publishProvider);
+
+        for (int i = 0; i < numberOfMessages; i++){
+            String payload = "Message " + i;
+            if (i == numberOfMessages/2){
+                subscriptionProvider.unsubscribe(topic);
+            }
+            publishProvider.publish(topic,payload.getBytes(),AT_LEAST_ONCE);
         }
 
         latch.await(10, TimeUnit.SECONDS);

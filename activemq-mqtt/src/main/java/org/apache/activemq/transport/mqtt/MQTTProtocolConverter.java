@@ -277,6 +277,7 @@ public class MQTTProtocolConverter {
 
     void onMQTTDisconnect() throws MQTTProtocolException {
         if (connected.get()) {
+            connected.set(false);
             sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
             sendToActiveMQ(new ShutdownInfo(), null);
         }
@@ -542,7 +543,7 @@ public class MQTTProtocolConverter {
 
     public void onTransportError() {
         if (connect != null) {
-            if (connect.willTopic() != null && connect.willMessage() != null) {
+            if (connected.get() && connect.willTopic() != null && connect.willMessage() != null) {
                 try {
                     PUBLISH publish = new PUBLISH();
                     publish.topicName(connect.willTopic());
