@@ -26,7 +26,7 @@
         @import url(../styles/site.css);
         @import url(../styles/prettify.css);
     </style>
-    <title>Chat Example Using Stomp Over WebSocket</title>
+    <title>Chat Example Using MQTT Over WebSocket</title>
     <link rel="stylesheet" type="text/css" href="chat.css"></link>
     <script type="text/javascript" src="../js/jquery-1.4.2.min.js"></script>
     <script src='mqttws31.js'></script>
@@ -102,8 +102,8 @@
     </form>
 
     <p><b>Make sure you have enabled <a href="http://activemq.apache.org/websockets.html">websockets transport</a> before running this demo</b></p>
-    <p>This is adapted <a href="https://github.com/jmesnil/stomp-websocket">stomp-websocket</a> library demo</p>
-    <p>Use the form above to connect to the Stomp server and subscribe to the destination.</p>
+    <p>This demo uses <a href="http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git/">Eclipse Paho MQTT JavaScript library</a></p>
+    <p>Use the form above to connect to the MQTT server and subscribe to the destination.</p>
     <p>Once connected, you can send messages to the destination with the text field at the bottom of this page</p>
 
 
