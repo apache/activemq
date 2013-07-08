@@ -35,6 +35,7 @@ public class IdGenerator {
     private String seed;
     private AtomicLong sequence = new AtomicLong(1);
     private int length;
+    public static final String PROPERTY_IDGENERATOR_PORT ="activemq.idgenerator.port";
 
     static {
         String stub = "";
@@ -50,13 +51,19 @@ public class IdGenerator {
 
         if (canAccessSystemProps) {
             try {
+                int idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
+                LOG.trace("Using port {}", idGeneratorPort);
                 hostName = InetAddressUtil.getLocalHostName();
-                ServerSocket ss = new ServerSocket(0);
+                ServerSocket ss = new ServerSocket(idGeneratorPort);
                 stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
                 Thread.sleep(100);
                 ss.close();
             } catch (Exception ioe) {
-                LOG.warn("could not generate unique stub by using DNS and binding to local port", ioe);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("could not generate unique stub by using DNS and binding to local port", ioe);
+                } else {
+                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", ioe.getClass().getCanonicalName(), ioe.getMessage());
+                }
             }
         }
         // fallback
