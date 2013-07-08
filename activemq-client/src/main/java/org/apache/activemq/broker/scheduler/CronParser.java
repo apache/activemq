@@ -21,6 +21,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
+
 import javax.jms.MessageFormatException;
 
 public class CronParser {
@@ -44,7 +45,7 @@ public class CronParser {
         // starting the next event at the top of the minute.
         if (cronEntry.equals("* * * * *")) {
             result = currentTime + 60 * 1000;
-            result = result / 1000 * 1000;
+            result = result / 60000 * 60000;
             return result;
         }
 
