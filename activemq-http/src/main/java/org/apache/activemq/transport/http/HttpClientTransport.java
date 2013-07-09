@@ -92,6 +92,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         return null;
     }
 
+    @Override
     public void oneway(Object command) throws IOException {
 
         if (isStopped()) {
@@ -142,6 +143,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         }
     }
 
+    @Override
     public Object request(Object command) throws IOException {
         return null;
     }
@@ -155,6 +157,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         }
     }
 
+    @Override
     public void run() {
 
         if (LOG.isTraceEnabled()) {
@@ -188,7 +191,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                 } else {
                     receiveCounter++;
                     DataInputStream stream = createDataInputStream(answer);
-                    Object command = (Object)getTextWireFormat().unmarshal(stream);
+                    Object command = getTextWireFormat().unmarshal(stream);
                     if (command == null) {
                         LOG.debug("Received null command from url: " + remoteUrl);
                     } else {
@@ -236,6 +239,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
     // Implementation methods
     // -------------------------------------------------------------------------
+    @Override
     protected void doStart() throws Exception {
 
         if (LOG.isTraceEnabled()) {
@@ -268,7 +272,6 @@ public class HttpClientTransport extends HttpTransportSupport {
             }
         };
 
-
         try {
             httpClient.execute(httpMethod, new BasicResponseHandler());
             httpClient.execute(optionsMethod, handler);
@@ -279,9 +282,31 @@ public class HttpClientTransport extends HttpTransportSupport {
         super.doStart();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (httpMethod != null) {
-            httpMethod.abort();
+            // In some versions of the JVM a race between the httpMethod and the completion
+            // of the method when using HTTPS can lead to a deadlock.  This hack attempts to
+            // detect that and interrupt the thread that's locked so that they can complete
+            // on another attempt.
+            for (int i = 0; i < 3; ++i) {
+                Thread abortThread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            httpMethod.abort();
+                        } catch (Exception e) {
+                        }
+                    }
+                });
+
+                abortThread.start();
+                abortThread.join(2000);
+                if (!abortThread.isAlive()) {
+                    abortThread.interrupt();
+                }
+            }
         }
     }
 
@@ -325,6 +350,7 @@ public class HttpClientTransport extends HttpTransportSupport {
         this.trace = trace;
     }
 
+    @Override
     public int getReceiveCounter() {
         return receiveCounter;
     }
