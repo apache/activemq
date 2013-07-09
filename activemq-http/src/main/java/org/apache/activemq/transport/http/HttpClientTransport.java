@@ -303,7 +303,7 @@ public class HttpClientTransport extends HttpTransportSupport {
 
                 abortThread.start();
                 abortThread.join(2000);
-                if (!abortThread.isAlive()) {
+                if (abortThread.isAlive() && !httpMethod.isAborted()) {
                     abortThread.interrupt();
                 }
             }
