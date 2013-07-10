@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.leveldb.replicated
 
-import org.fusesource.fabric.groups._
-import org.fusesource.fabric.zookeeper.internal.ZKClient
 import org.linkedin.util.clock.Timespan
 import scala.reflect.BeanProperty
 import org.apache.activemq.util.{JMXSupport, ServiceStopper, ServiceSupport}
@@ -38,6 +36,7 @@ import org.apache.activemq.leveldb.LevelDBStore._
 import javax.management.ObjectName
 import javax.management.openmbean.{CompositeDataSupport, SimpleType, CompositeType, CompositeData}
 import java.util
+import org.apache.activemq.leveldb.replicated.groups._
 
 object ElectingLevelDBStore extends Log {
 

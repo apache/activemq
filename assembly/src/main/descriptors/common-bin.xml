@@ -223,8 +223,10 @@
         <include>org.xerial.snappy:*</include>
         <include>org.iq80.snappy:*</include>
         <include>org.codehaus.jackson:*</include>
-        <include>org.fusesource.fabric:*</include>
-
+        <include>org.linkedin:org.linkedin.zookeeper-impl</include>
+        <include>org.linkedin:org.linkedin.util-core</include>
+        <include>org.apache.zookeeper:zookeeper</include>
+        
       </includes>
     </dependencySet>
     <dependencySet>

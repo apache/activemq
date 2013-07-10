@@ -1,6 +1,6 @@
 package org.apache.activemq.leveldb.replicated
 
-import org.fusesource.fabric.groups._
+import org.apache.activemq.leveldb.replicated.groups._
 import org.codehaus.jackson.annotate.JsonProperty
 import org.apache.activemq.leveldb.util.{Log, JsonCodec}
 
