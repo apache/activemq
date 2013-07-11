@@ -42,7 +42,7 @@ rem
 rem Uninstall the Wrapper as an NT service.
 rem
 :startup
-"%_APP_HOME%wrapper.exe" -r %_WRAPPER_CONF%
+"%_REALPATH%wrapper.exe" -r %_WRAPPER_CONF%
 if not errorlevel 1 goto :eof
 pause
 
