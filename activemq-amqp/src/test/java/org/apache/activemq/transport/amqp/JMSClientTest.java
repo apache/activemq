@@ -16,20 +16,13 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Enumeration;
 
-import javax.jms.Connection;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.QueueBrowser;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import javax.jms.*;
 
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
@@ -70,6 +63,44 @@ public class JMSClientTest extends AmqpTestSupport {
         }
         connection.close();
 
+    }
+
+    @Test
+    public void testSelectors() throws Exception{
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
+
+        Connection connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer p = session.createProducer(queue);
+
+            TextMessage message = session.createTextMessage();
+            message.setText("hello");
+            p.send(message, DeliveryMode.PERSISTENT, 5, 0);
+
+            message = session.createTextMessage();
+            message.setText("hello + 9");
+            p.send(message, DeliveryMode.PERSISTENT, 9, 0);
+
+            QueueBrowser browser = session.createBrowser(queue);
+            Enumeration enumeration = browser.getEnumeration();
+            int count = 0;
+            while (enumeration.hasMoreElements()) {
+                Message m = (Message) enumeration.nextElement();
+                assertTrue(m instanceof TextMessage);
+                count ++;
+            }
+
+            assertEquals(2, count);
+
+            MessageConsumer consumer = session.createConsumer(queue, "JMSPriority > 8");
+            Message msg = consumer.receive(TestConfig.TIMEOUT);
+            assertNotNull(msg);
+            assertTrue(msg instanceof TextMessage);
+            assertEquals("hello + 9", ((TextMessage) msg).getText());
+        }
+        connection.close();
     }
 
     private Connection createConnection() throws JMSException {
