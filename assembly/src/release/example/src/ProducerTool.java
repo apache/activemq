@@ -51,6 +51,7 @@ public class ProducerTool extends Thread {
     private boolean topic;
     private boolean transacted;
     private boolean persistent;
+    private long batch = 10;
     private static Object lockResults = new Object();
 
     public static void main(String[] args) {
@@ -166,7 +167,7 @@ public class ProducerTool extends Thread {
 
             producer.send(message);
 
-            if (transacted) {
+            if (transacted && (i % batch == 0)) {
                 System.out.println("[" + this.getName() + "] Committing " + messageCount + " messages");
                 session.commit();
             }
@@ -243,5 +244,9 @@ public class ProducerTool extends Thread {
 
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
+    }
+
+    public void setBatch(long batch) {
+        this.batch = batch;
     }
 }

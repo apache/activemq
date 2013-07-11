@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -45,6 +44,9 @@ import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
+import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
 /**
  * Implements all the default JDBC operations that are used by the JDBCPersistenceAdapter. <p/> sub-classing is
@@ -228,9 +230,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (xid != null) {
                 byte[] xidVal = xid.getEncodedXidBytes();
                 xidVal[0] = '+';
-                setBinaryData(s, 8, xidVal);
+                String xidString = printBase64Binary(xidVal);
+                s.setString(8, xidString);
             } else {
-                setBinaryData(s, 8, null);
+                s.setString(8, null);
             }
             if (this.batchStatments) {
                 s.addBatch();
@@ -246,6 +249,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
         }
     }
+
+
 
     public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,
             long expirationTime, String messageRef) throws SQLException, IOException {
@@ -356,7 +361,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } else {
                 byte[] xidVal = xid.getEncodedXidBytes();
                 xidVal[0] = '-';
-                setBinaryData(s, 1, xidVal);
+                String xidString = printBase64Binary(xidVal);
+                s.setString(1, xidString);
                 s.setLong(2, seq);
             }
             if (this.batchStatments) {
@@ -443,7 +449,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             if (xid != null) {
                 byte[] xidVal = encodeXid(xid, seq, priority);
-                setBinaryData(s, 1, xidVal);
+                String xidString = printBase64Binary(xidVal);
+                s.setString(1, xidString);
             } else {
                 s.setLong(1, seq);
             }
@@ -480,7 +487,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             if (xid != null) {
                 byte[] xidVal = encodeXid(xid, seq, priority);
-                setBinaryData(s, 1, xidVal);
+                String xidString = printBase64Binary(xidVal);
+                s.setString(1, xidString);
             } else {
                 s.setLong(1, seq);
             }
@@ -957,7 +965,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             rs = s.executeQuery();
             while (rs.next()) {
                 long id = rs.getLong(1);
-                byte[] encodedXid = getBinaryData(rs, 2);
+                String encodedString = rs.getString(2);
+                byte[] encodedXid = parseBase64Binary(encodedString);
                 if (encodedXid[0] == '+') {
                     jdbcMemoryTransactionStore.recoverAdd(id, getBinaryData(rs, 3));
                 } else {
@@ -971,7 +980,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(this.statements.getFindAcksPendingOutcomeStatement());
             rs = s.executeQuery();
             while (rs.next()) {
-                byte[] encodedXid = getBinaryData(rs, 1);
+                String encodedString = rs.getString(1);
+                byte[] encodedXid = parseBase64Binary(encodedString);
                 String destination = rs.getString(2);
                 String subName = rs.getString(3);
                 String subId = rs.getString(4);

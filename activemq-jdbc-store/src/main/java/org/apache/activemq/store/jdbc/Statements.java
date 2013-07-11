@@ -112,11 +112,13 @@ public class Statements {
                 "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
-                "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + binaryDataType,
+                "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + stringIdDataType,
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIORITY " + sequenceDataType  + " DEFAULT 5 NOT NULL",
-                "ALTER TABLE " + getFullAckTableName() + " ADD XID " + binaryDataType,
+                "ALTER TABLE " + getFullAckTableName() + " ADD XID " + stringIdDataType,
                 "ALTER TABLE " + getFullAckTableName() + " " + getDropAckPKAlterStatementEnd(),
                 "ALTER TABLE " + getFullAckTableName() + " ADD PRIMARY KEY (CONTAINER, CLIENT_ID, SUB_NAME, PRIORITY)",
+                "CREATE INDEX " + getFullMessageTableName() + "_XIDX ON " + getFullMessageTableName() + " (XID)",
+                "CREATE INDEX " + getFullAckTableName() + "_XIDX ON " + getFullAckTableName() + " (XID)"
             };
         }
         return createSchemaStatements;
