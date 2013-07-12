@@ -22,8 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.8-SNAPSHOT</version>
-    <version>5.8-SNAPSHOT</version>
+    <version>5.9-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-optional</artifactId>
@@ -35,17 +34,11 @@
     <!-- activemq -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -227,7 +220,7 @@
                     org.apache.activemq.transport.https*;version=${project.version};-noimport:=;-split-package:=merge-last
                 </Export-Package>
                 <Import-Package>
-                    org.eclipse.jetty*;version="[7.5,8.0)";resolution:=optional,
+                    org.eclipse.jetty*;version="[7.6,8.0)";resolution:=optional,
                     !org.apache.activemq.transport.ws*;version=${project.version},
                     !org.apache.activemq.transport.xstream;version=${project.version},
                     !org.apache.activemq.transport.util;version=${project.version},
