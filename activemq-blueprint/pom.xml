@@ -32,8 +32,8 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-        org.apache.xbean*;version="[3.7,4)",
-        org.apache.aries.blueprint.*;version="[0.3,2)",
+        org.apache.xbean*;version="[3.13,4)",
+        org.apache.aries.blueprint.*;version="[1.0,2)",
           *
     </activemq.osgi.import.pkg>
   </properties>
@@ -43,6 +43,7 @@
             <groupId>org.apache.aries.blueprint</groupId>
             <artifactId>org.apache.aries.blueprint</artifactId>
             <version>${aries-version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.xbean</groupId>
