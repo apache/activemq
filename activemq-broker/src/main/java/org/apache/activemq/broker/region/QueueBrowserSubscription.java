@@ -18,7 +18,9 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jms.JMSException;
 
@@ -26,14 +28,21 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.usage.SystemUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueueBrowserSubscription extends QueueSubscription {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(QueueBrowserSubscription.class);
 
     int queueRefs;
     boolean browseDone;
     boolean destinationsAdded;
+
+    private final Map<MessageId, Object> audit = new HashMap<MessageId, Object>();
 
     public QueueBrowserSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
         super(broker, usageManager, context, info);
@@ -54,6 +63,16 @@ public class QueueBrowserSubscription extends QueueSubscription {
     synchronized public void destinationsAdded() throws Exception {
         destinationsAdded = true;
         checkDone();
+    }
+
+    public boolean isDuplicate(MessageId messageId) {
+
+        if (!audit.containsKey(messageId)) {
+            audit.put(messageId, Boolean.TRUE);
+            return false;
+        }
+
+        return true;
     }
 
     private void checkDone() throws Exception {

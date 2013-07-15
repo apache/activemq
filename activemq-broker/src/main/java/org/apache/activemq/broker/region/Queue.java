@@ -108,8 +108,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     protected PendingMessageCursor messages;
     private final ReentrantReadWriteLock pagedInMessagesLock = new ReentrantReadWriteLock();
     private final LinkedHashMap<MessageId, QueueMessageReference> pagedInMessages = new LinkedHashMap<MessageId, QueueMessageReference>();
-    // Messages that are paged in but have not yet been targeted at a
-    // subscription
+    // Messages that are paged in but have not yet been targeted at a subscription
     private final ReentrantReadWriteLock pagedInPendingDispatchLock = new ReentrantReadWriteLock();
     protected PendingList pagedInPendingDispatch = new OrderedPendingList();
     protected PendingList redeliveredWaitingDispatch = new OrderedPendingList();
@@ -177,7 +176,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
             return returnValue;
         }
-
     }
 
     DelayQueue<TimeoutMessage> flowControlTimeoutMessages = new DelayQueue<TimeoutMessage>();
@@ -246,7 +244,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         consumersLock.readLock().lock();
         try {
             return new ArrayList<Subscription>(consumers);
-        }finally {
+        } finally {
             consumersLock.readLock().unlock();
         }
     }
@@ -447,10 +445,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             sub.add(context, this);
 
             // needs to be synchronized - so no contention with dispatching
-           // consumersLock.
+            // consumersLock.
             consumersLock.writeLock().lock();
             try {
-
                 // set a flag if this is a first consumer
                 if (consumers.size() == 0) {
                     firstConsumer = true;
@@ -474,7 +471,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     }
                     dispatchSelector.setExclusiveConsumer(exclusiveConsumer);
                 }
-            }finally {
+            } finally {
                 consumersLock.writeLock().unlock();
             }
 
@@ -488,7 +485,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (!this.optimizedDispatch) {
                 wakeup();
             }
-        }finally {
+        } finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
         if (this.optimizedDispatch) {
@@ -593,13 +590,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 if (!redeliveredWaitingDispatch.isEmpty()) {
                     doDispatch(new OrderedPendingList());
                 }
-            }finally {
+            } finally {
                 consumersLock.writeLock().unlock();
             }
             if (!this.optimizedDispatch) {
                 wakeup();
             }
-        }finally {
+        } finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
         if (this.optimizedDispatch) {
@@ -639,13 +636,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG
-                            .info("Usage Manager Memory Limit ("
-                                    + memoryUsage.getLimit()
-                                    + ") reached on "
-                                    + getActiveMQDestination().getQualifiedName()
-                                    + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
-                                    + " See http://activemq.apache.org/producer-flow-control.html for more info");
+                    LOG.info("Usage Manager Memory Limit ("
+                             + memoryUsage.getLimit()
+                             + ") reached on "
+                             + getActiveMQDestination().getQualifiedName()
+                             + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
+                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
                 }
 
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
@@ -979,9 +975,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public String toString() {
         int size = 0;
         messagesLock.readLock().lock();
-        try{
+        try {
             size = messages.size();
-        }finally {
+        } finally {
             messagesLock.readLock().unlock();
         }
         return destination.getQualifiedName() + ", subscriptions=" + consumers.size()
@@ -1120,7 +1116,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         return allConsumersExclusiveByDefault;
     }
 
-
     // Implementation methods
     // -------------------------------------------------------------------------
     private QueueMessageReference createMessageReference(Message message) {
@@ -1209,7 +1204,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     messagesLock.writeLock().unlock();
                 }
             }
-
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
         }
@@ -1230,12 +1224,12 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public QueueMessageReference getMessage(String id) {
         MessageId msgId = new MessageId(id);
         pagedInMessagesLock.readLock().lock();
-        try{
+        try {
             QueueMessageReference ref = this.pagedInMessages.get(msgId);
             if (ref != null) {
                 return ref;
             }
-        }finally {
+        } finally {
             pagedInMessagesLock.readLock().unlock();
         }
         messagesLock.readLock().lock();
@@ -1282,6 +1276,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // don't spin/hang if stats are out and there is nothing left in the
             // store
         } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
+
         if (this.destinationStatistics.getMessages().getCount() > 0) {
             LOG.warn(getActiveMQDestination().getQualifiedName()
                     + " after purge complete, message count stats report: "
@@ -1346,9 +1341,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
-            try{
+            try {
                 set.addAll(pagedInMessages.values());
-            }finally {
+            } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
             List<MessageReference> list = new ArrayList<MessageReference>(set);
@@ -1415,7 +1410,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             pagedInMessagesLock.readLock().lock();
             try {
                 set.addAll(pagedInMessages.values());
-            }finally {
+            } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
             List<MessageReference> list = new ArrayList<MessageReference>(set);
@@ -1505,9 +1500,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
-            try{
+            try {
                 set.addAll(pagedInMessages.values());
-            }finally {
+            } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
             List<QueueMessageReference> list = new ArrayList<QueueMessageReference>(set);
@@ -1534,9 +1529,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         do {
             doPageIn(true);
             pagedInMessagesLock.readLock().lock();
-            try{
+            try {
                 set.addAll(pagedInMessages.values());
-            }finally {
+            } finally {
                 pagedInMessagesLock.readLock().unlock();
             }
             List<QueueMessageReference> list = new ArrayList<QueueMessageReference>(set);
@@ -1615,7 +1610,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
             }
 
-
             messagesLock.readLock().lock();
             try{
                 pageInMoreMessages |= !messages.isEmpty();
@@ -1640,7 +1634,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (pageInMoreMessages || hasBrowsers || !redeliveredWaitingDispatch.isEmpty()) {
                 try {
                     pageInMessages(hasBrowsers);
-
                 } catch (Throwable e) {
                     LOG.error("Failed to page in more queue messages ", e);
                 }
@@ -1670,7 +1663,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         }
                         boolean added = false;
                         for (QueueMessageReference node : alreadyDispatchedMessages) {
-                            if (!node.isAcked() && !browser.getPending().getMessageAudit().isDuplicate(node.getMessageId())) {
+                            if (!node.isAcked() && !browser.isDuplicate(node.getMessageId())) {
                                 msgContext.setMessageReference(node);
                                 if (browser.matches(node, msgContext)) {
                                     browser.add(node);
@@ -1750,7 +1743,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
-
     }
 
     protected void removeMessage(ConnectionContext c, Subscription subs, QueueMessageReference r) throws IOException {
@@ -1793,9 +1785,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (ack.isPoisonAck() || (sub != null && sub.getConsumerInfo().isNetworkSubscription())) {
             // message gone to DLQ, is ok to allow redelivery
             messagesLock.writeLock().lock();
-            try{
+            try {
                 messages.rollback(reference.getMessageId());
-            }finally {
+            } finally {
                 messagesLock.writeLock().unlock();
             }
         }
@@ -1841,9 +1833,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     final void sendMessage(final Message msg) throws Exception {
         messagesLock.writeLock().lock();
-        try{
+        try {
             messages.addMessageLast(msg);
-        }finally {
+        } finally {
             messagesLock.writeLock().unlock();
         }
     }
@@ -2044,7 +2036,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 return list;
             }
             consumers = new ArrayList<Subscription>(this.consumers);
-        }finally {
+        } finally {
             consumersLock.writeLock().unlock();
         }
 
@@ -2104,7 +2096,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         addToConsumerList(target);
                         consumers = new ArrayList<Subscription>(this.consumers);
                     }
-                }finally {
+                } finally {
                     consumersLock.writeLock().unlock();
                 }
             }
@@ -2149,7 +2141,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
 
         return result;
-
     }
 
     protected void assignGroup(Subscription subs, MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
@@ -2187,13 +2178,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         int total = 0;
         boolean zeroPrefetch = false;
         consumersLock.readLock().lock();
-        try{
+        try {
             for (Subscription s : consumers) {
                 zeroPrefetch |= s.getPrefetchSize() == 0;
                 int countBeforeFull = s.countBeforeFull();
                 total += countBeforeFull;
             }
-        }finally {
+        } finally {
             consumersLock.readLock().unlock();
         }
         if (total == 0 && zeroPrefetch) {
@@ -2306,7 +2297,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     break;
                 }
             }
-        }finally {
+        } finally {
             consumersLock.readLock().unlock();
         }
         return sub;
@@ -2346,7 +2337,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         }
                     }
                 }
-            }finally {
+            } finally {
                 consumersLock.readLock().unlock();
             }
         }
