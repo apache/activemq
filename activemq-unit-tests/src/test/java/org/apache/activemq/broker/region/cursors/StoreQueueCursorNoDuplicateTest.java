@@ -31,6 +31,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
+import org.mortbay.log.Log;
 
 /**
  * @author gtully
@@ -41,12 +42,13 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
             + StoreQueueCursorNoDuplicateTest.class.getSimpleName());
     BrokerService brokerService;
 
-    final static String mesageIdRoot = "11111:22222:";
+    final static String mesageIdRoot = "11111:22222:0:";
     final int messageBytesSize = 1024;
     final String text = new String(new byte[messageBytesSize]);
 
     protected int count = 6;
 
+    @Override
     public void setUp() throws Exception {
         brokerService = createBroker();
         brokerService.setUseJmx(false);
@@ -58,6 +60,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
         return new BrokerService();
     }
 
+    @Override
     public void tearDown() throws Exception {
         brokerService.stop();
     }
@@ -103,8 +106,9 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
             MessageReference ref = underTest.next();
             ref.decrementReferenceCount();
             underTest.remove();
-            assertEquals(dequeueCount++, ref.getMessageId()
-                    .getProducerSequenceId());
+            Log.info("Received message: {} with body: {}",
+                     ref.getMessageId(), ((ActiveMQTextMessage)ref.getMessage()).getText());
+            assertEquals(dequeueCount++, ref.getMessageId().getProducerSequenceId());
         }
         underTest.release();
         assertEquals(count, dequeueCount);
