@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.util;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -50,19 +51,33 @@ public class IdGenerator {
         }
 
         if (canAccessSystemProps) {
+            int idGeneratorPort = 0;
+            ServerSocket ss = null;
             try {
-                int idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
+                idGeneratorPort = Integer.parseInt(System.getProperty(PROPERTY_IDGENERATOR_PORT, "0"));
                 LOG.trace("Using port {}", idGeneratorPort);
                 hostName = InetAddressUtil.getLocalHostName();
-                ServerSocket ss = new ServerSocket(idGeneratorPort);
+                ss = new ServerSocket(idGeneratorPort);
                 stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
                 Thread.sleep(100);
-                ss.close();
             } catch (Exception ioe) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("could not generate unique stub by using DNS and binding to local port", ioe);
                 } else {
                     LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", ioe.getClass().getCanonicalName(), ioe.getMessage());
+                }
+            } finally {
+                if (ss != null) {
+                    try {
+                        // TODO: replace the following line with IOHelper.close(ss) when Java 6 support is dropped
+                        ss.close();
+                    } catch (IOException ioe) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Closing the server socket failed", ioe);
+                        } else {
+                            LOG.warn("Closing the server socket failed" + " due " + ioe.getMessage());
+                        }
+                    }
                 }
             }
         }
