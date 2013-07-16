@@ -60,14 +60,15 @@ public class MessageServlet extends MessageServletSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MessageServlet.class);
 
-    private String readTimeoutParameter = "readTimeout";
+    private final String readTimeoutParameter = "readTimeout";
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 20000;
     private long requestTimeout = 1000;
     private String defaultContentType = "text/xml";
 
-    private HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
+    private final HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
 
+    @Override
     public void init() throws ServletException {
         ServletConfig servletConfig = getServletConfig();
         String name = servletConfig.getInitParameter("defaultReadTimeout");
@@ -96,6 +97,7 @@ public class MessageServlet extends MessageServletSupport {
      * @throws ServletException
      * @throws IOException
      */
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // lets turn the HTTP post into a JMS Message
         try {
@@ -164,6 +166,7 @@ public class MessageServlet extends MessageServletSupport {
      * Supports a HTTP DELETE to be equivlanent of consuming a singe message
      * from a queue
      */
+    @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doMessages(request, response);
     }
@@ -172,6 +175,7 @@ public class MessageServlet extends MessageServletSupport {
      * Supports a HTTP DELETE to be equivlanent of consuming a singe message
      * from a queue
      */
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doMessages(request, response);
     }
@@ -208,7 +212,6 @@ public class MessageServlet extends MessageServletSupport {
 
             Continuation continuation = null;
             Listener listener = null;
-
 
             // Look for any available messages
             message = consumer.receive(10);
@@ -254,9 +257,6 @@ public class MessageServlet extends MessageServletSupport {
             if (message == null) {
                 // No messages so OK response of for ajax else no content.
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-//                response.setContentType("text/plain");
-//                writer.write("No message received");
-//                writer.flush();
             } else {
                 // We have at least one message so set up the response
                 messages = 1;
@@ -395,8 +395,11 @@ public class MessageServlet extends MessageServletSupport {
             }
         }
 
+        @Override
         public void onMessageAvailable(MessageConsumer consumer) {
             assert this.consumer == consumer;
+
+            ((MessageAvailableConsumer) consumer).setAvailableListener(null);
 
             synchronized (this.consumer) {
                 if (continuation != null) {
