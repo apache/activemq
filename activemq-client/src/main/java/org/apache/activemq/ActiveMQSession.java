@@ -857,26 +857,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             md.setDeliverySequenceId(getNextDeliveryId());
 
+            final MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             try {
-                messageListener.onMessage(message);
-            } catch (RuntimeException e) {
-                LOG.error("error dispatching message: ", e);
-                // A problem while invoking the MessageListener does not
-                // in general indicate a problem with the connection to the broker, i.e.
-                // it will usually be sufficient to let the afterDelivery() method either
-                // commit or roll back in order to deal with the exception.
-                // However, we notify any registered client internal exception listener
-                // of the problem.
-                connection.onClientInternalException(e);
-            }
-
-            try {
-                MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
                 ack.setFirstMessageId(md.getMessage().getMessageId());
                 doStartTransaction();
                 ack.setTransactionId(getTransactionContext().getTransactionId());
                 if (ack.getTransactionId() != null) {
                     getTransactionContext().addSynchronization(new Synchronization() {
+
+                        @Override
+                        public void beforeEnd() throws Exception {
+                            asyncSendPacket(ack);
+                        }
 
                         @Override
                         public void afterRollback() throws Exception {
@@ -893,7 +885,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 // Acknowledge the last message.
                                 MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
                                 ack.setFirstMessageId(md.getMessage().getMessageId());
+                                ack.setPoisonCause(new Throwable("Exceeded ra redelivery policy limit:" + redeliveryPolicy));
                                 asyncSendPacket(ack);
+
                             } else {
 
                                 MessageAck ack = new MessageAck(md, MessageAck.REDELIVERED_ACK_TYPE, 1);
@@ -916,9 +910,26 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                         }
                     });
                 }
-                asyncSendPacket(ack);
+
+                messageListener.onMessage(message);
+
             } catch (Throwable e) {
+                LOG.error("error dispatching message: ", e);
+                // A problem while invoking the MessageListener does not
+                // in general indicate a problem with the connection to the broker, i.e.
+                // it will usually be sufficient to let the afterDelivery() method either
+                // commit or roll back in order to deal with the exception.
+                // However, we notify any registered client internal exception listener
+                // of the problem.
                 connection.onClientInternalException(e);
+            } finally {
+                if (ack.getTransactionId() == null) {
+                    try {
+                        asyncSendPacket(ack);
+                    } catch (Throwable e) {
+                        connection.onClientInternalException(e);
+                    }
+                }
             }
 
             if (deliveryListener != null) {

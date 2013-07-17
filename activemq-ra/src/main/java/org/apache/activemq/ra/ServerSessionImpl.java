@@ -223,7 +223,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             try {
                 endpoint.afterDelivery();
             } catch (Throwable e) {
-                throw new RuntimeException("Endpoint after delivery notification failure", e);
+                throw new RuntimeException("Endpoint after delivery notification failure: " + e, e);
             } finally {
                 TransactionContext transactionContext = session.getTransactionContext();
                 if (transactionContext != null && transactionContext.isInLocalTransaction()) {
