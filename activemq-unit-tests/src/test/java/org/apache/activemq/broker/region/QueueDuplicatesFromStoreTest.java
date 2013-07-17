@@ -72,18 +72,20 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
     final int fullWindow = 200;
     protected int count = 5000;
 
+    @Override
     public void setUp() throws Exception {
         brokerService = createBroker();
         brokerService.setUseJmx(false);
         brokerService.deleteAllMessages();
-        brokerService.start();        
+        brokerService.start();
     }
 
     protected BrokerService createBroker() throws Exception {
         return new BrokerService();
     }
 
-	public void tearDown() throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         brokerService.stop();
     }
 
@@ -97,7 +99,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
 
     public void doTestNoDuplicateAfterCacheFullAndAcked(final int auditDepth) throws Exception {
         final PersistenceAdapter persistenceAdapter =  brokerService.getPersistenceAdapter();
-        final MessageStore queueMessageStore = 
+        final MessageStore queueMessageStore =
             persistenceAdapter.createQueueMessageStore(destination);
         final ConnectionContext contextNotInTx = new ConnectionContext();
         final ConsumerInfo consumerInfo = new ConsumerInfo();
@@ -112,7 +114,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         queue.setMaxAuditDepth(auditDepth);
         queue.initialize();
         queue.start();
-       
+
 
         ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
         ProducerInfo producerInfo = new ProducerInfo();
@@ -124,7 +126,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         final AtomicLong ackedCount = new AtomicLong(0);
         final AtomicLong enqueueCounter = new AtomicLong(0);
         final Vector<String> errors = new Vector<String>();
-                
+
         // populate the queue store, exceed memory limit so that cache is disabled
         for (int i = 0; i < count; i++) {
             Message message = getMessage(i);
@@ -132,10 +134,11 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
         }
 
         assertEquals("store count is correct", count, queueMessageStore.getMessageCount());
-        
+
         // pull from store in small windows
         Subscription subscription = new Subscription() {
 
+            @Override
             public void add(MessageReference node) throws Exception {
                 if (enqueueCounter.get() != node.getMessageId().getProducerSequenceId()) {
                     errors.add("Not in sequence at: " + enqueueCounter.get() + ", received: "
@@ -148,10 +151,12 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                 node.decrementReferenceCount();
             }
 
+            @Override
             public void add(ConnectionContext context, Destination destination)
                     throws Exception {
             }
 
+            @Override
             public int countBeforeFull() {
                 if (isFull()) {
                     return 0;
@@ -160,140 +165,179 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                 }
             }
 
+            @Override
             public void destroy() {
             };
 
+            @Override
             public void gc() {
             }
 
+            @Override
             public ConsumerInfo getConsumerInfo() {
                 return consumerInfo;
             }
 
+            @Override
             public ConnectionContext getContext() {
                 return null;
             }
 
+            @Override
             public long getDequeueCounter() {
                 return 0;
             }
 
+            @Override
             public long getDispatchedCounter() {
                 return 0;
             }
 
+            @Override
             public int getDispatchedQueueSize() {
                 return 0;
             }
 
+            @Override
             public long getEnqueueCounter() {
                 return 0;
             }
 
+            @Override
             public int getInFlightSize() {
                 return 0;
             }
 
+            @Override
             public int getInFlightUsage() {
                 return 0;
             }
 
+            @Override
             public ObjectName getObjectName() {
                 return null;
             }
 
+            @Override
             public int getPendingQueueSize() {
                 return 0;
             }
 
+            @Override
             public int getPrefetchSize() {
                 return 0;
             }
 
+            @Override
             public String getSelector() {
                 return null;
             }
 
+            @Override
             public boolean isBrowser() {
                 return false;
             }
 
+            @Override
             public boolean isFull() {
                 return (enqueueCounter.get() - ackedCount.get()) >= fullWindow;
             }
 
+            @Override
             public boolean isHighWaterMark() {
                 return false;
             }
 
+            @Override
             public boolean isLowWaterMark() {
                 return false;
             }
 
+            @Override
             public boolean isRecoveryRequired() {
                 return false;
             }
 
+            @Override
             public boolean matches(MessageReference node,
                     MessageEvaluationContext context) throws IOException {
                 return true;
             }
 
+            @Override
             public boolean matches(ActiveMQDestination destination) {
                 return true;
             }
 
+            @Override
             public void processMessageDispatchNotification(
                     MessageDispatchNotification mdn) throws Exception {
             }
 
+            @Override
             public Response pullMessage(ConnectionContext context,
                     MessagePull pull) throws Exception {
                 return null;
             }
 
+            @Override
             public List<MessageReference> remove(ConnectionContext context,
                     Destination destination) throws Exception {
                 return null;
             }
 
+            @Override
             public void setObjectName(ObjectName objectName) {
             }
 
+            @Override
             public void setSelector(String selector)
                     throws InvalidSelectorException,
                     UnsupportedOperationException {
             }
 
+            @Override
             public void updateConsumerPrefetch(int newPrefetch) {
             }
 
+            @Override
             public boolean addRecoveredMessage(ConnectionContext context,
                     MessageReference message) throws Exception {
                 return false;
             }
 
+            @Override
             public ActiveMQDestination getActiveMQDestination() {
                 return destination;
             }
 
+            @Override
             public void acknowledge(ConnectionContext context, MessageAck ack)
                     throws Exception {
             }
 
-			public int getCursorMemoryHighWaterMark(){
-				return 0;
-			}
+            @Override
+            public int getCursorMemoryHighWaterMark(){
+                return 0;
+            }
 
-			public void setCursorMemoryHighWaterMark(
-			        int cursorMemoryHighWaterMark) {				
-			}
+            @Override
+            public void setCursorMemoryHighWaterMark(
+                    int cursorMemoryHighWaterMark) {
+            }
 
+            @Override
             public boolean isSlowConsumer() {
                 return false;
             }
 
+            @Override
             public void unmatched(MessageReference node) throws IOException {
+            }
+
+            @Override
+            public long getTimeOfLastMessageAck() {
+                return 0;
             }
         };
 

@@ -56,6 +56,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -678,7 +679,14 @@ public class ManagedRegionBroker extends RegionBroker {
         try {
             objectName = BrokerMBeanSupport.createAbortSlowConsumerStrategyName(brokerObjectName, strategy);
             if (!registeredMBeans.contains(objectName))  {
-                AbortSlowConsumerStrategyView view = new AbortSlowConsumerStrategyView(this, strategy);
+
+                AbortSlowConsumerStrategyView view = null;
+                if (strategy instanceof AbortSlowAckConsumerStrategy) {
+                    view = new AbortSlowAckConsumerStrategyView(this, (AbortSlowAckConsumerStrategy) strategy);
+                } else {
+                    view = new AbortSlowConsumerStrategyView(this, strategy);
+                }
+
                 AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
                 registeredMBeans.add(objectName);
             }
