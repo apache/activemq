@@ -145,7 +145,7 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setLazyDispatch(isLazyDispatch());
     }
 
-    public void baseConfiguration(Broker broker,BaseDestination destination) {
+    public void baseConfiguration(Broker broker, BaseDestination destination) {
         destination.setProducerFlowControl(isProducerFlowControl());
         destination.setAlwaysRetroactive(isAlwaysRetroactive());
         destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
@@ -170,6 +170,7 @@ public class PolicyEntry extends DestinationMapEntry {
         SlowConsumerStrategy scs = getSlowConsumerStrategy();
         if (scs != null) {
             scs.setBrokerService(broker);
+            scs.addDestination(destination);
         }
         destination.setSlowConsumerStrategy(scs);
         destination.setPrioritizedMessages(isPrioritizedMessages());
@@ -179,7 +180,6 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
         destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
         destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
-
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {

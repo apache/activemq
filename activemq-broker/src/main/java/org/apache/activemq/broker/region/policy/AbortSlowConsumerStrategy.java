@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.thread.Scheduler;
@@ -34,40 +35,43 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Abort slow consumers when they reach the configured threshold of slowness, default is slow for 30 seconds
- * 
+ *
  * @org.apache.xbean.XBean
  */
 public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumerStrategy.class);
 
-    private String name = "AbortSlowConsumerStrategy@" + hashCode();
-    private Scheduler scheduler;
-    private Broker broker;
-    private final AtomicBoolean taskStarted = new AtomicBoolean(false);
-    private final Map<Subscription, SlowConsumerEntry> slowConsumers = new ConcurrentHashMap<Subscription, SlowConsumerEntry>();
+    protected String name = "AbortSlowConsumerStrategy@" + hashCode();
+    protected Scheduler scheduler;
+    protected Broker broker;
+    protected final AtomicBoolean taskStarted = new AtomicBoolean(false);
+    protected final Map<Subscription, SlowConsumerEntry> slowConsumers =
+        new ConcurrentHashMap<Subscription, SlowConsumerEntry>();
 
     private long maxSlowCount = -1;
     private long maxSlowDuration = 30*1000;
     private long checkPeriod = 30*1000;
     private boolean abortConnection = false;
 
+    @Override
     public void setBrokerService(Broker broker) {
        this.scheduler = broker.getScheduler();
        this.broker = broker;
     }
 
+    @Override
     public void slowConsumer(ConnectionContext context, Subscription subs) {
         if (maxSlowCount < 0 && maxSlowDuration < 0) {
             // nothing to do
             LOG.info("no limits set, slowConsumer strategy has nothing to do");
             return;
         }
-        
+
         if (taskStarted.compareAndSet(false, true)) {
             scheduler.executePeriodically(this, checkPeriod);
         }
-            
+
         if (!slowConsumers.containsKey(subs)) {
             slowConsumers.put(subs, new SlowConsumerEntry(context));
         } else if (maxSlowCount > 0) {
@@ -75,6 +79,7 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         }
     }
 
+    @Override
     public void run() {
         if (maxSlowDuration > 0) {
             // mark
@@ -82,12 +87,12 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                 entry.mark();
             }
         }
-        
+
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
             if (entry.getKey().isSlowConsumer()) {
                 if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod > maxSlowDuration)
-                        || maxSlowCount > 0 && entry.getValue().slowCount > maxSlowCount) { 
+                        || maxSlowCount > 0 && entry.getValue().slowCount > maxSlowCount) {
                     toAbort.put(entry.getKey(), entry.getValue());
                     slowConsumers.remove(entry.getKey());
                 }
@@ -100,19 +105,20 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         abortSubscription(toAbort, abortConnection);
     }
 
-    private void abortSubscription(Map<Subscription, SlowConsumerEntry> toAbort, boolean abortSubscriberConnection) {
+    protected void abortSubscription(Map<Subscription, SlowConsumerEntry> toAbort, boolean abortSubscriberConnection) {
         for (final Entry<Subscription, SlowConsumerEntry> entry : toAbort.entrySet()) {
             ConnectionContext connectionContext = entry.getValue().context;
             if (connectionContext!= null) {
                 try {
                     LOG.info("aborting "
-                            + (abortSubscriberConnection ? "connection" : "consumer") 
+                            + (abortSubscriberConnection ? "connection" : "consumer")
                             + ", slow consumer: " + entry.getKey());
 
                     final Connection connection = connectionContext.getConnection();
                     if (connection != null) {
                         if (abortSubscriberConnection) {
                             scheduler.executeAfterDelay(new Runnable() {
+                                @Override
                                 public void run() {
                                     connection.serviceException(new InactivityIOException("Consumer was slow too often (>"
                                             + maxSlowCount +  ") or too long (>"
@@ -137,12 +143,11 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         }
     }
 
-
     public void abortConsumer(Subscription sub, boolean abortSubscriberConnection) {
         if (sub != null) {
             SlowConsumerEntry entry = slowConsumers.remove(sub);
             if (entry != null) {
-                Map toAbort = new HashMap<Subscription, SlowConsumerEntry>();
+                Map<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
                 toAbort.put(sub, entry);
                 abortSubscription(toAbort, abortSubscriberConnection);
             } else {
@@ -150,7 +155,6 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
             }
         }
     }
-
 
     public long getMaxSlowCount() {
         return maxSlowCount;
@@ -204,12 +208,17 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     public void setName(String name) {
         this.name = name;
     }
-    
+
     public String getName() {
         return name;
     }
 
     public Map<Subscription, SlowConsumerEntry> getSlowConsumers() {
         return slowConsumers;
+    }
+
+    @Override
+    public void addDestination(Destination destination) {
+        // Not needed for this strategy.
     }
 }

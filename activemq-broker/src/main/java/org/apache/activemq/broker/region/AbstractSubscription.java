@@ -20,14 +20,17 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.LogicExpression;
@@ -49,7 +52,7 @@ public abstract class AbstractSubscription implements Subscription {
     private ObjectName objectName;
     private int cursorMemoryHighWaterMark = 70;
     private boolean slowConsumer;
-
+    private long lastAckTime;
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -57,6 +60,7 @@ public abstract class AbstractSubscription implements Subscription {
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());
         this.selectorExpression = parseSelector(info);
+        this.lastAckTime = System.currentTimeMillis();
     }
 
     private static BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
@@ -81,6 +85,12 @@ public abstract class AbstractSubscription implements Subscription {
         return rc;
     }
 
+    @Override
+    public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
+        this.lastAckTime = System.currentTimeMillis();
+    }
+
+    @Override
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         ConsumerId targetConsumerId = node.getTargetConsumerId();
         if (targetConsumerId != null) {
@@ -96,26 +106,32 @@ public abstract class AbstractSubscription implements Subscription {
         }
     }
 
+    @Override
     public boolean matches(ActiveMQDestination destination) {
         return destinationFilter.matches(destination);
     }
 
+    @Override
     public void add(ConnectionContext context, Destination destination) throws Exception {
         destinations.add(destination);
     }
 
+    @Override
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         destinations.remove(destination);
         return Collections.EMPTY_LIST;
     }
 
+    @Override
     public ConsumerInfo getConsumerInfo() {
         return info;
     }
 
+    @Override
     public void gc() {
     }
 
+    @Override
     public ConnectionContext getContext() {
         return context;
     }
@@ -128,10 +144,12 @@ public abstract class AbstractSubscription implements Subscription {
         return selectorExpression;
     }
 
+    @Override
     public String getSelector() {
         return info.getSelector();
     }
 
+    @Override
     public void setSelector(String selector) throws InvalidSelectorException {
         ConsumerInfo copy = info.copy();
         copy.setSelector(selector);
@@ -141,14 +159,17 @@ public abstract class AbstractSubscription implements Subscription {
         this.selectorExpression = newSelector;
     }
 
+    @Override
     public ObjectName getObjectName() {
         return objectName;
     }
 
+    @Override
     public void setObjectName(ObjectName objectName) {
         this.objectName = objectName;
     }
 
+    @Override
     public int getPrefetchSize() {
         return info.getPrefetchSize();
     }
@@ -156,18 +177,21 @@ public abstract class AbstractSubscription implements Subscription {
         info.setPrefetchSize(newSize);
     }
 
+    @Override
     public boolean isRecoveryRequired() {
         return true;
     }
-    
+
+    @Override
     public boolean isSlowConsumer() {
         return slowConsumer;
     }
-    
+
     public void setSlowConsumer(boolean val) {
         slowConsumer = val;
     }
 
+    @Override
     public boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception {
         boolean result = false;
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
@@ -186,55 +210,70 @@ public abstract class AbstractSubscription implements Subscription {
         return result;
     }
 
+    @Override
     public ActiveMQDestination getActiveMQDestination() {
         return info != null ? info.getDestination() : null;
     }
-    
+
+    @Override
     public boolean isBrowser() {
         return info != null && info.isBrowser();
     }
-    
+
+    @Override
     public int getInFlightUsage() {
         if (info.getPrefetchSize() > 0) {
         return (getInFlightSize() * 100)/info.getPrefetchSize();
         }
         return Integer.MAX_VALUE;
     }
-    
+
     /**
      * Add a destination
      * @param destination
      */
     public void addDestination(Destination destination) {
-        
+
     }
-       
-    
+
     /**
      * Remove a destination
      * @param destination
      */
     public void removeDestination(Destination destination) {
-        
-    }
-    
-    public int getCursorMemoryHighWaterMark(){
-    	return this.cursorMemoryHighWaterMark;
+
     }
 
-	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark){
-		this.cursorMemoryHighWaterMark=cursorMemoryHighWaterMark;
-	}
-    
+    @Override
+    public int getCursorMemoryHighWaterMark(){
+        return this.cursorMemoryHighWaterMark;
+    }
+
+    @Override
+    public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark){
+        this.cursorMemoryHighWaterMark=cursorMemoryHighWaterMark;
+    }
+
+    @Override
     public int countBeforeFull() {
         return getDispatchedQueueSize() - info.getPrefetchSize();
     }
 
+    @Override
     public void unmatched(MessageReference node) throws IOException {
         // only durable topic subs have something to do here
     }
 
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         add(message);
+    }
+
+    @Override
+    public long getTimeOfLastMessageAck() {
+        return lastAckTime;
+    }
+
+    public void setTimeOfLastMessageAck(long value) {
+        this.lastAckTime = value;
     }
 }

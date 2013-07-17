@@ -32,27 +32,26 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
- * 
+ *
  */
 public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Used to add messages that match the subscription.
      * @param node
-     * @throws Exception 
-     * @throws InterruptedException 
-     * @throws IOException 
+     * @throws Exception
+     * @throws InterruptedException
+     * @throws IOException
      */
     void add(MessageReference node) throws Exception;
-    
+
     /**
-     * Used when client acknowledge receipt of dispatched message. 
+     * Used when client acknowledge receipt of dispatched message.
      * @param node
-     * @throws IOException 
-     * @throws Exception 
+     * @throws IOException
+     * @throws Exception
      */
     void acknowledge(ConnectionContext context, final MessageAck ack) throws Exception;
-    
 
     /**
      * Allows a consumer to pull a message on demand
@@ -61,36 +60,36 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Is the subscription interested in the message?
-     * @param node 
+     * @param node
      * @param context
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException;
-    
+
     /**
      * Is the subscription interested in messages in the destination?
      * @param context
      * @return
      */
     boolean matches(ActiveMQDestination destination);
-    
+
     /**
      * The subscription will be receiving messages from the destination.
-     * @param context 
+     * @param context
      * @param destination
-     * @throws Exception 
+     * @throws Exception
      */
     void add(ConnectionContext context, Destination destination) throws Exception;
-    
+
     /**
      * The subscription will be no longer be receiving messages from the destination.
-     * @param context 
+     * @param context
      * @param destination
      * @return a list of un-acked messages that were added to the subscription.
      */
     List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception;
-    
+
     /**
      * The ConsumerInfo object that created the subscription.
      * @param destination
@@ -102,11 +101,11 @@ public interface Subscription extends SubscriptionRecovery {
      * reclaim memory.
      */
     void gc();
-    
+
     /**
      * Used by a Slave Broker to update dispatch infomation
      * @param mdn
-     * @throws Exception 
+     * @throws Exception
      */
     void processMessageDispatchNotification(MessageDispatchNotification  mdn) throws Exception;
 
@@ -114,17 +113,17 @@ public interface Subscription extends SubscriptionRecovery {
      * @return number of messages pending delivery
      */
     int getPendingQueueSize();
-    
+
     /**
      * @return number of messages dispatched to the client
      */
     int getDispatchedQueueSize();
-        
+
     /**
      * @return number of messages dispatched to the client
      */
     long getDispatchedCounter();
-    
+
     /**
      * @return number of messages that matched the subscription
      */
@@ -139,7 +138,7 @@ public interface Subscription extends SubscriptionRecovery {
      * @return the JMS selector on the current subscription
      */
     String getSelector();
-    
+
     /**
      * Attempts to change the current active selector on the subscription.
      * This operation is not supported for persistent topics.
@@ -155,29 +154,28 @@ public interface Subscription extends SubscriptionRecovery {
      * Set when the subscription is registered in JMX
      */
     void setObjectName(ObjectName objectName);
-    
+
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
     boolean isLowWaterMark();
-    
+
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
     boolean isHighWaterMark();
-    
+
     /**
      * @return true if there is no space to dispatch messages
      */
     boolean isFull();
-    
+
     /**
      * inform the MessageConsumer on the client to change it's prefetch
      * @param newPrefetch
      */
     void updateConsumerPrefetch(int newPrefetch);
-    
-        
+
     /**
      * Called when the subscription is destroyed.
      */
@@ -187,17 +185,17 @@ public interface Subscription extends SubscriptionRecovery {
      * @return the prefetch size that is configured for the subscription
      */
     int getPrefetchSize();
-    
+
     /**
      * @return the number of messages awaiting acknowledgement
      */
     int getInFlightSize();
-    
+
     /**
      * @return the in flight messages as a percentage of the prefetch size
      */
     int getInFlightUsage();
-    
+
     /**
      * Informs the Broker if the subscription needs to intervention to recover it's state
      * e.g. DurableTopicSubscriber may do
@@ -205,25 +203,35 @@ public interface Subscription extends SubscriptionRecovery {
      * @return true if recovery required
      */
     boolean isRecoveryRequired();
-    
-    
+
     /**
      * @return true if a browser
      */
     boolean isBrowser();
-    
+
     /**
      * @return the number of messages this subscription can accept before its full
      */
     int countBeforeFull();
 
     ConnectionContext getContext();
-    
+
     public int getCursorMemoryHighWaterMark();
 
-	public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
+    public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark);
 
     boolean isSlowConsumer();
 
     void unmatched(MessageReference node) throws IOException;
+
+    /**
+     * Returns the time since the last Ack message was received by this subscription.
+     *
+     * If there has never been an ack this value should be set to the creation time of the
+     * subscription.
+     *
+     * @return time of last received Ack message or Subscription create time if no Acks.
+     */
+    long getTimeOfLastMessageAck();
+
 }

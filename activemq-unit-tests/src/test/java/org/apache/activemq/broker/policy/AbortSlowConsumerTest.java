@@ -51,21 +51,23 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumerTest.class);
 
-    AbortSlowConsumerStrategy underTest;
-
-    public boolean abortConnection = false;
-    public long checkPeriod = 2 * 1000;
-    public long maxSlowDuration = 5 * 1000;
-
-    private final List<Throwable> exceptions = new ArrayList<Throwable>();
+    protected AbortSlowConsumerStrategy underTest;
+    protected boolean abortConnection = false;
+    protected long checkPeriod = 2 * 1000;
+    protected long maxSlowDuration = 5 * 1000;
+    protected final List<Throwable> exceptions = new ArrayList<Throwable>();
 
     @Override
     protected void setUp() throws Exception {
         exceptions.clear();
         topic = true;
-        underTest = new AbortSlowConsumerStrategy();
+        underTest = createSlowConsumerStrategy();
         super.setUp();
         createDestination();
+    }
+
+    protected AbortSlowConsumerStrategy createSlowConsumerStrategy() {
+        return new AbortSlowConsumerStrategy();
     }
 
     @Override
@@ -243,7 +245,6 @@ public class AbortSlowConsumerTest extends JmsMultipleClientsTestSupport impleme
         TimeUnit.SECONDS.sleep(5);
         assertTrue("no exceptions : " + exceptions.toArray(), exceptions.isEmpty());
     }
-
 
     public void initCombosForTestAbortAlreadyClosedConnection() {
         addCombinationValues("abortConnection", new Object[]{Boolean.TRUE, Boolean.FALSE});

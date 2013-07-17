@@ -310,6 +310,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
+        this.setTimeOfLastMessageAck(System.currentTimeMillis());
         Destination regionDestination = (Destination) node.getRegionDestination();
         regionDestination.acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());

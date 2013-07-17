@@ -18,13 +18,41 @@ package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 
-/*
- * a strategy for dealing with slow consumers
+/**
+ * Interface for a strategy for dealing with slow consumers
  */
 public interface SlowConsumerStrategy {
 
+    /**
+     * Slow consumer event.
+     *
+     * @param context
+     *      Connection context of the subscription.
+     * @param subs
+     *      The subscription object for the slow consumer.
+     */
     void slowConsumer(ConnectionContext context, Subscription subs);
+
+    /**
+     * Sets the Broker instance which can provide a Scheduler among other things.
+     *
+     * @param broker
+     *      The running Broker.
+     */
     void setBrokerService(Broker broker);
+
+    /**
+     * For Strategies that need to examine assigned destination for slow consumers
+     * periodically the destination is assigned here.
+     *
+     * If the strategy doesn't is event driven it can just ignore assigned destination.
+     *
+     * @param destination
+     *      A destination to add to a watch list.
+     */
+    void addDestination(Destination destination);
+
 }

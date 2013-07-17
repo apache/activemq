@@ -47,6 +47,8 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
      */
     @Override
     protected void acknowledge(final ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
+        this.setTimeOfLastMessageAck(System.currentTimeMillis());
+
         final Destination q = (Destination) n.getRegionDestination();
         final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;

@@ -261,6 +261,8 @@ public class TopicSubscription extends AbstractSubscription {
 
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
+        super.acknowledge(context, ack);
+
         // Handle the standard acknowledgment case.
         if (ack.isStandardAck() || ack.isPoisonAck() || ack.isIndividualAck()) {
             if (context.isInTransaction()) {
