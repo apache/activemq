@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -281,6 +284,19 @@ public class DestinationView implements DestinationViewMBean {
         }
 
         return rc;
+    }
+
+    @Override
+    public String sendTextMessageWithProperties(String properties) throws Exception {
+        String[] kvs = properties.split(",");
+        Map<String, String> props = new HashMap<String, String>();
+        for (String kv : kvs) {
+            String[] it = kv.split("=");
+            if (it.length == 2) {
+                props.put(it[0],it[1]);
+            }
+        }
+        return sendTextMessage(props, props.remove("body"), props.remove("username"), props.remove("password"));
     }
 
     @Override

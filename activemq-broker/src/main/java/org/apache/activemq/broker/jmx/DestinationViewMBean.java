@@ -148,6 +148,17 @@ public interface DestinationViewMBean {
     String sendTextMessage(@MBeanInfo("body") String body) throws Exception;
 
     /**
+     * Sends a TextMessage to the destination.
+     *
+     * @param properties the message properties to set as a comma sep name=value list. Can only
+     *                contain Strings maped to primitive types or JMS properties. eg: body=hi,JMSReplyTo=Queue2
+     * @return the message id of the message sent.
+     * @throws Exception
+     */
+    @MBeanInfo("Sends a TextMessage to the destination.")
+    public String sendTextMessageWithProperties(String properties) throws Exception;
+
+    /**
      * Sends a TextMesage to the destination.
      *
      * @param headers the message headers and properties to set. Can only

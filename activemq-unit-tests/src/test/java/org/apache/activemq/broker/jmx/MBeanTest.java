@@ -92,6 +92,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // test all the various MBeans now we have a producer, consumer and
         // messages on a queue
         assertSendViaMBean();
+        assertSendCsnvViaMBean();
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
         assertConsumerCounts();
@@ -394,6 +395,14 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             proxy.sendTextMessage(headers, body);
         }
 
+        browseAndVerify(proxy);
+    }
+
+    private void browseAndVerify(QueueViewMBean proxy) throws Exception {
+        browseAndVerifyTypes(proxy, false);
+    }
+
+    private void browseAndVerifyTypes(QueueViewMBean proxy, boolean allStrings) throws Exception {
         CompositeData[] compdatalist = proxy.browse();
         if (compdatalist.length == 0) {
             fail("There is no message in the queue:");
@@ -418,23 +427,65 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             }
             assertComplexData(i, cdata, "PropertiesText", expected);
 
-            Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
-            assertEquals("intProperties size()", 1, intProperties.size());
-            assertEquals("intProperties.MyHeader", i, intProperties.get("MyHeader"));
+            if (allStrings) {
+                Map stringProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.STRING_PROPERTIES);
+                assertEquals("stringProperties size()", 2, stringProperties.size());
+                assertEquals("stringProperties.MyHeader", "StringHeader" + i, stringProperties.get("MyStringHeader"));
+                assertEquals("stringProperties.MyHeader", "" + i, stringProperties.get("MyHeader"));
 
-            Map stringProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.STRING_PROPERTIES);
-            assertEquals("stringProperties size()", 1, stringProperties.size());
-            assertEquals("stringProperties.MyHeader", "StringHeader" + i, stringProperties.get("MyStringHeader"));
+            } else {
+                Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
+                assertEquals("intProperties size()", 1, intProperties.size());
+                assertEquals("intProperties.MyHeader", i, intProperties.get("MyHeader"));
+
+                Map stringProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.STRING_PROPERTIES);
+                assertEquals("stringProperties size()", 1, stringProperties.size());
+                assertEquals("stringProperties.MyHeader", "StringHeader" + i, stringProperties.get("MyStringHeader"));
+            }
 
             Map properties = CompositeDataHelper.getMessageUserProperties(cdata);
             assertEquals("properties size()", 2, properties.size());
-            assertEquals("properties.MyHeader", i, properties.get("MyHeader"));
+            assertEquals("properties.MyHeader", allStrings ? "" + i : i, properties.get("MyHeader"));
             assertEquals("properties.MyHeader", "StringHeader" + i, properties.get("MyStringHeader"));
 
             assertComplexData(i, cdata, "JMSXGroupSeq", 1234);
             assertComplexData(i, cdata, "JMSXGroupID", "MyGroupID");
             assertComplexData(i, cdata, "Text", "message:" + i);
         }
+    }
+
+    protected void assertSendCsnvViaMBean() throws Exception {
+        String queueName = getDestinationString() + ".SendMBBean";
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        echo("Create QueueView MBean...");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        broker.addQueue(queueName);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queueName);
+
+        echo("Create QueueView MBean...");
+        QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        proxy.purge();
+
+        int count = 5;
+        for (int i = 0; i < count; i++) {
+            String props = "body=message:" + i;
+
+            props += ",JMSCorrelationID=MyCorrId";
+            props += ",JMSDeliveryMode=1";
+            props += ",JMSXGroupID=MyGroupID";
+            props += ",JMSXGroupSeq=1234";
+            props += ",JMSPriority=" + (i + 1);
+            props += ",JMSType=MyType";
+            props += ",MyHeader=" + i;
+            props += ",MyStringHeader=StringHeader" + i;
+
+            proxy.sendTextMessageWithProperties(props);
+        }
+
+        browseAndVerifyTypes(proxy, true);
     }
 
     protected void assertComplexData(int messageIndex, CompositeData cdata, String name, Object expected) {
