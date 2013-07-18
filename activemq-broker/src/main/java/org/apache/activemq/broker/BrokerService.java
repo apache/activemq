@@ -1850,7 +1850,8 @@ public class BrokerService implements Service {
         if (memLimit > jvmLimit) {
             LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
                       " mb) is more than the maximum available for the JVM: " +
-                      jvmLimit / (1024 * 1024) + " mb");
+                      jvmLimit / (1024 * 1024) + " mb - resetting to maximum available: " + jvmLimit / (1024 * 1024) + " mb");
+            usage.getMemoryUsage().setLimit(jvmLimit);
         }
 
         if (getPersistenceAdapter() != null) {
@@ -1871,7 +1872,10 @@ public class BrokerService implements Service {
                 if (storeLimit > dirFreeSpace) {
                     LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
                              " mb, whilst the data directory: " + dir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
+                             " only has " + dirFreeSpace / (1024 * 1024) +
+                             " mb of usable space - resetting to maximum available disk space:  " +
+                            dirFreeSpace / (1024 * 1024) + " mb");
+                    usage.getStoreUsage().setLimit(dirFreeSpace);
                 }
             }
 
@@ -1887,6 +1891,7 @@ public class BrokerService implements Service {
                           " mb, whilst the max journal file size for the store is: " +
                           maxJournalFileSize / (1024 * 1024) + " mb, " +
                           "the store will not accept any data when used.");
+
             }
         }
 
@@ -1906,7 +1911,9 @@ public class BrokerService implements Service {
             if (storeLimit > dirFreeSpace) {
                 LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                           " mb, whilst the temporary data directory: " + tmpDirPath +
-                          " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
+                          " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
+                        dirFreeSpace / (1024 * 1024) + " mb.");
+                usage.getTempUsage().setLimit(dirFreeSpace);
             }
 
             if (isPersistent()) {
@@ -1946,7 +1953,9 @@ public class BrokerService implements Service {
                 if (schedularLimit > dirFreeSpace) {
                     LOG.warn("Job Schedular Store limit is " + schedularLimit / (1024 * 1024) +
                              " mb, whilst the data directory: " + schedulerDir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space");
+                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - reseting to " +
+                            dirFreeSpace / (1024 * 1024) + " mb.");
+                    usage.getJobSchedulerUsage().setLimit(dirFreeSpace);
                 }
             }
         }
