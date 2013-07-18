@@ -698,7 +698,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
 
     override def setBatch(id: MessageId): Unit = {
-      cursorPosition = db.queuePosition(id)
+      cursorPosition = db.queuePosition(id) + 1
     }
 
   }
