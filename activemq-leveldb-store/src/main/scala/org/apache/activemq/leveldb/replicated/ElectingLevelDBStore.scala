@@ -76,6 +76,9 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var brokerName: String = _
 
   @BeanProperty
+  var container: String = _
+
+  @BeanProperty
   var hostname: String = _
   @BeanProperty
   var bind = "tcp://0.0.0.0:61619"
