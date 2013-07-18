@@ -166,5 +166,14 @@
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
         </adminobject>
+      <adminobject>
+          <adminobject-interface>javax.jms.ConnectionFactory</adminobject-interface>
+          <adminobject-class>org.apache.activemq.ActiveMQConnectionFactory</adminobject-class>
+          <config-property>
+              <config-property-name>brokerUrl</config-property-name>
+              <config-property-type>java.lang.String</config-property-type>
+          </config-property>
+      </adminobject>
+
     </resourceadapter>
 </connector>
