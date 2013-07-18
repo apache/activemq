@@ -77,6 +77,7 @@ public class FailoverTransactionTest extends TestSupport {
     }
 
     public void tearDown() throws Exception {
+        super.tearDown();
         stopBroker();
     }
 
