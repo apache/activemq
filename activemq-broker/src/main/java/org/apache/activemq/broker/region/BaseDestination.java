@@ -606,11 +606,11 @@ public abstract class BaseDestination implements Destination {
         this.storeUsageHighWaterMark = storeUsageHighWaterMark;
     }
 
-    protected final void waitForSpace(ConnectionContext context, Usage<?> usage, String warning) throws IOException, InterruptedException, ResourceAllocationException {
-        waitForSpace(context, usage, 100, warning);
+    protected final void waitForSpace(ConnectionContext context,ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+        waitForSpace(context, producerBrokerExchange, usage, 100, warning);
     }
 
-    protected final void waitForSpace(ConnectionContext context, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
+    protected final void waitForSpace(ConnectionContext context, ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
             getLog().debug("sendFailIfNoSpace, forcing exception on send, usage:  " + usage + ": " + warning);
             throw new ResourceAllocationException(warning);
@@ -623,6 +623,8 @@ public abstract class BaseDestination implements Destination {
         } else {
             long start = System.currentTimeMillis();
             long nextWarn = start;
+            producerBrokerExchange.blockingOnFlowControl(true);
+            destinationStatistics.getBlockedSends().increment();
             while (!usage.waitForSpace(1000, highWaterMark)) {
                 if (context.getStopping().get()) {
                     throw new IOException("Connection closed, send aborted.");
@@ -634,6 +636,11 @@ public abstract class BaseDestination implements Destination {
                     nextWarn = now + blockedProducerWarningInterval;
                 }
             }
+            long finish = System.currentTimeMillis();
+            long totalTimeBlocked = finish - start;
+            destinationStatistics.getBlockedTime().addTime(totalTimeBlocked);
+            producerBrokerExchange.incrementTimeBlocked(this,totalTimeBlocked);
+            producerBrokerExchange.blockingOnFlowControl(false);
         }
     }
 

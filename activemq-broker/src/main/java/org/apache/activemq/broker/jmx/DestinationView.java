@@ -486,4 +486,19 @@ public class DestinationView implements DestinationViewMBean {
         return destination.isDLQ();
     }
 
+    @Override
+    public long getBlockedSends() {
+        return destination.getDestinationStatistics().getBlockedSends().getCount();
+    }
+
+    @Override
+    public double getAverageBlockedTime() {
+        return destination.getDestinationStatistics().getBlockedTime().getAverageTime();
+    }
+
+    @Override
+    public long getTotalBlockedTime() {
+        return destination.getDestinationStatistics().getBlockedTime().getTotalTime();
+    }
+
 }

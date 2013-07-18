@@ -371,4 +371,13 @@ public interface DestinationViewMBean {
     @MBeanInfo("Dead Letter Queue")
     boolean isDLQ();
 
+    @MBeanInfo("Get number of messages blocked for Flow Control")
+    long getBlockedSends();
+
+    @MBeanInfo("get the average time (ms) a message is blocked for Flow Control")
+    double getAverageBlockedTime();
+
+    @MBeanInfo("Get the total time (ms) messages are blocked for Flow Control")
+    long getTotalBlockedTime();
+
 }

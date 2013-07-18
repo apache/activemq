@@ -716,7 +716,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 } else {
 
                     if (memoryUsage.isFull()) {
-                        waitForSpace(context, memoryUsage, "Usage Manager Memory Limit reached. Producer ("
+                        waitForSpace(context, producerExchange, memoryUsage, "Usage Manager Memory Limit reached. Producer ("
                                 + message.getProducerId() + ") stopped to prevent flooding "
                                 + getActiveMQDestination().getQualifiedName() + "."
                                 + " See http://activemq.apache.org/producer-flow-control.html for more info");
@@ -869,7 +869,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         final ConnectionContext context = producerExchange.getConnectionContext();
         Future<Object> result = null;
 
-        checkUsage(context, message);
+        producerExchange.incrementSend();
+        checkUsage(context, producerExchange, message);
         sendLock.lockInterruptibly();
         try {
             if (store != null && message.isPersistent()) {
@@ -911,7 +912,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
-    private void checkUsage(ConnectionContext context, Message message) throws ResourceAllocationException, IOException, InterruptedException {
+    private void checkUsage(ConnectionContext context,ProducerBrokerExchange producerBrokerExchange, Message message) throws ResourceAllocationException, IOException, InterruptedException {
         if (message.isPersistent()) {
             if (store != null && systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
                 final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
@@ -920,7 +921,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     + getActiveMQDestination().getQualifiedName() + "."
                     + " See http://activemq.apache.org/producer-flow-control.html for more info";
 
-                waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
+                waitForSpace(context, producerBrokerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
         } else if (messages.getSystemUsage() != null && systemUsage.getTempUsage().isFull()) {
             final String logMessage = "Temp Store is Full ("
@@ -929,7 +930,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
                 + " See http://activemq.apache.org/producer-flow-control.html for more info";
 
-            waitForSpace(context, messages.getSystemUsage().getTempUsage(), logMessage);
+            waitForSpace(context, producerBrokerExchange, messages.getSystemUsage().getTempUsage(), logMessage);
         }
     }
 

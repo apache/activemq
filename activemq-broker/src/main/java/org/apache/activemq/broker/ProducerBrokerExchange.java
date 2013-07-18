@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.command.Message;
@@ -24,13 +28,8 @@ import org.apache.activemq.state.ProducerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
  * Holds internal state in the broker for a MessageProducer
- * 
- * 
  */
 public class ProducerBrokerExchange {
 
@@ -44,6 +43,7 @@ public class ProducerBrokerExchange {
     private boolean auditProducerSequenceIds;
     private boolean isNetworkProducer;
     private BrokerService brokerService;
+    private final FlowControlInfo flowControlInfo = new FlowControlInfo();
 
     public ProducerBrokerExchange() {
     }
@@ -58,7 +58,7 @@ public class ProducerBrokerExchange {
         return rc;
     }
 
-    
+
     /**
      * @return the connectionContext
      */
@@ -131,7 +131,7 @@ public class ProducerBrokerExchange {
 
     /**
      * Enforce duplicate suppression using info from persistence adapter
-     * @param messageSend
+     *
      * @return false if message should be ignored as a duplicate
      */
     public boolean canDispatch(Message messageSend) {
@@ -145,14 +145,14 @@ public class ProducerBrokerExchange {
                     canDispatch = false;
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("suppressing duplicate message send  [" + (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()) + "] from network producer with producerSequenceId ["
-                                + producerSequenceId + "] less than last stored: "  + lastStoredForMessageProducer);
+                                + producerSequenceId + "] less than last stored: " + lastStoredForMessageProducer);
                     }
                 }
             } else if (producerSequenceId <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("suppressing duplicate message send [" + (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()) + "] with producerSequenceId ["
-                            + producerSequenceId + "] less than last stored: "  + lastSendSequenceNumber);
+                            + producerSequenceId + "] less than last stored: " + lastSendSequenceNumber);
                 }
             } else {
                 // track current so we can suppress duplicates later in the stream
@@ -165,8 +165,8 @@ public class ProducerBrokerExchange {
     private long getStoredSequenceIdForMessage(MessageId messageId) {
         try {
             return brokerService.getPersistenceAdapter().getLastProducerSequenceId(messageId.getProducerId());
-       } catch (IOException ignored) {
-            LOG.debug("Failed to determine last producer sequence id for: " +messageId, ignored);
+        } catch (IOException ignored) {
+            LOG.debug("Failed to determine last producer sequence id for: " + messageId, ignored);
         }
         return -1;
     }
@@ -179,5 +179,88 @@ public class ProducerBrokerExchange {
         }
         lastSendSequenceNumber.set(l);
         LOG.debug("last stored sequence id set: " + l);
+    }
+
+    public void incrementSend() {
+        flowControlInfo.incrementSend();
+    }
+
+    public void blockingOnFlowControl(boolean blockingOnFlowControl) {
+        flowControlInfo.setBlockingOnFlowControl(blockingOnFlowControl);
+    }
+
+    public void incrementTimeBlocked(Destination destination, long timeBlocked) {
+        flowControlInfo.incrementTimeBlocked(timeBlocked);
+    }
+
+
+    public boolean isBlockedForFlowControl() {
+        return flowControlInfo.isBlockingOnFlowControl();
+    }
+
+    public void resetFlowControl() {
+        flowControlInfo.reset();
+    }
+
+    public long getTotalTimeBlocked() {
+        return flowControlInfo.getTotalTimeBlocked();
+    }
+
+    public int getPercentageBlocked() {
+        double value = flowControlInfo.getSendsBlocked() / flowControlInfo.getTotalSends();
+        return (int) value * 100;
+    }
+
+
+    public static class FlowControlInfo {
+        private AtomicBoolean blockingOnFlowControl = new AtomicBoolean();
+        private AtomicLong totalSends = new AtomicLong();
+        private AtomicLong sendsBlocked = new AtomicLong();
+        private AtomicLong totalTimeBlocked = new AtomicLong();
+
+
+        public boolean isBlockingOnFlowControl() {
+            return blockingOnFlowControl.get();
+        }
+
+        public void setBlockingOnFlowControl(boolean blockingOnFlowControl) {
+            this.blockingOnFlowControl.set(blockingOnFlowControl);
+            if (blockingOnFlowControl) {
+                incrementSendBlocked();
+            }
+        }
+
+
+        public long getTotalSends() {
+            return totalSends.get();
+        }
+
+        public void incrementSend() {
+            this.totalSends.incrementAndGet();
+        }
+
+        public long getSendsBlocked() {
+            return sendsBlocked.get();
+        }
+
+        public void incrementSendBlocked() {
+            this.sendsBlocked.incrementAndGet();
+        }
+
+        public long getTotalTimeBlocked() {
+            return totalTimeBlocked.get();
+        }
+
+        public void incrementTimeBlocked(long time) {
+            this.totalTimeBlocked.addAndGet(time);
+        }
+
+        public void reset() {
+            blockingOnFlowControl.set(false);
+            totalSends.set(0);
+            sendsBlocked.set(0);
+            totalTimeBlocked.set(0);
+
+        }
     }
 }

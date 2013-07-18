@@ -86,4 +86,16 @@ public interface ProducerViewMBean {
      */
     @MBeanInfo("User Name used to authorize creation of this Producer")
     String getUserName();
+
+    @MBeanInfo("is the producer blocked for Flow Control")
+    boolean isProducerBlocked();
+
+    @MBeanInfo("total time (ms) Producer Blocked For Flow Control")
+    long getTotalTimeBlocked();
+
+    @MBeanInfo("percentage of sends Producer Blocked for Flow Control")
+    int getPercentageBlocked();
+
+    @MBeanInfo("reset flow control stata")
+    void resetFlowControlStats();
 }

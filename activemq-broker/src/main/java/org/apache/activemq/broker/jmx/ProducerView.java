@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerInfo;
 
@@ -147,5 +148,40 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public String getUserName() {
         return userName;
+    }
+
+    @Override
+    public boolean isProducerBlocked() {
+        ProducerBrokerExchange producerBrokerExchange = broker.getBrokerService().getProducerBrokerExchange(info);
+        if (producerBrokerExchange != null){
+            return producerBrokerExchange.isBlockedForFlowControl();
+        }
+        return false;
+    }
+
+    @Override
+    public long getTotalTimeBlocked() {
+        ProducerBrokerExchange producerBrokerExchange = broker.getBrokerService().getProducerBrokerExchange(info);
+        if (producerBrokerExchange != null){
+            return producerBrokerExchange.getTotalTimeBlocked();
+        }
+        return 0;
+    }
+
+    @Override
+    public int getPercentageBlocked() {
+        ProducerBrokerExchange producerBrokerExchange = broker.getBrokerService().getProducerBrokerExchange(info);
+        if (producerBrokerExchange != null){
+            return producerBrokerExchange.getPercentageBlocked();
+        }
+        return 0;
+    }
+
+    @Override
+    public void resetFlowControlStats() {
+        ProducerBrokerExchange producerBrokerExchange = broker.getBrokerService().getProducerBrokerExchange(info);
+        if (producerBrokerExchange != null){
+            producerBrokerExchange.resetFlowControl();
+        }
     }
 }

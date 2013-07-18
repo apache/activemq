@@ -36,44 +36,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.transaction.xa.XAResource;
-
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.ConnectionControl;
-import org.apache.activemq.command.ConnectionError;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerControl;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.ControlCommand;
-import org.apache.activemq.command.DataArrayResponse;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.FlushCommand;
-import org.apache.activemq.command.IntegerResponse;
-import org.apache.activemq.command.KeepAliveInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessagePull;
-import org.apache.activemq.command.ProducerAck;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionId;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.command.TransactionInfo;
-import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.MBeanNetworkListener;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
@@ -94,10 +60,8 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
-import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
-import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -1405,6 +1369,16 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 && this.wireFormatInfo.getVersion() >= 6) {
             dispatchAsync(control);
         }
+    }
+
+    public ProducerBrokerExchange getProducerBrokerExchangeIfExists(ProducerInfo producerInfo){
+        ProducerBrokerExchange result = null;
+        if (producerInfo != null && producerInfo.getProducerId() != null){
+            synchronized (producerExchanges){
+                result = producerExchanges.get(producerInfo.getProducerId());
+            }
+        }
+        return result;
     }
 
     private ProducerBrokerExchange getProducerBrokerExchange(ProducerId id) throws IOException {

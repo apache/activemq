@@ -316,6 +316,7 @@ public class Topic extends BaseDestination implements Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
 
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
+        producerExchange.incrementSend();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0
                 && !context.isInRecoveryMode();
 
@@ -418,6 +419,7 @@ public class Topic extends BaseDestination implements Task {
                         } else {
                             waitForSpace(
                                     context,
+                                    producerExchange,
                                     memoryUsage,
                                     "Usage Manager Memory Usage limit reached. Stopping producer ("
                                             + message.getProducerId()
@@ -475,7 +477,7 @@ public class Topic extends BaseDestination implements Task {
                     throw new javax.jms.ResourceAllocationException(logMessage);
                 }
 
-                waitForSpace(context, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
+                waitForSpace(context,producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
             }
             result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
         }
