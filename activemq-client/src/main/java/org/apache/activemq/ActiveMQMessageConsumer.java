@@ -1208,6 +1208,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
                     ack.setPoisonCause(lastMd.getRollbackCause());
                     ack.setFirstMessageId(firstMsgId);
+                    ack.setPoisonCause(new Throwable("Exceeded redelivery policy limit:" + redeliveryPolicy));
                     session.sendAck(ack,true);
                     // Adjust the window size.
                     additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());

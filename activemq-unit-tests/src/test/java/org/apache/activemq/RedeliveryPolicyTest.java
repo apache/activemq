@@ -24,6 +24,7 @@ import javax.jms.TextMessage;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
@@ -199,6 +200,8 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         m = (TextMessage)dlqConsumer.receive(1000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
+        String cause = m.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        assertTrue("cause exception has policy ref", cause.contains("RedeliveryPolicy"));
         session.commit();
 
     }
