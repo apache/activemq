@@ -32,33 +32,33 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-  	  !org.apache.commons.daemon,
-  	  !org.apache.maven*,
-  	  sun.misc*;resolution:=optional,
-  	  sun.nio*;resolution:=optional,
-  	  javax.jmdns*;resolution:=optional,
-  	  javax.resource*;resolution:=optional,
-  	  javax.servlet*;resolution:=optional,
-  	  com.thoughtworks.xstream*;resolution:=optional,
-  	  org.apache.activeio*;resolution:=optional,
-  	  org.apache.camel*;resolution:=optional,
-  	  org.apache.derby.jdbc*;resolution:=optional,
-  	  org.apache.geronimo.transaction.manager*;resolution:=optional,
-  	  org.apache.hadoop*;resolution:=optional,
-  	  org.apache.http*;resolution:=optional,
-  	  org.apache.xpath*;resolution:=optional,
-  	  org.bouncycastle*;resolution:=optional,
-  	  org.codehaus.jackson*;resolution:=optional,
-  	  org.codehaus.jettison*;resolution:=optional,
-  	  org.jasypt*;resolution:=optional,
-  	  org.eclipse.jetty*;resolution:=optional,
+        !org.apache.commons.daemon,
+        !org.apache.maven*,
+        sun.misc*;resolution:=optional,
+        sun.nio*;resolution:=optional,
+        javax.jmdns*;resolution:=optional,
+        javax.resource*;resolution:=optional,
+        javax.servlet*;resolution:=optional,
+        com.thoughtworks.xstream*;resolution:=optional,
+        org.apache.activeio*;resolution:=optional,
+        org.apache.camel*;resolution:=optional,
+        org.apache.derby.jdbc*;resolution:=optional,
+        org.apache.geronimo.transaction.manager*;resolution:=optional,
+        org.apache.hadoop*;resolution:=optional,
+        org.apache.http*;resolution:=optional,
+        org.apache.xpath*;resolution:=optional,
+        org.bouncycastle*;resolution:=optional,
+        org.codehaus.jackson*;resolution:=optional,
+        org.codehaus.jettison*;resolution:=optional,
+        org.jasypt*;resolution:=optional,
+        org.eclipse.jetty*;resolution:=optional,
       org.apache.zookeeper;resolution:=optional,
       org.linkedin*;resolution:=optional,
-  	  org.springframework.jms*;version="[3,4]";resolution:=optional,
-  	  org.springframework.osgi*;version="[1.2,1.3]";resolution:=optional,
-  	  org.springframework.transaction*;version="[3,4]";resolution:=optional,
-  	  org.xmlpull*;resolution:=optional,
-  	  scala*;resolution:=optional,
+        org.springframework.jms*;version="[3,4]";resolution:=optional,
+        org.springframework.osgi*;version="[1.2,1.3]";resolution:=optional,
+        org.springframework.transaction*;version="[3,4]";resolution:=optional,
+        org.xmlpull*;resolution:=optional,
+        scala*;resolution:=optional,
       org.springframework*;version="[3,4]";resolution:=optional,
       org.apache.xbean.spring*;resolution:=optional,
       javax.annotation*,
@@ -69,18 +69,18 @@
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
       com.sun.syndication*;resolution:=optional,
-	    *
+        *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq*;version=${project.version};-noimport:=true;-split-package:=merge-first,
       org.apache.activemq.web*;version=${project.version};-noimport:=true;-split-package:=merge-first,
     </activemq.osgi.export>
-	<activemq.osgi.private.pkg>
-   	  org.fusesource*,
-   	  org.apache.qpid*,
-   	  com.google.common*,
-   	  org.iq80*
-	</activemq.osgi.private.pkg>
+    <activemq.osgi.private.pkg>
+         org.fusesource*,
+         org.apache.qpid*,
+         com.google.common*,
+         org.iq80*
+    </activemq.osgi.private.pkg>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
     <surefire.argLine>-Xmx512M</surefire.argLine>
   </properties>
@@ -301,7 +301,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>2.1.2</version>
+            <version>${maven-source-plugin-version}</version>
             <configuration>
               <attach>false</attach>
             </configuration>
@@ -317,7 +317,7 @@
         </plugins>
       </build>
     </profile>
-    
+
     <profile>
       <id>apache-release</id>
 
@@ -492,7 +492,7 @@
           <optional>true</optional>
         </dependency>
       </dependencies>
-      
+
       <build>
         <plugins>
           <plugin>
@@ -522,7 +522,7 @@
         </plugins>
       </build>
     </profile>
-    
+
   </profiles>
 
 </project>
