@@ -170,18 +170,18 @@ public class LeaseDatabaseLocker extends AbstractLocker {
         return diffFromCurrentTime;
     }
 
-    private long determineTimeDifference(Connection connection) throws SQLException {
+    protected long determineTimeDifference(Connection connection) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(statements.getCurrentDateTime());
         ResultSet resultSet = statement.executeQuery();
         long result = 0l;
         if (resultSet.next()) {
             Timestamp timestamp = resultSet.getTimestamp(1);
             long diff = System.currentTimeMillis() - timestamp.getTime();
-            LOG.info(getLeaseHolderId() + " diff from db: " + diff + ", db time: " + timestamp);
-            if (diff > maxAllowableDiffFromDBTime || diff < -maxAllowableDiffFromDBTime) {
+            if (Math.abs(diff) > maxAllowableDiffFromDBTime) {
                 // off by more than maxAllowableDiffFromDBTime so lets adjust
-                result = diff;
+                result = (-diff);
             }
+            LOG.info(getLeaseHolderId() + " diff adjust from db: " + result + ", db time: " + timestamp);
         }
         return result;
     }

@@ -16,12 +16,10 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -29,16 +27,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class LeaseDatabaseLockerTest {
 
@@ -202,6 +207,59 @@ public class LeaseDatabaseLockerTest {
 
         lockedSet.iterator().next().stop();
         printLockTable(connection);
+    }
+
+    @Test
+    public void testDiffOffsetAhead() throws Exception {
+        LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
+        assertTrue("when ahead of db adjustment is negative", callDiffOffset(underTest, System.currentTimeMillis() - 60000) < 0);
+    }
+
+    @Test
+    public void testDiffOffsetBehind() throws Exception {
+        LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
+        assertTrue("when behind db adjustment is positive", callDiffOffset(underTest, System.currentTimeMillis() + 60000) > 0);
+    }
+
+    @Test
+    public void testDiffIngoredIfLessthanMaxAllowableDiffFromDBTime() throws Exception {
+        LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
+        underTest.setMaxAllowableDiffFromDBTime(60000);
+        assertEquals("no adjust when under limit", 0, callDiffOffset(underTest,System.currentTimeMillis() - 40000 ));
+    }
+
+    public long callDiffOffset(LeaseDatabaseLocker underTest, final long dbTime) throws Exception {
+
+        Mockery context = new Mockery() {{
+            setImposteriser(ClassImposteriser.INSTANCE);
+        }};
+        final Statements statements = context.mock(Statements.class);
+        final JDBCPersistenceAdapter jdbcPersistenceAdapter = context.mock(JDBCPersistenceAdapter.class);
+        final Connection connection = context.mock(Connection.class);
+        final PreparedStatement preparedStatement = context.mock(PreparedStatement.class);
+        final ResultSet resultSet = context.mock(ResultSet.class);
+        final Timestamp timestamp = context.mock(Timestamp.class);
+
+        context.checking(new Expectations() {{
+            allowing(jdbcPersistenceAdapter).getStatements();
+            will(returnValue(statements));
+            allowing(jdbcPersistenceAdapter);
+            allowing(statements);
+            allowing(connection).prepareStatement(with(any(String.class)));
+            will(returnValue(preparedStatement));
+            allowing(connection);
+            allowing(preparedStatement).executeQuery();
+            will(returnValue(resultSet));
+            allowing(resultSet).next();
+            will(returnValue(true));
+            allowing(resultSet).getTimestamp(1);
+            will(returnValue(timestamp));
+            allowing(timestamp).getTime();
+            will(returnValue(dbTime));
+        }});
+
+        underTest.configure(jdbcPersistenceAdapter);
+        return underTest.determineTimeDifference(connection);
     }
 
     private void printLockTable(Connection connection) throws Exception {
