@@ -327,8 +327,13 @@ public class MessageListenerRedeliveryTest extends TestCase {
         message = dlqMessage[0];
         assertNotNull("dlq message captured", message);
         String cause = message.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+
         LOG.info("DLQ'd message cause reported as: {}", cause);
+
+        assertTrue("cause 'cause' exception is remembered", cause.contains("RuntimeException"));
+        assertTrue("is correct exception", cause.contains(getName()));
         assertTrue("cause exception is remembered", cause.contains("Throwable"));
+        assertTrue("cause policy is remembered", cause.contains("RedeliveryPolicy"));
 
         session.close();
     }
