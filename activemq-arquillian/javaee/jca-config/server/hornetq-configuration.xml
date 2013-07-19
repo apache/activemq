@@ -1,0 +1,54 @@
+<configuration xmlns="urn:hornetq"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="urn:hornetq /schema/hornetq-configuration.xsd">
+
+   <!--  Don't change this name.
+         This is used by the dependency framework on the deployers,
+         to make sure this deployment is done before any other deployment -->
+   <name>HornetQ.main.config</name>
+
+
+   <bindings-directory>${jboss.server.data.dir}/messaging/bindings</bindings-directory>
+
+   <journal-directory>${jboss.server.data.dir}/messaging/journal</journal-directory>
+
+   <large-messages-directory>${jboss.server.data.dir}/messaging/largemessages</large-messages-directory>
+
+   <paging-directory>${jboss.server.data.dir}/messaging/paging</paging-directory>
+
+   <!-- Connectors -->
+   <connectors>
+      <connector name="netty">
+         <factory-class>org.hornetq.core.remoting.impl.netty.NettyConnectorFactory</factory-class>
+      </connector>
+
+      <connector name="in-vm">
+         <factory-class>org.hornetq.core.remoting.impl.invm.InVMConnectorFactory</factory-class>
+      </connector>
+
+   </connectors>
+
+   <!-- Acceptors -->
+   <acceptors>
+      <!-- In VM acceptor -->
+      <acceptor name="in-vm">
+         <factory-class>org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory</factory-class>
+         <param key="server-id" value="0"/>
+      </acceptor>
+
+      <!-- Netty TCP Acceptor -->
+      <acceptor name="netty">
+         <factory-class>org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory</factory-class>
+         <param key="port" value="${hornetq.remoting.netty.port:5445}"/>
+      </acceptor>
+   </acceptors>
+
+   <security-settings>
+      <security-setting match="jms.queue.#">
+         <permission type="consume" roles="guest,publisher"/>
+         <permission type="send" roles="guest,publisher"/>
+      </security-setting>
+   </security-settings>
+
+
+</configuration>

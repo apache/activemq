@@ -1,0 +1,20 @@
+<!--configuration xmlns="urn:hornetq"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="urn:hornetq /schema/hornetq-jms.xsd">
+   <connection-factory name="ConnectionFactory">
+      <connectors>
+         <connector-ref connector-name="netty"/>
+      </connectors>
+      <entries>
+         <entry name="ConnectionFactory"/>
+         <entry name="XAConnectionFactory"/>
+      </entries>
+   </connection-factory>
+
+   <queue name="A">
+      <entry name="/queue/A"/>
+   </queue>
+   <queue name="B">
+      <entry name="/queue/B"/>
+   </queue>
+</configuration -->
