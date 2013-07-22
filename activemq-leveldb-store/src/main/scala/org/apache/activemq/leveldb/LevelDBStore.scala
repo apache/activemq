@@ -624,9 +624,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       val seq = lastSeq.incrementAndGet()
+      message.incrementReferenceCount()
+      uow.addCompleteListener({
+        message.decrementReferenceCount()
+      })
       uow.enqueue(key, seq, message, delay)
     }
-
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): Future[AnyRef] = {
@@ -717,7 +720,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         db.removeSubscription(sub)
     }
   }
-
 
   def getTopicGCPositions = {
     import collection.JavaConversions._
