@@ -22,7 +22,16 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Enumeration;
 
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
@@ -35,6 +44,7 @@ import org.objectweb.jtests.jms.framework.TestConfig;
  */
 public class JMSClientTest extends AmqpTestSupport {
 
+    @SuppressWarnings("rawtypes")
     @Test
     public void testTransactions() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -65,6 +75,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
     }
 
+    @SuppressWarnings("rawtypes")
     @Test
     public void testSelectors() throws Exception{
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -115,5 +126,4 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.start();
         return connection;
     }
-
 }

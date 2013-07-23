@@ -19,7 +19,7 @@ package org.apache.activemq.transport.amqp.joram;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
@@ -35,13 +35,8 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
-import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
 import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -52,11 +47,9 @@ public class JoramJmsTest extends TestCase {
         TestSuite suite = new TestSuite();
 
         // TODO: Fix these tests..
-        if (false) {
-            // Fails due to
-            // https://issues.apache.org/jira/browse/PROTON-154
-            suite.addTestSuite(TopicSessionTest.class);
-        }
+        // Fails due to
+        // https://issues.apache.org/jira/browse/PROTON-154
+        // suite.addTestSuite(TopicSessionTest.class);
 
         // Passing tests
         suite.addTestSuite(MessageHeaderTest.class);
@@ -83,5 +76,4 @@ public class JoramJmsTest extends TestCase {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-
 }

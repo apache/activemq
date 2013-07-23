@@ -16,29 +16,32 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.objectweb.jtests.jms.admin.Admin;
-    import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
-
-import javax.jms.ConnectionFactory;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.Hashtable;
-import java.util.logging.*;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
+import javax.jms.ConnectionFactory;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
+import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
+import org.objectweb.jtests.jms.admin.Admin;
 
 /**
  *
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ActiveMQAdmin implements Admin {
 
@@ -56,9 +59,9 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @SuppressWarnings("resource")
     static public void enableJMSFrameTracing() {
         try {
-            final SimpleFormatter formatter = new SimpleFormatter();
             String outputStreamName = "amqp-trace.txt";
             final PrintStream out = new PrintStream(new FileOutputStream(new File(outputStreamName)));
             Handler handler = new Handler() {
@@ -74,6 +77,7 @@ public class ActiveMQAdmin implements Admin {
 
                 @Override
                 public void close() throws SecurityException {
+                    out.close();
                 }
             };
 
@@ -89,6 +93,7 @@ public class ActiveMQAdmin implements Admin {
         return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
     }
 
+    @Override
     public String getName() {
         return getClass().getName();
     }
@@ -96,6 +101,7 @@ public class ActiveMQAdmin implements Admin {
     static BrokerService broker;
     static int port;
 
+    @Override
     public void startServer() throws Exception {
         if( broker!=null ) {
             stopServer();
@@ -105,26 +111,35 @@ public class ActiveMQAdmin implements Admin {
             System.setProperty("basedir", file.getAbsolutePath());
         }
         broker = createBroker();
-        TransportConnector connector = broker.addConnector("amqp://localhost:0");
+        TransportConnector connector = broker.addConnector(getConnectorURI());
         broker.start();
         port = connector.getConnectUri().getPort();
     }
 
+    protected String getConnectorURI() {
+        return "amqp://localhost:0";
+    }
+
+    @Override
     public void stopServer() throws Exception {
         broker.stop();
         broker = null;
     }
 
+    @Override
     public void start() throws Exception {
     }
 
+    @Override
     public void stop() throws Exception {
     }
 
+    @Override
     public Context createContext() throws NamingException {
         return context;
     }
 
+    @Override
     public void createQueue(String name) {
         try {
             context.bind(name, new QueueImpl("queue://"+name));
@@ -133,6 +148,7 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @Override
     public void createTopic(String name) {
         try {
             context.bind(name, new TopicImpl("topic://"+name));
@@ -141,6 +157,7 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @Override
     public void deleteQueue(String name) {
         // BrokerTestSupport.delete_queue((Broker)base.broker, name);
         try {
@@ -150,6 +167,7 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @Override
     public void deleteTopic(String name) {
         try {
             context.unbind(name);
@@ -158,6 +176,7 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @Override
     public void createConnectionFactory(String name) {
         try {
             final ConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, null, null);
@@ -167,6 +186,7 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @Override
     public void deleteConnectionFactory(String name) {
         try {
             context.unbind(name);
@@ -175,17 +195,23 @@ public class ActiveMQAdmin implements Admin {
         }
     }
 
+    @Override
     public void createQueueConnectionFactory(String name) {
         createConnectionFactory(name);
     }
+
+    @Override
     public void createTopicConnectionFactory(String name) {
         createConnectionFactory(name);
     }
+
+    @Override
     public void deleteQueueConnectionFactory(String name) {
         deleteConnectionFactory(name);
     }
+
+    @Override
     public void deleteTopicConnectionFactory(String name) {
         deleteConnectionFactory(name);
     }
-
 }

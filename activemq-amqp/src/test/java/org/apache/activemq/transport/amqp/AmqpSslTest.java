@@ -16,19 +16,17 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.broker.BrokerService;
-import org.junit.Ignore;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
+import javax.net.ssl.X509TrustManager;
+
+import org.apache.activemq.broker.BrokerService;
+import org.junit.Ignore;
+
 @Ignore("hangs atm, needs investigation")
 public class AmqpSslTest extends AmqpTestSupport {
+    @Override
     public void startBroker() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
@@ -54,12 +52,15 @@ public class AmqpSslTest extends AmqpTestSupport {
 
     static class DefaultTrustManager implements X509TrustManager {
 
+        @Override
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
         }
 
+        @Override
         public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
         }
 
+        @Override
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
