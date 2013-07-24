@@ -289,7 +289,7 @@ public class CreateCommand extends AbstractCommand {
        res.append("#export ACTIVEMQ_OPTS=\"$ACTIVEMQ_OPTS_MEMORY -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties\"\n\n");
        res.append("export ACTIVEMQ_HOME=${activemq.home}\n");
        res.append("export ACTIVEMQ_BASE=$ACTIVEMQ_BASE\n\n");
-       res.append("${ACTIVEMQ_HOME}/bin/activemq \"$*\"");
+       res.append("${ACTIVEMQ_HOME}/bin/activemq \"$@\"");
        return res.toString();
    }
 
