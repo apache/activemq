@@ -33,6 +33,7 @@ import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
@@ -46,7 +47,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
     @SuppressWarnings("rawtypes")
     @Test
-    public void testTransactions() throws Exception {
+    public void testProducerConsume() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
         QueueImpl queue = new QueueImpl("queue://txqueue");
 
@@ -72,7 +73,116 @@ public class JMSClientTest extends AmqpTestSupport {
             assertTrue(msg instanceof TextMessage);
         }
         connection.close();
+    }
 
+    @Test
+    public void testTransactedConsumer() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
+        final int msgCount = 10;
+
+        Connection connection = createConnection();
+        sendMessages(connection, queue, msgCount);
+
+        QueueViewMBean queueView = getProxyToQueue("txqueue");
+        LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
+        assertEquals(msgCount, queueView.getQueueSize());
+
+        // Consumer all in TX and commit.
+        {
+            Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = session.createConsumer(queue);
+
+            for (int i = 0; i < msgCount; ++i) {
+                Message msg = consumer.receive(TestConfig.TIMEOUT);
+                assertNotNull(msg);
+                assertTrue(msg instanceof TextMessage);
+            }
+
+            consumer.close();
+            session.commit();
+        }
+
+        LOG.info("Queue size after consumer commit is: {}", queueView.getQueueSize());
+        assertEquals(0, queueView.getQueueSize());
+
+        connection.close();
+    }
+
+    @Test
+    public void testRollbackRececeivedMessage() throws Exception {
+
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
+        final int msgCount = 1;
+
+        Connection connection = createConnection();
+        sendMessages(connection, queue, msgCount);
+
+        QueueViewMBean queueView = getProxyToQueue("txqueue");
+        LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
+        assertEquals(msgCount, queueView.getQueueSize());
+
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        // Receive and roll back, first receive should not show redelivered.
+        Message msg = consumer.receive(TestConfig.TIMEOUT);
+        assertNotNull(msg);
+        assertTrue(msg instanceof TextMessage);
+        assertEquals(false, msg.getJMSRedelivered());
+
+        session.rollback();
+
+        // Receive and roll back, first receive should not show redelivered.
+        msg = consumer.receive(TestConfig.TIMEOUT);
+        assertNotNull(msg);
+        assertTrue(msg instanceof TextMessage);
+        assertEquals(true, msg.getJMSRedelivered());
+
+        LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
+        assertEquals(msgCount, queueView.getQueueSize());
+
+        session.commit();
+
+        LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
+        assertEquals(0, queueView.getQueueSize());
+    }
+
+    @Test
+    public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
+
+        ActiveMQAdmin.enableJMSFrameTracing();
+        QueueImpl queue = new QueueImpl("queue://txqueue");
+        final int msgCount = 500;
+
+        Connection connection = createConnection();
+        sendMessages(connection, queue, msgCount);
+
+        QueueViewMBean queueView = getProxyToQueue("txqueue");
+        LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
+        assertEquals(msgCount, queueView.getQueueSize());
+
+        // Consumer all in TX and commit.
+        {
+            Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            MessageConsumer consumer = session.createConsumer(queue);
+
+            for (int i = 0; i < msgCount; ++i) {
+                if ((i % 100) == 0) {
+                    LOG.info("Attempting receive of Message #{}", i);
+                }
+                Message msg = consumer.receive(TestConfig.TIMEOUT);
+                assertNotNull("Should receive message: " + i, msg);
+                assertTrue(msg instanceof TextMessage);
+            }
+
+            consumer.close();
+            session.commit();
+        }
+
+        LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
+        assertEquals(0, queueView.getQueueSize());
     }
 
     @SuppressWarnings("rawtypes")
