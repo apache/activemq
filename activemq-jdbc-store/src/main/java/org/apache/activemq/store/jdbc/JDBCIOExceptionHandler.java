@@ -19,6 +19,7 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 
 import org.apache.activemq.broker.Locker;
+import org.apache.activemq.broker.SuppressReplyException;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 
 /**
@@ -31,6 +32,7 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
         setStopStartConnectors(true);
     }
 
+    // fail only when we get an authoritative answer from the db w/o exceptions
     @Override
     protected boolean hasLockOwnership() throws IOException {
         boolean hasLock = true;
@@ -42,11 +44,12 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
                     if (!locker.keepAlive()) {
                         hasLock = false;
                     }
+                } catch (SuppressReplyException ignoreWhileHandlingInProgress) {
                 } catch (IOException ignored) {
                 }
 
                 if (!hasLock) {
-                    throw new IOException("PersistenceAdapter lock no longer valid using: " + locker);
+                    throw new IOException("Lock keepAlive failed, no longer lock owner with: " + locker);
                 }
             }
         }

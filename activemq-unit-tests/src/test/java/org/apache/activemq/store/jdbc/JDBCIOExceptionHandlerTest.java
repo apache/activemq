@@ -68,7 +68,9 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
         jdbc.setLocker(leaseDatabaseLocker);
 
         broker.setPersistenceAdapter(jdbc);
-        broker.setIoExceptionHandler(new JDBCIOExceptionHandler());
+        JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
+        jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+        broker.setIoExceptionHandler(jdbcioExceptionHandler);
         String connectionUri = broker.addConnector(TRANSPORT_URL).getPublishableConnectString();
 
         factory = new ActiveMQConnectionFactory(connectionUri);

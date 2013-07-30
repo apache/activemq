@@ -58,7 +58,7 @@ public class LocalTransaction extends Transaction {
             LOG.warn("COMMIT FAILED: ", e);
             rollback();
             // Let them know we rolled back.
-            XAException xae = new XAException("COMMIT FAILED: Transaction rolled back.");
+            XAException xae = new XAException("COMMIT FAILED: Transaction rolled back");
             xae.errorCode = XAException.XA_RBOTHER;
             xae.initCause(e);
             throw xae;
@@ -66,15 +66,13 @@ public class LocalTransaction extends Transaction {
 
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
-        // Sync on transaction store to avoid out of order messages in the cursor
-        // https://issues.apache.org/activemq/browse/AMQ-2594
         try {
-            transactionStore.commit(getTransactionId(), false,preCommitTask, postCommitTask);
+            transactionStore.commit(getTransactionId(), false, preCommitTask, postCommitTask);
             this.waitPostCommitDone(postCommitTask);
         } catch (Throwable t) {
             LOG.warn("Store COMMIT FAILED: ", t);
             rollback();
-            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back.");
+            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back");
             xae.errorCode = XAException.XA_RBOTHER;
             xae.initCause(t);
             throw xae;
@@ -109,7 +107,7 @@ public class LocalTransaction extends Transaction {
 
     @Override
     public int prepare() throws XAException {
-        XAException xae = new XAException("Prepare not implemented on Local Transactions.");
+        XAException xae = new XAException("Prepare not implemented on Local Transactions");
         xae.errorCode = XAException.XAER_RMERR;
         throw xae;
     }

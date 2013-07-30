@@ -74,6 +74,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
         String sql = statements.getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
 
+        long now = 0l;
         while (!stopping) {
             Connection connection = null;
             PreparedStatement statement = null;
@@ -84,7 +85,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
                 statement = connection.prepareStatement(sql);
                 setQueryTimeout(statement);
 
-                final long now = System.currentTimeMillis() + diffFromCurrentTime;
+                now = System.currentTimeMillis() + diffFromCurrentTime;
                 statement.setString(1, getLeaseHolderId());
                 statement.setLong(2, now + lockAcquireSleepInterval);
                 statement.setLong(3, now);
@@ -113,7 +114,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
             throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
         }
 
-        LOG.info(getLeaseHolderId() + ", becoming the master on dataSource: " + dataSource);
+        LOG.info(getLeaseHolderId() + ", becoming master with lease expiry " + new Date(now) + " on dataSource: " + dataSource);
     }
 
     private void setQueryTimeout(PreparedStatement statement) throws SQLException {
@@ -187,8 +188,12 @@ public class LeaseDatabaseLocker extends AbstractLocker {
     }
 
     public void doStop(ServiceStopper stopper) throws Exception {
-        releaseLease();
         stopping = true;
+        if (persistenceAdapter.getBrokerService() != null && persistenceAdapter.getBrokerService().isRestartRequested()) {
+            // keep our lease for restart
+            return;
+        }
+        releaseLease();
     }
 
     private void releaseLease() {
@@ -232,6 +237,10 @@ public class LeaseDatabaseLocker extends AbstractLocker {
             statement.setString(3, getLeaseHolderId());
 
             result = (statement.executeUpdate() == 1);
+
+            if (!result) {
+                reportLeasOwnerShipAndDuration(connection);
+            }
         } catch (Exception e) {
             LOG.warn(getLeaseHolderId() + ", failed to update lease: " + e, e);
             IOException ioe = IOExceptionSupport.create(e);
@@ -279,5 +288,10 @@ public class LeaseDatabaseLocker extends AbstractLocker {
 
     public void setMaxAllowableDiffFromDBTime(int maxAllowableDiffFromDBTime) {
         this.maxAllowableDiffFromDBTime = maxAllowableDiffFromDBTime;
+    }
+
+    @Override
+    public String toString() {
+        return "LeaseDatabaseLocker owner:" + leaseHolderId + ",duration:" + lockAcquireSleepInterval + ",renew:" + lockAcquireSleepInterval;
     }
 }

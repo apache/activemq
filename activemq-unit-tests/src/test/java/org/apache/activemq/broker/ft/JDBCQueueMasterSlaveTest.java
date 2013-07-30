@@ -30,6 +30,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
@@ -59,7 +60,11 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
         master.start();
     }
 
-    protected void configureBroker(BrokerService master) {
+    protected void configureBroker(BrokerService brokerService) {
+        DefaultIOExceptionHandler stopBrokerOnStoreException = new DefaultIOExceptionHandler();
+        // we want any store io exception to stop the broker
+        stopBrokerOnStoreException.setIgnoreSQLExceptions(false);
+        brokerService.setIoExceptionHandler(stopBrokerOnStoreException);
     }
 
     protected void createSlave() throws Exception {

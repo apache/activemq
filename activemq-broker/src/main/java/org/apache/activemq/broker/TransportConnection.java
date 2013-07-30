@@ -301,6 +301,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         + " command: " + command + ", exception: " + e, e);
             }
 
+            if (e instanceof SuppressReplyException || (e.getCause() instanceof SuppressReplyException)) {
+                LOG.info("Suppressing reply to: " + command + " on: " + e + ", cause: " + e.getCause());
+                responseRequired = false;
+            }
+
             if (responseRequired) {
                 response = new ExceptionResponse(e);
             } else {

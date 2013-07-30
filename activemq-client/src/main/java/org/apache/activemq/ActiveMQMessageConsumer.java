@@ -1162,6 +1162,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public void rollback() throws JMSException {
+        clearDispatchList();
         synchronized (unconsumedMessages.getMutex()) {
             if (optimizeAcknowledge) {
                 // remove messages read but not acked at the broker yet through

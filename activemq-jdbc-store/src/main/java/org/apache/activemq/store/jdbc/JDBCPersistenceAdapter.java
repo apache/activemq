@@ -369,7 +369,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable runnable) {
-                    Thread thread = new Thread(runnable, "ActiveMQ Cleanup Timer");
+                    Thread thread = new Thread(runnable, "ActiveMQ JDBC PA Scheduled Task");
                     thread.setDaemon(true);
                     return thread;
                 }

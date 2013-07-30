@@ -138,7 +138,9 @@ public class TransactionContext {
 
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Error while closing connection: ", e);
-                throw IOExceptionSupport.create(e);
+                IOException ioe = IOExceptionSupport.create(e);
+                persistenceAdapter.getBrokerService().handleIOException(ioe);
+                throw ioe;
             } finally {
                 try {
                     if (connection != null) {

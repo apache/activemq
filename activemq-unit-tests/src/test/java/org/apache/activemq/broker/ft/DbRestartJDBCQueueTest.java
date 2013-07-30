@@ -76,7 +76,7 @@ public class DbRestartJDBCQueueTest extends JmsTopicSendReceiveWithTwoConnection
 
     protected void tearDown() throws  Exception {
        super.tearDown();
-        broker.stop();
+       broker.stop();
     }
 
 

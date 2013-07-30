@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.SuppressReplyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
     private String noSpaceMessage = "space";
     private String sqlExceptionMessage = ""; // match all
     private long resumeCheckSleepPeriod = 5*1000;
-    private AtomicBoolean stopStartInProgress = new AtomicBoolean(false);
+    private AtomicBoolean handlingException = new AtomicBoolean(false);
 
     public void handle(IOException exception) {
         if (ignoreAllErrors) {
@@ -73,59 +74,69 @@ import org.slf4j.LoggerFactory;
         }
 
         if (stopStartConnectors) {
-            if (!stopStartInProgress.compareAndSet(false, true)) {
-                // we are already working on it
-                return;
-            }
-            LOG.info("Initiating stop/restart of broker transport due to IO exception, " + exception, exception);
+            if (handlingException.compareAndSet(false, true)) {
+                LOG.info("Initiating stop/restart of transports on " + broker + " due to IO exception, " + exception, exception);
 
-            new Thread("stop transport connectors on IO exception") {
-                public void run() {
-                    try {
-                        ServiceStopper stopper = new ServiceStopper();
-                        broker.stopAllConnectors(stopper);
-                    } catch (Exception e) {
-                        LOG.warn("Failure occurred while stopping broker connectors", e);
-                    }
-                }
-            }.start();
+                new Thread("IOExceptionHandler: stop transports") {
+                    public void run() {
+                        try {
+                            ServiceStopper stopper = new ServiceStopper();
+                            broker.stopAllConnectors(stopper);
+                            LOG.info("Successfully stopped transports on " + broker);
+                        } catch (Exception e) {
+                            LOG.warn("Failure occurred while stopping broker connectors", e);
+                        } finally {
+                            // resume again
+                            new Thread("IOExceptionHandler: restart transports") {
+                                public void run() {
+                                    try {
+                                        while (hasLockOwnership() && isPersistenceAdapterDown()) {
+                                            LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
+                                            TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
+                                        }
+                                        broker.startAllConnectors();
+                                        LOG.info("Successfully restarted transports on " + broker);
+                                    } catch (Exception e) {
+                                        LOG.warn("Stopping " + broker + " due to failure while restarting transports", e);
+                                        stopBroker(e);
+                                    } finally {
+                                        handlingException.compareAndSet(true, false);
+                                    }
+                                }
 
-            // resume again
-            new Thread("restart transport connectors post IO exception") {
-                public void run() {
-                    try {
-                        while (hasLockOwnership() && isPersistenceAdapterDown()) {
-                            LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
-                            TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
+                                private boolean isPersistenceAdapterDown() {
+                                    boolean checkpointSuccess = false;
+                                    try {
+                                        broker.getPersistenceAdapter().checkpoint(true);
+                                        checkpointSuccess = true;
+                                    } catch (Throwable ignored) {
+                                    }
+                                    return !checkpointSuccess;
+                                }
+                            }.start();
+
+
                         }
-                        broker.startAllConnectors();
-                    } catch (Exception e) {
-                        LOG.warn("Stopping broker due to failure while restarting broker connectors", e);
-                        stopBroker(e);
-                    } finally {
-                        stopStartInProgress.compareAndSet(true, false);
                     }
-                }
+                }.start();
+            }
 
-                private boolean isPersistenceAdapterDown() {
-                    boolean checkpointSuccess = false;
-                    try {
-                        broker.getPersistenceAdapter().checkpoint(true);
-                        checkpointSuccess = true;
-                    } catch (Throwable ignored) {}
-                    return !checkpointSuccess;
-                }
-            }.start();
-
-            return;
+            throw new SuppressReplyException("Stop/RestartTransportsInitiated", exception);
         }
 
-        stopBroker(exception);
+        if (handlingException.compareAndSet(false, true)) {
+            stopBroker(exception);
+        }
+
+        // we don't want to propagate the exception back to the client
+        // They will see a delay till they see a disconnect via socket.close
+        // at which point failover: can kick in.
+        throw new SuppressReplyException("ShutdownBrokerInitiated", exception);
     }
 
     private void stopBroker(Exception exception) {
-        LOG.info("Stopping the broker due to exception, " + exception, exception);
-        new Thread("Stopping the broker due to IO exception") {
+        LOG.info("Stopping " + broker + " due to exception, " + exception, exception);
+        new Thread("IOExceptionHandler: stopping " + broker) {
             public void run() {
                 try {
                     if( broker.isRestartAllowed() ) {

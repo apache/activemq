@@ -122,7 +122,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                 }
             }
         } catch (IOException e) {
-            LOG.warn("locker keepalive resulted in: " + e, e);
+            LOG.warn("locker keepAlive resulted in: " + e, e);
         }
         if (stop) {
             stopBroker();
