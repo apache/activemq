@@ -114,7 +114,7 @@ public class AmqpTestSupport {
             p.send(message);
         }
 
-        p.close();
+        session.close();
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {

@@ -37,7 +37,9 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.objectweb.jtests.jms.framework.TestConfig;
 
 /**
@@ -45,11 +47,13 @@ import org.objectweb.jtests.jms.framework.TestConfig;
  */
 public class JMSClientTest extends AmqpTestSupport {
 
+    @Rule public TestName name = new TestName();
+
     @SuppressWarnings("rawtypes")
     @Test
     public void testProducerConsume() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
+        QueueImpl queue = new QueueImpl("queue://" + name);
 
         Connection connection = createConnection();
         {
@@ -78,32 +82,29 @@ public class JMSClientTest extends AmqpTestSupport {
     @Test
     public void testTransactedConsumer() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
-        final int msgCount = 10;
+        QueueImpl queue = new QueueImpl("queue://" + name);
+        final int msgCount = 1;
 
         Connection connection = createConnection();
         sendMessages(connection, queue, msgCount);
 
-        QueueViewMBean queueView = getProxyToQueue("txqueue");
+        QueueViewMBean queueView = getProxyToQueue(name.toString());
         LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
         assertEquals(msgCount, queueView.getQueueSize());
 
-        // Consumer all in TX and commit.
-        {
-            Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-            MessageConsumer consumer = session.createConsumer(queue);
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(queue);
 
-            for (int i = 0; i < msgCount; ++i) {
-                Message msg = consumer.receive(TestConfig.TIMEOUT);
-                assertNotNull(msg);
-                assertTrue(msg instanceof TextMessage);
-            }
+        Message msg = consumer.receive(TestConfig.TIMEOUT);
+        assertNotNull(msg);
+        assertTrue(msg instanceof TextMessage);
 
-            consumer.close();
-            session.commit();
-        }
+        LOG.info("Queue size before session commit is: {}", queueView.getQueueSize());
+        assertEquals(msgCount, queueView.getQueueSize());
 
-        LOG.info("Queue size after consumer commit is: {}", queueView.getQueueSize());
+        session.commit();
+
+        LOG.info("Queue size after session commit is: {}", queueView.getQueueSize());
         assertEquals(0, queueView.getQueueSize());
 
         connection.close();
@@ -113,13 +114,13 @@ public class JMSClientTest extends AmqpTestSupport {
     public void testRollbackRececeivedMessage() throws Exception {
 
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
+        QueueImpl queue = new QueueImpl("queue://" + name);
         final int msgCount = 1;
 
         Connection connection = createConnection();
         sendMessages(connection, queue, msgCount);
 
-        QueueViewMBean queueView = getProxyToQueue("txqueue");
+        QueueViewMBean queueView = getProxyToQueue(name.toString());
         LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
         assertEquals(msgCount, queueView.getQueueSize());
 
@@ -128,6 +129,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
         // Receive and roll back, first receive should not show redelivered.
         Message msg = consumer.receive(TestConfig.TIMEOUT);
+        LOG.info("Test received msg: {}", msg);
         assertNotNull(msg);
         assertTrue(msg instanceof TextMessage);
         assertEquals(false, msg.getJMSRedelivered());
@@ -147,19 +149,22 @@ public class JMSClientTest extends AmqpTestSupport {
 
         LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
         assertEquals(0, queueView.getQueueSize());
+
+        session.close();
+        connection.close();
     }
 
     @Test
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
+        QueueImpl queue = new QueueImpl("queue://" + name);
         final int msgCount = 500;
 
         Connection connection = createConnection();
         sendMessages(connection, queue, msgCount);
 
-        QueueViewMBean queueView = getProxyToQueue("txqueue");
+        QueueViewMBean queueView = getProxyToQueue(name.toString());
         LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
         assertEquals(msgCount, queueView.getQueueSize());
 
@@ -177,9 +182,12 @@ public class JMSClientTest extends AmqpTestSupport {
                 assertTrue(msg instanceof TextMessage);
             }
 
-            consumer.close();
             session.commit();
+            consumer.close();
+            session.close();
         }
+
+        connection.close();
 
         LOG.info("Queue size after produce is: {}", queueView.getQueueSize());
         assertEquals(0, queueView.getQueueSize());
@@ -189,7 +197,7 @@ public class JMSClientTest extends AmqpTestSupport {
     @Test
     public void testSelectors() throws Exception{
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
+        QueueImpl queue = new QueueImpl("queue://" + name);
 
         Connection connection = createConnection();
         {
