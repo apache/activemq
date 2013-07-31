@@ -336,6 +336,10 @@
       <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
     <dependency>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+    </dependency>
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>

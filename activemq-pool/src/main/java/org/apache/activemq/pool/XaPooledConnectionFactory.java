@@ -18,6 +18,7 @@ package org.apache.activemq.pool;
 
 import java.io.Serializable;
 import java.util.Hashtable;
+import java.util.Properties;
 import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -160,5 +161,22 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
     @Override
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
         return (TopicConnection) createConnection(userName, password);
+    }
+
+    @Override
+    protected void buildFromProperties(Properties props) {
+        super.buildFromProperties(props);
+        for (String v : new String[]{"tmFromJndi", "tmJndiName"}) {
+            if (props.containsKey(v)) {
+                IntrospectionSupport.setProperty(this, v, props.getProperty(v));
+            }
+        }
+    }
+
+    @Override
+    protected void populateProperties(Properties props) {
+        super.populateProperties(props);
+        props.setProperty("tmFromJndi", String.valueOf(isTmFromJndi()));
+        props.setProperty("tmJndiName", tmJndiName);
     }
 }

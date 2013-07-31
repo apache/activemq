@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.pool;
 
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
@@ -25,6 +26,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
+import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.pool.KeyedObjectPool;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
@@ -62,7 +64,7 @@ import org.slf4j.LoggerFactory;
  *
  * @org.apache.xbean.XBean element="pooledConnectionFactory"
  */
-public class PooledConnectionFactory implements ConnectionFactory, Service {
+public class PooledConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, Service {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
 
     private final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -483,5 +485,17 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      */
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
         return new ConnectionPool(connection);
+    }
+
+    @Override
+    protected void buildFromProperties(Properties props) {
+        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
+        activeMQConnectionFactory.buildFromProperties(props);
+        connectionFactory = activeMQConnectionFactory;
+    }
+
+    @Override
+    protected void populateProperties(Properties props) {
+        ((ActiveMQConnectionFactory)connectionFactory).populateProperties(props);
     }
 }
