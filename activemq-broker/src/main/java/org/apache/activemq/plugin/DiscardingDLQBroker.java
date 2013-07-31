@@ -44,7 +44,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
     }
 
     @Override
-    public boolean sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef, Subscription subscription) {
+    public boolean sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef, Subscription subscription, Throwable poisonCause) {
         if (log.isTraceEnabled()) {
             log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null));
         }
@@ -73,7 +73,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
             skipMessage("dropOnly", msgRef);
         } else {
             dropped = false;
-            return next.sendToDeadLetterQueue(ctx, msgRef, subscription);
+            return next.sendToDeadLetterQueue(ctx, msgRef, subscription, poisonCause);
         }
 
         if (dropped && getReportInterval() > 0) {

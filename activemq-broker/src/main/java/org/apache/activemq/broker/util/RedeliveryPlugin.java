@@ -127,10 +127,10 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
     }
 
     @Override
-    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription) {
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause) {
         if (messageReference.isExpired()) {
             // there are two uses of  sendToDeadLetterQueue, we are only interested in valid messages
-            return super.sendToDeadLetterQueue(context, messageReference, subscription);
+            return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
         } else {
             try {
                 Destination regionDestination = (Destination) messageReference.getRegionDestination();
@@ -146,12 +146,12 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
                         scheduleRedelivery(context, messageReference, delay, ++redeliveryCount);
                     } else if (isSendToDlqIfMaxRetriesExceeded()) {
-                        return super.sendToDeadLetterQueue(context, messageReference, subscription);
+                        return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
                     } else {
                         LOG.debug("Discarding message that exceeds max redelivery count( " + maximumRedeliveries + "), " + messageReference.getMessageId());
                     }
                 } else if (isFallbackToDeadLetter()) {
-                    return super.sendToDeadLetterQueue(context, messageReference, subscription);
+                    return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
                 } else {
                     LOG.debug("Ignoring dlq request for:" + messageReference.getMessageId() + ", RedeliveryPolicy not found (and no fallback) for: " + regionDestination.getActiveMQDestination());
                 }

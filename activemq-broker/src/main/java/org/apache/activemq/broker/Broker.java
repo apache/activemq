@@ -317,13 +317,13 @@ public interface Broker extends Region, Service {
     /**
      * A message needs to go the a DLQ
      *
+     *
      * @param context
      * @param messageReference
-     * @param subscription, may be null
-     *
+     * @param poisonCause reason for dlq submission, may be null
      * @return true if Message was placed in a DLQ false if discarded.
      */
-    boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription);
+    boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause);
 
     /**
      * @return the broker sequence id

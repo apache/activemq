@@ -417,8 +417,8 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                         Subscription subscription) {
-        boolean wasDLQd = super.sendToDeadLetterQueue(context, messageReference, subscription);
+                                         Subscription subscription, Throwable poisonCause) {
+        boolean wasDLQd = super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
         if (wasDLQd) {
             try {
                 if(!messageReference.isAdvisory()) {

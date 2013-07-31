@@ -500,7 +500,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                      Subscription subscription) {
+                                         Subscription subscription, Throwable poisonCause) {
         if (isLogAll() || isLogInternalEvents()) {
             String msg = "Unable to display message.";
 
@@ -508,7 +508,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
             LOG.info("Sending to DLQ : " + msg);
         }
-        return super.sendToDeadLetterQueue(context, messageReference, subscription);
+        return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
     }
 
     @Override

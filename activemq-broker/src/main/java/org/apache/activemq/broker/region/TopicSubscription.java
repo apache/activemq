@@ -630,7 +630,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (dest != null) {
             dest.messageDiscarded(getContext(), this, message);
         }
-        broker.getRoot().sendToDeadLetterQueue(getContext(), message, this);
+        broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
     }
 
     @Override

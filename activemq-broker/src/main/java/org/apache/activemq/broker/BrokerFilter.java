@@ -309,8 +309,8 @@ public class BrokerFilter implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                      Subscription subscription) {
-        return next.sendToDeadLetterQueue(context, messageReference, subscription);
+                                         Subscription subscription, Throwable poisonCause) {
+        return next.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
     }
 
     @Override

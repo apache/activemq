@@ -44,6 +44,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionId;
@@ -698,11 +699,11 @@ public class RegionBroker extends EmptyBroker {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Message expired " + node);
         }
-        getRoot().sendToDeadLetterQueue(context, node, subscription);
+        getRoot().sendToDeadLetterQueue(context, node, subscription, new Throwable("Message Expired. Expiration:" + node.getExpiration()));
     }
 
     @Override
-    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference node, Subscription subscription) {
+    public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference node, Subscription subscription, Throwable poisonCause) {
         try {
             if (node != null) {
                 Message message = node.getMessage();
@@ -717,6 +718,10 @@ public class RegionBroker extends EmptyBroker {
                             if (!message.isPersistent()) {
                                 message.setPersistent(true);
                                 message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
+                            }
+                            if (poisonCause != null) {
+                                message.setProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY,
+                                        poisonCause.toString());
                             }
                             // The original destination and transaction id do
                             // not get filled when the message is first sent,

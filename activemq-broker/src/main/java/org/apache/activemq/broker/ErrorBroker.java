@@ -312,7 +312,7 @@ public class ErrorBroker implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                         Subscription subscription) {
+                                         Subscription subscription, Throwable poisonCause) {
         throw new BrokerStoppedException(this.message);
     }
 

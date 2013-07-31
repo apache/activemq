@@ -376,11 +376,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         inAckRange = true;
                     }
                     if (inAckRange) {
-                        if (ack.getPoisonCause() != null) {
-                            node.getMessage().setProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY,
-                                    ack.getPoisonCause().toString());
-                        }
-                        sendToDLQ(context, node);
+                        sendToDLQ(context, node, ack.getPoisonCause());
                         Destination nodeDest = (Destination) node.getRegionDestination();
                         nodeDest.getDestinationStatistics()
                                 .getInflight().decrement();
@@ -501,13 +497,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     /**
+     *
      * @param context
      * @param node
+     * @param poisonCause
      * @throws IOException
      * @throws Exception
      */
-    protected void sendToDLQ(final ConnectionContext context, final MessageReference node) throws IOException, Exception {
-        broker.getRoot().sendToDeadLetterQueue(context, node, this);
+    protected void sendToDLQ(final ConnectionContext context, final MessageReference node, Throwable poisonCause) throws IOException, Exception {
+        broker.getRoot().sendToDeadLetterQueue(context, node, this, poisonCause);
     }
 
     @Override

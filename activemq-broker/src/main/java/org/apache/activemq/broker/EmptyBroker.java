@@ -302,7 +302,7 @@ public class EmptyBroker implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                         Subscription subscription) {
+                                         Subscription subscription, Throwable poisonCause) {
         return false;
     }
 
