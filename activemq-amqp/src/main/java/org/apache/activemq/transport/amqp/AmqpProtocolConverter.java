@@ -179,7 +179,7 @@ class AmqpProtocolConverter {
         long nextProducerId = 0;
         long nextConsumerId = 0;
 
-        final LinkedList<ConsumerContext> consumers = new LinkedList<ConsumerContext>();
+        final Map<ConsumerId, ConsumerContext> consumers = new HashMap<ConsumerId, ConsumerContext>();
 
         public AmqpSessionContext(ConnectionId connectionId, long id) {
             sessionId = new SessionId(connectionId, id);
@@ -656,7 +656,7 @@ class AmqpProtocolConverter {
                 }
 
                 AmqpSessionContext context = (AmqpSessionContext) receiver.getSession().getContext();
-                for (ConsumerContext consumer : context.consumers) {
+                for (ConsumerContext consumer : context.consumers.values()) {
                     if (operation == TransactionInfo.ROLLBACK) {
                         consumer.doRollback();
                     } else {
@@ -682,7 +682,7 @@ class AmqpProtocolConverter {
                     }
                 });
 
-                for (ConsumerContext consumer : context.consumers) {
+                for (ConsumerContext consumer : context.consumers.values()) {
                     if (operation == TransactionInfo.ROLLBACK) {
                         consumer.pumpOutbound();
                     }
@@ -815,6 +815,12 @@ class AmqpProtocolConverter {
         public void onClose() throws Exception {
             if (!closed) {
                 closed = true;
+
+                AmqpSessionContext session = (AmqpSessionContext) sender.getSession().getContext();
+                if (session != null) {
+                    session.consumers.remove(info.getConsumerId());
+                }
+
                 sendToActiveMQ(new RemoveInfo(consumerId), null);
             }
         }
@@ -1188,7 +1194,7 @@ class AmqpProtocolConverter {
                         subscriptionsByConsumerId.remove(id);
                         sender.close();
                     } else {
-                        sessionContext.consumers.add(consumerContext);
+                        sessionContext.consumers.put(id, consumerContext);
                         sender.open();
                     }
                     pumpProtonToSocket();
