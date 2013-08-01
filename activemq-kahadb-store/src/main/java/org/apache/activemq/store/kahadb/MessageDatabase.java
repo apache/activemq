@@ -240,7 +240,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean ignoreMissingJournalfiles = false;
     private int indexCacheSize = 10000;
     private boolean checkForCorruptJournalFiles = false;
-    private boolean checksumJournalFiles = false;
+    private boolean checksumJournalFiles = true;
     protected boolean forceRecoverIndex = false;
     private final Object checkpointThreadLock = new Object();
     private boolean rewriteOnRedelivery = false;

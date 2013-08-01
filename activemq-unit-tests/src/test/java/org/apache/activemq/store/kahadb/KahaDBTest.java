@@ -108,7 +108,7 @@ public class KahaDBTest extends TestCase {
 
     public void testCheckCorruptionNotIgnored() throws Exception {
         KahaDBStore kaha = createStore(true);
-        assertFalse(kaha.isChecksumJournalFiles());
+        assertTrue(kaha.isChecksumJournalFiles());
         assertFalse(kaha.isCheckForCorruptJournalFiles());
 
         kaha.setJournalMaxFileLength(1024*100);
@@ -135,6 +135,27 @@ public class KahaDBTest extends TestCase {
 
     }
 
+
+    public void testMigrationOnNewDefaultForChecksumJournalFiles() throws Exception {
+        KahaDBStore kaha = createStore(true);
+        kaha.setChecksumJournalFiles(false);
+        assertFalse(kaha.isChecksumJournalFiles());
+        assertFalse(kaha.isCheckForCorruptJournalFiles());
+
+        kaha.setJournalMaxFileLength(1024*100);
+        BrokerService broker = createBroker(kaha);
+        sendMessages(1000);
+        broker.stop();
+
+        kaha = createStore(false);
+        kaha.setJournalMaxFileLength(1024*100);
+        kaha.setCheckForCorruptJournalFiles(true);
+        assertFalse(kaha.isIgnoreMissingJournalfiles());
+        createBroker(kaha);
+        assertEquals(1000, receiveMessages());
+    }
+
+
     private void assertExistsAndCorrupt(File file) throws IOException {
         assertTrue(file.exists());
         RandomAccessFile f = new RandomAccessFile(file, "rw");
@@ -150,7 +171,6 @@ public class KahaDBTest extends TestCase {
     public void testCheckCorruptionIgnored() throws Exception {
         KahaDBStore kaha = createStore(true);
         kaha.setJournalMaxFileLength(1024*100);
-        kaha.setChecksumJournalFiles(true);
         BrokerService broker = createBroker(kaha);
         sendMessages(1000);
         broker.stop();
@@ -162,7 +182,6 @@ public class KahaDBTest extends TestCase {
         kaha = createStore(false);
         kaha.setIgnoreMissingJournalfiles(true);
         kaha.setJournalMaxFileLength(1024*100);
-        kaha.setChecksumJournalFiles(true);
         kaha.setCheckForCorruptJournalFiles(true);
         broker = createBroker(kaha);
 
