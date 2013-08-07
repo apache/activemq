@@ -35,6 +35,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -127,7 +128,7 @@ public class MemoryLimitTest extends TestSupport {
         Thread.sleep(1000);
 
         // assert we didn't break high watermark (70%) usage
-        Destination dest = broker.getDestination((ActiveMQQueue) queue);
+        final Destination dest = broker.getDestination((ActiveMQQueue) queue);
         LOG.info("Destination usage: " + dest.getMemoryUsage());
         int percentUsage = dest.getMemoryUsage().getPercentUsage();
         assertTrue("Should be less than 70% of limit but was: " + percentUsage, percentUsage <= 71);
@@ -139,11 +140,16 @@ public class MemoryLimitTest extends TestSupport {
         Message msg = consumer.receive();
         msg.acknowledge();
 
-        Thread.sleep(1000);
         // this should free some space and allow us to get new batch of messages in the memory
         // exceeding the limit
-        LOG.info("Destination usage: " + dest.getMemoryUsage());
-        assertTrue(dest.getMemoryUsage().getPercentUsage() >= 478);
+        assertTrue("Limit is exceeded", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Destination usage: " + dest.getMemoryUsage());
+                return dest.getMemoryUsage().getPercentUsage() >= 478;
+            }
+        }));
+
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
         assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 478);
 
