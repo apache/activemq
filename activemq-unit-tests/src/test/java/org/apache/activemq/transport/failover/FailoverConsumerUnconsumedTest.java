@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -96,6 +98,141 @@ public class FailoverConsumerUnconsumedTest {
     }
 
     @SuppressWarnings("unchecked")
+    @Test
+    public void testFailoverClientAckMissingRedelivery() throws Exception {
+
+        final int maxConsumers = 2;
+        broker = createBroker(true);
+
+        broker.setPlugins(new BrokerPlugin[] {
+                new BrokerPluginSupport() {
+                    int consumerCount;
+
+                    // broker is killed on x create consumer
+                    @Override
+                    public Subscription addConsumer(ConnectionContext context,
+                            final ConsumerInfo info) throws Exception {
+                         if (++consumerCount == maxConsumers) {
+                             context.setDontSendReponse(true);
+                             Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                 public void run() {
+                                     LOG.info("Stopping broker on consumer: " + info.getConsumerId());
+                                     try {
+                                         broker.stop();
+                                     } catch (Exception e) {
+                                         e.printStackTrace();
+                                     }
+                                 }
+                             });
+                         }
+                        return super.addConsumer(context, info);
+                    }
+                }
+        });
+        broker.start();
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        cf.setWatchTopicAdvisories(false);
+
+        final ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
+
+        final Session consumerSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        final Queue destination = consumerSession.createQueue(QUEUE_NAME + "?jms.consumer.prefetch=" + prefetch);
+
+        final Vector<TestConsumer> testConsumers = new Vector<TestConsumer>();
+        TestConsumer testConsumer = new TestConsumer(consumerSession, destination, connection);
+        testConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                try {
+                    LOG.info("onMessage:" + message.getJMSMessageID());
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        testConsumers.add(testConsumer);
+
+
+        produceMessage(consumerSession, destination, maxConsumers * prefetch);
+
+        assertTrue("add messages are delivered", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                int totalDelivered = 0;
+                for (TestConsumer testConsumer : testConsumers) {
+                    long delivered = testConsumer.deliveredSize();
+                    LOG.info(testConsumer.getConsumerId() + " delivered: " + delivered);
+                    totalDelivered += delivered;
+                }
+                return totalDelivered == maxConsumers * prefetch;
+            }
+        }));
+
+        final CountDownLatch shutdownConsumerAdded = new CountDownLatch(1);
+
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            public void run() {
+                try {
+                    LOG.info("add last consumer...");
+                    TestConsumer testConsumer = new TestConsumer(consumerSession, destination, connection);
+                    testConsumer.setMessageListener(new MessageListener() {
+                                @Override
+                                public void onMessage(Message message) {
+                                    try {
+                                        LOG.info("onMessage:" + message.getJMSMessageID());
+                                    } catch (JMSException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                    testConsumers.add(testConsumer);
+                    shutdownConsumerAdded.countDown();
+                    LOG.info("done add last consumer");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // will be stopped by the plugin
+        broker.waitUntilStopped();
+
+        broker = createBroker(false, this.url);
+        broker.start();
+
+        assertTrue("consumer added through failover", shutdownConsumerAdded.await(30, TimeUnit.SECONDS));
+
+        // each should again get prefetch messages - all unacked deliveries should be rolledback
+        assertTrue("after restart all messages are re dispatched", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                int totalDelivered = 0;
+                for (TestConsumer testConsumer : testConsumers) {
+                    long delivered = testConsumer.deliveredSize();
+                    LOG.info(testConsumer.getConsumerId() + " delivered: " + delivered);
+                    totalDelivered += delivered;
+                }
+                return totalDelivered == maxConsumers * prefetch;
+            }
+        }));
+
+        assertTrue("after restart each got prefetch amount", Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                for (TestConsumer testConsumer : testConsumers) {
+                    long delivered = testConsumer.deliveredSize();
+                    LOG.info(testConsumer.getConsumerId() + " delivered: " + delivered);
+                    if (delivered != prefetch) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }));
+
+        connection.close();
+    }
+
+    @SuppressWarnings("unchecked")
     public void doTestFailoverConsumerDups(final boolean watchTopicAdvisories) throws Exception {
 
         final int maxConsumers = 4;
@@ -156,14 +293,14 @@ public class FailoverConsumerUnconsumedTest {
             }
         }));
 
-        final CountDownLatch commitDoneLatch = new CountDownLatch(1);
+        final CountDownLatch shutdownConsumerAdded = new CountDownLatch(1);
 
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 try {
                     LOG.info("add last consumer...");
                     testConsumers.add(new TestConsumer(consumerSession, destination, connection));
-                    commitDoneLatch.countDown();
+                    shutdownConsumerAdded.countDown();
                     LOG.info("done add last consumer");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -190,7 +327,7 @@ public class FailoverConsumerUnconsumedTest {
         broker = createBroker(false, this.url);
         broker.start();
 
-        assertTrue("consumer added through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
+        assertTrue("consumer added through failover", shutdownConsumerAdded.await(30, TimeUnit.SECONDS));
 
         // each should again get prefetch messages - all unconsumed deliveries should be rolledback
         assertTrue("after start all messages are re dispatched", Wait.waitFor(new Wait.Condition() {
@@ -230,6 +367,10 @@ public class FailoverConsumerUnconsumedTest {
 
         public int unconsumedSize() {
             return unconsumedMessages.size();
+        }
+
+        public int deliveredSize() {
+            return deliveredMessages.size();
         }
     }
 

@@ -41,9 +41,6 @@ import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.util.LoggingBrokerPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.leveldb.LevelDBStore;
-import org.apache.activemq.usage.MemoryUsage;
-import org.apache.activemq.usage.SystemUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +72,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
     String brokerURL = DEFAULT_BROKER_URL;
     
     int numBrokerRestarts = 0;
-    final static int MAX_BROKER_RESTARTS = 3;
+    final static int MAX_BROKER_RESTARTS = 4;
     BrokerService broker;
     Vector<Throwable> exceptions = new Vector<Throwable>();
 
@@ -171,6 +168,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
         }
         
         final int TRANSACITON_BATCH = 500;
+        boolean resumeOnNextOrPreviousIsOk = false;
         public void onMessage(Message message) {
             try {
                 final long seqNum = message.getLongProperty(SEQ_NUM_PROPERTY);
@@ -181,6 +179,16 @@ public class AMQ2149Test extends AutoFailTestSupport {
                         LOG.info("committing..");
                         session.commit();
                     }
+                }
+                if (resumeOnNextOrPreviousIsOk) {
+                    // after an indoubt commit we need to accept what we get (within reason)
+                    if (seqNum != nextExpectedSeqNum) {
+                        if (seqNum == nextExpectedSeqNum - (TRANSACITON_BATCH -1)) {
+                            nextExpectedSeqNum -= (TRANSACITON_BATCH -1);
+                            LOG.info("In doubt commit failed, getting replay at:" +  nextExpectedSeqNum);
+                        }
+                    }
+                    resumeOnNextOrPreviousIsOk = false;
                 }
                 if (seqNum != nextExpectedSeqNum) {
                     LOG.warn(dest + " received " + seqNum
@@ -196,8 +204,16 @@ public class AMQ2149Test extends AutoFailTestSupport {
                 lastId = message.getJMSMessageID();
             } catch (TransactionRolledBackException expectedSometimesOnFailoverRecovery) {
                 LOG.info("got rollback: " + expectedSometimesOnFailoverRecovery);
-                // batch will be replayed
-                nextExpectedSeqNum -= (TRANSACITON_BATCH -1);
+                if (expectedSometimesOnFailoverRecovery.getMessage().contains("completion in doubt")) {
+                    // in doubt - either commit command or reply missing
+                    // don't know if we will get a replay
+                    resumeOnNextOrPreviousIsOk = true;
+                } else {
+                    resumeOnNextOrPreviousIsOk = false;
+                    // batch will be replayed
+                    nextExpectedSeqNum -= (TRANSACITON_BATCH -1);
+                }
+
             } catch (Throwable e) {
                 LOG.error(dest + " onMessage error", e);
                 exceptions.add(e);
@@ -327,7 +343,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
     public void doTestTransactionalOrderWithRestart(byte destinationType) throws Exception {
         numtoSend = 10000;
         sleepBetweenSend = 3;
-        brokerStopPeriod = 30 * 1000;
+        brokerStopPeriod = 10 * 1000;
               
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {

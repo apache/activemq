@@ -289,11 +289,14 @@ public class FailoverConsumerOutstandingCommitTest {
         assertTrue("commit done through failover", commitDoneLatch.await(20, TimeUnit.SECONDS));
         assertTrue("commit failed", gotCommitException.get());
         assertTrue("another message was received after failover", messagesReceived.await(20, TimeUnit.SECONDS));
-        assertEquals("get message 0 first", MESSAGE_TEXT + "0", receivedMessages.get(0).getText());
-        // it was redelivered
-        assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(1).getText());
+        int receivedIndex = 0;
+        assertEquals("get message 0 first", MESSAGE_TEXT + "0", receivedMessages.get(receivedIndex++).getText());
+        if (!doActualBrokerCommit) {
+            // it will be redelivered and not tracked as a duplicate
+            assertEquals("get message 0 second", MESSAGE_TEXT + "0", receivedMessages.get(receivedIndex++).getText());
+        }
         assertTrue("another message was received", messagesReceived.await(20, TimeUnit.SECONDS));
-        assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(2).getText());
+        assertEquals("get message 1 eventually", MESSAGE_TEXT + "1", receivedMessages.get(receivedIndex++).getText());
 
         connection.close();
     }

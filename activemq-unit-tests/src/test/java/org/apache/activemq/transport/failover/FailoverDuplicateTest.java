@@ -203,7 +203,7 @@ public class FailoverDuplicateTest extends TestSupport {
         receiveConnection.close();
 
         // verify stats
-        assertEquals("expect all messages are dequeued with one duplicate", totalSent +1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+        assertEquals("expect all messages are dequeued with one duplicate to dlq", totalSent + 2, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
 
         Wait.waitFor(new Wait.Condition() {
             @Override
@@ -212,7 +212,7 @@ public class FailoverDuplicateTest extends TestSupport {
                 return  totalSent + 1 <= ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getDequeues().getCount();
             }
         });
-        assertEquals("dequeue correct, including duplicate dispatch auto acked", totalSent  + 1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getDequeues().getCount());
+        assertEquals("dequeue correct, including duplicate dispatch poisoned", totalSent  + 1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getDequeues().getCount());
 
         // ensure no dangling messages with fresh broker etc
         broker.stop();
