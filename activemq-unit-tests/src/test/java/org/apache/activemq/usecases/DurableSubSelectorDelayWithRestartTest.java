@@ -225,8 +225,10 @@ public class DurableSubSelectorDelayWithRestartTest {
                 } while (true);
 
             } finally {
-                sess.close();
-                con.close();
+                try {
+                    sess.close();
+                    con.close();
+                } catch (Exception e) {}
 
                 LOG.info(toString() + " OFFLINE.");
             }

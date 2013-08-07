@@ -162,17 +162,19 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
 
             synchronized (pendingLock) {
-                pending.setSystemUsage(memoryManager);
-                pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
-                pending.setMaxAuditDepth(getMaxAuditDepth());
-                pending.setMaxProducersToAudit(getMaxProducersToAudit());
-                pending.start();
-                // If nothing was in the persistent store, then try to use the
-                // recovery policy.
-                if (pending.isEmpty()) {
-                    for (Destination destination : durableDestinations.values()) {
-                        Topic topic = (Topic) destination;
-                        topic.recoverRetroactiveMessages(context, this);
+                if (!((StoreDurableSubscriberCursor) pending).isStarted() || !keepDurableSubsActive) {
+                    pending.setSystemUsage(memoryManager);
+                    pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
+                    pending.setMaxAuditDepth(getMaxAuditDepth());
+                    pending.setMaxProducersToAudit(getMaxProducersToAudit());
+                    pending.start();
+                    // If nothing was in the persistent store, then try to use the
+                    // recovery policy.
+                    if (pending.isEmpty()) {
+                        for (Destination destination : durableDestinations.values()) {
+                            Topic topic = (Topic) destination;
+                            topic.recoverRetroactiveMessages(context, this);
+                        }
                     }
                 }
             }
@@ -195,7 +197,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         List<MessageReference> savedDispateched = null;
 
         synchronized (pendingLock) {
-            pending.stop();
+            if (!keepDurableSubsActive) {
+                pending.stop();
+            }
 
             synchronized (dispatchLock) {
                 for (Destination destination : durableDestinations.values()) {

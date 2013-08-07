@@ -130,6 +130,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             ((KahaDBPersistenceAdapter)broker.getPersistenceAdapter()).setJournalMaxFileLength(journalMaxFileLength);
         }
         broker.start();
+        broker.waitUntilStarted();
     }
 
     private void destroyBroker() throws Exception {
@@ -1120,6 +1121,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             LOG.info("Iteration: " + i);
             doTestOrderOnActivateDeactivate();
             broker.stop();
+            broker.waitUntilStopped();
             createBroker(true /*deleteAllMessages*/);
         }
     }

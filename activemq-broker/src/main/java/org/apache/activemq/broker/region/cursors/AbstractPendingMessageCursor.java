@@ -309,7 +309,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
         }
     }
     
-    protected synchronized boolean isStarted() {
+    public synchronized boolean isStarted() {
         return started;
     }
     

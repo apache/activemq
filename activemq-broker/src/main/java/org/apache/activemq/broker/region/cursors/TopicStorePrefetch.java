@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -58,6 +59,11 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
         // shouldn't get called
         throw new RuntimeException("Not supported");
+    }
+
+    public synchronized void addMessageFirst(MessageReference node) throws Exception {
+        batchList.addMessageFirst(node);
+        size++;
     }
     
         

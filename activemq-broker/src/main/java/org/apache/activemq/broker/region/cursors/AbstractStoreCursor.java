@@ -211,7 +211,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     
-    public final synchronized void addMessageFirst(MessageReference node) throws Exception {
+    public synchronized void addMessageFirst(MessageReference node) throws Exception {
         setCacheEnabled(false);
         size++;
     }
