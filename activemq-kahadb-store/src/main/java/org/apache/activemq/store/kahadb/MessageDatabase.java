@@ -1014,6 +1014,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     void process(JournalCommand<?> data, final Location location, final Location inDoubtlocation) throws IOException {
         if (inDoubtlocation != null && location.compareTo(inDoubtlocation) >= 0) {
+            if (data instanceof KahaSubscriptionCommand) {
+                KahaSubscriptionCommand kahaSubscriptionCommand = (KahaSubscriptionCommand)data;
+                if (kahaSubscriptionCommand.hasSubscriptionInfo()) {
+                    // needs to be processed via activate and will be replayed on reconnect
+                    LOG.debug("ignoring add sub command during recovery replay:" + data);
+                    return;
+                }
+            }
             process(data, location, (Runnable) null, (Runnable) null);
         } else {
             // just recover producer audit
