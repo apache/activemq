@@ -249,7 +249,9 @@ public class MessageServlet extends MessageServletSupport {
     protected void writeResponse(HttpServletRequest request, HttpServletResponse response, Message message) throws IOException, JMSException {
         int messages = 0;
         try {
-
+        	response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1
+        	response.setHeader("Pragma", "no-cache"); // HTTP 1.0
+        	response.setDateHeader("Expires", 0);
             // write a responds
             PrintWriter writer = response.getWriter();
 
