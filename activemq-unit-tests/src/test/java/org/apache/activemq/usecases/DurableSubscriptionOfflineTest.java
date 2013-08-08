@@ -906,7 +906,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertEquals(filtered, listener3.count);
     }
 
-    public void initCombosForTestOfflineAfterRestart() throws Exception {
+    public void initCombosForTestOfflineSubscriptionAfterRestart() throws Exception {
         this.addCombinationValues("defaultPersistenceAdapter",
                 new Object[]{ PersistenceAdapterChoice.KahaDB, PersistenceAdapterChoice.LevelDB, PersistenceAdapterChoice.JDBC});
     }
