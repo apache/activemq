@@ -51,10 +51,10 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
     }
 
     private long getLockKeepAlivePeriod() {
-        return 500;
+        return 1000;
     }
 
     private long getLockAcquireSleepInterval() {
-        return 2000;
+        return 8000;
     }
 }

@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBCQueueMasterSlaveLeaseTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest.class);
 
-    private long restartDelay = 500;
+    private long restartDelay = 2000;
 
     @Override
     protected void configureBroker(BrokerService brokerService) {
@@ -37,7 +37,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBC
 
     @Override
     protected void delayTillRestartRequired() {
-        if (restartDelay > 500) {
+        if (restartDelay > 2000) {
             LOG.info("delay for more than lease quantum. While Db is offline, master should stay alive but could loose lease");
         } else {
             LOG.info("delay for less than lease quantum. While Db is offline, master should stay alive");
@@ -61,12 +61,12 @@ public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBC
 
     @Override
     public void setUp() throws Exception {
-        restartDelay = 500;
+        restartDelay = 2000;
         super.setUp();
     }
 
     public void testSendReceiveWithLeaseExpiry() throws Exception {
-        restartDelay = 3000;
+        restartDelay = 10000;
         testSendReceive();
     }
 

@@ -30,6 +30,7 @@ import javax.jms.TransactionRolledBackException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
@@ -114,15 +115,16 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
                     java.sql.Connection dbConnection = null;
                     try {
                         ActiveMQMessage mqMessage = (ActiveMQMessage) message;
+                        MessageId id = mqMessage.getMessageId();
                         dbConnection = sharedDs.getConnection();
                         PreparedStatement s = dbConnection.prepareStatement(((JDBCPersistenceAdapter) connectedToBroker().getPersistenceAdapter()).getStatements().getFindMessageStatement());
-                        s.setString(1, mqMessage.getMessageId().getProducerId().toString());
-                        s.setLong(2, mqMessage.getMessageId().getProducerSequenceId());
+                        s.setString(1, id.getProducerId().toString());
+                        s.setLong(2, id.getProducerSequenceId());
                         ResultSet rs = s.executeQuery();
 
                         if (!rs.next()) {
                             // message is gone, so lets count it as consumed
-                            LOG.info("On TransactionRolledBackException we know that the ack/commit got there b/c message is gone so we  count it: " + mqMessage);
+                            LOG.info("On TransactionRolledBackException we know that the ack/commit got there b/c message is gone so we count it: " + mqMessage);
                             super.consumeMessage(message, messageList);
                         } else {
                             LOG.info("On TransactionRolledBackException we know that the ack/commit was lost so we expect a replay of: " + mqMessage);
