@@ -168,7 +168,7 @@ public class KahaDBVersionTest extends TestCase {
                 TextMessage msg = (TextMessage) topicConsumer.receive(10000);
                 count++;
                 // System.err.println(msg.getText());
-                assertNotNull(msg);
+                assertNotNull("" + count, msg);
             }
             LOG.info("Consumed " + count + " from topic");
             connection.close();
