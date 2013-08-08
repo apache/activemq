@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLServerSocket;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.ThreadPriorities;
@@ -151,6 +152,27 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     private void configureServerSocket(ServerSocket socket) throws SocketException {
         socket.setSoTimeout(2000);
         if (transportOptions != null) {
+
+            // If the enabledCipherSuites option is invalid we don't want to ignore it as the call
+            // to SSLServerSocket to configure it has a side effect on the socket rendering it
+            // useless as all suites are enabled many of which are considered as insecure.  We
+            // instead trap that option here and throw an exception.  We should really consider
+            // all invalid options as breaking and not start the transport but the current design
+            // doesn't really allow for this.
+            //
+            //  see: https://issues.apache.org/jira/browse/AMQ-4582
+            //
+            if (socket instanceof SSLServerSocket) {
+                if (transportOptions.containsKey("enabledCipherSuites")) {
+                    Object cipherSuites = transportOptions.remove("enabledCipherSuites");
+
+                    if (!IntrospectionSupport.setProperty(socket, "enabledCipherSuites", cipherSuites)) {
+                        throw new SocketException(String.format(
+                            "Invalid transport options {enabledCipherSuites=%s}", cipherSuites));
+                    }
+                }
+            }
+
             IntrospectionSupport.setProperties(socket, transportOptions);
         }
     }
