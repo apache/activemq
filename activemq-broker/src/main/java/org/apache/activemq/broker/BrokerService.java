@@ -1953,7 +1953,7 @@ public class BrokerService implements Service {
                 if (schedularLimit > dirFreeSpace) {
                     LOG.warn("Job Schedular Store limit is " + schedularLimit / (1024 * 1024) +
                              " mb, whilst the data directory: " + schedulerDir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - reseting to " +
+                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to " +
                             dirFreeSpace / (1024 * 1024) + " mb.");
                     usage.getJobSchedulerUsage().setLimit(dirFreeSpace);
                 }
