@@ -450,7 +450,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   def rollback(txid: TransactionId) = {
     transactions.remove(txid) match {
       case null =>
-        println("The transaction does not exist")
+        debug("on rollback, the transaction " + txid + " does not exist")
       case tx =>
         if( tx.prepared ) {
           val done = new CountDownLatch(1)
@@ -470,7 +470,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   def prepare(tx: TransactionId) = {
     transactions.get(tx) match {
       case null =>
-        println("The transaction does not exist")
+        warn("on prepare, the transaction " + tx + " does not exist")
       case tx =>
         tx.prepare
     }
