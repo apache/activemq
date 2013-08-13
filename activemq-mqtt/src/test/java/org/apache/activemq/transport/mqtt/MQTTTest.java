@@ -92,8 +92,9 @@ public class MQTTTest extends AbstractMQTTTest {
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
-        Topic[] topics = {new Topic("TopicA", QoS.EXACTLY_ONCE), new Topic("TopicB", QoS.EXACTLY_ONCE)};
-        connection.subscribe(topics);
+        Topic[] topics = {new Topic("Topic/A", QoS.EXACTLY_ONCE), new Topic("Topic/B", QoS.EXACTLY_ONCE)};
+        Topic[] wildcardTopic = {new Topic("Topic/#", QoS.AT_LEAST_ONCE)};
+        connection.subscribe(wildcardTopic);
 
         for (Topic topic : topics) {
             connection.publish(topic.name().toString(), payload, QoS.AT_LEAST_ONCE, false);
