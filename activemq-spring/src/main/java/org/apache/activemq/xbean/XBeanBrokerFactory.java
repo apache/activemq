@@ -88,7 +88,9 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         if (broker instanceof ApplicationContextAware) {
         	((ApplicationContextAware)broker).setApplicationContext(context);
         }
-        
+
+        broker.setConfigurationUrl(uri);
+
         // TODO warning resources from the context may not be closed down!
 
         return broker;

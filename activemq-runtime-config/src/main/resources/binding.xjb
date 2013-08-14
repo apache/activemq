@@ -1,0 +1,16 @@
+<jxb:bindings version="2.0"
+    xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+ <jxb:bindings schemaLocation="activemq.xsd" node="/xs:schema/xs:element[@name='broker']">
+
+   <jxb:bindings node="xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:complexType/xs:choice/xs:choice/xs:element[@name='networkConnectors']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+ </jxb:bindings>
+</jxb:bindings>

@@ -218,6 +218,7 @@ public class BrokerService implements Service {
     private boolean restartRequested = false;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
+    private String configurationUrl;
 
     static {
 
@@ -1030,7 +1031,7 @@ public class BrokerService implements Service {
             return systemUsage;
         } catch (IOException e) {
             LOG.error("Cannot create SystemUsage", e);
-            throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage());
+            throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage(), e);
         }
     }
 
@@ -2894,5 +2895,13 @@ public class BrokerService implements Service {
 
     public void setStoreOpenWireVersion(int storeOpenWireVersion) {
         this.storeOpenWireVersion = storeOpenWireVersion;
+    }
+
+    public String getConfigurationUrl() {
+        return configurationUrl;
+    }
+
+    public void setConfigurationUrl(String configurationUrl) {
+        this.configurationUrl = configurationUrl;
     }
 }

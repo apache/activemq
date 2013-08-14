@@ -37,6 +37,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven-dependency-plugin-version}</version>
         <executions>
           <execution>
             <id>unpack-rar</id>
@@ -100,6 +101,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
+            <version>${maven-dependency-plugin-version}</version>
             <executions>
               <execution>
                 <id>unpack-jboss</id>
@@ -133,6 +135,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
+            <version>${maven-dependency-plugin-version}</version>
             <executions>
               <execution>
                 <id>unpack-wildfly</id>
