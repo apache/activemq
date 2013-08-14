@@ -34,33 +34,7 @@ import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerContextAware;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTempQueue;
-import org.apache.activemq.command.ActiveMQTempTopic;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.ConnectionError;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerControl;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.LocalTransactionId;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionId;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -124,6 +98,7 @@ public class ProtocolConverter {
     private String version = "1.0";
     private long hbReadInterval;
     private long hbWriteInterval;
+    private float hbGracePeriodMultiplier = 1.0f;
     private String defaultHeartBeat = Stomp.DEFAULT_HEART_BEAT;
 
     private static class AckEntry {
@@ -928,6 +903,20 @@ public class ProtocolConverter {
         this.defaultHeartBeat = defaultHeartBeat;
     }
 
+    /**
+     * @return the hbGracePeriodMultiplier
+     */
+    public float getHbGracePeriodMultiplier() {
+        return hbGracePeriodMultiplier;
+    }
+
+    /**
+     * @param hbGracePeriodMultiplier the hbGracePeriodMultiplier to set
+     */
+    public void setHbGracePeriodMultiplier(float hbGracePeriodMultiplier) {
+        this.hbGracePeriodMultiplier = hbGracePeriodMultiplier;
+    }
+
     protected void configureInactivityMonitor(String heartBeatConfig) throws ProtocolException {
 
         String[] keepAliveOpts = heartBeatConfig.split(Stomp.COMMA);
@@ -937,7 +926,7 @@ public class ProtocolConverter {
         } else {
 
             try {
-                hbReadInterval = Long.parseLong(keepAliveOpts[0]);
+                hbReadInterval = (long) (Long.parseLong(keepAliveOpts[0]) * hbGracePeriodMultiplier);
                 hbWriteInterval = Long.parseLong(keepAliveOpts[1]);
             } catch(NumberFormatException e) {
                 throw new ProtocolException("Invalid heart-beat header:" + heartBeatConfig, true);
@@ -945,7 +934,7 @@ public class ProtocolConverter {
 
             try {
                 StompInactivityMonitor monitor = this.stompTransport.getInactivityMonitor();
-                monitor.setReadCheckTime(hbReadInterval);
+                monitor.setReadCheckTime((long) (hbReadInterval * hbGracePeriodMultiplier));
                 monitor.setInitialDelayTime(Math.min(hbReadInterval, hbWriteInterval));
                 monitor.setWriteCheckTime(hbWriteInterval);
                 monitor.startMonitoring();

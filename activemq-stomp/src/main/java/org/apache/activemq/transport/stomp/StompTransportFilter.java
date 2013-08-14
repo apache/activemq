@@ -55,6 +55,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         }
     }
 
+    @Override
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command) o;
@@ -64,6 +65,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         }
     }
 
+    @Override
     public void onCommand(Object command) {
         try {
             if (trace) {
@@ -78,6 +80,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         }
     }
 
+    @Override
     public void sendToActiveMQ(Command command) {
         TransportListener l = transportListener;
         if (l != null) {
@@ -85,6 +88,7 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         }
     }
 
+    @Override
     public void sendToStomp(StompFrame command) throws IOException {
         if (trace) {
             TRACE.trace("Sending: \n" + command);
@@ -123,6 +127,30 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
 
     public void setDefaultHeartBeat(String defaultHeartBeat) {
         protocolConverter.setDefaultHeartBeat(defaultHeartBeat);
+    }
+
+    /**
+     * Returns the currently configured Read check grace period multiplier.
+     *
+     * @return the hbGracePeriodMultiplier
+     */
+    public float getHbGracePeriodMultiplier() {
+        return protocolConverter != null ? protocolConverter.getHbGracePeriodMultiplier() : null;
+    }
+
+    /**
+     * Sets the read check grace period multiplier.  New CONNECT frames that indicate a heart beat
+     * value with a read check interval will have that value multiplied by this value to add a
+     * grace period before the connection is considered invalid.  By default this value is set to
+     * zero and no grace period is given.  When set the value must be larger than 1.0 or it will
+     * be ignored.
+     *
+     * @param hbGracePeriodMultiplier the hbGracePeriodMultiplier to set
+     */
+    public void setHbGracePeriodMultiplier(float hbGracePeriodMultiplier) {
+        if (hbGracePeriodMultiplier > 1.0f) {
+            protocolConverter.setHbGracePeriodMultiplier(hbGracePeriodMultiplier);
+        }
     }
 
 }
