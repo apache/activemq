@@ -146,12 +146,12 @@
     <maven-assembly-plugin-version>2.4</maven-assembly-plugin-version>
     <maven-release-plugin-version>2.4.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.9</maven-eclipse-plugin-version>
-    <maven-war-plugin-version>2.3</maven-war-plugin-version>
+    <maven-war-plugin-version>2.4</maven-war-plugin-version>
     <maven-compiler-plugin-version>2.5.1</maven-compiler-plugin-version>
     <maven-jar-plugin-version>2.4</maven-jar-plugin-version>
     <maven-archiver-version>2.5</maven-archiver-version>
     <maven-source-plugin-version>2.2.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>2.9</maven-javadoc-plugin-version>
+    <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
     <maven-shade-plugin-version>2.0</maven-shade-plugin-version>
     <maven-jaxb2-plugin-version>0.8.3</maven-jaxb2-plugin-version>
@@ -160,10 +160,12 @@
     <cobertura-maven-plugin-version>2.5.2</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>2.4</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>1.8</build-helper-maven-plugin-version>
-    <apache-rat-plugin-version>0.8</apache-rat-plugin-version>
+    <apache-rat-plugin-version>0.9</apache-rat-plugin-version>
     <ianal-maven-plugin-version>1.0-alpha-1</ianal-maven-plugin-version>
     <depends-maven-plugin-version>1.2</depends-maven-plugin-version>
     <maven-dependency-plugin-version>2.8</maven-dependency-plugin-version>
+    <maven-project-info-reports-plugin-version>2.7</maven-project-info-reports-plugin-version>
+    <maven-graph-plugin-version>1.30</maven-graph-plugin-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
@@ -1530,7 +1532,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-project-info-reports-plugin</artifactId>
-            <version>2.6</version>
+            <version>${maven-project-info-reports-plugin-version}</version>
             <configuration>
               <dependencyLocationsEnabled>
                 false
@@ -1551,7 +1553,7 @@
           <plugin>
             <groupId>org.fusesource.mvnplugins</groupId>
             <artifactId>maven-graph-plugin</artifactId>
-            <version>1.15</version>
+            <version>${maven-graph-plugin-version}</version>
           </plugin>
         </plugins>
       </build>
