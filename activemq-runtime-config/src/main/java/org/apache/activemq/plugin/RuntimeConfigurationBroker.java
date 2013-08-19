@@ -17,10 +17,12 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.TreeMap;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -111,25 +113,87 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void processNetworkConnectors(Broker currentConfiguration, Broker modifiedConfiguration) {
-        List<Broker.NetworkConnectors> currentNc = filterElement(
+        List<Broker.NetworkConnectors> currentNCsElems = filterElement(
                 currentConfiguration.getContents(), Broker.NetworkConnectors.class);
-        List<Broker.NetworkConnectors> modNc = filterElement(
+        List<Broker.NetworkConnectors> modifiedNCsElems = filterElement(
                 modifiedConfiguration.getContents(), Broker.NetworkConnectors.class);
 
         int modIndex = 0, currentIndex = 0;
-        for (; modIndex < modNc.size() && currentIndex < currentNc.size(); modIndex++, currentIndex++) {
-            if (!modNc.get(modIndex).getContents().get(0).equals(
-                    currentNc.get(currentIndex).getContents().get(0))) {
-                // change in order will fool this logic
-                LOG.error("not supported: mod to existing network Connector, new: "
-                        + modNc.get(modIndex).getContents().get(0));
+        for (; modIndex < modifiedNCsElems.size() && currentIndex < currentNCsElems.size(); modIndex++, currentIndex++) {
+            // walk the list of individual nc's...
+            applyModifications(currentNCsElems.get(currentIndex).getContents(),
+                    modifiedNCsElems.get(modIndex).getContents());
+        }
+
+        for (; modIndex < modifiedNCsElems.size(); modIndex++) {
+            // new networkConnectors element; add all
+            for (Object nc : modifiedNCsElems.get(modIndex).getContents()) {
+                addNetworkConnector(nc);
             }
         }
 
-        for (; modIndex < modNc.size(); modIndex++) {
-            // additions
-            addNetworkConnector(modNc.get(modIndex).getContents().get(0));
+        for (; currentIndex < currentNCsElems.size(); currentIndex++) {
+            // removal of networkConnectors element; remove all
+            for (Object nc : modifiedNCsElems.get(modIndex).getContents()) {
+                removeNetworkConnector(nc);
+            }
         }
+    }
+
+    private void applyModifications(List<Object> current, List<Object> modification) {
+        int modIndex = 0, currentIndex = 0;
+        for (; modIndex < modification.size() && currentIndex < current.size(); modIndex++, currentIndex++) {
+            Object currentNc = current.get(currentIndex);
+            Object candidateNc = modification.get(modIndex);
+            if (! currentNc.equals(candidateNc)) {
+                LOG.info("modification to:" + currentNc + " , with: " + candidateNc);
+                removeNetworkConnector(currentNc);
+                addNetworkConnector(candidateNc);
+            }
+        }
+
+        for (; modIndex < modification.size(); modIndex++) {
+            addNetworkConnector(modification.get(modIndex));
+        }
+
+        for (; currentIndex < current.size(); currentIndex++) {
+            removeNetworkConnector(current.get(currentIndex));
+        }
+    }
+
+    private void removeNetworkConnector(Object o) {
+        if (o instanceof NetworkConnector) {
+            NetworkConnector toRemove = (NetworkConnector) o;
+            for (org.apache.activemq.network.NetworkConnector existingCandidate :
+                    getBrokerService().getNetworkConnectors()) {
+                if (configMatch(toRemove, existingCandidate)) {
+                    if (getBrokerService().removeNetworkConnector(existingCandidate)) {
+                        try {
+                            existingCandidate.stop();
+                            LOG.info("stopped and removed networkConnector: " + existingCandidate);
+                        } catch (Exception e) {
+                            LOG.error("Failed to stop removed network connector: " + existingCandidate);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean configMatch(NetworkConnector dto, org.apache.activemq.network.NetworkConnector candidate) {
+        TreeMap<String, String> dtoProps = new TreeMap<String, String>();
+        IntrospectionSupport.getProperties(dto, dtoProps, null);
+
+        TreeMap<String, String> candidateProps = new TreeMap<String, String>();
+        IntrospectionSupport.getProperties(candidate, candidateProps, null);
+
+        // every dto prop must be present in the candidate
+        for (String key : dtoProps.keySet()) {
+            if (!candidateProps.containsKey(key) || !candidateProps.get(key).equals(dtoProps.get(key))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void addNetworkConnector(Object o) {

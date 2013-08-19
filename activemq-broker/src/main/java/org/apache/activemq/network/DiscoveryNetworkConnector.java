@@ -54,6 +54,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     private DiscoveryAgent discoveryAgent;
     private Map<String, String> parameters;
     private final ConcurrentMap<URI, DiscoveryEvent> activeEvents = new ConcurrentHashMap<URI, DiscoveryEvent>();
+    private URI discoveryUri;
     public DiscoveryNetworkConnector() {
     }
 
@@ -62,6 +63,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     public void setUri(URI discoveryURI) throws IOException {
+        this.discoveryUri = discoveryURI;
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
         try {
             parameters = URISupport.parseParameters(discoveryURI);
@@ -70,6 +72,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         } catch (URISyntaxException e) {
             LOG.warn("failed to parse query parameters from discoveryURI: " + discoveryURI, e);
         }
+    }
+
+    public URI getUri() {
+        return discoveryUri;
     }
 
     @Override

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.util;
 
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -80,6 +81,8 @@ public final class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Float.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(Double.class, String.class), toStringConverter);
         CONVERSION_MAP.put(new ConversionKey(UTF8Buffer.class, String.class), toStringConverter);
+        CONVERSION_MAP.put(new ConversionKey(URI.class, String.class), toStringConverter);
+        CONVERSION_MAP.put(new ConversionKey(BigInteger.class, String.class), toStringConverter);
 
         CONVERSION_MAP.put(new ConversionKey(String.class, Boolean.class), new Converter() {
             @Override

@@ -74,9 +74,9 @@ public class NetworkConnectorTest {
     }
 
 
-    @Ignore("not implemented yet!")
     @Test
     public void testModConnector() throws Exception {
+
         final String brokerConfig = configurationSeed + "-one-nc-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc");
         startBroker(brokerConfig);
@@ -100,6 +100,23 @@ public class NetworkConnectorTest {
         assertEquals("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
     }
 
+    @Test
+    public void testRemoveConnector() throws Exception {
+
+        final String brokerConfig = configurationSeed + "-two-nc-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-two-nc");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+        assertEquals("correct network connectors", 2, brokerService.getNetworkConnectors().size());
+
+        applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
+
+        assertEquals("one network connectors", 1, brokerService.getNetworkConnectors().size());
+
+        NetworkConnector remainingNetworkConnector = brokerService.getNetworkConnectors().get(0);
+        assertEquals("name match", "one", remainingNetworkConnector.getName());
+    }
+
     private void applyNewConfig(String configName, String newConfigName) throws Exception {
         applyNewConfig(configName, newConfigName, 0l);
     }
@@ -107,7 +124,7 @@ public class NetworkConnectorTest {
     private void applyNewConfig(String configName, String newConfigName, long sleep) throws Exception {
         Resource resource = Utils.resourceFromString("org/apache/activemq");
         FileOutputStream current = new FileOutputStream(new File(resource.getFile(), configName + ".xml"));
-        FileInputStream modifications = new FileInputStream(new File(resource.getFile(), (newConfigName != null ? newConfigName : configName) + ".xml"));
+        FileInputStream modifications = new FileInputStream(new File(resource.getFile(), newConfigName + ".xml"));
         modifications.getChannel().transferTo(0, Long.MAX_VALUE, current.getChannel());
         current.flush();
         LOG.info("Updated: " + current.getChannel());
