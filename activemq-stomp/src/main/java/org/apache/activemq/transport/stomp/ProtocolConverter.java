@@ -926,7 +926,7 @@ public class ProtocolConverter {
         } else {
 
             try {
-                hbReadInterval = (long) (Long.parseLong(keepAliveOpts[0]) * hbGracePeriodMultiplier);
+                hbReadInterval = (Long.parseLong(keepAliveOpts[0]));
                 hbWriteInterval = Long.parseLong(keepAliveOpts[1]);
             } catch(NumberFormatException e) {
                 throw new ProtocolException("Invalid heart-beat header:" + heartBeatConfig, true);
