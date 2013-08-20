@@ -554,8 +554,8 @@ public class ProtocolConverter {
         String browser = headers.get(Stomp.Headers.Subscribe.BROWSER);
         if (browser != null && browser.equals(Stomp.TRUE)) {
 
-            if (!this.version.equals(Stomp.V1_1)) {
-                throw new ProtocolException("Queue Browser feature only valid for Stomp v1.1 clients!");
+            if (this.version.equals(Stomp.V1_0)) {
+                throw new ProtocolException("Queue Browser feature only valid for Stomp v1.1+ clients!");
             }
 
             consumerInfo.setBrowser(true);
