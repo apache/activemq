@@ -41,7 +41,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     public static final int MAXIMUM_PRODUCER_COUNT = 64;
     private int auditDepth;
     private int maximumNumberOfProducersToTrack;
-    private final LRUCache<Object, BitArrayBin> map;
+    private final LRUCache<String, BitArrayBin> map;
     private transient boolean modified = true;
 
     /**
@@ -60,7 +60,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     public ActiveMQMessageAuditNoSync(int auditDepth, final int maximumNumberOfProducersToTrack) {
         this.auditDepth = auditDepth;
         this.maximumNumberOfProducersToTrack=maximumNumberOfProducersToTrack;
-        this.map = new LRUCache<Object, BitArrayBin>(0, maximumNumberOfProducersToTrack, 0.75f, true);
+        this.map = new LRUCache<String, BitArrayBin>(0, maximumNumberOfProducersToTrack, 0.75f, true);
     }
 
     /**
@@ -91,7 +91,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
     public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
 
         if (maximumNumberOfProducersToTrack < this.maximumNumberOfProducersToTrack){
-            LRUCache<Object, BitArrayBin> newMap = new LRUCache<Object, BitArrayBin>(0,maximumNumberOfProducersToTrack,0.75f,true);
+            LRUCache<String, BitArrayBin> newMap = new LRUCache<String, BitArrayBin>(0,maximumNumberOfProducersToTrack,0.75f,true);
             /**
              * As putAll will access the entries in the right order,
              * this shouldn't result in wrong cache entries being removed
@@ -165,7 +165,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
-                BitArrayBin bab = map.get(pid);
+                BitArrayBin bab = map.get(pid.toString());
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
                     map.put(pid.toString(), bab);
@@ -196,7 +196,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
-                BitArrayBin bab = map.get(pid);
+                BitArrayBin bab = map.get(pid.toString());
                 if (bab != null) {
                     bab.setBit(id.getProducerSequenceId(), false);
                     modified = true;
@@ -269,7 +269,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
-                BitArrayBin bab = map.get(pid);
+                BitArrayBin bab = map.get(pid.toString());
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
                     map.put(pid.toString(), bab);
