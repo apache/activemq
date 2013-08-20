@@ -427,7 +427,7 @@ class DBManager(val parent:LevelDBStore) {
 
   val lastUowId = new AtomicInteger(1)
 
-  val producerSequenceIdTracker = new ActiveMQMessageAuditNoSync
+  var producerSequenceIdTracker = new ActiveMQMessageAuditNoSync
 
   def getLastProducerSequenceId(id: ProducerId): Long = dispatchQueue.sync {
     producerSequenceIdTracker.getLastSeqId(id)
@@ -437,13 +437,6 @@ class DBManager(val parent:LevelDBStore) {
     dispatchQueue.assertExecuting()
     uowClosedCounter += 1
 
-    // track the producer seq positions.
-    for( (_, action) <- uow.actions ) {
-      if( action.messageRecord!=null ) {
-        producerSequenceIdTracker.isDuplicate(action.messageRecord.id)
-      }
-    }
-
     // Broker could issue a flush_message call before
     // this stage runs.. which make the stage jump over UowDelayed
     if( uow.state.stage < UowDelayed.stage ) {
@@ -451,10 +444,6 @@ class DBManager(val parent:LevelDBStore) {
     }
     if( uow.state.stage < UowFlushing.stage ) {
       uow.actions.foreach { case (id, action) =>
-
-        if( action.messageRecord!=null ) {
-          producerSequenceIdTracker.isDuplicate(action.messageRecord.id)
-        }
 
         // The UoW may have been canceled.
         if( action.messageRecord!=null && action.enqueues.isEmpty ) {

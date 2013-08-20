@@ -168,7 +168,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 BitArrayBin bab = map.get(pid);
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
-                    map.put(pid, bab);
+                    map.put(pid.toString(), bab);
                     modified = true;
                 }
                 answer = bab.setBit(id.getProducerSequenceId(), true);
@@ -272,7 +272,7 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
                 BitArrayBin bab = map.get(pid);
                 if (bab == null) {
                     bab = new BitArrayBin(auditDepth);
-                    map.put(pid, bab);
+                    map.put(pid.toString(), bab);
                     modified = true;
                 }
                 answer = bab.isInOrder(id.getProducerSequenceId());

@@ -40,6 +40,7 @@ import java.util.{Date, Collections}
 import org.apache.activemq.leveldb.util.TimeMetric
 import org.apache.activemq.leveldb.RecordLog.LogInfo
 import org.fusesource.leveldbjni.internal.JniDB
+import org.apache.activemq.ActiveMQMessageAuditNoSync
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -66,6 +67,7 @@ object LevelDBClient extends Log {
   final val DIRTY_INDEX_KEY = bytes(":dirty")
   final val LOG_REF_INDEX_KEY = bytes(":log-refs")
   final val LOGS_INDEX_KEY = bytes(":logs")
+  final val PRODUCER_IDS_INDEX_KEY = bytes(":producer_ids")
 
   final val COLLECTION_META_KEY = bytes(":collection-meta")
   final val TRUE = bytes("true")
@@ -699,6 +701,10 @@ class LevelDBClient(store: LevelDBStore) {
             log.read(pos).map {
               case (kind, data, nextPos) =>
                 kind match {
+                  case LOG_DATA =>
+                    val message = decodeMessage(data)
+                    store.db.producerSequenceIdTracker.isDuplicate(message.getMessageId)
+
                   case LOG_ADD_COLLECTION =>
                     val record= decodeCollectionRecord(data)
                     index.put(encodeLongKey(COLLECTION_PREFIX, record.getKey), data)
@@ -846,10 +852,19 @@ class LevelDBClient(store: LevelDBStore) {
         case e => throw e
       }
     }
+    def storeObject(key:Array[Byte], o:Object) = {
+      val baos = new ByteArrayOutputStream()
+      val os = new ObjectOutputStream(baos);
+      os.writeObject(o)
+      os.close()
+      index.put(key, baos.toByteArray)
+    }
 
     storeMap(LOG_REF_INDEX_KEY, logRefs)
     storeMap(COLLECTION_META_KEY, collectionMeta)
     storeList(LOGS_INDEX_KEY, log.log_file_positions)
+    storeObject(PRODUCER_IDS_INDEX_KEY, store.db.producerSequenceIdTracker)
+
   }
 
   private def loadCounters = {
@@ -878,6 +893,13 @@ class LevelDBClient(store: LevelDBStore) {
         rc
       }
     }
+    def loadObject(key:Array[Byte]) = {
+      index.get(key, new ReadOptions).map { value=>
+        val bais = new ByteArrayInputStream(value)
+        val is = new ObjectInputStream(bais);
+        is.readObject();
+      }
+    }
 
     loadMap(LOG_REF_INDEX_KEY, logRefs)
     loadMap(COLLECTION_META_KEY, collectionMeta)
@@ -886,6 +908,9 @@ class LevelDBClient(store: LevelDBStore) {
       for( k <- list ) {
         recoveryLogs.put(k, null)
       }
+    }
+    for( audit <- loadObject(PRODUCER_IDS_INDEX_KEY) ) {
+      store.db.producerSequenceIdTracker = audit.asInstanceOf[ActiveMQMessageAuditNoSync]
     }
   }
 
@@ -1183,16 +1208,17 @@ class LevelDBClient(store: LevelDBStore) {
     }
 
     // Lets decode
-    buffer.map{ x =>
-      var data = if( store.snappyCompressLogs ) {
-        Snappy.uncompress(x)
-      } else {
-        x
-      }
-      store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[Message]
-    }.getOrElse(null)
+    buffer.map(decodeMessage(_)).getOrElse(null)
   }
 
+  def decodeMessage(x: Buffer): Message = {
+    var data = if (store.snappyCompressLogs) {
+      Snappy.uncompress(x)
+    } else {
+      x
+    }
+    store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[Message]
+  }
 
   def collectionCursor(collectionKey: Long, cursorPosition:Buffer)(func: (Buffer, EntryRecord.Buffer)=>Boolean) = {
     val ro = new ReadOptions
@@ -1267,6 +1293,7 @@ class LevelDBClient(store: LevelDBStore) {
         var dataLocator: DataLocator = null
 
         if (messageRecord != null && messageRecord.locator == null) {
+          store.db.producerSequenceIdTracker.isDuplicate(messageRecord.id)
           val start = System.nanoTime()
           val p = appender.append(LOG_DATA, messageRecord.data)
           log_info = p._2
@@ -1329,7 +1356,6 @@ class LevelDBClient(store: LevelDBStore) {
           val index_record = new EntryRecord.Bean()
           index_record.setValueLocation(dataLocator.pos)
           index_record.setValueLength(dataLocator.len)
-          batch.put(key, encodeEntryRecord(index_record.freeze()).toByteArray)
 
           val index_data = encodeEntryRecord(index_record.freeze()).toByteArray
           batch.put(key, index_data)
