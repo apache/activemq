@@ -411,12 +411,35 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         } catch (javax.jms.IllegalStateException expected) {}
     }
 
+    public void testRollbackXaErrorCode() throws Exception {
+        String brokerName = "rollbackErrorCode";
+        BrokerService broker = BrokerFactory.createBroker(new URI("broker:(tcp://localhost:0)/" + brokerName));
+        broker.start();
+        broker.waitUntilStarted();
+        ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
+        XAConnection connection = (XAConnection)cf.createConnection();
+        connection.start();
+        XASession session = connection.createXASession();
+        XAResource resource = session.getXAResource();
+
+        Xid tid = createXid();
+        try {
+            resource.rollback(tid);
+            fail("Expected xa exception on no tx");
+        } catch (XAException expected) {
+            LOG.info("got expected xa", expected);
+            assertTrue("not zero", expected.errorCode != XAResource.XA_OK);
+        }
+        connection.close();
+        broker.stop();
+    }
+
     private void assertTransactionGoneFromFailoverState(
             ActiveMQXAConnection connection1, Xid tid) throws Exception {
 
         FailoverTransport transport = (FailoverTransport) connection1.getTransport().narrow(FailoverTransport.class);
         TransactionInfo info = new TransactionInfo(connection1.getConnectionInfo().getConnectionId(), new XATransactionId(tid), TransactionInfo.COMMIT_ONE_PHASE);
-        assertNull("transaction shold not exist in the state tracker",
+        assertNull("transaction should not exist in the state tracker",
                 transport.getStateTracker().processCommitTransactionOnePhase(info));
     }
 

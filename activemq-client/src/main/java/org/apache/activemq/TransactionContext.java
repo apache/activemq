@@ -772,6 +772,11 @@ public class TransactionContext implements XAResource {
             XAException original = (XAException)e.getCause();
             XAException xae = new XAException(original.getMessage());
             xae.errorCode = original.errorCode;
+            if (xae.errorCode == XA_OK) {
+                // detail not unmarshalled see: org.apache.activemq.openwire.v1.BaseDataStreamMarshaller.createThrowable
+                // so use a valid generic error code in place of ok
+                xae.errorCode = XAException.XAER_RMERR;
+            }
             xae.initCause(original);
             return xae;
         }
