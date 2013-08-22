@@ -17,7 +17,6 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -39,8 +38,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
-import javax.xml.validation.ValidatorHandler;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.ManagementContext;
@@ -79,6 +76,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
     private ObjectName objectName;
     private String infoString;
+    private Schema schema;
 
     public RuntimeConfigurationBroker(org.apache.activemq.broker.Broker next) {
         super(next);
@@ -473,12 +471,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         return jaxbConfig;
     }
 
-    private Schema schema;
     private Schema getSchema() throws SAXException {
         if (schema == null) {
             SchemaFactory schemaFactory = SchemaFactory.newInstance(
-                                    XMLConstants.W3C_XML_SCHEMA_NS_URI);
-                schema = schemaFactory.newSchema(getClass().getResource("/activemq.xsd"));
+                    XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            schema = schemaFactory.newSchema(getClass().getResource("/activemq.xsd"));
         }
         return schema;
     }
