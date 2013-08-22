@@ -2,13 +2,26 @@
     xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
     xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
- <jxb:bindings schemaLocation="activemq.xsd" node="/xs:schema/xs:element[@name='broker']">
+ <jxb:bindings schemaLocation="activemq.xsd" node="/xs:schema">
 
-   <jxb:bindings node="xs:complexType/xs:choice">
+   <!-- provide uniform accessor to all interesting elements via getContents() -->
+   <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
 
-   <jxb:bindings node="xs:complexType/xs:choice/xs:choice/xs:element[@name='networkConnectors']/xs:complexType/xs:choice">
+   <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='networkConnectors']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='destinationInterceptors']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='virtualDestinationInterceptor']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element/xs:complexType/xs:choice/xs:choice/xs:element[@name='virtualDestinations']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
 

@@ -21,14 +21,16 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-  <broker xmlns="http://activemq.apache.org/schema/core" start="false" persistent="false" >
+  <broker xmlns="http://activemq.apache.org/schema/core" start="false" persistent="false">
     <plugins>
-      <runtimeConfigurationPlugin checkPeriod="1000" />
+      <runtimeConfigurationPlugin checkPeriod="1000"/>
     </plugins>
-
-    <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="one"/>
-      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="two"/>
-    </networkConnectors>
+    <destinationInterceptors>
+      <virtualDestinationInterceptor>
+        <virtualDestinations>
+          <virtualTopic name="B.>" selectorAware="false"/>
+        </virtualDestinations>
+      </virtualDestinationInterceptor>
+    </destinationInterceptors>
   </broker>
 </beans>

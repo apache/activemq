@@ -23,12 +23,14 @@
 
   <broker xmlns="http://activemq.apache.org/schema/core" start="false" persistent="false" >
     <plugins>
-      <runtimeConfigurationPlugin checkPeriod="1000" />
+      <runtimeConfigurationPlugin checkPeriod="1000"/>
     </plugins>
-
-    <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="one"/>
-      <networkConnector uri="static:(tcp://localhost:5555)" networkTTL="1" name="two"/>
-    </networkConnectors>
+    <destinationInterceptors>
+      <virtualDestinationInterceptor>
+        <virtualDestinations>
+          <virtualTopic name="A.>" selectorAware="false"/>
+        </virtualDestinations>
+      </virtualDestinationInterceptor>
+    </destinationInterceptors>
   </broker>
 </beans>

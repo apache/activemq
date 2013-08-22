@@ -24,6 +24,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.spring.Utils;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,12 +34,14 @@ import org.springframework.core.io.Resource;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class NetworkConnectorTest {
 
     public static final Logger LOG = LoggerFactory.getLogger(NetworkConnectorTest.class);
     public static final int SLEEP = 4; // seconds
+    public static final String EMPTY_UPDATABLE_CONFIG = "emptyUpdatableConfig1000" ;
     String configurationSeed = "networkConnectorTest";
     BrokerService brokerService;
 
@@ -55,9 +58,9 @@ public class NetworkConnectorTest {
     }
 
     @Test
-    public void testNewConnector() throws Exception {
+    public void testNew() throws Exception {
         final String brokerConfig = configurationSeed + "-no-nc-broker";
-        applyNewConfig(brokerConfig, configurationSeed);
+        applyNewConfig(brokerConfig, EMPTY_UPDATABLE_CONFIG);
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
         assertEquals("no network connectors", 0, brokerService.getNetworkConnectors().size());
@@ -70,12 +73,12 @@ public class NetworkConnectorTest {
         NetworkConnector networkConnector = brokerService.getNetworkConnectors().get(0);
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc");
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
-        assertEquals("same instance", networkConnector, brokerService.getNetworkConnectors().get(0));
+        assertSame("same instance", networkConnector, brokerService.getNetworkConnectors().get(0));
     }
 
 
     @Test
-    public void testModConnector() throws Exception {
+    public void testMod() throws Exception {
 
         final String brokerConfig = configurationSeed + "-one-nc-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc");
@@ -97,11 +100,11 @@ public class NetworkConnectorTest {
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", SLEEP);
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
-        assertEquals("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
+        assertSame("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
     }
 
     @Test
-    public void testRemoveConnector() throws Exception {
+    public void testRemove() throws Exception {
 
         final String brokerConfig = configurationSeed + "-two-nc-broker";
         applyNewConfig(brokerConfig, configurationSeed + "-two-nc");
@@ -111,7 +114,12 @@ public class NetworkConnectorTest {
 
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
 
-        assertEquals("one network connectors", 1, brokerService.getNetworkConnectors().size());
+        assertTrue("expected mod on time", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == brokerService.getNetworkConnectors().size();
+            }
+        }));
 
         NetworkConnector remainingNetworkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("name match", "one", remainingNetworkConnector.getName());

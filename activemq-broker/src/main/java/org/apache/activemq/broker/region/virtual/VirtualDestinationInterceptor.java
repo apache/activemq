@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.virtual;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -96,4 +97,8 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         };
     }
 
+    @Override
+    public String toString() {
+        return "VirtualDestinationInterceptor" + Arrays.asList(virtualDestinations);
+    }
 }
