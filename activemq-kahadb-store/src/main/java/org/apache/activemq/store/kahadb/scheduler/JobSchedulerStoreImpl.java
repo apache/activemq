@@ -65,7 +65,6 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     private boolean enableIndexWriteAsync = false;
-    // private int indexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
     MetaData metaData = new MetaData(this);
     final MetaDataMarshaller metaDataMarshaller = new MetaDataMarshaller(this);
     Map<String, JobSchedulerImpl> schedulers = new HashMap<String, JobSchedulerImpl>();
