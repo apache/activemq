@@ -16,49 +16,21 @@
  */
 package org.apache.activemq;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.concurrent.TimeUnit;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.Wait;
-import org.junit.After;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-public class NetworkConnectorTest {
-
-    public static final Logger LOG = LoggerFactory.getLogger(NetworkConnectorTest.class);
-    public static final int SLEEP = 4; // seconds
-    public static final String EMPTY_UPDATABLE_CONFIG = "emptyUpdatableConfig1000" ;
+public class NetworkConnectorTest extends RuntimeConfigTestSupport {
     String configurationSeed = "networkConnectorTest";
-    BrokerService brokerService;
-
-    public void startBroker(String configFileName) throws Exception {
-        brokerService = new BrokerService();
-        brokerService = BrokerFactory.createBroker("xbean:org/apache/activemq/" + configFileName + ".xml");
-        brokerService.start();
-        brokerService.waitUntilStarted();
-    }
-
-    @After
-    public void stopBroker() throws Exception {
-        brokerService.stop();
-    }
 
     @Test
     public void testNew() throws Exception {
+
         final String brokerConfig = configurationSeed + "-no-nc-broker";
         applyNewConfig(brokerConfig, EMPTY_UPDATABLE_CONFIG);
         startBroker(brokerConfig);
@@ -67,7 +39,12 @@ public class NetworkConnectorTest {
 
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
 
-        assertEquals("new network connectors", 1, brokerService.getNetworkConnectors().size());
+        assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == brokerService.getNetworkConnectors().size();
+            }
+        }));
 
         // apply again - ensure no change
         NetworkConnector networkConnector = brokerService.getNetworkConnectors().get(0);
@@ -123,23 +100,5 @@ public class NetworkConnectorTest {
 
         NetworkConnector remainingNetworkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("name match", "one", remainingNetworkConnector.getName());
-    }
-
-    private void applyNewConfig(String configName, String newConfigName) throws Exception {
-        applyNewConfig(configName, newConfigName, 0l);
-    }
-
-    private void applyNewConfig(String configName, String newConfigName, long sleep) throws Exception {
-        Resource resource = Utils.resourceFromString("org/apache/activemq");
-        FileOutputStream current = new FileOutputStream(new File(resource.getFile(), configName + ".xml"));
-        FileInputStream modifications = new FileInputStream(new File(resource.getFile(), newConfigName + ".xml"));
-        modifications.getChannel().transferTo(0, Long.MAX_VALUE, current.getChannel());
-        current.flush();
-        LOG.info("Updated: " + current.getChannel());
-
-        if (sleep > 0) {
-            // wait for mods to kick in
-            TimeUnit.SECONDS.sleep(sleep);
-        }
     }
 }

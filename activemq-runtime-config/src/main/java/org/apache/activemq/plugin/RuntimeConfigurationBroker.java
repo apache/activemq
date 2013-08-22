@@ -17,6 +17,7 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -26,6 +27,9 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import javax.management.JMException;
+import javax.management.ObjectName;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -33,14 +37,20 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import javax.xml.validation.ValidatorHandler;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
 import org.apache.activemq.schema.core.Broker;
 import org.apache.activemq.schema.core.CompositeQueue;
 import org.apache.activemq.schema.core.CompositeTopic;
@@ -59,6 +69,7 @@ import org.xml.sax.SAXException;
 public class RuntimeConfigurationBroker extends BrokerFilter {
 
     public static final Logger LOG = LoggerFactory.getLogger(RuntimeConfigurationBroker.class);
+    public static final String objectNamePropsAppendage = ",service=RuntimeConfiguration,name=Plugin";
     private long checkPeriod;
     private long lastModified = -1;
     private Resource configToMonitor;
@@ -66,6 +77,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     private Runnable monitorTask;
     private ConcurrentLinkedQueue<Runnable> destinationInterceptorUpdateWork = new ConcurrentLinkedQueue<Runnable>();
     private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
+    private ObjectName objectName;
+    private String infoString;
 
     public RuntimeConfigurationBroker(org.apache.activemq.broker.Broker next) {
         super(next);
@@ -82,6 +95,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
         currentConfiguration = loadConfiguration(configToMonitor);
         monitorModification(configToMonitor);
+        registerMbean();
     }
 
     @Override
@@ -93,7 +107,29 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 LOG.warn("Failed to cancel config monitor task", letsNotStopStop);
             }
         }
+        unregisterMbean();
         super.stop();
+    }
+
+    private void registerMbean() {
+        if (getBrokerService().isUseJmx()) {
+            ManagementContext managementContext = getBrokerService().getManagementContext();
+            try {
+                objectName = new ObjectName(getBrokerService().getBrokerObjectName().toString() + objectNamePropsAppendage);
+                managementContext.registerMBean(new RuntimeConfigurationView(this), objectName);
+            } catch (Exception ignored) {
+                LOG.debug("failed to register RuntimeConfigurationMBean", ignored);
+            }
+        }
+    }
+
+    private void unregisterMbean() {
+        if  (objectName != null) {
+            try {
+                getBrokerService().getManagementContext().unregisterMBean(objectName);
+            } catch (JMException ignored) {
+            }
+        }
     }
 
     // modification to virtual destinations interceptor needs exclusive access to destination add
@@ -121,6 +157,15 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
+    public String updateNow() {
+        LOG.info("Manual configuration update triggered");
+        infoString = "";
+        applyModifications(configToMonitor);
+        String result = infoString;
+        infoString = null;
+        return result;
+    }
+
     private void monitorModification(final Resource configToMonitor) {
         monitorTask = new Runnable() {
             @Override
@@ -134,22 +179,40 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 }
             }
         };
-        if (lastModified > 0) {
+        if (lastModified > 0 && checkPeriod > 0) {
             this.getBrokerService().getScheduler().executePeriodically(monitorTask, checkPeriod);
-            LOG.info("Monitoring for updates (every " + checkPeriod + "millis) : " + configToMonitor);
+            info("Monitoring for updates (every " + checkPeriod + "millis) : " + configToMonitor);
         }
     }
 
+    private void info(String s) {
+        LOG.info(s);
+        if (infoString != null) {
+            infoString += s;
+            infoString += ";";
+        }
+    }
+
+    private void info(String s, Throwable t) {
+        LOG.info(s, t);
+        if (infoString != null) {
+            infoString += s;
+            infoString += ", " + t;
+            infoString += ";";
+        }
+    }
+
+
     private void applyModifications(Resource configToMonitor) {
         Broker changed = loadConfiguration(configToMonitor);
-        if (!currentConfiguration.equals(changed)) {
-            LOG.info("configuration change in " + configToMonitor + " at: " + new Date(lastModified));
-            LOG.info("current:" + currentConfiguration);
-            LOG.info("new    :" + changed);
+        if (changed != null && !currentConfiguration.equals(changed)) {
+            LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
+            LOG.debug("current:" + currentConfiguration);
+            LOG.debug("new    :" + changed);
             processSelectiveChanges(currentConfiguration, changed);
             currentConfiguration = changed;
         } else {
-            LOG.info("file modification but no material change to configuration in " + configToMonitor + " at: " + new Date(lastModified));
+            info("No material change to configuration in " + configToMonitor + " at: " + new Date(lastModified));
         }
     }
 
@@ -192,7 +255,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         try {
             return (List<Object>) o.getClass().getMethod("getContents", new Class[]{}).invoke(o, new Object[]{});
         } catch (Exception e) {
-            LOG.info("Failed to access getContents for " + o + ", runtime modifications not supported", e);
+            info("Failed to access getContents for " + o + ", runtime modifications not supported", e);
         }
         return new ArrayList<Object>();
     }
@@ -203,7 +266,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             Object existing = current.get(currentIndex);
             Object candidate = modification.get(modIndex);
             if (! existing.equals(candidate)) {
-                LOG.info("modification to:" + existing + " , with: " + candidate);
+                info("modification to:" + existing + " , with: " + candidate);
                 remove(existing);
                 addNew(candidate);
             }
@@ -227,9 +290,9 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     if (getBrokerService().removeNetworkConnector(existingCandidate)) {
                         try {
                             existingCandidate.stop();
-                            LOG.info("stopped and removed networkConnector: " + existingCandidate);
+                            info("stopped and removed networkConnector: " + existingCandidate);
                         } catch (Exception e) {
-                            LOG.error("Failed to stop removed network connector: " + existingCandidate);
+                            info("Failed to stop removed network connector: " + existingCandidate);
                         }
                     }
                 }
@@ -247,11 +310,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     DestinationInterceptor[] destinationInterceptors = interceptorsList.toArray(new DestinationInterceptor[]{});
                     getBrokerService().setDestinationInterceptors(destinationInterceptors);
                     ((CompositeDestinationInterceptor) ((RegionBroker) getBrokerService().getRegionBroker()).getDestinationInterceptor()).setInterceptors(destinationInterceptors);
-                    LOG.trace("removed VirtualDestinationInterceptor from: " + interceptorsList);
+                    info("removed VirtualDestinationInterceptor from: " + interceptorsList);
                 }
             });
         } else {
-            LOG.info("No runtime support for removal of: " + o);
+            info("No runtime support for removal of: " + o);
         }
     }
 
@@ -284,9 +347,9 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     LOG.trace("applying networkConnector props: " + properties);
                     IntrospectionSupport.setProperties(nc, properties);
                     nc.start();
-                    LOG.info("started new network connector: " + nc);
+                    info("started new network connector: " + nc);
                 } catch (Exception e) {
-                    LOG.error("Failed to add new networkConnector " + networkConnector, e);
+                    info("Failed to add new networkConnector " + networkConnector, e);
                 }
             }
         } else if (o instanceof VirtualDestinationInterceptor) {
@@ -303,7 +366,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                                     (org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor) destinationInterceptor;
 
                             virtualDestinationInterceptor.setVirtualDestinations(fromDto(dto));
-                            LOG.trace("applied updates to: " + virtualDestinationInterceptor);
+                            info("applied updates to: " + virtualDestinationInterceptor);
                             updatedExistingInterceptor = true;
                         }
                     }
@@ -321,12 +384,12 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                         DestinationInterceptor[] destinationInterceptors = interceptorsList.toArray(new DestinationInterceptor[]{});
                         getBrokerService().setDestinationInterceptors(destinationInterceptors);
                         ((CompositeDestinationInterceptor) ((RegionBroker) getBrokerService().getRegionBroker()).getDestinationInterceptor()).setInterceptors(destinationInterceptors);
-                        LOG.trace("applied new: " + interceptorsList);
+                        info("applied new: " + interceptorsList);
                     }
                 }
             });
         } else {
-            LOG.info("No runtime support for modifications to " + o);
+            info("No runtime support for modifications to " + o);
         }
     }
 
@@ -381,6 +444,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             try {
                 JAXBContext context = JAXBContext.newInstance(Broker.class);
                 Unmarshaller unMarshaller = context.createUnmarshaller();
+                unMarshaller.setSchema(getSchema());
 
                 // skip beans and pull out the broker node to validate
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -397,19 +461,41 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 lastModified = configToMonitor.lastModified();
 
             } catch (IOException e) {
-                LOG.error("Failed to access: " + configToMonitor, e);
+                info("Failed to access: " + configToMonitor, e);
             } catch (JAXBException e) {
-                LOG.error("Failed to parse: " + configToMonitor, e);
+                info("Failed to parse: " + configToMonitor, e);
             } catch (ParserConfigurationException e) {
-                LOG.error("Failed to document parse: " + configToMonitor, e);
+                info("Failed to document parse: " + configToMonitor, e);
             } catch (SAXException e) {
-                LOG.error("Failed to find broker element in: " + configToMonitor, e);
+                info("Failed to find broker element in: " + configToMonitor, e);
             }
         }
         return jaxbConfig;
     }
 
+    private Schema schema;
+    private Schema getSchema() throws SAXException {
+        if (schema == null) {
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(
+                                    XMLConstants.W3C_XML_SCHEMA_NS_URI);
+                schema = schemaFactory.newSchema(getClass().getResource("/activemq.xsd"));
+        }
+        return schema;
+    }
+
     public void setCheckPeriod(long checkPeriod) {
         this.checkPeriod = checkPeriod;
+    }
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public Resource getConfigToMonitor() {
+        return configToMonitor;
+    }
+
+    public long getCheckPeriod() {
+        return checkPeriod;
     }
 }
