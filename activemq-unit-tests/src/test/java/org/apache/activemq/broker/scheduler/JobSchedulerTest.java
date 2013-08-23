@@ -247,6 +247,7 @@ public class JobSchedulerTest {
         store.setDirectory(directory);
         store.start();
         scheduler = store.getJobScheduler("test");
+        scheduler.startDispatching();
     }
 
     @After

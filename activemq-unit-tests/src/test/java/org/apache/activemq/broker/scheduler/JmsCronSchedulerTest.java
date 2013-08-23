@@ -53,6 +53,7 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
                 count.incrementAndGet();
@@ -118,7 +119,7 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
             IOHelper.deleteChildren(schedulerDirectory);
         }
         BrokerService answer = new BrokerService();
-        answer.setPersistent(isPersistent());
+        answer.setPersistent(true);
         answer.getManagementContext().setCreateConnector(false);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");

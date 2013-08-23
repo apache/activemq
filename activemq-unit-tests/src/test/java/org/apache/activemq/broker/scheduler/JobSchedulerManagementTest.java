@@ -58,6 +58,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
@@ -96,6 +97,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
@@ -105,9 +107,10 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         MessageConsumer browser = session.createConsumer(browseDest);
         final CountDownLatch browsedLatch = new CountDownLatch(COUNT);
         browser.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
-            	browsedLatch.countDown();
-            	LOG.debug("Scheduled Message Browser got Message: " + message);
+                browsedLatch.countDown();
+                LOG.debug("Scheduled Message Browser got Message: " + message);
             }
         });
 
@@ -120,7 +123,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         MessageProducer producer = session.createProducer(management);
         Message request = session.createMessage();
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-        					      ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
+                                  ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_START_TIME, Long.toString(start));
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_END_TIME, Long.toString(end));
         producer.send(request);
@@ -158,6 +161,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
@@ -167,9 +171,10 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         MessageConsumer browser = session.createConsumer(browseDest);
         final CountDownLatch browsedLatch = new CountDownLatch(COUNT);
         browser.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
-            	browsedLatch.countDown();
-            	LOG.debug("Scheduled Message Browser got Message: " + message);
+                browsedLatch.countDown();
+                LOG.debug("Scheduled Message Browser got Message: " + message);
             }
         });
 
@@ -215,6 +220,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT + 2);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
@@ -224,9 +230,10 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         MessageConsumer browser = session.createConsumer(browseDest);
         final CountDownLatch browsedLatch = new CountDownLatch(COUNT);
         browser.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
-            	browsedLatch.countDown();
-            	LOG.debug("Scheduled Message Browser got Message: " + message);
+                browsedLatch.countDown();
+                LOG.debug("Scheduled Message Browser got Message: " + message);
             }
         });
 
@@ -276,6 +283,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
@@ -290,24 +298,24 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         // Send the browse request
         Message request = session.createMessage();
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-        						  ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE);
+                                  ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE);
         request.setJMSReplyTo(browseDest);
         producer.send(request);
 
         // Browse all the Scheduled Messages.
         for (int i = 0; i < COUNT; ++i) {
-        	Message message = browser.receive(2000);
-        	assertNotNull(message);
+            Message message = browser.receive(2000);
+            assertNotNull(message);
 
-        	try{
-        		Message remove = session.createMessage();
-        		remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-        				ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE);
-        		remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID,
-        				message.getStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID));
-        		producer.send(remove);
-        	} catch(Exception e) {
-        	}
+            try{
+                Message remove = session.createMessage();
+                remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
+                        ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE);
+                remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID,
+                        message.getStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID));
+                producer.send(remove);
+            } catch(Exception e) {
+            }
         }
 
         // now check that they all got removed and are not delivered.
@@ -325,17 +333,17 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         MessageProducer producer = session.createProducer(management);
 
-    	try{
+        try{
 
-	        // Send the remove request
-			Message remove = session.createMessage();
-			remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-					ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
-			remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID, new IdGenerator().generateId());
-			producer.send(remove);
-    	} catch(Exception e) {
-    		fail("Caught unexpected exception during remove of unscheduled message.");
-    	}
+            // Send the remove request
+            Message remove = session.createMessage();
+            remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
+                    ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
+            remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID, new IdGenerator().generateId());
+            producer.send(remove);
+        } catch(Exception e) {
+            fail("Caught unexpected exception during remove of unscheduled message.");
+        }
     }
 
     public void testBrowseWithSelector() throws Exception {
@@ -377,7 +385,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
 
     protected void scheduleMessage(Connection connection, long delay) throws Exception {
-    	scheduleMessage(connection, delay, 1);
+        scheduleMessage(connection, delay, 1);
     }
 
     protected void scheduleMessage(Connection connection, long delay, int count) throws Exception {
@@ -387,7 +395,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
 
         for(int i = 0; i < count; ++i ) {
-        	producer.send(message);
+            producer.send(message);
         }
 
         producer.close();
@@ -411,7 +419,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
             IOHelper.deleteChildren(schedulerDirectory);
         }
         BrokerService answer = new BrokerService();
-        answer.setPersistent(isPersistent());
+        answer.setPersistent(true);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");
         answer.setSchedulerDirectoryFile(schedulerDirectory);

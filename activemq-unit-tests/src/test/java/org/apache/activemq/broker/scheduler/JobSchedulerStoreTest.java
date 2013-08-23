@@ -16,48 +16,50 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import junit.framework.TestCase;
-import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.ByteSequence;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOHelper;
+
 public class JobSchedulerStoreTest extends TestCase {
 
-	public void testRestart() throws Exception {
-		JobSchedulerStore store = new JobSchedulerStoreImpl();
-		File directory = new File("target/test/ScheduledDB");
-		  IOHelper.mkdirs(directory);
-	      IOHelper.deleteChildren(directory);
-	      store.setDirectory(directory);
-		final int NUMBER = 1000;
-		store.start();
-		List<ByteSequence>list = new ArrayList<ByteSequence>();
-		for (int i = 0; i < NUMBER;i++ ) {
+    public void testRestart() throws Exception {
+        JobSchedulerStore store = new JobSchedulerStoreImpl();
+        File directory = new File("target/test/ScheduledDB");
+          IOHelper.mkdirs(directory);
+          IOHelper.deleteChildren(directory);
+          store.setDirectory(directory);
+        final int NUMBER = 1000;
+        store.start();
+        List<ByteSequence>list = new ArrayList<ByteSequence>();
+        for (int i = 0; i < NUMBER;i++ ) {
             ByteSequence buff = new ByteSequence(new String("testjob"+i).getBytes());
-            list.add(buff);     
+            list.add(buff);
         }
-		JobScheduler js = store.getJobScheduler("test");
-		int count = 0;
-		long startTime = 10 * 60 * 1000; long period = startTime;
-		for (ByteSequence job:list) {
-		    js.schedule("id:"+(count++), job, "", startTime, period, -1);
-		}
-		List<Job>test = js.getAllJobs();
-		assertEquals(list.size(),test.size());
-		store.stop();
-		
-		store.start();
-		js = store.getJobScheduler("test");
-		test = js.getAllJobs();
-		assertEquals(list.size(),test.size());
-		for (int i = 0; i < list.size();i++) {
-		    String orig = new String(list.get(i).getData());
-		    String payload = new String(test.get(i).getPayload());
-		    assertEquals(orig,payload);
-		}
-	}
+        JobScheduler js = store.getJobScheduler("test");
+        js.startDispatching();
+        int count = 0;
+        long startTime = 10 * 60 * 1000; long period = startTime;
+        for (ByteSequence job:list) {
+            js.schedule("id:"+(count++), job, "", startTime, period, -1);
+        }
+        List<Job>test = js.getAllJobs();
+        assertEquals(list.size(),test.size());
+        store.stop();
+
+        store.start();
+        js = store.getJobScheduler("test");
+        test = js.getAllJobs();
+        assertEquals(list.size(),test.size());
+        for (int i = 0; i < list.size();i++) {
+            String orig = new String(list.get(i).getData());
+            String payload = new String(test.get(i).getPayload());
+            assertEquals(orig,payload);
+        }
+    }
 }

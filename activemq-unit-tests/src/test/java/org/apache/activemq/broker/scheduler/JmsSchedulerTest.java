@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -51,6 +52,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
                 count.incrementAndGet();
@@ -88,6 +90,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
@@ -119,6 +122,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 try {
                     session.commit();
@@ -158,6 +162,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
         final CountDownLatch latch = new CountDownLatch(NUMBER);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
                 count.incrementAndGet();
@@ -216,13 +221,13 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         producer.send(message);
         producer.close();
     }
-    
+
     public void testJobSchedulerStoreUsage() throws Exception {
-        
+
         // Shrink the store limit down so we get the producer to block
         broker.getSystemUsage().getJobSchedulerUsage().setLimit(10 * 1024);
-        
-        
+
+
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createConnection();
         conn.start();
@@ -234,24 +239,25 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
                 Message message = super.createMessage(i);
                 message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, time);
                 return message;
-            }  
+            }
         };
         producer.setMessageCount(100);
         producer.start();
-        
+
         MessageConsumer consumer = sess.createConsumer(destination);
         final CountDownLatch latch = new CountDownLatch(100);
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 latch.countDown();
             }
         });
 
-        // wait for the producer to block, which should happen immediately, and also wait long 
+        // wait for the producer to block, which should happen immediately, and also wait long
         // enough for the delay to elapse.  We should see no deliveries as the send should block
         // on the first message.
         Thread.sleep(10000l);
-        
+
         assertEquals(100, latch.getCount());
 
         // Increase the store limit so the producer unblocks.  Everything should enqueue at this point.
@@ -262,16 +268,17 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
 
         // Make sure we sent all the messages we expected to send
         Wait.waitFor(new Wait.Condition() {
+            @Override
             public boolean isSatisified() throws Exception {
                 return producer.getSentCount() == producer.getMessageCount();
             }
         }, 20000l);
-        
+
         assertEquals("Producer didn't send all messages", producer.getMessageCount(), producer.getSentCount());
-        
+
         // Make sure we got all the messages we expected to get
         latch.await(20000l, TimeUnit.MILLISECONDS);
-        
+
         assertEquals("Consumer did not receive all messages.", 0, latch.getCount());
     }
 
@@ -293,7 +300,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
             IOHelper.deleteChildren(schedulerDirectory);
         }
         BrokerService answer = new BrokerService();
-        answer.setPersistent(isPersistent());
+        answer.setPersistent(true);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");
         answer.setSchedulerDirectoryFile(schedulerDirectory);
