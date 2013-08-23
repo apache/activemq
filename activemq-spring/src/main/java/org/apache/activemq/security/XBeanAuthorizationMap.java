@@ -16,11 +16,12 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.filter.DestinationMapEntry;
-import org.springframework.beans.factory.InitializingBean;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
+
+import org.apache.activemq.filter.DestinationMapEntry;
+import org.springframework.beans.factory.InitializingBean;
 
 
 /**
@@ -31,10 +32,24 @@ public class XBeanAuthorizationMap extends DefaultAuthorizationMap implements In
     protected List<DestinationMapEntry> authorizationEntries;
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
+    @Override
     public void afterPropertiesSet() throws Exception {
         for (DestinationMapEntry entry : authorizationEntries) {
             if (((XBeanAuthorizationEntry)entry).getGroupClass() == null) {
@@ -50,6 +65,7 @@ public class XBeanAuthorizationMap extends DefaultAuthorizationMap implements In
      *
      * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthorizationEntry"
      */
+    @Override
     @SuppressWarnings("rawtypes")
     public void setAuthorizationEntries(List<DestinationMapEntry> entries) {
         this.authorizationEntries = entries;

@@ -96,11 +96,24 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (pooledConnectionFactory == null && transactionManager != null && resourceName != null) {
             try {
@@ -147,11 +160,24 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to destroy, done to prevent backwards incompatible signature change.
+     */
+    @PreDestroy
+    private void preDestroy() {
+        try {
+            destroy();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.DestroyMethod
      */
-    @PreDestroy
     public void destroy() throws Exception {
         if (pooledConnectionFactory != null) {
             pooledConnectionFactory.stop();

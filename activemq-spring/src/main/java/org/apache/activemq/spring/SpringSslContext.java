@@ -30,21 +30,22 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+
 import org.apache.activemq.broker.SslContext;
 
 /**
  * Extends the SslContext so that it's easier to configure from spring.
- * 
+ *
  * @org.apache.xbean.XBean element="sslContext"
- * 
- * 
+ *
+ *
  */
-public class SpringSslContext extends SslContext {    
-    
+public class SpringSslContext extends SslContext {
+
     private String keyStoreType="jks";
     private String trustStoreType="jks";
 
-    private String secureRandomAlgorithm="SHA1PRNG";    
+    private String secureRandomAlgorithm="SHA1PRNG";
     private String keyStoreAlgorithm=KeyManagerFactory.getDefaultAlgorithm();
     private String trustStoreAlgorithm=TrustManagerFactory.getDefaultAlgorithm();
 
@@ -56,11 +57,24 @@ public class SpringSslContext extends SslContext {
     private String trustStorePassword;
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         keyManagers.addAll(createKeyManagers());
         trustManagers.addAll(createTrustManagers());
@@ -74,22 +88,22 @@ public class SpringSslContext extends SslContext {
     }
 
     private Collection<TrustManager> createTrustManagers() throws Exception {
-        KeyStore ks = createTrustManagerKeyStore(); 
+        KeyStore ks = createTrustManagerKeyStore();
         if( ks ==null ) {
             return new ArrayList<TrustManager>(0);
         }
-        
+
         TrustManagerFactory tmf  = TrustManagerFactory.getInstance(trustStoreAlgorithm);
         tmf.init(ks);
         return Arrays.asList(tmf.getTrustManagers());
     }
 
     private Collection<KeyManager> createKeyManagers() throws Exception {
-        KeyStore ks = createKeyManagerKeyStore(); 
+        KeyStore ks = createKeyManagerKeyStore();
         if( ks ==null ) {
             return new ArrayList<KeyManager>(0);
         }
-        
+
         KeyManagerFactory tmf  = KeyManagerFactory.getInstance(keyStoreAlgorithm);
         tmf.init(ks, keyStoreKeyPassword == null ? (keyStorePassword==null? null : keyStorePassword.toCharArray()) : keyStoreKeyPassword.toCharArray());
         return Arrays.asList(tmf.getKeyManagers());
@@ -99,7 +113,7 @@ public class SpringSslContext extends SslContext {
         if( trustStore ==null ) {
             return null;
         }
-        
+
         KeyStore ks = KeyStore.getInstance(trustStoreType);
         InputStream is=Utils.resourceFromString(trustStore).getInputStream();
         try {
@@ -109,12 +123,12 @@ public class SpringSslContext extends SslContext {
         }
         return ks;
     }
-    
+
     private KeyStore createKeyManagerKeyStore() throws Exception {
         if( keyStore ==null ) {
             return null;
         }
-        
+
         KeyStore ks = KeyStore.getInstance(keyStoreType);
         InputStream is=Utils.resourceFromString(keyStore).getInputStream();
         try {

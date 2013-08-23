@@ -28,21 +28,7 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.BrokerInfo;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.Message;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessagePull;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.*;
 import org.apache.activemq.usage.Usage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +38,6 @@ import org.slf4j.LoggerFactory;
  *
  * @org.apache.xbean.XBean
  */
-
 public class LoggingBrokerPlugin extends BrokerPluginSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(LoggingBrokerPlugin.class);
@@ -67,10 +52,23 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private boolean logInternalEvents = false;
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         LOG.info("Created LoggingBrokerPlugin: " + this.toString());
     }

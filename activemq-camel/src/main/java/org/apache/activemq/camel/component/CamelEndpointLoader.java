@@ -20,11 +20,7 @@ package org.apache.activemq.camel.component;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 
-import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.advisory.DestinationEvent;
 import org.apache.activemq.advisory.DestinationListener;
 import org.apache.activemq.advisory.DestinationSource;
@@ -36,13 +32,11 @@ import org.apache.camel.CamelContextAware;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.JmsQueueEndpoint;
-import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A helper bean which populates a {@link CamelContext} with ActiveMQ Queue endpoints
- *
  *
  * @org.apache.xbean.XBean
  */
@@ -61,14 +55,30 @@ public class CamelEndpointLoader implements CamelContextAware {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change
+     *
+     * fix: AMQ-4676
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (source != null) {
             source.setDestinationListener(new DestinationListener() {
+                @Override
                 public void onDestinationEvent(DestinationEvent event) {
                     try {
                         ActiveMQDestination destination = event.getDestination();
@@ -107,10 +117,12 @@ public class CamelEndpointLoader implements CamelContextAware {
 
     // Properties
     //-------------------------------------------------------------------------
+    @Override
     public CamelContext getCamelContext() {
         return camelContext;
     }
 
+    @Override
     public void setCamelContext(CamelContext camelContext) {
         this.camelContext = camelContext;
     }

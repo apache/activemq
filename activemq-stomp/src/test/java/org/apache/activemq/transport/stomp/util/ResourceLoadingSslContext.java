@@ -59,11 +59,24 @@ public class ResourceLoadingSslContext extends SslContext {
     private String trustStorePassword;
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         keyManagers.addAll(createKeyManagers());
         trustManagers.addAll(createTrustManagers());

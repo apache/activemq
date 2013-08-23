@@ -50,6 +50,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
@@ -99,10 +100,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
- * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
+ * Manages the life-cycle of an ActiveMQ Broker. A BrokerService consists of a
  * number of transport connectors, network connectors and a bunch of properties
  * which can be used to configure the broker as its lazily created.
- *
  *
  * @org.apache.xbean.XBean
  */
@@ -114,7 +114,10 @@ public class BrokerService implements Service {
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
+
+    @SuppressWarnings("unused")
     private static final long serialVersionUID = 7353129142305630237L;
+
     private boolean useJmx = true;
     private boolean enableStatistics = true;
     private boolean persistent = true;
@@ -498,11 +501,24 @@ public class BrokerService implements Service {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to autoStart, done to prevent backwards incompatible signature change
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            autoStart();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org. apache.xbean.InitMethod
      */
-    @PostConstruct
     public void autoStart() throws Exception {
         if(shouldAutostart()) {
             start();
@@ -665,12 +681,25 @@ public class BrokerService implements Service {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to stop, done to prevent backwards incompatible signature change
+     */
+    @PreDestroy
+    private void preDestroy () {
+        try {
+            stop();
+        } catch (Exception ex) {
+            throw new RuntimeException();
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache .xbean.DestroyMethod
      */
     @Override
-    @PreDestroy
     public void stop() throws Exception {
         if (!stopping.compareAndSet(false, true)) {
             LOG.trace("Broker already stopping/stopped");
