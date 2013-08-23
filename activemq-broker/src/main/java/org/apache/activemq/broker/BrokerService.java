@@ -1814,7 +1814,31 @@ public class BrokerService implements Service {
     }
 
     public synchronized JobSchedulerStore getJobSchedulerStore() {
-        if (jobSchedulerStore == null && isSchedulerSupport()) {
+
+        // If support is off don't allow any scheduler even is user configured their own.
+        if (!isSchedulerSupport()) {
+            return null;
+        }
+
+        // If the user configured their own we use it even if persistence is disabled since
+        // we don't know anything about their implementation.
+        if (jobSchedulerStore == null) {
+
+            if (!isPersistent()) {
+                return null;
+            }
+
+            try {
+                PersistenceAdapter pa = getPersistenceAdapter();
+                if (pa != null && pa instanceof JobSchedulerStore) {
+                    this.jobSchedulerStore = (JobSchedulerStore) pa;
+                    configureService(jobSchedulerStore);
+                    return this.jobSchedulerStore;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             try {
                 String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
                 jobSchedulerStore = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
@@ -1825,7 +1849,6 @@ public class BrokerService implements Service {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
         }
         return jobSchedulerStore;
     }
