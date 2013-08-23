@@ -232,6 +232,10 @@ public class DestinationMap {
         tempTopicRootNode = new DestinationMapNode(null);
     }
 
+    public boolean isEmpty(){
+        return queueRootNode.isEmpty() && topicRootNode.isEmpty() && tempQueueRootNode.isEmpty() && tempTopicRootNode.isEmpty();
+    }
+
     public static Set union(Set existing, Set candidates) {
         if ( candidates != null ) {
             if (existing != null) {

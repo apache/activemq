@@ -239,6 +239,10 @@ public class DestinationMapNode implements DestinationNode {
         return path;
     }
 
+    public boolean isEmpty(){
+        return childNodes.isEmpty();
+    }
+
     protected void pruneIfEmpty() {
         if (parent != null && childNodes.isEmpty() && values.isEmpty()) {
             parent.removeChild(this);
