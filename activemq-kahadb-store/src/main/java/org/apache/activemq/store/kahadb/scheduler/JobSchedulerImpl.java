@@ -51,7 +51,7 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     private String name;
     BTreeIndex<Long, List<JobLocation>> index;
     private Thread thread;
-    private final Object listenerLock = new Object();
+    private final AtomicBoolean started = new AtomicBoolean(false);
     private final List<JobListener> jobListeners = new CopyOnWriteArrayList<JobListener>();
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private final ScheduleTime scheduleTime = new ScheduleTime();
@@ -82,9 +82,6 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     @Override
     public void addListener(JobListener l) {
         this.jobListeners.add(l);
-        synchronized (this.listenerLock) {
-            this.listenerLock.notify();
-        }
     }
 
     /*
@@ -480,19 +477,6 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
 
     protected void mainLoop() {
         while (this.running.get()) {
-
-            // Can't start pumping messages until a listener is added otherwise we'd discard messages
-            // without any warning.
-            synchronized (listenerLock) {
-                while (this.running.get() && this.jobListeners.isEmpty()) {
-                    try {
-                        LOG.debug("Scheduled Message dispatch paused while awaiting a Job Listener");
-                        this.listenerLock.wait();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            }
-
             this.scheduleTime.clearNewJob();
             try {
                 // peek the next job
@@ -584,24 +568,39 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
     }
 
     @Override
+    public void startDispatching() throws Exception {
+        if (!this.running.get()) {
+            return;
+        }
+
+        if (started.compareAndSet(false, true)) {
+            this.thread = new Thread(this, "JobScheduler:" + this.name);
+            this.thread.setDaemon(true);
+            this.thread.start();
+        }
+    }
+
+    @Override
+    public void stopDispatching() throws Exception {
+        if (started.compareAndSet(true, false)) {
+            this.scheduleTime.wakeup();
+            Thread t = this.thread;
+            this.thread = null;
+            if (t != null) {
+                t.join(1000);
+            }
+        }
+    }
+
+    @Override
     protected void doStart() throws Exception {
         this.running.set(true);
-        synchronized (this.listenerLock) {
-            this.listenerLock.notify();
-        }
-        this.thread = new Thread(this, "JobScheduler:" + this.name);
-        this.thread.setDaemon(true);
-        this.thread.start();
     }
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         this.running.set(false);
-        this.scheduleTime.wakeup();
-        Thread t = this.thread;
-        if (t != null) {
-            t.join(1000);
-        }
+        stopDispatching();
     }
 
     long calculateNextExecutionTime(final JobLocation job, long currentTime, int repeat) throws MessageFormatException {

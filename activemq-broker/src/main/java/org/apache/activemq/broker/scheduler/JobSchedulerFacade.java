@@ -18,118 +18,147 @@ package org.apache.activemq.broker.scheduler;
 
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.activemq.util.ByteSequence;
 
 public class JobSchedulerFacade implements JobScheduler {
 
     private final SchedulerBroker broker;
-    
-    JobSchedulerFacade(SchedulerBroker broker){
-        this.broker=broker;
+
+    JobSchedulerFacade(SchedulerBroker broker) {
+        this.broker = broker;
     }
+
+    @Override
     public void addListener(JobListener l) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.addListener(l);
         }
     }
 
+    @Override
     public List<Job> getAllJobs() throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             return js.getAllJobs();
         }
         return Collections.emptyList();
     }
 
+    @Override
     public List<Job> getAllJobs(long start, long finish) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
-            return js.getAllJobs(start,finish);
+        if (js != null) {
+            return js.getAllJobs(start, finish);
         }
         return Collections.emptyList();
     }
 
+    @Override
     public String getName() throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             return js.getName();
         }
         return "";
     }
 
+    @Override
     public List<Job> getNextScheduleJobs() throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             return js.getNextScheduleJobs();
         }
         return Collections.emptyList();
     }
 
+    @Override
     public long getNextScheduleTime() throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             return js.getNextScheduleTime();
         }
         return 0;
     }
 
+    @Override
     public void remove(long time) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.remove(time);
         }
     }
 
+    @Override
     public void remove(String jobId) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.remove(jobId);
         }
-
     }
 
+    @Override
     public void removeAllJobs() throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.removeAllJobs();
         }
     }
 
+    @Override
     public void removeAllJobs(long start, long finish) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
-            js.removeAllJobs(start,finish);
+        if (js != null) {
+            js.removeAllJobs(start, finish);
         }
-
     }
 
+    @Override
     public void removeListener(JobListener l) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.removeListener(l);
         }
-
     }
 
+    @Override
     public void schedule(String jobId, ByteSequence payload, long delay) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.schedule(jobId, payload, delay);
         }
     }
 
-    public void schedule(String jobId, ByteSequence payload,String cronEntry, long start, long period, int repeat) throws Exception {
+    @Override
+    public void schedule(String jobId, ByteSequence payload, String cronEntry, long start, long period, int repeat) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
-            js.schedule(jobId, payload, cronEntry,start,period,repeat);
+        if (js != null) {
+            js.schedule(jobId, payload, cronEntry, start, period, repeat);
         }
     }
+
+    @Override
     public void schedule(String jobId, ByteSequence payload, String cronEntry) throws Exception {
         JobScheduler js = this.broker.getInternalScheduler();
-        if (js !=null) {
+        if (js != null) {
             js.schedule(jobId, payload, cronEntry);
         }
-        
+    }
+
+    @Override
+    public void startDispatching() throws Exception {
+        JobScheduler js = this.broker.getInternalScheduler();
+        if (js != null) {
+            js.startDispatching();
+        }
+    }
+
+    @Override
+    public void stopDispatching() throws Exception {
+        JobScheduler js = this.broker.getInternalScheduler();
+        if (js != null) {
+            js.stopDispatching();
+        }
     }
 }

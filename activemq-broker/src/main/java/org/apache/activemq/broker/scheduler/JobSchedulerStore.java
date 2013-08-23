@@ -16,14 +16,16 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import org.apache.activemq.Service;
-
 import java.io.File;
 
+import org.apache.activemq.Service;
+
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ * A Job Scheduler Store interface use to manage delay processing of Messaging
+ * related jobs.
  */
 public interface JobSchedulerStore extends Service {
+
     File getDirectory();
 
     void setDirectory(File directory);

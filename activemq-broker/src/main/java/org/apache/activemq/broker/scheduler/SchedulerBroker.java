@@ -292,6 +292,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             if (this.scheduler == null) {
                 this.scheduler = store.getJobScheduler("JMS");
                 this.scheduler.addListener(this);
+                this.scheduler.startDispatching();
             }
             return this.scheduler;
         }

@@ -17,117 +17,161 @@
 package org.apache.activemq.broker.scheduler;
 
 import java.util.List;
+
 import org.apache.activemq.util.ByteSequence;
 
 public interface JobScheduler {
 
     /**
      * @return the name of the scheduler
-     * @throws Exception 
+     * @throws Exception
      */
-    public abstract String getName() throws Exception;
-/**
- * Add a Job listener
- * @param l
- * @throws Exception 
- */
-    public abstract void addListener(JobListener l) throws Exception;
-/**
- * remove a JobListener
- * @param l
- * @throws Exception 
- */
-    public abstract void removeListener(JobListener l) throws Exception;
+    String getName() throws Exception;
+
+    /**
+     * Starts dispatch of scheduled Jobs to registered listeners.
+     *
+     * Any listener added after the start dispatch method can miss jobs so its
+     * important to register critical listeners before the start of job dispatching.
+     *
+     * @throws Exception
+     */
+    void startDispatching() throws Exception;
+
+    /**
+     * Stops dispatching of scheduled Jobs to registered listeners.
+     *
+     * @throws Exception
+     */
+    void stopDispatching() throws Exception;
+
+    /**
+     * Add a Job listener
+     *
+     * @param l
+     * @throws Exception
+     */
+    void addListener(JobListener l) throws Exception;
+
+    /**
+     * remove a JobListener
+     *
+     * @param l
+     * @throws Exception
+     */
+    void removeListener(JobListener l) throws Exception;
 
     /**
      * Add a job to be scheduled
-     * @param jobId a unique identifier for the job
-     * @param payload the message to be sent when the job is scheduled
-     * @param delay the time in milliseconds before the job will be run
+     *
+     * @param jobId
+     *            a unique identifier for the job
+     * @param payload
+     *            the message to be sent when the job is scheduled
+     * @param delay
+     *            the time in milliseconds before the job will be run
      * @throws Exception
      */
-    public abstract void schedule(String jobId, ByteSequence payload,long delay) throws Exception;
+    void schedule(String jobId, ByteSequence payload, long delay) throws Exception;
 
     /**
      * Add a job to be scheduled
-     * @param jobId a unique identifier for the job
-     * @param payload the message to be sent when the job is scheduled
-     * @param cronEntry - cron entry
+     *
+     * @param jobId
+     *            a unique identifier for the job
+     * @param payload
+     *            the message to be sent when the job is scheduled
+     * @param cronEntry
+     *            - cron entry
      * @throws Exception
      */
-    public abstract void schedule(String jobId, ByteSequence payload,String cronEntry) throws Exception;
+    void schedule(String jobId, ByteSequence payload, String cronEntry) throws Exception;
 
-    
     /**
      * Add a job to be scheduled
-     * @param jobId a unique identifier for the job
-     * @param payload the message to be sent when the job is scheduled
-     * @param cronEntry - cron entry
-     * @param delay time in ms to wait before scheduling
-     * @param period the time in milliseconds between successive executions of the Job
-     * @param repeat the number of times to execute the job - less than 0 will be repeated forever
+     *
+     * @param jobId
+     *            a unique identifier for the job
+     * @param payload
+     *            the message to be sent when the job is scheduled
+     * @param cronEntry
+     *            - cron entry
+     * @param delay
+     *            time in ms to wait before scheduling
+     * @param period
+     *            the time in milliseconds between successive executions of the Job
+     * @param repeat
+     *            the number of times to execute the job - less than 0 will be repeated forever
      * @throws Exception
      */
-    public abstract void schedule(String jobId, ByteSequence payload,String cronEntry,long delay, long period, int repeat) throws Exception;
+    void schedule(String jobId, ByteSequence payload, String cronEntry, long delay, long period, int repeat) throws Exception;
 
     /**
      * remove all jobs scheduled to run at this time
+     *
      * @param time
-     * @throws Exception 
+     * @throws Exception
      */
-    public abstract void remove(long time) throws  Exception;
+    void remove(long time) throws Exception;
 
     /**
      * remove a job with the matching jobId
+     *
      * @param jobId
-     * @throws Exception 
+     * @throws Exception
      */
-    public abstract void remove(String jobId) throws  Exception;
-    
+    void remove(String jobId) throws Exception;
+
     /**
      * remove all the Jobs from the scheduler
+     *
      * @throws Exception
      */
-    public abstract void removeAllJobs() throws Exception;
-    
+    void removeAllJobs() throws Exception;
+
     /**
      * remove all the Jobs from the scheduler that are due between the start and finish times
-     * @param start time in milliseconds
-     * @param finish time in milliseconds
+     *
+     * @param start
+     *            time in milliseconds
+     * @param finish
+     *            time in milliseconds
      * @throws Exception
      */
-    public abstract void removeAllJobs(long start,long finish) throws Exception;
-    
+    void removeAllJobs(long start, long finish) throws Exception;
 
-    
     /**
      * Get the next time jobs will be fired
+     *
      * @return the time in milliseconds
-     * @throws Exception 
+     * @throws Exception
      */
-    public abstract long getNextScheduleTime() throws Exception;
-    
+    long getNextScheduleTime() throws Exception;
+
     /**
      * Get all the jobs scheduled to run next
+     *
      * @return a list of jobs that will be scheduled next
      * @throws Exception
      */
-    public abstract List<Job> getNextScheduleJobs() throws Exception;
-    
+    List<Job> getNextScheduleJobs() throws Exception;
+
     /**
      * Get all the outstanding Jobs
-     * @return a  list of all jobs
-     * @throws Exception 
+     *
+     * @return a list of all jobs
+     * @throws Exception
      */
-    public abstract List<Job> getAllJobs() throws Exception;
-    
+    List<Job> getAllJobs() throws Exception;
+
     /**
      * Get all outstanding jobs due to run between start and finish
+     *
      * @param start
      * @param finish
      * @return a list of jobs
      * @throws Exception
      */
-    public abstract List<Job> getAllJobs(long start,long finish)throws Exception;
+    List<Job> getAllJobs(long start, long finish) throws Exception;
 
 }
