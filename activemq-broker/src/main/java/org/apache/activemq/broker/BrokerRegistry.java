@@ -52,6 +52,9 @@ public class BrokerRegistry {
                     LOG.warn("Broker localhost not started so using " + result.getBrokerName() + " instead");
                 }
             }
+            if (result == null && (brokerName==null || brokerName.isEmpty() || brokerName.equals("null"))){
+                result = findFirst();
+            }
         }
         return result;
     }
