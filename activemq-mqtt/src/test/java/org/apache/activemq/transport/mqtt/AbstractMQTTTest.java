@@ -41,6 +41,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 public abstract class AbstractMQTTTest extends AutoFailTestSupport {
     protected TransportConnector mqttConnector;
+    protected TransportConnector openwireConnector;
 
     public static final int AT_MOST_ONCE =0;
     public static final int AT_LEAST_ONCE = 1;
@@ -380,6 +381,10 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
 
     protected void addMQTTConnector(String config) throws Exception {
         mqttConnector = brokerService.addConnector(getProtocolScheme()+"://localhost:0?" + config);
+    }
+
+    protected void addOpenwireConnector() throws Exception {
+        openwireConnector = brokerService.addConnector("tcp://localhost:0");
     }
 
     protected void initializeConnection(MQTTClientProvider provider) throws Exception {
