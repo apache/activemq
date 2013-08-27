@@ -173,7 +173,7 @@ public class BrokerService implements Service {
     private boolean useMirroredQueues = false;
     private boolean useTempMirroredQueues = true;
     private BrokerId brokerId;
-    private DestinationInterceptor[] destinationInterceptors;
+    private volatile DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
     private PListStore tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;

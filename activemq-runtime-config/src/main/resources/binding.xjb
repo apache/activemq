@@ -4,6 +4,12 @@
 
  <jxb:bindings schemaLocation="activemq.xsd" node="/xs:schema">
 
+   <jxb:schemaBindings>
+     <jxb:nameXmlTransform>
+       <jxb:elementName prefix="Dto"/>
+     </jxb:nameXmlTransform>
+   </jxb:schemaBindings>
+
    <!-- provide uniform accessor to all interesting elements via getContents() -->
    <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
@@ -17,11 +23,27 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
+   <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='plugins']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
    <jxb:bindings node="xs:element[@name='virtualDestinationInterceptor']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
 
    <jxb:bindings node="xs:element/xs:complexType/xs:choice/xs:choice/xs:element[@name='virtualDestinations']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='authorizationPlugin']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='authorizationMap']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='authorizationMap']/xs:complexType/xs:choice/xs:choice/xs:element[@name='authorizationEntries']/xs:complexType/xs:sequence">
      <jxb:property name="Contents" />
    </jxb:bindings>
 

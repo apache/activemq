@@ -38,6 +38,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.ManagementContext;
@@ -45,15 +46,29 @@ import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.virtual.CompositeQueue;
+import org.apache.activemq.broker.region.virtual.CompositeTopic;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
+import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
+import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
-import org.apache.activemq.schema.core.Broker;
-import org.apache.activemq.schema.core.CompositeQueue;
-import org.apache.activemq.schema.core.CompositeTopic;
-import org.apache.activemq.schema.core.NetworkConnector;
-import org.apache.activemq.schema.core.VirtualDestinationInterceptor;
-import org.apache.activemq.schema.core.VirtualTopic;
+import org.apache.activemq.schema.core.DtoAuthorizationEntry;
+import org.apache.activemq.schema.core.DtoAuthorizationMap;
+import org.apache.activemq.schema.core.DtoAuthorizationPlugin;
+import org.apache.activemq.schema.core.DtoBroker;
+import org.apache.activemq.schema.core.DtoCompositeQueue;
+import org.apache.activemq.schema.core.DtoCompositeTopic;
+import org.apache.activemq.schema.core.DtoNetworkConnector;
+import org.apache.activemq.schema.core.DtoVirtualDestinationInterceptor;
+import org.apache.activemq.schema.core.DtoVirtualTopic;
+import org.apache.activemq.security.AuthorizationBroker;
+import org.apache.activemq.security.AuthorizationMap;
+import org.apache.activemq.security.TempDestinationAuthorizationEntry;
+import org.apache.activemq.security.XBeanAuthorizationEntry;
+import org.apache.activemq.security.XBeanAuthorizationMap;
 import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
@@ -67,18 +82,18 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     public static final Logger LOG = LoggerFactory.getLogger(RuntimeConfigurationBroker.class);
     public static final String objectNamePropsAppendage = ",service=RuntimeConfiguration,name=Plugin";
+    private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
     private long checkPeriod;
     private long lastModified = -1;
     private Resource configToMonitor;
-    private Broker currentConfiguration;
+    private DtoBroker currentConfiguration;
     private Runnable monitorTask;
     private ConcurrentLinkedQueue<Runnable> destinationInterceptorUpdateWork = new ConcurrentLinkedQueue<Runnable>();
-    private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
     private ObjectName objectName;
     private String infoString;
     private Schema schema;
 
-    public RuntimeConfigurationBroker(org.apache.activemq.broker.Broker next) {
+    public RuntimeConfigurationBroker(Broker next) {
         super(next);
     }
 
@@ -122,7 +137,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void unregisterMbean() {
-        if  (objectName != null) {
+        if (objectName != null) {
             try {
                 getBrokerService().getManagementContext().unregisterMBean(objectName);
             } catch (JMException ignored) {
@@ -200,9 +215,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
-
     private void applyModifications(Resource configToMonitor) {
-        Broker changed = loadConfiguration(configToMonitor);
+        DtoBroker changed = loadConfiguration(configToMonitor);
         if (changed != null && !currentConfiguration.equals(changed)) {
             LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
             LOG.debug("current:" + currentConfiguration);
@@ -214,14 +228,17 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
-    private void processSelectiveChanges(Broker currentConfiguration, Broker modifiedConfiguration) {
+    private void processSelectiveChanges(DtoBroker currentConfiguration, DtoBroker modifiedConfiguration) {
 
-        for (Class upDatable : new Class[]{Broker.NetworkConnectors.class, Broker.DestinationInterceptors.class}) {
-             processChanges(currentConfiguration, modifiedConfiguration, upDatable);
+        for (Class upDatable : new Class[]{
+                DtoBroker.NetworkConnectors.class,
+                DtoBroker.DestinationInterceptors.class,
+                DtoBroker.Plugins.class}) {
+            processChanges(currentConfiguration, modifiedConfiguration, upDatable);
         }
     }
 
-    private void processChanges(Broker currentConfiguration, Broker modifiedConfiguration, Class upDatable) {
+    private void processChanges(DtoBroker currentConfiguration, DtoBroker modifiedConfiguration, Class upDatable) {
 
         List current = filter(currentConfiguration, upDatable);
         List modified = filter(modifiedConfiguration, upDatable);
@@ -263,10 +280,9 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         for (; modIndex < modification.size() && currentIndex < current.size(); modIndex++, currentIndex++) {
             Object existing = current.get(currentIndex);
             Object candidate = modification.get(modIndex);
-            if (! existing.equals(candidate)) {
+            if (!existing.equals(candidate)) {
                 info("modification to:" + existing + " , with: " + candidate);
-                remove(existing);
-                addNew(candidate);
+                modify(existing, candidate);
             }
         }
 
@@ -279,10 +295,59 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
+    private void modify(Object existing, Object candidate) {
+        if (candidate instanceof DtoAuthorizationPlugin) {
+            try {
+                // replace authorization map - need exclusive write lock to total broker
+                AuthorizationBroker authorizationBroker =
+                        (AuthorizationBroker) getBrokerService().getBroker().getAdaptor(AuthorizationBroker.class);
+
+                authorizationBroker.setAuthorizationMap(fromDto(filter(candidate, DtoAuthorizationPlugin.Map.class)));
+            } catch (Exception e) {
+                info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
+            }
+        } else {
+            remove(existing);
+            addNew(candidate);
+        }
+    }
+
+    private AuthorizationMap fromDto(List<Object> map) {
+        XBeanAuthorizationMap xBeanAuthorizationMap = new XBeanAuthorizationMap();
+        for (Object o : map) {
+            if (o instanceof DtoAuthorizationPlugin.Map) {
+                DtoAuthorizationPlugin.Map dtoMap = (DtoAuthorizationPlugin.Map) o;
+                List<DestinationMapEntry> entries = new LinkedList<DestinationMapEntry>();
+                // revisit - would like to map getAuthorizationMap to generic getContents
+                for (Object authMap : filter(dtoMap.getAuthorizationMap(), DtoAuthorizationMap.AuthorizationEntries.class)) {
+                    for (Object entry : filter(getContents(authMap), DtoAuthorizationEntry.class)) {
+                        entries.add(fromDto(entry, new XBeanAuthorizationEntry()));
+                    }
+                }
+                xBeanAuthorizationMap.setAuthorizationEntries(entries);
+                try {
+                    xBeanAuthorizationMap.afterPropertiesSet();
+                } catch (Exception e) {
+                    info("failed to update xBeanAuthorizationMap auth entries:", e);
+                }
+
+                for (Object entry : filter(dtoMap.getAuthorizationMap(), DtoAuthorizationMap.TempDestinationAuthorizationEntry.class)) {
+                    // another restriction - would like to be getContents
+                    DtoAuthorizationMap.TempDestinationAuthorizationEntry dtoEntry = (DtoAuthorizationMap.TempDestinationAuthorizationEntry) entry;
+                    xBeanAuthorizationMap.setTempDestinationAuthorizationEntry(fromDto(dtoEntry.getTempDestinationAuthorizationEntry(), new TempDestinationAuthorizationEntry()));
+                }
+
+            } else {
+                info("No support for updates to: " + o);
+            }
+        }
+        return xBeanAuthorizationMap;
+    }
+
     private void remove(Object o) {
-        if (o instanceof NetworkConnector) {
-            NetworkConnector toRemove = (NetworkConnector) o;
-            for (org.apache.activemq.network.NetworkConnector existingCandidate :
+        if (o instanceof DtoNetworkConnector) {
+            DtoNetworkConnector toRemove = (DtoNetworkConnector) o;
+            for (NetworkConnector existingCandidate :
                     getBrokerService().getNetworkConnectors()) {
                 if (configMatch(toRemove, existingCandidate)) {
                     if (getBrokerService().removeNetworkConnector(existingCandidate)) {
@@ -295,13 +360,13 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     }
                 }
             }
-        } else if (o instanceof VirtualDestinationInterceptor) {
+        } else if (o instanceof DtoVirtualDestinationInterceptor) {
             // whack it
             destinationInterceptorUpdateWork.add(new Runnable() {
                 public void run() {
                     List<DestinationInterceptor> interceptorsList = new ArrayList<DestinationInterceptor>();
                     for (DestinationInterceptor candidate : getBrokerService().getDestinationInterceptors()) {
-                        if (!(candidate instanceof org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor)) {
+                        if (!(candidate instanceof VirtualDestinationInterceptor)) {
                             interceptorsList.add(candidate);
                         }
                     }
@@ -316,7 +381,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
-    private boolean configMatch(NetworkConnector dto, org.apache.activemq.network.NetworkConnector candidate) {
+    private boolean configMatch(DtoNetworkConnector dto, NetworkConnector candidate) {
         TreeMap<String, String> dtoProps = new TreeMap<String, String>();
         IntrospectionSupport.getProperties(dto, dtoProps, null);
 
@@ -333,11 +398,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void addNew(Object o) {
-        if (o instanceof NetworkConnector) {
-            NetworkConnector networkConnector = (NetworkConnector) o;
+        if (o instanceof DtoNetworkConnector) {
+            DtoNetworkConnector networkConnector = (DtoNetworkConnector) o;
             if (networkConnector.getUri() != null) {
                 try {
-                    org.apache.activemq.network.NetworkConnector nc =
+                    NetworkConnector nc =
                             getBrokerService().addNetworkConnector(networkConnector.getUri());
                     Properties properties = new Properties();
                     IntrospectionSupport.getProperties(networkConnector, properties, null);
@@ -350,18 +415,18 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     info("Failed to add new networkConnector " + networkConnector, e);
                 }
             }
-        } else if (o instanceof VirtualDestinationInterceptor) {
-            final VirtualDestinationInterceptor dto = (VirtualDestinationInterceptor) o;
+        } else if (o instanceof DtoVirtualDestinationInterceptor) {
+            final DtoVirtualDestinationInterceptor dto = (DtoVirtualDestinationInterceptor) o;
             destinationInterceptorUpdateWork.add(new Runnable() {
                 public void run() {
 
                     boolean updatedExistingInterceptor = false;
 
                     for (DestinationInterceptor destinationInterceptor : getBrokerService().getDestinationInterceptors()) {
-                        if (destinationInterceptor instanceof org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor) {
+                        if (destinationInterceptor instanceof VirtualDestinationInterceptor) {
                             // update existing interceptor
-                            final org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor virtualDestinationInterceptor =
-                                    (org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor) destinationInterceptor;
+                            final VirtualDestinationInterceptor virtualDestinationInterceptor =
+                                    (VirtualDestinationInterceptor) destinationInterceptor;
 
                             virtualDestinationInterceptor.setVirtualDestinations(fromDto(dto));
                             info("applied updates to: " + virtualDestinationInterceptor);
@@ -371,8 +436,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
                     if (!updatedExistingInterceptor) {
                         // add
-                        org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor virtualDestinationInterceptor =
-                                new org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor();
+                        VirtualDestinationInterceptor virtualDestinationInterceptor =
+                                new VirtualDestinationInterceptor();
                         virtualDestinationInterceptor.setVirtualDestinations(fromDto(dto));
 
                         List<DestinationInterceptor> interceptorsList = new ArrayList<DestinationInterceptor>();
@@ -381,8 +446,10 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
                         DestinationInterceptor[] destinationInterceptors = interceptorsList.toArray(new DestinationInterceptor[]{});
                         getBrokerService().setDestinationInterceptors(destinationInterceptors);
-                        ((CompositeDestinationInterceptor) ((RegionBroker) getBrokerService().getRegionBroker()).getDestinationInterceptor()).setInterceptors(destinationInterceptors);
+                        RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
+                        ((CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor()).setInterceptors(destinationInterceptors);
                         info("applied new: " + interceptorsList);
+                        Thread.dumpStack();
                     }
                 }
             });
@@ -391,17 +458,17 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         }
     }
 
-    private VirtualDestination[] fromDto(VirtualDestinationInterceptor virtualDestinationInterceptor) {
+    private VirtualDestination[] fromDto(DtoVirtualDestinationInterceptor virtualDestinationInterceptor) {
         List<VirtualDestination> answer = new ArrayList<VirtualDestination>();
-        for (Object vd : filter(virtualDestinationInterceptor, VirtualDestinationInterceptor.VirtualDestinations.class)) {
-            for (Object vt : filter(vd, VirtualTopic.class)) {
-                answer.add(fromDto(vt, new org.apache.activemq.broker.region.virtual.VirtualTopic()));
+        for (Object vd : filter(virtualDestinationInterceptor, DtoVirtualDestinationInterceptor.VirtualDestinations.class)) {
+            for (Object vt : filter(vd, DtoVirtualTopic.class)) {
+                answer.add(fromDto(vt, new VirtualTopic()));
             }
-            for (Object vt : filter(vd, CompositeTopic.class)) {
-                answer.add(fromDto(vt, new org.apache.activemq.broker.region.virtual.CompositeTopic()));
+            for (Object vt : filter(vd, DtoCompositeTopic.class)) {
+                answer.add(fromDto(vt, new CompositeTopic()));
             }
-            for (Object vt : filter(vd, CompositeQueue.class)) {
-                answer.add(fromDto(vt, new org.apache.activemq.broker.region.virtual.CompositeQueue()));
+            for (Object vt : filter(vd, DtoCompositeQueue.class)) {
+                answer.add(fromDto(vt, new CompositeQueue()));
             }
         }
         VirtualDestination[] array = new VirtualDestination[answer.size()];
@@ -409,7 +476,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         return array;
     }
 
-    private VirtualDestination fromDto(Object dto, VirtualDestination instance) {
+    private <T> T fromDto(Object dto, T instance) {
         Properties properties = new Properties();
         IntrospectionSupport.getProperties(dto, properties, null);
         LOG.trace("applying props: " + properties + ", to " + instance.getClass().getSimpleName());
@@ -436,11 +503,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         return result;
     }
 
-    private Broker loadConfiguration(Resource configToMonitor) {
-        Broker jaxbConfig = null;
+    private DtoBroker loadConfiguration(Resource configToMonitor) {
+        DtoBroker jaxbConfig = null;
         if (configToMonitor != null) {
             try {
-                JAXBContext context = JAXBContext.newInstance(Broker.class);
+                JAXBContext context = JAXBContext.newInstance(DtoBroker.class);
                 Unmarshaller unMarshaller = context.createUnmarshaller();
                 unMarshaller.setSchema(getSchema());
 
@@ -451,8 +518,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 Document doc = db.parse(configToMonitor.getInputStream());
                 Node brokerRootNode = doc.getElementsByTagName("broker").item(0);
 
-                JAXBElement<Broker> brokerJAXBElement =
-                        unMarshaller.unmarshal(brokerRootNode, Broker.class);
+                JAXBElement<DtoBroker> brokerJAXBElement =
+                        unMarshaller.unmarshal(brokerRootNode, DtoBroker.class);
                 jaxbConfig = brokerJAXBElement.getValue();
 
                 // if we can parse we can track mods
@@ -480,10 +547,6 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         return schema;
     }
 
-    public void setCheckPeriod(long checkPeriod) {
-        this.checkPeriod = checkPeriod;
-    }
-
     public long getLastModified() {
         return lastModified;
     }
@@ -494,5 +557,9 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     public long getCheckPeriod() {
         return checkPeriod;
+    }
+
+    public void setCheckPeriod(long checkPeriod) {
+        this.checkPeriod = checkPeriod;
     }
 }

@@ -79,4 +79,8 @@ public class XBeanAuthorizationEntry extends AuthorizationEntry implements Initi
         }
     }
 
+    @Override
+    public String toString() {
+        return "XBeanAuthEntry:" + adminRoles + "," + writeRoles + "," + readRoles;
+    }
 }

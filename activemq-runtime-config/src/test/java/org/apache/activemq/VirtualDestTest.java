@@ -65,7 +65,7 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
 
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
-        assertSame("same instance", newValue, (((VirtualDestinationInterceptor) brokerService.getDestinationInterceptors()[0])));
+        assertSame("same instance", newValue, brokerService.getDestinationInterceptors()[0]);
     }
 
 
@@ -96,7 +96,7 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
 
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
-        assertSame("same instance", newValue, (((VirtualDestinationInterceptor) brokerService.getDestinationInterceptors()[0])));
+        assertSame("same instance", newValue, brokerService.getDestinationInterceptors()[0]);
     }
 
     @Test
@@ -126,7 +126,7 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
 
         // apply again - ensure no change
         applyNewConfig(brokerConfig, configurationSeed + "-one-vd");
-        assertSame("same instance", newValue, (((VirtualDestinationInterceptor) brokerService.getDestinationInterceptors()[0])));
+        assertSame("same instance", newValue, brokerService.getDestinationInterceptors()[0]);
     }
 
     @Test
@@ -216,13 +216,15 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        MessageConsumer consumer = session.createConsumer(session.createQueue("Consumer.A." + topic));
+        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(session.createQueue("Consumer.A." + topic));
+        LOG.info("new consumer for: " + consumer.getDestination());
         MessageProducer producer = session.createProducer(session.createTopic(topic));
         final String body = "To vt:" + topic;
         producer.send(session.createTextMessage(body));
+        LOG.info("sent to: " + producer.getDestination());
 
         Message message = null;
-        for (int i=0; i<5 && message == null; i++) {
+        for (int i=0; i<10 && message == null; i++) {
             message = consumer.receive(1000);
         }
         assertNotNull("got message", message);

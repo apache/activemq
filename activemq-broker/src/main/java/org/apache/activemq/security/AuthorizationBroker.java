@@ -39,11 +39,15 @@ import org.apache.activemq.command.ProducerInfo;
  */
 public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMBean {
 
-    private final AuthorizationMap authorizationMap;
+    private volatile AuthorizationMap authorizationMap;
 
     public AuthorizationBroker(Broker next, AuthorizationMap authorizationMap) {
         super(next);
         this.authorizationMap = authorizationMap;
+    }
+
+    public void setAuthorizationMap(AuthorizationMap map) {
+        authorizationMap = map;
     }
 
     protected SecurityContext checkSecurityContext(ConnectionContext context) throws SecurityException {
@@ -130,7 +134,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             allowedACLs = authorizationMap.getTempDestinationReadACLs();
         }
 
-        if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
+        if (!securityContext.isBrokerContext() && (allowedACLs == null || !securityContext.isInOneOf(allowedACLs))) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
         securityContext.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());

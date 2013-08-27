@@ -67,5 +67,6 @@ public class RuntimeConfigTestSupport {
     @After
     public void stopBroker() throws Exception {
         brokerService.stop();
+        brokerService.waitUntilStopped();
     }
 }
