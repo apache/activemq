@@ -24,6 +24,7 @@ import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueBrowserSubscription;
 import org.apache.activemq.broker.region.QueueSubscription;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
@@ -128,6 +129,20 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
     }
 
+    public void update(Queue queue) {
+        baseUpdate(queue);
+        if (memoryLimit > 0) {
+            queue.getMemoryUsage().setLimit(memoryLimit);
+        }
+        queue.setUseConsumerPriority(isUseConsumerPriority());
+        queue.setStrictOrderDispatch(isStrictOrderDispatch());
+        queue.setOptimizedDispatch(isOptimizedDispatch());
+        queue.setLazyDispatch(isLazyDispatch());
+        queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
+        queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
+        queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+    }
+
     public void configure(Broker broker,Topic topic) {
         baseConfiguration(broker,topic);
         if (dispatchPolicy != null) {
@@ -145,28 +160,51 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setLazyDispatch(isLazyDispatch());
     }
 
-    public void baseConfiguration(Broker broker, BaseDestination destination) {
+    public void update(Topic topic) {
+        baseUpdate(topic);
+        if (memoryLimit > 0) {
+            topic.getMemoryUsage().setLimit(memoryLimit);
+        }
+        topic.setLazyDispatch(isLazyDispatch());
+    }
+
+    // attributes that can change on the fly
+    public void baseUpdate(BaseDestination destination) {
         destination.setProducerFlowControl(isProducerFlowControl());
         destination.setAlwaysRetroactive(isAlwaysRetroactive());
         destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
-        destination.setEnableAudit(isEnableAudit());
-        destination.setMaxAuditDepth(getMaxQueueAuditDepth());
-        destination.setMaxProducersToAudit(getMaxProducersToAudit());
+
         destination.setMaxPageSize(getMaxPageSize());
         destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
-        destination.setUseCache(isUseCache());
+
         destination.setMinimumMessageSize((int) getMinimumMessageSize());
+        destination.setMaxExpirePageSize(getMaxExpirePageSize());
+        destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
+
+        destination.setGcIfInactive(isGcInactiveDestinations());
+        destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
+        destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
+        destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
+        destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
+        destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
+
         destination.setAdvisoryForConsumed(isAdvisoryForConsumed());
         destination.setAdvisoryForDelivery(isAdvisoryForDelivery());
         destination.setAdvisoryForDiscardingMessages(isAdvisoryForDiscardingMessages());
         destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
         destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
-        destination.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
+        destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
+    }
+
+    public void baseConfiguration(Broker broker, BaseDestination destination) {
+        baseUpdate(destination);
+        destination.setEnableAudit(isEnableAudit());
+        destination.setMaxAuditDepth(getMaxQueueAuditDepth());
+        destination.setMaxProducersToAudit(getMaxProducersToAudit());
+        destination.setUseCache(isUseCache());
         destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
-        destination.setMaxExpirePageSize(getMaxExpirePageSize());
-        destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
-        destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
         SlowConsumerStrategy scs = getSlowConsumerStrategy();
         if (scs != null) {
             scs.setBrokerService(broker);
@@ -174,12 +212,6 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         destination.setSlowConsumerStrategy(scs);
         destination.setPrioritizedMessages(isPrioritizedMessages());
-        destination.setGcIfInactive(isGcInactiveDestinations());
-        destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
-        destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
-        destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
-        destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
-        destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -872,4 +904,5 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setOptimizeMessageStoreInFlightLimit(int optimizeMessageStoreInFlightLimit) {
         this.optimizeMessageStoreInFlightLimit = optimizeMessageStoreInFlightLimit;
     }
+
 }

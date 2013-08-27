@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -45,7 +46,11 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.CompositeQueue;
 import org.apache.activemq.broker.region.virtual.CompositeTopic;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
@@ -62,6 +67,8 @@ import org.apache.activemq.schema.core.DtoBroker;
 import org.apache.activemq.schema.core.DtoCompositeQueue;
 import org.apache.activemq.schema.core.DtoCompositeTopic;
 import org.apache.activemq.schema.core.DtoNetworkConnector;
+import org.apache.activemq.schema.core.DtoPolicyEntry;
+import org.apache.activemq.schema.core.DtoPolicyMap;
 import org.apache.activemq.schema.core.DtoVirtualDestinationInterceptor;
 import org.apache.activemq.schema.core.DtoVirtualTopic;
 import org.apache.activemq.security.AuthorizationBroker;
@@ -231,6 +238,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     private void processSelectiveChanges(DtoBroker currentConfiguration, DtoBroker modifiedConfiguration) {
 
         for (Class upDatable : new Class[]{
+                DtoBroker.DestinationPolicy.class,
                 DtoBroker.NetworkConnectors.class,
                 DtoBroker.DestinationInterceptors.class,
                 DtoBroker.Plugins.class}) {
@@ -242,6 +250,13 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
         List current = filter(currentConfiguration, upDatable);
         List modified = filter(modifiedConfiguration, upDatable);
+
+        if (current.equals(modified)) {
+            LOG.debug("no changes to " + upDatable.getSimpleName());
+            return;
+        } else {
+            info("changes to " + upDatable.getSimpleName());
+        }
 
         int modIndex = 0, currentIndex = 0;
         for (; modIndex < modified.size() && currentIndex < current.size(); modIndex++, currentIndex++) {
@@ -267,12 +282,18 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     // mapping all supported updatable elements to support getContents
     private List<Object> getContents(Object o) {
+        List<Object> answer = new ArrayList<Object>();
         try {
-            return (List<Object>) o.getClass().getMethod("getContents", new Class[]{}).invoke(o, new Object[]{});
+            Object val = o.getClass().getMethod("getContents", new Class[]{}).invoke(o, new Object[]{});
+            if (val instanceof List) {
+                answer = (List<Object>) val;
+            } else {
+                answer.add(val);
+            }
         } catch (Exception e) {
             info("Failed to access getContents for " + o + ", runtime modifications not supported", e);
         }
-        return new ArrayList<Object>();
+        return answer;
     }
 
     private void applyModifications(List<Object> current, List<Object> modification) {
@@ -297,6 +318,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     private void modify(Object existing, Object candidate) {
         if (candidate instanceof DtoAuthorizationPlugin) {
+
             try {
                 // replace authorization map - need exclusive write lock to total broker
                 AuthorizationBroker authorizationBroker =
@@ -306,9 +328,44 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             } catch (Exception e) {
                 info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
             }
+
+        } else if (candidate instanceof DtoPolicyMap) {
+
+            List<Object> existingEntries = filter(existing, DtoPolicyMap.PolicyEntries.class);
+            List<Object> candidateEntries = filter(candidate, DtoPolicyMap.PolicyEntries.class);
+            // walk the map for mods
+            applyModifications(getContents(existingEntries.get(0)), getContents(candidateEntries.get(0)));
+
+        } else if (candidate instanceof DtoPolicyEntry) {
+
+            PolicyMap existingMap = getBrokerService().getDestinationPolicy();
+
+            PolicyEntry updatedEntry = fromDto(candidate, new PolicyEntry());
+
+            Set existingEntry = existingMap.get(updatedEntry.getDestination());
+            if (existingEntry.size() == 1) {
+                updatedEntry = fromDto(candidate, (PolicyEntry) existingEntry.iterator().next());
+                applyRetrospectively(updatedEntry);
+                info("updated policy for: " + updatedEntry.getDestination());
+            } else {
+                info("cannot modify policy matching multiple destinations: " + existingEntry + ", destination:" + updatedEntry.getDestination());
+            }
+
         } else {
             remove(existing);
             addNew(candidate);
+        }
+    }
+
+    private void applyRetrospectively(PolicyEntry updatedEntry) {
+        RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
+        for (Destination destination : regionBroker.getDestinations(updatedEntry.getDestination())) {
+            if (destination.getActiveMQDestination().isQueue()) {
+                updatedEntry.update((Queue) destination);
+            } else if (destination.getActiveMQDestination().isTopic()) {
+                updatedEntry.update((Topic) destination);
+            }
+            LOG.debug("applied update to:" + destination);
         }
     }
 
@@ -452,8 +509,16 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     }
                 }
             });
+        } else if (o instanceof DtoPolicyEntry) {
+
+            PolicyEntry addition = fromDto(o, new PolicyEntry());
+            PolicyMap existingMap = getBrokerService().getDestinationPolicy();
+            existingMap.put(addition.getDestination(), addition);
+            applyRetrospectively(addition);
+            info("added policy for: " + addition.getDestination());
+
         } else {
-            info("No runtime support for modifications to " + o);
+            info("No runtime support for additions of " + o);
         }
     }
 

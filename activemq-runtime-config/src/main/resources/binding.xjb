@@ -27,6 +27,22 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
+   <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='destinationPolicy']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='policyMap']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='policyMap']/xs:complexType/xs:choice/xs:choice/xs:element[@name='policyEntries']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='policyMap']/xs:complexType/xs:choice/xs:choice/xs:element[@name='defaultEntry']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
    <jxb:bindings node="xs:element[@name='virtualDestinationInterceptor']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
@@ -43,7 +59,7 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
-   <jxb:bindings node="xs:element[@name='authorizationMap']/xs:complexType/xs:choice/xs:choice/xs:element[@name='authorizationEntries']/xs:complexType/xs:sequence">
+   <jxb:bindings node="xs:element/xs:complexType/xs:choice/xs:choice/xs:element[@name='authorizationEntries']/xs:complexType/xs:sequence">
      <jxb:property name="Contents" />
    </jxb:bindings>
 
