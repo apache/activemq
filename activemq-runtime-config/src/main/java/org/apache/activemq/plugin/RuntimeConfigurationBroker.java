@@ -449,7 +449,6 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                         RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
                         ((CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor()).setInterceptors(destinationInterceptors);
                         info("applied new: " + interceptorsList);
-                        Thread.dumpStack();
                     }
                 }
             });
