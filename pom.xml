@@ -111,7 +111,6 @@
     <snappy-version>1.1.0-M3</snappy-version>
     <spring-version>3.2.4.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
-    <spring-oxm-version>1.5.10</spring-oxm-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <velocity-version>1.7</velocity-version>
     <woodstox-core-asl-version>4.1.4</woodstox-core-asl-version>
