@@ -40,34 +40,74 @@ public class MessageBrokerView  {
     private final BrokerService brokerService;
     private Map<ActiveMQDestination,BrokerDestinationView> destinationViewMap = new LRUCache<ActiveMQDestination, BrokerDestinationView>();
 
-    MessageBrokerView(BrokerService brokerService){
+
+    /**
+     * Create a view of a running Broker
+     * @param brokerService
+     */
+    public MessageBrokerView(BrokerService brokerService){
         this.brokerService = brokerService;
+        if (brokerService == null){
+            throw new NullPointerException("BrokerService is null");
+        }
+        if (!brokerService.isStarted()){
+            throw new IllegalStateException("BrokerService " + brokerService.getBrokerName() + " is not started");
+        }
     }
 
+
+    /**
+     * @return the brokerName
+     */
     public String getBrokerName(){
         return brokerService.getBrokerName();
     }
 
+    /**
+     * @return the unique id of the Broker
+     */
+    public String getBrokerId(){
+        try {
+            return brokerService.getBroker().getBrokerId().toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
 
+
+    /**
+     * @return the memory used by the Broker as a percentage
+     */
     public int getMemoryPercentUsage() {
         return brokerService.getSystemUsage().getMemoryUsage().getPercentUsage();
     }
 
 
+    /**
+     * @return  the space used by the Message Store as a percentage
+     */
 
     public int getStorePercentUsage() {
         return brokerService.getSystemUsage().getStoreUsage().getPercentUsage();
     }
 
+    /**
+     * @return the space used by the store for temporary messages as a percentage
+     */
     public int getTempPercentUsage() {
         return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
     }
 
-
+    /**
+     * @return the space used by the store of scheduled messages
+     */
     public int getJobSchedulerStorePercentUsage() {
         return brokerService.getSystemUsage().getJobSchedulerUsage().getPercentUsage();
     }
 
+    /**
+     * @return true if the Broker isn't using an in-memory store only for messages
+     */
     public boolean isPersistent() {
         return brokerService.isPersistent();
     }
@@ -76,6 +116,10 @@ public class MessageBrokerView  {
         return brokerService;
     }
 
+    /**
+     * Retrieve a set of all Destinations be used by the Broker
+     * @return  all Destinations
+     */
     public Set<ActiveMQDestination> getDestinations(){
         Set<ActiveMQDestination> result;
 
@@ -89,6 +133,11 @@ public class MessageBrokerView  {
         return result;
     }
 
+    /**
+     * Retrieve a set of all Topics be used by the Broker
+     * @return  all Topics
+     */
+
     public Set<ActiveMQTopic> getTopics(){
         Set<ActiveMQTopic> result = new HashSet<ActiveMQTopic>();
         for (ActiveMQDestination destination:getDestinations()){
@@ -98,6 +147,11 @@ public class MessageBrokerView  {
         }
         return result;
     }
+
+    /**
+     * Retrieve a set of all Queues be used by the Broker
+     * @return  all Queues
+     */
 
     public Set<ActiveMQQueue> getQueues(){
         Set<ActiveMQQueue> result = new HashSet<ActiveMQQueue>();
@@ -109,6 +163,10 @@ public class MessageBrokerView  {
         return result;
     }
 
+    /**
+     * Retrieve a set of all TemporaryTopics be used by the Broker
+     * @return  all TemporaryTopics
+     */
     public Set<ActiveMQTempTopic> getTempTopics(){
         Set<ActiveMQTempTopic> result = new HashSet<ActiveMQTempTopic>();
         for (ActiveMQDestination destination:getDestinations()){
@@ -119,6 +177,11 @@ public class MessageBrokerView  {
         return result;
     }
 
+
+    /**
+     * Retrieve a set of all TemporaryQueues be used by the Broker
+     * @return  all TemporaryQueues
+     */
     public Set<ActiveMQTempQueue> getTempQueues(){
         Set<ActiveMQTempQueue> result = new HashSet<ActiveMQTempQueue>();
         for (ActiveMQDestination destination:getDestinations()){
@@ -135,9 +198,10 @@ public class MessageBrokerView  {
      * will default to a Queue
      * @param destinationName
      * @return the BrokerDestinationView associated with the destinationName
+     * @throws Exception
      */
 
-    public BrokerDestinationView getDestinationView(String destinationName){
+    public BrokerDestinationView getDestinationView(String destinationName)   throws Exception{
         return getDestinationView(destinationName,ActiveMQDestination.QUEUE_TYPE);
     }
 
@@ -145,9 +209,10 @@ public class MessageBrokerView  {
      * Get the BrokerDestinationView associated with the topic
      * @param destinationName
      * @return  BrokerDestinationView
+     * @throws Exception
      */
 
-    public BrokerDestinationView getTopicDestinationView(String destinationName){
+    public BrokerDestinationView getTopicDestinationView(String destinationName)   throws Exception{
         return getDestinationView(destinationName,ActiveMQDestination.TOPIC_TYPE);
     }
 
@@ -155,23 +220,38 @@ public class MessageBrokerView  {
      * Get the BrokerDestinationView associated with the queue
      * @param destinationName
      * @return  BrokerDestinationView
+     * @throws Exception
      */
 
-    public BrokerDestinationView getQueueDestinationView(String destinationName){
+    public BrokerDestinationView getQueueDestinationView(String destinationName) throws Exception{
         return getDestinationView(destinationName,ActiveMQDestination.QUEUE_TYPE);
     }
 
-    public BrokerDestinationView getDestinationView (String destinationName, byte type)  {
+
+    /**
+     * Get the BrokerDestinationView associated with destination
+     * @param destinationName
+     * @param type  expects either ActiveMQDestination.QUEUE_TYPE, ActiveMQDestination.TOPIC_TYPE etc
+     * @return  BrokerDestinationView
+     * @throws Exception
+     */
+    public BrokerDestinationView getDestinationView (String destinationName, byte type)  throws Exception {
         ActiveMQDestination activeMQDestination = ActiveMQDestination.createDestination(destinationName,type);
         return getDestinationView(activeMQDestination);
     }
 
-    public BrokerDestinationView getDestinationView (ActiveMQDestination activeMQDestination)  {
+    /**
+     *  Get the BrokerDestinationView associated with destination
+     * @param activeMQDestination
+     * @return   BrokerDestinationView
+     * @throws Exception
+     */
+    public BrokerDestinationView getDestinationView (ActiveMQDestination activeMQDestination) throws Exception {
         BrokerDestinationView view = null;
         synchronized(destinationViewMap){
             view = destinationViewMap.get(activeMQDestination);
             if (view==null){
-                try {
+
                     /**
                      * If auto destinatons are allowed (on by default) - this will create a Broker Destination
                      * if it doesn't exist. We could query the regionBroker first to check - but this affords more
@@ -179,12 +259,9 @@ public class MessageBrokerView  {
                      * messaging clients have started (and hence created the destination themselves
                      */
                     Destination destination = brokerService.getDestination(activeMQDestination);
-                    BrokerDestinationView brokerDestinationView = new BrokerDestinationView(destination);
-                    destinationViewMap.put(activeMQDestination,brokerDestinationView);
-                } catch (Exception e) {
-                   LOG.warn("Failed to get Destination for " + activeMQDestination,e);
-                }
-                destinationViewMap.put(activeMQDestination,view);
+                    view = new BrokerDestinationView(destination);
+                    destinationViewMap.put(activeMQDestination,view);
+
             }
         }
         return view;

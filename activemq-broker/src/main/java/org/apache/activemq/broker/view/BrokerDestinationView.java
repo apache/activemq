@@ -22,113 +22,154 @@ public class BrokerDestinationView {
     private final Destination destination;
 
 
-    public BrokerDestinationView(Destination destination) {
+     BrokerDestinationView(Destination destination) {
         this.destination = destination;
     }
 
 
-
+    /**
+     * @return the name of the DestinationView
+     */
     public String getName() {
         return destination.getName();
     }
 
+    /**
+     * @return the number of messages enqueued by this destination
+     */
 
     public long getEnqueueCount() {
         return destination.getDestinationStatistics().getEnqueues().getCount();
     }
 
+    /**
+     * @return the number of messages dequeued (dispatched and removed) by this destination
+     */
     public long getDequeueCount() {
         return destination.getDestinationStatistics().getDequeues().getCount();
     }
 
-
+    /**
+     * @return the number of messages dispatched by this destination
+     */
     public long getDispatchCount() {
         return destination.getDestinationStatistics().getDispatched().getCount();
     }
 
-
+    /**
+     * @return the number of messages inflight (dispatched by not acknowledged) by this destination
+     */
     public long getInFlightCount() {
         return destination.getDestinationStatistics().getInflight().getCount();
     }
 
-
+    /**
+     * @return the number of messages expired by this destination
+     */
     public long getExpiredCount() {
         return destination.getDestinationStatistics().getExpired().getCount();
     }
 
-
-    public long getConsumerCount() {
-        return destination.getDestinationStatistics().getConsumers().getCount();
+    /**
+     * @return the number of active consumers on this destination
+     */
+    public int getConsumerCount() {
+        return (int)destination.getDestinationStatistics().getConsumers().getCount();
     }
 
+    /**
+     * @return the number of active consumers on this destination
+     */
+    public int getProducerCount() {
+        return (int)destination.getDestinationStatistics().getProducers().getCount();
+    }
 
+    /**
+     * @return the depth of the Destination
+     */
     public long getQueueSize() {
         return destination.getDestinationStatistics().getMessages().getCount();
     }
 
+    /**
+     * @return the number of messages cached in memory by this destination
+     */
     public long getMessagesCached() {
         return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
 
-
+    /**
+     * @return the memory usage as a percentage for this Destination
+     */
     public int getMemoryPercentUsage() {
         return destination.getMemoryUsage().getPercentUsage();
     }
 
-
+    /**
+     * @return the memory used by this destination in bytes
+     */
     public long getMemoryUsageByteCount() {
         return destination.getMemoryUsage().getUsage();
     }
 
 
+    /**
+     * @return  the memory limit for this destination in bytes
+     */
     public long getMemoryLimit() {
         return destination.getMemoryUsage().getLimit();
     }
 
 
-    public void setMemoryLimit(long limit) {
-        destination.getMemoryUsage().setLimit(limit);
-    }
-
-
+    /**
+     * @return the average time it takes to store a message on this destination (ms)
+     */
     public double getAverageEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getAverageTime();
     }
 
-
+    /**
+     * @return the maximum time it takes to store a message on this destination (ms)
+     */
     public long getMaxEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMaxTime();
     }
 
+    /**
+     * @return the minimum time it takes to store a message on this destination (ms)
+     */
 
     public long getMinEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
     }
 
 
-    public float getMemoryUsagePortion() {
-        return destination.getMemoryUsage().getUsagePortion();
-    }
-
-    public long getProducerCount() {
-        return destination.getDestinationStatistics().getProducers().getCount();
-    }
-
-
+    /**
+     * @return true if the destination is a Dead Letter Queue
+     */
     public boolean isDLQ() {
         return destination.isDLQ();
     }
 
 
+    /**
+     * @return the number of messages blocked waiting for dispatch (indication of slow consumption if greater than zero)
+     */
     public long getBlockedSends() {
         return destination.getDestinationStatistics().getBlockedSends().getCount();
     }
 
+    /**
+     * @return the average time(ms) messages are  blocked waiting for dispatch (indication of slow consumption if greater than zero)
+     */
 
     public double getAverageBlockedTime() {
         return destination.getDestinationStatistics().getBlockedTime().getAverageTime();
     }
 
+    /**
+     * @return the total time(ms) messages are  blocked waiting for dispatch (indication of slow consumption if greater than zero)
+     */
 
     public long getTotalBlockedTime() {
         return destination.getDestinationStatistics().getBlockedTime().getTotalTime();
