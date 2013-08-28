@@ -85,6 +85,7 @@ object LevelDBClient extends Log {
   final val LOG_REMOVE_ENTRY        = 4.toByte
   final val LOG_DATA                = 5.toByte
   final val LOG_TRACE               = 6.toByte
+  final val LOG_UPDATE_ENTRY        = 7.toByte
 
   final val LOG_SUFFIX  = ".log"
   final val INDEX_SUFFIX  = ".index"
@@ -727,7 +728,7 @@ class LevelDBClient(store: LevelDBStore) {
                     index.delete(data)
                     collectionMeta.remove(record.getKey)
 
-                  case LOG_ADD_ENTRY =>
+                  case LOG_ADD_ENTRY | LOG_UPDATE_ENTRY =>
                     val record = decodeEntryRecord(data)
 
                     val index_record = new EntryRecord.Bean()
@@ -737,10 +738,12 @@ class LevelDBClient(store: LevelDBStore) {
 
                     index.put(encodeEntryKey(ENTRY_PREFIX, record.getCollectionKey, record.getEntryKey), index_value)
 
-                    if ( record.hasValueLocation ) {
-                      logRefIncrement(record.getValueLocation)
+                    if( kind==LOG_ADD_ENTRY ) {
+                      if ( record.hasValueLocation ) {
+                        logRefIncrement(record.getValueLocation)
+                      }
+                      collectionIncrementSize(record.getCollectionKey, record.getEntryKey.toByteArray)
                     }
-                    collectionIncrementSize(record.getCollectionKey, record.getEntryKey.toByteArray)
 
                   case LOG_REMOVE_ENTRY =>
                     val record = decodeEntryRecord(data)
@@ -1150,6 +1153,33 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
+  def decodeQueueEntryMeta(value:EntryRecord.Getter):Int= {
+    if( value.hasMeta ) {
+      val is = new DataByteArrayInputStream(value.getMeta);
+      val metaVersion = is.readVarInt()
+      metaVersion match {
+        case 1 =>
+          return is.readVarInt()
+        case _ =>
+      }
+    }
+    return 0
+  }
+
+  def getDeliveryCounter(collectionKey: Long, seq:Long):Int = {
+    val ro = new ReadOptions
+    ro.fillCache(true)
+    ro.verifyChecksums(verifyChecksums)
+    val key = encodeEntryKey(ENTRY_PREFIX, collectionKey, encodeLong(seq))
+    var rc = 0
+    might_fail_using_index {
+      for( v <- index.get(key, ro) ) {
+        rc = decodeQueueEntryMeta(EntryRecord.FACTORY.parseUnframed(v))
+      }
+    }
+    return rc
+  }
+
   def queueCursor(collectionKey: Long, seq:Long)(func: (Message)=>Boolean) = {
     collectionCursor(collectionKey, encodeLong(seq)) { (key, value) =>
       val seq = decodeLong(key)
@@ -1157,6 +1187,7 @@ class LevelDBClient(store: LevelDBStore) {
       val msg = getMessage(locator)
       msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
       msg.getMessageId().setDataLocator(locator)
+      msg.setRedeliveryCounter(decodeQueueEntryMeta(value))
       func(msg)
     }
   }
@@ -1351,20 +1382,32 @@ class LevelDBClient(store: LevelDBStore) {
           log_record.setEntryKey(new Buffer(key, 9, 8))
           log_record.setValueLocation(dataLocator.pos)
           log_record.setValueLength(dataLocator.len)
-          appender.append(LOG_ADD_ENTRY, encodeEntryRecord(log_record.freeze()))
+
+          val kind = if (entry.deliveries==0) LOG_ADD_ENTRY else LOG_UPDATE_ENTRY
+          appender.append(kind, encodeEntryRecord(log_record.freeze()))
 
           val index_record = new EntryRecord.Bean()
           index_record.setValueLocation(dataLocator.pos)
           index_record.setValueLength(dataLocator.len)
 
+          // Store the delivery counter.
+          if( entry.deliveries!=0 ) {
+            val os = new DataByteArrayOutputStream()
+            os.writeVarInt(1) // meta data format version
+            os.writeVarInt(entry.deliveries)
+            index_record.setMeta(os.toBuffer)
+          }
+
           val index_data = encodeEntryRecord(index_record.freeze()).toByteArray
           batch.put(key, index_data)
 
-          for (key <- logRefKey(dataLocator.pos, log_info)) {
-            logRefs.getOrElseUpdate(key, new LongCounter()).incrementAndGet()
+          if( kind==LOG_ADD_ENTRY ) {
+            for (key <- logRefKey(dataLocator.pos, log_info)) {
+              logRefs.getOrElseUpdate(key, new LongCounter()).incrementAndGet()
+            }
+            collectionIncrementSize(entry.queueKey, log_record.getEntryKey.toByteArray)
           }
 
-          collectionIncrementSize(entry.queueKey, log_record.getEntryKey.toByteArray)
           write_enqueue_total += System.nanoTime() - start
         }
 

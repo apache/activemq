@@ -380,6 +380,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           if( prepared ) {
             store.preparedAcks.remove(ack.getLastMessageId)
           }
+          uow.incrementRedelivery(store.key, ack.getLastMessageId)
         }
       }
     }
@@ -452,16 +453,16 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       case null =>
         debug("on rollback, the transaction " + txid + " does not exist")
       case tx =>
-        if( tx.prepared ) {
-          val done = new CountDownLatch(1)
-          withUow { uow =>
-            for( action <- tx.commitActions.reverse ) {
-              action.rollback(uow)
-            }
-            uow.syncFlag = true
-            uow.addCompleteListener { done.countDown() }
+        val done = new CountDownLatch(1)
+        withUow { uow =>
+          for( action <- tx.commitActions.reverse ) {
+            action.rollback(uow)
           }
-          done.await()
+          uow.syncFlag = true
+          uow.addCompleteListener { done.countDown() }
+        }
+        done.await()
+        if( tx.prepared ) {
           db.removeTransactionContainer(tx.xacontainer_id)
         }
     }

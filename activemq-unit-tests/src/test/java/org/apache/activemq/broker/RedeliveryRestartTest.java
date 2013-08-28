@@ -33,6 +33,8 @@ import org.apache.activemq.transport.failover.FailoverTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class RedeliveryRestartTest extends BrokerRestartTestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(RedeliveryRestartTest.class);
@@ -82,7 +84,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
 
         // make failover aware of the restarted auto assigned port
         connection.getTransport().narrow(FailoverTransport.class).add(true, broker.getTransportConnectors().get(0)
-            .getPublishableConnectString());
+                .getPublishableConnectString());
 
         consumer = session.createConsumer(destination);
         for (int i = 0; i < 5; i++) {
@@ -125,11 +127,7 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
         assertEquals("first delivery", 1, msg.getLongProperty("JMSXDeliveryCount"));
         assertEquals("not a redelivery", false, msg.getJMSRedelivered());
 
-        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-
-        // have the broker stop with an IOException on next checkpoint so it has a pending local transaction to recover
-        kahaDBPersistenceAdapter.getStore().getJournal().close();
-        broker.waitUntilStopped();
+        stopBrokerWithStoreFailure();
 
         broker = createRestartedBroker();
         broker.start();
@@ -148,6 +146,14 @@ public class RedeliveryRestartTest extends BrokerRestartTestSupport {
 
         session.commit();
         connection.close();
+    }
+
+    protected void stopBrokerWithStoreFailure() throws Exception {
+        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+
+        // have the broker stop with an IOException on next checkpoint so it has a pending local transaction to recover
+        kahaDBPersistenceAdapter.getStore().getJournal().close();
+        broker.waitUntilStopped();
     }
 
     private void populateDestination(final int nbMessages, final String destinationName, javax.jms.Connection connection) throws JMSException {
