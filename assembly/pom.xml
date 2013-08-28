@@ -158,12 +158,15 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
-    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-xmpp</artifactId>
+      <artifactId>activemq-runtime-config</artifactId>
     </dependency>
-    -->
+    <dependency>
+      <groupId>org.jvnet.jaxb2_commons</groupId>
+      <artifactId>jaxb2-basics-runtime</artifactId>
+      <version>${jaxb-basics-version}</version>
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
