@@ -66,7 +66,13 @@ public class MemoryUsageTest {
         assertEquals("usage is correct", 10, underTest.getPercentUsage());
         assertEquals("new thread created with listener", activeThreadCount + 1, Thread.activeCount());        
     }
-    
+
+    @Test
+    public void testPercentOfJvmHeap() throws Exception {
+        underTest.setPercentOfJvmHeap(50);
+        assertEquals("limit is half jvm limit", Math.round(Runtime.getRuntime().maxMemory() / 2.0), underTest.getLimit());
+    }
+
     @Before
     public void setUp() throws Exception {
         underTest = new MemoryUsage();

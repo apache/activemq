@@ -205,4 +205,10 @@ public class MemoryUsage extends Usage<MemoryUsage> {
     public void setUsage(long usage) {
         this.usage = usage;
     }
+
+    public void setPercentOfJvmHeap(int percentOfJvmHeap) {
+        if (percentOfJvmHeap > 0) {
+            setLimit(Math.round(Runtime.getRuntime().maxMemory() * percentOfJvmHeap / 100.0));
+        }
+    }
 }
