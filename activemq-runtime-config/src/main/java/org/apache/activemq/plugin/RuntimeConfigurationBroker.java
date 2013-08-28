@@ -37,6 +37,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import org.apache.activemq.broker.Broker;
@@ -604,9 +606,18 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     private Schema getSchema() throws SAXException {
         if (schema == null) {
+            // need to pull the spring schemas from the classpath and find reelvant
+            // constants for the system id etc something like ...
+            //PluggableSchemaResolver resolver =
+            //        new PluggableSchemaResolver(getClass().getClassLoader());
+            //InputSource springBeans = resolver.resolveEntity("http://www.springframework.org/schema/beans",
+            //                                                "http://www.springframework.org/schema/beans/spring-beans-2.0.xsd");
+            //LOG.trace("Beans schema:" + springBeans);
             SchemaFactory schemaFactory = SchemaFactory.newInstance(
                     XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            schema = schemaFactory.newSchema(getClass().getResource("/activemq.xsd"));
+            schema = schemaFactory.newSchema(
+                    new Source[]{new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()),
+                            new StreamSource("http://www.springframework.org/schema/beans/spring-beans-2.0.xsd")});
         }
         return schema;
     }
