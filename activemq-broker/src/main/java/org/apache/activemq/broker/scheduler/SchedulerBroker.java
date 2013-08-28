@@ -289,7 +289,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
     protected synchronized JobScheduler getInternalScheduler() throws Exception {
         if (this.started.get()) {
-            if (this.scheduler == null) {
+            if (this.scheduler == null && store != null) {
                 this.scheduler = store.getJobScheduler("JMS");
                 this.scheduler.addListener(this);
                 this.scheduler.startDispatching();
