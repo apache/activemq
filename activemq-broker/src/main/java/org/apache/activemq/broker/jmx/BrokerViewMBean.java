@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.util.Map;
+
 import javax.management.ObjectName;
 import org.apache.activemq.Service;
-
-import java.util.Map;
 
 
 /**
@@ -87,6 +87,16 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("Number of unacknowledged messages on the broker.")
     long getTotalMessageCount();
+
+
+    @MBeanInfo("Average message size on this broker")
+    double getAverageMessageSize();
+
+    @MBeanInfo("Max message size on this broker")
+    public long getMaxMessageSize();
+
+    @MBeanInfo("Min message size on this broker")
+    public long getMinMessageSize();
 
     @MBeanInfo("Percent of memory limit used.")
     int getMemoryPercentUsage();

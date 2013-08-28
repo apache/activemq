@@ -143,6 +143,27 @@ public class BrokerDestinationView {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
     }
 
+    /**
+     * @return the average size of a message (bytes)
+     */
+    public double getAverageMessageSize() {
+        return destination.getDestinationStatistics().getMessageSize().getAverageSize();
+    }
+
+    /**
+      * @return the max size of a message (bytes)
+    */
+    public long getMaxMessageSize() {
+        return destination.getDestinationStatistics().getMessageSize().getMaxSize();
+    }
+
+    /**
+     * @return the min size of a message (bytes)
+     */
+    public long getMinMessageSize() {
+        return destination.getDestinationStatistics().getMessageSize().getMinSize();
+    }
+
 
     /**
      * @return true if the destination is a Dead Letter Queue

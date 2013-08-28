@@ -38,7 +38,6 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
@@ -52,8 +51,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,6 +152,28 @@ public class DestinationView implements DestinationViewMBean {
     public long getMinEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
     }
+
+    /**
+     * @return the average size of a message (bytes)
+     */
+    public double getAverageMessageSize() {
+        return destination.getDestinationStatistics().getMessageSize().getAverageSize();
+    }
+
+    /**
+     * @return the max size of a message (bytes)
+     */
+    public long getMaxMessageSize() {
+        return destination.getDestinationStatistics().getMessageSize().getMaxSize();
+    }
+
+    /**
+     * @return the min size of a message (bytes)
+     */
+    public long getMinMessageSize() {
+        return destination.getDestinationStatistics().getMessageSize().getMinSize();
+    }
+
 
     @Override
     public boolean isPrioritizedMessages() {

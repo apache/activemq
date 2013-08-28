@@ -254,11 +254,18 @@ public interface DestinationViewMBean {
     @MBeanInfo("The shortest time a message has been held this destination.")
     long getMinEnqueueTime();
 
-    /**
-     * @return average time a message is held by a destination
-     */
+
     @MBeanInfo("Average time a message has been held this destination.")
     double getAverageEnqueueTime();
+
+    @MBeanInfo("Average message size on this destination")
+    double getAverageMessageSize();
+
+    @MBeanInfo("Max message size on this destination")
+    public long getMaxMessageSize();
+
+    @MBeanInfo("Min message size on this destination")
+    public long getMinMessageSize();
 
     /**
      * @return the producerFlowControl

@@ -1844,6 +1844,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     final void messageSent(final ConnectionContext context, final Message msg) throws Exception {
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
+        destinationStatistics.getMessageSize().addSize(msg.getSize());
         messageDelivered(context, msg);
         consumersLock.readLock().lock();
         try {

@@ -145,6 +145,28 @@ public class BrokerView implements BrokerViewMBean {
         return safeGetBroker().getDestinationStatistics().getMessages().getCount();
     }
 
+    /**
+     * @return the average size of a message (bytes)
+     */
+    public double getAverageMessageSize() {
+        return safeGetBroker().getDestinationStatistics().getMessageSize().getAverageSize();
+    }
+
+    /**
+     * @return the max size of a message (bytes)
+     */
+    public long getMaxMessageSize() {
+        return safeGetBroker().getDestinationStatistics().getMessageSize().getMaxSize();
+    }
+
+    /**
+     * @return the min size of a message (bytes)
+     */
+    public long getMinMessageSize() {
+        return safeGetBroker().getDestinationStatistics().getMessageSize().getMinSize();
+    }
+
+
     public long getTotalMessagesCached() {
         return safeGetBroker().getDestinationStatistics().getMessagesCached().getCount();
     }

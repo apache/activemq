@@ -20,7 +20,7 @@ package org.apache.activemq.broker.region;
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
-import org.apache.activemq.management.TimeStatisticImpl;
+import org.apache.activemq.management.*;
 
 /**
  * The J2EE Statistics for the a Destination.
@@ -41,6 +41,7 @@ public class DestinationStatistics extends StatsImpl {
     protected TimeStatisticImpl processTime;
     protected CountStatisticImpl blockedSends;
     protected TimeStatisticImpl blockedTime;
+    protected SizeStatisticImpl messageSize;
 
 
     public DestinationStatistics() {
@@ -61,6 +62,7 @@ public class DestinationStatistics extends StatsImpl {
         processTime = new TimeStatisticImpl("processTime", "information around length of time messages are held by a destination");
         blockedSends = new CountStatisticImpl("blockedSends", "number of messages that have to wait for flow control");
         blockedTime = new TimeStatisticImpl("blockedTime","amount of time messages are blocked for flow control");
+        messageSize = new SizeStatisticImpl("messageSize","Size of messages passing through the destination");
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
@@ -73,6 +75,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("processTime", processTime);
         addStatistic("blockedSends",blockedSends);
         addStatistic("blockedTime",blockedTime);
+        addStatistic("messageSize",messageSize);
     }
 
     public CountStatisticImpl getEnqueues() {
@@ -125,6 +128,9 @@ public class DestinationStatistics extends StatsImpl {
     public TimeStatisticImpl getBlockedTime(){
         return this.blockedTime;
     }
+    public SizeStatisticImpl getMessageSize(){
+        return this.messageSize;
+    }
 
     public void reset() {
         if (this.isDoReset()) {
@@ -136,6 +142,7 @@ public class DestinationStatistics extends StatsImpl {
             expired.reset();
             blockedSends.reset();
             blockedTime.reset();
+            messageSize.reset();
         }
     }
 
@@ -153,6 +160,7 @@ public class DestinationStatistics extends StatsImpl {
         processTime.setEnabled(enabled);
         blockedSends.setEnabled(enabled);
         blockedTime.setEnabled(enabled);
+        messageSize.setEnabled(enabled);
 
     }
 
@@ -170,6 +178,7 @@ public class DestinationStatistics extends StatsImpl {
             processTime.setParent(parent.processTime);
             blockedSends.setParent(parent.blockedSends);
             blockedTime.setParent(parent.blockedTime);
+            messageSize.setParent(parent.messageSize);
         } else {
             enqueues.setParent(null);
             dispatched.setParent(null);
@@ -183,6 +192,7 @@ public class DestinationStatistics extends StatsImpl {
             processTime.setParent(null);
             blockedSends.setParent(null);
             blockedTime.setParent(null);
+            messageSize.setParent(null);
         }
     }
 
