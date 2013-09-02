@@ -26,7 +26,8 @@ import org.springframework.context.ApplicationContextAware;
 public class SpringBrokerContext implements BrokerContext, ApplicationContextAware {
 
     ApplicationContext applicationContext;
-    
+    String configurationUrl;
+
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
@@ -43,4 +44,11 @@ public class SpringBrokerContext implements BrokerContext, ApplicationContextAwa
         return applicationContext.getBeansOfType(type);
     }
 
+    public void setConfigurationUrl(String configurationUrl) {
+        this.configurationUrl = configurationUrl;
+    }
+
+    public String getConfigurationUrl() {
+        return configurationUrl;
+    }
 }

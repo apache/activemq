@@ -59,7 +59,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
 
         LOG.info("Result from update: " + result);
 
-        assertTrue("got sensible result", result.contains("started"));
+        assertTrue("got sensible result: " + result, result.contains("started"));
 
         assertEquals("one new network connectors", 1, brokerService.getNetworkConnectors().size());
 
@@ -72,7 +72,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
     }
 
     @Test
-    public void testUpdateFailedMod() throws Exception {
+    public void testUpdateFailedModParseError() throws Exception {
         final String brokerConfig =  "mBeanTest-manual-broker";
         applyNewConfig(brokerConfig, "emptyManualUpdateConfig");
         startBroker(brokerConfig);
@@ -96,7 +96,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         String result = runtimeConfigurationView.updateNow();
         LOG.info("Result from failed update: " + result);
 
-        assertTrue("got sensible result", result.contains("dudElement"));
+        assertTrue("got sensible result: " + result, result.contains("dudElement"));
 
         HashMap<String, String> propsAfter = new HashMap<String, String>();
         IntrospectionSupport.getProperties(runtimeConfigurationView, propsAfter, null);
@@ -111,7 +111,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         result = runtimeConfigurationView.updateNow();
 
         LOG.info("Result from update: " + result);
-        assertTrue("got sensible result", result.contains("started"));
+        assertTrue("got sensible result: " + result, result.contains("started"));
         assertEquals("one new network connectors", 1, brokerService.getNetworkConnectors().size());
 
         propsAfter = new HashMap<String, String>();

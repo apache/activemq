@@ -17,16 +17,23 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.management.JMException;
 import javax.management.ObjectName;
 import javax.xml.XMLConstants;
@@ -42,6 +49,7 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.ManagementContext;
@@ -59,7 +67,10 @@ import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
 import org.apache.activemq.schema.core.DtoAuthorizationEntry;
@@ -71,6 +82,8 @@ import org.apache.activemq.schema.core.DtoCompositeTopic;
 import org.apache.activemq.schema.core.DtoNetworkConnector;
 import org.apache.activemq.schema.core.DtoPolicyEntry;
 import org.apache.activemq.schema.core.DtoPolicyMap;
+import org.apache.activemq.schema.core.DtoQueue;
+import org.apache.activemq.schema.core.DtoTopic;
 import org.apache.activemq.schema.core.DtoVirtualDestinationInterceptor;
 import org.apache.activemq.schema.core.DtoVirtualTopic;
 import org.apache.activemq.security.AuthorizationBroker;
@@ -82,9 +95,13 @@ import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.beans.factory.xml.PluggableSchemaResolver;
 import org.springframework.core.io.Resource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class RuntimeConfigurationBroker extends BrokerFilter {
@@ -92,6 +109,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     public static final Logger LOG = LoggerFactory.getLogger(RuntimeConfigurationBroker.class);
     public static final String objectNamePropsAppendage = ",service=RuntimeConfiguration,name=Plugin";
     private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
+    PropertiesPlaceHolderUtil placeHolderUtil = null;
     private long checkPeriod;
     private long lastModified = -1;
     private Resource configToMonitor;
@@ -110,7 +128,12 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     public void start() throws Exception {
         super.start();
         try {
-            configToMonitor = Utils.resourceFromString(next.getBrokerService().getConfigurationUrl());
+            BrokerContext brokerContext = next.getBrokerService().getBrokerContext();
+            if (brokerContext != null) {
+                configToMonitor = Utils.resourceFromString(brokerContext.getConfigurationUrl());
+            } else {
+                LOG.error("Null BrokerContext; impossible to determine configuration url resource from broker, updates cannot be tracked");
+            }
         } catch (Exception error) {
             LOG.error("failed to determine configuration url resource from broker, updates cannot be tracked", error);
         }
@@ -461,13 +484,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             DtoNetworkConnector networkConnector = (DtoNetworkConnector) o;
             if (networkConnector.getUri() != null) {
                 try {
-                    NetworkConnector nc =
-                            getBrokerService().addNetworkConnector(networkConnector.getUri());
-                    Properties properties = new Properties();
-                    IntrospectionSupport.getProperties(networkConnector, properties, null);
-                    properties.remove("uri");
-                    LOG.trace("applying networkConnector props: " + properties);
-                    IntrospectionSupport.setProperties(nc, properties);
+                    DiscoveryNetworkConnector nc = fromDto(networkConnector, new DiscoveryNetworkConnector());
+                    getBrokerService().addNetworkConnector(nc);
                     nc.start();
                     info("started new network connector: " + nc);
                 } catch (Exception e) {
@@ -545,9 +563,63 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     private <T> T fromDto(Object dto, T instance) {
         Properties properties = new Properties();
         IntrospectionSupport.getProperties(dto, properties, null);
+        replacePlaceHolders(properties);
         LOG.trace("applying props: " + properties + ", to " + instance.getClass().getSimpleName());
         IntrospectionSupport.setProperties(instance, properties);
+
+        // deal with nested elements
+        for (Object nested : filter(dto, Object.class)) {
+            String elementName = nested.getClass().getSimpleName();
+            if (elementName.endsWith("s")) {
+                Method setter = findSetter(instance, elementName);
+                if (setter != null) {
+
+                    List<Object> argument = new LinkedList<Object>();
+                    for (Object elementContent : filter(nested, Object.class)) {
+                        argument.add(fromDto(elementContent, inferTargetObject(elementContent)));
+                    }
+                    try {
+                        setter.invoke(instance, matchType(argument, setter.getParameterTypes()[0]));
+                    } catch (Exception e) {
+                        info("failed to invoke " + setter + " on " + instance, e);
+                    }
+                } else {
+                    info("failed to find setter for " + elementName + " on :" + instance);
+                }
+            } else {
+                info("unsupported mapping of element for non plural:" + elementName);
+            }
+        }
         return instance;
+    }
+
+    private Object matchType(List<Object> parameterValues, Class<?> aClass) {
+        Object result = parameterValues;
+        if (Set.class.isAssignableFrom(aClass)) {
+            result = new HashSet(parameterValues);
+        }
+        return result;
+    }
+
+    private Object inferTargetObject(Object elementContent) {
+        if (DtoTopic.class.isAssignableFrom(elementContent.getClass())) {
+            return new ActiveMQTopic();
+        } else if (DtoQueue.class.isAssignableFrom(elementContent.getClass())) {
+            return new ActiveMQQueue();
+        } else {
+            info("update not supported for dto: " + elementContent);
+            return new Object();
+        }
+    }
+
+    private Method findSetter(Object instance, String elementName) {
+        String setter = "set" + elementName;
+        for (Method m : instance.getClass().getMethods()) {
+            if (setter.equals(m.getName())) {
+                return m;
+            }
+        }
+        return null;
     }
 
     private <T> List<Object> filter(Object obj, Class<T> type) {
@@ -559,7 +631,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         for (Object o : objectList) {
             if (o instanceof JAXBElement) {
                 JAXBElement element = (JAXBElement) o;
-                if (element.getDeclaredType() == type) {
+                if (type.isAssignableFrom(element.getDeclaredType())) {
                     result.add((T) element.getValue());
                 }
             } else if (type.isAssignableFrom(o.getClass())) {
@@ -591,6 +663,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 // if we can parse we can track mods
                 lastModified = configToMonitor.lastModified();
 
+                loadPropertiesPlaceHolderSupport(doc);
+
             } catch (IOException e) {
                 info("Failed to access: " + configToMonitor, e);
             } catch (JAXBException e) {
@@ -604,20 +678,97 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         return jaxbConfig;
     }
 
-    private Schema getSchema() throws SAXException {
+    private void loadPropertiesPlaceHolderSupport(Document doc) {
+        BrokerContext brokerContext = getBrokerService().getBrokerContext();
+        if (brokerContext != null && !brokerContext.getBeansOfType(PropertyPlaceholderConfigurer.class).isEmpty()) {
+
+            Properties initialProperties = new Properties(System.getProperties());
+            placeHolderUtil = new PropertiesPlaceHolderUtil(initialProperties);
+            mergeProperties(doc, initialProperties);
+        }
+    }
+
+    private void mergeProperties(Document doc, Properties initialProperties) {
+        // find resources
+        //        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        //            <property name="locations">
+        //              <value>${props.base}users.properties</value>
+        //            </property>
+        //          </bean>
+        String resourcesString = null;
+        NodeList beans = doc.getElementsByTagName("bean");
+        for (int i = 0; i < beans.getLength(); i++) {
+            Node bean = beans.item(0);
+            if (bean.hasAttributes() && bean.getAttributes().getNamedItem("class").getTextContent().contains("PropertyPlaceholderConfigurer")) {
+                if (bean.hasChildNodes()) {
+                    NodeList beanProps = bean.getChildNodes();
+                    for (int j = 0; j < beanProps.getLength(); j++) {
+                        Node beanProp = beanProps.item(j);
+                        if (beanProp.hasAttributes() && beanProp.getAttributes().getNamedItem("name").getTextContent().equals("locations")) {
+                            NodeList locationsPropNodes = beanProp.getChildNodes();
+                            for (int k = 0; k < locationsPropNodes.getLength(); k++) {
+                                Node location = locationsPropNodes.item(k);
+                                if (Node.ELEMENT_NODE == location.getNodeType() && location.getLocalName().equals("value")) {
+                                    resourcesString = location.getFirstChild().getTextContent();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        List<Resource> propResources = new LinkedList<Resource>();
+        if (resourcesString != null) {
+            for (String value : resourcesString.split(",")) {
+                try {
+                    propResources.add(Utils.resourceFromString(replacePlaceHolders(value)));
+                } catch (MalformedURLException e) {
+                    info("failed to resolve resource: " + value, e);
+                }
+            }
+        }
+        for (Resource resource : propResources) {
+            Properties properties = new Properties();
+            try {
+                properties.load(resource.getInputStream());
+            } catch (IOException e) {
+                info("failed to load properties resource: " + resource, e);
+            }
+            initialProperties.putAll(properties);
+        }
+    }
+
+    private void replacePlaceHolders(Properties properties) {
+        if (placeHolderUtil != null) {
+            placeHolderUtil.filter(properties);
+        }
+    }
+
+    private String replacePlaceHolders(String s) {
+        if (placeHolderUtil != null) {
+            s = placeHolderUtil.filter(s);
+        }
+        return s;
+    }
+
+    private Schema getSchema() throws SAXException, IOException {
         if (schema == null) {
-            // need to pull the spring schemas from the classpath and find reelvant
-            // constants for the system id etc something like ...
-            //PluggableSchemaResolver resolver =
-            //        new PluggableSchemaResolver(getClass().getClassLoader());
-            //InputSource springBeans = resolver.resolveEntity("http://www.springframework.org/schema/beans",
-            //                                                "http://www.springframework.org/schema/beans/spring-beans-2.0.xsd");
-            //LOG.trace("Beans schema:" + springBeans);
             SchemaFactory schemaFactory = SchemaFactory.newInstance(
                     XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            schema = schemaFactory.newSchema(
-                    new Source[]{new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()),
-                            new StreamSource("http://www.springframework.org/schema/beans/spring-beans-2.0.xsd")});
+
+            // avoid going to the net to pull down the spring schema
+            final PluggableSchemaResolver springResolver =
+                    new PluggableSchemaResolver(getClass().getClassLoader());
+            final InputSource beanInputSource =
+                    springResolver.resolveEntity(
+                            "http://www.springframework.org/schema/beans",
+                            "http://www.springframework.org/schema/beans/spring-beans-2.0.xsd");
+
+            schema = schemaFactory.newSchema(new Source[]{
+                    new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()),
+                    new StreamSource(beanInputSource.getByteStream())
+            });
         }
         return schema;
     }
@@ -636,5 +787,44 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     public void setCheckPeriod(long checkPeriod) {
         this.checkPeriod = checkPeriod;
+    }
+
+    static public class PropertiesPlaceHolderUtil {
+
+        static final Pattern pattern = Pattern.compile("\\$\\{([^\\}]+)\\}");
+        final Properties properties;
+
+        public PropertiesPlaceHolderUtil(Properties properties) {
+            this.properties = properties;
+        }
+
+        public void filter(Properties toFilter) {
+            for (Map.Entry<Object, Object> entry : toFilter.entrySet()) {
+                String val = (String) entry.getValue();
+                String newVal = filter(val);
+                if (!val.equals(newVal)) {
+                    toFilter.put(entry.getKey(), newVal);
+                }
+            }
+        }
+
+        public String filter(String str) {
+            int start = 0;
+            while (true) {
+                Matcher matcher = pattern.matcher(str);
+                if (!matcher.find(start)) {
+                    break;
+                }
+                String group = matcher.group(1);
+                String property = properties.getProperty(group);
+                if (property != null) {
+                    str = matcher.replaceFirst(Matcher.quoteReplacement(property));
+                } else {
+                    start = matcher.end();
+                }
+            }
+            return str;
+        }
+
     }
 }

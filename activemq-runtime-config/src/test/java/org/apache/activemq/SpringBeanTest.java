@@ -16,13 +16,14 @@
  */
 package org.apache.activemq;
 
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import javax.management.ObjectName;
+import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.plugin.RuntimeConfigurationBroker;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationViewMBean;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.Wait;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -31,8 +32,8 @@ import static org.junit.Assert.*;
 public class SpringBeanTest extends RuntimeConfigTestSupport {
 
     @Test
-    public void testUpdateNow() throws Exception {
-        final String brokerConfig =  "SpromgBeanTest-broker";
+    public void testModifiable() throws Exception {
+        final String brokerConfig =  "SpringBeanTest-broker";
         applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-bean");
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
@@ -63,6 +64,56 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
         LOG.info("mbean attributes after: " + propsAfter);
 
         assertEquals("modified is same", props.get(propOfInterest), propsAfter.get(propOfInterest));
+    }
+
+
+    @Test
+    public void testAddPropertyRef() throws Exception {
+
+        System.setProperty("network.uri", "static:(tcp://localhost:8888)");
+        final String brokerConfig = "SpringPropertyTest-broker";
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-nc", SLEEP);
+
+        assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == brokerService.getNetworkConnectors().size();
+            }
+        }));
+
+        DiscoveryNetworkConnector discoveryNetworkConnector =
+                (DiscoveryNetworkConnector) brokerService.getNetworkConnectors().get(0);
+        assertEquals("property replaced", System.getProperty("network.uri"), discoveryNetworkConnector.getUri().toASCIIString());
+    }
+
+    @Test
+    public void testAddPropertyRefFromFile() throws Exception {
+
+        System.setProperty("network.uri", "static:(tcp://localhost:8888)");
+        System.setProperty("props.base", "classpath:");
+        final String brokerConfig = "SpringPropertyTest-broker";
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-file");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-file-nc", SLEEP);
+
+        assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == brokerService.getNetworkConnectors().size();
+            }
+        }));
+
+        DiscoveryNetworkConnector discoveryNetworkConnector =
+                (DiscoveryNetworkConnector) brokerService.getNetworkConnectors().get(0);
+        assertEquals("property replaced", System.getProperty("network.uri"), discoveryNetworkConnector.getUri().toASCIIString());
+
+        assertEquals("name is replaced", "guest", discoveryNetworkConnector.getName());
     }
 
 }

@@ -52,4 +52,9 @@ public class XStreamBrokerContext implements BrokerContext {
         return null;
     }
 
+    @Override
+    public String getConfigurationUrl() {
+        return null;
+    }
+
 }

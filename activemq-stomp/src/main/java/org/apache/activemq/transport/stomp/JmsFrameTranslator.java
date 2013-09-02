@@ -281,6 +281,11 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
         this.brokerContext = brokerContext;
     }
 
+    @Override
+    public  BrokerContext getBrokerContext() {
+        return this.brokerContext;
+    }
+
     /**
      * Return an Advisory message as a JSON formatted string
      * @param ds

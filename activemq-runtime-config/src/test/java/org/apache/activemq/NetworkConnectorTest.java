@@ -16,6 +16,8 @@
  */
 package org.apache.activemq;
 
+import java.util.List;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.junit.Before;
@@ -51,6 +53,14 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         applyNewConfig(brokerConfig, configurationSeed + "-one-nc");
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
         assertSame("same instance", networkConnector, brokerService.getNetworkConnectors().get(0));
+
+        // verify nested elements
+        assertEquals("has exclusions", 2, networkConnector.getExcludedDestinations().size());
+
+        assertEquals("one statically included", 1, networkConnector.getStaticallyIncludedDestinations().size());
+        assertEquals("one dynamically included", 1, networkConnector.getDynamicallyIncludedDestinations().size());
+        assertEquals("one durable", 1, networkConnector.getDurableDestinations().size());
+
     }
 
 

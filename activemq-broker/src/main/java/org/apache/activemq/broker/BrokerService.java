@@ -2948,12 +2948,4 @@ public class BrokerService implements Service {
     public void setStoreOpenWireVersion(int storeOpenWireVersion) {
         this.storeOpenWireVersion = storeOpenWireVersion;
     }
-
-    public String getConfigurationUrl() {
-        return configurationUrl;
-    }
-
-    public void setConfigurationUrl(String configurationUrl) {
-        this.configurationUrl = configurationUrl;
-    }
 }

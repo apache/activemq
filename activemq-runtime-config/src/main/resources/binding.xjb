@@ -19,6 +19,34 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
+   <jxb:bindings node="xs:element[@name='queue']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='topic']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='networkConnector']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='networkConnector']/xs:complexType/xs:choice/xs:choice/xs:element[@name='excludedDestinations']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='networkConnector']/xs:complexType/xs:choice/xs:choice/xs:element[@name='dynamicallyIncludedDestinations']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='networkConnector']/xs:complexType/xs:choice/xs:choice/xs:element[@name='durableDestinations']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='networkConnector']/xs:complexType/xs:choice/xs:choice/xs:element[@name='staticallyIncludedDestinations']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
    <jxb:bindings node="xs:element[@name='broker']/xs:complexType/xs:choice/xs:choice/xs:element[@name='destinationInterceptors']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
