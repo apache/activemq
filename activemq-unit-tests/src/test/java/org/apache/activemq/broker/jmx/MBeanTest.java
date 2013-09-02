@@ -189,6 +189,26 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     }
 
+    public void testRemoveQueue() throws Exception {
+        String queueName = "TEST";
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        broker.addQueue(queueName);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + queueName);
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        queue.sendTextMessage("message 1");
+        queue.sendTextMessage("message 2");
+
+        assertEquals(2, broker.getTotalMessageCount());
+
+        broker.removeQueue(queueName);
+
+        assertEquals(0, broker.getTotalMessageCount());
+
+    }
+
     public void testRetryMessages() throws Exception {
         // lets speed up redelivery
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) connectionFactory;
