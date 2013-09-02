@@ -46,7 +46,7 @@
               <authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />
               <authorizationEntry topic="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
               
-              <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="*" write="guests,users" admin="guests,users"/>
             </authorizationEntries>
             
             <!-- let's assign roles to temporary destinations. comment this entry if we don't want any roles assigned to temp destinations  -->

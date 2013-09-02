@@ -134,7 +134,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             allowedACLs = authorizationMap.getTempDestinationReadACLs();
         }
 
-        if (!securityContext.isBrokerContext() && (allowedACLs == null || !securityContext.isInOneOf(allowedACLs))) {
+        if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
         securityContext.getAuthorizedReadDests().put(info.getDestination(), info.getDestination());

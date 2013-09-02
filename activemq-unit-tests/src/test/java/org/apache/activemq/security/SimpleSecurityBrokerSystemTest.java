@@ -43,11 +43,19 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleSecurityBrokerSystemTest.class);
 
     static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
     static final GroupPrincipal USERS = new GroupPrincipal("users");
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleSecurityBrokerSystemTest.class);
+    static Principal WILDCARD;
+    static {
+        try {
+         WILDCARD = (Principal) DefaultAuthorizationMap.createGroupPrincipal("*", GroupPrincipal.class.getName());
+        } catch (Exception e) {
+            LOG.error("Failed to make wildcard principal", e);
+        }
+    }
 
     public BrokerPlugin authorizationPlugin;
     public BrokerPlugin authenticationPlugin;
@@ -91,10 +99,8 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         writeAccess.put(new ActiveMQTopic("GUEST.>"), USERS);
         writeAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
+        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
 
         DestinationMap adminAccess = new DefaultAuthorizationMap();
         adminAccess.put(new ActiveMQTopic(">"), ADMINS);

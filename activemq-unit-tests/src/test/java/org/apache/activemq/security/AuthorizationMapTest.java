@@ -30,7 +30,6 @@ import org.apache.activemq.jaas.GroupPrincipal;
  *
  */
 public class AuthorizationMapTest extends TestCase {
-    static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
     static final GroupPrincipal USERS = new GroupPrincipal("users");
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
     static final GroupPrincipal TEMP_DESTINATION_ADMINS = new GroupPrincipal("tempDestAdmins");
@@ -64,6 +63,61 @@ public class AuthorizationMapTest extends TestCase {
         Set<?> tempAdminACLs = map.getTempDestinationAdminACLs();
         assertEquals("set size: " + tempAdminACLs, 1, tempAdminACLs.size());
         assertTrue("Contains users group", tempAdminACLs.contains(TEMP_DESTINATION_ADMINS));
+
+    }
+
+    public void testWildcards() {
+        AuthorizationMap map = createWildcardAuthorizationMap();
+
+        Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(ADMINS));
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        Set<?> writeAcls = map.getWriteACLs(new ActiveMQQueue("USERS.FOO.BAR"));
+        assertEquals("set size: " + writeAcls, 1, writeAcls.size());
+        assertTrue("Contains users group", writeAcls.contains(ADMINS));
+        assertTrue("Contains users group", writeAcls.contains(USERS));
+
+        Set<?> adminAcls = map.getAdminACLs(new ActiveMQQueue("USERS.FOO.BAR"));
+        assertEquals("set size: " + adminAcls, 1, adminAcls.size());
+        assertTrue("Contains users group", adminAcls.contains(ADMINS));
+        assertFalse("Contains users group", adminAcls.contains(USERS));
+
+        Set<?> tempAdminACLs = map.getTempDestinationAdminACLs();
+        assertEquals("set size: " + tempAdminACLs, 1, tempAdminACLs.size());
+        assertTrue("Contains users group", tempAdminACLs.contains(TEMP_DESTINATION_ADMINS));
+    }
+
+    protected AuthorizationMap createWildcardAuthorizationMap() {
+        DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
+
+        List<DestinationMapEntry> entries = new ArrayList<DestinationMapEntry>();
+
+        AuthorizationEntry entry = new AuthorizationEntry();
+        entry.setQueue(">");
+        try {
+            entry.setRead("*");
+            entry.setWrite("*");
+            entry.setAdmin("admins");
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+
+        entries.add(entry);
+
+        answer.setAuthorizationEntries(entries);
+
+        TempDestinationAuthorizationEntry tEntry = new TempDestinationAuthorizationEntry();
+        try {
+            tEntry.setAdmin("*");
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+
+        answer.setTempDestinationAuthorizationEntry(tEntry);
+
+        return answer;
 
     }
 
