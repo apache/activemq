@@ -50,6 +50,7 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private boolean logConsumerEvents = false;
     private boolean logProducerEvents = false;
     private boolean logInternalEvents = false;
+    private boolean perDestinationLogger = false;
 
     /**
      * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
@@ -282,9 +283,19 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         if (isLogAll() || isLogProducerEvents()) {
-            LOG.info("Sending message : " + messageSend.copy());
+            logSend(messageSend.copy());
         }
         super.send(producerExchange, messageSend);
+    }
+
+    private void logSend(Message copy) {
+        Logger perDestinationsLogger = LOG;
+        if (isPerDestinationLogger()) {
+            ActiveMQDestination destination = copy.getDestination();
+            perDestinationsLogger = LoggerFactory.getLogger(LOG.getName() +
+                    "." + destination.getDestinationTypeAsString() + "." + destination.getPhysicalName());
+        }
+        perDestinationsLogger.info("Sending message : " + copy);
     }
 
     @Override
@@ -605,5 +616,13 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         buf.append(isLogInternalEvents());
         buf.append(")");
         return buf.toString();
+    }
+
+    public void setPerDestinationLogger(boolean perDestinationLogger) {
+        this.perDestinationLogger = perDestinationLogger;
+    }
+
+    public boolean isPerDestinationLogger() {
+        return perDestinationLogger;
     }
 }
