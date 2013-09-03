@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Locale;
 
 import org.apache.activemq.util.InetAddressUtil;
@@ -34,6 +35,7 @@ public class PublishedAddressPolicy {
 
     private String clusterClientUriQuery;
     private PublishedHostStrategy publishedHostStrategy = PublishedHostStrategy.DEFAULT;
+    private HashMap<Integer, Integer> portMapping = new HashMap<Integer, Integer>();
 
     /**
      * Defines the value of the published host value.
@@ -70,6 +72,9 @@ public class PublishedAddressPolicy {
         String userInfo = getPublishedUserInfoValue(connectorURI.getUserInfo());
         String host = getPublishedHostValue(connectorURI.getHost());
         int port = connectorURI.getPort();
+        if (portMapping.containsKey(port)) {
+            port = portMapping.get(port);
+        }
         String path = getPublishedPathValue(connectorURI.getPath());
         String fragment = getPublishedFragmentValue(connectorURI.getFragment());
 
@@ -196,5 +201,12 @@ public class PublishedAddressPolicy {
      */
     public void setPublishedHostStrategy(String strategy) {
         this.publishedHostStrategy = PublishedHostStrategy.getValue(strategy);
+    }
+
+    /**
+     * @param portMapping map the ports in restrictive environments
+     */
+    public void setPortMapping(HashMap<Integer, Integer> portMapping) {
+        this.portMapping = portMapping;
     }
 }
