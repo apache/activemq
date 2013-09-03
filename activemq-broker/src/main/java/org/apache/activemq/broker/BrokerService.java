@@ -2738,7 +2738,7 @@ public class BrokerService implements Service {
      * @return the schedulerSupport
      */
     public boolean isSchedulerSupport() {
-        return this.schedulerSupport;
+        return this.schedulerSupport && (isPersistent() || jobSchedulerStore != null);
     }
 
     /**
