@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.Ignore;
 
 
 public class JDBCTestMemory extends TestCase {
@@ -82,7 +83,8 @@ public class JDBCTestMemory extends TestCase {
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         dest = sess.createQueue("test");        
     }
-    
+
+    @Ignore("requires human input to terminate!")
     public void testRecovery() throws Exception {
         init();
         MessageProducer producer = sess.createProducer(dest);
