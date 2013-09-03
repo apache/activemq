@@ -140,7 +140,7 @@ public class LockFile {
     }
 
     public boolean keepAlive() {
-        return lock != null && lock.isValid();
+        return lock != null && lock.isValid() && file.exists();
     }
 
 }

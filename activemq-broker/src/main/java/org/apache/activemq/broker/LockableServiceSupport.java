@@ -131,7 +131,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     protected void stopBroker() {
         // we can no longer keep the lock so lets fail
-        LOG.info(brokerService.getBrokerName() + ", no longer able to keep the exclusive lock so giving up being a master");
+        LOG.error(brokerService.getBrokerName() + ", no longer able to keep the exclusive lock so giving up being a master");
         try {
             if( brokerService.isRestartAllowed() ) {
                 brokerService.requestRestart();
