@@ -60,7 +60,7 @@ public class PublishedAddressPolicy {
      * @return a string URI address that a client can use to connect to this Transport.
      * @throws Exception
      */
-    public String getPublishableConnectString(TransportConnector connector) throws Exception {
+    public URI getPublishableConnectURI(TransportConnector connector) throws Exception {
 
         URI connectorURI = connector.getConnectUri();
 
@@ -79,8 +79,11 @@ public class PublishedAddressPolicy {
         String fragment = getPublishedFragmentValue(connectorURI.getFragment());
 
         URI publishedURI = new URI(scheme, userInfo, host, port, path, getClusterClientUriQuery(), fragment);
+        return publishedURI;
+    }
 
-        return publishedURI.toString();
+    public String getPublishableConnectString(TransportConnector connector) throws Exception {
+        return getPublishableConnectURI(connector).toString();
     }
 
     /**

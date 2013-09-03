@@ -262,6 +262,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return publishableConnectString;
     }
 
+    public URI getPublishableConnectURI() throws Exception {
+        return publishedAddressPolicy.getPublishableConnectURI(this);
+    }
+
     @Override
     public void stop() throws Exception {
         ServiceStopper ss = new ServiceStopper();
