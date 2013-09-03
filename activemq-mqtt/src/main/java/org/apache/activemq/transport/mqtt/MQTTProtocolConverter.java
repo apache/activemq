@@ -209,11 +209,11 @@ public class MQTTProtocolConverter {
             clientId = connect.clientId().toString();
         }
 
-        String userName = "";
+        String userName = null;
         if (connect.userName() != null) {
             userName = connect.userName().toString();
         }
-        String passswd = "";
+        String passswd = null;
         if (connect.password() != null) {
             passswd = connect.password().toString();
         }

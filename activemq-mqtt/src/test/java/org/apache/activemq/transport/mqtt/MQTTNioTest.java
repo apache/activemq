@@ -16,10 +16,17 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.security.*;
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.junit.Test;
+
+import java.util.LinkedList;
 
 import static org.junit.Assert.assertTrue;
 
@@ -35,6 +42,7 @@ public class MQTTNioTest extends MQTTTest {
         addMQTTConnector("maxInactivityDuration=-1");
         brokerService.start();
         MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("test-mqtt");
         mqtt.setKeepAlive((short)2);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
@@ -47,6 +55,47 @@ public class MQTTNioTest extends MQTTTest {
         }));
 
         connection.disconnect();
+    }
+
+    @Test
+    public void testAnonymousUserConnect() throws Exception {
+        addMQTTConnector();
+        configureAuthentication(brokerService);
+        brokerService.start();
+        brokerService.waitUntilStarted();
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setCleanSession(true);
+        mqtt.setUserName((String)null);
+        mqtt.setPassword((String)null);
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        System.out.println("Connected!");
+
+        connection.disconnect();
+
+    }
+
+    private void configureAuthentication(BrokerService brokerService) throws Exception {
+        LinkedList<AuthenticationUser> users = new LinkedList<AuthenticationUser>();
+        users.add(new AuthenticationUser("user1", "user1", "anonymous,user1group"));
+        final SimpleAuthenticationPlugin authenticationPlugin = new SimpleAuthenticationPlugin(users);
+
+        DefaultAuthorizationMap map = new DefaultAuthorizationMap();
+        LinkedList<DestinationMapEntry> authz = new LinkedList<DestinationMapEntry>();
+        AuthorizationEntry entry = new AuthorizationEntry();
+        entry.setDestination(new ActiveMQTopic(">"));
+        entry.setAdmin("admins");
+        entry.setRead("admins,anonymous");
+        entry.setWrite("admins");
+        authz.add(entry);
+        map.setAuthorizationEntries(authz);
+        AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin(map);
+        authenticationPlugin.setAnonymousAccessAllowed(true);
+
+        brokerService.setPlugins(new BrokerPlugin[]{
+                authenticationPlugin, authorizationPlugin
+        });
     }
 
 }
