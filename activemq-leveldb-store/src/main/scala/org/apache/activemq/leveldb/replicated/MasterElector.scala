@@ -85,7 +85,9 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
   object change_listener extends ChangeListener {
 
     def connected = changed
-    def disconnected = changed
+    def disconnected = {
+      changed
+    }
 
     def changed:Unit = elector.synchronized {
 //      info(eid+" cluster state changed: "+members)

@@ -357,7 +357,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       return
     }
 
-    if( isStopped ) {
+    if( isStoppedOrStopping ) {
       throw new IllegalStateException("Store replication stopped")
     }
 
@@ -368,12 +368,22 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     }
 
     while( !position_sync.await(1, TimeUnit.SECONDS) ) {
-      if( isStopped ) {
+      if( isStoppedOrStopping ) {
         throw new IllegalStateException("Store replication stopped")
       }
       warn("Store update waiting on %d replica(s) to catch up to log position %d. %s", minSlaveAcks, position, status)
     }
   }
+
+
+  def isStoppedOrStopping: Boolean = {
+    if( isStopped || isStopping )
+      return true
+    if( broker_service!=null && broker_service.isStopping )
+      return true
+    false
+  }
+
 
   def replicate_wal(file:File, position:Long, offset:Long, length:Long):Unit = {
     if( length > 0 ) {

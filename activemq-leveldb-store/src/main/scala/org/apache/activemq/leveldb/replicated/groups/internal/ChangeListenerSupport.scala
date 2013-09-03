@@ -51,7 +51,7 @@ trait ChangeListenerSupport {
   }
 
   def fireConnected() = {
-    val listener = this.synchronized { this.listeners }
+    val listeners = this.synchronized { this.listeners }
     check_elapsed_time {
       for (listener <- listeners) {
         listener.connected
@@ -60,7 +60,7 @@ trait ChangeListenerSupport {
   }
 
   def fireDisconnected() = {
-    val listener = this.synchronized { this.listeners }
+    val listeners = this.synchronized { this.listeners }
     check_elapsed_time {
       for (listener <- listeners) {
         listener.disconnected
@@ -69,7 +69,7 @@ trait ChangeListenerSupport {
   }
 
   def fireChanged() = {
-    val listener = this.synchronized { this.listeners }
+    val listeners = this.synchronized { this.listeners }
     val start = System.nanoTime()
     check_elapsed_time {
       for (listener <- listeners) {

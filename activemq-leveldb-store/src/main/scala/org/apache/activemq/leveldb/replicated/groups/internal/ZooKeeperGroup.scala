@@ -91,7 +91,10 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends Group with Life
 
   def connected = zk.isConnected
   def onConnected() = fireConnected()
-  def onDisconnected() = fireDisconnected()
+  def onDisconnected() = {
+    this.members = new LinkedHashMap()
+    fireDisconnected()
+  }
 
   def join(data:Array[Byte]=null): String = this.synchronized {
     val id = zk.createWithParents(member_path_prefix, data, CreateMode.EPHEMERAL_SEQUENTIAL).stripPrefix(member_path_prefix)
@@ -102,9 +105,16 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends Group with Life
   def update(path:String, data:Array[Byte]=null): Unit = this.synchronized {
     joins.get(path) match {
       case Some(ver) =>
-        val stat = zk.setData(member_path_prefix+path, data, ver)
-        joins.put(path, stat.getVersion)
-      case None => throw new IllegalArgumentException("Has not joined locally: "+path)
+        try {
+          val stat = zk.setData(member_path_prefix + path, data, ver)
+          joins.put(path, stat.getVersion)
+        }
+        catch {
+          case e:NoNodeException =>
+            joins.remove(path)
+            throw e;
+        }
+      case None => throw new NoNodeException("Has not joined locally: "+path)
     }
   }
 

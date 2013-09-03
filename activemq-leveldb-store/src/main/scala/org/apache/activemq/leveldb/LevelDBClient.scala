@@ -511,12 +511,20 @@ class LevelDBClient(store: LevelDBStore) {
 
   def might_fail[T](func : =>T):T = {
     def handleFailure(e:IOException) = {
+      var failure:Throwable = e;
       if( store.broker_service !=null ) {
         // This should start stopping the broker but it might block,
         // so do it on another thread...
         new Thread("LevelDB IOException handler.") {
           override def run() {
-            store.broker_service.handleIOException(e);
+            try {
+              store.broker_service.handleIOException(e)
+            } catch {
+              case e:RuntimeException =>
+                failure = e
+            } finally {
+              store.stop()
+            }
           }
         }.start()
         // Lets wait until the broker service has started stopping.  Once the
@@ -526,8 +534,7 @@ class LevelDBClient(store: LevelDBStore) {
           Thread.sleep(100);
         }
       }
-      store.stop()
-      throw e;
+      throw failure;
     }
     try {
       func

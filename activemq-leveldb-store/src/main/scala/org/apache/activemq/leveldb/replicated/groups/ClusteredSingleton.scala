@@ -27,6 +27,7 @@ import java.util.LinkedHashMap
 import java.lang.{IllegalStateException, String}
 import reflect.BeanProperty
 import org.codehaus.jackson.annotate.JsonProperty
+import org.apache.zookeeper.KeeperException.NoNodeException
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -108,16 +109,20 @@ class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends
     }
 
     def connected = {
+      onConnected
       changed
       ClusteredSingletonWatcher.this.fireConnected
     }
 
     def disconnected = {
+      onDisconnected
       changed
       ClusteredSingletonWatcher.this.fireDisconnected
     }
   }
 
+  protected def onConnected = {}
+  protected def onDisconnected = {}
 
   def start(group:Group) = this.synchronized {
     if(_group !=null )
@@ -223,8 +228,26 @@ class ClusteredSingleton[T <: NodeState ](stateClass:Class[T]) extends Clustered
 
     if(_group==null)
       throw new IllegalStateException("Not started.")
+
     this._state = state
-    _group.update(_eid, encode(state, mapper))
+    try {
+      _group.update(_eid, encode(state, mapper))
+    } catch {
+      case e:NoNodeException =>
+        this._state = null.asInstanceOf[T]
+        join(state)
+    }
+  }
+
+  override protected def onDisconnected {
+    this._eid = null
+  }
+
+  override protected def onConnected {
+    if( this.eid==null && this._state!=null ) {
+      this._state = null.asInstanceOf[T]
+      join(this._state)
+    }
   }
 
   def isMaster:Boolean = this.synchronized {
