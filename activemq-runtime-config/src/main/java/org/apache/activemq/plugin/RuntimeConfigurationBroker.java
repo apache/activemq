@@ -99,6 +99,7 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.PluggableSchemaResolver;
 import org.springframework.core.io.Resource;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -692,10 +693,10 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         // find resources
         //        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         //            <property name="locations">
-        //              <value>${props.base}users.properties</value>
+        //              ...
         //            </property>
         //          </bean>
-        String resourcesString = null;
+        String resourcesString = "";
         NodeList beans = doc.getElementsByTagName("bean");
         for (int i = 0; i < beans.getLength(); i++) {
             Node bean = beans.item(0);
@@ -704,14 +705,18 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     NodeList beanProps = bean.getChildNodes();
                     for (int j = 0; j < beanProps.getLength(); j++) {
                         Node beanProp = beanProps.item(j);
-                        if (beanProp.hasAttributes() && beanProp.getAttributes().getNamedItem("name").getTextContent().equals("locations")) {
-                            NodeList locationsPropNodes = beanProp.getChildNodes();
-                            for (int k = 0; k < locationsPropNodes.getLength(); k++) {
-                                Node location = locationsPropNodes.item(k);
-                                if (Node.ELEMENT_NODE == location.getNodeType() && location.getLocalName().equals("value")) {
-                                    resourcesString = location.getFirstChild().getTextContent();
-                                    break;
+                        if (Node.ELEMENT_NODE == beanProp.getNodeType() &&
+                                beanProp.hasAttributes() && beanProp.getAttributes().getNamedItem("name").getTextContent().equals("locations")) {
+
+                            // interested in value or list/value of locations property
+                            Element beanPropElement = (Element) beanProp;
+                            NodeList values = beanPropElement.getElementsByTagName("value");
+                            for (int k = 0; k < values.getLength(); k++) {
+                                Node value = values.item(k);
+                                if (!resourcesString.isEmpty()) {
+                                    resourcesString += ",";
                                 }
+                                resourcesString += value.getFirstChild().getTextContent();
                             }
                         }
                     }
@@ -719,13 +724,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             }
         }
         List<Resource> propResources = new LinkedList<Resource>();
-        if (resourcesString != null) {
-            for (String value : resourcesString.split(",")) {
-                try {
-                    propResources.add(Utils.resourceFromString(replacePlaceHolders(value)));
-                } catch (MalformedURLException e) {
-                    info("failed to resolve resource: " + value, e);
-                }
+        for (String value : resourcesString.split(",")) {
+            try {
+                propResources.add(Utils.resourceFromString(replacePlaceHolders(value)));
+            } catch (MalformedURLException e) {
+                info("failed to resolve resource: " + value, e);
             }
         }
         for (Resource resource : propResources) {
