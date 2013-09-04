@@ -72,19 +72,22 @@ import org.apache.qpid.proton.amqp.transaction.Declare;
 import org.apache.qpid.proton.amqp.transaction.Declared;
 import org.apache.qpid.proton.amqp.transaction.Discharge;
 import org.apache.qpid.proton.amqp.transaction.TransactionalState;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
+import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
-import org.apache.qpid.proton.engine.EndpointError;
 import org.apache.qpid.proton.engine.EndpointState;
+import org.apache.qpid.proton.engine.EngineFactory;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.ConnectionImpl;
-import org.apache.qpid.proton.engine.impl.LinkImpl;
+import org.apache.qpid.proton.engine.impl.EngineFactoryImpl;
 import org.apache.qpid.proton.engine.impl.ProtocolTracer;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
 import org.apache.qpid.proton.framing.TransportFrame;
@@ -120,8 +123,9 @@ class AmqpProtocolConverter {
     int prefetch = 100;
 
     ReentrantLock lock = new ReentrantLock();
-    TransportImpl protonTransport = new TransportImpl();
-    ConnectionImpl protonConnection = new ConnectionImpl();
+    EngineFactory engineFactory = new EngineFactoryImpl();
+    Transport protonTransport = engineFactory.createTransport();
+    Connection protonConnection = engineFactory.createConnection();
 
     public AmqpProtocolConverter(AmqpTransport transport, BrokerContext brokerContext) {
         this.amqpTransport = transport;
@@ -131,7 +135,7 @@ class AmqpProtocolConverter {
 
     void updateTracer() {
         if (amqpTransport.isTrace()) {
-            this.protonTransport.setProtocolTracer(new ProtocolTracer() {
+            ((TransportImpl) protonTransport).setProtocolTracer(new ProtocolTracer() {
                 @Override
                 public void receivedFrame(TransportFrame transportFrame) {
                     if (TRACE_FRAMES.isTraceEnabled()) {
@@ -415,9 +419,7 @@ class AmqpProtocolConverter {
 
                 if (response.isException()) {
                     Throwable exception = ((ExceptionResponse) response).getException();
-                    // TODO: figure out how to close /w an error.
-                    // protonConnection.setLocalError(new EndpointError(exception.getClass().getName(),
-                    // exception.getMessage()));
+                    protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
                     protonConnection.close();
                     pumpProtonToSocket();
                     amqpTransport.onException(IOExceptionSupport.create(exception));
@@ -729,7 +731,7 @@ class AmqpProtocolConverter {
                         if (response.isException()) {
                             receiver.setTarget(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
-                            ((LinkImpl) receiver).setLocalError(new EndpointError(exception.getClass().getName(), exception.getMessage()));
+                            receiver.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                             receiver.close();
                         } else {
                             receiver.open();
@@ -740,7 +742,7 @@ class AmqpProtocolConverter {
             }
         } catch (AmqpProtocolException exception) {
             receiver.setTarget(null);
-            ((LinkImpl) receiver).setLocalError(new EndpointError(exception.getSymbolicName(), exception.getMessage()));
+            receiver.setCondition(new ErrorCondition(Symbol.getSymbol(exception.getSymbolicName()), exception.getMessage()));
             receiver.close();
         }
     }
@@ -840,6 +842,7 @@ class AmqpProtocolConverter {
 
         Buffer currentBuffer;
         Delivery currentDelivery;
+        final String MESSAGE_FORMAT_KEY = outboundTransformer.getPrefixVendor() + "MESSAGE_FORMAT";
 
         public void pumpOutbound() throws Exception {
             while (!closed) {
@@ -868,6 +871,12 @@ class AmqpProtocolConverter {
 
                 final MessageDispatch md = outbound.removeFirst();
                 try {
+                    if (md.getMessage() != null) {
+                        org.apache.activemq.command.Message message = md.getMessage();
+                        if (!message.getProperties().containsKey(MESSAGE_FORMAT_KEY)) {
+                            message.setProperty(MESSAGE_FORMAT_KEY, 0);
+                        }
+                    }
                     final ActiveMQMessage jms = (ActiveMQMessage) md.getMessage();
                     if (jms == null) {
                         // It's the end of browse signal.
@@ -1102,7 +1111,7 @@ class AmqpProtocolConverter {
                             SelectorParser.parse(selector);
                         } catch (InvalidSelectorException e) {
                             sender.setSource(null);
-                            ((LinkImpl) sender).setLocalError(new EndpointError("amqp:invalid-field", e.getMessage()));
+                            sender.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, e.getMessage()));
                             sender.close();
                             consumerContext.closed = true;
                             return;
@@ -1133,7 +1142,7 @@ class AmqpProtocolConverter {
                             sender.setSource(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
                             String name = exception.getClass().getName();
-                            ((LinkImpl) sender).setLocalError(new EndpointError(name, exception.getMessage()));
+                            sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                         }
                         sender.open();
                         pumpProtonToSocket();
@@ -1185,11 +1194,11 @@ class AmqpProtocolConverter {
                     if (response.isException()) {
                         sender.setSource(null);
                         Throwable exception = ((ExceptionResponse) response).getException();
-                        String name = exception.getClass().getName();
+                        Symbol condition = AmqpError.INTERNAL_ERROR;
                         if (exception instanceof InvalidSelectorException) {
-                            name = "amqp:invalid-field";
+                            condition = AmqpError.INVALID_FIELD;
                         }
-                        ((LinkImpl) sender).setLocalError(new EndpointError(name, exception.getMessage()));
+                        sender.setCondition(new ErrorCondition(condition, exception.getMessage()));
                         subscriptionsByConsumerId.remove(id);
                         sender.close();
                     } else {
@@ -1201,7 +1210,7 @@ class AmqpProtocolConverter {
             });
         } catch (AmqpProtocolException e) {
             sender.setSource(null);
-            ((LinkImpl) sender).setLocalError(new EndpointError(e.getSymbolicName(), e.getMessage()));
+            sender.setCondition(new ErrorCondition(Symbol.getSymbol(e.getSymbolicName()), e.getMessage()));
             sender.close();
         }
     }
