@@ -39,14 +39,15 @@ public final class SelectorManager {
 
     private Executor selectorExecutor = createDefaultExecutor();
     private Executor channelExecutor = selectorExecutor;
-    private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
+    private final LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
     private int maxChannelsPerWorker = 1024;
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
 
             private long i = 0;
 
+            @Override
             public Thread newThread(Runnable runnable) {
                 this.i++;
                 final Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + this.i);
@@ -55,6 +56,10 @@ public final class SelectorManager {
         });
 
         return rc;
+    }
+
+    private static int getDefaultKeepAliveTime() {
+        return Integer.getInteger("org.apache.activemq.transport.nio.SelectorManager.keepAliveTime", 30);
     }
 
     public static SelectorManager getInstance() {

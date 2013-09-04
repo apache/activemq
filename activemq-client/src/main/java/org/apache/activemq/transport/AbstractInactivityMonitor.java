@@ -444,10 +444,12 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     };
 
     private ThreadPoolExecutor createExecutor() {
-        // TODO: This value of 10 seconds seems to low, see discussion at
-        // http://activemq.2283324.n4.nabble.com/InactivityMonitor-Creating-too-frequent-threads-tp4656752.html;cid=1348142445209-351
-        ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
+        ThreadPoolExecutor exec = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), factory);
         exec.allowCoreThreadTimeOut(true);
         return exec;
+    }
+
+    private static int getDefaultKeepAliveTime() {
+        return Integer.getInteger("org.apache.activemq.transport.AbstractInactivityMonitor.keepAliveTime", 30);
     }
 }
