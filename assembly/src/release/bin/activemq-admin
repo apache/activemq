@@ -148,7 +148,7 @@ ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};"$ACTIVEMQ_CLASSPATH
 
 if [ ""$1 = "start" ] ; then
     if [ -z "$ACTIVEMQ_OPTS" ] ; then
-        ACTIVEMQ_OPTS="-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties"
+        ACTIVEMQ_OPTS="-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Dhawtio.authenticationEnabled=false"
     fi
 
     if [ -z "$SUNJMX" ] ; then

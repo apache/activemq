@@ -101,9 +101,10 @@
       <unpack>true</unpack>
       <unpackOptions>
         <excludes>
-          <exclude>WEB-INF/lib/slf4j-api-1.6.1.jar</exclude>
-          <exclude>WEB-INF/lib/log4j-1.2.16.jar</exclude>
-          <exclude>WEB-INF/lib/commons-codec-1.2.jar</exclude>
+          <exclude>WEB-INF/lib/slf4j-api-*.jar</exclude>
+          <exclude>WEB-INF/lib/log4j-*.jar</exclude>
+          <exclude>WEB-INF/lib/commons-codec-*.jar</exclude>
+          <exclude>WEB-INF/lib/org.eclipse.jgit-*.jar</exclude>
         </excludes>
       </unpackOptions>
       <scope>runtime</scope>
