@@ -21,6 +21,7 @@ activemq-unit-tests/shared
 activemq-data
 activemq-leveldb-store/.cache
 activemq-runtime-config/src/main/resources/activemq.xsd
+activemq-amqp/amqp-trace.txt
 data/
 dependency-reduced-pom.xml
 velocity.log
