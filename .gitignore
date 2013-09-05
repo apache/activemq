@@ -16,6 +16,7 @@ activemq-unit-tests/KahaDB
 activemq-unit-tests/broker
 activemq-unit-tests/derby.log
 activemq-unit-tests/derbyDb
+activemq-unit-tests/LevelDB
 activemq-unit-tests/networkedBroker
 activemq-unit-tests/shared
 activemq-data
