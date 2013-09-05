@@ -27,7 +27,7 @@ import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.util.VariableMarshaller;
 
 class JobLocation {
-   
+
     private String jobId;
     private int repeat;
     private long startTime;
@@ -39,13 +39,12 @@ class JobLocation {
 
     public JobLocation(Location location) {
         this.location = location;
-
     }
 
     public JobLocation() {
         this(new Location());
     }
-   
+
     public void readExternal(DataInput in) throws IOException {
         this.jobId = in.readUTF();
         this.repeat = in.readInt();
@@ -85,7 +84,6 @@ class JobLocation {
     public void setJobId(String jobId) {
         this.jobId = jobId;
     }
-    
 
     /**
      * @return the repeat
@@ -116,7 +114,7 @@ class JobLocation {
     public void setStartTime(long start) {
         this.startTime = start;
     }
-    
+
     /**
      * @return the nextTime
      */
@@ -145,7 +143,7 @@ class JobLocation {
     public void setPeriod(long period) {
         this.period = period;
     }
-    
+
     /**
      * @return the cronEntry
      */
@@ -159,11 +157,14 @@ class JobLocation {
     public synchronized void setCronEntry(String cronEntry) {
         this.cronEntry = cronEntry;
     }
-    
+
+    /**
+     * @return if this JobLocation represents a cron entry.
+     */
     public boolean isCron() {
         return getCronEntry() != null && getCronEntry().length() > 0;
     }
-    
+
     /**
      * @return the delay
      */
@@ -184,15 +185,17 @@ class JobLocation {
     public Location getLocation() {
         return this.location;
     }
-    
+
+    @Override
     public String toString() {
         return "Job [id=" + jobId + ", startTime=" + new Date(startTime)
                 + ", delay=" + delay + ", period=" + period + ", repeat="
-                + repeat + ", nextTime=" + new Date(nextTime) + "]"; 
+                + repeat + ", nextTime=" + new Date(nextTime) + "]";
     }
 
     static class JobLocationMarshaller extends VariableMarshaller<List<JobLocation>> {
         static final JobLocationMarshaller INSTANCE = new JobLocationMarshaller();
+        @Override
         public List<JobLocation> readPayload(DataInput dataIn) throws IOException {
             List<JobLocation> result = new ArrayList<JobLocation>();
             int size = dataIn.readInt();
@@ -204,11 +207,86 @@ class JobLocation {
             return result;
         }
 
+        @Override
         public void writePayload(List<JobLocation> value, DataOutput dataOut) throws IOException {
             dataOut.writeInt(value.size());
             for (JobLocation jobLocation : value) {
                 jobLocation.writeExternal(dataOut);
             }
         }
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((cronEntry == null) ? 0 : cronEntry.hashCode());
+        result = prime * result + (int) (delay ^ (delay >>> 32));
+        result = prime * result + ((jobId == null) ? 0 : jobId.hashCode());
+        result = prime * result + ((location == null) ? 0 : location.hashCode());
+        result = prime * result + (int) (nextTime ^ (nextTime >>> 32));
+        result = prime * result + (int) (period ^ (period >>> 32));
+        result = prime * result + repeat;
+        result = prime * result + (int) (startTime ^ (startTime >>> 32));
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        JobLocation other = (JobLocation) obj;
+
+        if (cronEntry == null) {
+            if (other.cronEntry != null) {
+                return false;
+            }
+        } else if (!cronEntry.equals(other.cronEntry)) {
+            return false;
+        }
+
+        if (delay != other.delay) {
+            return false;
+        }
+
+        if (jobId == null) {
+            if (other.jobId != null)
+                return false;
+        } else if (!jobId.equals(other.jobId)) {
+            return false;
+        }
+
+        if (location == null) {
+            if (other.location != null) {
+                return false;
+            }
+        } else if (!location.equals(other.location)) {
+            return false;
+        }
+
+        if (nextTime != other.nextTime) {
+            return false;
+        }
+        if (period != other.period) {
+            return false;
+        }
+        if (repeat != other.repeat) {
+            return false;
+        }
+        if (startTime != other.startTime) {
+            return false;
+        }
+
+        return true;
     }
 }

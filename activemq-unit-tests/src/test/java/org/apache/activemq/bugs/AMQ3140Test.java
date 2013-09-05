@@ -134,7 +134,7 @@ public class AMQ3140Test {
         }
 
         // wait until all scheduled messages has been received
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.MINUTES.sleep(2);
 
         session.close();
         connection.close();

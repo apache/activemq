@@ -163,6 +163,15 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         });
     }
 
+    synchronized void remove(final long time, final List<JobLocation> jobIds) throws IOException {
+        this.store.getPageFile().tx().execute(new Transaction.Closure<IOException>() {
+            @Override
+            public void execute(Transaction tx) throws IOException {
+                remove(tx, time, jobIds);
+            }
+        });
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -369,6 +378,34 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         return result;
     }
 
+    private void remove(Transaction tx, long time, List<JobLocation> jobIds) throws IOException {
+        List<JobLocation> result = removeFromIndex(tx, time, jobIds);
+        if (result != null) {
+            for (JobLocation jl : result) {
+                this.store.decrementJournalCount(tx, jl.getLocation());
+            }
+        }
+    }
+
+    private List<JobLocation> removeFromIndex(Transaction tx, long time, List<JobLocation> Jobs) throws IOException {
+        List<JobLocation> result = null;
+        List<JobLocation> values = this.index.remove(tx, time);
+        if (values != null) {
+            result = new ArrayList<JobLocation>(values.size());
+
+            for (JobLocation job : Jobs) {
+                if (values.remove(job)) {
+                    result.add(job);
+                }
+            }
+
+            if (!values.isEmpty()) {
+                this.index.put(tx, time, values);
+            }
+        }
+        return result;
+    }
+
     void remove(Transaction tx, long time) throws IOException {
         List<JobLocation> values = this.index.remove(tx, time);
         if (values != null) {
@@ -482,79 +519,84 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
                 // peek the next job
                 long currentTime = System.currentTimeMillis();
 
-                // Reads the list of the next entries and removes them from the store in one atomic step.
-                // Prevents race conditions on short delays, when storeJob() tries to append new items to the
-                // existing list during this read operation (see AMQ-3141).
-                synchronized (this) {
-                    Map.Entry<Long, List<JobLocation>> first = getNextToSchedule();
-                    if (first != null) {
-                        List<JobLocation> list = new ArrayList<JobLocation>(first.getValue());
-                        final long executionTime = first.getKey();
-                        long nextExecutionTime = 0;
-                        if (executionTime <= currentTime) {
-                            for (final JobLocation job : list) {
-                                int repeat = job.getRepeat();
-                                nextExecutionTime = calculateNextExecutionTime(job, currentTime, repeat);
-                                long waitTime = nextExecutionTime - currentTime;
-                                this.scheduleTime.setWaitTime(waitTime);
-                                if (job.isCron() == false) {
+                // Read the list of scheduled events and fire the jobs.  Once done with the batch
+                // remove all that were fired, and reschedule as needed.
+                Map.Entry<Long, List<JobLocation>> first = getNextToSchedule();
+                if (first != null) {
+                    List<JobLocation> list = new ArrayList<JobLocation>(first.getValue());
+                    List<JobLocation> fired = new ArrayList<JobLocation>(list.size());
+                    final long executionTime = first.getKey();
+                    long nextExecutionTime = 0;
+                    if (executionTime <= currentTime) {
+                        for (final JobLocation job : list) {
+                            int repeat = job.getRepeat();
+                            nextExecutionTime = calculateNextExecutionTime(job, currentTime, repeat);
+                            long waitTime = nextExecutionTime - currentTime;
+                            this.scheduleTime.setWaitTime(waitTime);
+                            if (job.isCron() == false) {
+                                fireJob(job);
+                                if (repeat != 0) {
+                                    repeat--;
+                                    job.setRepeat(repeat);
+                                    // remove this job from the index so it doesn't get destroyed
+                                    removeFromIndex(executionTime, job.getJobId());
+                                    // and re-store it
+                                    storeJob(job, nextExecutionTime);
+                                } else {
+                                    fired.add(job);
+                                }
+                            } else {
+                                // cron job will have a repeat time.
+                                if (repeat == 0) {
+                                    // we haven't got a separate scheduler to execute at
+                                    // this time - just a cron job - so fire it
                                     fireJob(job);
+                                }
+
+                                if (nextExecutionTime > currentTime) {
+                                    // we will run again ...
+                                    // remove this job from the index - so it doesn't get destroyed
+                                    removeFromIndex(executionTime, job.getJobId());
+                                    // and re-store it
+                                    storeJob(job, nextExecutionTime);
                                     if (repeat != 0) {
-                                        repeat--;
-                                        job.setRepeat(repeat);
-                                        // remove this job from the index so it doesn't get destroyed
-                                        removeFromIndex(executionTime, job.getJobId());
-                                        // and re-store it
-                                        storeJob(job, nextExecutionTime);
+                                        // we have a separate schedule to run at this time
+                                        // so the cron job is used to set of a separate schedule
+                                        // hence we won't fire the original cron job to the
+                                        // listeners but we do need to start a separate schedule
+                                        String jobId = ID_GENERATOR.generateId();
+                                        ByteSequence payload = getPayload(job.getLocation());
+                                        schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
+                                        waitTime = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
+                                        this.scheduleTime.setWaitTime(waitTime);
                                     }
                                 } else {
-                                    // cron job
-                                    if (repeat == 0) {
-                                        // we haven't got a separate scheduler to execute at
-                                        // this time - just a cron job - so fire it
-                                        fireJob(job);
-                                    }
-                                    if (nextExecutionTime > currentTime) {
-                                        // we will run again ...
-                                        // remove this job from the index - so it doesn't get destroyed
-                                        removeFromIndex(executionTime, job.getJobId());
-                                        // and re-store it
-                                        storeJob(job, nextExecutionTime);
-                                        if (repeat != 0) {
-                                            // we have a separate schedule to run at this time
-                                            // so the cron job is used to set of a separate schedule
-                                            // hence we won't fire the original cron job to the
-                                            // listeners but we do need to start a separate schedule
-                                            String jobId = ID_GENERATOR.generateId();
-                                            ByteSequence payload = getPayload(job.getLocation());
-                                            schedule(jobId, payload, "", job.getDelay(), job.getPeriod(), job.getRepeat());
-                                            waitTime = job.getDelay() != 0 ? job.getDelay() : job.getPeriod();
-                                            this.scheduleTime.setWaitTime(waitTime);
-                                        }
-                                    }
+                                    fired.add(job);
                                 }
                             }
-                            // now remove all jobs that have not been
-                            // rescheduled from this execution time
-                            remove(executionTime);
-
-                            // If there is a job that should fire before the currently set wait time
-                            // we need to reset wait time otherwise we'll miss it.
-                            Map.Entry<Long, List<JobLocation>> nextUp = getNextToSchedule();
-                            if (nextUp != null) {
-                                final long timeUntilNextScheduled = nextUp.getKey() - currentTime;
-                                if (timeUntilNextScheduled < this.scheduleTime.getWaitTime()) {
-                                    this.scheduleTime.setWaitTime(timeUntilNextScheduled);
-                                }
-                            }
-                        } else {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Not yet time to execute the job, waiting " + (executionTime - currentTime) + " ms");
-                            }
-                            this.scheduleTime.setWaitTime(executionTime - currentTime);
                         }
+
+                        // now remove all jobs that have not been rescheduled from this execution
+                        // time, if there are no more entries in that time it will be removed.
+                        remove(executionTime, fired);
+
+                        // If there is a job that should fire before the currently set wait time
+                        // we need to reset wait time otherwise we'll miss it.
+                        Map.Entry<Long, List<JobLocation>> nextUp = getNextToSchedule();
+                        if (nextUp != null) {
+                            final long timeUntilNextScheduled = nextUp.getKey() - currentTime;
+                            if (timeUntilNextScheduled < this.scheduleTime.getWaitTime()) {
+                                this.scheduleTime.setWaitTime(timeUntilNextScheduled);
+                            }
+                        }
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Not yet time to execute the job, waiting " + (executionTime - currentTime) + " ms");
+                        }
+                        this.scheduleTime.setWaitTime(executionTime - currentTime);
                     }
                 }
+
                 this.scheduleTime.pause();
             } catch (Exception ioe) {
                 LOG.error(this.name + " Failed to schedule job", ioe);
