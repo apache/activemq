@@ -22,8 +22,6 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.transport.amqp.DefaultTrustManager;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -53,7 +51,6 @@ import org.slf4j.LoggerFactory;
     //    TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
     MessageHeaderTest.class,
     QueueBrowserTest.class,
-    JMSXPropertyTest.class,
     MessageTypeTest.class,
     //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
     TemporaryTopicTest.class,
@@ -71,7 +68,7 @@ import org.slf4j.LoggerFactory;
     MessagePropertyTest.class
 })
 
-public class JoramSslTest extends TestCase {
+public class JoramSslTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(JoramSslTest.class);
 

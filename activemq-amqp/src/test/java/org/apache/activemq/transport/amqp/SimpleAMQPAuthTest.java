@@ -15,6 +15,22 @@ package org.apache.activemq.transport.amqp;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.net.URI;
+
+import javax.jms.Connection;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.qpid.amqp_1_0.client.ConnectionClosedException;
@@ -26,14 +42,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
-import java.net.URI;
-
-import static org.junit.Assert.*;
-
-/**
- * @author Kevin Earls
- */
 public class SimpleAMQPAuthTest {
     public static final String SIMPLE_AUTH_AMQP_BROKER_XML = "org/apache/activemq/transport/amqp/simple-auth-amqp-broker.xml";
     public BrokerService brokerService;
@@ -67,7 +75,7 @@ public class SimpleAMQPAuthTest {
             });
             connection.start();
             Thread.sleep(1000);
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSException e) {
             Exception linkedException = e.getLinkedException();
@@ -88,7 +96,7 @@ public class SimpleAMQPAuthTest {
             Connection connection = factory.createConnection("nosuchuser", "blah");
             connection.start();
             Thread.sleep(500);
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSException e)  {
             Exception linkedException = e.getLinkedException();
@@ -109,7 +117,7 @@ public class SimpleAMQPAuthTest {
             Connection connection = factory.createConnection("user", "wrongPassword");
             connection.start();
             Thread.sleep(500);
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSException e) {
             Exception linkedException = e.getLinkedException();
@@ -122,7 +130,6 @@ public class SimpleAMQPAuthTest {
             }
         }
     }
-
 
     @Test(timeout = 30000)
     public void testSendReceive() throws Exception {
@@ -148,7 +155,6 @@ public class SimpleAMQPAuthTest {
         connection.close();
     }
 
-
     protected BrokerService createBroker() throws Exception {
         return createBroker(SIMPLE_AUTH_AMQP_BROKER_XML);
     }
@@ -163,6 +169,5 @@ public class SimpleAMQPAuthTest {
         brokerService.start();
         brokerService.waitUntilStarted();
     }
-
 }
 
