@@ -56,7 +56,8 @@ public class MessageInterceptorRegistry {
     }
 
     private MessageInterceptorRegistry(){
-        this.brokerService=null;
+        this.brokerService=BrokerRegistry.getInstance().findFirst();
+        messageInterceptorRegistryMap.put(brokerService,this);
     }
 
     private MessageInterceptorRegistry(BrokerService brokerService) {
