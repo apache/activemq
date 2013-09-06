@@ -81,7 +81,9 @@ public class MessageInterceptorTest extends TestCase {
         }
     }
 
-    public void testNormalOperation() throws Exception {
+
+
+    public void testNoIntercept() throws Exception {
         final CountDownLatch latch = new CountDownLatch(messageCount);
 
         consumer.setMessageListener(new MessageListener() {
@@ -101,8 +103,41 @@ public class MessageInterceptorTest extends TestCase {
 
     }
 
+    public void testNoStackOverFlow() throws Exception {
+
+
+        final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
+        registry.addMessageInterceptorForTopic(topic.getTopicName(), new MessageInterceptor() {
+            @Override
+            public void intercept(ProducerBrokerExchange producerExchange, Message message) {
+
+                try {
+                    registry.injectMessage(producerExchange, message);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        final CountDownLatch latch = new CountDownLatch(messageCount);
+        consumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(javax.jms.Message message) {
+                latch.countDown();
+
+            }
+        });
+        for (int i  = 0; i < messageCount; i++){
+            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            producer.send(message);
+        }
+
+        latch.await(timeOutInSeconds, TimeUnit.SECONDS);
+        assertEquals(0,latch.getCount());
+    }
+
     public void testInterceptorAll() throws Exception {
-        MessageInterceptorRegistry registry = new MessageInterceptorRegistry(BrokerRegistry.getInstance().findFirst());
+        MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(topic.getTopicName(), new MessageInterceptor() {
             @Override
             public void intercept(ProducerBrokerExchange producerExchange, Message message) {
@@ -132,7 +167,7 @@ public class MessageInterceptorTest extends TestCase {
     public void testReRouteAll() throws Exception {
         final ActiveMQQueue queue = new ActiveMQQueue("Reroute.From."+topic.getTopicName());
 
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry(BrokerRegistry.getInstance().findFirst());
+        final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(topic.getTopicName(), new MessageInterceptor() {
             @Override
             public void intercept(ProducerBrokerExchange producerExchange, Message message) {
@@ -167,7 +202,7 @@ public class MessageInterceptorTest extends TestCase {
     public void testReRouteAllWithNullProducerExchange() throws Exception {
         final ActiveMQQueue queue = new ActiveMQQueue("Reroute.From."+topic.getTopicName());
 
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry(BrokerRegistry.getInstance().findFirst());
+        final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(topic.getTopicName(), new MessageInterceptor() {
             @Override
             public void intercept(ProducerBrokerExchange producerExchange, Message message) {
@@ -203,7 +238,7 @@ public class MessageInterceptorTest extends TestCase {
 
         final ActiveMQQueue testQueue = new ActiveMQQueue("testQueueFor."+getName());
 
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry(BrokerRegistry.getInstance().findFirst());
+        final MessageInterceptorRegistry registry = MessageInterceptorRegistry.getInstance().get(BrokerRegistry.getInstance().findFirst());
         registry.addMessageInterceptorForTopic(">", new MessageInterceptor() {
             @Override
             public void intercept(ProducerBrokerExchange producerExchange, Message message) {

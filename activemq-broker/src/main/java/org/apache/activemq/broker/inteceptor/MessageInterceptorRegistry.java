@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.broker.inteceptor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.MutableBrokerFilter;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -27,11 +31,35 @@ import org.slf4j.LoggerFactory;
 
 public class MessageInterceptorRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(MessageInterceptorRegistry.class);
+    private static final MessageInterceptorRegistry INSTANCE = new MessageInterceptorRegistry();
     private final BrokerService brokerService;
     private MessageInterceptorFilter filter;
+    private final Map<BrokerService, MessageInterceptorRegistry> messageInterceptorRegistryMap = new HashMap<BrokerService, MessageInterceptorRegistry>();
 
 
-    public MessageInterceptorRegistry(BrokerService brokerService) {
+    public static MessageInterceptorRegistry getInstance() {
+        return INSTANCE;
+    }
+
+    public MessageInterceptorRegistry get(String brokerName){
+        BrokerService brokerService = BrokerRegistry.getInstance().lookup(brokerName);
+        return get(brokerService);
+    }
+
+    public synchronized MessageInterceptorRegistry get(BrokerService brokerService){
+        MessageInterceptorRegistry result = messageInterceptorRegistryMap.get(brokerService);
+        if (result == null){
+            result = new MessageInterceptorRegistry(brokerService);
+            messageInterceptorRegistryMap.put(brokerService,result);
+        }
+        return result;
+    }
+
+    private MessageInterceptorRegistry(){
+        this.brokerService=null;
+    }
+
+    private MessageInterceptorRegistry(BrokerService brokerService) {
         this.brokerService = brokerService;
     }
 

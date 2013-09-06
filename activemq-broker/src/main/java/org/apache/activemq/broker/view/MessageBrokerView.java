@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -54,6 +55,21 @@ public class MessageBrokerView  {
             throw new IllegalStateException("BrokerService " + brokerService.getBrokerName() + " is not started");
         }
     }
+
+    /**
+     * Create a view of a running Broker
+     * @param brokerName
+     */
+    public MessageBrokerView(String brokerName){
+        this.brokerService = BrokerRegistry.getInstance().lookup(brokerName);
+        if (brokerService == null){
+            throw new NullPointerException("BrokerService is null");
+        }
+        if (!brokerService.isStarted()){
+            throw new IllegalStateException("BrokerService " + brokerService.getBrokerName() + " is not started");
+        }
+    }
+
 
 
     /**
