@@ -22,8 +22,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.inteceptor.MessageInterceptor;
 import org.apache.activemq.broker.inteceptor.MessageInterceptorRegistry;
-import org.apache.activemq.broker.view.MessageBrokerView;
-import org.apache.activemq.broker.view.MessageBrokerViewRegistry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.camel.Consumer;
@@ -46,7 +44,6 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
 
     @UriParam
     private final BrokerConfiguration configuration;
-    private MessageBrokerView messageBrokerView;
     private MessageInterceptorRegistry messageInterceptorRegistry;
 
 
@@ -92,8 +89,7 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        messageBrokerView = MessageBrokerViewRegistry.getInstance().lookup(configuration.getBrokerName());
-        messageInterceptorRegistry = new MessageInterceptorRegistry(messageBrokerView.getBrokerService());
+        messageInterceptorRegistry =  MessageInterceptorRegistry.getInstance().get(configuration.getBrokerName());
         for (MessageInterceptor messageInterceptor : messageInterceptorList) {
             addMessageInterceptor(messageInterceptor);
         }
@@ -119,11 +115,18 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
     }
 
     protected void inject(ProducerBrokerExchange producerBrokerExchange, Message message) throws Exception {
+        ProducerBrokerExchange pbe = producerBrokerExchange;
         if (message != null) {
-            if (message.getDestination() == null) {
-                message.setDestination(destination);
+            message.setDestination(destination);
+            if (producerBrokerExchange != null && producerBrokerExchange.getRegionDestination() != null){
+                if (!producerBrokerExchange.getRegionDestination().getActiveMQDestination().equals(destination)){
+                     //The message broker will create a new ProducerBrokerExchange with the
+                     //correct region broker set
+                     pbe = null;
+                }
             }
-            messageInterceptorRegistry.injectMessage(producerBrokerExchange, message);
+
+            messageInterceptorRegistry.injectMessage(pbe, message);
         }
     }
 }

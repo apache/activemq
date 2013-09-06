@@ -47,16 +47,18 @@ public class BrokerComponentXMLConfigTest {
     private static final Logger LOG = LoggerFactory.getLogger(BrokerComponentXMLConfigTest.class);
     protected static final String TOPIC_NAME = "test.broker.component.topic";
     protected static final String QUEUE_NAME = "test.broker.component.queue";
+    protected static final String ROUTE_QUEUE_NAME = "test.broker.component.route";
+    protected static final String DIVERTED_QUEUE_NAME = "test.broker.component.ProcessLater";
+    protected static final int DIVERT_COUNT = 100;
+
     protected BrokerService brokerService;
     protected ActiveMQConnectionFactory factory;
     protected Connection producerConnection;
     protected Connection consumerConnection;
     protected Session consumerSession;
     protected Session producerSession;
-    protected MessageConsumer consumer;
-    protected MessageProducer producer;
-    protected Topic topic;
-    protected int messageCount = 5000;
+
+    protected int messageCount = 1000;
     protected int timeOutInSeconds = 10;
 
     @Before
@@ -69,10 +71,9 @@ public class BrokerComponentXMLConfigTest {
         producerConnection = factory.createConnection();
         producerConnection.start();
         consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        topic = consumerSession.createTopic(TOPIC_NAME);
+
         producerSession = producerConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        consumer = consumerSession.createConsumer(topic);
-        producer = producerSession.createProducer(topic);
+
     }
 
     protected BrokerService createBroker(String resource) throws Exception {
@@ -110,9 +111,10 @@ public class BrokerComponentXMLConfigTest {
     public void testReRouteAll() throws Exception {
         final ActiveMQQueue queue = new ActiveMQQueue(QUEUE_NAME);
 
+        Topic topic = consumerSession.createTopic(TOPIC_NAME);
 
         final CountDownLatch latch = new CountDownLatch(messageCount);
-        consumer = consumerSession.createConsumer(queue);
+        MessageConsumer  consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(javax.jms.Message message) {
@@ -124,6 +126,8 @@ public class BrokerComponentXMLConfigTest {
                 }
             }
         });
+        MessageProducer producer = producerSession.createProducer(topic);
+
         for (int i  = 0; i < messageCount; i++){
             javax.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
@@ -134,7 +138,50 @@ public class BrokerComponentXMLConfigTest {
 
     }
 
+    @Test
+    public void testRouteWithDestinationLimit() throws Exception {
+        final ActiveMQQueue routeQueue = new ActiveMQQueue(ROUTE_QUEUE_NAME);
 
+
+        final CountDownLatch routeLatch = new CountDownLatch(DIVERT_COUNT);
+        MessageConsumer  messageConsumer = consumerSession.createConsumer(routeQueue);
+        messageConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(javax.jms.Message message) {
+                try {
+                    routeLatch.countDown();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        final CountDownLatch divertLatch = new CountDownLatch(messageCount-DIVERT_COUNT);
+        MessageConsumer  divertConsumer = consumerSession.createConsumer(new ActiveMQQueue(DIVERTED_QUEUE_NAME));
+        divertConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(javax.jms.Message message) {
+                try {
+                    divertLatch.countDown();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
+        MessageProducer producer = producerSession.createProducer(routeQueue);
+
+        for (int i  = 0; i < messageCount; i++){
+            javax.jms.Message message = producerSession.createTextMessage("test: " + i);
+            producer.send(message);
+        }
+
+        routeLatch.await(timeOutInSeconds, TimeUnit.SECONDS);
+        divertLatch.await(timeOutInSeconds,TimeUnit.SECONDS);
+        assertEquals(0,routeLatch.getCount());
+        assertEquals(0,divertLatch.getCount());
+    }
 
 
 }
