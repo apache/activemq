@@ -75,7 +75,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
     protected final Transport remoteBroker;
-    protected final IdGenerator idGenerator = new IdGenerator();
+    protected IdGenerator idGenerator;
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     protected ConnectionInfo localConnectionInfo;
     protected ConnectionInfo remoteConnectionInfo;
@@ -354,6 +354,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // Fill in the remote broker's information now.
             remoteBrokerPath[0] = remoteBrokerId;
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
+            if (configuration.isUseBrokerNamesAsIdSeed()) {
+                idGenerator = new IdGenerator(brokerService.getBrokerName() + "->" + remoteBrokerName);
+            } else {
+                idGenerator = new IdGenerator();
+            }
         } catch (Throwable e) {
             serviceLocalException(e);
         }

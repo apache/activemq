@@ -57,38 +57,24 @@ public class ConduitBridge extends DemandForwardingBridge {
         return doCreateDemandSubscription(info);
     }
 
-    protected boolean checkPaths(BrokerId[] first, BrokerId[] second) {
-        if (first == null || second == null) {
-            return true;
-        }
-        if (Arrays.equals(first, second)) {
-            return true;
-        }
-
-        if (first[0].equals(second[0]) && first[first.length - 1].equals(second[second.length - 1])) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
         // search through existing subscriptions and see if we have a match
+        if (info.isNetworkSubscription()) {
+            return false;
+        }
         boolean matched = false;
 
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
-            if (filter.matches(info.getDestination())) {
+            if (!ds.getRemoteInfo().isNetworkSubscription() && filter.matches(info.getDestination())) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " " + info + " with ids" + info.getNetworkConsumerIds() + " matched (add interest) " + ds);
                 }
                 // add the interest in the subscription
-                if (checkPaths(info.getBrokerPath(), ds.getRemoteInfo().getBrokerPath())) {
-                    if (!info.isDurable()) {
-                        ds.add(info.getConsumerId());
-                    } else {
-                       ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
-                    }
+                if (!info.isDurable()) {
+                    ds.add(info.getConsumerId());
+                } else {
+                    ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
                 }
                 matched = true;
                 // continue - we want interest to any existing DemandSubscriptions

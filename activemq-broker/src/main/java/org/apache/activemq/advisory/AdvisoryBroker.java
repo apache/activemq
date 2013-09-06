@@ -16,10 +16,12 @@
  */
 package org.apache.activemq.advisory;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -52,7 +54,34 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
     protected final ConcurrentHashMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
-    protected final ConcurrentHashMap<ConsumerId, ConsumerInfo> consumers = new ConcurrentHashMap<ConsumerId, ConsumerInfo>();
+    class ConsumerIdKey {
+        final ConsumerId delegate;
+        final long creationTime = System.currentTimeMillis();
+        ConsumerIdKey(ConsumerId id) {
+            delegate = id;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return delegate.equals(other);
+        }
+
+        @Override
+        public int hashCode() {
+            return delegate.hashCode();
+        }
+    }
+    // replay consumer advisory messages in the order in which they arrive - allows duplicate suppression in
+    // mesh networks with ttl>1
+    protected final Map<ConsumerIdKey, ConsumerInfo> consumers = new ConcurrentSkipListMap<ConsumerIdKey, ConsumerInfo>(
+            new Comparator<ConsumerIdKey>() {
+                @Override
+                public int compare(ConsumerIdKey o1, ConsumerIdKey o2) {
+                    return (o1.creationTime < o2.creationTime ? -1 : (o1.delegate==o2.delegate ? 0 : 1));
+                }
+            }
+    );
+
     protected final ConcurrentHashMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
     protected final ConcurrentHashMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
     protected final ConcurrentHashMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<BrokerInfo, ActiveMQMessage>();
@@ -84,7 +113,7 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            consumers.put(info.getConsumerId(), info);
+            consumers.put(new ConsumerIdKey(info.getConsumerId()), info);
             fireConsumerAdvisory(context, info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
@@ -247,7 +276,7 @@ public class AdvisoryBroker extends BrokerFilter {
         ActiveMQDestination dest = info.getDestination();
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
-            consumers.remove(info.getConsumerId());
+            consumers.remove(new ConsumerIdKey(info.getConsumerId()));
             if (!dest.isTemporary() || destinations.containsKey(dest)) {
                 fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
             }
@@ -575,7 +604,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return connections;
     }
 
-    public Map<ConsumerId, ConsumerInfo> getAdvisoryConsumers() {
+    public Map<ConsumerIdKey, ConsumerInfo> getAdvisoryConsumers() {
         return consumers;
     }
 

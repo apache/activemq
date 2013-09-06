@@ -61,6 +61,7 @@ public class NetworkBridgeConfiguration {
     private boolean staticBridge = false;
     private boolean useCompression = false;
     private boolean advisoryForFailedForward = false;
+    private boolean useBrokerNamesAsIdSeed = true;
 
     /**
      * @return the conduitSubscriptions
@@ -414,5 +415,13 @@ public class NetworkBridgeConfiguration {
 
     public int getMessageTTL() {
         return messageTTL;
+    }
+
+    public boolean isUseBrokerNamesAsIdSeed() {
+        return useBrokerNamesAsIdSeed;
+    }
+
+    public void setUseBrokerNameAsIdSees(boolean val) {
+        useBrokerNamesAsIdSeed = val;
     }
 }

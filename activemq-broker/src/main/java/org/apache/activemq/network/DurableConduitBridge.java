@@ -33,7 +33,7 @@ public class DurableConduitBridge extends ConduitBridge {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConduitBridge.class);
 
     public String toString() {
-        return "DurableConduitBridge";
+        return "DurableConduitBridge:" + configuration.getBrokerName() + "->" + getRemoteBrokerName();
     }
     /**
      * Constructor
