@@ -107,6 +107,10 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                 // Not considered Idle so ensure its cleared from the list
                 if (slowConsumers.remove(subscriber) != null) {
                     LOG.info("sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
+                } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Not ignoring idle Consumer {}", subscriber.getConsumerInfo().getConsumerId());
+                    }
                 }
             }
 
@@ -133,13 +137,25 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     private void abortAllQualifiedSlowConsumers() {
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
-            if (entry.getKey().isSlowConsumer()) {
-                if (getMaxSlowDuration() > 0 &&
-                    (entry.getValue().markCount * getCheckPeriod() > getMaxSlowDuration()) ||
-                    getMaxSlowCount() > 0 && entry.getValue().slowCount > getMaxSlowCount()) {
+            if (getMaxSlowDuration() > 0 &&
+                (entry.getValue().markCount * getCheckPeriod() > getMaxSlowDuration()) ||
+                getMaxSlowCount() > 0 && entry.getValue().slowCount > getMaxSlowCount()) {
 
-                    toAbort.put(entry.getKey(), entry.getValue());
-                    slowConsumers.remove(entry.getKey());
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Remove consumer {} from slow list: " +
+                              "slow duration = " + entry.getValue().markCount * getCheckPeriod() + ", " +
+                              "slow count = " + entry.getValue().slowCount,
+                              entry.getKey().getConsumerInfo().getConsumerId());
+                }
+
+                toAbort.put(entry.getKey(), entry.getValue());
+                slowConsumers.remove(entry.getKey());
+            } else {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Not yet time to abot consumer {}: " +
+                              "slow duration = " + entry.getValue().markCount * getCheckPeriod() + ", " +
+                              "slow count = " + entry.getValue().slowCount,
+                              entry.getKey().getConsumerInfo().getConsumerId());
                 }
             }
         }
