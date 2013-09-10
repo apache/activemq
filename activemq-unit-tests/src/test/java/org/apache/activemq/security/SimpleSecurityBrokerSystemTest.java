@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
@@ -35,6 +36,12 @@ import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
 
 /**
  * Tests that the broker allows/fails access to destinations based on the
@@ -78,6 +85,29 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
+    }
+
+    /**
+     * @throws javax.jms.JMSException
+     */
+    public void testPopulateJMSXUserID() throws Exception {
+        destination = new ActiveMQQueue("TEST");
+        Connection connection = factory.createConnection("system", "manager");
+        connections.add(connection);
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        sendMessages(session, destination, 1);
+
+        // make sure that the JMSXUserID is exposed over JMX
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        CompositeData[] browse = (CompositeData[]) mbs.invoke(new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=TEST"), "browse", null, null);
+        assertEquals("system", browse[0].get("JMSXUserID"));
+
+        // And also via JMS.
+        MessageConsumer consumer = session.createConsumer(destination);
+        Message m = consumer.receive(1000);
+        assertEquals("system",  m.getStringProperty("JMSXUserID"));
     }
 
     public static AuthorizationMap createAuthorizationMap() {
@@ -146,6 +176,8 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
+        broker.setPopulateJMSXUserID(true);
+        broker.setUseAuthenticatedPrincipalForJMSXUserID(true);
         broker.setPlugins(new BrokerPlugin[] {authorizationPlugin, authenticationPlugin});
         broker.setPersistent(false);
         return broker;

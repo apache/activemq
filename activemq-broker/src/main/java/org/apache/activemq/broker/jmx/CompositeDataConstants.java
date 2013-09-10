@@ -24,6 +24,7 @@ public interface CompositeDataConstants {
     String PROPERTIES = "PropertiesText";
     String JMSXGROUP_SEQ = "JMSXGroupSeq";
     String JMSXGROUP_ID = "JMSXGroupID";
+    String JMSXUSER_ID = "JMSXUserID";
     String BROKER_PATH = "BrokerPath";
     String BODY_LENGTH = "BodyLength";
     String BODY_PREVIEW = "BodyPreview";
