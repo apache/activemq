@@ -21,18 +21,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.net.*;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -58,6 +48,7 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,6 +115,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean priorityBackup = false;
     private final ArrayList<URI> priorityList = new ArrayList<URI>();
     private boolean priorityBackupAvailable = false;
+    private String nestedExtraQueryOptions;
 
     public FailoverTransport() throws InterruptedIOException {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -999,7 +991,7 @@ public class FailoverTransport implements CompositeTransport {
                             // We could be starting with a backup and if so we wait to grab a
                             // URI from the pool until next time around.
                             if (transport == null) {
-                                uri = iter.next();
+                                uri = addExtraQueryOptions(iter.next());
                                 transport = TransportFactory.compositeConnect(uri);
                             }
 
@@ -1180,7 +1172,7 @@ public class FailoverTransport implements CompositeTransport {
                 backups.removeAll(disposedList);
                 disposedList.clear();
                 for (Iterator<URI> iter = backupList.iterator(); !disposed && iter.hasNext() && shouldBuildBackups(); ) {
-                    URI uri = iter.next();
+                    URI uri = addExtraQueryOptions(iter.next());
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
                         try {
                             SslContext.setCurrentSslContext(brokerSslContext);
@@ -1398,4 +1390,24 @@ public class FailoverTransport implements CompositeTransport {
         }
         return result;
     }
+
+    private URI addExtraQueryOptions(URI uri) {
+        try {
+            if( nestedExtraQueryOptions!=null && !nestedExtraQueryOptions.isEmpty() ) {
+                if( uri.getQuery() == null ) {
+                    uri = URISupport.createURIWithQuery(uri, nestedExtraQueryOptions);
+                } else {
+                    uri = URISupport.createURIWithQuery(uri, uri.getQuery()+"&"+nestedExtraQueryOptions);
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        return uri;
+    }
+
+    public void setNestedExtraQueryOptions(String nestedExtraQueryOptions) {
+        this.nestedExtraQueryOptions = nestedExtraQueryOptions;
+    }
+
 }

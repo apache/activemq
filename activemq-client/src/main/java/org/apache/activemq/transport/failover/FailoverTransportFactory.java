@@ -19,6 +19,7 @@ package org.apache.activemq.transport.failover;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
@@ -70,6 +71,11 @@ public class FailoverTransportFactory extends TransportFactory {
     public FailoverTransport createTransport(Map<String, String> parameters) throws IOException {
         FailoverTransport transport = new FailoverTransport();
         IntrospectionSupport.setProperties(transport, parameters);
+        try {
+            transport.setNestedExtraQueryOptions(URISupport.createQueryString(parameters));
+        } catch (URISyntaxException e) {
+        }
+        parameters.clear();
         return transport;
     }
 
