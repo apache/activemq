@@ -107,6 +107,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         // And also via JMS.
         MessageConsumer consumer = session.createConsumer(destination);
         Message m = consumer.receive(1000);
+        assertTrue(m.propertyExists("JMSXUserID"));
         assertEquals("system",  m.getStringProperty("JMSXUserID"));
     }
 
