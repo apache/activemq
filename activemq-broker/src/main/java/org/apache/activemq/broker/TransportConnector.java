@@ -74,6 +74,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
+    private boolean allowLinkStealing;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
 
@@ -571,6 +572,15 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public int connectionCount() {
         return connections.size();
+    }
+
+    @Override
+    public boolean isAllowLinkStealing() {
+        return allowLinkStealing;
+    }
+
+    public void setAllowLinkStealing (boolean allowLinkStealing) {
+        this.allowLinkStealing=allowLinkStealing;
     }
 
     public boolean isAuditNetworkProducers() {

@@ -231,8 +231,18 @@ public class RegionBroker extends EmptyBroker {
         synchronized (clientIdSet) {
             ConnectionContext oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
-                throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
-                    + oldContext.getConnection().getRemoteAddress());
+                if (context.isAllowLinkStealing()){
+                     clientIdSet.remove(clientId);
+                     if (oldContext.getConnection() != null) {
+                        LOG.warn("Stealing link for clientId " + clientId + " From Connection " + oldContext.getConnection());
+                        oldContext.getConnection().stop();
+                     }else{
+                         LOG.error("Not Connection for " + oldContext);
+                     }
+                }else{
+                    throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
+                            + oldContext.getConnection().getRemoteAddress());
+                }
             } else {
                 clientIdSet.put(clientId, context);
             }

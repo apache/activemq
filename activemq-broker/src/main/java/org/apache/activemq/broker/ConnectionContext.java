@@ -332,4 +332,8 @@ public class ConnectionContext {
     public XATransactionId getXid() {
         return xid;
     }
+
+    public boolean isAllowLinkStealing(){
+       return connector != null && connector.isAllowLinkStealing();
+    }
 }
