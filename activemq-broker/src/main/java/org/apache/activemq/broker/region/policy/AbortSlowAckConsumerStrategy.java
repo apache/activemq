@@ -104,23 +104,19 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     private void updateSlowConsumersList(List<Subscription> subscribers) {
         for (Subscription subscriber : subscribers) {
 
-            if (subscriber.getConsumerInfo().isNetworkSubscription()) {
+            if (isIgnoreNetworkSubscriptions() && subscriber.getConsumerInfo().isNetworkSubscription()) {
                 if (slowConsumers.remove(subscriber) != null) {
-                    LOG.info("sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
-                    continue;
+                    LOG.info("network sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
                 }
+                continue;
             }
 
             if (isIgnoreIdleConsumers() && subscriber.getDispatchedQueueSize() == 0) {
                 // Not considered Idle so ensure its cleared from the list
                 if (slowConsumers.remove(subscriber) != null) {
-                    LOG.info("sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
-                    continue;
-                } else {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Not ignoring idle Consumer {}", subscriber.getConsumerInfo().getConsumerId());
-                    }
+                    LOG.info("idle sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
                 }
+                continue;
             }
 
             long lastAckTime = subscriber.getTimeOfLastMessageAck();
@@ -146,12 +142,11 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     private void abortAllQualifiedSlowConsumers() {
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
-            if (getMaxSlowDuration() > 0 &&
-                (entry.getValue().markCount * getCheckPeriod() > getMaxSlowDuration()) ||
+            if (getMaxSlowDuration() > 0 && (entry.getValue().markCount * getCheckPeriod() > getMaxSlowDuration()) ||
                 getMaxSlowCount() > 0 && entry.getValue().slowCount > getMaxSlowCount()) {
 
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Remove consumer {} from slow list: " +
+                    LOG.trace("Transferring consumer {} to the abort list: " +
                               "slow duration = " + entry.getValue().markCount * getCheckPeriod() + ", " +
                               "slow count = " + entry.getValue().slowCount,
                               entry.getKey().getConsumerInfo().getConsumerId());
