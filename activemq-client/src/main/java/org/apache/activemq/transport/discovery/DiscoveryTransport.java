@@ -24,6 +24,7 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.Suspendable;
 import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,4 +104,27 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
        this.parameters = parameters;      
     }
 
+    @Override
+    public void transportResumed() {
+        if( discoveryAgent instanceof Suspendable ) {
+            try {
+                ((Suspendable)discoveryAgent).suspend();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        super.transportResumed();
+    }
+
+    @Override
+    public void transportInterupted() {
+        if( discoveryAgent instanceof Suspendable ) {
+            try {
+                ((Suspendable)discoveryAgent).resume();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        super.transportInterupted();
+    }
 }

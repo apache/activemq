@@ -31,6 +31,7 @@ import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.Suspendable;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpDelete;
@@ -41,7 +42,13 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HTTPDiscoveryAgent implements DiscoveryAgent {
+public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
+
+    static enum UpdateState {
+        SUSPENDED,
+        RESUMING,
+        RESUMED
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
 
@@ -65,6 +72,8 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     private boolean useExponentialBackOff = true;
     private int maxReconnectAttempts;
     private final Object sleepMutex = new Object();
+    private final Object updateMutex = new Object();
+    private UpdateState updateState = UpdateState.RESUMED;
     private long minConnectTime = 5000;
 
     class SimpleDiscoveryEvent extends DiscoveryEvent {
@@ -237,7 +246,15 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
                     while (running.get()) {
                         try {
                             update();
-                            Thread.sleep(updateInterval);
+                            synchronized (updateMutex) {
+                                do {
+                                    if( updateState == UpdateState.RESUMING ) {
+                                        updateState = UpdateState.RESUMED;
+                                    } else {
+                                        updateMutex.wait(updateInterval);
+                                    }
+                                } while( updateState==UpdateState.SUSPENDED && running.get());
+                            }
                         } catch (InterruptedException e) {
                             return;
                         }
@@ -305,6 +322,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
 
     public void stop() throws Exception {
         if (startCounter.decrementAndGet() == 0) {
+            resume();
             running.set(false);
             if (thread != null) {
                 thread.join(updateInterval * 3);
@@ -340,4 +358,21 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent {
     public void setStartEmbeddRegistry(boolean startEmbeddRegistry) {
         this.startEmbeddRegistry = startEmbeddRegistry;
     }
+
+
+    @Override
+    public void suspend() throws Exception {
+        synchronized (updateMutex) {
+            updateState = UpdateState.SUSPENDED;
+        }
+    }
+
+    @Override
+    public void resume() throws Exception {
+        synchronized (updateMutex) {
+            updateState = UpdateState.RESUMING;
+            updateMutex.notify();
+        }
+    }
+
 }
