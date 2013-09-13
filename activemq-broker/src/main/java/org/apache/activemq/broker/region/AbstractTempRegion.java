@@ -100,7 +100,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
                 dest.dispose(context);
                 dest.stop();
             } catch (Exception e) {
-                LOG.warn("Failed to dispose of " + dest, e);
+                LOG.warn("Failed to dispose of {}", dest, e);
             }
         }
     }
@@ -111,7 +111,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
             dest.dispose(context);
             dest.stop();
         } catch (Exception e) {
-            LOG.warn("Failed to dispose of " + dest, e);
+            LOG.warn("Failed to dispose of {}", dest, e);
         }
 
     }

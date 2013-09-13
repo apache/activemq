@@ -141,9 +141,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             this.context = context;
             this.info = info;
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Activating " + this);
-            }
+            LOG.debug("Activating {}", this);
             if (!keepDurableSubsActive) {
                 for (Destination destination : durableDestinations.values()) {
                     Topic topic = (Topic) destination;
@@ -186,9 +184,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deactivating keepActive=" + keepDurableSubsActive + ", " + this);
-        }
+        LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
         active.set(false);
         offlineTimestamp.set(System.currentTimeMillis());
         this.usageManager.getMemoryUsage().removeUsageListener(this);

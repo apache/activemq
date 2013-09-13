@@ -71,7 +71,7 @@ public class ConnectionSplitBroker extends BrokerFilter{
                     for (ConsumerInfo nc : gcList) {
                         networkConsumerList.remove(nc);
                         super.removeConsumer(context, nc);
-                        LOG.warn("Removed stale network consumer " + nc);
+                        LOG.warn("Removed stale network consumer {}", nc);
                     }
                 }
             }

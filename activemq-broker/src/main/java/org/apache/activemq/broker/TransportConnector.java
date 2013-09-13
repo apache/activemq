@@ -252,14 +252,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             this.statusDector.start();
         }
 
-        LOG.info("Connector " + getName() + " Started");
+        LOG.info("Connector {} Started", getName());
     }
 
     public String getPublishableConnectString() throws Exception {
         String publishableConnectString = publishedAddressPolicy.getPublishableConnectString(this);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Publishing: " + publishableConnectString + " for broker transport URI: " + getConnectUri());
-        }
+        LOG.debug("Publishing: {} for broker transport URI: {}", publishableConnectString, getConnectUri());
         return publishableConnectString;
     }
 
@@ -285,7 +283,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
         server = null;
         ss.throwFirstException();
-        LOG.info("Connector " + getName() + " Stopped");
+        LOG.info("Connector {} Stopped", getName());
     }
 
     // Implementation methods

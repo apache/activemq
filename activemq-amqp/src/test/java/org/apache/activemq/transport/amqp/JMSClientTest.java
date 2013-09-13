@@ -42,9 +42,6 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.objectweb.jtests.jms.framework.TestConfig;
 
-/**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
 public class JMSClientTest extends AmqpTestSupport {
 
     @Rule public TestName name = new TestName();

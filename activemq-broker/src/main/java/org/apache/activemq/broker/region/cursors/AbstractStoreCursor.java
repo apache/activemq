@@ -96,9 +96,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
              * the cache. If subsequently, we pull out that message from the store (before its deleted)
              * it will be a duplicate - but should be ignored
              */
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " - cursor got duplicate: " + message.getMessageId() + ", " + message.getPriority());
-            }
+            LOG.trace("{} - cursor got duplicate: {}, {}", new Object[]{ this, message.getMessageId(), message.getPriority() });
         }
         return recovered;
     }
@@ -109,7 +107,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             try {
                 fillBatch();
             } catch (Exception e) {
-                LOG.error(this + " - Failed to fill batch", e);
+                LOG.error("{} - Failed to fill batch", this, e);
                 throw new RuntimeException(e);
             }
         }
@@ -146,7 +144,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             try {
                 fillBatch();
             } catch (Exception e) {
-                LOG.error(this + " - Failed to fill batch", e);
+                LOG.error("{} - Failed to fill batch", this, e);
                 throw new RuntimeException(e);
             }
         }
@@ -172,9 +170,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         boolean disableCache = false;
         if (hasSpace()) {
             if (!isCacheEnabled() && size==0 && isStarted() && useCache) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace(this + " - enabling cache for empty store " + node.getMessageId());
-                }
+                LOG.trace("{} - enabling cache for empty store {}", this, node.getMessageId());
                 setCacheEnabled(true);
             }
             if (isCacheEnabled()) {
@@ -194,11 +190,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             setCacheEnabled(false);
             // sync with store on disabling the cache
             if (lastCachedId != null) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace(this + " - disabling cache"
-                            + ", lastCachedId: " + lastCachedId
-                            + " current node Id: " + node.getMessageId() + " batchList size: " + batchList.size());
-                }
+                LOG.trace(this + "{} - disabling cache, lastCachedId: {} current node Id: {} batchList size: {}", new Object[]{ this, lastCachedId, node.getMessageId(), batchList.size() });
                 setBatch(lastCachedId);
                 lastCachedId = null;
             }
@@ -254,9 +246,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     protected final synchronized void fillBatch() {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(this + " - fillBatch");
-        }
+        LOG.trace("{} - fillBatch", this);
         if (batchResetNeeded) {
             resetSize();
             setMaxBatchSize(Math.min(regionDestination.getMaxPageSize(), size));
@@ -267,7 +257,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             try {
                 doFillBatch();
             } catch (Exception e) {
-                LOG.error(this + " - Failed to fill batch", e);
+                LOG.error("{} - Failed to fill batch", this, e);
                 throw new RuntimeException(e);
             }
             this.storeHasMessages = !this.batchList.isEmpty() || !hadSpace;

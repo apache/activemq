@@ -21,12 +21,9 @@ import java.util.Map;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MessageBrokerViewRegistry {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BrokerRegistry.class);
     private static final MessageBrokerViewRegistry INSTANCE = new MessageBrokerViewRegistry();
 
     private final Object mutex = new Object();

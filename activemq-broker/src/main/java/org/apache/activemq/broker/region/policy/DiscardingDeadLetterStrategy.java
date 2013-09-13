@@ -18,9 +18,7 @@ public class DiscardingDeadLetterStrategy extends SharedDeadLetterStrategy {
     @Override
     public boolean isSendToDeadLetterQueue(Message message) {
         boolean result = false;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Discarding message sent to DLQ: " + message.getMessageId() + ", dest: " + message.getDestination());
-        }
+        LOG.debug("Discarding message sent to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
         return result;
     }
 }

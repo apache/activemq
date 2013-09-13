@@ -114,7 +114,7 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
             configure(activeMessage);
             sub.addRecoveredMessage(context, activeMessage);
         } catch (Throwable e) {
-            LOG.warn("Failed to dispatch initial message: " + message + " into subscription. Reason: " + e, e);
+            LOG.warn("Failed to dispatch initial message: {} into subscription. Reason: ", message, e);
         }
     }
 

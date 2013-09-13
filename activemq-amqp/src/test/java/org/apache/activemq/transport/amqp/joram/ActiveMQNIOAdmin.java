@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
-/**
- * @author Kevin Earls
- */
 public class ActiveMQNIOAdmin extends ActiveMQAdmin {
     private static final String AMQP_NIO_URI = "amqp+nio://localhost:0";
 

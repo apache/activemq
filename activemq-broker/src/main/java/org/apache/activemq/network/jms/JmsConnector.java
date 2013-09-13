@@ -89,9 +89,9 @@ public abstract class JmsConnector implements Service {
                     DestinationBridge bridge = (DestinationBridge)lru.getValue();
                     try {
                         bridge.stop();
-                        LOG.info("Expired bridge: " + bridge);
+                        LOG.info("Expired bridge: {}", bridge);
                     } catch (Exception e) {
-                        LOG.warn("stopping expired bridge" + bridge + " caused an exception", e);
+                        LOG.warn("stopping expired bridge {} caused an exception", bridge, e);
                     }
                 }
                 return false;
@@ -160,7 +160,7 @@ public abstract class JmsConnector implements Service {
             for (DestinationBridge bridge : outboundBridges) {
                 bridge.start();
             }
-            LOG.info("JMS Connector " + getName() + " Started");
+            LOG.info("JMS Connector {} Started", getName());
         }
     }
 
@@ -176,7 +176,7 @@ public abstract class JmsConnector implements Service {
             for (DestinationBridge bridge : outboundBridges) {
                 bridge.stop();
             }
-            LOG.info("JMS Connector " + getName() + " Stopped");
+            LOG.info("JMS Connector {} Stopped", getName());
         }
     }
 
@@ -475,7 +475,7 @@ public abstract class JmsConnector implements Service {
             return;
         }
 
-        LOG.info("JmsConnector handling loss of connection [" + connection.toString() + "]");
+        LOG.info("JmsConnector handling loss of connection [{}]", connection.toString());
 
         // TODO - How do we handle the re-wiring of replyToBridges in this case.
         replyToBridges.clear();
@@ -500,7 +500,7 @@ public abstract class JmsConnector implements Service {
                     try {
                         doInitializeConnection(false);
                     } catch (Exception e) {
-                        LOG.error("Failed to initialize forgein connection for the JMSConnector", e);
+                        LOG.error("Failed to initialize foreign connection for the JMSConnector", e);
                     }
                 }
             });
@@ -552,7 +552,7 @@ public abstract class JmsConnector implements Service {
                 try {
                     doInitializeConnection(false);
                 } catch (Exception e) {
-                    LOG.error("Failed to initialize forgein connection for the JMSConnector", e);
+                    LOG.error("Failed to initialize foreign connection for the JMSConnector", e);
                 }
             }
         });
@@ -606,8 +606,7 @@ public abstract class JmsConnector implements Service {
 
                 return;
             } catch(Exception e) {
-                LOG.debug("Failed to establish initial " + (local ? "local" : "foriegn") +
-                          " connection for JmsConnector [" + attempt + "]: " + e.getMessage());
+                LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
             }
         }
         while (maxRetries < ++attempt && !connectionSerivce.isTerminating());

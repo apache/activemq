@@ -42,9 +42,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
- */
 public class AmqpTransformerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransformerTest.class);
@@ -135,7 +132,7 @@ public class AmqpTransformerTest {
         Message message = c.receive(2000);
 
         assertNotNull("Should have received a message", message);
-        LOG.info("Recieved message: ", message);
+        LOG.info("Recieved message: {}", message);
         assertTrue(message instanceof BytesMessage);
         Boolean nativeTransformationUsed = message.getBooleanProperty("JMS_AMQP_NATIVE");
         Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");

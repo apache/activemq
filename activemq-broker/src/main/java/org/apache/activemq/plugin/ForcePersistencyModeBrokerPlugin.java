@@ -50,7 +50,7 @@ public ForcePersistencyModeBrokerPlugin() {
   public Broker installPlugin(Broker broker) throws Exception{
     ForcePersistencyModeBroker pB = new ForcePersistencyModeBroker(broker);
     pB.setPersistenceFlag(isPersistenceForced());
-    LOG.info("Installing ForcePersistencyModeBroker plugin: persistency enforced=" + pB.isPersistent());
+    LOG.info("Installing ForcePersistencyModeBroker plugin: persistency enforced={}", pB.isPersistent());
     return pB;
   }
 

@@ -101,7 +101,7 @@ public abstract class AbstractSubscription implements Subscription {
         try {
             return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
-            LOG.info("Selector failed to evaluate: " + e.getMessage(), e);
+            LOG.info("Selector failed to evaluate: {}", e.getMessage(), e);
             return false;
         }
     }

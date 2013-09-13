@@ -17,8 +17,6 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.region.MessageReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -34,8 +32,6 @@ import java.util.LinkedList;
  *
  */
 public class UniquePropertyMessageEvictionStrategy extends MessageEvictionStrategySupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(UniquePropertyMessageEvictionStrategy.class);
 
     protected String propertyName;
 

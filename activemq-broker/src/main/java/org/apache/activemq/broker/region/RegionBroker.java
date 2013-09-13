@@ -234,10 +234,10 @@ public class RegionBroker extends EmptyBroker {
                 if (context.isAllowLinkStealing()){
                      clientIdSet.remove(clientId);
                      if (oldContext.getConnection() != null) {
-                        LOG.warn("Stealing link for clientId " + clientId + " From Connection " + oldContext.getConnection());
+                        LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
                         oldContext.getConnection().stop();
                      }else{
-                         LOG.error("Not Connection for " + oldContext);
+                         LOG.error("Not Connection for {}", oldContext);
                      }
                 }else{
                     throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
@@ -560,9 +560,7 @@ public class RegionBroker extends EmptyBroker {
             brokerInfos.put(info.getBrokerId(), existing);
         }
         existing.incrementRefCount();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(getBrokerName() + " addBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
-        }
+        LOG.debug("{} addBroker: {} brokerInfo size: {}", new Object[]{ getBrokerName(), info.getBrokerName(), brokerInfos.size() });
         addBrokerInClusterUpdate(info);
     }
 
@@ -573,9 +571,7 @@ public class RegionBroker extends EmptyBroker {
             if (existing != null && existing.decrementRefCount() == 0) {
                 brokerInfos.remove(info.getBrokerId());
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(getBrokerName() + " removeBroker:" + info.getBrokerName() + " brokerInfo size : " + brokerInfos.size());
-            }
+            LOG.debug("{} removeBroker: {} brokerInfo size: {}", new Object[]{ getBrokerName(), info.getBrokerName(), brokerInfos.size()});
             // When stopping don't send cluster updates since we are the one's tearing down
             // our own bridges.
             if (!brokerService.isStopping()) {
@@ -688,7 +684,7 @@ public class RegionBroker extends EmptyBroker {
                     expired = stampAsExpired(message);
                 }
             } catch (IOException e) {
-                LOG.warn("unexpected exception on message expiry determination for: " + messageReference, e);
+                LOG.warn("unexpected exception on message expiry determination for: {}", messageReference, e);
             }
         }
         return expired;
@@ -706,9 +702,7 @@ public class RegionBroker extends EmptyBroker {
 
     @Override
     public void messageExpired(ConnectionContext context, MessageReference node, Subscription subscription) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Message expired " + node);
-        }
+        LOG.debug("Message expired {}", node);
         getRoot().sendToDeadLetterQueue(context, node, subscription, new Throwable("Message Expired. Expiration:" + node.getExpiration()));
     }
 
@@ -745,15 +739,12 @@ public class RegionBroker extends EmptyBroker {
                             return true;
                         }
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Dead Letter message with no DLQ strategy in place, message id: " + message.getMessageId() + ", destination: "
-                                + message.getDestination());
-                        }
+                        LOG.debug("Dead Letter message with no DLQ strategy in place, message id: {}, destination: {}", message.getMessageId(), message.getDestination());
                     }
                 }
             }
         } catch (Exception e) {
-            LOG.warn("Caught an exception sending to DLQ: " + node, e);
+            LOG.warn("Caught an exception sending to DLQ: {}", node, e);
         }
 
         return false;
@@ -764,7 +755,7 @@ public class RegionBroker extends EmptyBroker {
         try {
             return getBrokerService().getBroker();
         } catch (Exception e) {
-            LOG.error("Trying to get Root Broker " + e);
+            LOG.error("Trying to get Root Broker", e);
             throw new RuntimeException("The broker from the BrokerService should not throw an exception");
         }
     }
@@ -795,7 +786,7 @@ public class RegionBroker extends EmptyBroker {
         try {
             getRegion(destination).processConsumerControl(consumerExchange, control);
         } catch (JMSException jmse) {
-            LOG.warn("unmatched destination: " + destination + ", in consumerControl: " + control);
+            LOG.warn("unmatched destination: {}, in consumerControl: {}", destination, control);
         }
     }
 
@@ -849,11 +840,11 @@ public class RegionBroker extends EmptyBroker {
                     if (dest instanceof BaseDestination) {
                         log = ((BaseDestination) dest).getLog();
                     }
-                    log.info(dest.getName() + " Inactive for longer than " + dest.getInactiveTimoutBeforeGC() + " ms - removing ...");
+                    log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimoutBeforeGC());
                     try {
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
                     } catch (Exception e) {
-                        LOG.error("Failed to remove inactive destination " + dest, e);
+                        LOG.error("Failed to remove inactive destination {}", dest, e);
                     }
                 }
             }

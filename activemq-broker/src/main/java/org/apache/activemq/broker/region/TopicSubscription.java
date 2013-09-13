@@ -115,7 +115,7 @@ public class TopicSubscription extends AbstractSubscription {
             if (info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize()) {
                 // Slow consumers should log and set their state as such.
                 if (!isSlowConsumer()) {
-                    LOG.warn(toString() + ": has twice its prefetch limit pending, without an ack; it appears to be slow");
+                    LOG.warn("{}: has twice its prefetch limit pending, without an ack; it appears to be slow", toString());
                     setSlowConsumer(true);
                     for (Destination dest: destinations) {
                         dest.slowConsumer(getContext(), this);
@@ -128,18 +128,18 @@ public class TopicSubscription extends AbstractSubscription {
                     synchronized (matchedListMutex) {
                         while (matched.isFull()) {
                             if (getContext().getStopping().get()) {
-                                LOG.warn(toString() + ": stopped waiting for space in pendingMessage cursor for: "
-                                        + node.getMessageId());
+                                LOG.warn("{}: stopped waiting for space in pendingMessage cursor for: {}", toString(), node.getMessageId());
                                 enqueueCounter.decrementAndGet();
                                 return;
                             }
                             if (!warnedAboutWait) {
-                                LOG.info(toString() + ": Pending message cursor [" + matched
-                                        + "] is full, temp usage ("
-                                        + +matched.getSystemUsage().getTempUsage().getPercentUsage()
-                                        + "%) or memory usage ("
-                                        + matched.getSystemUsage().getMemoryUsage().getPercentUsage()
-                                        + "%) limit reached, blocking message add() pending the release of resources.");
+                                LOG.info("{}: Pending message cursor [{}] is full, temp usag ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
+                                        new Object[]{
+                                                toString(),
+                                                matched,
+                                                matched.getSystemUsage().getTempUsage().getPercentUsage(),
+                                                matched.getSystemUsage().getMemoryUsage().getPercentUsage()
+                                        });
                                 warnedAboutWait = true;
                             }
                             matchedListMutex.wait(20);
@@ -188,7 +188,9 @@ public class TopicSubscription extends AbstractSubscription {
                             // lets avoid an infinite loop if we are given a bad eviction strategy
                             // for a bad strategy lets just not evict
                             if (messagesToEvict == 0) {
-                                LOG.warn("No messages to evict returned for "  + destination + " from eviction strategy: " + messageEvictionStrategy + " out of " + list.size() + " candidates");
+                                LOG.warn("No messages to evict returned for {} from eviction strategy: {} out of {} candidates", new Object[]{
+                                        destination, messageEvictionStrategy, list.size()
+                                });
                                 break;
                             }
                         }
@@ -205,7 +207,7 @@ public class TopicSubscription extends AbstractSubscription {
             duplicate = audit.isDuplicate(node);
             if (LOG.isDebugEnabled()) {
                 if (duplicate) {
-                    LOG.debug(this + ", ignoring duplicate add: " + node.getMessageId());
+                    LOG.debug("{}, ignoring duplicate add: {}", this, node.getMessageId());
                 }
             }
         }
@@ -623,9 +625,7 @@ public class TopicSubscription extends AbstractSubscription {
         if(destination != null) {
             destination.getDestinationStatistics().getDequeues().increment();
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(this + ", discarding message " + message);
-        }
+        LOG.debug("{}, discarding message {}", this, message);
         Destination dest = (Destination) message.getRegionDestination();
         if (dest != null) {
             dest.messageDiscarded(getContext(), this, message);

@@ -55,11 +55,9 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view, objectName);
             bridge.setMbeanObjectName(objectName);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("registered: " + bridge + " as: " + objectName);
-            }
+            LOG.debug("registered: {} as: {}", bridge, objectName);
         } catch (Throwable e) {
-            LOG.debug("Network bridge could not be registered in JMX: " + e.getMessage(), e);
+            LOG.debug("Network bridge could not be registered in JMX: {}", e.getMessage(), e);
         }
     }
 
@@ -74,7 +72,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
                 brokerService.getManagementContext().unregisterMBean(objectName);
             }
         } catch (Throwable e) {
-            LOG.debug("Network bridge could not be unregistered in JMX: " + e.getMessage(), e);
+            LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);
         }
     }
 

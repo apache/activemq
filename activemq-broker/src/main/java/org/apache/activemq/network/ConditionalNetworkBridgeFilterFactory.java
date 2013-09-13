@@ -106,15 +106,10 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
                 // potential replay back to origin
                 match = allowReplayWhenNoConsumers && hasNoLocalConsumers(message, mec) && hasNotJustArrived(message);
 
-                if (LOG.isTraceEnabled()) {
-                    if (match) {
-                        LOG.trace("Replaying [" + message.getMessageId() + "] for [" + message.getDestination()
-                                + "] back to origin in the absence of a local consumer");
-                    } else {
-                        LOG.trace("Suppressing replay of [" + message.getMessageId() + "] for [" + message.getDestination()
-                                + "] back to origin " + Arrays.asList(message.getBrokerPath()));
-
-                    }
+                if (match) {
+                    LOG.trace("Replaying [{}] for [{}] back to origin in the absence of a local consumer", message.getMessageId(), message.getDestination());
+                } else {
+                    LOG.trace("Suppressing replay of [{}] for [{}] back to origin {}", new Object[]{ message.getMessageId(), message.getDestination(), Arrays.asList(message.getBrokerPath())} );
                 }
 
             } else {
@@ -123,10 +118,9 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             }
 
             if (match && rateLimitExceeded()) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Throttled network consumer rejecting [" + message.getMessageId() + "] for [" + message.getDestination() + " " + matchCount
-                            + ">" + rateLimit + "/" + rateDuration);
-                }
+                LOG.trace("Throttled network consumer rejecting [{}] for [{}] {}>{}/{}", new Object[]{
+                        message.getMessageId(), message.getDestination(), matchCount, rateLimit, rateDuration
+                });
                 match = false;
             }
 
@@ -142,10 +136,9 @@ public class ConditionalNetworkBridgeFilterFactory implements NetworkBridgeFilte
             List<Subscription> consumers = regionDestination.getConsumers();
             for (Subscription sub : consumers) {
                 if (!sub.getConsumerInfo().isNetworkSubscription() && !sub.getConsumerInfo().isBrowser()) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Not replaying [" + message.getMessageId() + "] for [" + message.getDestination()
-                                + "] to origin due to existing local consumer: " + sub.getConsumerInfo());
-                    }
+                    LOG.trace("Not replaying [{}] for [{}] to origin due to existing local consumer: {}", new Object[]{
+                            message.getMessageId(), message.getDestination(), sub.getConsumerInfo()
+                    });
                     return false;
                 }
             }

@@ -39,8 +39,7 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * A message was sent to the destination.
      * 
      * @param context
-     * @param message 
-     * @param node
+     * @param message
      * @return true if successful
      * @throws Exception
      */
@@ -51,8 +50,7 @@ public interface SubscriptionRecoveryPolicy extends Service {
      * 
      * @param context
      * @param topic
-     * @param sub 
-     * @param node
+     * @param sub
      * @throws Exception
      */
     void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception;

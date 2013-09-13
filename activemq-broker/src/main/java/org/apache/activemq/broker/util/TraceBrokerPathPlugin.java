@@ -61,7 +61,7 @@ public class TraceBrokerPathPlugin extends BrokerPluginSupport {
                 messageDispatch.getMessage().setMarshalledProperties(null);
             }
         } catch (IOException ioe) {
-            LOG.warn("Setting broker property failed " + ioe, ioe);
+            LOG.warn("Setting broker property failed", ioe);
         }
         super.preProcessDispatch(messageDispatch);
     }

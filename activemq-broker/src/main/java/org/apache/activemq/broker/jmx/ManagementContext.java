@@ -110,7 +110,7 @@ public class ManagementContext implements Service {
                         getMBeanServer().invoke(namingServiceObjectName, "start", null, null);
                     }
                 } catch (Throwable ignore) {
-                    LOG.debug("Error invoking start on mbean " + namingServiceObjectName + ". This exception is ignored.", ignore);
+                    LOG.debug("Error invoking start on MBean {}. This exception is ignored.", namingServiceObjectName, ignore);
                 }
 
                 Thread t = new Thread("JMX connector") {
@@ -135,11 +135,11 @@ public class ManagementContext implements Service {
                                     }
                                     connectorStarting.set(false);
                                 }
-                                LOG.info("JMX consoles can connect to " + server.getAddress());
+                                LOG.info("JMX consoles can connect to {}", server.getAddress());
                             }
                         } catch (IOException e) {
-                            LOG.warn("Failed to start jmx connector: " + e.getMessage() + ". Will restart management to re-create jmx connector, trying to remedy this issue.");
-                            LOG.debug("Reason for failed jmx connector start", e);
+                            LOG.warn("Failed to start JMX connector {}. Will restart management to re-create JMX connector, trying to remedy this issue.", e.getMessage());
+                            LOG.debug("Reason for failed JMX connector start", e);
                         } finally {
                             MDC.remove("activemq.broker");
                         }
@@ -177,7 +177,7 @@ public class ManagementContext implements Service {
                         server.stop();
                     }
                 } catch (IOException e) {
-                    LOG.warn("Failed to stop jmx connector: " + e.getMessage());
+                    LOG.warn("Failed to stop jmx connector: {}", e.getMessage());
                 }
                 // stop naming service mbean
                 try {
@@ -188,7 +188,7 @@ public class ManagementContext implements Service {
                         getMBeanServer().unregisterMBean(namingServiceObjectName);
                     }
                 } catch (Throwable ignore) {
-                    LOG.warn("Error stopping and unregsitering mbean " + namingServiceObjectName + " due " + ignore.getMessage());
+                    LOG.warn("Error stopping and unregsitering MBean {} due to {}", namingServiceObjectName, ignore.getMessage());
                 }
                 namingServiceObjectName = null;
             }
@@ -324,7 +324,7 @@ public class ManagementContext implements Service {
         try {
             result = new ObjectName(tmp);
         } catch (MalformedObjectNameException e) {
-            LOG.error("Couldn't create ObjectName from: " + type + " , " + name);
+            LOG.error("Couldn't create ObjectName from: {}, {}", type, name);
         }
         return result;
     }
@@ -452,16 +452,16 @@ public class ManagementContext implements Service {
                         }
                         return (MBeanServer)answer;
                     } else {
-                        LOG.warn("Could not cast: " + answer + " into an MBeanServer. There must be some classloader strangeness in town");
+                        LOG.warn("Could not cast: {} into an MBeanServer. There must be some classloader strangeness in town", answer);
                     }
                 } else {
-                    LOG.warn("Method getPlatformMBeanServer() does not appear visible on type: " + type.getName());
+                    LOG.warn("Method getPlatformMBeanServer() does not appear visible on type: {}", type.getName());
                 }
             } catch (Exception e) {
-                LOG.warn("Failed to call getPlatformMBeanServer() due to: " + e, e);
+                LOG.warn("Failed to call getPlatformMBeanServer() due to: ", e);
             }
         } else {
-            LOG.trace("Class not found: " + name + " so probably running on Java 1.4");
+            LOG.trace("Class not found: {} so probably running on Java 1.4", name);
         }
         return null;
     }
@@ -516,7 +516,7 @@ public class ManagementContext implements Service {
             Attribute attr = new Attribute("Port", Integer.valueOf(connectorPort));
             mbeanServer.setAttribute(namingServiceObjectName, attr);
         } catch(ClassNotFoundException e) {
-            LOG.debug("Probably not using JRE 1.4: " + e.getLocalizedMessage());
+            LOG.debug("Probably not using JRE 1.4: {}", e.getLocalizedMessage());
         } catch (Throwable e) {
             LOG.debug("Failed to create local registry. This exception will be ignored.", e);
         }

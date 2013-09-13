@@ -143,17 +143,15 @@ public class ProducerBrokerExchange {
                 long lastStoredForMessageProducer = getStoredSequenceIdForMessage(messageSend.getMessageId());
                 if (producerSequenceId <= lastStoredForMessageProducer) {
                     canDispatch = false;
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("suppressing duplicate message send  [" + (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()) + "] from network producer with producerSequenceId ["
-                                + producerSequenceId + "] less than last stored: " + lastStoredForMessageProducer);
-                    }
+                    LOG.debug("suppressing duplicate message send [{}] from network producer with producerSequence [{}] less than last stored: {}", new Object[]{
+                            (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastStoredForMessageProducer
+                    });
                 }
             } else if (producerSequenceId <= lastSendSequenceNumber.get()) {
                 canDispatch = false;
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("suppressing duplicate message send [" + (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()) + "] with producerSequenceId ["
-                            + producerSequenceId + "] less than last stored: " + lastSendSequenceNumber);
-                }
+                LOG.debug("suppressing duplicated message send [{}] with producerSequenceId [{}] less than last stored: {}", new Object[]{
+                        (LOG.isTraceEnabled() ? messageSend : messageSend.getMessageId()), producerSequenceId, lastSendSequenceNumber
+                });
             } else {
                 // track current so we can suppress duplicates later in the stream
                 lastSendSequenceNumber.set(producerSequenceId);
@@ -166,7 +164,7 @@ public class ProducerBrokerExchange {
         try {
             return brokerService.getPersistenceAdapter().getLastProducerSequenceId(messageId.getProducerId());
         } catch (IOException ignored) {
-            LOG.debug("Failed to determine last producer sequence id for: " + messageId, ignored);
+            LOG.debug("Failed to determine last producer sequence id for: {}", messageId, ignored);
         }
         return -1;
     }
@@ -178,7 +176,7 @@ public class ProducerBrokerExchange {
             isNetworkProducer = true;
         }
         lastSendSequenceNumber.set(l);
-        LOG.debug("last stored sequence id set: " + l);
+        LOG.debug("last stored sequence id set: {}", l);
     }
 
     public void incrementSend() {

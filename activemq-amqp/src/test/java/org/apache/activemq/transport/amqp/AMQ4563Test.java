@@ -64,7 +64,7 @@ public class AMQ4563Test extends AmqpTestSupport {
             message = session.createTextMessage();
             String messageText = "Hello " + i + " sent at " + new java.util.Date().toString();
             message.setText(messageText);
-            LOG.debug(">>>> Sent [" + messageText + "]");
+            LOG.debug(">>>> Sent [{}]", messageText);
             p.send(message);
         }
 
@@ -97,7 +97,7 @@ public class AMQ4563Test extends AmqpTestSupport {
         // Restart broker.
         restartBroker(connection, session);
         String selector = "JMSMessageID = '" + message.getJMSMessageID() + "'";
-        LOG.info("Using selector: "+selector);
+        LOG.info("Using selector: {}", selector);
         int messagesReceived = readAllMessages(queue, selector);
         assertEquals(1, messagesReceived);
     }
@@ -120,7 +120,7 @@ public class AMQ4563Test extends AmqpTestSupport {
         // Restart broker.
         restartBroker(connection, session);
         String selector = "JMSMessageID = '" + message.getJMSMessageID() + "'";
-        LOG.info("Using selector: "+selector);
+        LOG.info("Using selector: {}", selector);
         int messagesReceived = readAllMessages(queue, selector);
         assertEquals(1, messagesReceived);
     }
@@ -140,7 +140,7 @@ public class AMQ4563Test extends AmqpTestSupport {
             message = session.createTextMessage();
             String messageText = "Hello " + i + " sent at " + new java.util.Date().toString();
             message.setText(messageText);
-            LOG.debug(">>>> Sent [" + messageText + "]");
+            LOG.debug(">>>> Sent [{}]", messageText);
             p.send(message);
         }
 
@@ -175,7 +175,7 @@ public class AMQ4563Test extends AmqpTestSupport {
                 assertNotNull(msg);
                 assertTrue(msg instanceof TextMessage);
                 TextMessage textMessage = (TextMessage) msg;
-                LOG.debug(">>>> Received [" + textMessage.getText() + "]");
+                LOG.debug(">>>> Received [{}]", textMessage.getText());
                 messagesReceived++;
                 msg = consumer.receive(5000);
             }
@@ -196,7 +196,7 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     private Connection createAMQPConnection() throws JMSException {
-        LOG.debug(">>> In createConnection using port " + port);
+        LOG.debug(">>> In createConnection using port {}", port);
         final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
         final Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
@@ -210,7 +210,7 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     private Connection createAMQConnection() throws JMSException {
-        LOG.debug(">>> In createConnection using port " + port);
+        LOG.debug(">>> In createConnection using port {}", port);
         final ConnectionFactory factory = new ActiveMQConnectionFactory("admin", "password", openwireUri);
         final Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {

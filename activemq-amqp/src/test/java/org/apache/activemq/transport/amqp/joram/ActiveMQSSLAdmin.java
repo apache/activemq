@@ -68,7 +68,7 @@ public class ActiveMQSSLAdmin extends ActiveMQAdmin {
         String connectorURI = getConnectorURI();
         TransportConnector connector = broker.addConnector(connectorURI);
         port = connector.getConnectUri().getPort();
-        LOG.info("ssl port is " + port);
+        LOG.info("ssl port is {}", port);
 
         broker.start();
         //broker.
@@ -83,7 +83,7 @@ public class ActiveMQSSLAdmin extends ActiveMQAdmin {
     @Override
     public void createConnectionFactory(String name) {
         try {
-            LOG.debug("Creating a connection factory using port " + port);
+            LOG.debug("Creating a connection factory using port {}", port);
             final ConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, null, null, null, true);
             context.bind(name, factory);
         } catch (NamingException e) {

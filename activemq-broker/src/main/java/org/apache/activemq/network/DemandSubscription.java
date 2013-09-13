@@ -107,9 +107,7 @@ public class DemandSubscription {
 
     public void waitForCompletion() {
         if (dispatched.get() > 0) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Waiting for completion for sub: " + localInfo.getConsumerId() + ", dispatched: " + this.dispatched.get());
-            }
+            LOG.debug("Waiting for completion for sub: {}, dispatched: {}", localInfo.getConsumerId(), this.dispatched.get());
             activeWaiter.set(true);
             if (dispatched.get() > 0) {
                 synchronized (activeWaiter) {
@@ -119,8 +117,7 @@ public class DemandSubscription {
                     }
                 }
                 if (this.dispatched.get() > 0) {
-                    LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, " +
-                             "expect potentially " + this.dispatched.get() + " duplicate forwards");
+                    LOG.warn("demand sub interrupted or timedout while waiting for outstanding responses, expect potentially {} duplicate forwards", this.dispatched.get());
                 }
             }
         }

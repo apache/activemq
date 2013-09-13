@@ -38,13 +38,13 @@ public abstract class BrokerPluginSupport extends MutableBrokerFilter implements
     @Override
     public void start() throws Exception {
         super.start();
-        LOG.info("Broker Plugin " + getClass().getName() + " started");
+        LOG.info("Broker Plugin {} started", getClass().getName());
     }
     
     @Override
     public void stop() throws Exception {
         super.stop();
-        LOG.info("Broker Plugin " + getClass().getName() + " stopped");
+        LOG.info("Broker Plugin {} stopped", getClass().getName());
     }
     
 }

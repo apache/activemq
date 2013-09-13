@@ -40,9 +40,7 @@ public abstract class DotFileInterceptorSupport extends BrokerFilter {
     }
 
     protected void generateFile() throws Exception {
-        if (log.isDebugEnabled()) {
-            log.debug("Creating DOT file at: " + file);
-        }
+        log.debug("Creating DOT file at: {}", file);
         PrintWriter writer = new PrintWriter(new FileWriter(file));
         try {
             generateFile(writer);

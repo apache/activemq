@@ -49,7 +49,7 @@ public class BrokerRegistry {
             if (result == null && brokerName != null && brokerName.equals(BrokerService.DEFAULT_BROKER_NAME)) {
                 result = findFirst();
                 if (result != null) {
-                    LOG.warn("Broker localhost not started so using " + result.getBrokerName() + " instead");
+                    LOG.warn("Broker localhost not started so using {} instead", result.getBrokerName());
                 }
             }
             if (result == null && (brokerName==null || brokerName.isEmpty() || brokerName.equals("null"))){

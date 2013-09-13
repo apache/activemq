@@ -612,12 +612,12 @@ public abstract class BaseDestination implements Destination {
 
     protected final void waitForSpace(ConnectionContext context, ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-            getLog().debug("sendFailIfNoSpace, forcing exception on send, usage:  " + usage + ": " + warning);
+            getLog().debug("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
             throw new ResourceAllocationException(warning);
         }
         if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
             if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout(), highWaterMark)) {
-                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: " + usage + ": " + warning);
+                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: {}: {}", usage, warning);
                 throw new ResourceAllocationException(warning);
             }
         } else {
@@ -632,7 +632,7 @@ public abstract class BaseDestination implements Destination {
 
                 long now = System.currentTimeMillis();
                 if (now >= nextWarn) {
-                    getLog().info("" + usage + ": " + warning + " (blocking for: " + (now - start) / 1000 + "s)");
+                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((now - start) / 1000))});
                     nextWarn = now + blockedProducerWarningInterval;
                 }
             }

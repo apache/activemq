@@ -18,8 +18,6 @@ package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.DataByteArrayInputStream;
 
 import javax.net.SocketFactory;
 import java.io.IOException;

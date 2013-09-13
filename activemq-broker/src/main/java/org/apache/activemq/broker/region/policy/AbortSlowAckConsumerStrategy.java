@@ -124,9 +124,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
             if (timeDelta > maxTimeSinceLastAck) {
                 if (!slowConsumers.containsKey(subscriber)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("sub: {} is now slow", subscriber.getConsumerInfo().getConsumerId());
-                    }
+                    LOG.debug("sub: {} is now slow", subscriber.getConsumerInfo().getConsumerId());
                     slowConsumers.put(subscriber, new SlowConsumerEntry(subscriber.getContext()));
                 } else if (getMaxSlowCount() > 0) {
                     slowConsumers.get(subscriber).slow();
@@ -145,22 +143,14 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
             if (getMaxSlowDuration() > 0 && (entry.getValue().markCount * getCheckPeriod() > getMaxSlowDuration()) ||
                 getMaxSlowCount() > 0 && entry.getValue().slowCount > getMaxSlowCount()) {
 
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Transferring consumer {} to the abort list: " +
-                              "slow duration = " + entry.getValue().markCount * getCheckPeriod() + ", " +
-                              "slow count = " + entry.getValue().slowCount,
-                              entry.getKey().getConsumerInfo().getConsumerId());
-                }
+                LOG.trace("Transferring consumer{} to the abort list: {} slow duration = {}, slow count = {}", new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(), entry.getValue().markCount * getCheckPeriod(), entry.getValue().getSlowCount() });
 
                 toAbort.put(entry.getKey(), entry.getValue());
                 slowConsumers.remove(entry.getKey());
             } else {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Not yet time to abot consumer {}: " +
-                              "slow duration = " + entry.getValue().markCount * getCheckPeriod() + ", " +
-                              "slow count = " + entry.getValue().slowCount,
-                              entry.getKey().getConsumerInfo().getConsumerId());
-                }
+
+                LOG.trace("Not yet time to abort consumer {}: slow duration = {}, slow count = {}", new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(), entry.getValue().markCount * getCheckPeriod(), entry.getValue().slowCount });
+
             }
         }
 

@@ -66,7 +66,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     public SubQueueSelectorCacheBroker(Broker next, final File persistFile) {
         super(next);
         this.persistFile = persistFile;
-        LOG.info("Using persisted selector cache from[" + persistFile + "]");
+        LOG.info("Using persisted selector cache from[{}]", persistFile);
 
         readCache();
 
@@ -85,7 +85,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug("Caching consumer selector [" + info.getSelector() + "] on a " + info.getDestination().getQualifiedName());
+        LOG.debug("Caching consumer selector [{}] on a {}", info.getSelector(), info.getDestination().getQualifiedName());
         String selector = info.getSelector();
 
         // As ConcurrentHashMap doesn't support null values, use always true expression
@@ -141,7 +141,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 fos.close();
             } //try
         } catch (IOException ex) {
-            LOG.error("Unable to access file[" + persistFile + "]", ex);
+            LOG.error("Unable to access file[{}]", persistFile, ex);
         } //try
     }
 

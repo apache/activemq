@@ -122,7 +122,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                 }
             }
         } catch (IOException e) {
-            LOG.warn("locker keepAlive resulted in: " + e, e);
+            LOG.warn("locker keepAlive resulted in", e);
         }
         if (stop) {
             stopBroker();
@@ -131,7 +131,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     protected void stopBroker() {
         // we can no longer keep the lock so lets fail
-        LOG.error(brokerService.getBrokerName() + ", no longer able to keep the exclusive lock so giving up being a master");
+        LOG.error("{}, no longer able to keep the exclusive lock so giving up being a master", brokerService.getBrokerName());
         try {
             if( brokerService.isRestartAllowed() ) {
                 brokerService.requestRestart();

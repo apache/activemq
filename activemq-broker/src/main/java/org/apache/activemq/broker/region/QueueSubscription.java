@@ -56,9 +56,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         if (n.isExpired()) {
             // sync with message expiry processing
             if (!broker.isExpired(n)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ignoring ack {}, for already expired message: {}", ack, n);
-                }
+                LOG.debug("ignoring ack {}, for already expired message: {}", ack, n);
                 return;
             }
         }

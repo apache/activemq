@@ -271,9 +271,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                         messageSend.setExpiration(expiration);
                     }
                     messageSend.setTimestamp(newTimeStamp);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Set message " + messageSend.getMessageId() + " timestamp from " + oldTimestamp + " to " + newTimeStamp);
-                    }
+                    LOG.debug("Set message {} timestamp from {} to {}", new Object[]{ messageSend.getMessageId(), oldTimestamp, newTimeStamp });
                 }
             }
 
@@ -283,7 +281,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             super.send(producerExchange, messageSend);
         } catch (Exception e) {
-            LOG.error("Failed to send scheduled message " + id, e);
+            LOG.error("Failed to send scheduled message {}", id, e);
         }
     }
 
@@ -327,7 +325,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 context.setProducerFlowControl(originalFlowControl);
             }
         } catch (Exception e) {
-            LOG.error("Failed to send scheduled message " + job.getJobId(), e);
+            LOG.error("Failed to send scheduled message {}", job.getJobId(), e);
         }
     }
 }

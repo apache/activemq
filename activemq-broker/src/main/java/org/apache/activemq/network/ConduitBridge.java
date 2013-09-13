@@ -18,10 +18,8 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.SubscriptionInfo;
@@ -67,9 +65,9 @@ public class ConduitBridge extends DemandForwardingBridge {
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
             if (!ds.getRemoteInfo().isNetworkSubscription() && filter.matches(info.getDestination())) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " " + info + " with ids" + info.getNetworkConsumerIds() + " matched (add interest) " + ds);
-                }
+                LOG.debug("{} {} with ids {} matched (add interest) {}", new Object[]{
+                        configuration.getBrokerName(), info, info.getNetworkConsumerIds(), ds
+                });
                 // add the interest in the subscription
                 if (!info.isDurable()) {
                     ds.add(info.getConsumerId());
@@ -89,9 +87,9 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             if (ds.remove(id)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " on " + localBroker + " from " + remoteBrokerName + " removed interest for: " + id  + " from " + ds);
-                }
+                LOG.debug("{} on {} from {} removed interest for: {} from {}", new Object[]{
+                        configuration.getBrokerName(), localBroker, remoteBrokerName, id, ds
+                });
             }
             if (ds.isEmpty()) {
                 tmpList.add(ds);
@@ -100,9 +98,9 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (DemandSubscription ds : tmpList) {
             removeSubscription(ds);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(configuration.getBrokerName() + " on " + localBroker + " from " + remoteBrokerName + " removed " + ds);
-            }
+            LOG.debug("{} on {} from {} removed {}", new Object[]{
+                    configuration.getBrokerName(), localBroker, remoteBrokerName, ds
+            });
         }
     }
 }

@@ -94,7 +94,7 @@ public class BrokerView implements BrokerViewMBean {
         try {
             brokerService.getPersistenceAdapter().checkpoint(true);
         } catch (IOException e) {
-            LOG.error("Failed to checkpoint persistence adapter on gc request, reason:" + e, e);
+            LOG.error("Failed to checkpoint persistence adapter on gc request", e);
         }
     }
 

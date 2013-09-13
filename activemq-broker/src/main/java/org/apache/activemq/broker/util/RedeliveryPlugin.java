@@ -148,12 +148,12 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
                     } else if (isSendToDlqIfMaxRetriesExceeded()) {
                         return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
                     } else {
-                        LOG.debug("Discarding message that exceeds max redelivery count( " + maximumRedeliveries + "), " + messageReference.getMessageId());
+                        LOG.debug("Discarding message that exceeds max redelivery count({}), {}", maximumRedeliveries, messageReference.getMessageId());
                     }
                 } else if (isFallbackToDeadLetter()) {
                     return super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
                 } else {
-                    LOG.debug("Ignoring dlq request for:" + messageReference.getMessageId() + ", RedeliveryPolicy not found (and no fallback) for: " + regionDestination.getActiveMQDestination());
+                    LOG.debug("Ignoring dlq request for: {}, RedeliveryPolicy not found (and no fallback) for: {}", messageReference.getMessageId(), regionDestination.getActiveMQDestination());
                 }
 
                 return false;
@@ -169,8 +169,9 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
     private void scheduleRedelivery(ConnectionContext context, MessageReference messageReference, long delay, int redeliveryCount) throws Exception {
         if (LOG.isTraceEnabled()) {
             Destination regionDestination = (Destination) messageReference.getRegionDestination();
-            LOG.trace("redelivery #" + redeliveryCount + " of: " + messageReference.getMessageId() + " with delay: "
-                    + delay + ", dest: " + regionDestination.getActiveMQDestination());
+            LOG.trace("redelivery #{} of: {} with delay: {}, dest: {}", new Object[]{
+                    redeliveryCount, messageReference.getMessageId(), delay, regionDestination.getActiveMQDestination()
+            });
         }
         final Message old = messageReference.getMessage();
         Message message = old.copy();

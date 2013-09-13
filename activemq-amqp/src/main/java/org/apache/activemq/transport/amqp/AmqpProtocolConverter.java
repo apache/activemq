@@ -138,18 +138,12 @@ class AmqpProtocolConverter {
             ((TransportImpl) protonTransport).setProtocolTracer(new ProtocolTracer() {
                 @Override
                 public void receivedFrame(TransportFrame transportFrame) {
-                    if (TRACE_FRAMES.isTraceEnabled()) {
-                        TRACE_FRAMES.trace(String.format("%s | RECV: %s",
-                                AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
-                    }
+                    TRACE_FRAMES.trace("{} | RECV: {}", AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody());
                 }
 
                 @Override
                 public void sentFrame(TransportFrame transportFrame) {
-                    if (TRACE_FRAMES.isTraceEnabled()) {
-                        TRACE_FRAMES.trace(String.format("%s | SENT: %s",
-                                AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody()));
-                    }
+                    TRACE_FRAMES.trace("{} | SENT: {}", AmqpProtocolConverter.this.amqpTransport.getRemoteAddress(), transportFrame.getBody());
                 }
             });
         }
@@ -359,8 +353,8 @@ class AmqpProtocolConverter {
             ConsumerContext consumerContext = subscriptionsByConsumerId.get(md.getConsumerId());
             if (consumerContext != null) {
                 // End of Queue Browse will have no Message object.
-                if (LOG.isTraceEnabled() && md.getMessage() != null) {
-                    LOG.trace("Dispatching MessageId:{} to consumer", md.getMessage().getMessageId());
+                if (md.getMessage() != null) {
+                    LOG.trace("Dispatching MessageId: {} to consumer", md.getMessage().getMessageId());
                 } else {
                     LOG.trace("Dispatching End of Browse Command to consumer {}", md.getConsumerId());
                 }
@@ -373,9 +367,7 @@ class AmqpProtocolConverter {
         } else if (command.isBrokerInfo()) {
             // ignore
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Do not know how to process ActiveMQ Command " + command);
-            }
+            LOG.debug("Do not know how to process ActiveMQ Command {}", command);
         }
     }
 
@@ -440,9 +432,7 @@ class AmqpProtocolConverter {
     private void onSessionClose(Session session) {
         AmqpSessionContext sessionContext = (AmqpSessionContext) session.getContext();
         if (sessionContext != null) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Session {} closed", sessionContext.sessionId);
-            }
+            LOG.trace("Session {} closed", sessionContext.sessionId);
             sendToActiveMQ(new RemoveInfo(sessionContext.sessionId), null);
             session.setContext(null);
         }
@@ -473,7 +463,7 @@ class AmqpProtocolConverter {
             } else if (transformer.equals(InboundTransformer.TRANSFORMER_RAW)) {
                 inboundTransformer = new AMQPRawInboundTransformer(ActiveMQJMSVendor.INSTANCE);
             } else {
-                LOG.warn("Unknown transformer type " + transformer + ", using native one instead");
+                LOG.warn("Unknown transformer type {} using native one instead", transformer);
                 inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
             }
         }
@@ -552,10 +542,7 @@ class AmqpProtocolConverter {
             messageId.setProducerId(producerId);
             messageId.setProducerSequenceId(messageIdGenerator.getNextSequenceId());
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Inbound Message:{} from Producer:{}", message.getMessageId(),
-                    producerId + ":" + messageId.getProducerSequenceId());
-            }
+            LOG.trace("Inbound Message:{} from Producer:{}", message.getMessageId(), producerId + ":" + messageId.getProducerSequenceId());
 
             DeliveryState remoteState = delivery.getRemoteState();
             if (remoteState != null && remoteState instanceof TransactionalState) {
@@ -621,7 +608,7 @@ class AmqpProtocolConverter {
             }
 
             final Object action = ((AmqpValue) msg.getBody()).getValue();
-            LOG.debug("COORDINATOR received: " + action + ", [" + buffer + "]");
+            LOG.debug("COORDINATOR received: {}, [{}]", action, buffer);
             if (action instanceof Declare) {
                 Declare declare = (Declare) action;
                 if (declare.getGlobalId() != null) {
@@ -631,9 +618,7 @@ class AmqpProtocolConverter {
                 long txid = nextTransactionId++;
                 TransactionInfo txinfo = new TransactionInfo(connectionId, new LocalTransactionId(connectionId, txid), TransactionInfo.BEGIN);
                 sendToActiveMQ(txinfo, null);
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("started transaction " + txid);
-                }
+                LOG.trace("started transaction {}", txid);
 
                 Declared declared = new Declared();
                 declared.setTxnId(new Binary(toBytes(txid)));
@@ -645,14 +630,10 @@ class AmqpProtocolConverter {
 
                 final byte operation;
                 if (discharge.getFail()) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("rollback transaction " + txid);
-                    }
+                    LOG.trace("rollback transaction {}", txid);
                     operation = TransactionInfo.ROLLBACK;
                 } else {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("commit transaction " + txid);
-                    }
+                    LOG.trace("commit transaction {}", txid);
                     operation = TransactionInfo.COMMIT_ONE_PHASE;
                 }
 
@@ -675,9 +656,7 @@ class AmqpProtocolConverter {
                             rejected.setError(createErrorCondition("failed", er.getException().getMessage()));
                             delivery.disposition(rejected);
                         }
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("TX: {} settling {}", operation, action);
-                        }
+                        LOG.debug("TX: {} settling {}", operation, action);
                         delivery.settle();
                         pumpProtonToSocket();
                     }
@@ -937,9 +916,7 @@ class AmqpProtocolConverter {
                     dispatchedInTx.addFirst(md);
                 }
 
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Sending Ack to ActiveMQ: {}", ack);
-                }
+                LOG.trace("Sending Ack to ActiveMQ: {}", ack);
 
                 sendToActiveMQ(ack, new ResponseHandler() {
                     @Override
@@ -980,9 +957,7 @@ class AmqpProtocolConverter {
                 TransactionalState txState = (TransactionalState) state;
                 if (txState.getOutcome() instanceof DeliveryState) {
 
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("onDelivery: TX delivery state = {}", state);
-                    }
+                    LOG.trace("onDelivery: TX delivery state = {}", state);
 
                     state = (DeliveryState) txState.getOutcome();
 
@@ -995,9 +970,7 @@ class AmqpProtocolConverter {
                 }
             } else {
                 if (state instanceof Accepted) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("onDelivery: accepted state = {}", state);
-                    }
+                    LOG.trace("onDelivery: accepted state = {}", state);
 
                     if (!delivery.remotelySettled()) {
                         delivery.disposition(new Accepted());
@@ -1006,14 +979,10 @@ class AmqpProtocolConverter {
                 } else if (state instanceof Rejected) {
                     // re-deliver /w incremented delivery counter.
                     md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("onDelivery: Rejected state = {}, delivery count now {}", state, md.getRedeliveryCounter());
-                    }
+                    LOG.trace("onDelivery: Rejected state = {}, delivery count now {}", state, md.getRedeliveryCounter());
                     settle(delivery, -1);
                 } else if (state instanceof Released) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("onDelivery: Released state = {}", state);
-                    }
+                    LOG.trace("onDelivery: Released state = {}", state);
                     // re-deliver && don't increment the counter.
                     settle(delivery, -1);
                 } else if (state instanceof Modified) {
@@ -1022,9 +991,7 @@ class AmqpProtocolConverter {
                         // increment delivery counter..
                         md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
                     }
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("onDelivery: Modified state = {}, delivery count now {}", state, md.getRedeliveryCounter());
-                    }
+                    LOG.trace("onDelivery: Modified state = {}, delivery count now {}", state, md.getRedeliveryCounter());
                     byte ackType = -1;
                     Boolean undeliverableHere = modified.getUndeliverableHere();
                     if (undeliverableHere != null && undeliverableHere) {
@@ -1047,9 +1014,7 @@ class AmqpProtocolConverter {
                 pendingTxAck.setTransactionId(md.getMessage().getTransactionId());
                 pendingTxAck.setFirstMessageId(dispatchedInTx.getLast().getMessage().getMessageId());
 
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Sending commit Ack to ActiveMQ: {}", pendingTxAck);
-                }
+                LOG.trace("Sending commit Ack to ActiveMQ: {}", pendingTxAck);
 
                 dispatchedInTx.clear();
 
@@ -1073,9 +1038,7 @@ class AmqpProtocolConverter {
         void doRollback() throws Exception {
             synchronized (outbound) {
 
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Rolling back {} messages for redelivery. ", dispatchedInTx.size());
-                }
+                LOG.trace("Rolling back {} messages for redelivery. ", dispatchedInTx.size());
 
                 for (MessageDispatch md : dispatchedInTx) {
                     md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
@@ -1265,9 +1228,7 @@ class AmqpProtocolConverter {
 
     void handleException(Throwable exception) {
         exception.printStackTrace();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Exception detail", exception);
-        }
+        LOG.debug("Exception detail", exception);
         try {
             amqpTransport.stop();
         } catch (Throwable e) {

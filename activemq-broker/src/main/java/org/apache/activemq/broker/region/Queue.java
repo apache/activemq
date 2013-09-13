@@ -206,9 +206,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     }
                 }
             } catch (InterruptedException e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
-                }
+                LOG.debug(getName() + "Producer Flow Control Timeout Task is stopping");
             }
         }
     };
@@ -274,10 +272,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         @Override
         public boolean recoverMessage(Message message) {
             recoveredAccumulator++;
-            if (LOG.isInfoEnabled() && (recoveredAccumulator % 10000) == 0) {
-                LOG.info("cursor for " + getActiveMQDestination().getQualifiedName() + " has recovered "
-                        + recoveredAccumulator + " messages. " +
-                        (int) (recoveredAccumulator * 100 / totalMessageCount) + "% complete");
+            if ((recoveredAccumulator % 10000) == 0) {
+                LOG.info("cursor for {} has recovered {} messages. {}% complete", new Object[]{ getActiveMQDestination().getQualifiedName(), recoveredAccumulator, new Integer((int) (recoveredAccumulator * 100 / totalMessageCount))});
             }
             // Message could have expired while it was being
             // loaded..
@@ -428,12 +424,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(getActiveMQDestination().getQualifiedName() + " add sub: " + sub + ", dequeues: "
-                    + getDestinationStatistics().getDequeues().getCount() + ", dispatched: "
-                    + getDestinationStatistics().getDispatched().getCount() + ", inflight: "
-                    + getDestinationStatistics().getInflight().getCount());
-        }
+        LOG.debug("{} add sub: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), getDestinationStatistics().getDequeues().getCount(), getDestinationStatistics().getDispatched().getCount(), getDestinationStatistics().getInflight().getCount() });
 
         super.addSubscription(context, sub);
         // synchronize with dispatch method so that no new messages are sent
@@ -504,12 +495,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         // while removing up a subscription.
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(getActiveMQDestination().getQualifiedName() + " remove sub: " + sub + ", lastDeliveredSeqId: " + lastDeiveredSequenceId + ", dequeues: "
-                        + getDestinationStatistics().getDequeues().getCount() + ", dispatched: "
-                        + getDestinationStatistics().getDispatched().getCount() + ", inflight: "
-                        + getDestinationStatistics().getInflight().getCount());
-            }
+            LOG.debug("{} remove sub: {}, lastDeliveredSeqId: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{
+                    getActiveMQDestination().getQualifiedName(),
+                    sub,
+                    lastDeiveredSequenceId,
+                    getDestinationStatistics().getDequeues().getCount(),
+                    getDestinationStatistics().getDispatched().getCount(),
+                    getDestinationStatistics().getInflight().getCount()
+            });
             consumersLock.writeLock().lock();
             try {
                 removeFromConsumerList(sub);
@@ -553,9 +546,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("found lastDeliveredSeqID: " + lastDeiveredSequenceId + ", message reference: " + ref.getMessageId());
-                            }
+                            LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeiveredSequenceId, ref.getMessageId());
                             break;
                         }
                     }
@@ -615,7 +606,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         message.setRegionDestination(this);
         ProducerState state = producerExchange.getProducerState();
         if (state == null) {
-            LOG.warn("Send failed for: " + message + ",  missing producer state for: " + producerExchange);
+            LOG.warn("Send failed for: {}, missing producer state for: {}", message, producerExchange);
             throw new JMSException("Cannot send message to " + getActiveMQDestination() + " with invalid (null) producer state");
         }
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
@@ -636,12 +627,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG.info("Usage Manager Memory Limit ("
-                             + memoryUsage.getLimit()
-                             + ") reached on "
-                             + getActiveMQDestination().getQualifiedName()
-                             + ". Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it."
-                             + " See http://activemq.apache.org/producer-flow-control.html for more info");
+                    LOG.info("Usage Manager Memory Limit ({}) reached on {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                                    memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName());
                 }
 
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
@@ -697,7 +684,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                                         response.setCorrelationId(message.getCommandId());
                                         context.getConnection().dispatchAsync(response);
                                     } else {
-                                        LOG.debug("unexpected exception on deferred send of :" + message, e);
+                                        LOG.debug("unexpected exception on deferred send of: {}", message, e);
                                     }
                                 }
                             }
@@ -725,9 +712,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     // The usage manager could have delayed us by the time
                     // we unblock the message could have expired..
                     if (message.isExpired()) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Expired message: " + message);
-                        }
+                        LOG.debug("Expired message: {}", message);
                         broker.getRoot().messageExpired(context, message, null);
                         return;
                     }
@@ -935,17 +920,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     private void expireMessages() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(getActiveMQDestination().getQualifiedName() + " expiring messages ..");
-        }
+        LOG.debug("{} expiring messages ..", getActiveMQDestination().getQualifiedName());
 
         // just track the insertion count
         List<Message> browsedMessages = new InsertionCountList<Message>();
         doBrowse(browsedMessages, this.getMaxExpirePageSize());
         asyncWakeup();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(getActiveMQDestination().getQualifiedName() + " expiring messages done.");
-        }
+        LOG.debug("{} expiring messages done.", getActiveMQDestination().getQualifiedName());
     }
 
     @Override
@@ -1143,9 +1124,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 for (MessageReference ref : toExpire) {
                     pagedInPendingDispatch.remove(ref);
                     if (broker.isExpired(ref)) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("expiring from pagedInPending: " + ref);
-                        }
+                        LOG.debug("expiring from pagedInPending: {}", ref);
                         messageExpired(connectionContext, ref);
                     }
                 }
@@ -1161,9 +1140,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
             for (MessageReference ref : toExpire) {
                 if (broker.isExpired(ref)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("expiring from pagedInMessages: " + ref);
-                    }
+                    LOG.debug("expiring from pagedInMessages: {}", ref);
                     messageExpired(connectionContext, ref);
                 } else {
                     pagedInMessagesLock.writeLock().lock();
@@ -1184,9 +1161,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             MessageReference node = messages.next();
                             if (node.isExpired()) {
                                 if (broker.isExpired(node)) {
-                                    if (LOG.isDebugEnabled()) {
-                                        LOG.debug("expiring from messages: " + node);
-                                    }
+                                    LOG.debug("expiring from messages: {}", node);
                                     messageExpired(connectionContext, createMessageReference(node.getMessage()));
                                 }
                                 messages.remove();
@@ -1279,9 +1254,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
 
         if (this.destinationStatistics.getMessages().getCount() > 0) {
-            LOG.warn(getActiveMQDestination().getQualifiedName()
-                    + " after purge complete, message count stats report: "
-                    + this.destinationStatistics.getMessages().getCount());
+            LOG.warn("{} after purge complete, message count stats report: {}", getActiveMQDestination().getQualifiedName(), this.destinationStatistics.getMessages().getCount());
         }
         gc();
         this.destinationStatistics.getMessages().setCount(0);
@@ -1590,21 +1563,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             timeout = timeBeforeDispatchStarts;
                         }
                         if (consumersBeforeStartsLatch.await(timeout, TimeUnit.MILLISECONDS)) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug(consumers.size() + " consumers subscribed. Starting dispatch.");
-                            }
+                            LOG.debug("{} consumers subscribed. Starting dispatch.", consumers.size());
                         } else {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug(timeout + " ms elapsed and " + consumers.size()
-                                        + " consumers subscribed. Starting dispatch.");
-                            }
+                            LOG.debug("{} ms elapsed and {} consumers subscribed. Starting dispatch.", timeout, consumers.size());
                         }
                     }
                     if (timeBeforeDispatchStarts > 0 && consumersBeforeDispatchStarts <= 0) {
                         iteratingMutex.wait(timeBeforeDispatchStarts);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug(timeBeforeDispatchStarts + " ms elapsed. Starting dispatch.");
-                        }
+                        LOG.debug("{} ms elapsed. Starting dispatch.", timeBeforeDispatchStarts);
                     }
                 } catch (Exception e) {
                     LOG.error(e.toString());
@@ -1658,10 +1624,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
                         QueueBrowserSubscription browser = browserDispatch.getBrowser();
 
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("dispatch to browser: " + browser
-                                    + ", already dispatched/paged count: " + alreadyDispatchedMessages.size());
-                        }
+                        LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, alreadyDispatchedMessages.size());
                         boolean added = false;
                         for (QueueMessageReference node : alreadyDispatchedMessages) {
                             if (!node.isAcked() && !browser.isDuplicate(node.getMessageId())) {
@@ -1678,7 +1641,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             browserDispatches.remove(browserDispatch);
                         }
                     } catch (Exception e) {
-                        LOG.warn("exception on dispatch to browser: " + browserDispatch.getBrowser(), e);
+                        LOG.warn("exception on dispatch to browser: {}", browserDispatch.getBrowser(), e);
                     }
                 }
             }
@@ -1814,9 +1777,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     @Override
     public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("message expired: " + reference);
-        }
+        LOG.debug("message expired: {}", reference);
         broker.messageExpired(context, reference, subs);
         destinationStatistics.getExpired().increment();
         try {
@@ -1854,9 +1815,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }finally {
             consumersLock.readLock().unlock();
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(broker.getBrokerName() + " Message " + msg.getMessageId() + " sent to " + this.destination);
-        }
+        LOG.debug("{} Message {} sent to {}", new Object[]{ broker.getBrokerName(), msg.getMessageId(), this.destination });
         wakeup();
     }
 
@@ -1907,13 +1866,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         PendingList resultList = null;
 
         int toPageIn = Math.min(getMaxPageSize(), messages.size());
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(destination.getPhysicalName() + " toPageIn: " + toPageIn + ", Inflight: "
-                    + destinationStatistics.getInflight().getCount() + ", pagedInMessages.size "
-                    + pagedInMessages.size() + ", enqueueCount: " + destinationStatistics.getEnqueues().getCount()
-                    + ", dequeueCount: " + destinationStatistics.getDequeues().getCount());
-        }
-
+        LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, enqueueCount: {}, dequeueCount: {}",
+                new Object[]{
+                        destination.getPhysicalName(),
+                        toPageIn,
+                        destinationStatistics.getInflight().getCount(),
+                        pagedInMessages.size(),
+                        destinationStatistics.getEnqueues().getCount(),
+                        destinationStatistics.getDequeues().getCount()
+                });
         if (isLazyDispatch() && !force) {
             // Only page in the minimum number of messages which can be
             // dispatched immediately.
@@ -2153,7 +2114,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             try {
                 activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
             } catch (JMSException e) {
-                LOG.warn("Failed to set boolean header: " + e, e);
+                LOG.warn("Failed to set boolean header", e);
             }
         }
         subs.getConsumerInfo().setLastDeliveredSequenceId(subs.getConsumerInfo().getLastDeliveredSequenceId() + 1);

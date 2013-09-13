@@ -45,7 +45,7 @@ class ProxyConnection implements Service {
 
     public void onFailure(IOException e) {
         if (!shuttingDown.get()) {
-            LOG.debug("Transport error: " + e, e);
+            LOG.debug("Transport error: {}", e.getMessage(), e);
             try {
                 stop();
             } catch (Exception ignore) {

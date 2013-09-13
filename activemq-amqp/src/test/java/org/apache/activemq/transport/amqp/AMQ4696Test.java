@@ -42,7 +42,7 @@ public class AMQ4696Test extends AmqpTestSupport {
         BrokerView adminView = this.brokerService.getAdminView();
         int durableSubscribersAtStart = adminView.getDurableTopicSubscribers().length;
         int inactiveSubscribersAtStart = adminView.getInactiveDurableTopicSubscribers().length;
-        LOG.debug(">>>> At Start, durable Subscribers " + durableSubscribersAtStart + " inactiveDurableSubscribers " + inactiveSubscribersAtStart);
+        LOG.debug(">>>> At Start, durable Subscribers {} inactiveDurableSubscribers {}", durableSubscribersAtStart, inactiveSubscribersAtStart);
 
         TopicConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
         Topic topic = new TopicImpl("topic://" + TOPIC_NAME);
@@ -55,7 +55,7 @@ public class AMQ4696Test extends AmqpTestSupport {
 
         int durableSubscribers = adminView.getDurableTopicSubscribers().length;
         int inactiveSubscribers = adminView.getInactiveDurableTopicSubscribers().length;
-        LOG.debug(">>>> durable Subscribers after creation " + durableSubscribers + " inactiveDurableSubscribers " + inactiveSubscribers);
+        LOG.debug(">>>> durable Subscribers after creation {} inactiveDurableSubscribers {}", durableSubscribers, inactiveSubscribers);
         assertEquals("Wrong number of durable subscribers after first subscription", 1, (durableSubscribers - durableSubscribersAtStart));
         assertEquals("Wrong number of inactive durable subscribers after first subscription", 0, (inactiveSubscribers - inactiveSubscribersAtStart));
 
@@ -64,7 +64,7 @@ public class AMQ4696Test extends AmqpTestSupport {
 
         durableSubscribers = adminView.getDurableTopicSubscribers().length;
         inactiveSubscribers = adminView.getInactiveDurableTopicSubscribers().length;
-        LOG.debug(">>>> durable Subscribers after close " + durableSubscribers + " inactiveDurableSubscribers " + inactiveSubscribers);
+        LOG.debug(">>>> durable Subscribers after close {} inactiveDurableSubscribers {}", durableSubscribers, inactiveSubscribers);
         assertEquals("Wrong number of durable subscribers after close", 0, (durableSubscribersAtStart));
         assertEquals("Wrong number of inactive durable subscribers after close", 1, (inactiveSubscribers - inactiveSubscribersAtStart));
     }

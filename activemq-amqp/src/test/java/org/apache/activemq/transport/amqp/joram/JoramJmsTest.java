@@ -38,9 +38,6 @@ import org.objectweb.jtests.jms.conform.session.SessionTest;
 import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 
-/**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
 public class JoramJmsTest extends TestCase {
 
     public static Test suite() {

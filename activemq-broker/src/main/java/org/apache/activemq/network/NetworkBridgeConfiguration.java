@@ -19,8 +19,6 @@ package org.apache.activemq.network;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -29,7 +27,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Configuration for a NetworkBridge
  */
 public class NetworkBridgeConfiguration {
-    private static final Logger LOG = LoggerFactory.getLogger(NetworkBridgeConfiguration.class);
 
     private boolean conduitSubscriptions = true;
     private boolean dynamicOnly;

@@ -80,10 +80,10 @@ public class AbortSlowConsumerStrategyView implements AbortSlowConsumerStrategyV
     public void abortConsumer(ObjectName consumerToAbort) {
         Subscription sub = broker.getSubscriber(consumerToAbort);
         if (sub != null) {
-            LOG.info("aborting consumer via jmx: " + sub.getConsumerInfo().getConsumerId());           
+            LOG.info("aborting consumer via jmx: {}", sub.getConsumerInfo().getConsumerId());
             strategy.abortConsumer(sub, false);
         } else {
-            LOG.warn("cannot resolve subscription matching name: " + consumerToAbort);
+            LOG.warn("cannot resolve subscription matching name: {}", consumerToAbort);
         }
 
     }
@@ -91,10 +91,10 @@ public class AbortSlowConsumerStrategyView implements AbortSlowConsumerStrategyV
     public void abortConnection(ObjectName consumerToAbort) {
         Subscription sub = broker.getSubscriber(consumerToAbort);
         if (sub != null) {
-            LOG.info("aborting consumer connection via jmx: " + sub.getConsumerInfo().getConsumerId().getConnectionId());
+            LOG.info("aborting consumer connection via jmx: {}", sub.getConsumerInfo().getConsumerId().getConnectionId());
             strategy.abortConsumer(sub, true);
         } else {
-            LOG.warn("cannot resolve subscription matching name: " + consumerToAbort);
+            LOG.warn("cannot resolve subscription matching name: {}", consumerToAbort);
         }
     }
 
@@ -111,7 +111,7 @@ public class AbortSlowConsumerStrategyView implements AbortSlowConsumerStrategyV
         try {
             result = new ObjectName(objectName);
         } catch (Exception e) {
-            LOG.warn("cannot create subscription ObjectName to abort, from string: " + objectName);
+            LOG.warn("cannot create subscription ObjectName to abort, from string: {}", objectName);
         }
         return result;
     }

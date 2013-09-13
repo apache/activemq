@@ -30,7 +30,6 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
-import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -200,13 +199,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
         if (!okForAckAsDispatchDone.await(0l, TimeUnit.MILLISECONDS)) {
             // suppress unexpected ack exception in this expected case
-            LOG.warn("Ignoring ack received before dispatch; result of failover with an outstanding ack. Acked messages will be replayed if present on this broker. Ignored ack: " + ack);
+            LOG.warn("Ignoring ack received before dispatch; result of failover with an outstanding ack. Acked messages will be replayed if present on this broker. Ignored ack: {}", ack);
             return;
         }
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("ack:" + ack);
-        }
+        LOG.trace("ack: {}", ack);
+
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
                 // First check if the ack matches the dispatched. When using failover this might
@@ -268,8 +266,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // this only happens after a reconnect - get an ack which is not
                 // valid
                 if (!callDispatchMatched) {
-                    LOG.warn("Could not correlate acknowledgment with dispatched message: "
-                                  + ack);
+                    LOG.warn("Could not correlate acknowledgment with dispatched message: {}", ack);
                 }
             } else if (ack.isIndividualAck()) {
                 // Message was delivered and acknowledge - but only delete the
@@ -418,8 +415,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             }
         } else {
-            LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
-                    + ack);
+            LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): {}", ack);
         }
     }
 
@@ -731,10 +727,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         if (node != QueueMessageReference.NULL_MESSAGE) {
                             nodeDest.getDestinationStatistics().getDispatched().increment();
                             nodeDest.getDestinationStatistics().getInflight().increment();
-                            if (LOG.isTraceEnabled()) {
-                                LOG.trace(info.getConsumerId() + " failed to dispatch: " + message.getMessageId() + " - "
-                                        + message.getDestination()  + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
-                            }
+                            LOG.trace("{} failed to dispatch: {} - {}, dispatched: {}, inflight: {}", new Object[]{ info.getConsumerId(), message.getMessageId(), message.getDestination(), dispatchCounter, dispatched.size() });
                         }
                     }
                 }
@@ -753,10 +746,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 nodeDest.getDestinationStatistics().getDispatched().increment();
                 nodeDest.getDestinationStatistics().getInflight().increment();
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace(info.getConsumerId() + " dispatched: " + message.getMessageId() + " - "
-                            + message.getDestination()  + ", dispatched: " + dispatchCounter + ", inflight: " + dispatched.size());
-                }
+                LOG.trace("{} dispatched: {} - {}, dispatched: {}, inflight: {}", new Object[]{ info.getConsumerId(), message.getMessageId(), message.getDestination(), dispatchCounter, dispatched.size() });
             }
         }
 

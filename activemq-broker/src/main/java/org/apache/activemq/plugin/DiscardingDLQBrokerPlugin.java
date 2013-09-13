@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Filip Hanik
  * @org.apache.xbean.XBean element="discardingDLQBrokerPlugin"
  * @version 1.0
  */
@@ -49,10 +48,9 @@ public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
      * @todo Implement this org.apache.activemq.broker.BrokerPlugin method
      */
     public Broker installPlugin(Broker broker) throws Exception {
-        log.info("Installing Discarding Dead Letter Queue broker plugin[dropAll="+isDropAll()+
-                 "; dropTemporaryTopics="+isDropTemporaryTopics()+"; dropTemporaryQueues="+
-                 isDropTemporaryQueues()+"; dropOnly="+getDropOnly()+"; reportInterval="+
-                 getReportInterval()+"]");
+        log.info("Installing Discarding Dead Letter Queue broker plugin[dropAll={}; dropTemporaryTopics={}; dropTemporaryQueues={}; dropOnly={}; reportInterval={}]", new Object[]{
+                isDropAll(), isDropTemporaryTopics(), isDropTemporaryQueues(), getDropOnly(), reportInterval
+        });
         DiscardingDLQBroker cb = new DiscardingDLQBroker(broker);
         cb.setDropAll(isDropAll());
         cb.setDropTemporaryQueues(isDropTemporaryQueues());

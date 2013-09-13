@@ -225,9 +225,7 @@ public class PolicyEntry extends DestinationMapEntry {
                 }
             }
             if (value >= 0) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Setting the maximumPendingMessages size to: " + value + " for consumer: " + subscription.getInfo().getConsumerId());
-                }
+                LOG.debug("Setting the maximumPendingMessages size to: {} for consumer: {}", value, subscription.getInfo().getConsumerId());
                 subscription.setMaximumPendingMessages(value);
             }
         }

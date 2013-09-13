@@ -20,9 +20,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
- */
 public class JobSupport {
     public static String getDateTime(long value) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

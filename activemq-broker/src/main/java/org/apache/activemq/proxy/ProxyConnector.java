@@ -67,11 +67,11 @@ public class ProxyConnector implements Service {
             }
 
             public void onAcceptError(Exception error) {
-                LOG.error("Could not accept connection: " + error, error);
+                LOG.error("Could not accept connection: ", error);
             }
         });
         getServer().start();
-        LOG.info("Proxy Connector " + getName() + " Started");
+        LOG.info("Proxy Connector {} Started", getName());
 
     }
 
@@ -85,7 +85,7 @@ public class ProxyConnector implements Service {
             ss.stop(iter.next());
         }
         ss.throwFirstException();
-        LOG.info("Proxy Connector " + getName() + " Stopped");
+        LOG.info("Proxy Connector {} Stopped", getName());
     }
 
     // Properties

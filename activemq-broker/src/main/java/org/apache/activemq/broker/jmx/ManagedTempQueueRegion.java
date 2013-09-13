@@ -19,7 +19,6 @@ package org.apache.activemq.broker.jmx;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;

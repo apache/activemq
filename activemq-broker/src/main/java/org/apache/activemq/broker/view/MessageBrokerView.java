@@ -30,14 +30,11 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.LRUCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A view into the running Broker
  */
 public class MessageBrokerView  {
-    private static final Logger LOG = LoggerFactory.getLogger(MessageBrokerView.class);
     private final BrokerService brokerService;
     private Map<ActiveMQDestination,BrokerDestinationView> destinationViewMap = new LRUCache<ActiveMQDestination, BrokerDestinationView>();
 

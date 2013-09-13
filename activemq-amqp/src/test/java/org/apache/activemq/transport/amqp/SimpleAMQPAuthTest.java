@@ -160,7 +160,7 @@ public class SimpleAMQPAuthTest {
     }
 
     protected BrokerService createBroker(String uri) throws Exception {
-        LOG.debug(">>>>> Loading broker configuration from the classpath with URI: " + uri);
+        LOG.debug(">>>>> Loading broker configuration from the classpath with URI: {}", uri);
         return BrokerFactory.createBroker(new URI("xbean:" +  uri));
     }
 

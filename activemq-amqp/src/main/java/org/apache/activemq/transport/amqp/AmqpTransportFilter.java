@@ -87,8 +87,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public void onCommand(Object command) {
         try {
-            if (trace && TRACE_BYTES.isTraceEnabled()) {
-                TRACE_BYTES.trace("Received: \n" + command);
+            if (trace) {
+                TRACE_BYTES.trace("Received: \n{}", command);
             }
             protocolConverter.lock.lock();
             try {
@@ -113,8 +113,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public void sendToAmqp(Object command) throws IOException {
         assert protocolConverter.lock.isHeldByCurrentThread();
-        if (trace && TRACE_BYTES.isTraceEnabled()) {
-            TRACE_BYTES.trace("Sending: \n" + command);
+        if (trace) {
+            TRACE_BYTES.trace("Sending: \n{}", command);
         }
         Transport n = next;
         if (n != null) {
@@ -156,12 +156,9 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         return this.wireFormat;
     }
 
-
-
     public void handleException(IOException e) {
         super.onException(e);
     }
-
 
     public String getTransformer() {
         return transformer;

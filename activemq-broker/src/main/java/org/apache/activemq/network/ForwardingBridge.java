@@ -84,8 +84,7 @@ public class ForwardingBridge implements Service {
     }
 
     public void start() throws Exception {
-        LOG.info("Starting a network connection between " + localBroker + " and " + remoteBroker
-                 + " has been established.");
+        LOG.info("Starting a network connection between {} and {} has been established.", localBroker, remoteBroker);
 
         localBroker.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object o) {
@@ -119,7 +118,7 @@ public class ForwardingBridge implements Service {
                 try {
                     startBridge();
                 } catch (IOException e) {
-                    LOG.error("Failed to start network bridge: " + e, e);
+                    LOG.error("Failed to start network bridge: ", e);
                 }
             }
         };
@@ -162,10 +161,7 @@ public class ForwardingBridge implements Service {
             localBroker.oneway(topicConsumerInfo);
         }
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Network connection between " + localBroker + " and " + remoteBroker
-                     + " has been established.");
-        }
+        LOG.info("Network connection between {} and {} has been established.", localBroker, remoteBroker);
     }
 
     public void stop() throws Exception {
@@ -187,10 +183,8 @@ public class ForwardingBridge implements Service {
     }
 
     public void serviceRemoteException(Throwable error) {
-        LOG.info("Unexpected remote exception: " + error);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Exception trace: ", error);
-        }
+        LOG.info("Unexpected remote exception: {}", error.getMessage());
+        LOG.debug("Exception trace: ", error);
     }
 
     protected void serviceRemoteCommand(Command command) {
@@ -209,7 +203,7 @@ public class ForwardingBridge implements Service {
                     }
                 }
             } else {
-                LOG.warn("Unexpected remote command: " + command);
+                LOG.warn("Unexpected remote command: {}", command);
             }
         } catch (IOException e) {
             serviceLocalException(e);
@@ -217,7 +211,7 @@ public class ForwardingBridge implements Service {
     }
 
     public void serviceLocalException(Throwable error) {
-        LOG.info("Unexpected local exception: " + error);
+        LOG.info("Unexpected local exception: {}", error.getMessage());
         LOG.debug("Exception trace: ", error);
         fireBridgeFailed();
     }
@@ -315,7 +309,7 @@ public class ForwardingBridge implements Service {
                     }
                 }
             } else {
-                LOG.debug("Unexpected local command: " + command);
+                LOG.debug("Unexpected local command: {}", command);
             }
         } catch (IOException e) {
             serviceLocalException(e);

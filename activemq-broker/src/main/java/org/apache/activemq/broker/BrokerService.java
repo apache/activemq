@@ -568,7 +568,7 @@ public class BrokerService implements Service {
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
-            LOG.error("Failed to start Apache ActiveMQ (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
+            LOG.error("Failed to start Apache ActiveMQ ({}, {})", new Object[]{ getBrokerName(), brokerId }, e);
             try {
                 if (!stopped.get()) {
                     stop();
@@ -606,7 +606,7 @@ public class BrokerService implements Service {
     private void doStartPersistenceAdapter() throws Exception {
         getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
         getPersistenceAdapter().setBrokerName(getBrokerName());
-        LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
+        LOG.info("Using Persistence Adapter: {}", getPersistenceAdapter());
         if (deleteAllMessagesOnStartup) {
             deleteAllMessages();
         }
@@ -644,10 +644,7 @@ public class BrokerService implements Service {
         brokerId = broker.getBrokerId();
 
         // need to log this after creating the broker so we have its id and name
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") is starting");
-        }
+        LOG.info("Apache ActiveMQ {} ({}, {}) is starting", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId });
         broker.start();
 
         if (isUseJmx()) {
@@ -668,11 +665,8 @@ public class BrokerService implements Service {
 
         startAllConnectors();
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") started");
-            LOG.info("For help or more information please see: http://activemq.apache.org");
-        }
+        LOG.info("Apache ActiveMQ {} ({}, {}) started", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
+        LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
         checkSystemUsageLimits();
@@ -717,10 +711,7 @@ public class BrokerService implements Service {
             }.start();
         }
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") is shutting down");
-        }
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId} );
 
         removeShutdownHook();
         if (this.scheduler != null) {
@@ -780,14 +771,10 @@ public class BrokerService implements Service {
         this.destinationInterceptors = null;
         this.destinationFactory = null;
 
-        if (LOG.isInfoEnabled()) {
-            if (startDate != null) {
-                LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                        + getBrokerName() + ", " + brokerId + ") uptime " + getUptime());
-            }
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") is shutdown");
+        if (startDate != null) {
+            LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId, getUptime()});
         }
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutdown", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
 
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -817,8 +804,7 @@ public class BrokerService implements Service {
                     queueSize = entry.getValue().getDestinationStatistics().getMessages().getCount();
                     count += queueSize;
                     if (queueSize > 0) {
-                        LOG.info("Queue has pending message:" + entry.getValue().getName() + " queueSize is:"
-                                + queueSize);
+                        LOG.info("Queue has pending message: {} queueSize is: {}", entry.getValue().getName(), queueSize);
                     }
                 }
             }
@@ -850,8 +836,9 @@ public class BrokerService implements Service {
             if (pollInterval <= 0) {
                 pollInterval = 30;
             }
-            LOG.info("Stop gracefully with connectorName:" + connectorName + " queueName:" + queueName + " timeout:"
-                    + timeout + " pollInterval:" + pollInterval);
+            LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}", new Object[]{
+                    connectorName, queueName, timeout, pollInterval
+            });
             TransportConnector connector;
             for (int i = 0; i < transportConnectors.size(); i++) {
                 connector = transportConnectors.get(i);
@@ -953,7 +940,7 @@ public class BrokerService implements Service {
         }
         String str = brokerName.replaceAll("[^a-zA-Z0-9\\.\\_\\-\\:]", "_");
         if (!str.equals(brokerName)) {
-            LOG.error("Broker Name: " + brokerName + " contained illegal characters - replaced with " + str);
+            LOG.error("Broker Name: {} contained illegal characters - replaced with {}", brokerName, str);
         }
         this.brokerName = str.trim();
     }
@@ -1151,7 +1138,7 @@ public class BrokerService implements Service {
      */
     public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) throws IOException {
         if (!isPersistent() && ! (persistenceAdapter instanceof MemoryPersistenceAdapter)) {
-            LOG.warn("persistent=\"false\", ignoring configured persistenceAdapter: " + persistenceAdapter);
+            LOG.warn("persistent=\"false\", ignoring configured persistenceAdapter: {}", persistenceAdapter);
             return;
         }
         this.persistenceAdapter = persistenceAdapter;
@@ -1508,7 +1495,7 @@ public class BrokerService implements Service {
             try {
                 vmConnectorURI = new URI("vm://" + getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
             } catch (URISyntaxException e) {
-                LOG.error("Badly formed URI from " + getBrokerName(), e);
+                LOG.error("Badly formed URI from {}", getBrokerName(), e);
             }
         }
         return vmConnectorURI;
@@ -1526,7 +1513,7 @@ public class BrokerService implements Service {
                     try {
                         result = tc.getPublishableConnectString();
                     } catch (Exception e) {
-                      LOG.warn("Failed to get the ConnectURI for "+tc,e);
+                      LOG.warn("Failed to get the ConnectURI for {}", tc, e);
                     }
                     if (result != null) {
                         // find first publishable uri
@@ -1657,7 +1644,7 @@ public class BrokerService implements Service {
                 }
                 if (!empty) {
                     String str = result ? "Successfully deleted" : "Failed to delete";
-                    LOG.info(str + " temporary storage");
+                    LOG.info("{} temporary storage", str);
                 }
 
                 String clazz = "org.apache.activemq.store.kahadb.plist.PListStoreImpl";
@@ -1845,7 +1832,7 @@ public class BrokerService implements Service {
                 jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                 configureService(jobSchedulerStore);
                 jobSchedulerStore.start();
-                LOG.info("JobScheduler using directory: " + getSchedulerDirectoryFile());
+                LOG.info("JobScheduler using directory: {}", getSchedulerDirectoryFile());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -2099,7 +2086,7 @@ public class BrokerService implements Service {
                 ObjectName objectName = createNetworkConnectorObjectName(connector);
                 getManagementContext().unregisterMBean(objectName);
             } catch (Exception e) {
-                LOG.error("Network Connector could not be unregistered from JMX: " + e, e);
+                LOG.error("Network Connector could not be unregistered from JMX", e);
             }
         }
     }
@@ -2185,7 +2172,7 @@ public class BrokerService implements Service {
                 regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
                     getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
             } catch(MalformedObjectNameException me){
-                LOG.error("Couldn't create ManagedRegionBroker",me);
+                LOG.error("Couldn't create ManagedRegionBroker", me);
                 throw new IOException(me);
             }
         } else {
@@ -2315,7 +2302,7 @@ public class BrokerService implements Service {
         Object port = options.get("port");
         if (port == null) {
             port = DEFAULT_PORT;
-            LOG.warn("No port specified so defaulting to: " + port);
+            LOG.warn("No port specified so defaulting to: {}", port);
         }
         return port;
     }
@@ -2337,7 +2324,7 @@ public class BrokerService implements Service {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
             } catch (Exception e) {
-                LOG.debug("Caught exception, must be shutting down: " + e);
+                LOG.debug("Caught exception, must be shutting down", e);
             }
         }
     }
@@ -2470,10 +2457,10 @@ public class BrokerService implements Service {
                         @Override
                         public void run() {
                             try {
-                                LOG.info("Async start of " + connector);
+                                LOG.info("Async start of {}", connector);
                                 connector.start();
                             } catch(Exception e) {
-                                LOG.error("Async start of network connector: " + connector + " failed", e);
+                                LOG.error("Async start of network connector: {} failed", connector, e);
                             }
                         }
                     });
@@ -2538,7 +2525,7 @@ public class BrokerService implements Service {
         if (ioExceptionHandler != null) {
             ioExceptionHandler.handle(exception);
          } else {
-            LOG.info("No IOExceptionHandler registered, ignoring IO exception, " + exception, exception);
+            LOG.info("No IOExceptionHandler registered, ignoring IO exception", exception);
          }
     }
 
