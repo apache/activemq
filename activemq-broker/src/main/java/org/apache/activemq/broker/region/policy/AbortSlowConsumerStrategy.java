@@ -93,8 +93,8 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
             if (entry.getKey().isSlowConsumer()) {
-                if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod > maxSlowDuration)
-                        || maxSlowCount > 0 && entry.getValue().slowCount > maxSlowCount) {
+                if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod >= maxSlowDuration)
+                        || maxSlowCount > 0 && entry.getValue().slowCount >= maxSlowCount) {
                     toAbort.put(entry.getKey(), entry.getValue());
                     slowConsumers.remove(entry.getKey());
                 }

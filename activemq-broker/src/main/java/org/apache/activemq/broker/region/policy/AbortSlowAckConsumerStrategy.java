@@ -118,11 +118,6 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                 continue;
             }
 
-            // don't mark consumers with no messages
-            if (subscriber.getInFlightSize() <= 0) {
-                continue;
-            }
-
             long lastAckTime = subscriber.getTimeOfLastMessageAck();
             long timeDelta = System.currentTimeMillis() - lastAckTime;
 
