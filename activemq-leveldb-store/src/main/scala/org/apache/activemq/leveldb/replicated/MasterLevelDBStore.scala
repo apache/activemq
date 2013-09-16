@@ -309,14 +309,16 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       }
     }
 
-    def replicate_wal(frame1:ReplicationFrame, frame2:FileTransferFrame ) = {
+    def replicate_wal(frame1:ReplicationFrame, frame2:FileTransferFrame=null ) = {
       val h = this.synchronized {
         session
       }
       if( h !=null ) {
         h.queue {
           h.send(frame1)
-          h.send(frame2)
+          if( frame2!=null ) {
+            h.send(frame2)
+          }
         }
       }
     }
@@ -397,6 +399,15 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       for( slave <- slaves.values() ) {
         slave.replicate_wal(frame1, frame2)
       }
+    }
+  }
+
+  def replicate_log_delete(log:Long):Unit = {
+    val value = new LogDelete
+    value.log = log
+    val frame = ReplicationFrame(LOG_DELETE_ACTION, JsonCodec.encode(value))
+    for( slave <- slaves.values() ) {
+      slave.replicate_wal(frame)
     }
   }
 

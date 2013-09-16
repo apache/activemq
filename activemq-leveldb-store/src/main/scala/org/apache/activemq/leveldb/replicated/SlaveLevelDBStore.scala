@@ -152,6 +152,8 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     }
   }
 
+  val pending_log_removes = new util.ArrayList[Long]()
+
   def wal_handler(session:Session): (AnyRef)=>Unit = (command)=>{
     command match {
       case command:ReplicationFrame =>
@@ -178,6 +180,15 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
                 send_wal_ack
               }
             })
+          case LOG_DELETE_ACTION =>
+
+            val value = JsonCodec.decode(command.body, classOf[LogDelete])
+            if( !caughtUp ) {
+              pending_log_removes.add(value.log)
+            } else {
+              client.log.delete(value.log)
+            }
+
           case OK_ACTION =>
             // This comes in as response to a disconnect we send.
           case _ => session.fail("Unexpected command action: "+command.action)
@@ -394,6 +405,10 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         caughtUp = true
         client.log.open(wal_append_offset)
         send_wal_ack
+        for( i <- pending_log_removes ) {
+          client.log.delete(i);
+        }
+        pending_log_removes.clear()
       }
     })
     state.snapshot_position

@@ -88,10 +88,14 @@ case class RecordLog(directory: File, logSuffix:String) {
       if( current_appender.position != id ) {
         Option(log_infos.get(id)).foreach { info =>
           onDelete(info.file)
+          onDelete(id)
           log_infos.remove(id)
         }
       }
     }
+  }
+
+  protected def onDelete(file:Long) = {
   }
 
   protected def onDelete(file:File) = {
