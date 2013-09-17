@@ -121,6 +121,8 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                     stop = true;
                 }
             }
+        } catch (SuppressReplyException e) {
+            LOG.warn("locker keepAlive resulted in", e);
         } catch (IOException e) {
             LOG.warn("locker keepAlive resulted in", e);
         }
