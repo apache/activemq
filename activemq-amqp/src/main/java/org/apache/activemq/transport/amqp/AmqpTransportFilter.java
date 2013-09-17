@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * The AMQPTransportFilter normally sits on top of a TcpTransport that has been
@@ -41,17 +42,17 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransportFilter.class);
     static final Logger TRACE_BYTES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".BYTES");
     static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
-    private final AmqpProtocolConverter protocolConverter;
+    private IAmqpProtocolConverter protocolConverter;
 //    private AmqpInactivityMonitor monitor;
     private AmqpWireFormat wireFormat;
 
     private boolean trace;
     private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
+    private ReentrantLock lock = new ReentrantLock();
 
     public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
         super(next);
-        this.protocolConverter = new AmqpProtocolConverter(this, brokerContext);
-
+        this.protocolConverter = new AMQPProtocolDiscriminator(this);
         if (wireFormat instanceof AmqpWireFormat) {
             this.wireFormat = (AmqpWireFormat) wireFormat;
         }
@@ -60,11 +61,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command) o;
-            protocolConverter.lock.lock();
+            lock.lock();
             try {
                 protocolConverter.onActiveMQCommand(command);
             } finally {
-                protocolConverter.lock.unlock();
+                lock.unlock();
             }
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
@@ -73,11 +74,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public void onException(IOException error) {
-        protocolConverter.lock.lock();
+        lock.lock();
         try {
             protocolConverter.onAMQPException(error);
         } finally {
-            protocolConverter.lock.unlock();
+            lock.unlock();
         }
     }
 
@@ -90,11 +91,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
             if (trace) {
                 TRACE_BYTES.trace("Received: \n{}", command);
             }
-            protocolConverter.lock.lock();
+            lock.lock();
             try {
                 protocolConverter.onAMQPData(command);
             } finally {
-                protocolConverter.lock.unlock();
+                lock.unlock();
             }
         } catch (IOException e) {
             handleException(e);
@@ -104,7 +105,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public void sendToActiveMQ(Command command) {
-        assert protocolConverter.lock.isHeldByCurrentThread();
+        assert lock.isHeldByCurrentThread();
         TransportListener l = transportListener;
         if (l != null) {
             l.onCommand(command);
@@ -112,7 +113,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public void sendToAmqp(Object command) throws IOException {
-        assert protocolConverter.lock.isHeldByCurrentThread();
+        assert lock.isHeldByCurrentThread();
         if (trace) {
             TRACE_BYTES.trace("Sending: \n{}", command);
         }
@@ -166,5 +167,12 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     public void setTransformer(String transformer) {
         this.transformer = transformer;
+    }
+    public IAmqpProtocolConverter getProtocolConverter() {
+        return protocolConverter;
+    }
+
+    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter) {
+        this.protocolConverter = protocolConverter;
     }
 }

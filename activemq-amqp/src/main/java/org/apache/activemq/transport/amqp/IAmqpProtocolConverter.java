@@ -17,38 +17,20 @@
 package org.apache.activemq.transport.amqp;
 
 import org.apache.activemq.command.Command;
+import org.fusesource.hawtbuf.Buffer;
 
 import java.io.IOException;
-import java.security.cert.X509Certificate;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Basic interface that mediates between protocol converter and transport
  */
-public interface AmqpTransport {
+public interface IAmqpProtocolConverter {
 
-    public void sendToActiveMQ(Command command);
+    void onAMQPData(Object command) throws Exception;
 
-    public void sendToActiveMQ(IOException command);
+    void onAMQPException(IOException error);
 
-    public void sendToAmqp(Object command) throws IOException;
+    void onActiveMQCommand(Command command) throws Exception;
 
-    public X509Certificate[] getPeerCertificates();
-
-    public void onException(IOException error);
-
-//    public AmqpInactivityMonitor getInactivityMonitor();
-
-    public AmqpWireFormat getWireFormat();
-
-    public void stop() throws Exception;
-
-    public String getTransformer();
-
-    public String getRemoteAddress();
-
-    public boolean isTrace();
-
-    public IAmqpProtocolConverter getProtocolConverter();
-    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter);
-
+    void updateTracer();
 }

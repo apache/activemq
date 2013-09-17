@@ -25,5 +25,5 @@ import java.io.IOException;
  * Interface used by the AMQPProtocolConverter for callbacks.
  */
 interface ResponseHandler {
-    void onResponse(AmqpProtocolConverter converter, Response response) throws IOException;
+    void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException;
 }

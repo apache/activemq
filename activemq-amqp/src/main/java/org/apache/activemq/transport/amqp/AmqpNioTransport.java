@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.nio.channels.SocketChannel;
 
 import javax.net.SocketFactory;
 
+import org.apache.activemq.transport.nio.NIOInputStream;
 import org.apache.activemq.transport.nio.NIOOutputStream;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
@@ -35,6 +37,7 @@ import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
+import org.fusesource.hawtbuf.Buffer;
 
 /**
  * An implementation of the {@link org.apache.activemq.transport.Transport} interface for using AMQP over NIO
@@ -80,6 +83,8 @@ public class AmqpNioTransport extends TcpTransport {
         this.buffOut = outPutStream;
     }
 
+    boolean magicRead = false;
+
     private void serviceRead() {
         try {
 
@@ -100,9 +105,25 @@ public class AmqpNioTransport extends TcpTransport {
                 receiveCounter += readSize;
 
                 inputBuffer.flip();
+
+                if( !magicRead ) {
+                    if( inputBuffer.remaining()>= 8 ) {
+                        magicRead = true;
+                        Buffer magic = new Buffer(8);
+                        for (int i = 0; i < 8; i++) {
+                            magic.data[i] = inputBuffer.get();
+                        }
+                        doConsume(new AmqpHeader(magic));
+                    } else {
+                        inputBuffer.flip();
+                        continue;
+                    }
+                }
+
                 doConsume(AmqpSupport.toBuffer(inputBuffer));
                 // clear the buffer
                 inputBuffer.clear();
+
             }
         } catch (IOException e) {
             onException(e);

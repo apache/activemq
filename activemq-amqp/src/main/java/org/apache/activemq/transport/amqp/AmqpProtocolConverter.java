@@ -25,11 +25,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jms.InvalidSelectorException;
 
-import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -86,7 +84,6 @@ import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
-import org.apache.qpid.proton.engine.impl.ConnectionImpl;
 import org.apache.qpid.proton.engine.impl.EngineFactoryImpl;
 import org.apache.qpid.proton.engine.impl.ProtocolTracer;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
@@ -104,7 +101,7 @@ import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class AmqpProtocolConverter {
+class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     static final Logger TRACE_FRAMES = AmqpTransportFilter.TRACE_FRAMES;
     public static final EnumSet<EndpointState> UNINITIALIZED_SET = EnumSet.of(EndpointState.UNINITIALIZED);
@@ -122,18 +119,17 @@ class AmqpProtocolConverter {
 
     int prefetch = 100;
 
-    ReentrantLock lock = new ReentrantLock();
     EngineFactory engineFactory = new EngineFactoryImpl();
     Transport protonTransport = engineFactory.createTransport();
     Connection protonConnection = engineFactory.createConnection();
 
-    public AmqpProtocolConverter(AmqpTransport transport, BrokerContext brokerContext) {
+    public AmqpProtocolConverter(AmqpTransport transport) {
         this.amqpTransport = transport;
         this.protonTransport.bind(this.protonConnection);
         updateTracer();
     }
 
-    void updateTracer() {
+    public void updateTracer() {
         if (amqpTransport.isTrace()) {
             ((TransportImpl) protonTransport).setProtocolTracer(new ProtocolTracer() {
                 @Override
@@ -188,6 +184,7 @@ class AmqpProtocolConverter {
     /**
      * Convert a AMQP command
      */
+    @Override
     public void onAMQPData(Object command) throws Exception {
         Buffer frame;
         if (command.getClass() == AmqpHeader.class) {
@@ -313,7 +310,7 @@ class AmqpProtocolConverter {
             closing = true;
             sendToActiveMQ(new RemoveInfo(connectionId), new ResponseHandler() {
                 @Override
-                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                     protonConnection.close();
                     if (!closedSocket) {
                         pumpProtonToSocket();
@@ -323,6 +320,7 @@ class AmqpProtocolConverter {
         }
     }
 
+    @Override
     public void onAMQPException(IOException error) {
         closedSocket = true;
         if (!closing) {
@@ -335,6 +333,7 @@ class AmqpProtocolConverter {
         }
     }
 
+    @Override
     public void onActiveMQCommand(Command command) throws Exception {
         if (command.isResponse()) {
             Response response = (Response) command;
@@ -405,7 +404,7 @@ class AmqpProtocolConverter {
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             @Override
-            public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+            public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                 protonConnection.open();
                 pumpProtonToSocket();
 
@@ -554,7 +553,7 @@ class AmqpProtocolConverter {
             message.onSend();
             sendToActiveMQ(message, new ResponseHandler() {
                 @Override
-                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                     if (!delivery.remotelySettled()) {
                         if (response.isException()) {
                             ExceptionResponse er = (ExceptionResponse) response;
@@ -649,7 +648,7 @@ class AmqpProtocolConverter {
                 TransactionInfo txinfo = new TransactionInfo(connectionId, new LocalTransactionId(connectionId, txid), operation);
                 sendToActiveMQ(txinfo, new ResponseHandler() {
                     @Override
-                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
                             ExceptionResponse er = (ExceptionResponse) response;
                             Rejected rejected = new Rejected();
@@ -706,7 +705,7 @@ class AmqpProtocolConverter {
                 producerInfo.setDestination(dest);
                 sendToActiveMQ(producerInfo, new ResponseHandler() {
                     @Override
-                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
                             receiver.setTarget(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
@@ -920,7 +919,7 @@ class AmqpProtocolConverter {
 
                 sendToActiveMQ(ack, new ResponseHandler() {
                     @Override
-                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
                             if (response.isException()) {
                                 Throwable exception = ((ExceptionResponse) response).getException();
@@ -1020,7 +1019,7 @@ class AmqpProtocolConverter {
 
                 sendToActiveMQ(pendingTxAck, new ResponseHandler() {
                     @Override
-                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
                             if (response.isException()) {
                                 Throwable exception = ((ExceptionResponse) response).getException();
@@ -1100,7 +1099,7 @@ class AmqpProtocolConverter {
                 consumerContext.closed = true;
                 sendToActiveMQ(rsi, new ResponseHandler() {
                     @Override
-                    public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                         if (response.isException()) {
                             sender.setSource(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
@@ -1153,7 +1152,7 @@ class AmqpProtocolConverter {
 
             sendToActiveMQ(consumerInfo, new ResponseHandler() {
                 @Override
-                public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
+                public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                     if (response.isException()) {
                         sender.setSource(null);
                         Throwable exception = ((ExceptionResponse) response).getException();
