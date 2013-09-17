@@ -2109,14 +2109,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     protected void assignGroup(Subscription subs, MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
         messageGroupOwners.put(groupId, subs.getConsumerInfo().getConsumerId());
         Message message = n.getMessage();
-        if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage) message;
-            try {
-                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
-            } catch (JMSException e) {
-                LOG.warn("Failed to set boolean header", e);
-            }
-        }
+        message.setJMSXGroupFirstForConsumer(true);
         subs.getConsumerInfo().setLastDeliveredSequenceId(subs.getConsumerInfo().getLastDeliveredSequenceId() + 1);
     }
 

@@ -74,23 +74,6 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         return result;
     }
 
-    /**
-     * Assigns the message group to this subscription and set the flag on the
-     * message that it is the first message to be dispatched.
-     */
-    protected void assignGroupToMe(MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
-        messageGroupOwners.put(groupId, info.getConsumerId());
-        Message message = n.getMessage();
-        if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage)message;
-            try {
-                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
-            } catch (JMSException e) {
-                LOG.warn("Failed to set boolean header: " + e, e);
-            }
-        }
-    }
-
     @Override
     public synchronized String toString() {
         return "QueueSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
