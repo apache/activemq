@@ -488,7 +488,7 @@ public class URISupport {
      * @return a URI formatted query string.
      * @throws URISyntaxException
      */
-    public static String createQueryString(Map<String, String> options) throws URISyntaxException {
+    public static String createQueryString(Map<String, ? extends Object> options) throws URISyntaxException {
         try {
             if (options.size() > 0) {
                 StringBuffer rc = new StringBuffer();
