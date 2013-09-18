@@ -41,84 +41,84 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     public String prefix;
     public String postfix;
 
-//    public void initCombosForTestUriOptionsWork() {
-//        initSharedCombos();
-//    }
-//
-//    public void testUriOptionsWork() throws Exception {
-//        String uri = prefix + bindAddress + postfix;
-//        LOG.info("Connecting via: " + uri);
-//
-//        connection = new ActiveMQConnectionFactory(uri).createConnection();
-//        connection.start();
-//    }
-//
-//    public void initCombosForTestValidDiffServOptionsWork() {
-//        initSharedCombos();
-//    }
-//
-//    public void testValidDiffServOptionsWork() throws Exception {
-//        String[] validIntegerOptions = {"0", "1", "32", "62", "63"};
-//        for (String opt : validIntegerOptions) {
-//            testValidOptionsWork(DIFF_SERV + opt, "");
-//        }
-//        String[] validNameOptions = { "CS0", "CS1", "CS2", "CS3", "CS4", "CS5", "CS6",
-//                "CS7", "EF", "AF11", "AF12","AF13", "AF21", "AF22", "AF23", "AF31",
-//                "AF32", "AF33", "AF41", "AF42", "AF43" };
-//        for (String opt : validNameOptions) {
-//            testValidOptionsWork(DIFF_SERV + opt, "");
-//        }
-//    }
-//
-//    public void initCombosForTestInvalidDiffServOptionDoesNotWork() {
-//        initSharedCombos();
-//    }
-//
-//    public void testInvalidDiffServOptionsDoesNotWork() throws Exception {
-//        String[] invalidIntegerOptions = {"-2", "-1", "64", "65", "100", "255"};
-//        for (String opt : invalidIntegerOptions) {
-//            testInvalidOptionsDoNotWork(DIFF_SERV + opt, "");
-//        }
-//        String[] invalidNameOptions = {"hi", "", "A", "AF", "-AF21"};
-//        for (String opt : invalidNameOptions) {
-//            testInvalidOptionsDoNotWork(DIFF_SERV + opt, "");
-//        }
-//    }
-//
-//    public void initCombosForTestValidTypeOfServiceOptionsWork() {
-//        initSharedCombos();
-//    }
-//
-//    public void testValidTypeOfServiceOptionsWork() throws Exception {
-//        int[] validOptions = {0, 1, 32, 100, 254, 255};
-//        for (int opt : validOptions) {
-//            testValidOptionsWork(TOS + opt, "");
-//        }
-//    }
-//
-//    public void initCombosForTestInvalidTypeOfServiceOptionDoesNotWork() {
-//        initSharedCombos();
-//    }
-//
-//    public void testInvalidTypeOfServiceOptionDoesNotWork() throws Exception {
-//        int[] invalidOptions = {-2, -1, 256, 257};
-//        for (int opt : invalidOptions) {
-//            testInvalidOptionsDoNotWork(TOS + opt, "");
-//        }
-//    }
-//
-//    public void initCombosForTestDiffServAndTypeOfServiceMutuallyExclusive() {
-//        initSharedCombos();
-//    }
-//
-//    public void testDiffServAndTypeServiceMutuallyExclusive() {
-//        String msg = "It should not be possible to set both Differentiated "
-//            + "Services and Type of Service options on the same connection "
-//            + "URI.";
-//        testInvalidOptionsDoNotWork(TOS + 32 + DIFF_SERV, msg);
-//        testInvalidOptionsDoNotWork(DIFF_SERV + 32 + TOS + 32, msg);
-//    }
-//
+    public void initCombosForTestUriOptionsWork() {
+        initSharedCombos();
+    }
+
+    public void testUriOptionsWork() throws Exception {
+        String uri = prefix + bindAddress + postfix;
+        LOG.info("Connecting via: " + uri);
+
+        connection = new ActiveMQConnectionFactory(uri).createConnection();
+        connection.start();
+    }
+
+    public void initCombosForTestValidDiffServOptionsWork() {
+        initSharedCombos();
+    }
+
+    public void testValidDiffServOptionsWork() throws Exception {
+        String[] validIntegerOptions = {"0", "1", "32", "62", "63"};
+        for (String opt : validIntegerOptions) {
+            testValidOptionsWork(DIFF_SERV + opt, "");
+        }
+        String[] validNameOptions = { "CS0", "CS1", "CS2", "CS3", "CS4", "CS5", "CS6",
+                "CS7", "EF", "AF11", "AF12","AF13", "AF21", "AF22", "AF23", "AF31",
+                "AF32", "AF33", "AF41", "AF42", "AF43" };
+        for (String opt : validNameOptions) {
+            testValidOptionsWork(DIFF_SERV + opt, "");
+        }
+    }
+
+    public void initCombosForTestInvalidDiffServOptionDoesNotWork() {
+        initSharedCombos();
+    }
+
+    public void testInvalidDiffServOptionsDoesNotWork() throws Exception {
+        String[] invalidIntegerOptions = {"-2", "-1", "64", "65", "100", "255"};
+        for (String opt : invalidIntegerOptions) {
+            testInvalidOptionsDoNotWork(DIFF_SERV + opt, "");
+        }
+        String[] invalidNameOptions = {"hi", "", "A", "AF", "-AF21"};
+        for (String opt : invalidNameOptions) {
+            testInvalidOptionsDoNotWork(DIFF_SERV + opt, "");
+        }
+    }
+
+    public void initCombosForTestValidTypeOfServiceOptionsWork() {
+        initSharedCombos();
+    }
+
+    public void testValidTypeOfServiceOptionsWork() throws Exception {
+        int[] validOptions = {0, 1, 32, 100, 254, 255};
+        for (int opt : validOptions) {
+            testValidOptionsWork(TOS + opt, "");
+        }
+    }
+
+    public void initCombosForTestInvalidTypeOfServiceOptionDoesNotWork() {
+        initSharedCombos();
+    }
+
+    public void testInvalidTypeOfServiceOptionDoesNotWork() throws Exception {
+        int[] invalidOptions = {-2, -1, 256, 257};
+        for (int opt : invalidOptions) {
+            testInvalidOptionsDoNotWork(TOS + opt, "");
+        }
+    }
+
+    public void initCombosForTestDiffServAndTypeOfServiceMutuallyExclusive() {
+        initSharedCombos();
+    }
+
+    public void testDiffServAndTypeServiceMutuallyExclusive() {
+        String msg = "It should not be possible to set both Differentiated "
+            + "Services and Type of Service options on the same connection "
+            + "URI.";
+        testInvalidOptionsDoNotWork(TOS + 32 + DIFF_SERV, msg);
+        testInvalidOptionsDoNotWork(DIFF_SERV + 32 + TOS + 32, msg);
+    }
+
     public void initCombosForTestBadVersionNumberDoesNotWork() {
         initSharedCombos();
     }
@@ -144,19 +144,19 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
             {"?tcpNoDelay=true&keepAlive=true&soLinger=-1"});
     }
 
-//    private void testValidOptionsWork(String options, String msg) {
-//        String uri = prefix + bindAddress + postfix + options;
-//        LOG.info("Connecting via: " + uri);
-//
-//        try {
-//            connection = new ActiveMQConnectionFactory(uri).createConnection();
-//            connection.start();
-//        } catch (Exception unexpected) {
-//            fail("Valid options '" + options + "' on URI '" + uri + "' should "
-//                 + "not have caused an exception to be thrown. " + msg
-//                 + " Exception: " + unexpected);
-//        }
-//    }
+    private void testValidOptionsWork(String options, String msg) {
+        String uri = prefix + bindAddress + postfix + options;
+        LOG.info("Connecting via: " + uri);
+
+        try {
+            connection = new ActiveMQConnectionFactory(uri).createConnection();
+            connection.start();
+        } catch (Exception unexpected) {
+            fail("Valid options '" + options + "' on URI '" + uri + "' should "
+                 + "not have caused an exception to be thrown. " + msg
+                 + " Exception: " + unexpected);
+        }
+    }
 
     private void testInvalidOptionsDoNotWork(String options, String msg) {
         String uri = prefix + bindAddress + postfix + options;
