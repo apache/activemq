@@ -885,7 +885,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         private void settle(final Delivery delivery, final int ackType) throws Exception {
             byte[] tag = delivery.getTag();
-            if (tag != null && tag.length > 0) {
+            if (tag != null && tag.length > 0 && delivery.remotelySettled()) {
                 checkinTag(tag);
             }
 
