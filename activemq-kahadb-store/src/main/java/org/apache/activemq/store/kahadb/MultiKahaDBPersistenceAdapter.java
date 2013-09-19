@@ -30,6 +30,8 @@ import java.util.Set;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.LockableServiceSupport;
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -39,9 +41,11 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.AnyDestination;
 import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
@@ -49,6 +53,7 @@ import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,11 +63,18 @@ import org.slf4j.LoggerFactory;
  *
  * @org.apache.xbean.XBean element="mKahaDB"
  */
-public class MultiKahaDBPersistenceAdapter extends DestinationMap implements PersistenceAdapter, BrokerServiceAware {
+public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter {
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBPersistenceAdapter.class);
 
     final static ActiveMQDestination matchAll = new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">"), new ActiveMQTopic(">")});
     final int LOCAL_FORMAT_ID_MAGIC = Integer.valueOf(System.getProperty("org.apache.activemq.store.kahadb.MultiKahaDBTransactionStore.localXaFormatId", "61616"));
+
+    final class DelegateDestinationMap extends DestinationMap {
+        public void setEntries(List<DestinationMapEntry>  entries) {
+            super.setEntries(entries);
+        }
+    };
+    final DelegateDestinationMap destinationMap = new DelegateDestinationMap();
 
     BrokerService brokerService;
     List<KahaDBPersistenceAdapter> adapters = new LinkedList<KahaDBPersistenceAdapter>();
@@ -120,7 +132,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
             configureAdapter(adapter);
             adapters.add(adapter);
         }
-        super.setEntries(entries);
+        destinationMap.setEntries(entries);
     }
 
     private String nameFromDestinationFilter(ActiveMQDestination destination) {
@@ -161,7 +173,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     }
 
     private PersistenceAdapter getMatchingPersistenceAdapter(ActiveMQDestination destination) {
-        Object result = this.chooseValue(destination);
+        Object result = destinationMap.chooseValue(destination);
         if (result == null) {
             throw new RuntimeException("No matching persistence adapter configured for destination: " + destination + ", options:" + adapters);
         }
@@ -249,7 +261,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         if (adapter instanceof KahaDBPersistenceAdapter) {
             adapter.removeQueueMessageStore(destination);
             removeMessageStore((KahaDBPersistenceAdapter)adapter, destination);
-            removeAll(destination);
+            destinationMap.removeAll(destination);
         }
     }
 
@@ -259,7 +271,7 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
         if (adapter instanceof KahaDBPersistenceAdapter) {
             adapter.removeTopicMessageStore(destination);
             removeMessageStore((KahaDBPersistenceAdapter)adapter, destination);
-            removeAll(destination);
+            destinationMap.removeAll(destination);
         }
     }
 
@@ -310,8 +322,8 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     }
 
     @Override
-    public void start() throws Exception {
-        Object result = this.chooseValue(matchAll);
+    public void doStart() throws Exception {
+        Object result = destinationMap.chooseValue(matchAll);
         if (result != null) {
             FilteredKahaDBPersistenceAdapter filteredAdapter = (FilteredKahaDBPersistenceAdapter) result;
             if (filteredAdapter.getDestination() == matchAll && filteredAdapter.isPerDestination()) {
@@ -378,13 +390,16 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     private FilteredKahaDBPersistenceAdapter registerAdapter(KahaDBPersistenceAdapter adapter, ActiveMQDestination destination) {
         adapters.add(adapter);
         FilteredKahaDBPersistenceAdapter result = new FilteredKahaDBPersistenceAdapter(destination, adapter);
-        put(destination, result);
+        destinationMap.put(destination, result);
         return result;
     }
 
     private void configureAdapter(KahaDBPersistenceAdapter adapter) {
         // need a per store factory that will put the store in the branch qualifier to disiambiguate xid mbeans
         adapter.getStore().setTransactionIdTransformer(transactionIdTransformer);
+        if (isUseLock()) {
+            adapter.setUseLock(false);
+        }
         adapter.setBrokerService(getBrokerService());
     }
 
@@ -397,9 +412,9 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     }
 
     @Override
-    public void stop() throws Exception {
+    protected void doStop(ServiceStopper stopper) throws Exception {
         for (PersistenceAdapter persistenceAdapter : adapters) {
-            persistenceAdapter.stop();
+            stopper.stop(persistenceAdapter);
         }
     }
 
@@ -411,6 +426,10 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     @Override
     public void setDirectory(File directory) {
         this.directory = directory;
+    }
+
+    @Override
+    public void init() throws Exception {
     }
 
     @Override
@@ -463,5 +482,12 @@ public class MultiKahaDBPersistenceAdapter extends DestinationMap implements Per
     public String toString() {
         String path = getDirectory() != null ? getDirectory().getAbsolutePath() : "DIRECTORY_NOT_SET";
         return "MultiKahaDBPersistenceAdapter[" + path + "]" + adapters;
+    }
+
+    @Override
+    public Locker createDefaultLocker() throws IOException {
+        SharedFileLocker locker = new SharedFileLocker();
+        locker.configure(this);
+        return locker;
     }
 }

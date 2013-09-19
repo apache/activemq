@@ -54,6 +54,10 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
         this.useLock = useLock;
     }
 
+    public boolean isUseLock() {
+        return this.useLock;
+    }
+
     @Override
     public void setLocker(Locker locker) throws IOException {
         this.locker = locker;
