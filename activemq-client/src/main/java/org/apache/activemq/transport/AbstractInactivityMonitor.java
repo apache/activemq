@@ -80,8 +80,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             long now = System.currentTimeMillis();
             long elapsed = (now - lastRunTime);
 
-            if (lastRunTime != 0 && LOG.isDebugEnabled()) {
-                LOG.debug("" + elapsed + " ms elapsed since last read check.");
+            if (lastRunTime != 0) {
+                LOG.debug("{}ms elapsed since last read check.", elapsed);
             }
 
             // Perhaps the timer executed a read check late.. and then executes
@@ -89,10 +89,9 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             // read checks to be small..
 
             // If less than 90% of the read check Time elapsed then abort this
-            // readcheck.
-            if (!allowReadCheck(elapsed)) { // FUNKY qdox bug does not allow me
-                                            // to inline this expression.
-                LOG.debug("Aborting read check.. Not enough time elapsed since last read check.");
+            // read check.
+            if (!allowReadCheck(elapsed)) {
+                LOG.debug("Aborting read check...Not enough time elapsed since last read check.");
                 return;
             }
 
@@ -116,9 +115,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         @Override
         public void run() {
             long now = System.currentTimeMillis();
-            if (lastRunTime != 0 && LOG.isDebugEnabled()) {
-                LOG.debug(this + " " + (now - lastRunTime) + " ms elapsed since last write check.");
-
+            if (lastRunTime != 0) {
+                LOG.debug("{}: {}ms elapsed since last write check.", this, (now - lastRunTime));
             }
             lastRunTime = now;
             writeCheck();
@@ -149,25 +147,18 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     final void writeCheck() {
         if (inSend.get()) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("A send is in progress");
-            }
+            LOG.trace("Send in progress. Skipping write check.");
             return;
         }
 
         if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
-
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " no message sent since last write check, sending a KeepAliveInfo");
-            }
+            LOG.trace("{} no message sent since last write check, sending a KeepAliveInfo", this);
 
             try {
                 ASYNC_TASKS.execute(new Runnable() {
                     @Override
                     public void run() {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Running {}", this);
-                        }
+                        LOG.debug("Running {}", this);
                         if (monitorStarted.get()) {
                             try {
                                 // If we can't get the lock it means another
@@ -200,9 +191,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                 }
             }
         } else {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " message sent since last write check, resetting flag");
-            }
+            LOG.trace("{} message sent since last write check, resetting flag.", this);
         }
 
         commandSent.set(false);
@@ -212,24 +201,17 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
         int currentCounter = next.getReceiveCounter();
         int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
         if (inReceive.get() || currentCounter != previousCounter) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("A receive is in progress");
-            }
+            LOG.trace("A receive is in progress, skipping read check.");
             return;
         }
         if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("No message received since last read check for " + toString() + ". Throwing InactivityIOException.");
-            }
+            LOG.debug("No message received since last read check for {}. Throwing InactivityIOException.", this);
 
             try {
                 ASYNC_TASKS.execute(new Runnable() {
                     @Override
                     public void run() {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Running {}", this);
-                        }
+                        LOG.debug("Running {}", this);
                         onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
                     }
 

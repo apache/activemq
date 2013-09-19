@@ -49,7 +49,7 @@ public class StompInactivityMonitor extends AbstractInactivityMonitor {
     }
 
     @Override
-    protected void processOutboundWireFormatInfo(WireFormatInfo info) throws IOException{
+    protected void processOutboundWireFormatInfo(WireFormatInfo info) throws IOException {
     }
 
     @Override
@@ -59,13 +59,9 @@ public class StompInactivityMonitor extends AbstractInactivityMonitor {
             return false;
         }
 
-        LOG.debug("Stomp Inactivity Monitor read check: " + getReadCheckTime() +
-                  ", write check: " + getWriteCheckTime());
+        LOG.debug("Stomp Inactivity Monitor read check interval: {}ms, write check interval: {}ms",
+                  getReadCheckTime(), getWriteCheckTime());
 
-        if (this.getReadCheckTime() >= 0 && this.getWriteCheckTime() >= 0) {
-            return true;
-        }
-
-        return false;
+        return this.getReadCheckTime() >= 0 && this.getWriteCheckTime() >= 0;
     }
 }
