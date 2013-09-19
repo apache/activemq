@@ -267,6 +267,10 @@
         <!-- REST API -->
         <include>org.jolokia:jolokia-core</include>
         <include>com.googlecode.json-simple:json-simple</include>
+        <!-- ADDITIONAL HAWTIO PLUGINS -->
+        <include>org.fusesource.insight:insight-log-core</include>
+        <include>org.fusesource.insight:insight-log4j</include>
+        <include>org.ops4j.pax.url:pax-url-aether</include>
       </includes>
     </dependencySet>
   </dependencySets>
