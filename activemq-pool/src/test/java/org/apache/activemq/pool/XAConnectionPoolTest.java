@@ -151,6 +151,104 @@ public class XAConnectionPoolTest extends TestSupport {
         connection.close();
     }
 
+    public void testAckModeOfPoolNonXAWithTM() throws Exception {
+        final Vector<Synchronization> syncs = new Vector<Synchronization>();
+        ActiveMQTopic topic = new ActiveMQTopic("test");
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test?broker.persistent=false"));
+
+        // simple TM that is in a tx and will track syncs
+        pcf.setTransactionManager(new TransactionManager(){
+            @Override
+            public void begin() throws NotSupportedException, SystemException {
+            }
+
+            @Override
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return Status.STATUS_ACTIVE;
+            }
+
+            @Override
+            public Transaction getTransaction() throws SystemException {
+                return new Transaction() {
+                    @Override
+                    public void commit() throws HeuristicMixedException, HeuristicRollbackException, RollbackException, SecurityException, SystemException {
+                    }
+
+                    @Override
+                    public boolean delistResource(XAResource xaRes, int flag) throws IllegalStateException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean enlistResource(XAResource xaRes) throws IllegalStateException, RollbackException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public int getStatus() throws SystemException {
+                        return 0;
+                    }
+
+                    @Override
+                    public void registerSynchronization(Synchronization synch) throws IllegalStateException, RollbackException, SystemException {
+                        syncs.add(synch);
+                    }
+
+                    @Override
+                    public void rollback() throws IllegalStateException, SystemException {
+                    }
+
+                    @Override
+                    public void setRollbackOnly() throws IllegalStateException, SystemException {
+                    }
+                };
+
+            }
+
+            @Override
+            public void resume(Transaction tobj) throws IllegalStateException, InvalidTransactionException, SystemException {
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SecurityException, SystemException {
+            }
+
+            @Override
+            public void setRollbackOnly() throws IllegalStateException, SystemException {
+            }
+
+            @Override
+            public void setTransactionTimeout(int seconds) throws SystemException {
+            }
+
+            @Override
+            public Transaction suspend() throws SystemException {
+                return null;
+            }
+        });
+
+        TopicConnection connection = (TopicConnection) pcf.createConnection();
+        TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        assertEquals("client ack is enforce", Session.CLIENT_ACKNOWLEDGE, session.getAcknowledgeMode());
+        TopicPublisher publisher = session.createPublisher(topic);
+        publisher.publish(session.createMessage());
+
+        // simulate a commit
+        for (Synchronization sync : syncs) {
+            sync.beforeCompletion();
+        }
+        for (Synchronization sync : syncs) {
+            sync.afterCompletion(1);
+        }
+        connection.close();
+    }
+
     public void testInstanceOf() throws  Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);

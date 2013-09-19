@@ -398,8 +398,9 @@ public class TransactionContext implements XAResource {
                 beforeEnd();
             } catch (JMSException e) {
                 throw toXAException(e);
+            } finally {
+                setXid(null);
             }
-            setXid(null);
         } else if ((flags & TMSUCCESS) == TMSUCCESS) {
             // set to null if this is the current xid.
             // otherwise this could be an asynchronous success call
@@ -408,8 +409,9 @@ public class TransactionContext implements XAResource {
                     beforeEnd();
                 } catch (JMSException e) {
                     throw toXAException(e);
+                } finally {
+                    setXid(null);
                 }
-                setXid(null);
             }
         } else {
             throw new XAException(XAException.XAER_INVAL);
@@ -684,6 +686,7 @@ public class TransactionContext implements XAResource {
             this.connection.checkClosedOrFailed();
             this.connection.ensureConnectionInfoSent();
         } catch (JMSException e) {
+            disassociate();
             throw toXAException(e);
         }
 
@@ -699,6 +702,7 @@ public class TransactionContext implements XAResource {
                     LOG.debug("Started XA transaction: " + transactionId);
                 }
             } catch (JMSException e) {
+                disassociate();
                 throw toXAException(e);
             }
 
@@ -712,6 +716,7 @@ public class TransactionContext implements XAResource {
                         LOG.debug("Ended XA transaction: " + transactionId);
                     }
                 } catch (JMSException e) {
+                    disassociate();
                     throw toXAException(e);
                 }
 
@@ -729,10 +734,14 @@ public class TransactionContext implements XAResource {
 	        	}
             }
 
-            // dis-associate
-            associatedXid = null;
-            transactionId = null;
+            disassociate();
         }
+    }
+
+    private void disassociate() {
+         // dis-associate
+         associatedXid = null;
+         transactionId = null;
     }
 
     /**

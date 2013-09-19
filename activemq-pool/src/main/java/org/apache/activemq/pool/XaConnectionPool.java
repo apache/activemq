@@ -46,8 +46,9 @@ public class XaConnectionPool extends ConnectionPool {
         try {
             boolean isXa = (transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION);
             if (isXa) {
-                transacted = true;
-                ackMode = Session.SESSION_TRANSACTED;
+                // if the xa tx aborts inflight we don't want to auto create a local transaction or auto ack
+                transacted = false;
+                ackMode = Session.CLIENT_ACKNOWLEDGE;
             } else if (transactionManager != null) {
                 // cmt or transactionManager managed
                 transacted = false;

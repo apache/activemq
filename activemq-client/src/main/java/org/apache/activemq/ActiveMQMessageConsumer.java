@@ -820,7 +820,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 for (MessageDispatch old : list) {
                     // ensure we don't filter this as a duplicate
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("on close, rollback: " + old.getMessage().getMessageId());
+                        LOG.debug("on close, rollback duplicate: " + old.getMessage().getMessageId());
                     }
                     session.connection.rollbackDuplicate(this, old.getMessage());
                 }
