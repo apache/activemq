@@ -34,7 +34,21 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.TopicSubscription;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
@@ -55,32 +69,64 @@ public class AdvisoryBroker extends BrokerFilter {
 
     protected final ConcurrentHashMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
     class ConsumerIdKey {
-        final ConsumerId delegate;
-        final long creationTime = System.currentTimeMillis();
+        private final ConsumerId delegate;
+        private final long creationTime;
+
         ConsumerIdKey(ConsumerId id) {
-            delegate = id;
+            this.delegate = id;
+            this.creationTime = System.currentTimeMillis();
+        }
+
+        ConsumerIdKey(ConsumerId id, long creationTime) {
+            this.delegate = id;
+            this.creationTime = creationTime;
         }
 
         @Override
         public boolean equals(Object other) {
-            return delegate.equals(other);
+            if (this == other) {
+                return true;
+            }
+            if (other == null || other.getClass() != ConsumerIdKey.class) {
+                return false;
+            }
+
+            ConsumerIdKey key = (ConsumerIdKey) other;
+
+            return delegate.equals(key.delegate);
         }
 
         @Override
         public int hashCode() {
             return delegate.hashCode();
         }
+
+        @Override
+        public String toString() {
+            return "ConsumerIdKey { " + delegate + " }";
+        }
+
+        public ConsumerId getConsumerId() {
+            return this.delegate;
+        }
+
+        public long getCreationTime() {
+            return this.creationTime;
+        }
     }
+
     // replay consumer advisory messages in the order in which they arrive - allows duplicate suppression in
     // mesh networks with ttl>1
     protected final Map<ConsumerIdKey, ConsumerInfo> consumers = new ConcurrentSkipListMap<ConsumerIdKey, ConsumerInfo>(
-            new Comparator<ConsumerIdKey>() {
-                @Override
-                public int compare(ConsumerIdKey o1, ConsumerIdKey o2) {
-                    return (o1.creationTime < o2.creationTime ? -1 : (o1.delegate==o2.delegate ? 0 : 1));
-                }
+        new Comparator<ConsumerIdKey>() {
+            @Override
+            public int compare(ConsumerIdKey o1, ConsumerIdKey o2) {
+                return (o1.creationTime < o2.creationTime ? -1 : o1.equals(o2) ? 0 : 1);
             }
+        }
     );
+
+    protected final Map<ConsumerId, Long> consumerTracker = new ConcurrentHashMap<ConsumerId, Long>();
 
     protected final ConcurrentHashMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
     protected final ConcurrentHashMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
@@ -113,7 +159,10 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            consumers.put(new ConsumerIdKey(info.getConsumerId()), info);
+            ConsumerIdKey key = new ConsumerIdKey(info.getConsumerId());
+            consumerTracker.put(key.getConsumerId(), key.getCreationTime());
+            consumers.put(key, info);
+            LOG.info("Added {} to the map:", key);
             fireConsumerAdvisory(context, info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
@@ -276,7 +325,18 @@ public class AdvisoryBroker extends BrokerFilter {
         ActiveMQDestination dest = info.getDestination();
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
-            consumers.remove(new ConsumerIdKey(info.getConsumerId()));
+
+            Object value = consumerTracker.remove(info.getConsumerId());
+            if (value != null) {
+                Long creationTime = (Long) value;
+                ConsumerIdKey key = new ConsumerIdKey(info.getConsumerId(), creationTime);
+                if (consumers.remove(key) == null) {
+                    LOG.info("Failed to remove:{} from the consumers map: {}", key, consumers);
+                }
+            } else {
+                LOG.info("Failed to find consumer:{} in creation time tracking map: ", info.getConsumerId());
+            }
+
             if (!dest.isTemporary() || destinations.containsKey(dest)) {
                 fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
             }
