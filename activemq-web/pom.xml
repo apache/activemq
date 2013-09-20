@@ -32,7 +32,6 @@
   <properties>
     <activemq.osgi.import.pkg>
       org.apache.activemq*;resolution:=optional,
-      org.apache.camel*;resolution:=optional,
       org.eclipse.jetty*;resolution:=optional,
       org.springframework*;resolution:=optional,
       com.thoughtworks.xstream*;resolution:=optional,
@@ -46,9 +45,10 @@
 
   <dependencies>
     <!-- activemq -->
+
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-camel</artifactId>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>activemq-all</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

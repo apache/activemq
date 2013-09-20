@@ -129,28 +129,11 @@ public class MessageServlet extends MessageServletSupport {
             boolean sync = isSync(request);
             TextMessage message = client.getSession().createTextMessage(text);
 
-            if (sync) {
-               String point = "activemq:"
-                   + ((ActiveMQDestination)destination).getPhysicalName().replace("//", "")
-                   + "?requestTimeout=" + requestTimeout;
-               try {
-                   String body = (String)client.getProducerTemplate().requestBody(point, text);
-                   ActiveMQTextMessage answer = new ActiveMQTextMessage();
-                   answer.setText(body);
-
-                   writeMessageResponse(response.getWriter(), answer);
-               } catch (Exception e) {
-                   IOException ex = new IOException();
-                   ex.initCause(e);
-                   throw ex;
-               }
-            } else {
-                appendParametersToMessage(request, message);
-                boolean persistent = isSendPersistent(request);
-                int priority = getSendPriority(request);
-                long timeToLive = getSendTimeToLive(request);
-                client.send(destination, message, persistent, priority, timeToLive);
-            }
+            appendParametersToMessage(request, message);
+            boolean persistent = isSendPersistent(request);
+            int priority = getSendPriority(request);
+            long timeToLive = getSendTimeToLive(request);
+            client.send(destination, message, persistent, priority, timeToLive);
 
             // lets return a unique URI for reliable messaging
             response.setHeader("messageID", message.getJMSMessageID());
