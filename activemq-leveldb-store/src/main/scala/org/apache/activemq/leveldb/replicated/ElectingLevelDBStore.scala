@@ -22,7 +22,7 @@ import org.apache.activemq.util.{JMXSupport, ServiceStopper, ServiceSupport}
 import org.apache.activemq.leveldb.{LevelDBStoreViewMBean, LevelDBClient, RecordLog, LevelDBStore}
 import java.net.{NetworkInterface, InetAddress}
 import org.fusesource.hawtdispatch._
-import org.apache.activemq.broker.Locker
+import org.apache.activemq.broker.{LockableServiceSupport, Locker}
 import org.apache.activemq.store.PersistenceAdapter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -190,6 +190,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   def createDefaultLocker(): Locker = new Locker {
 
+    def setLockable(lockable: LockableServiceSupport) {}
     def configure(persistenceAdapter: PersistenceAdapter) {}
     def setFailIfLocked(failIfLocked: Boolean) {}
     def setLockAcquireSleepInterval(lockAcquireSleepInterval: Long) {}

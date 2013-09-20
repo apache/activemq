@@ -38,7 +38,6 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
     
     @Override
     public void doStart() throws Exception {
-        stopping = false;
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
         PreparedStatement statement = null;
@@ -57,7 +56,7 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
                 }
                 break;
             } catch (Exception e) {
-                if (stopping) {
+                if (isStopping()) {
                     throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
                 }
 

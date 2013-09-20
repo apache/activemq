@@ -17,24 +17,19 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.util.logging.Logger;
-
 import javax.sql.DataSource;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
+import org.apache.activemq.store.jdbc.Statements;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
-public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
+public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
     protected DataSource sharedDs;
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";
@@ -52,10 +47,13 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
         master.setUseJmx(false);
         master.setPersistent(true);
         master.setDeleteAllMessagesOnStartup(true);
-        JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
-        persistenceAdapter.setDataSource(getExistingDataSource());
-        configureJdbcPersistenceAdapter(persistenceAdapter);
-        master.setPersistenceAdapter(persistenceAdapter);
+        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) master.getPersistenceAdapter();
+        LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+        leaseDatabaseLocker.setCreateTablesOnStartup(true);
+        leaseDatabaseLocker.setDataSource(getExistingDataSource());
+        leaseDatabaseLocker.setStatements(new Statements());
+        configureLocker(kahaDBPersistenceAdapter);
+        kahaDBPersistenceAdapter.setLocker(leaseDatabaseLocker);
         configureBroker(master);
         master.start();
     }
@@ -78,15 +76,15 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
                     TransportConnector connector = new TransportConnector();
                     connector.setUri(new URI(SLAVE_URL));
                     broker.addConnector(connector);
-                    // no need for broker.setMasterConnectorURI(masterConnectorURI)
-                    // as the db lock provides the slave/master initialisation
                     broker.setUseJmx(false);
                     broker.setPersistent(true);
-                    JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
-                    persistenceAdapter.setDataSource(getExistingDataSource());
-                    persistenceAdapter.setCreateTablesOnStartup(false);
-                    broker.setPersistenceAdapter(persistenceAdapter);
-                    configureJdbcPersistenceAdapter(persistenceAdapter);
+                    KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+                    LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+                    leaseDatabaseLocker.setDataSource(getExistingDataSource());
+                    leaseDatabaseLocker.setStatements(new Statements());
+                    configureLocker(kahaDBPersistenceAdapter);
+                    kahaDBPersistenceAdapter.setLocker(leaseDatabaseLocker);
+
                     configureBroker(broker);
                     broker.start();
                     slave.set(broker);
@@ -100,9 +98,9 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
         t.start();
     }
 
-    protected void configureJdbcPersistenceAdapter(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
-        persistenceAdapter.setLockKeepAlivePeriod(500);
-        persistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
+    protected void configureLocker(KahaDBPersistenceAdapter kahaDBPersistenceAdapter) throws IOException {
+        kahaDBPersistenceAdapter.setLockKeepAlivePeriod(500);
+        kahaDBPersistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
     }
 
     protected DataSource getExistingDataSource() throws Exception {

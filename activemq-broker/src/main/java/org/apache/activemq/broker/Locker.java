@@ -54,6 +54,10 @@ public interface Locker extends Service {
      */
     public void setFailIfLocked(boolean failIfLocked);
 
+    /**
+     * A reference to what is locked
+     */
+    public void setLockable(LockableServiceSupport lockable);
 
     /**
      * Optionally configure the locker with the persistence adapter currently used

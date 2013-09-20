@@ -24,10 +24,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
-
-import org.apache.activemq.broker.AbstractLocker;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
@@ -40,42 +36,27 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean element="lease-database-locker"
  * 
  */
-public class LeaseDatabaseLocker extends AbstractLocker {
+public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     private static final Logger LOG = LoggerFactory.getLogger(LeaseDatabaseLocker.class);
-    protected DataSource dataSource;
-    protected Statements statements;
 
-    protected boolean stopping;
     protected int maxAllowableDiffFromDBTime = 0;
     protected long diffFromCurrentTime = Long.MAX_VALUE;
     protected String leaseHolderId;
-    protected int queryTimeout = -1;
-    JDBCPersistenceAdapter persistenceAdapter;
 
-
-    public void configure(PersistenceAdapter adapter) throws IOException {
-        if (adapter instanceof JDBCPersistenceAdapter) {
-            this.persistenceAdapter = (JDBCPersistenceAdapter)adapter;
-            this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
-            this.statements = ((JDBCPersistenceAdapter) adapter).getStatements();
-        }
-    }
-    
     public void doStart() throws Exception {
-        stopping = false;
 
-        if (lockAcquireSleepInterval < persistenceAdapter.getLockKeepAlivePeriod()) {
-            LOG.warn("Persistence adapter keep alive period: " + persistenceAdapter.getLockKeepAlivePeriod()
+        if (lockAcquireSleepInterval < lockable.getLockKeepAlivePeriod()) {
+            LOG.warn("LockableService keep alive period: " + lockable.getLockKeepAlivePeriod()
                     + ", which renews the lease, is less than lockAcquireSleepInterval: " + lockAcquireSleepInterval
                     + ", the lease duration. These values will allow the lease to expire.");
         }
 
-        LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the Master broker");
+        LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the master");
         String sql = statements.getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
 
         long now = 0l;
-        while (!stopping) {
+        while (!isStopping()) {
             Connection connection = null;
             PreparedStatement statement = null;
             try {
@@ -110,41 +91,11 @@ public class LeaseDatabaseLocker extends AbstractLocker {
             LOG.info(getLeaseHolderId() + " failed to acquire lease.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
             TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
         }
-        if (stopping) {
+        if (isStopping()) {
             throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
         }
 
         LOG.info(getLeaseHolderId() + ", becoming master with lease expiry " + new Date(now) + " on dataSource: " + dataSource);
-    }
-
-    private void setQueryTimeout(PreparedStatement statement) throws SQLException {
-        if (queryTimeout > 0) {
-            statement.setQueryTimeout(queryTimeout);
-        }
-    }
-
-    private Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
-    }
-
-    private void close(Connection connection) {
-        if (null != connection) {
-            try {
-                connection.close();
-            } catch (SQLException e1) {
-                LOG.debug(getLeaseHolderId() + " caught exception while closing connection: " + e1, e1);
-            }
-        }
-    }
-
-    private void close(PreparedStatement statement) {
-        if (null != statement) {
-            try {
-                statement.close();
-            } catch (SQLException e1) {
-                LOG.debug(getLeaseHolderId() + ", caught while closing statement: " + e1, e1);
-            }
-        }
     }
 
     private void reportLeasOwnerShipAndDuration(Connection connection) throws SQLException {
@@ -188,8 +139,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
     }
 
     public void doStop(ServiceStopper stopper) throws Exception {
-        stopping = true;
-        if (persistenceAdapter.getBrokerService() != null && persistenceAdapter.getBrokerService().isRestartRequested()) {
+        if (lockable.getBrokerService() != null && lockable.getBrokerService().isRestartRequested()) {
             // keep our lease for restart
             return;
         }
@@ -244,7 +194,7 @@ public class LeaseDatabaseLocker extends AbstractLocker {
         } catch (Exception e) {
             LOG.warn(getLeaseHolderId() + ", failed to update lease: " + e, e);
             IOException ioe = IOExceptionSupport.create(e);
-            persistenceAdapter.getBrokerService().handleIOException(ioe);
+            lockable.getBrokerService().handleIOException(ioe);
             throw ioe;
         } finally {
             close(statement);
@@ -253,26 +203,10 @@ public class LeaseDatabaseLocker extends AbstractLocker {
         return result;
     }
 
-    public long getLockAcquireSleepInterval() {
-        return lockAcquireSleepInterval;
-    }
-
-    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
-        this.lockAcquireSleepInterval = lockAcquireSleepInterval;
-    }
-    
-    public int getQueryTimeout() {
-        return queryTimeout;
-    }
-
-    public void setQueryTimeout(int queryTimeout) {
-        this.queryTimeout = queryTimeout;
-    }
-
     public String getLeaseHolderId() {
         if (leaseHolderId == null) {
-            if (persistenceAdapter.getBrokerService() != null) {
-                leaseHolderId = persistenceAdapter.getBrokerService().getBrokerName();
+            if (lockable.getBrokerService() != null) {
+                leaseHolderId = lockable.getBrokerService().getBrokerName();
             }
         }
         return leaseHolderId;

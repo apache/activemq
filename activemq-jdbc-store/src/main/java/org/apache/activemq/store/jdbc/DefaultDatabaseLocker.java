@@ -21,11 +21,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-
-import javax.sql.DataSource;
-
-import org.apache.activemq.broker.AbstractLocker;
-import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.Handler;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
@@ -38,27 +33,15 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean element="database-locker"
  * 
  */
-public class DefaultDatabaseLocker extends AbstractLocker {
+public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultDatabaseLocker.class);
-    protected DataSource dataSource;
-    protected Statements statements;
 
     protected volatile PreparedStatement lockCreateStatement;
     protected volatile PreparedStatement lockUpdateStatement;
     protected volatile Connection connection;
-    protected volatile boolean stopping;
     protected Handler<Exception> exceptionHandler;
-    protected int queryTimeout = 10;
 
-    public void configure(PersistenceAdapter adapter) throws IOException {
-        if (adapter instanceof JDBCPersistenceAdapter) {
-            this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
-            this.statements = ((JDBCPersistenceAdapter) adapter).getStatements();
-        }
-    }
-    
     public void doStart() throws Exception {
-        stopping = false;
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
         String sql = statements.getLockCreateStatement();
@@ -73,7 +56,7 @@ public class DefaultDatabaseLocker extends AbstractLocker {
                 break;
             } catch (Exception e) {
                 try {
-                    if (stopping) {
+                    if (isStopping()) {
                         throw new Exception(
                                 "Cannot start broker as being asked to shut down. " 
                                         + "Interrupted attempt to acquire lock: "
@@ -136,7 +119,6 @@ public class DefaultDatabaseLocker extends AbstractLocker {
     }
 
     public void doStop(ServiceStopper stopper) throws Exception {
-        stopping = true;
         try {
             if (lockCreateStatement != null) {
                 lockCreateStatement.cancel();    			
@@ -178,9 +160,7 @@ public class DefaultDatabaseLocker extends AbstractLocker {
         try {
             lockUpdateStatement = connection.prepareStatement(statements.getLockUpdateStatement());
             lockUpdateStatement.setLong(1, System.currentTimeMillis());
-            if (queryTimeout > 0) {
-                lockUpdateStatement.setQueryTimeout(queryTimeout);
-            }
+            setQueryTimeout(lockUpdateStatement);
             int rows = lockUpdateStatement.executeUpdate();
             if (rows == 1) {
                 result=true;
@@ -216,11 +196,4 @@ public class DefaultDatabaseLocker extends AbstractLocker {
         this.exceptionHandler = exceptionHandler;
     }
 
-    public int getQueryTimeout() {
-        return queryTimeout;
-    }
-
-    public void setQueryTimeout(int queryTimeout) {
-        this.queryTimeout = queryTimeout;
-    }
 }

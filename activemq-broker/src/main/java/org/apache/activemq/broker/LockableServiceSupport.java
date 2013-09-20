@@ -61,6 +61,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     @Override
     public void setLocker(Locker locker) throws IOException {
         this.locker = locker;
+        locker.setLockable(this);
         if (this instanceof PersistenceAdapter) {
             this.locker.configure((PersistenceAdapter)this);
         }
@@ -68,7 +69,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     public Locker getLocker() throws IOException {
         if (this.locker == null) {
-            this.locker = createDefaultLocker();
+            setLocker(createDefaultLocker());
         }
         return this.locker;
     }
@@ -164,5 +165,9 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+    }
+
+    public BrokerService getBrokerService() {
+        return this.brokerService;
     }
 }

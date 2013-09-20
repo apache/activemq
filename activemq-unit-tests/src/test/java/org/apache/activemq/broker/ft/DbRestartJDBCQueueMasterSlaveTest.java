@@ -43,7 +43,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
         verifyExpectedBroker(inflightMessageCount);
         if (++inflightMessageCount == failureCount) {
             LOG.info("STOPPING DB!@!!!!");
-            final EmbeddedDataSource ds = ((SyncDataSource)getExistingDataSource()).getDelegate();
+            final EmbeddedDataSource ds = ((SyncCreateDataSource)getExistingDataSource()).getDelegate();
             ds.setShutdownDatabase("shutdown");
             LOG.info("DB STOPPED!@!!!!");
             
