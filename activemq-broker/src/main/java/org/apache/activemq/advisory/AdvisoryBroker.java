@@ -162,7 +162,6 @@ public class AdvisoryBroker extends BrokerFilter {
             ConsumerIdKey key = new ConsumerIdKey(info.getConsumerId());
             consumerTracker.put(key.getConsumerId(), key.getCreationTime());
             consumers.put(key, info);
-            LOG.info("Added {} to the map:", key);
             fireConsumerAdvisory(context, info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
@@ -325,16 +324,15 @@ public class AdvisoryBroker extends BrokerFilter {
         ActiveMQDestination dest = info.getDestination();
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
-
             Object value = consumerTracker.remove(info.getConsumerId());
             if (value != null) {
                 Long creationTime = (Long) value;
                 ConsumerIdKey key = new ConsumerIdKey(info.getConsumerId(), creationTime);
                 if (consumers.remove(key) == null) {
-                    LOG.info("Failed to remove:{} from the consumers map: {}", key, consumers);
+                    LOG.trace("Failed to remove:{} from the consumers map: {}", key, consumers);
                 }
             } else {
-                LOG.info("Failed to find consumer:{} in creation time tracking map: ", info.getConsumerId());
+                LOG.trace("Failed to find consumer:{} in creation time tracking map: ", info.getConsumerId());
             }
 
             if (!dest.isTemporary() || destinations.containsKey(dest)) {
