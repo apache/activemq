@@ -73,7 +73,7 @@
     <httpcore-version>4.2.4</httpcore-version>
     <insight-version>7.2.0.redhat-024</insight-version>
     <jackson-version>1.9.12</jackson-version>
-    <jasypt-version>1.9.0</jasypt-version>
+    <jasypt-version>1.9.1</jasypt-version>
     <jaxb-bundle-version>2.2.1.1_2</jaxb-bundle-version>
     <jdom-version>1.0</jdom-version>
     <jetty-version>7.6.9.v20130131</jetty-version>
