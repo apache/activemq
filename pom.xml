@@ -46,7 +46,7 @@
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.0.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.12.0</camel-version>
+    <camel-version>2.12.1</camel-version>
     <camel-version-range>[2.12,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
@@ -60,7 +60,7 @@
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>3.3</commons-net-version>
     <directory-version>2.0.0-M6</directory-version>
-    <hawtio-version>1.2-M5</hawtio-version>
+    <hawtio-version>1.2-M16</hawtio-version>
 
     <ftpserver-version>1.0.6</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
@@ -182,7 +182,7 @@
   </properties>
 
   <prerequisites>
-    <maven>3.0.2</maven>
+    <maven>3.0.4</maven>
   </prerequisites>
 
   <url>http://activemq.apache.org</url>
