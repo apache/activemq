@@ -18,29 +18,30 @@ package org.apache.activemq.store.kahadb;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.store.PersistenceAdapter;
 
 /**
  * @org.apache.xbean.XBean element="filteredKahaDB"
  *
  */
 public class FilteredKahaDBPersistenceAdapter extends DestinationMapEntry {
-    private KahaDBPersistenceAdapter persistenceAdapter;
+    private PersistenceAdapter persistenceAdapter;
     private boolean perDestination;
 
     public FilteredKahaDBPersistenceAdapter() {
         super();
     }
 
-    public FilteredKahaDBPersistenceAdapter(ActiveMQDestination destination, KahaDBPersistenceAdapter adapter) {
+    public FilteredKahaDBPersistenceAdapter(ActiveMQDestination destination, PersistenceAdapter adapter) {
         setDestination(destination);
         persistenceAdapter  = adapter;
     }
 
-    public KahaDBPersistenceAdapter getPersistenceAdapter() {
+    public PersistenceAdapter getPersistenceAdapter() {
         return persistenceAdapter;
     }
 
-    public void setPersistenceAdapter(KahaDBPersistenceAdapter persistenceAdapter) {
+    public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) {
         this.persistenceAdapter = persistenceAdapter;
     }
 

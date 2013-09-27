@@ -32,13 +32,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.store.AbstractMessageStore;
-import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.ProxyMessageStore;
-import org.apache.activemq.store.ProxyTopicMessageStore;
-import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.store.TransactionRecoveryListener;
-import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.*;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
@@ -237,11 +231,11 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
     public void persistOutcome(Tx tx, TransactionId txid) throws IOException {
-        tx.trackPrepareLocation(store(new KahaPrepareCommand().setTransactionInfo(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid))));
+        tx.trackPrepareLocation(store(new KahaPrepareCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid)))));
     }
 
     public void persistCompletion(TransactionId txid) throws IOException {
-        store(new KahaCommitCommand().setTransactionInfo(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid)));
+        store(new KahaCommitCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid))));
     }
 
     private Location store(JournalCommand<?> data) throws IOException {
@@ -343,7 +337,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
 
     public synchronized void recover(final TransactionRecoveryListener listener) throws IOException {
 
-        for (final KahaDBPersistenceAdapter adapter : multiKahaDBPersistenceAdapter.adapters) {
+        for (final PersistenceAdapter adapter : multiKahaDBPersistenceAdapter.adapters) {
             adapter.createTransactionStore().recover(new TransactionRecoveryListener() {
                 @Override
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] acks) {

@@ -56,12 +56,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
-import org.apache.activemq.store.AbstractMessageStore;
-import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.*;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
@@ -69,7 +64,6 @@ import org.apache.activemq.store.kahadb.data.KahaLocation;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
-import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.usage.MemoryUsage;
@@ -114,8 +108,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         this.transactionStore = new KahaDBTransactionStore(this);
         this.transactionIdTransformer = new TransactionIdTransformer() {
             @Override
-            public KahaTransactionInfo transform(TransactionId txid) {
-                return TransactionIdConversion.convert(txid);
+            public TransactionId transform(TransactionId txid) {
+                return txid;
             }
         };
     }
@@ -462,7 +456,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
             command.setMessageId(message.getMessageId().toProducerKey());
-            command.setTransactionInfo(transactionIdTransformer.transform(message.getTransactionId()));
+            command.setTransactionInfo(TransactionIdConversion.convert(transactionIdTransformer.transform(message.getTransactionId())));
             command.setPriority(message.getPriority());
             command.setPrioritySupported(isPrioritizedMessages());
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
@@ -476,7 +470,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
             command.setMessageId(ack.getLastMessageId().toProducerKey());
-            command.setTransactionInfo(transactionIdTransformer.transform(ack.getTransactionId()));
+            command.setTransactionInfo(TransactionIdConversion.convert(transactionIdTransformer.transform(ack.getTransactionId())));
 
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(ack);
             command.setAck(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
@@ -760,7 +754,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey);
             command.setMessageId(messageId.toProducerKey());
-            command.setTransactionInfo(ack != null ? transactionIdTransformer.transform(ack.getTransactionId()) : null);
+            command.setTransactionInfo(ack != null ? TransactionIdConversion.convert(transactionIdTransformer.transform(ack.getTransactionId())) : null);
             if (ack != null && ack.isUnmatchedAck()) {
                 command.setAck(UNMATCHED);
             } else {

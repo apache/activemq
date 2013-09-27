@@ -525,6 +525,6 @@ public class KahaDBTransactionStore implements TransactionStore {
 
 
     private KahaTransactionInfo getTransactionInfo(TransactionId txid) {
-        return theStore.getTransactionIdTransformer().transform(txid);
+        return TransactionIdConversion.convert(theStore.getTransactionIdTransformer().transform(txid));
     }
 }

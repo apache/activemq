@@ -39,12 +39,7 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
-import org.apache.activemq.store.JournaledStore;
-import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.SharedFileLocker;
-import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.*;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
@@ -58,7 +53,7 @@ import org.apache.activemq.util.ServiceStopper;
  * @org.apache.xbean.XBean element="kahaDB"
  *
  */
-public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore {
+public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore, TransactionIdTransformerAware {
     private final KahaDBStore letter = new KahaDBStore();
 
     /**
@@ -655,4 +650,8 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return "KahaDBPersistenceAdapter[" + path + "]";
     }
 
+    @Override
+    public void setTransactionIdTransformer(TransactionIdTransformer transactionIdTransformer) {
+        getStore().setTransactionIdTransformer(transactionIdTransformer);
+    }
 }

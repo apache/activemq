@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadb;
+package org.apache.activemq.store;
 
-import org.apache.activemq.command.TransactionId;
-import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
-
-public interface TransactionIdTransformer {
-    KahaTransactionInfo transform(TransactionId txid);
+/**
+ */
+public interface TransactionIdTransformerAware {
+    void setTransactionIdTransformer(TransactionIdTransformer transactionIdTransformer);
 }
