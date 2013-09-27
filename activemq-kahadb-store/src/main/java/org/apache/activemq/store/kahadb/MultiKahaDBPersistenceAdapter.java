@@ -43,7 +43,7 @@ import java.util.*;
  *
  * @org.apache.xbean.XBean element="mKahaDB"
  */
-public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter {
+public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, BrokerServiceAware {
     static final Logger LOG = LoggerFactory.getLogger(MultiKahaDBPersistenceAdapter.class);
 
     final static ActiveMQDestination matchAll = new AnyDestination(new ActiveMQDestination[]{new ActiveMQQueue(">"), new ActiveMQTopic(">")});
@@ -438,12 +438,12 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     @Override
     public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
         for (PersistenceAdapter persistenceAdapter : adapters) {
             if( persistenceAdapter instanceof BrokerServiceAware ) {
                 ((BrokerServiceAware)persistenceAdapter).setBrokerService(getBrokerService());
             }
         }
-        this.brokerService = brokerService;
     }
 
     public BrokerService getBrokerService() {
