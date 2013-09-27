@@ -371,12 +371,18 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     private void configureDirectory(PersistenceAdapter adapter, String fileName) {
         File directory = null;
-        if (MessageDatabase.DEFAULT_DIRECTORY.equals(adapter.getDirectory())) {
+        File defaultDir = MessageDatabase.DEFAULT_DIRECTORY;
+        try {
+            defaultDir = adapter.getClass().newInstance().getDirectory();
+        } catch (Exception e) {
+        }
+        if (defaultDir.equals(adapter.getDirectory())) {
             // not set so inherit from mkahadb
             directory = getDirectory();
         } else {
             directory = adapter.getDirectory();
         }
+
         if (fileName != null) {
             directory = new File(directory, fileName);
         }
