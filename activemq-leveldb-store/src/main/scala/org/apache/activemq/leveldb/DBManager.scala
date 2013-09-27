@@ -37,8 +37,8 @@ import org.apache.activemq.ActiveMQMessageAuditNoSync
 import org.fusesource.hawtdispatch
 
 case class EntryLocator(qid:Long, seq:Long)
-case class DataLocator(pos:Long, len:Int)
-case class MessageRecord(id:MessageId, data:Buffer, syncNeeded:Boolean) {
+case class DataLocator(store:LevelDBStore, pos:Long, len:Int)
+case class MessageRecord(store:LevelDBStore, id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:DataLocator = _
 }
 case class QueueEntryRecord(id:MessageId, queueKey:Long, queueSeq:Long, deliveries:Int=0)
@@ -267,23 +267,35 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
 
     val id = message.getMessageId
 
+    def create_message_record: MessageRecord = {
+      // encodes body and release object bodies, in case message was sent from
+      // a VM connection.  Releases additional memory.
+      message.storeContentAndClear()
+      var packet = manager.parent.wireFormat.marshal(message)
+      var data = new Buffer(packet.data, packet.offset, packet.length)
+      if (manager.snappyCompressLogs) {
+        data = Snappy.compress(data)
+      }
+      val record = MessageRecord(manager.parent, id, data, message.isResponseRequired)
+      id.setDataLocator(record)
+      record
+    }
+
     val messageRecord = id.getDataLocator match {
       case null =>
-        // encodes body and release object bodies, in case message was sent from
-        // a VM connection.  Releases additional memory.
-        message.storeContentAndClear()
-        var packet = manager.parent.wireFormat.marshal(message)
-        var data = new Buffer(packet.data, packet.offset, packet.length)
-        if( manager.snappyCompressLogs ) {
-          data = Snappy.compress(data)
-        }
-        val record = MessageRecord(id, data, message.isResponseRequired)
-        id.setDataLocator(record)
-        record
+        create_message_record
       case record:MessageRecord =>
-        record
+        if( record.store == manager.parent ) {
+          record
+        } else {
+          create_message_record
+        }
       case x:DataLocator =>
-        null
+        if( x.store == manager.parent ) {
+          null
+        } else {
+          create_message_record
+        }
     }
 
     val entry = QueueEntryRecord(id, queueKey, queueSeq)

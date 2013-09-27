@@ -1190,7 +1190,7 @@ class LevelDBClient(store: LevelDBStore) {
   def queueCursor(collectionKey: Long, seq:Long)(func: (Message)=>Boolean) = {
     collectionCursor(collectionKey, encodeLong(seq)) { (key, value) =>
       val seq = decodeLong(key)
-      var locator = DataLocator(value.getValueLocation, value.getValueLength)
+      var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
       val msg = getMessage(locator)
       msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
       msg.getMessageId().setDataLocator(locator)
@@ -1211,12 +1211,12 @@ class LevelDBClient(store: LevelDBStore) {
         val seq = is.readLong()
         val sub = is.readLong()
         val ack = store.wireFormat.unmarshal(is).asInstanceOf[MessageAck]
-        ack.getLastMessageId.setDataLocator(DataLocator(log, offset))
+        ack.getLastMessageId.setDataLocator(DataLocator(store, log, offset))
         ack.getLastMessageId.setEntryLocator(EntryLocator(qid, seq))
 
         func(XaAckRecord(collectionKey, seq, ack, sub))
       } else {
-        var locator = DataLocator(value.getValueLocation, value.getValueLength)
+        var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
         val msg = getMessage(locator)
         msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
         msg.getMessageId().setDataLocator(locator)
@@ -1240,7 +1240,7 @@ class LevelDBClient(store: LevelDBStore) {
       case x:MessageRecord =>
         // Encoded form is still in memory..
         Some(x.data)
-      case DataLocator(pos, len) =>
+      case DataLocator(store, pos, len) =>
         // Load the encoded form from disk.
         log.read(pos, len).map(new Buffer(_))
     }
@@ -1335,7 +1335,7 @@ class LevelDBClient(store: LevelDBStore) {
           val start = System.nanoTime()
           val p = appender.append(LOG_DATA, messageRecord.data)
           log_info = p._2
-          dataLocator = DataLocator(p._1, messageRecord.data.length)
+          dataLocator = DataLocator(store, p._1, messageRecord.data.length)
           messageRecord.locator = dataLocator
 //          println("msg: "+messageRecord.id+" -> "+dataLocator)
           write_message_total += System.nanoTime() - start

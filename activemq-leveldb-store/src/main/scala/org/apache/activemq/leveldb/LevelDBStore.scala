@@ -133,7 +133,7 @@ class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
 
 import LevelDBStore._
 
-class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with PersistenceAdapter with TransactionStore with PListStore {
+class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with PersistenceAdapter with TransactionStore with PListStore with TransactionIdTransformerAware {
 
   final val wireFormat = new OpenWireFormat
   final val db = new DBManager(this)
@@ -284,6 +284,14 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
   }
 
+  var transactionIdTransformer: TransactionIdTransformer = new TransactionIdTransformer{
+    def transform(txid: TransactionId): TransactionId = txid
+  }
+
+  def setTransactionIdTransformer(transactionIdTransformer: TransactionIdTransformer) {
+    this.transactionIdTransformer = transactionIdTransformer
+  }
+
   def setBrokerName(brokerName: String): Unit = {
   }
 
@@ -407,7 +415,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
   }
 
-  def transaction(txid: TransactionId) = {
+  def transaction(original: TransactionId) = {
+    val txid = transactionIdTransformer.transform(original)
     var rc = transactions.get(txid)
     if( rc == null ) {
       rc = Transaction(txid)
@@ -419,12 +428,32 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     rc
   }
 
-  def commit(txid: TransactionId, wasPrepared: Boolean, preCommit: Runnable, postCommit: Runnable) = {
+  def verify_running = {
+    if( isStopping || isStopped ) {
+      try {
+        throw new IOException("Not running")
+      } catch {
+        case e:IOException =>
+          if( broker_service!=null ) {
+            broker_service.handleIOException(e)
+          }
+          throw e
+      }
+    }
+  }
+
+  def commit(original: TransactionId, wasPrepared: Boolean, preCommit: Runnable, postCommit: Runnable) = {
+
+    verify_running
+
+    val txid = transactionIdTransformer.transform(original)
     transactions.remove(txid) match {
       case null =>
         // Only in-flight non-persistent messages in this TX.
-        preCommit.run()
-        postCommit.run()
+        if( preCommit!=null )
+          preCommit.run()
+        if( postCommit!=null )
+          postCommit.run()
       case tx =>
         val done = new CountDownLatch(1)
         // Ugly synchronization hack to make sure messages are ordered the way the cursor expects them.
@@ -435,7 +464,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
             }
             uow.syncFlag = true
             uow.addCompleteListener {
-              preCommit.run()
+              if( preCommit!=null )
+                preCommit.run()
               done.countDown()
             }
           }
@@ -444,11 +474,15 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         if( tx.prepared ) {
           db.removeTransactionContainer(tx.xacontainer_id)
         }
-        postCommit.run()
+        if( postCommit!=null )
+          postCommit.run()
     }
   }
 
-  def rollback(txid: TransactionId) = {
+  def rollback(original: TransactionId) = {
+    verify_running
+
+    val txid = transactionIdTransformer.transform(original)
     transactions.remove(txid) match {
       case null =>
         debug("on rollback, the transaction " + txid + " does not exist")
@@ -468,7 +502,10 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
   }
 
-  def prepare(tx: TransactionId) = {
+  def prepare(original: TransactionId) = {
+    verify_running
+
+    val tx = transactionIdTransformer.transform(original)
     transactions.get(tx) match {
       case null =>
         warn("on prepare, the transaction " + tx + " does not exist")
@@ -479,6 +516,9 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   var doingRecover = false
   def recover(listener: TransactionRecoveryListener) = {
+
+    verify_running
+
     this.doingRecover = true
     try {
       import collection.JavaConversions._
