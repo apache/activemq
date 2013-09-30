@@ -1,8 +1,20 @@
 Deploying the ActiveMQ-WebConsole
 =================================
 
+From ActiveMQ 5.9 onwards ActiveMQ ships with two web consoles:
+- new console using hawtio
+- old console
+
+The old console is deprecated and replaced with a new modern console based on hawtio (http://hawt.io)
+
+The old console is accessible at its usual location at:
+  http://localhost:8161/admin/
+
+And the new console is located at:
+  http://localhost:8161/hawtio/
+
 In the default configuration ActiveMQ automatically starts the web console in the
-same VM as the broker. The console is accessibly under http://localhost:8161/admin/.
+same VM as the broker. The console is accessibly under http://localhost:8161/hawtio/.
 
 The broker may ask for credentials to login the web console the first time.
 The default username and password is admin/admin. You can configure this in the
