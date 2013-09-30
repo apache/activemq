@@ -52,8 +52,8 @@
         org.codehaus.jettison*;resolution:=optional,
         org.jasypt*;resolution:=optional,
         org.eclipse.jetty*;resolution:=optional,
-      org.apache.zookeeper;resolution:=optional,
-      org.linkedin*;resolution:=optional,
+        org.apache.zookeeper;resolution:=optional,
+        org.linkedin*;resolution:=optional,
         org.springframework.jms*;version="[3,4]";resolution:=optional,
         org.springframework.osgi*;version="[1.2,1.3]";resolution:=optional,
         org.springframework.transaction*;version="[3,4]";resolution:=optional,
@@ -69,6 +69,7 @@
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
       com.sun.syndication*;resolution:=optional,
+      org.jvnet.jaxb2_commons*;resolution:=optional,
         *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
