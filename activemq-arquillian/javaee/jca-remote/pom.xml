@@ -45,7 +45,7 @@
               <overwrite>true</overwrite>
               <resources>
                 <resource>
-                  <directory>${jboss.home}</directory>
+                  <directory>${ee.install.home}</directory>
                   <excludes>
                     <exclude>standalone/data</exclude>
                     <exclude>standalone/log</exclude>

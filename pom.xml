@@ -241,6 +241,7 @@
     <module>activemq-jaas</module>
     <module>activemq-karaf</module>
     <module>activemq-openwire-generator</module>
+    <module>activemq-jms-pool</module>
     <module>activemq-pool</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
@@ -362,6 +363,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jaas</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jms-pool</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

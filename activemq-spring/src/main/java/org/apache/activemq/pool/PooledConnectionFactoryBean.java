@@ -20,7 +20,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import javax.transaction.TransactionManager;
-
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
@@ -38,7 +38,7 @@ import org.springframework.beans.factory.FactoryBean;
  * </bean>
  * </pre>
  *
- * The <code>resourceName</code> property should be used along with the {@link ActiveMQResourceManager} and have
+ * The <code>resourceName</code> property should be used along with the {@link org.apache.activemq.jms.pool.GenericResourceManager} and have
  * the same value than its <code>resourceName</code> property. This will make sure the transaction manager
  * maps correctly the connection factory to the recovery process.
  *

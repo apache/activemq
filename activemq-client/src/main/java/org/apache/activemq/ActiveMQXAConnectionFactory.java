@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.net.URI;
+import java.util.Properties;
 
 import javax.jms.JMSException;
 import javax.jms.XAConnection;
@@ -81,6 +82,25 @@ public class ActiveMQXAConnectionFactory extends ActiveMQConnectionFactory imple
 
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
         ActiveMQXAConnection connection = new ActiveMQXAConnection(transport, getClientIdGenerator(), getConnectionIdGenerator(), stats);
+        configureXAConnection(connection);
         return connection;
+    }
+
+    private void configureXAConnection(ActiveMQXAConnection connection) {
+        connection.setXaAckMode(xaAckMode);
+    }
+
+    public int getXaAckMode() {
+        return xaAckMode;
+    }
+
+    public void setXaAckMode(int xaAckMode) {
+        this.xaAckMode = xaAckMode;
+    }
+
+    @Override
+    public void populateProperties(Properties props) {
+        super.populateProperties(props);
+        props.put("xaAckMode", Integer.toString(xaAckMode));
     }
 }

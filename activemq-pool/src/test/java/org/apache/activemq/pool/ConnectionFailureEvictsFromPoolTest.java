@@ -21,15 +21,21 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
+import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQXAConnectionFactory;
+import org.apache.activemq.EnhancedConnection;
+import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.jms.pool.PooledConnection;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.mock.MockTransport;
@@ -39,22 +45,44 @@ import org.slf4j.LoggerFactory;
 public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionFailureEvictsFromPoolTest.class);
     private BrokerService broker;
-    private ActiveMQConnectionFactory factory;
-    private PooledConnectionFactory pooledFactory;
+    TransportConnector connector;
 
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setUseJmx(false);
         broker.setPersistent(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
+        connector = broker.addConnector("tcp://localhost:0");
         broker.start();
-        factory = new ActiveMQConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false");
-        pooledFactory = new PooledConnectionFactory(factory);
+    }
+
+    public void testEnhancedConnection() throws Exception {
+        XaPooledConnectionFactory pooledFactory =
+                new XaPooledConnectionFactory(new ActiveMQXAConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false"));
+
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+        EnhancedConnection enhancedConnection = (EnhancedConnection)connection.getConnection();
+        DestinationSource destinationSource = enhancedConnection.getDestinationSource();
+        assertNotNull(destinationSource);
+
+    }
+
+    public void testEvictionXA() throws Exception {
+        XaPooledConnectionFactory pooledFactory =
+                new XaPooledConnectionFactory(new ActiveMQXAConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false"));
+
+        doTestEviction(pooledFactory);
     }
 
     public void testEviction() throws Exception {
+        PooledConnectionFactory pooledFactory =
+                new PooledConnectionFactory(new ActiveMQConnectionFactory("mock:" + connector.getConnectUri() + "?closeAsync=false"));
+
+        doTestEviction(pooledFactory);
+    }
+
+    public void doTestEviction(ConnectionFactory pooledFactory) throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
-        ActiveMQConnection amqC = connection.getConnection();
+        ActiveMQConnection amqC = (ActiveMQConnection) connection.getConnection();
         final CountDownLatch gotExceptionEvent = new CountDownLatch(1);
         amqC.addTransportListener(new TransportListener() {
             public void onCommand(Object command) {
@@ -75,12 +103,12 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
         createConnectionFailure(connection);
         try {
             sendMessage(connection);
-            fail("Expected Error");
+            TestCase.fail("Expected Error");
         } catch (JMSException e) {
         } finally {
             connection.close();
         }
-        assertTrue("exception event propagated ok", gotExceptionEvent.await(5, TimeUnit.SECONDS));
+        TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(5, TimeUnit.SECONDS));
         // If we get another connection now it should be a new connection that
         // works.
         LOG.info("expect new connection after failure");
@@ -89,7 +117,7 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
     }
 
     private void createConnectionFailure(Connection connection) throws Exception {
-        ActiveMQConnection c = ((PooledConnection)connection).getConnection();
+        ActiveMQConnection c = (ActiveMQConnection) ((PooledConnection)connection).getConnection();
         MockTransport t = (MockTransport)c.getTransportChannel().narrow(MockTransport.class);
         t.onException(new IOException("forcing exception for " + getName() + " to force pool eviction"));
         LOG.info("arranged for failure, chucked exception");

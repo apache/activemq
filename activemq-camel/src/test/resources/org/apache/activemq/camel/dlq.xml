@@ -61,7 +61,7 @@
    </bean>
 
    <!--  only for jta - not jms tm
-   bean id="resourceManager" class="org.apache.activemq.pool.ActiveMQResourceManager" init-method="recoverResource">
+   bean id="resourceManager" class="org.apache.activemq.jms.pool.GenericResourceManager" init-method="recoverResource">
          <property name="transactionManager" ref="transactionManager" />
          <property name="connectionFactory" ref="activemqConnectionFactory" />
          <property name="resourceName" value="activemq.default" />

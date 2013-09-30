@@ -32,6 +32,7 @@
   <properties>
     <activemq.osgi.import.pkg>
       javax.transaction*;resolution:=optional,
+      org.apache.activemq.jms.pool*;resolution:=optional,
       org.apache.activemq.ra*;resolution:=optional,
       org.apache.geronimo.transaction.manager*;resolution:=optional,
       *
@@ -52,12 +53,11 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-client</artifactId>
+      <artifactId>activemq-jms-pool</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-ra</artifactId>
-      <optional>true</optional>
+      <artifactId>activemq-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.components</groupId>
@@ -76,6 +76,11 @@
     <dependency>
       <groupId>commons-pool</groupId>
       <artifactId>commons-pool</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-broker</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

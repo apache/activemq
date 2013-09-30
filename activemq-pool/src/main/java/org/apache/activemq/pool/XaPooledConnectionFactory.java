@@ -16,167 +16,143 @@
  */
 package org.apache.activemq.pool;
 
-import java.io.Serializable;
-import java.util.Hashtable;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
+import javax.jms.Connection;
 import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
-import javax.naming.Binding;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.Name;
-import javax.naming.NamingEnumeration;
-import javax.naming.spi.ObjectFactory;
-import javax.transaction.TransactionManager;
-
+import javax.jms.Session;
+import javax.jms.XAConnection;
+import javax.jms.XASession;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.transaction.xa.XAResource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.ActiveMQXAConnectionFactory;
+import org.apache.activemq.Service;
+import org.apache.activemq.jms.pool.PooledSession;
+import org.apache.activemq.jms.pool.SessionKey;
+import org.apache.activemq.jms.pool.XaConnectionPool;
+import org.apache.activemq.jndi.JNDIReferenceFactory;
+import org.apache.activemq.jndi.JNDIStorableInterface;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A pooled connection factory that automatically enlists
- * sessions in the current active XA transaction if any.
- */
-public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory,
-        Serializable, QueueConnectionFactory, TopicConnectionFactory {
-
-    private static final transient Logger LOG = LoggerFactory.getLogger(XaPooledConnectionFactory.class);
-    private TransactionManager transactionManager;
-    private boolean tmFromJndi = false;
-    private String tmJndiName = "java:/TransactionManager";
-    private String brokerUrl = null;
+  * Add Service and Referenceable and TransportListener to @link{org.apache.activemq.jms.pool.XaPooledConnectionFactory}
+  *
+  * @org.apache.xbean.XBean element=xaPooledConnectionFactory"
+  */
+public class XaPooledConnectionFactory extends org.apache.activemq.jms.pool.XaPooledConnectionFactory implements JNDIStorableInterface, Service {
+    public static final String POOL_PROPS_PREFIX = "pool";
+    private static final transient Logger LOG = LoggerFactory.getLogger(org.apache.activemq.jms.pool.XaPooledConnectionFactory.class);
 
     public XaPooledConnectionFactory() {
         super();
     }
 
-    public XaPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-        super(connectionFactory);
+    public XaPooledConnectionFactory(ActiveMQXAConnectionFactory connectionFactory) {
+        setConnectionFactory(connectionFactory);
     }
 
-    public XaPooledConnectionFactory(String brokerURL) {
-        super(brokerURL);
-    }
+    @Override
+    protected org.apache.activemq.jms.pool.ConnectionPool createConnectionPool(Connection connection) {
+        return new XaConnectionPool(connection, getTransactionManager()) {
 
-    public TransactionManager getTransactionManager() {
-        if (transactionManager == null && tmFromJndi) {
-            try {
-                transactionManager = (TransactionManager) new InitialContext().lookup(getTmJndiName());
-            } catch (Throwable ignored) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("exception on tmFromJndi: " + getTmJndiName(), ignored);
+            @Override
+            protected Session makeSession(SessionKey key) throws JMSException {
+                if (connection instanceof XAConnection) {
+                    return ((XAConnection)connection).createXASession();
+                } else {
+                    return connection.createSession(key.isTransacted(), key.getAckMode());
                 }
             }
-        }
-        return transactionManager;
-    }
 
-    public void setTransactionManager(TransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
-    }
-
-    @Override
-    protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        return new XaConnectionPool(connection, getTransactionManager());
-    }
-
-    @Override
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
-        setTmFromJndi(true);
-        configFromJndiConf(obj);
-        if (environment != null) {
-            IntrospectionSupport.setProperties(this, environment);
-        }
-        return this;
-    }
-
-    private void configFromJndiConf(Object rootContextName) {
-        if (rootContextName instanceof String) {
-            String name = (String) rootContextName;
-            name = name.substring(0, name.lastIndexOf('/')) + "/conf" + name.substring(name.lastIndexOf('/'));
-            try {
-                InitialContext ctx = new InitialContext();
-                NamingEnumeration bindings = ctx.listBindings(name);
-
-                while (bindings.hasMore()) {
-                    Binding bd = (Binding)bindings.next();
-                    IntrospectionSupport.setProperty(this, bd.getName(), bd.getObject());
-                }
-
-            } catch (Exception ignored) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("exception on config from jndi: " + name, ignored);
+            @Override
+            protected XAResource createXaResource(PooledSession session) throws JMSException {
+                if (session.getInternalSession() instanceof XASession) {
+                    return ((XASession)session.getInternalSession()).getXAResource();
+                } else {
+                    return ((ActiveMQSession)session.getInternalSession()).getTransactionContext();
                 }
             }
-        }
+
+
+            @Override
+            protected Connection wrap(final Connection connection) {
+                // Add a transport Listener so that we can notice if this connection
+                // should be expired due to a connection failure.
+                ((ActiveMQConnection)connection).addTransportListener(new TransportListener() {
+                    @Override
+                    public void onCommand(Object command) {
+                    }
+
+                    @Override
+                    public void onException(IOException error) {
+                        synchronized (this) {
+                            setHasExpired(true);
+                            LOG.info("Expiring connection " + connection + " on IOException: " + error);
+                            LOG.debug("Expiring connection on IOException", error);
+                        }
+                    }
+
+                    @Override
+                    public void transportInterupted() {
+                    }
+
+                    @Override
+                    public void transportResumed() {
+                    }
+                });
+
+                // make sure that we set the hasFailed flag, in case the transport already failed
+                // prior to the addition of our new TransportListener
+                setHasExpired(((ActiveMQConnection) connection).isTransportFailed());
+
+                // may want to return an amq EnhancedConnection
+                return connection;
+            }
+
+            @Override
+            protected void unWrap(Connection connection) {
+                if (connection != null) {
+                    ((ActiveMQConnection)connection).cleanUpTempDestinations();
+                }
+            }
+        };
     }
 
-    public void setBrokerUrl(String url) {
-        if (brokerUrl == null || !brokerUrl.equals(url)) {
-            brokerUrl = url;
-            setConnectionFactory(new ActiveMQConnectionFactory(brokerUrl));
-        }
-    }
-
-    public String getTmJndiName() {
-        return tmJndiName;
-    }
-
-    public void setTmJndiName(String tmJndiName) {
-        this.tmJndiName = tmJndiName;
-    }
-
-    public boolean isTmFromJndi() {
-        return tmFromJndi;
-    }
-
-    /**
-     * Allow transaction manager resolution from JNDI (ee deployment)
-     * @param tmFromJndi
-     */
-    public void setTmFromJndi(boolean tmFromJndi) {
-        this.tmFromJndi = tmFromJndi;
-    }
-
-    @Override
-    public QueueConnection createQueueConnection() throws JMSException {
-        return (QueueConnection) createConnection();
-    }
-
-    @Override
-    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
-        return (QueueConnection) createConnection(userName, password);
-    }
-
-    @Override
-    public TopicConnection createTopicConnection() throws JMSException {
-        return (TopicConnection) createConnection();
-    }
-
-    @Override
-    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
-        return (TopicConnection) createConnection(userName, password);
-    }
-
-    @Override
     protected void buildFromProperties(Properties props) {
-        super.buildFromProperties(props);
-        for (String v : new String[]{"tmFromJndi", "tmJndiName"}) {
-            if (props.containsKey(v)) {
-                IntrospectionSupport.setProperty(this, v, props.getProperty(v));
-            }
-        }
+        ActiveMQConnectionFactory activeMQConnectionFactory = props.containsKey("xaAckMode") ?
+                new ActiveMQXAConnectionFactory() : new ActiveMQConnectionFactory();
+        activeMQConnectionFactory.buildFromProperties(props);
+        setConnectionFactory(activeMQConnectionFactory);
+        IntrospectionSupport.setProperties(this, new HashMap(props), POOL_PROPS_PREFIX);
+    }
+
+    protected void populateProperties(Properties props) {
+        ((ActiveMQConnectionFactory)getConnectionFactory()).populateProperties(props);
+        IntrospectionSupport.getProperties(this, props, POOL_PROPS_PREFIX);
     }
 
     @Override
-    protected void populateProperties(Properties props) {
-        super.populateProperties(props);
-        props.setProperty("tmFromJndi", String.valueOf(isTmFromJndi()));
-        props.setProperty("tmJndiName", tmJndiName);
+    public void setProperties(Properties properties) {
+        buildFromProperties(properties);
+    }
+
+    @Override
+    public Properties getProperties() {
+        Properties properties = new Properties();
+        populateProperties(properties);
+        return properties;
+    }
+
+    @Override
+    public Reference getReference() throws NamingException {
+        return JNDIReferenceFactory.createReference(this.getClass().getName(), this);
     }
 }

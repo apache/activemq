@@ -177,6 +177,7 @@
         <include>${pom.groupId}:activemq-jdbc-store</include>
         <include>${pom.groupId}:activemq-leveldb-store</include>
         <include>${pom.groupId}:activemq-log4j-appender</include>
+        <include>${pom.groupId}:activemq-jms-pool</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>

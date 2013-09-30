@@ -122,6 +122,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int maxThreadPoolSize = ActiveMQConnection.DEFAULT_THREAD_POOL_SIZE;
     private TaskRunnerFactory sessionTaskRunner;
     private RejectedExecutionHandler rejectedTaskHandler = null;
+    protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
 
     // /////////////////////////////////////////////
     //
