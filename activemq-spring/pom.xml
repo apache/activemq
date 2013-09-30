@@ -103,13 +103,14 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>4.3.1</version>
+      <version>${org.osgi.core-version}</version>
       <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
-      <version>4.3.1</version>
+      <version>${org.osgi.core-version}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -191,12 +192,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework.osgi</groupId>
