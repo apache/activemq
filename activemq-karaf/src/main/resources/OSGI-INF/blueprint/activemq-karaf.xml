@@ -19,135 +19,161 @@
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:shell="http://karaf.apache.org/xmlns/shell/v1.0.0">
-    
-    <!-- ActiveMQ List Command -->
-    <bean id="listcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
-      <property name="blueprintContainer" ref="blueprintContainer"/>
-      <property name="blueprintConverter" ref="blueprintConverter"/>
-      <property name="actionId" value="listaction"/>
-    </bean>
 
-    <service ref="listcommand" activation="lazy" >
-        <interfaces>
-            <value>org.apache.felix.service.command.Function</value>
-            <value>org.apache.karaf.shell.console.CompletableFunction</value>
-        </interfaces>
-        <service-properties>
-            <entry key="osgi.command.scope" value="activemq"/>
-            <entry key="osgi.command.function" value="list"/>
-        </service-properties>
-    </service>
+  <!-- ActiveMQ List Command -->
+  <bean id="listcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+    <property name="blueprintContainer" ref="blueprintContainer"/>
+    <property name="blueprintConverter" ref="blueprintConverter"/>
+    <property name="actionId" value="listaction"/>
+  </bean>
 
-    <bean id="listaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
-          activation="lazy"
-          scope="prototype">
-        <property name="command">
-            <bean class="org.apache.activemq.console.command.ListCommand"/>
-        </property>
-    </bean>
+  <service ref="listcommand" activation="lazy">
+    <interfaces>
+      <value>org.apache.felix.service.command.Function</value>
+      <value>org.apache.karaf.shell.console.CompletableFunction</value>
+    </interfaces>
+    <service-properties>
+      <entry key="osgi.command.scope" value="activemq"/>
+      <entry key="osgi.command.function" value="list"/>
+    </service-properties>
+  </service>
 
-    <!-- ActiveMQ Query Command -->
-    <bean id="querycommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
-      <property name="blueprintContainer" ref="blueprintContainer"/>
-      <property name="blueprintConverter" ref="blueprintConverter"/>
-      <property name="actionId" value="queryaction"/>
-    </bean>
+  <bean id="listaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+        activation="lazy"
+        scope="prototype">
+    <property name="command">
+      <bean class="org.apache.activemq.console.command.ListCommand"/>
+    </property>
+  </bean>
 
-    <service ref="querycommand" activation="lazy" >
-        <interfaces>
-            <value>org.apache.felix.service.command.Function</value>
-            <value>org.apache.karaf.shell.console.CompletableFunction</value>
-        </interfaces>
-        <service-properties>
-            <entry key="osgi.command.scope" value="activemq"/>
-            <entry key="osgi.command.function" value="query"/>
-        </service-properties>
-    </service>
+  <!-- ActiveMQ Query Command -->
+  <bean id="querycommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+    <property name="blueprintContainer" ref="blueprintContainer"/>
+    <property name="blueprintConverter" ref="blueprintConverter"/>
+    <property name="actionId" value="queryaction"/>
+  </bean>
 
-    <bean id="queryaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
-          activation="lazy"
-          scope="prototype">
-        <property name="command">
-            <bean class="org.apache.activemq.console.command.QueryCommand"/>
-        </property>
-    </bean>
+  <service ref="querycommand" activation="lazy">
+    <interfaces>
+      <value>org.apache.felix.service.command.Function</value>
+      <value>org.apache.karaf.shell.console.CompletableFunction</value>
+    </interfaces>
+    <service-properties>
+      <entry key="osgi.command.scope" value="activemq"/>
+      <entry key="osgi.command.function" value="query"/>
+    </service-properties>
+  </service>
 
-    <!-- ActiveMQ Browse Command -->
-    <bean id="browsecommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
-      <property name="blueprintContainer" ref="blueprintContainer"/>
-      <property name="blueprintConverter" ref="blueprintConverter"/>
-      <property name="actionId" value="browseaction"/>
-    </bean>
+  <bean id="queryaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+        activation="lazy"
+        scope="prototype">
+    <property name="command">
+      <bean class="org.apache.activemq.console.command.QueryCommand"/>
+    </property>
+  </bean>
 
-    <service ref="browsecommand" activation="lazy" >
-        <interfaces>
-            <value>org.apache.felix.service.command.Function</value>
-            <value>org.apache.karaf.shell.console.CompletableFunction</value>
-        </interfaces>
-        <service-properties>
-            <entry key="osgi.command.scope" value="activemq"/>
-            <entry key="osgi.command.function" value="browse"/>
-        </service-properties>
-    </service>
+  <!-- ActiveMQ Browse Command -->
+  <bean id="browsecommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+    <property name="blueprintContainer" ref="blueprintContainer"/>
+    <property name="blueprintConverter" ref="blueprintConverter"/>
+    <property name="actionId" value="browseaction"/>
+  </bean>
 
-    <bean id="browseaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
-          activation="lazy"
-          scope="prototype">
-        <property name="command">
-            <bean class="org.apache.activemq.console.command.AmqBrowseCommand"/>
-        </property>
-    </bean>
+  <service ref="browsecommand" activation="lazy">
+    <interfaces>
+      <value>org.apache.felix.service.command.Function</value>
+      <value>org.apache.karaf.shell.console.CompletableFunction</value>
+    </interfaces>
+    <service-properties>
+      <entry key="osgi.command.scope" value="activemq"/>
+      <entry key="osgi.command.function" value="browse"/>
+    </service-properties>
+  </service>
 
-    <!-- ActiveMQ Bstat Command -->
-    <bean id="bstatcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
-      <property name="blueprintContainer" ref="blueprintContainer"/>
-      <property name="blueprintConverter" ref="blueprintConverter"/>
-      <property name="actionId" value="bstataction"/>
-    </bean>
+  <bean id="browseaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+        activation="lazy"
+        scope="prototype">
+    <property name="command">
+      <bean class="org.apache.activemq.console.command.AmqBrowseCommand"/>
+    </property>
+  </bean>
 
-    <service ref="bstatcommand" activation="lazy" >
-        <interfaces>
-            <value>org.apache.felix.service.command.Function</value>
-            <value>org.apache.karaf.shell.console.CompletableFunction</value>
-        </interfaces>
-        <service-properties>
-            <entry key="osgi.command.scope" value="activemq"/>
-            <entry key="osgi.command.function" value="bstat"/>
-        </service-properties>
-    </service>
+  <!-- ActiveMQ Bstat Command -->
+  <bean id="bstatcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+    <property name="blueprintContainer" ref="blueprintContainer"/>
+    <property name="blueprintConverter" ref="blueprintConverter"/>
+    <property name="actionId" value="bstataction"/>
+  </bean>
 
-    <bean id="bstataction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
-          activation="lazy"
-          scope="prototype">
-        <property name="command">
-            <bean class="org.apache.activemq.console.command.BstatCommand"/>
-        </property>
-    </bean>
+  <service ref="bstatcommand" activation="lazy">
+    <interfaces>
+      <value>org.apache.felix.service.command.Function</value>
+      <value>org.apache.karaf.shell.console.CompletableFunction</value>
+    </interfaces>
+    <service-properties>
+      <entry key="osgi.command.scope" value="activemq"/>
+      <entry key="osgi.command.function" value="bstat"/>
+    </service-properties>
+  </service>
 
-    <!-- ActiveMQ Purge Command -->
-    <bean id="purgecommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
-      <property name="blueprintContainer" ref="blueprintContainer"/>
-      <property name="blueprintConverter" ref="blueprintConverter"/>
-      <property name="actionId" value="purgeaction"/>
-    </bean>
+  <bean id="bstataction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+        activation="lazy"
+        scope="prototype">
+    <property name="command">
+      <bean class="org.apache.activemq.console.command.BstatCommand"/>
+    </property>
+  </bean>
 
-    <service ref="purgecommand" activation="lazy" >
-        <interfaces>
-            <value>org.apache.felix.service.command.Function</value>
-            <value>org.apache.karaf.shell.console.CompletableFunction</value>
-        </interfaces>
-        <service-properties>
-            <entry key="osgi.command.scope" value="activemq"/>
-            <entry key="osgi.command.function" value="purge"/>
-        </service-properties>
-    </service>
+  <!-- ActiveMQ Purge Command -->
+  <bean id="purgecommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+    <property name="blueprintContainer" ref="blueprintContainer"/>
+    <property name="blueprintConverter" ref="blueprintConverter"/>
+    <property name="actionId" value="purgeaction"/>
+  </bean>
 
-    <bean id="purgeaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
-          activation="lazy"
-          scope="prototype">
-        <property name="command">
-            <bean class="org.apache.activemq.console.command.PurgeCommand"/>
-        </property>
-    </bean>
+  <service ref="purgecommand" activation="lazy">
+    <interfaces>
+      <value>org.apache.felix.service.command.Function</value>
+      <value>org.apache.karaf.shell.console.CompletableFunction</value>
+    </interfaces>
+    <service-properties>
+      <entry key="osgi.command.scope" value="activemq"/>
+      <entry key="osgi.command.function" value="purge"/>
+    </service-properties>
+  </service>
+
+  <bean id="purgeaction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+        activation="lazy"
+        scope="prototype">
+    <property name="command">
+      <bean class="org.apache.activemq.console.command.PurgeCommand"/>
+    </property>
+  </bean>
+
+  <!-- ActiveMQ Dstat Command -->
+  <bean id="dstatcommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+    <property name="blueprintContainer" ref="blueprintContainer"/>
+    <property name="blueprintConverter" ref="blueprintConverter"/>
+    <property name="actionId" value="dstataction"/>
+  </bean>
+
+  <service ref="dstatcommand" activation="lazy">
+    <interfaces>
+      <value>org.apache.felix.service.command.Function</value>
+      <value>org.apache.karaf.shell.console.CompletableFunction</value>
+    </interfaces>
+    <service-properties>
+      <entry key="osgi.command.scope" value="activemq"/>
+      <entry key="osgi.command.function" value="dstat"/>
+    </service-properties>
+  </service>
+
+  <bean id="dstataction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+        activation="lazy"
+        scope="prototype">
+    <property name="command">
+      <bean class="org.apache.activemq.console.command.DstatCommand"/>
+    </property>
+  </bean>
 
 </blueprint>

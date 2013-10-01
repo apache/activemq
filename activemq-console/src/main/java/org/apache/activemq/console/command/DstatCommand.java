@@ -81,13 +81,13 @@ public class DstatCommand extends AbstractJmxCommand {
         }
     }
 
-    private void displayAllDestinations() throws IOException, Exception {
+    private void displayAllDestinations() throws Exception {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "*");
         List<?> queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%20s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%20s  %10d  %10d  %10d  %10d";
+        final String header = "%-60s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-60s  %10d  %10d  %10d  %10d";
 
         context.print(String.format(Locale.US, header, "Name", "Pending", "Consumers", "Enqueued", "Dequeued"));
 
@@ -106,13 +106,13 @@ public class DstatCommand extends AbstractJmxCommand {
         }
     }
 
-    private void displayQueueStats() throws IOException, Exception {
+    private void displayQueueStats() throws Exception {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "Queue");
         List<?> queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%20s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%20s  %10d  %10d  %10d  %10d";
+        final String header = "%-60s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-60s  %10d  %10d  %10d  %10d";
 
         context.print(String.format(Locale.US, header, "Name", "Pending", "Consumers", "Enqueued", "Dequeued"));
 
@@ -131,13 +131,13 @@ public class DstatCommand extends AbstractJmxCommand {
         }
     }
 
-    private void displayTopicStats() throws IOException, Exception {
+    private void displayTopicStats() throws Exception {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "Topic");
         List<?> topicsList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%20s  %10s  %10s  %10s";
-        final String tableRow = "%20s  %10d  %10d  %10d";
+        final String header = "%-60s  %10s  %10s  %10s";
+        final String tableRow = "%-60s  %10d  %10d  %10d";
 
         context.print(String.format(Locale.US, header, "Name", "Consumers", "Enqueued", "Dequeued"));
 
