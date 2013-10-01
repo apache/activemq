@@ -227,7 +227,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         };
         if (lastModified > 0 && checkPeriod > 0) {
             this.getBrokerService().getScheduler().executePeriodically(monitorTask, checkPeriod);
-            info("Monitoring for updates (every " + checkPeriod + "millis) : " + configToMonitor);
+            info("Monitoring for updates (every " + checkPeriod + "millis) : " + configToMonitor + ", lastUpdate: " + new Date(lastModified));
         }
     }
 
