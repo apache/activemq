@@ -41,7 +41,8 @@ public class ActiveMQCommandSupport extends OsgiCommandSupport {
 
         try {
             currentCommand.setCommandContext(context2);
-            arguments.add("--jmxlocal");
+            // must be added first
+            arguments.add(0, "--jmxlocal");
             currentCommand.execute(arguments);
             return null;
         } catch (Throwable e) {
