@@ -2003,13 +2003,6 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             consumersLock.writeLock().unlock();
         }
 
-        PendingList rc;
-        if(isPrioritizedMessages()) {
-            rc = new PrioritizedPendingList();
-        } else {
-            rc = new OrderedPendingList();
-        }
-
         Set<Subscription> fullConsumers = new HashSet<Subscription>(this.consumers.size());
 
         for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
@@ -2027,6 +2020,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
                             // Dispatch it.
                             s.add(node);
+                            iterator.remove();
                             target = s;
                             break;
                         }
@@ -2043,10 +2037,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
             }
 
-            if ((target == null && interestCount > 0) || consumers.size() == 0) {
-                // This means all subs were full or that there are no
-                // consumers...
-                rc.addMessageLast(node);
+            // return if there are no consumers or all consumers are full
+            if (target == null && (consumers.size() == 0 || consumers.size() == fullConsumers.size())) {
+                return list;
             }
 
             // If it got dispatched, rotate the consumer list to get round robin
@@ -2065,7 +2058,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             }
         }
 
-        return rc;
+        return list;
     }
 
     protected boolean assignMessageGroup(Subscription subscription, QueueMessageReference node) throws Exception {

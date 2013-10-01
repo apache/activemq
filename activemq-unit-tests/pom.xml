@@ -250,6 +250,20 @@
       <artifactId>regexp</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.17</version>
+      <optional>true</optional>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-dbcp</groupId>
+      <artifactId>commons-dbcp</artifactId>
+      <version>1.4</version>
+      <optional>true</optional>
+      <scope>test</scope>
+    </dependency>
 
     <!--  Joram JMS conformance tests -->
     <dependency>
