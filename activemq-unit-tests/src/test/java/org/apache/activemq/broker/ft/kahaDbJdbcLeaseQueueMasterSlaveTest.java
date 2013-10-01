@@ -52,8 +52,8 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
         leaseDatabaseLocker.setCreateTablesOnStartup(true);
         leaseDatabaseLocker.setDataSource(getExistingDataSource());
         leaseDatabaseLocker.setStatements(new Statements());
-        configureLocker(kahaDBPersistenceAdapter);
         kahaDBPersistenceAdapter.setLocker(leaseDatabaseLocker);
+        configureLocker(kahaDBPersistenceAdapter);
         configureBroker(master);
         master.start();
     }
@@ -82,9 +82,8 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
                     LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
                     leaseDatabaseLocker.setDataSource(getExistingDataSource());
                     leaseDatabaseLocker.setStatements(new Statements());
-                    configureLocker(kahaDBPersistenceAdapter);
                     kahaDBPersistenceAdapter.setLocker(leaseDatabaseLocker);
-
+                    configureLocker(kahaDBPersistenceAdapter);
                     configureBroker(broker);
                     broker.start();
                     slave.set(broker);
