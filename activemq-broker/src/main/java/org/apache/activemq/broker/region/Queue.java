@@ -2009,10 +2009,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
             MessageReference node = iterator.next();
             Subscription target = null;
-            int interestCount = 0;
             for (Subscription s : consumers) {
                 if (s instanceof QueueBrowserSubscription) {
-                    interestCount++;
                     continue;
                 }
                 if (!fullConsumers.contains(s)) {
@@ -2031,14 +2029,14 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         LOG.trace("Subscription full {}", s);
                     }
                 }
-                // make sure it gets dispatched again
-                if (!node.isDropped()) {
-                    interestCount++;
-                }
+            }
+
+            if (target == null && node.isDropped()) {
+                iterator.remove();
             }
 
             // return if there are no consumers or all consumers are full
-            if (target == null && (consumers.size() == 0 || consumers.size() == fullConsumers.size())) {
+            if (target == null && consumers.size() == fullConsumers.size()) {
                 return list;
             }
 
