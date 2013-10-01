@@ -220,7 +220,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     if (configToMonitor.lastModified() > lastModified) {
                         applyModifications(configToMonitor);
                     }
-                } catch (IOException e) {
+                } catch (Throwable e) {
                     LOG.error("Failed to determine lastModified time on configuration: " + configToMonitor, e);
                 }
             }

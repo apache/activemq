@@ -52,11 +52,14 @@ public class RuntimeConfigTestSupport {
 
     protected void applyNewConfig(String configName, String newConfigName, long sleep) throws Exception {
         Resource resource = Utils.resourceFromString("org/apache/activemq");
-        FileOutputStream current = new FileOutputStream(new File(resource.getFile(), configName + ".xml"));
+        File file = new File(resource.getFile(), configName + ".xml");
+        FileOutputStream current = new FileOutputStream(file);
         FileInputStream modifications = new FileInputStream(new File(resource.getFile(), newConfigName + ".xml"));
         modifications.getChannel().transferTo(0, Long.MAX_VALUE, current.getChannel());
         current.flush();
-        LOG.info("Updated: " + current.getChannel());
+        current.close();
+        modifications.close();
+        LOG.info("Updated: " + file);
 
         if (sleep > 0) {
             // wait for mods to kick in
