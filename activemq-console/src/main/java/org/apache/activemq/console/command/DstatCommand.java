@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.console.command;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
@@ -86,10 +85,10 @@ public class DstatCommand extends AbstractJmxCommand {
         String query = JmxMBeansUtil.createQueryString(queryString, "*");
         List<?> queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%-60s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%-60s  %10d  %10d  %10d  %10d";
+        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
 
-        context.print(String.format(Locale.US, header, "Name", "Pending", "Consumers", "Enqueued", "Dequeued"));
+        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
 
         // Iterate through the queue result
         for (Object view : queueList) {
@@ -98,11 +97,13 @@ public class DstatCommand extends AbstractJmxCommand {
                 newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
 
             context.print(String.format(Locale.US, tableRow,
-                                        queueView.getName(),
-                                        queueView.getQueueSize(),
-                                        queueView.getConsumerCount(),
-                                        queueView.getEnqueueCount(),
-                                        queueView.getDequeueCount()));
+                    queueView.getName(),
+                    queueView.getQueueSize(),
+                    queueView.getProducerCount(),
+                    queueView.getConsumerCount(),
+                    queueView.getEnqueueCount(),
+                    queueView.getDequeueCount(),
+                    queueView.getMemoryPercentUsage()));
         }
     }
 
@@ -111,10 +112,10 @@ public class DstatCommand extends AbstractJmxCommand {
         String query = JmxMBeansUtil.createQueryString(queryString, "Queue");
         List<?> queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%-60s  %10s  %10s  %10s  %10s";
-        final String tableRow = "%-60s  %10d  %10d  %10d  %10d";
+        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
 
-        context.print(String.format(Locale.US, header, "Name", "Pending", "Consumers", "Enqueued", "Dequeued"));
+        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
 
         // Iterate through the queue result
         for (Object view : queueList) {
@@ -123,11 +124,13 @@ public class DstatCommand extends AbstractJmxCommand {
                 newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
 
             context.print(String.format(Locale.US, tableRow,
-                                        queueView.getName(),
-                                        queueView.getQueueSize(),
-                                        queueView.getConsumerCount(),
-                                        queueView.getEnqueueCount(),
-                                        queueView.getDequeueCount()));
+                    queueView.getName(),
+                    queueView.getQueueSize(),
+                    queueView.getProducerCount(),
+                    queueView.getConsumerCount(),
+                    queueView.getEnqueueCount(),
+                    queueView.getDequeueCount(),
+                    queueView.getMemoryPercentUsage()));
         }
     }
 
@@ -136,10 +139,10 @@ public class DstatCommand extends AbstractJmxCommand {
         String query = JmxMBeansUtil.createQueryString(queryString, "Topic");
         List<?> topicsList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
-        final String header = "%-60s  %10s  %10s  %10s";
-        final String tableRow = "%-60s  %10d  %10d  %10d";
+        final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
+        final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
 
-        context.print(String.format(Locale.US, header, "Name", "Consumers", "Enqueued", "Dequeued"));
+        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
 
         // Iterate through the topics result
         for (Object view : topicsList) {
@@ -148,10 +151,13 @@ public class DstatCommand extends AbstractJmxCommand {
                 newProxyInstance(createJmxConnection(), topicName, TopicViewMBean.class, true);
 
             context.print(String.format(Locale.US, tableRow,
-                                        topicView.getName(),
-                                        topicView.getConsumerCount(),
-                                        topicView.getEnqueueCount(),
-                                        topicView.getDequeueCount()));
+                    topicView.getName(),
+                    topicView.getQueueSize(),
+                    topicView.getProducerCount(),
+                    topicView.getConsumerCount(),
+                    topicView.getEnqueueCount(),
+                    topicView.getDequeueCount(),
+                    topicView.getMemoryPercentUsage()));
         }
     }
 
