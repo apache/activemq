@@ -44,6 +44,7 @@ public class DemandSubscription {
     private SubscriptionInfo localDurableSubscriber;
 
     private NetworkBridgeFilter networkBridgeFilter;
+    private boolean staticallyIncluded;
 
     DemandSubscription(ConsumerInfo info) {
         remoteInfo = info;
@@ -154,5 +155,13 @@ public class DemandSubscription {
 
     public void setLocalDurableSubscriber(SubscriptionInfo localDurableSubscriber) {
         this.localDurableSubscriber = localDurableSubscriber;
+    }
+
+    public boolean isStaticallyIncluded() {
+        return staticallyIncluded;
+    }
+
+    public void setStaticallyIncluded(boolean staticallyIncluded) {
+        this.staticallyIncluded = staticallyIncluded;
     }
 }

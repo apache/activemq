@@ -64,7 +64,7 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
-            if (!ds.getRemoteInfo().isNetworkSubscription() && filter.matches(info.getDestination())) {
+            if (canConduit(ds) && filter.matches(info.getDestination())) {
                 LOG.debug("{} {} with ids {} matched (add interest) {}", new Object[]{
                         configuration.getBrokerName(), info, info.getNetworkConsumerIds(), ds
                 });
@@ -79,6 +79,12 @@ public class ConduitBridge extends DemandForwardingBridge {
             }
         }
         return matched;
+    }
+
+    // we want to conduit statically included consumers which are local networkSubs
+    // but we don't want to conduit remote network subs i.e. (proxy proxy) consumers
+    private boolean canConduit(DemandSubscription ds) {
+        return ds.isStaticallyIncluded() || !ds.getRemoteInfo().isNetworkSubscription();
     }
 
     @Override

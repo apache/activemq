@@ -1103,6 +1103,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
                 DemandSubscription sub = createDemandSubscription(dest);
+                sub.setStaticallyIncluded(true);
                 try {
                     addSubscription(sub);
                 } catch (IOException e) {
