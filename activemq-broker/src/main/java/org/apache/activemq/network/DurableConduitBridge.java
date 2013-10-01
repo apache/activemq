@@ -59,6 +59,7 @@ public class DurableConduitBridge extends ConduitBridge {
             for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest) && !doesConsumerExist(dest)) {
                     DemandSubscription sub = createDemandSubscription(dest);
+                    sub.setStaticallyIncluded(true);
                     if (dest.isTopic()) {
                         sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
                     }
