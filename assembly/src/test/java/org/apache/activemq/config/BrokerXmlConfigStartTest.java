@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.jms.Connection;
 
@@ -51,11 +52,12 @@ public class BrokerXmlConfigStartTest {
     Properties secProps;
 
     private String configUrl;
+    private String shortName;
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "{1}")
     public static Collection<String[]> getTestParameters() {
         List<String[]> configUrls = new ArrayList<String[]>();
-        configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml"});
+        configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml", "activemq.xml"});
 
         File sampleConfDir = new File("target/conf");
         for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
@@ -65,15 +67,16 @@ public class BrokerXmlConfigStartTest {
                         pathname.getName().endsWith("xml");
             }})) {
 
-            configUrls.add(new String[]{"xbean:" + sampleConfDir.getAbsolutePath() + "/" + xmlFile.getName()});
+            configUrls.add(new String[]{"xbean:" + sampleConfDir.getAbsolutePath() + "/" + xmlFile.getName(), xmlFile.getName()});
         }
 
         return configUrls;
     }
 
 
-    public BrokerXmlConfigStartTest(String config) {
+    public BrokerXmlConfigStartTest(String config, String configFileShortName) {
         this.configUrl = config;
+        this.shortName = configFileShortName;
     }
 
     @Test
@@ -82,6 +85,15 @@ public class BrokerXmlConfigStartTest {
         LOG.info("Broker config: " + configUrl);
         System.err.println("Broker config: " + configUrl);
         broker = BrokerFactory.createBroker(configUrl);
+        if ("activemq-leveldb-replicating.xml".equals(shortName)) {
+            try {
+                broker.start();
+            } catch (TimeoutException expectedWithNoZk) {
+                return;
+            }
+        } else {
+            broker.start();
+        }
         // alive, now try connect to connect
         try {
             for (TransportConnector transport : broker.getTransportConnectors()) {

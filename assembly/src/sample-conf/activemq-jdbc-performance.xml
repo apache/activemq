@@ -58,7 +58,8 @@
         See more database locker options at http://activemq.apache.org/pluggable-storage-lockers.html
     -->
     <persistenceAdapter>
-       <jdbcPersistenceAdapter dataDirectory="${activemq.data}" dataSource="#mysql-ds" cleanupPeriod="0" />
+       <!--  for mysql-ds below, add attribute: dataSource="#mysql-ds" -->
+       <jdbcPersistenceAdapter dataDirectory="${activemq.data}" cleanupPeriod="0" />
     </persistenceAdapter>
 
     <transportConnectors>
