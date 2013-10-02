@@ -45,7 +45,46 @@ and jmx uri(s):
 	java:comp/env/jmx/url: URL of the brokers JMX (Type java.lang.String)       
 	
 	
-	
+
+Installing Web consoles in Apache Karaf / Apache ServiceMix
+-----------------------------------------------------------
+
+If you are using Apache Karaf, you can install ActiveMQ broker / client into the container using:
+
+   features:chooseurl activemq 5.9.0
+
+To install the broker:
+
+   features:install activemq-broker
+
+or the client only (web console not available):
+
+   features:install activemq-client
+
+You can then use web:list to see the context-path the console is accessible,
+that is usually: http://localhost:8181/activemqweb
+
+
+To install the new hawtio web console you install it as follows:
+
+If you use Karaf 2.3.3 or better:
+
+    features:chooseurl hawtio 
+
+For older releases you have to use addurl:
+
+    features:addurl mvn:io.hawt/hawtio-karaf/1.2-M19/xml/features
+
+And then you can install hawtio simply by:
+
+    features:install hawtio
+
+You can then use web:list to see the context-path the console is accessible,
+that is usually: http://localhost:8181/hawtio
+
+See also: http://hawt.io/getstarted/index.html for details how to install hawtio.
+
+
 Master/Slave monitoring
 -----------------------
 To configure the web console to monitor a master/slave configuration configure the jms/jmx
