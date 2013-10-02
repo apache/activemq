@@ -240,6 +240,17 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       stopped_latch.countDown()
       func
     })
+    master.blocking_executor.execute(^{
+      val broker = brokerService
+      if( broker!=null ) {
+        try {
+            broker.requestRestart();
+            broker.stop();
+        } catch {
+          case e:Exception=> warn("Failure occurred while restarting the broker", e);
+        }
+      }
+    })
   }
 
   def objectName = {

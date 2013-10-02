@@ -160,6 +160,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
         updating_store = true
         store.stop_master {
           elector.synchronized {
+            updating_store = false
             info("Master stopped")
             address = null
             changed
