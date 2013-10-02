@@ -181,7 +181,9 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
     val zk_group = ZooKeeperGroupFactory.create(zk_client, zkPath)
     val master_elector = new MasterElector(this)
+    debug("Starting ZooKeeper group monitor")
     master_elector.start(zk_group)
+    debug("Joining ZooKeeper group")
     master_elector.join
 
     this.setUseLock(true)

@@ -90,6 +90,8 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
     }
 
     def changed:Unit = elector.synchronized {
+      debug("ZooKeeper group changed: %s", members)
+
 //      info(eid+" cluster state changed: "+members)
       if (isMaster) {
         // We are the master elector, we will choose which node will startup the MasterLevelDBStore
