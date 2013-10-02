@@ -1347,6 +1347,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return transport.getRemoteAddress();
     }
 
+    public Transport getTransport() {
+        return transport;
+    }
+
     @Override
     public String getConnectionId() {
         List<TransportConnectionState> connectionStates = listConnectionStates();

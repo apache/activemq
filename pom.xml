@@ -249,6 +249,7 @@
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
+    <module>activemq-partition</module>
     <module>activemq-osgi</module>
     <module>activemq-blueprint</module>
     <module>activemq-web-demo</module>

@@ -237,6 +237,7 @@
                 <include>${basedir}/../activemq-kahadb-store/src/main/java</include>
                 <include>${basedir}/../activemq-mqtt/src/main/java</include>
                 <include>${basedir}/../activemq-stomp/src/main/java</include>
+                <include>${basedir}/../activemq-partition/src/main/java</include>
                 <include>${basedir}/../activemq-runtime-config/src/main/java</include>
               </includes>
               <strictXsdOrder>false</strictXsdOrder>
