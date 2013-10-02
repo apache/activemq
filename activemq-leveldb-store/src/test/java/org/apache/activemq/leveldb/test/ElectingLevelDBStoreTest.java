@@ -224,6 +224,7 @@ public class ElectingLevelDBStoreTest {
         store.setZkAddress("localhost:" + connector.getLocalPort());
         store.setZkPath("/broker-stores");
         store.setBrokerName("foo");
+        store.setHostname("localhost");
         store.setBind("tcp://0.0.0.0:0");
         return store;
     }
