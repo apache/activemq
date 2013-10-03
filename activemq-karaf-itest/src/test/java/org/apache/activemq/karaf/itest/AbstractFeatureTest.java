@@ -146,7 +146,7 @@ public abstract class AbstractFeatureTest {
 
 
 	public static String karafVersion() {
-        return System.getProperty("karafVersion", "2.3.0");
+        return System.getProperty("karafVersion", "2.3.3");
     }
 
     public static String activemqVersion() {
