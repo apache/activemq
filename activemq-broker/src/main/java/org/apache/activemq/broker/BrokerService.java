@@ -1904,7 +1904,7 @@ public class BrokerService implements Service {
                     dir = new File(dirPath);
                 }
 
-                while (dir != null && dir.isDirectory() == false) {
+                while (dir != null && !dir.isDirectory()) {
                     dir = dir.getParentFile();
                 }
                 long storeLimit = usage.getStoreUsage().getLimit();
@@ -1913,7 +1913,7 @@ public class BrokerService implements Service {
                     LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
                              " mb, whilst the data directory: " + dir.getAbsolutePath() +
                              " only has " + dirFreeSpace / (1024 * 1024) +
-                             " mb of usable space - resetting to maximum available disk space:  " +
+                             " mb of usable space - resetting to maximum available disk space: " +
                             dirFreeSpace / (1024 * 1024) + " mb");
                     usage.getStoreUsage().setLimit(dirFreeSpace);
                 }
@@ -1944,7 +1944,7 @@ public class BrokerService implements Service {
             }
 
             long storeLimit = usage.getTempUsage().getLimit();
-            while (tmpDir != null && tmpDir.isDirectory() == false) {
+            while (tmpDir != null && !tmpDir.isDirectory()) {
                 tmpDir = tmpDir.getParentFile();
             }
             long dirFreeSpace = tmpDir.getUsableSpace();
@@ -1985,7 +1985,7 @@ public class BrokerService implements Service {
                     schedulerDir = new File(schedulerDirPath);
                 }
 
-                while (schedulerDir != null && schedulerDir.isDirectory() == false) {
+                while (schedulerDir != null && !schedulerDir.isDirectory()) {
                     schedulerDir = schedulerDir.getParentFile();
                 }
                 long schedularLimit = usage.getJobSchedulerUsage().getLimit();
@@ -2077,7 +2077,7 @@ public class BrokerService implements Service {
     }
 
     public ObjectName createDuplexNetworkConnectorObjectName(String transport) throws MalformedObjectNameException {
-        return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport.toString());
+        return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport);
     }
 
     protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
@@ -2086,7 +2086,7 @@ public class BrokerService implements Service {
                 ObjectName objectName = createNetworkConnectorObjectName(connector);
                 getManagementContext().unregisterMBean(objectName);
             } catch (Exception e) {
-                LOG.error("Network Connector could not be unregistered from JMX", e);
+                LOG.warn("Network Connector could not be unregistered from JMX due " + e.getMessage() + ". This exception is ignored.", e);
             }
         }
     }
@@ -2172,7 +2172,7 @@ public class BrokerService implements Service {
                 regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
                     getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
             } catch(MalformedObjectNameException me){
-                LOG.error("Couldn't create ManagedRegionBroker", me);
+                LOG.warn("Cannot create ManagedRegionBroker due " + me.getMessage(), me);
                 throw new IOException(me);
             }
         } else {
@@ -2324,7 +2324,7 @@ public class BrokerService implements Service {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
             } catch (Exception e) {
-                LOG.debug("Caught exception, must be shutting down", e);
+                LOG.debug("Caught exception, must be shutting down. This exception is ignored.", e);
             }
         }
     }
@@ -2606,7 +2606,7 @@ public class BrokerService implements Service {
             try {
                 this.scheduler.start();
             } catch (Exception e) {
-               LOG.error("Failed to start Scheduler ",e);
+               LOG.error("Failed to start Scheduler", e);
             }
         }
         return this.scheduler;
