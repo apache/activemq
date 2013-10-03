@@ -316,6 +316,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             } else {
                 answer.add(val);
             }
+        } catch (NoSuchMethodException mappingIncomplete) {
+            LOG.debug(o + " has no modifiable elements");
         } catch (Exception e) {
             info("Failed to access getContents for " + o + ", runtime modifications not supported", e);
         }
