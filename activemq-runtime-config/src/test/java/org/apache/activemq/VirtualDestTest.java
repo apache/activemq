@@ -16,8 +16,8 @@
  */
 package org.apache.activemq;
 
+import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -78,6 +78,8 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         brokerService.start();
         brokerService.waitUntilStarted();
 
+        TimeUnit.SECONDS.sleep(SLEEP);
+
         assertTrue("broker alive", brokerService.isStarted());
 
         DestinationInterceptor[] interceptors  = brokerService.getDestinationInterceptors();
@@ -107,6 +109,8 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         brokerService.setUseMirroredQueues(true);
         brokerService.start();
         brokerService.waitUntilStarted();
+
+        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertTrue("broker alive", brokerService.isStarted());
 
@@ -193,6 +197,8 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         brokerService.setUseMirroredQueues(true);
         brokerService.start();
         brokerService.waitUntilStarted();
+
+        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertEquals("one interceptor", 1, brokerService.getDestinationInterceptors().length);
         exerciseVirtualTopic("A.Default");
