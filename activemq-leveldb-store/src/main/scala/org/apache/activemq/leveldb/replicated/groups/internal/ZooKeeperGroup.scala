@@ -70,13 +70,17 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends Group with Life
   create(root)
   tree.track(new NodeEventsListener[Array[Byte]]() {
     def onEvents(events: Collection[NodeEvent[Array[Byte]]]): Unit = {
-      fire_cluster_change
+      if( !closed )
+        fire_cluster_change
     }
   })
   fire_cluster_change
 
+  @volatile
+  var closed = false
 
   def close = this.synchronized {
+    closed = true
     joins.foreach { case (path, version) =>
       try {
         zk.delete(member_path_prefix + path, version)

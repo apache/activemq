@@ -179,7 +179,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     zk_client.start
     zk_client.waitForConnected(Timespan.parse("30s"))
 
-    val zk_group = ZooKeeperGroupFactory.create(zk_client, zkPath)
+    zk_group = ZooKeeperGroupFactory.create(zk_client, zkPath)
     val master_elector = new MasterElector(this)
     debug("Starting ZooKeeper group monitor")
     master_elector.start(zk_group)
@@ -267,6 +267,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     if(brokerService!=null){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
+    zk_group.close
     zk_client.close()
     zk_client = null
     if( master_started.get() ) {
