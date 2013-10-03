@@ -19,23 +19,21 @@ package org.apache.activemq.web;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
-
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.net.SocketFactory;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JettyTestSupport extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(JettyTestSupport.class);
@@ -50,10 +48,15 @@ public class JettyTestSupport extends TestCase {
     URI tcpUri;
     URI stompUri;
 
+    protected boolean isPersistent() {
+        return false;
+    }
+
     protected void setUp() throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("amq-broker");
-        broker.setPersistent(false);
+        broker.setPersistent(isPersistent());
+        broker.setDataDirectory("target/activemq-data");
         broker.setUseJmx(true);
         tcpUri = new URI(broker.addConnector("tcp://localhost:0").getPublishableConnectString());
         stompUri = new URI(broker.addConnector("stomp://localhost:0").getPublishableConnectString());

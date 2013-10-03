@@ -35,8 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTextMessage;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 import org.slf4j.Logger;
@@ -196,7 +194,7 @@ public class MessageServlet extends MessageServletSupport {
             Continuation continuation = null;
             Listener listener = null;
 
-            // Look for any available messages
+            // Look for any available messages (need a little timeout)
             message = consumer.receive(10);
 
             // Get an existing Continuation or create a new one if there are
@@ -392,9 +390,10 @@ public class MessageServlet extends MessageServletSupport {
                         Message message = consumer.receiveNoWait();
                         continuation.setAttribute("message", message);
                     } catch (Exception e) {
-                        LOG.error("Error receiving message " + e, e);
+                        LOG.warn("Error receiving message due " + e.getMessage() + ". This exception is ignored.", e);
+                    } finally {
+                        continuation.resume();
                     }
-                    continuation.resume();
                 }
             }
         }
