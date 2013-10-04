@@ -257,12 +257,12 @@ public class FailoverTransport implements CompositeTransport {
                 connected = false;
                 connectedToPriority = false;
 
-                // notify before any reconnect attempt so ack state can be whacked
-                if (transportListener != null) {
-                    transportListener.transportInterupted();
-                }
-
                 if (reconnectOk) {
+                    // notify before any reconnect attempt so ack state can be whacked
+                    if (transportListener != null) {
+                        transportListener.transportInterupted();
+                    }
+
                     updated.remove(failedConnectTransportURI);
                     reconnectTask.wakeup();
                 } else if (!isDisposed()) {
