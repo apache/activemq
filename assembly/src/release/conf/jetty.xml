@@ -111,13 +111,19 @@
     <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection">
     </bean>
 
-    <bean id="Server" class="org.eclipse.jetty.server.Server" init-method="start"
+    <bean id="jettyPort" class="org.apache.activemq.web.WebConsolePort" init-method="start">
+             <!-- the default port number for the web console -->
+        <property name="port" value="8161"/>
+    </bean>
+
+    <bean id="Server" depends-on="jettyPort" class="org.eclipse.jetty.server.Server" init-method="start"
         destroy-method="stop">
 
         <property name="connectors">
             <list>
                 <bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                    <property name="port" value="8161" />
+                     <!-- see the jettyPort bean -->
+                    <property name="port" value="#{systemProperties['jetty.port']}" />
                 </bean>
                 <!--
                     Enable this connector if you wish to use https with web console

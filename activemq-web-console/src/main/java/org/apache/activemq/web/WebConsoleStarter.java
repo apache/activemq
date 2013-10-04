@@ -30,8 +30,6 @@ import javax.servlet.ServletContextListener;
 
 /**
  * Starts the WebConsole.
- * 
- * 
  */
 public class WebConsoleStarter implements ServletContextListener {
     
@@ -40,30 +38,28 @@ public class WebConsoleStarter implements ServletContextListener {
     public void contextInitialized(ServletContextEvent event) {
         LOG.debug("Initializing ActiveMQ WebConsole...");
 
+        String webconsoleType = getWebconsoleType();
+
         ServletContext servletContext = event.getServletContext();
-        WebApplicationContext context = createWebapplicationContext(servletContext);
+        WebApplicationContext context = createWebapplicationContext(servletContext, webconsoleType);
 
         initializeWebClient(servletContext, context);
 
-        LOG.info("ActiveMQ WebConsole initialized.");
-    }
-
-    private WebApplicationContext createWebapplicationContext(ServletContext servletContext) {
-
-        String webconsoleType = System.getProperty("webconsole.type", "embedded");
-
-        // detect osgi
-        try {
-            if (OsgiUtil.isOsgi()) {
-                webconsoleType = "osgi";
+        // for embedded console log what port it uses
+        if ("embedded".equals(webconsoleType)) {
+            // show the url for the web consoles / main page so people can spot it
+            String port = System.getProperty("jetty.port");
+            if (port != null) {
+                LOG.info("ActiveMQ WebConsole available at http://localhost:{}/", port);
             }
-        } catch (NoClassDefFoundError ignore) {
         }
 
+        LOG.debug("ActiveMQ WebConsole initialized.");
+    }
 
+    private WebApplicationContext createWebapplicationContext(ServletContext servletContext, String webconsoleType) {
         String configuration = "/WEB-INF/webconsole-" + webconsoleType + ".xml";
-
-        LOG.info("Web console type: " + webconsoleType);
+        LOG.debug("Web console type: " + webconsoleType);
 
         XmlWebApplicationContext context = new XmlWebApplicationContext();
         context.setServletContext(servletContext);
@@ -91,6 +87,20 @@ public class WebConsoleStarter implements ServletContextListener {
             context.destroy();
         }
         // do nothing, since the context is destroyed anyway
+    }
+
+    private static String getWebconsoleType() {
+        String webconsoleType = System.getProperty("webconsole.type", "embedded");
+
+        // detect osgi
+        try {
+            if (OsgiUtil.isOsgi()) {
+                webconsoleType = "osgi";
+            }
+        } catch (NoClassDefFoundError ignore) {
+        }
+
+        return webconsoleType;
     }
 
     static class OsgiUtil {
