@@ -30,11 +30,10 @@
     </bean>
 
     <!-- Allows log searching in hawtio console -->
-    <!-- Disabled until new release of insight to fix AMQ-4747
     <bean id="logQuery" class="org.fusesource.insight.log.log4j.Log4jLogQuery"
           lazy-init="false" scope="singleton"
           init-method="start" destroy-method="stop">
-    </bean> -->
+    </bean>
 
     <!--
         The <broker> element is used to configure the ActiveMQ broker.

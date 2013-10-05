@@ -71,8 +71,16 @@
         <include>bin/win64/*.dll</include>
       </includes>
     </fileSet>
+    <!-- include patched JAR files -->
+    <fileSet>
+      <directory>src/patch</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>*</include>
+      </includes>
+    </fileSet>
 
-   </fileSets>
+  </fileSets>
 
   <componentDescriptors>
     <componentDescriptor>src/main/descriptors/common-bin.xml</componentDescriptor>

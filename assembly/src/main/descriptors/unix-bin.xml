@@ -66,6 +66,16 @@
       <fileMode>0755</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>
+    <!-- include patched JAR files -->
+    <fileSet>
+      <directory>src/patch</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>*</include>
+      </includes>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
 
     <!-- Copy over the files that need unix line endings and also chmod to 755 -->
     <fileSet>

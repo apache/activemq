@@ -28,7 +28,7 @@
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>
-        <include>webapps/*.ico</include>
+        <include>webapps/*.ico</include>        
       </includes>
     </fileSet>
 
@@ -153,7 +153,9 @@
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
         <include>org.fusesource.insight:insight-log-core</include>
+        <!-- TODO: we use a patched insight-log4j AR from assembly/src/release/lib until a new release is out 
         <include>org.fusesource.insight:insight-log4j</include>
+        -->
       </includes>
     </dependencySet>
     <dependencySet>
