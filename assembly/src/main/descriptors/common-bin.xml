@@ -44,6 +44,20 @@
 
     <!-- lets copy the portions of the admin web app we need - as we can't exclude stuff from the WAR -->
     <fileSet>
+      <directory>../activemq-web-console/src/main/webapp/images</directory>
+      <outputDirectory>/webapps/images</outputDirectory>
+      <includes>
+        <include>*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>../activemq-web-console/src/main/webapp/styles</directory>
+      <outputDirectory>/webapps/styles</outputDirectory>
+      <includes>
+        <include>*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
       <directory>../activemq-web-console/src/main/webapp</directory>
       <outputDirectory>/webapps/admin</outputDirectory>
       <excludes>
