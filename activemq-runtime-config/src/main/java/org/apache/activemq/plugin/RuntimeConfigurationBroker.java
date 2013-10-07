@@ -17,7 +17,6 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -132,6 +131,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             BrokerContext brokerContext = next.getBrokerService().getBrokerContext();
             if (brokerContext != null) {
                 configToMonitor = Utils.resourceFromString(brokerContext.getConfigurationUrl());
+                info("Configuration " + configToMonitor);
             } else {
                 LOG.error("Null BrokerContext; impossible to determine configuration url resource from broker, updates cannot be tracked");
             }
@@ -683,8 +683,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
     private void loadPropertiesPlaceHolderSupport(Document doc) {
         BrokerContext brokerContext = getBrokerService().getBrokerContext();
-        if (brokerContext != null && !brokerContext.getBeansOfType(PropertyPlaceholderConfigurer.class).isEmpty()) {
-
+        if (brokerContext != null) {
             Properties initialProperties = new Properties(System.getProperties());
             placeHolderUtil = new PropertiesPlaceHolderUtil(initialProperties);
             mergeProperties(doc, initialProperties);
@@ -728,7 +727,9 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         List<Resource> propResources = new LinkedList<Resource>();
         for (String value : resourcesString.split(",")) {
             try {
-                propResources.add(Utils.resourceFromString(replacePlaceHolders(value)));
+                if (!value.isEmpty()) {
+                    propResources.add(Utils.resourceFromString(replacePlaceHolders(value)));
+                }
             } catch (MalformedURLException e) {
                 info("failed to resolve resource: " + value, e);
             }
@@ -762,18 +763,23 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             SchemaFactory schemaFactory = SchemaFactory.newInstance(
                     XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-            // avoid going to the net to pull down the spring schema
+            ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
+            schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
+
+            // avoid going to the net to pull down the spring schema,
+            // REVISIT may need to be smarter in osgi
             final PluggableSchemaResolver springResolver =
                     new PluggableSchemaResolver(getClass().getClassLoader());
             final InputSource beanInputSource =
                     springResolver.resolveEntity(
                             "http://www.springframework.org/schema/beans",
-                            "http://www.springframework.org/schema/beans/spring-beans-2.0.xsd");
-
-            schema = schemaFactory.newSchema(new Source[]{
-                    new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()),
-                    new StreamSource(beanInputSource.getByteStream())
-            });
+                            "http://www.springframework.org/schema/beans/spring-beans.xsd");
+            if (beanInputSource != null) {
+                schemas.add(new StreamSource(beanInputSource.getByteStream()));
+            } else {
+                schemas.add(new StreamSource("http://www.springframework.org/schema/beans/spring-beans.xsd"));
+            }
+            schema = schemaFactory.newSchema(schemas.toArray(new Source[]{}));
         }
         return schema;
     }
@@ -827,6 +833,31 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 } else {
                     start = matcher.end();
                 }
+            }
+            return replaceBytePostfix(str);
+        }
+
+        static Pattern[] byteMatchers = new Pattern[] {
+                Pattern.compile("^\\s*(\\d+)\\s*(b)?\\s*$", Pattern.CASE_INSENSITIVE),
+                Pattern.compile("^\\s*(\\d+)\\s*k(b)?\\s*$", Pattern.CASE_INSENSITIVE),
+                Pattern.compile("^\\s*(\\d+)\\s*m(b)?\\s*$", Pattern.CASE_INSENSITIVE),
+                Pattern.compile("^\\s*(\\d+)\\s*g(b)?\\s*$", Pattern.CASE_INSENSITIVE)};
+
+        // xbean can Xb, Xkb, Xmb, Xg etc
+        private String replaceBytePostfix(String str) {
+            try {
+                for (int i=0; i< byteMatchers.length; i++) {
+                    Matcher matcher = byteMatchers[i].matcher(str);
+                    if (matcher.matches()) {
+                        long value = Long.parseLong(matcher.group(1));
+                        for (int j=1; j<=i; j++) {
+                            value *= 1024;
+                        }
+                        return String.valueOf(value);
+                    }
+                }
+            } catch (NumberFormatException ignored) {
+                LOG.debug("nfe on: " + str, ignored);
             }
             return str;
         }

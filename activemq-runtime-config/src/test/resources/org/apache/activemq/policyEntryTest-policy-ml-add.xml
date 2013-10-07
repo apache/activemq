@@ -28,8 +28,8 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry queue=">" memoryLimit="2048"/>
-          <policyEntry topic=">" memoryLimit="2048"/>
+          <policyEntry queue=">" memoryLimit="2048b"/>
+          <policyEntry topic=">" memoryLimit="2kb"/>
         </policyEntries>
       </policyMap>
     </destinationPolicy>

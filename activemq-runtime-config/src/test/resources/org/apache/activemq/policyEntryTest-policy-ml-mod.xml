@@ -28,7 +28,7 @@
     <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry queue=">" memoryLimit="2048"/>
+          <policyEntry queue=">" memoryLimit="4 mb"/>
         </policyEntries>
       </policyMap>
     </destinationPolicy>

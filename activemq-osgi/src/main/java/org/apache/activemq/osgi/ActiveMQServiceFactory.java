@@ -17,6 +17,7 @@
 package org.apache.activemq.osgi;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.osgi.framework.BundleContext;
@@ -95,6 +96,10 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             }
             //TODO deal with multiple brokers
 
+            SpringBrokerContext brokerContext = new SpringBrokerContext();
+            brokerContext.setConfigurationUrl(resource.getURL().toExternalForm());
+            brokerContext.setApplicationContext(ctx);
+            broker.setBrokerContext(brokerContext);
 
             broker.start();
             broker.waitUntilStarted();

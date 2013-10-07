@@ -41,6 +41,7 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
         } finally {
             try {
                 in.close();
+                out.force(true);
                 out.close();
             } catch (Exception e) {
                 // ignore

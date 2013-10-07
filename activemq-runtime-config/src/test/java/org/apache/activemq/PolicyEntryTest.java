@@ -37,10 +37,10 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
         verifyQueueLimit("Before", 1024);
         applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-mod", SLEEP);
-        verifyQueueLimit("After", 2048);
+        verifyQueueLimit("After", 4194304);
 
         // change to existing dest
-        verifyQueueLimit("Before", 2048);
+        verifyQueueLimit("Before", 4194304);
     }
 
     @Test
