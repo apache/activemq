@@ -24,10 +24,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.partition.dto.Partitioning;
 import org.apache.activemq.partition.dto.Target;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
+import javax.jms.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -81,7 +78,7 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
         partitioning.byQueue.put("foo", new Target("broker1"));
         createBrokerCluster(2);
 
-        Connection connection = createConnectionTo("broker2");
+        Connection connection2 = createConnectionTo("broker2");
 
         within(5, TimeUnit.SECONDS, new Task() {
             public void run() throws Exception {
@@ -90,11 +87,8 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
             }
         });
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(session.createQueue("foo"));
-        for (int i = 0; i < 100; i++) {
-            producer.send(session.createTextMessage("#"+i));
-        }
+        Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session2.createConsumer(session2.createQueue("foo"));
 
         within(5, TimeUnit.SECONDS, new Task() {
             public void run() throws Exception {
@@ -102,7 +96,31 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
                 assertEquals(0, getTransportConnector("broker2").getConnections().size());
             }
         });
+
+        Connection connection1 = createConnectionTo("broker2");
+        Session session1 = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session1.createProducer(session1.createQueue("foo"));
+
+        within(5, TimeUnit.SECONDS, new Task() {
+            public void run() throws Exception {
+                assertEquals(1, getTransportConnector("broker1").getConnections().size());
+                assertEquals(1, getTransportConnector("broker2").getConnections().size());
+            }
+        });
+
+        for (int i = 0; i < 100; i++) {
+            producer.send(session1.createTextMessage("#" + i));
+        }
+
+        within(5, TimeUnit.SECONDS, new Task() {
+            public void run() throws Exception {
+                assertEquals(2, getTransportConnector("broker1").getConnections().size());
+                assertEquals(0, getTransportConnector("broker2").getConnections().size());
+            }
+        });
     }
+
+
     static interface Task {
         public void run() throws Exception;
     }

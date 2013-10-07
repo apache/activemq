@@ -20,6 +20,8 @@ import org.apache.activemq.broker.*;
 import org.apache.activemq.command.*;
 import org.apache.activemq.partition.dto.Partitioning;
 import org.apache.activemq.partition.dto.Target;
+import org.apache.activemq.state.ConsumerState;
+import org.apache.activemq.state.SessionState;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.LRUCache;
 import org.slf4j.Logger;
@@ -28,8 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -132,7 +133,7 @@ public class PartitionBroker extends BrokerFilter {
         }
 
         LOG.info("Redirecting connection to: " + connectionString);
-        TransportConnection connection = (TransportConnection)monitor.next;
+        TransportConnection connection = (TransportConnection)monitor.context.getConnection();
         ConnectionControl cc = new ConnectionControl();
         cc.setConnectedBrokers(connectionString);
         cc.setRebalanceConnection(true);
@@ -153,6 +154,10 @@ public class PartitionBroker extends BrokerFilter {
             }
         }
         return rc.toString();
+    }
+
+    static private class Score {
+        int value;
     }
 
     protected Target pickBestBroker(ConnectionMonitor monitor) {
@@ -201,22 +206,62 @@ public class PartitionBroker extends BrokerFilter {
           || (getConfig().byTopic !=null && !getConfig().byTopic.isEmpty())
           ) {
 
-            ActiveMQDestination best = monitor.findMostActiveDestination(plugin);
-            if( best!=null ) {
-                if( getConfig().byQueue !=null && !getConfig().byQueue.isEmpty() && best.isQueue() ) {
-                    Target targetDTO = getConfig().byQueue.get(best.getPhysicalName());
-                    if( targetDTO!=null ) {
-                        return targetDTO;
-                    }
-                }
-
-                if( getConfig().byTopic !=null && !getConfig().byTopic.isEmpty() && best.isTopic() ) {
-                    Target targetDTO = getConfig().byTopic.get(best.getPhysicalName());
-                    if( targetDTO!=null ) {
-                        return targetDTO;
+            // Collect the destinations the connection is consuming from...
+            HashSet<ActiveMQDestination> dests = new HashSet<ActiveMQDestination>();
+            for (SessionState session : monitor.context.getConnectionState().getSessionStates()) {
+                for (ConsumerState consumer : session.getConsumerStates()) {
+                    ActiveMQDestination destination = consumer.getInfo().getDestination();
+                    if( destination.isComposite() ) {
+                        dests.addAll(Arrays.asList(destination.getCompositeDestinations()));
+                    } else {
+                        dests.addAll(Collections.singletonList(destination));
                     }
                 }
             }
+
+            // Group them by the partitioning target for the destinations and score them..
+            HashMap<Target, Score> targetScores = new HashMap<Target, Score>();
+            for (ActiveMQDestination dest : dests) {
+                Target target = getTarget(dest);
+                if( target!=null ) {
+                    Score score = targetScores.get(target);
+                    if( score == null ) {
+                        score = new Score();
+                        targetScores.put(target, score);
+                    }
+                    score.value++;
+                }
+            }
+
+            // The target with largest score wins..
+            if( !targetScores.isEmpty() ) {
+                Target bestTarget = null;
+                int bestScore=0;
+                for (Map.Entry<Target, Score> entry : targetScores.entrySet()) {
+                    if( entry.getValue().value > bestScore ) {
+                        bestTarget = entry.getKey();
+                    }
+                }
+                return bestTarget;
+            }
+
+            // If we get here is because there were no consumers, or the destinations for those
+            // consumers did not have an assigned destination..  So partition based on producer
+            // usage.
+            Target best = monitor.findBestProducerTarget(this);
+            if( best!=null ) {
+                return best;
+            }
+        }
+        return null;
+    }
+
+    protected Target getTarget(ActiveMQDestination dest) {
+        Partitioning config = getConfig();
+        if( dest.isQueue() && config.byQueue !=null && !config.byQueue.isEmpty() ) {
+            return config.byQueue.get(dest.getPhysicalName());
+        } else if( dest.isTopic() && config.byTopic !=null && !config.byTopic.isEmpty() ) {
+            return config.byTopic.get(dest.getPhysicalName());
         }
         return null;
     }
@@ -226,7 +271,6 @@ public class PartitionBroker extends BrokerFilter {
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         ConnectionMonitor monitor = new ConnectionMonitor(context);
-        context.setConnection(monitor);
         monitors.put(info.getConnectionId(), monitor);
         super.addConnection(context, info);
         checkTarget(monitor);
@@ -236,9 +280,6 @@ public class PartitionBroker extends BrokerFilter {
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
         ConnectionMonitor removed = monitors.remove(info.getConnectionId());
-        if( removed!=null ) {
-            context.setConnection(removed.next);
-        }
     }
 
     @Override
@@ -259,28 +300,30 @@ public class PartitionBroker extends BrokerFilter {
         long bytes;
     }
 
-    static class ConnectionMonitor extends ConnectionProxy {
-        final ConnectionContext context;
+    static class ConnectionMonitor {
 
+        final ConnectionContext context;
         LRUCache<ActiveMQDestination, Traffic> trafficPerDestination =  new LRUCache<ActiveMQDestination, Traffic>();
 
-        ConnectionMonitor(ConnectionContext context) {
-            super(context.getConnection());
+        public ConnectionMonitor(ConnectionContext context) {
             this.context = context;
         }
 
-        synchronized public ActiveMQDestination findMostActiveDestination(PartitionBrokerPlugin plugin) {
-            ActiveMQDestination best = null;
+        synchronized public Target findBestProducerTarget(PartitionBroker broker) {
+            Target best = null;
             long bestSize = 0 ;
             for (Map.Entry<ActiveMQDestination, Traffic> entry : trafficPerDestination.entrySet()) {
                 Traffic t = entry.getValue();
                 // Once we get enough messages...
-                if( t.messages < plugin.getMinTransferCount()) {
+                if( t.messages < broker.plugin.getMinTransferCount()) {
                     continue;
                 }
                 if( t.bytes > bestSize) {
                     bestSize = t.bytes;
-                    best = entry.getKey();
+                    Target target = broker.getTarget(entry.getKey());
+                    if( target!=null ) {
+                        best = target;
+                    }
                 }
             }
             return best;
@@ -297,25 +340,6 @@ public class PartitionBroker extends BrokerFilter {
             traffic.bytes += message.getSize();
         }
 
-
-        @Override
-        public void dispatchAsync(Command command) {
-            if (command.getClass() == MessageDispatch.class) {
-                MessageDispatch md = (MessageDispatch) command;
-                Message message = md.getMessage();
-                synchronized (this) {
-                    ActiveMQDestination dest = md.getDestination();
-                    Traffic traffic = trafficPerDestination.get(dest);
-                    if( traffic == null ) {
-                        traffic = new Traffic();
-                        trafficPerDestination.put(dest, traffic);
-                    }
-                    traffic.messages += 1;
-                    traffic.bytes += message.getSize();
-                }
-            }
-            super.dispatchAsync(command);
-        }
 
     }
 
