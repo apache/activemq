@@ -20,6 +20,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.io.IOException;
@@ -27,8 +28,6 @@ import java.util.HashMap;
 
 /**
  * The main Configuration class for the PartitionBroker plugin
- *
- * @org.apache.xbean.XBean element="partitioning"
  */
 public class Partitioning {
 
@@ -50,6 +49,7 @@ public class Partitioning {
      * to the partition target immediately.
      */
     @JsonProperty("by_client_id")
+    @JsonDeserialize(contentAs = Target.class)
     public HashMap<String, Target> byClientId;
 
     /**
@@ -58,6 +58,7 @@ public class Partitioning {
      * to the partition target immediately.
      */
     @JsonProperty("by_user_name")
+    @JsonDeserialize(contentAs = Target.class)
     public HashMap<String, Target> byUserName;
 
     /**
@@ -66,6 +67,7 @@ public class Partitioning {
      * to the partition target immediately.
      */
     @JsonProperty("by_source_ip")
+    @JsonDeserialize(contentAs = Target.class)
     public HashMap<String, Target> bySourceIp;
 
     /**
@@ -75,6 +77,7 @@ public class Partitioning {
      * will be reconnected to the appropriate target.
      */
     @JsonProperty("by_queue")
+    @JsonDeserialize(contentAs = Target.class)
     public HashMap<String, Target> byQueue;
 
     /**
@@ -84,12 +87,14 @@ public class Partitioning {
      * will be reconnected to the appropriate target.
      */
     @JsonProperty("by_topic")
+    @JsonDeserialize(contentAs = Target.class)
     public HashMap<String, Target> byTopic;
 
     /**
      * Maps broker names to broker URLs.
      */
     @JsonProperty("brokers")
+    @JsonDeserialize(contentAs = String.class)
     public HashMap<String, String> brokers;
 
 

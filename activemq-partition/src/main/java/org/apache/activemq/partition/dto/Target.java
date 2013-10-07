@@ -26,8 +26,6 @@ import java.util.HashSet;
 /**
  * Represents a partition target.  This identifies the brokers that
  * a partition lives on.
- *
- * @org.apache.xbean.XBean element="target"
  */
 public class Target {
 

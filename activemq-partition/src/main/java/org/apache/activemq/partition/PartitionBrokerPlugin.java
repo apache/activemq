@@ -19,6 +19,9 @@ package org.apache.activemq.partition;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.partition.dto.Partitioning;
+import org.codehaus.jackson.JsonParseException;
+
+import java.io.IOException;
 
 /**
  * A BrokerPlugin which partitions client connections over a cluster of brokers.
@@ -50,4 +53,9 @@ public class PartitionBrokerPlugin implements BrokerPlugin {
     public void setConfig(Partitioning config) {
         this.config = config;
     }
+
+    public void setConfigAsJson(String config) throws IOException {
+        this.config = Partitioning.MAPPER.readValue(config, Partitioning.class);
+    }
+
 }
