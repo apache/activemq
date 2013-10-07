@@ -18,7 +18,8 @@ same VM as the broker. The console is accessibly under http://localhost:8161/haw
 
 The broker may ask for credentials to login the web console the first time.
 The default username and password is admin/admin. You can configure this in the
-conf/jetty-real.properties file.
+conf/jetty-real.properties file.  And in the conf/jetty.xml file you can configure
+to disable login for the web consoles.
 
 However it's also possible to start the web console in a separate VM and connect it
 to the broker via JMS and JMX. The reasons to do so may include increased reliability

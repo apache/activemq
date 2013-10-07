@@ -161,6 +161,7 @@
 
     <!--
         Enable web consoles, REST and Ajax APIs and demos
+        The web consoles requires by default login, you can disable this in the jetty.xml file
 
         Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
     -->
