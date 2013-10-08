@@ -75,6 +75,10 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-leveldb-store</artifactId>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-partition</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.fusesource.hawtdispatch</groupId>
