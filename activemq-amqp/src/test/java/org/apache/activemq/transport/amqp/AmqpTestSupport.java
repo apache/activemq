@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp;
 
 import java.io.File;
+import java.security.SecureRandom;
 import java.util.Vector;
 
 import javax.jms.Connection;
@@ -27,6 +28,9 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -45,10 +49,11 @@ public class AmqpTestSupport {
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
     protected int numberOfMessages;
-    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {
-    };
+    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
     protected int port;
     protected int sslPort;
+    protected int nioPort;
+    protected int nioPlusSslPort;
 
     public static void main(String[] args) throws Exception {
         final AmqpTestSupport s = new AmqpTestSupport();
@@ -72,6 +77,10 @@ public class AmqpTestSupport {
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
 
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+        SSLContext.setDefault(ctx);
+
         // Setup SSL context...
         final File classesDir = new File(AmqpProtocolConverter.class.getProtectionDomain().getCodeSource().getLocation().getFile());
         File keystore = new File(classesDir, "../../src/test/resources/keystore");
@@ -91,8 +100,16 @@ public class AmqpTestSupport {
     protected void addAMQPConnector() throws Exception {
         TransportConnector connector = brokerService.addConnector("amqp+ssl://0.0.0.0:" + sslPort);
         sslPort = connector.getConnectUri().getPort();
+        LOG.debug("Using amqp+ssl port " + sslPort);
         connector = brokerService.addConnector("amqp://0.0.0.0:" + port);
         port = connector.getConnectUri().getPort();
+        LOG.debug("Using amqp port " + port);
+        connector = brokerService.addConnector("amqp+nio://0.0.0.0:" + nioPort);
+        nioPort = connector.getConnectUri().getPort();
+        LOG.debug("Using amqp+nio port " + nioPort);
+        connector = brokerService.addConnector("amqp+nio+ssl://0.0.0.0:" + nioPlusSslPort);
+        nioPlusSslPort = connector.getConnectUri().getPort();
+        LOG.debug("Using amqp+nio+ssl port " + nioPlusSslPort);
     }
 
     @After
