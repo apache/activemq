@@ -17,7 +17,9 @@
 package org.apache.activemq.transport.failover;
 
 import junit.framework.Test;
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -29,10 +31,12 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.util.DestinationPathSeparatorBroker;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.SocketProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +52,15 @@ import javax.jms.ServerSessionPool;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.TransactionRolledBackException;
+import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -874,6 +884,139 @@ public class FailoverTransactionTest extends TestSupport {
         connection.close();
     }
 
+    public void testPoolingNConsumesAfterReconnect() throws Exception {
+        broker = createBroker(true);
+        setDefaultPersistenceAdapter(broker);
+
+        broker.setPlugins(new BrokerPlugin[]{
+                new BrokerPluginSupport() {
+                    int count = 0;
+
+                    @Override
+                    public void removeConsumer(ConnectionContext context, final ConsumerInfo info) throws Exception {
+                        if (count++ == 1) {
+                            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                public void run() {
+                                    LOG.info("Stopping broker on removeConsumer: " + info);
+                                    try {
+                                        broker.stop();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+        });
+        broker.start();
+
+        Vector<Connection> connections = new Vector<Connection>();
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("failover:(" + url + ")");
+        configureConnectionFactory(cf);
+        Connection connection = cf.createConnection();
+        connection.start();
+        Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue destination = producerSession.createQueue(QUEUE_NAME + "?consumer.prefetchSize=1");
+
+        produceMessage(producerSession, destination);
+        connection.close();
+
+        connection = cf.createConnection();
+        connection.start();
+        connections.add(connection);
+        final Session consumerSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+
+        final int sessionCount = 10;
+        final Stack<Session> sessions = new Stack<Session>();
+        for (int i = 0; i < sessionCount; i++) {
+            sessions.push(connection.createSession(false, Session.AUTO_ACKNOWLEDGE));
+        }
+
+        final int consumerCount = 1000;
+        final Deque<MessageConsumer> consumers = new ArrayDeque<MessageConsumer>();
+        for (int i = 0; i < consumerCount; i++) {
+            consumers.push(consumerSession.createConsumer(destination));
+        }
+        final ExecutorService executorService = Executors.newCachedThreadPool();
+
+        final FailoverTransport failoverTransport = ((ActiveMQConnection) connection).getTransport().narrow(FailoverTransport.class);
+        final TransportListener delegate = failoverTransport.getTransportListener();
+        failoverTransport.setTransportListener(new TransportListener() {
+            @Override
+            public void onCommand(Object command) {
+                delegate.onCommand(command);
+            }
+
+            @Override
+            public void onException(IOException error) {
+                delegate.onException(error);
+            }
+
+            @Override
+            public void transportInterupted() {
+
+                LOG.error("Transport interrupted: " + failoverTransport, new RuntimeException("HERE"));
+                for (int i = 0; i < consumerCount && !consumers.isEmpty(); i++) {
+
+                    executorService.execute(new Runnable() {
+                        public void run() {
+                            MessageConsumer localConsumer = null;
+                            try {
+                                synchronized (delegate) {
+                                    localConsumer = consumers.pop();
+                                }
+                                localConsumer.receive(1);
+
+                                LOG.info("calling close() " + ((ActiveMQMessageConsumer) localConsumer).getConsumerId());
+                                localConsumer.close();
+                            } catch (NoSuchElementException nse) {
+                            } catch (Exception ignored) {
+                                LOG.error("Ex on: " + ((ActiveMQMessageConsumer) localConsumer).getConsumerId(), ignored);
+                            }
+                        }
+                    });
+                }
+
+                delegate.transportInterupted();
+            }
+
+            @Override
+            public void transportResumed() {
+                delegate.transportResumed();
+            }
+        });
+
+
+        MessageConsumer consumer = null;
+        synchronized (delegate) {
+            consumer = consumers.pop();
+        }
+        LOG.info("calling close to trigger broker stop " + ((ActiveMQMessageConsumer) consumer).getConsumerId());
+        consumer.close();
+
+        // will be stopped by the plugin
+        broker.waitUntilStopped();
+        broker = createBroker(false, url);
+        setDefaultPersistenceAdapter(broker);
+        broker.start();
+
+        consumer = consumerSession.createConsumer(destination);
+        LOG.info("finally consuming message: " + ((ActiveMQMessageConsumer) consumer).getConsumerId());
+
+        Message msg = null;
+        for (int i = 0; i < 4 && msg == null; i++) {
+            msg = consumer.receive(1000);
+        }
+        LOG.info("post: from consumer1 received: " + msg);
+        assertNotNull("got message after failover", msg);
+        msg.acknowledge();
+
+        for (Connection c : connections) {
+            c.close();
+        }
+    }
+
     public void testAutoRollbackWithMissingRedeliveries() throws Exception {
         broker = createBroker(true);
         broker.start();
@@ -991,8 +1134,8 @@ public class FailoverTransactionTest extends TestSupport {
 
         final Vector<Exception> exceptions = new Vector<Exception>();
 
-        // commit may fail if other consumer gets the message on restart, it will be seen a a duplicate on teh connection
-        // but with no transaciton and it pending on another consumer it will be posion
+        // commit may fail if other consumer gets the message on restart, it will be seen as a duplicate on the connection
+        // but with no transaction and it pending on another consumer it will be poison
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             public void run() {
                 LOG.info("doing async commit...");
@@ -1012,7 +1155,7 @@ public class FailoverTransactionTest extends TestSupport {
 
         // either message consumed or sent to dlq via poison on redelivery to wrong consumer
         // message should not be available again in any event
-        assertNull("consumer should not get rolledback on non redelivered message or duplicate", consumer.receive(5000));
+        assertNull("consumer should not get rolled back on non redelivered message or duplicate", consumer.receive(5000));
 
         // consumer replay is hashmap order dependent on a failover connection state recover so need to deal with both cases
         if (exceptions.isEmpty()) {

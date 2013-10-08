@@ -406,6 +406,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         if (ss != null) {
                             ss.removeConsumer(id);
                         }
+                        cs.getRecoveringPullConsumers().remove(id);
                     }
                 }
             }

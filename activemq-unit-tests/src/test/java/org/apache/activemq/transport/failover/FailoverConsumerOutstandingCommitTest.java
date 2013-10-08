@@ -167,6 +167,7 @@ public class FailoverConsumerOutstandingCommitTest {
                 LOG.info("producer started");
                 try {
                     produceMessage(producerSession, destination, prefetch * 2);
+                } catch (javax.jms.IllegalStateException SessionClosedExpectedOnShutdown) {
                 } catch (JMSException e) {
                     e.printStackTrace();
                     fail("unexpceted ex on producer: " + e);
@@ -273,6 +274,7 @@ public class FailoverConsumerOutstandingCommitTest {
                 LOG.info("producer started");
                 try {
                     produceMessage(producerSession, destination, prefetch * 2);
+                } catch (javax.jms.IllegalStateException SessionClosedExpectedOnShutdown) {
                 } catch (JMSException e) {
                     e.printStackTrace();
                     fail("unexpceted ex on producer: " + e);

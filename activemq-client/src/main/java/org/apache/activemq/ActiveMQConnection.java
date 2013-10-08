@@ -198,7 +198,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private DestinationSource destinationSource;
     private final Object ensureConnectionInfoSentMutex = new Object();
     private boolean useDedicatedTaskRunner;
-    protected volatile CountDownLatch transportInterruptionProcessingComplete;
+    protected AtomicInteger transportInterruptionProcessingComplete = new AtomicInteger(0);
     private long consumerFailoverRedeliveryWaitPeriod;
     private Scheduler scheduler;
     private boolean messagePrioritySupported = true;
@@ -2023,19 +2023,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     @Override
     public void transportInterupted() {
-        this.transportInterruptionProcessingComplete = new CountDownLatch(dispatchers.size() - (advisoryConsumer != null ? 1:0));
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("transport interrupted, dispatchers: " + transportInterruptionProcessingComplete.getCount());
-        }
-        signalInterruptionProcessingNeeded();
-
+        transportInterruptionProcessingComplete.set(1);
         for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
             ActiveMQSession s = i.next();
-            s.clearMessagesInProgress();
+            s.clearMessagesInProgress(transportInterruptionProcessingComplete);
         }
 
         for (ActiveMQConnectionConsumer connectionConsumer : this.connectionConsumers) {
-            connectionConsumer.clearMessagesInProgress();
+            connectionConsumer.clearMessagesInProgress(transportInterruptionProcessingComplete);
+        }
+
+        if (transportInterruptionProcessingComplete.decrementAndGet() > 0) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("transport interrupted - processing required, dispatchers: " + transportInterruptionProcessingComplete.get());
+            }
+            signalInterruptionProcessingNeeded();
         }
 
         for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
@@ -2462,33 +2464,23 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     protected void waitForTransportInterruptionProcessingToComplete() throws InterruptedException {
-        CountDownLatch cdl = this.transportInterruptionProcessingComplete;
-        if (cdl != null) {
-            if (!closed.get() && !transportFailed.get() && cdl.getCount()>0) {
-                LOG.warn("dispatch paused, waiting for outstanding dispatch interruption processing (" + cdl.getCount() + ") to complete..");
-                cdl.await(10, TimeUnit.SECONDS);
-            }
+        if (!closed.get() && !transportFailed.get() && transportInterruptionProcessingComplete.get()>0) {
+            LOG.warn("dispatch with outstanding dispatch interruption processing count " + transportInterruptionProcessingComplete.get());
             signalInterruptionProcessingComplete();
         }
     }
 
     protected void transportInterruptionProcessingComplete() {
-        CountDownLatch cdl = this.transportInterruptionProcessingComplete;
-        if (cdl != null) {
-            cdl.countDown();
-            try {
-                signalInterruptionProcessingComplete();
-            } catch (InterruptedException ignored) {}
+        if (transportInterruptionProcessingComplete.decrementAndGet() == 0) {
+            signalInterruptionProcessingComplete();
         }
     }
 
-    private void signalInterruptionProcessingComplete() throws InterruptedException {
-        CountDownLatch cdl = this.transportInterruptionProcessingComplete;
-        if (cdl.getCount()==0) {
+    private void signalInterruptionProcessingComplete() {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("transportInterruptionProcessingComplete for: " + this.getConnectionInfo().getConnectionId());
+                LOG.debug("transportInterruptionProcessingComplete: " + transportInterruptionProcessingComplete.get()
+                        + " for:" + this.getConnectionInfo().getConnectionId());
             }
-            this.transportInterruptionProcessingComplete = null;
 
             FailoverTransport failoverTransport = transport.narrow(FailoverTransport.class);
             if (failoverTransport != null) {
@@ -2498,8 +2490,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                             + ") of interruption completion for: " + this.getConnectionInfo().getConnectionId());
                 }
             }
-
-        }
+            transportInterruptionProcessingComplete.set(0);
     }
 
     private void signalInterruptionProcessingNeeded() {

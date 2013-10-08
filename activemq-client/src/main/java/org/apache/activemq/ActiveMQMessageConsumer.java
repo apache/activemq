@@ -687,7 +687,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     void doClose() throws JMSException {
         // Store interrupted state and clear so that Transport operations don't
-        // throw InterruptedException and we ensure that resources are clened up.
+        // throw InterruptedException and we ensure that resources are cleaned up.
         boolean interrupted = Thread.interrupted();
         dispose();
         RemoveInfo removeCommand = info.createRemoveCommand();
@@ -1583,5 +1583,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 throw e;
             }
         }
+    }
+
+    public boolean hasMessageListener() {
+        return messageListener.get() != null;
     }
 }

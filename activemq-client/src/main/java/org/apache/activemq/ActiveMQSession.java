@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -647,7 +648,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
-    void clearMessagesInProgress() {
+    void clearMessagesInProgress(AtomicInteger transportInterruptionProcessingComplete) {
         executor.clearMessagesInProgress();
         // we are called from inside the transport reconnection logic
         // which involves us clearing all the connections' consumers
@@ -659,6 +660,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         //
         for (final ActiveMQMessageConsumer consumer : consumers) {
             consumer.inProgressClearRequired();
+            transportInterruptionProcessingComplete.incrementAndGet();
             try {
                 connection.getScheduler().executeAfterDelay(new Runnable() {
                     public void run() {
@@ -2012,7 +2014,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         for (Iterator<ActiveMQMessageConsumer> i = consumers.iterator(); i.hasNext();) {
             ActiveMQMessageConsumer consumer = i.next();
-            if (consumer.getMessageListener() != null) {
+            if (consumer.hasMessageListener()) {
                 throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
             }
         }
