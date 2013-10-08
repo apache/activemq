@@ -276,13 +276,16 @@
         <configuration>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
-            <!-- 
             <Embed-Dependency>
               *;
               groupId=org.apache.activemq;inline=META-INF/services/*,
+              <!-- 
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
-              groupId=org.xerial.snappy;inline=org/xerial/snappy/*</Embed-Dependency>
+              groupId=org.xerial.snappy;inline=org/xerial/snappy/*
+              -->
+            </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive> 
+            <!--
             <Bundle-NativeCode>
               META-INF/native/windows32/leveldbjni.dll;osname=Win32;processor=x86,
               META-INF/native/windows64/leveldbjni.dll;osname=Win32;processor=x86-64,
