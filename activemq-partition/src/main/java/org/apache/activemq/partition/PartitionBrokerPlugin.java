@@ -58,4 +58,10 @@ public class PartitionBrokerPlugin implements BrokerPlugin {
         this.config = Partitioning.MAPPER.readValue(config, Partitioning.class);
     }
 
+    public String getBrokerURL(PartitionBroker partitionBroker, String id) {
+        if( config!=null && config.brokers!=null ) {
+            return config.brokers.get(id);
+        }
+        return null;
+    }
 }

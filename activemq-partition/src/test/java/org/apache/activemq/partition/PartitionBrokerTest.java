@@ -23,6 +23,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.partition.dto.Partitioning;
 import org.apache.activemq.partition.dto.Target;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import javax.jms.*;
 import java.io.IOException;
@@ -31,23 +34,51 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.*;
+
 /**
  * Unit tests for the PartitionBroker plugin.
  */
-public class PartitionBrokerTest extends AutoFailTestSupport {
+public class PartitionBrokerTest {
 
     protected HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
     protected ArrayList<Connection> connections = new ArrayList<Connection>();
     Partitioning partitioning;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         partitioning = new Partitioning();
         partitioning.brokers = new HashMap<String, String>();
     }
 
+    /**
+     * Partitioning can only re-direct failover clients since those
+     * can re-connect and re-establish their state with another broker.
+     */
+    @Test(timeout = 1000*60*60)
+    public void testNonFailoverClientHasNoPartitionEffect() throws Exception {
 
+        partitioning.byClientId = new HashMap<String, Target>();
+        partitioning.byClientId.put("client1", new Target("broker1"));
+        createBrokerCluster(2);
+
+        Connection connection = createConnectionToUrl(getConnectURL("broker2"));
+        within(5, TimeUnit.SECONDS, new Task() {
+            public void run() throws Exception {
+                assertEquals(0, getTransportConnector("broker1").getConnections().size());
+                assertEquals(1, getTransportConnector("broker2").getConnections().size());
+            }
+        });
+
+        connection.setClientID("client1");
+        connection.start();
+
+        Thread.sleep(1000);
+        assertEquals(0, getTransportConnector("broker1").getConnections().size());
+        assertEquals(1, getTransportConnector("broker2").getConnections().size());
+    }
+
+    @Test(timeout = 1000*60*60)
     public void testPartitionByClientId() throws Exception {
         partitioning.byClientId = new HashMap<String, Target>();
         partitioning.byClientId.put("client1", new Target("broker1"));
@@ -73,6 +104,7 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
         });
     }
 
+    @Test(timeout = 1000*60*60)
     public void testPartitionByQueue() throws Exception {
         partitioning.byQueue = new HashMap<String, Target>();
         partitioning.byQueue.put("foo", new Target("broker1"));
@@ -149,7 +181,10 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
     }
 
     protected Connection createConnectionTo(String brokerId) throws IOException, URISyntaxException, JMSException {
-        String url = "failover://(" + getConnectURL(brokerId) + ")";
+        return createConnectionToUrl("failover://(" + getConnectURL(brokerId) + ")");
+    }
+
+    private Connection createConnectionToUrl(String url) throws JMSException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
         Connection connection = factory.createConnection();
         connections.add(connection);
@@ -174,14 +209,18 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
             String brokerId = "broker" + i;
             BrokerService broker = createBroker(brokerId);
             broker.setPersistent(false);
-            PartitionBrokerPlugin plugin = new PartitionBrokerPlugin();
-            plugin.setConfig(partitioning);
-            broker.setPlugins(new BrokerPlugin[]{plugin});
             broker.addConnector("tcp://localhost:0").setName("tcp");
+            addPartitionBrokerPlugin(broker);
             broker.start();
             broker.waitUntilStarted();
             partitioning.brokers.put(brokerId, getConnectURL(brokerId));
         }
+    }
+
+    protected void addPartitionBrokerPlugin(BrokerService broker) {
+        PartitionBrokerPlugin plugin = new PartitionBrokerPlugin();
+        plugin.setConfig(partitioning);
+        broker.setPlugins(new BrokerPlugin[]{plugin});
     }
 
     protected BrokerService createBroker(String name) {
@@ -191,8 +230,8 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
         return broker;
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         for (Connection connection : connections) {
             try {
                 connection.close();
@@ -208,7 +247,6 @@ public class PartitionBrokerTest extends AutoFailTestSupport {
             }
         }
         brokers.clear();
-        super.tearDown();
     }
 
 }

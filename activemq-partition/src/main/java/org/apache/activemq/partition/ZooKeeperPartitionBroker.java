@@ -26,6 +26,9 @@ import org.linkedin.util.clock.Timespan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 /**
  */
 public class ZooKeeperPartitionBroker extends PartitionBroker {
@@ -34,11 +37,20 @@ public class ZooKeeperPartitionBroker extends PartitionBroker {
 
     protected volatile ZKClient zk_client = null;
     protected volatile Partitioning config;
+    protected final CountDownLatch configAcquired = new CountDownLatch(1);
 
     public ZooKeeperPartitionBroker(Broker broker, ZooKeeperPartitionBrokerPlugin plugin) {
         super(broker, plugin);
     }
 
+    @Override
+    public void start() throws Exception {
+        super.start();
+        // Lets block a bit until we get our config.. Otherwise just keep
+        // on going.. not a big deal if we get our config later.  Perhaps
+        // ZK service is not having a good day.
+        configAcquired.await(5, TimeUnit.SECONDS);
+    }
 
     @Override
     protected void onMonitorStop() {
@@ -96,6 +108,7 @@ public class ZooKeeperPartitionBroker extends PartitionBroker {
                     monitorWakeup();
                 }
             }, stat);
+            configAcquired.countDown();
             reloadConfigOnPoll = false;
         } catch (Exception e) {
             LOG.warn("Could load partitioning configuration: " + e, e);

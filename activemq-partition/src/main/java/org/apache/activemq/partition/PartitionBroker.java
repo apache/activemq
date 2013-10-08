@@ -130,6 +130,7 @@ public class PartitionBroker extends BrokerFilter {
         String connectionString = getConnectionString(targetDTO.ids);
         if( connectionString==null ) {
             LOG.debug("Could not convert to partition targets to connection string: " + targetDTO.ids);
+            return;
         }
 
         LOG.info("Redirecting connection to: " + connectionString);
@@ -141,11 +142,9 @@ public class PartitionBroker extends BrokerFilter {
     }
 
     protected String getConnectionString(HashSet<String> ids) {
-        if( getConfig().brokers==null || getConfig().brokers.isEmpty() )
-            return null;
         StringBuilder rc = new StringBuilder();
         for (String id : ids) {
-            String url = getConfig().brokers.get(id);
+            String url = plugin.getBrokerURL(this, id);
             if( url!=null ) {
                 if( rc.length()!=0 ) {
                     rc.append(',');
@@ -153,6 +152,8 @@ public class PartitionBroker extends BrokerFilter {
                 rc.append(url);
             }
         }
+        if( rc.length()==0 )
+            return null;
         return rc.toString();
     }
 
@@ -270,16 +271,22 @@ public class PartitionBroker extends BrokerFilter {
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        ConnectionMonitor monitor = new ConnectionMonitor(context);
-        monitors.put(info.getConnectionId(), monitor);
-        super.addConnection(context, info);
-        checkTarget(monitor);
+        if( info.isFaultTolerant() ) {
+            ConnectionMonitor monitor = new ConnectionMonitor(context);
+            monitors.put(info.getConnectionId(), monitor);
+            super.addConnection(context, info);
+            checkTarget(monitor);
+        } else {
+            super.addConnection(context, info);
+        }
     }
 
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
-        ConnectionMonitor removed = monitors.remove(info.getConnectionId());
+        if( info.isFaultTolerant() ) {
+            monitors.remove(info.getConnectionId());
+        }
     }
 
     @Override
