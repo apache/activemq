@@ -72,6 +72,7 @@
       org.apache.commons.net*;resolution:=optional,
       com.sun.syndication*;resolution:=optional,
       org.jvnet.jaxb2_commons*;resolution:=optional,
+      org.xerial.snappy*;resolution:=optional,
         *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
