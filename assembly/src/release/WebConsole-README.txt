@@ -17,8 +17,13 @@ In the default configuration ActiveMQ automatically starts the web console in th
 same VM as the broker. The console is accessibly under http://localhost:8161/hawtio/.
 
 The broker may ask for credentials to login the web console the first time.
-The default username and password is admin/admin. You can configure this in the
-conf/jetty-real.properties file.  And in the conf/jetty.xml file you can configure
+The default username and password is admin/admin. 
+
+In the new console using hawtio, you can configure the default users, in the 
+conf/users.properties, and conf/groups.properties files.
+
+In the old web console you can configure the default users, in the
+conf/jetty-real.properties file. And in the conf/jetty.xml file you can configure
 to disable login for the web consoles.
 
 However it's also possible to start the web console in a separate VM and connect it
