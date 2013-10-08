@@ -306,18 +306,20 @@ case class RecordLog(directory: File, logSuffix:String) {
     def read(record_position:Long) = {
       val offset = record_position-position
       val header = new Buffer(LOG_HEADER_SIZE)
+      check_read_flush(offset+LOG_HEADER_SIZE)
       channel.read(header.toByteBuffer, offset)
       val is = header.bigEndianEditor();
       val prefix = is.readByte()
       if( prefix != LOG_HEADER_PREFIX ) {
         // Does not look like a record.
-        throw new IOException("invalid record position")
+        throw new IOException("invalid record position %d (file: %s, offset: %d)".format(record_position, file.getName, offset))
       }
       val id = is.readByte()
       val expectedChecksum = is.readInt()
       val length = is.readInt()
       val data = new Buffer(length)
 
+      check_read_flush(offset+LOG_HEADER_SIZE+length)
       if( channel.read(data.toByteBuffer, offset+LOG_HEADER_SIZE) != length ) {
         throw new IOException("short record")
       }
