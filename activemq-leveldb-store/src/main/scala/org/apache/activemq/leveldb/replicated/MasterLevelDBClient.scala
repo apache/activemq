@@ -148,6 +148,9 @@ class MasterLevelDBClient(val store:MasterLevelDBStore) extends LevelDBClient(st
           }
         }
 
+        override def on_close {
+          super.force
+        }
       }
     }
 

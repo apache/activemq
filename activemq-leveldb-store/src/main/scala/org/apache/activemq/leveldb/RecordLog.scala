@@ -114,11 +114,9 @@ case class RecordLog(directory: File, logSuffix:String) {
 
     override def open = new RandomAccessFile(file, "rw")
 
-    override def dispose() = {
-      flush
-      super.dispose()
+    override def on_close ={
+      force
     }
-
 
     val flushed_offset = new AtomicLong(0)
 
@@ -233,8 +231,11 @@ case class RecordLog(directory: File, logSuffix:String) {
     val channel = fd.getChannel
 
     override def dispose() {
+      on_close
       fd.close()
     }
+
+    def on_close = {}
 
     def check_read_flush(end_offset:Long) = {}
 
