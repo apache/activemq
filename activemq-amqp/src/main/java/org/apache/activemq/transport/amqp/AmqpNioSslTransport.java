@@ -30,7 +30,7 @@ import org.fusesource.hawtbuf.Buffer;
 
 public class AmqpNioSslTransport extends NIOSSLTransport {
 
-    private boolean magicRead;
+    private final ByteBuffer magic = ByteBuffer.allocate(8);
 
     public AmqpNioSslTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -56,17 +56,21 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
 
         ByteBuffer payload = ByteBuffer.wrap(fill);
 
-        if (!magicRead) {
-            if (payload.remaining() >= 8) {
-                magicRead = true;
-                Buffer magic = new Buffer(8);
-                for (int i = 0; i < 8; i++) {
-                    magic.data[i] = payload.get();
-                }
-                doConsume(new AmqpHeader(magic));
+        if (magic.position() != 8) {
+
+            while (payload.hasRemaining() && magic.position() < 8) {
+                magic.put(payload.get());
+            }
+
+            if (!magic.hasRemaining()) {
+                magic.flip();
+                doConsume(new AmqpHeader(new Buffer(magic)));
+                magic.position(8);
             }
         }
 
-        doConsume(AmqpSupport.toBuffer(payload));
+        if (payload.hasRemaining()) {
+            doConsume(AmqpSupport.toBuffer(payload));
+        }
     }
 }
