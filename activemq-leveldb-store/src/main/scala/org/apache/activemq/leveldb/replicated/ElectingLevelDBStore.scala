@@ -18,8 +18,8 @@ package org.apache.activemq.leveldb.replicated
 
 import org.linkedin.util.clock.Timespan
 import scala.reflect.BeanProperty
-import org.apache.activemq.util.{JMXSupport, ServiceStopper, ServiceSupport}
-import org.apache.activemq.leveldb.{LevelDBStoreViewMBean, LevelDBClient, RecordLog, LevelDBStore}
+import org.apache.activemq.util.ServiceStopper
+import org.apache.activemq.leveldb.{LevelDBClient, RecordLog, LevelDBStore}
 import java.net.{NetworkInterface, InetAddress}
 import org.fusesource.hawtdispatch._
 import org.apache.activemq.broker.{LockableServiceSupport, Locker}
@@ -30,11 +30,9 @@ import org.apache.activemq.leveldb.util.Log
 import java.io.File
 import org.apache.activemq.usage.SystemUsage
 import org.apache.activemq.ActiveMQMessageAuditNoSync
-import org.fusesource.hawtdispatch
 import org.apache.activemq.broker.jmx.{OpenTypeSupport, BrokerMBeanSupport, AnnotatedMBean}
-import org.apache.activemq.leveldb.LevelDBStore._
 import javax.management.ObjectName
-import javax.management.openmbean.{CompositeDataSupport, SimpleType, CompositeType, CompositeData}
+import javax.management.openmbean.{CompositeDataSupport, SimpleType, CompositeData}
 import java.util
 import org.apache.activemq.leveldb.replicated.groups._
 
@@ -138,7 +136,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var slave: SlaveLevelDBStore = _
 
   var zk_client: ZKClient = _
-  var zk_group: Group = _
+  var zk_group: ZooKeeperGroup = _
 
   var position: Long = -1L
 
@@ -270,6 +268,22 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     zk_group.close
     zk_client.close()
     zk_client = null
+
+    if( master!=null ) {
+      val latch = new CountDownLatch(1)
+      stop_master {
+        latch.countDown()
+      }
+      latch.await()
+    }
+    if( slave !=null ) {
+      val latch = new CountDownLatch(1)
+      stop_slave {
+        latch.countDown()
+      }
+      latch.await()
+
+    }
     if( master_started.get() ) {
       stopped_latch.countDown()
     }

@@ -14,12 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb.replicated.groups.internal
+package org.apache.activemq.leveldb.replicated.groups
 
-import org.apache.activemq.leveldb.replicated.groups.ChangeListener
 import org.slf4j.{Logger, LoggerFactory}
 import java.util.concurrent.TimeUnit
 
+
+/**
+ * <p>
+ *   Callback interface used to get notifications of changes
+ *   to a cluster group.
+ * </p>
+ *
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ */
+trait ChangeListener {
+  def changed:Unit
+  def connected:Unit
+  def disconnected:Unit
+}
 
 object ChangeListenerSupport {
     val LOG: Logger = LoggerFactory.getLogger(classOf[ChangeListenerSupport])

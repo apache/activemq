@@ -3,6 +3,7 @@ package org.apache.activemq.leveldb.replicated
 import org.apache.activemq.leveldb.replicated.groups._
 import org.codehaus.jackson.annotate.JsonProperty
 import org.apache.activemq.leveldb.util.{Log, JsonCodec}
+import java.io.IOException
 
 
 class LevelDBNodeState extends NodeState {
@@ -67,7 +68,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
     var next = create_state
     if (next != last_state) {
       last_state = next
-      update(next)
+      join(next)
     }
   }
 
@@ -89,6 +90,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       changed
     }
 
+    var stopped = false;
     def changed:Unit = elector.synchronized {
       debug("ZooKeeper group changed: %s", members)
 
@@ -139,7 +141,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
         elected = null
       }
 
-      val master_elected = master.map(_.elected).getOrElse(null) 
+      val master_elected = if(eid==null) null else master.map(_.elected).getOrElse(null)
 
       // If no master is currently elected, we need to report our current store position.
       // Since that will be used to select the master.
@@ -155,7 +157,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       }
 
       // Do we need to stop the running master?
-      if (master_elected != eid && address != null && !updating_store) {
+      if ((eid==null || master_elected != eid) && address!=null && !updating_store) {
         info("Demoted to slave")
         updating_store = true
         store.stop_master {
@@ -169,7 +171,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       }
 
       // Have we been promoted to being the master?
-      if (master_elected == eid && address==null && !updating_store ) {
+      if (eid!=null && master_elected == eid && address==null && !updating_store ) {
         info("Promoted to master")
         updating_store = true
         store.start_master { port =>
@@ -183,7 +185,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       }
 
       // Can we become a slave?
-      if (master_elected != eid && address == null) {
+      if ( (eid==null || master_elected != eid) && address == null) {
         // Did the master address change?
         if (connect_target != connected_address) {
 
@@ -214,8 +216,9 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
           }
         }
       }
-
-      update
+      if( group.zk.isConnected ) {
+        update
+      }
     }
   }
 }

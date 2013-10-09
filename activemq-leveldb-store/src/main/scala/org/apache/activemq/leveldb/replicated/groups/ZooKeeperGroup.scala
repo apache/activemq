@@ -14,17 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.leveldb.replicated.groups.internal
+package org.apache.activemq.leveldb.replicated.groups
 
 import org.apache.zookeeper._
-import java.lang.String
 import org.linkedin.zookeeper.tracker._
-import org.apache.activemq.leveldb.replicated.groups.{ZKClient, ChangeListener, Group}
 import scala.collection.mutable.HashMap
 import org.linkedin.zookeeper.client.LifecycleListener
 import collection.JavaConversions._
 import java.util.{LinkedHashMap, Collection}
-import org.apache.zookeeper.KeeperException.{ConnectionLossException, NoNodeException, Code}
+import org.apache.zookeeper.KeeperException.{ConnectionLossException, NoNodeException}
+import scala.Predef._
+import scala.Some
+
+
+/**
+ * <p>
+ * </p>
+ *
+ * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ */
+object ZooKeeperGroupFactory {
+
+  def create(zk: ZKClient, path: String):ZooKeeperGroup = new ZooKeeperGroup(zk, path)
+  def members(zk: ZKClient, path: String):LinkedHashMap[String, Array[Byte]] = ZooKeeperGroup.members(zk, path)
+}
+
 
 /**
  *
@@ -56,7 +70,7 @@ object ZooKeeperGroup {
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class ZooKeeperGroup(val zk: ZKClient, val root: String) extends Group with LifecycleListener with ChangeListenerSupport {
+class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListener with ChangeListenerSupport {
 
   val tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
   val joins = HashMap[String, Int]()
@@ -83,7 +97,9 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends Group with Life
     closed = true
     joins.foreach { case (path, version) =>
       try {
-        zk.delete(member_path_prefix + path, version)
+        if( zk.isConnected ) {
+          zk.delete(member_path_prefix + path, version)
+        }
       } catch {
         case x:NoNodeException => // Already deleted.
       }

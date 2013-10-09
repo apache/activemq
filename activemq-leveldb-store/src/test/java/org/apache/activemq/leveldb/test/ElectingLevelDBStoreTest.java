@@ -167,6 +167,76 @@ public class ElectingLevelDBStoreTest {
         }
     }
 
+    @Test(timeout = 1000 * 60 * 60)
+    public void testZooKeeperServerFailure() throws Exception {
+
+        final ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+        ArrayList<CountDownFuture> pending_starts = new ArrayList<CountDownFuture>();
+
+        for (String dir : new String[]{"leveldb-node1", "leveldb-node2", "leveldb-node3"}) {
+            ElectingLevelDBStore store = createStoreNode();
+            store.setDirectory(new File(data_dir(), dir));
+            stores.add(store);
+            pending_starts.add(asyncStart(store));
+        }
+
+        // At least one of the stores should have started.
+        CountDownFuture f = waitFor(30 * 1000, pending_starts.toArray(new CountDownFuture[pending_starts.size()]));
+        assertTrue(f != null);
+        pending_starts.remove(f);
+
+        // The other stores should not start..
+        LOG.info("Making sure the other stores don't start");
+        Thread.sleep(5000);
+        for (CountDownFuture start : pending_starts) {
+            assertFalse(start.completed());
+        }
+
+        // Stop ZooKeeper..
+        LOG.info("SHUTTING DOWN ZooKeeper!");
+        connector.shutdown();
+
+        // None of the store should be slaves...
+        within( 30, TimeUnit.SECONDS, new Task(){
+            public void run() throws Exception {
+                for (ElectingLevelDBStore store : stores) {
+                    assertFalse(store.isMaster());
+                }
+            }
+        });
+
+        for (ElectingLevelDBStore store : stores) {
+            store.stop();
+        }
+    }
+
+    static interface Task {
+        public void run() throws Exception;
+    }
+
+    private void within(int time, TimeUnit unit, Task task) throws InterruptedException {
+        long timeMS = unit.toMillis(time);
+        long deadline = System.currentTimeMillis() + timeMS;
+        while (true) {
+            try {
+                task.run();
+                return;
+            } catch (Throwable e) {
+                long remaining = deadline - System.currentTimeMillis();
+                if( remaining <=0 ) {
+                    if( e instanceof RuntimeException ) {
+                        throw (RuntimeException)e;
+                    }
+                    if( e instanceof Error ) {
+                        throw (Error)e;
+                    }
+                    throw new RuntimeException(e);
+                }
+                Thread.sleep(Math.min(timeMS/10, remaining));
+            }
+        }
+    }
+
     private CountDownFuture waitFor(int timeout, CountDownFuture... futures) throws InterruptedException {
         long deadline =  System.currentTimeMillis()+timeout;
         while( true ) {
