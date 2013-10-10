@@ -35,6 +35,17 @@ public class ConsumerId implements DataStructure {
     public ConsumerId() {
     }
 
+    public ConsumerId(String str){
+        if (str != null){
+            String[] splits = str.split(":");
+            if (splits != null && splits.length >= 3){
+                this.connectionId = splits[0];
+                this.sessionId =  Long.parseLong(splits[1]);
+                this.value = Long.parseLong(splits[2]);
+            }
+        }
+    }
+
     public ConsumerId(SessionId sessionId, long consumerId) {
         this.connectionId = sessionId.getConnectionId();
         this.sessionId = sessionId.getValue();
