@@ -41,7 +41,7 @@
                 <div class="control-group">
                   <label>Port</label>
                   <div class="controls">
-                    <input name=url id='connect_port' value='61623' type="text">
+                    <input name=url id='connect_port' value='61614' type="text">
                   </div>
                 </div>
                 <div class="control-group">
@@ -101,6 +101,8 @@
     <script src="js/mqttws31.js"></script>
     <script>//<![CDATA[
 $(document).ready(function(){
+  
+  $("#connect_clientId").val("example-"+(Math.floor(Math.random() * 100000)));
   if( !window.WebSocket) {
     $("#connect").html("\
         <h1>Get a new Web Browser!</h1>\
