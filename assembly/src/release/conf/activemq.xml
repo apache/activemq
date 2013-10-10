@@ -17,7 +17,6 @@
 <!-- START SNIPPET: example -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
-  xmlns:amq="http://activemq.apache.org/schema/core"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
@@ -40,21 +39,10 @@
     -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
 
-        <!--
-            For better performances use VM cursor and small memory limit.
-            For more information, see:
-
-            http://activemq.apache.org/message-cursors.html
-
-            Also, if your producer is "hanging", it's probably due to producer flow control.
-            For more information, see:
-            http://activemq.apache.org/producer-flow-control.html
-        -->
-
         <destinationPolicy>
             <policyMap>
               <policyEntries>
-                <policyEntry topic=">" producerFlowControl="true">
+                <policyEntry topic=">" >
                     <!-- The constantPendingMessageLimitStrategy is used to prevent
                          slow topic consumers to block producers and affect other consumers
                          by limiting the number of messages that are retained
@@ -66,17 +54,6 @@
                   <pendingMessageLimitStrategy>
                     <constantPendingMessageLimitStrategy limit="1000"/>
                   </pendingMessageLimitStrategy>
-                </policyEntry>
-                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
-                  <!-- Use VM cursor for better latency
-                       For more information, see:
-
-                       http://activemq.apache.org/message-cursors.html
-
-                  <pendingQueuePolicy>
-                    <vmQueueCursor/>
-                  </pendingQueuePolicy>
-                  -->
                 </policyEntry>
               </policyEntries>
             </policyMap>
@@ -108,28 +85,13 @@
 
           <!--
             The systemUsage controls the maximum amount of space the broker will
-            use before slowing down producers. For more information, see:
+            use before disabling caching and/or slowing down producers. For more information, see:
             http://activemq.apache.org/producer-flow-control.html
-            If using ActiveMQ embedded - the following limits could safely be used:
-
-        <systemUsage>
-            <systemUsage>
-                <memoryUsage>
-                    <memoryUsage limit="20 mb"/>
-                </memoryUsage>
-                <storeUsage>
-                    <storeUsage limit="1 gb"/>
-                </storeUsage>
-                <tempUsage>
-                    <tempUsage limit="100 mb"/>
-                </tempUsage>
-            </systemUsage>
-        </systemUsage>
-        -->
+          -->
           <systemUsage>
             <systemUsage>
                 <memoryUsage>
-                    <memoryUsage limit="64 mb"/>
+                    <memoryUsage percentOfJvmHeap="70" />
                 </memoryUsage>
                 <storeUsage>
                     <storeUsage limit="100 gb"/>

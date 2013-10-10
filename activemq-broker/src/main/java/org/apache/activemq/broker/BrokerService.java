@@ -1038,10 +1038,10 @@ public class BrokerService implements Service {
 
                 systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore(), getJobSchedulerStore());
                 systemUsage.setExecutor(getExecutor());
-                systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // 64 MB
+                systemUsage.getMemoryUsage().setLimit(1024L * 1024 * 1024 * 1); // 1 GB
                 systemUsage.getTempUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
                 systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1024 * 100); // 100 GB
-                systemUsage.getJobSchedulerUsage().setLimit(1024L * 1024 * 1000 * 50); // 50 // Gb
+                systemUsage.getJobSchedulerUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
                 addService(this.systemUsage);
             }
             return systemUsage;
@@ -1888,10 +1888,10 @@ public class BrokerService implements Service {
         long jvmLimit = Runtime.getRuntime().maxMemory();
 
         if (memLimit > jvmLimit) {
+            usage.getMemoryUsage().setPercentOfJvmHeap(70);
             LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
                       " mb) is more than the maximum available for the JVM: " +
-                      jvmLimit / (1024 * 1024) + " mb - resetting to maximum available: " + jvmLimit / (1024 * 1024) + " mb");
-            usage.getMemoryUsage().setLimit(jvmLimit);
+                      jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
         }
 
         if (getPersistenceAdapter() != null) {
