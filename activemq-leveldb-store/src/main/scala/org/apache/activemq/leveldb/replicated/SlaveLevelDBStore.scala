@@ -146,7 +146,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         val old_replay_from = replay_from
         replay_from = ack.position
         client.writeExecutor {
-          client.replay_from(old_replay_from, ack.position)
+          client.replay_from(old_replay_from, ack.position, false)
         }
       }
     }

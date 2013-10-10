@@ -674,7 +674,7 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  def replay_from(from:Long, limit:Long) = {
+  def replay_from(from:Long, limit:Long, print_progress:Boolean=true) = {
     might_fail {
       try {
         // Update the index /w what was stored on the logs..
@@ -684,25 +684,28 @@ class LevelDBClient(store: LevelDBStore) {
         var last_reported_pos = 0L
         try {
           while (pos < limit) {
-            val now = System.currentTimeMillis();
-            if( now > last_reported_at+1000 ) {
-              val at = pos-from
-              val total = limit-from
-              val rate = (pos-last_reported_pos)*1000.0 / (now - last_reported_at)
-              val eta = (total-at)/rate
-              val remaining = if(eta > 60*60) {
-                "%.2f hrs".format(eta/(60*60))
-              } else if(eta > 60) {
-                "%.2f mins".format(eta/60)
-              } else {
-                "%.0f secs".format(eta)
-              }
 
-              System.out.print("Replaying recovery log: %f%% done (%,d/%,d bytes) @ %,.2f kb/s, %s remaining.     \r".format(
-                at*100.0/total, at, total, rate/1024, remaining))
-              showing_progress = true;
-              last_reported_at = now
-              last_reported_pos = pos
+            if( print_progress ) {
+              val now = System.currentTimeMillis();
+              if( now > last_reported_at+1000 ) {
+                val at = pos-from
+                val total = limit-from
+                val rate = (pos-last_reported_pos)*1000.0 / (now - last_reported_at)
+                val eta = (total-at)/rate
+                val remaining = if(eta > 60*60) {
+                  "%.2f hrs".format(eta/(60*60))
+                } else if(eta > 60) {
+                  "%.2f mins".format(eta/60)
+                } else {
+                  "%.0f secs".format(eta)
+                }
+
+                System.out.print("Replaying recovery log: %f%% done (%,d/%,d bytes) @ %,.2f kb/s, %s remaining.     \r".format(
+                  at*100.0/total, at, total, rate/1024, remaining))
+                showing_progress = true;
+                last_reported_at = now
+                last_reported_pos = pos
+              }
             }
 
 
@@ -774,7 +777,7 @@ class LevelDBClient(store: LevelDBStore) {
           case e:Throwable => e.printStackTrace()
         }
         if(showing_progress) {
-          System.out.print("                                                                       \r");
+          System.out.println("Replaying recovery log: 100% done                                 ");
         }
 
       } catch {
