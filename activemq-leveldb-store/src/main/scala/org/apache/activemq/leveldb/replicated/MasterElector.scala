@@ -37,6 +37,9 @@ class LevelDBNodeState extends NodeState {
   var position: Long = -1
 
   @JsonProperty
+  var weight: Int = 0
+
+  @JsonProperty
   var elected: String = _
 
   override def equals(obj: Any): Boolean = {
@@ -93,6 +96,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
     rc.id = store.brokerName
     rc.elected = elected
     rc.position = position
+    rc.weight = store.weight
     rc.address = address
     rc.container = store.container
     rc.address = address
@@ -140,7 +144,10 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
               if (elected == null) {
                 // Find the member with the most updates.
                 val sortedMembers = members.filter(_._2.position >= 0).sortWith {
-                  (a, b) => a._2.position > b._2.position
+                  (a, b) => {
+                    a._2.position > b._2.position ||
+                      (a._2.position == b._2.position &&  a._2.weight > b._2.weight )
+                  }
                 }
                 if (sortedMembers.size != members.size) {
                   info("Not enough cluster members have reported their update positions yet.")

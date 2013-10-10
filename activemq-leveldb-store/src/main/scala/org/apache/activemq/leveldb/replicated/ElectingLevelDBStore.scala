@@ -82,6 +82,8 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var bind = "tcp://0.0.0.0:61619"
 
   @BeanProperty
+  var weight = 1
+  @BeanProperty
   var replicas = 3
   @BeanProperty
   var sync="quorum_mem"
