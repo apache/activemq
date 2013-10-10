@@ -137,10 +137,16 @@ public abstract class AbstractFeatureTest {
 	 * @param feature
 	 * @throws Exception
 	 */
-	public void installAndAssertFeature(String feature) throws Exception {
+	public void installAndAssertFeature(final String feature) throws Throwable {
 		System.err.println(executeCommand("features:install " + feature));
 		System.err.println(executeCommand("osgi:list -t 0"));
-		assertTrue("Expected " + feature + " feature to be installed.", featuresService.isInstalled(featuresService.getFeature(feature)));
+        withinReason(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                assertTrue("Expected " + feature + " feature to be installed.", featuresService.isInstalled(featuresService.getFeature(feature)));
+                return true;
+            }
+        });
 	}
 
 
