@@ -86,6 +86,7 @@
             <transportConnector name="http" uri="http://0.0.0.0:61626"/>
             <transportConnector name="amqp" uri="amqp://0.0.0.0:61636"/>
             <transportConnector name="ws"   uri="ws://0.0.0.0:61646"/>
+            <transportConnector name="mqtt" uri="ws://0.0.0.0:61656"/>
         </transportConnectors>
     </broker>
 
