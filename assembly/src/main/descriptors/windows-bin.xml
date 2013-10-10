@@ -33,8 +33,20 @@
         <exclude>conf/*.ks</exclude>
         <exclude>conf/*.cert</exclude>
         <exclude>webapps/*.ico</exclude>
+        <exclude>examples/**/pom.xml</exclude>
       </excludes>
       <lineEnding>dos</lineEnding>
+    </fileSet>
+
+    <!-- Copy over the files that need to be filtered -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>examples/**/pom.xml</include>
+      </includes>
+      <lineEnding>dos</lineEnding>
+      <filtered>true</filtered>
     </fileSet>
 
     <fileSet>

@@ -33,14 +33,27 @@
         <exclude>conf/*.ts</exclude>
         <exclude>conf/*.ks</exclude>
         <exclude>conf/*.cert</exclude>
-        <exclude>example/**/*.sh</exclude>
-        <exclude>example/**/*.rb</exclude>
+        <exclude>examples/**/*.sh</exclude>
+        <exclude>examples/**/*.rb</exclude>
         <exclude>webapps/*.ico</exclude>
+        <exclude>examples/**/pom.xml</exclude>
       </excludes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
       <lineEnding>unix</lineEnding>
     </fileSet>
+    
+    <!-- Copy over the files that need to be filtered -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>examples/**/pom.xml</include>
+      </includes>
+      <lineEnding>unix</lineEnding>
+      <filtered>true</filtered>
+    </fileSet>
+    
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
@@ -98,8 +111,9 @@
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
-        <include>example/**/*.sh</include>
-        <include>example/**/*.rb</include>
+        <include>examples/**/*.sh</include>
+        <include>examples/**/*.rb</include>
+        <include>examples/**/*.py</include>
       </includes>
       <directoryMode>0755</directoryMode>
       <fileMode>0755</fileMode>

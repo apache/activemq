@@ -1,0 +1,30 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" ctype="Workspace" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Publisher/Publisher.cs" ctype="Workbench">
+    <Files>
+      <File FileName="Listener/Listener.cs" Line="51" Column="48" />
+      <File FileName="Publisher/Publisher.cs" Line="35" Column="30" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="Listener" expanded="True">
+            <Option id="ShowVersionControlOverlays" value="True" />
+            <Option id="ShowAllFiles" value="False" />
+          </Node>
+          <Node name="Publisher" expanded="True" selected="True">
+            <Option id="ShowVersionControlOverlays" value="True" />
+            <Option id="ShowAllFiles" value="False" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State selected="True" />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches ctype="PinnedWatchStore" />
+</Properties>
