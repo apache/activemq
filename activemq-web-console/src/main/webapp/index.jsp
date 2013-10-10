@@ -23,11 +23,11 @@
 <h2>Welcome!</h2>
 
 <p>
-Welcome to the ActiveMQ Console of <b>${requestContext.brokerQuery.brokerName}</b> (${requestContext.brokerQuery.brokerAdmin.brokerId})
+Welcome to the Apache ActiveMQ Console of <b>${requestContext.brokerQuery.brokerName}</b> (${requestContext.brokerQuery.brokerAdmin.brokerId})
 </p>
 
 <p>
-You can find more information about ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
+You can find more information about Apache ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
 </p>
 
 <h2>Broker</h2>
