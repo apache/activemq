@@ -221,6 +221,7 @@
         <include>org.apache.qpid:proton</include>
         <include>org.apache.qpid:proton-api</include>
         <include>org.apache.qpid:proton-jms</include>
+        <include>org.apache.qpid:proton-j-impl</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
 

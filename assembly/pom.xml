@@ -431,6 +431,11 @@
       <artifactId>pax-url-aether</artifactId>
       <version>${pax-url-version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>proton-j-impl</artifactId>
+      <version>${qpid-proton-version}</version>
+    </dependency>
   </dependencies>
 
   <build>
