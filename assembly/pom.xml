@@ -551,7 +551,7 @@
                   <directory>src/release/conf</directory>
                 </resource>
                 <resource>
-                  <directory>src/sample-conf</directory>
+                  <directory>src/release/examples/conf</directory>
                 </resource>
               </resources>
             </configuration>
