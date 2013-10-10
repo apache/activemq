@@ -1358,10 +1358,12 @@
             <exclude>**/*.bin</exclude>
             <exclude>**/*.log</exclude>
             <exclude>**/*.txt</exclude>
+            <exclude>**/*.md</exclude>
             <exclude>**/kahadb/**/*.data</exclude>
             <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
             <!-- web, web-console, web-demo files -->
+            <exclude>**/webapp/mqtt/mqttws31.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
             <exclude>**/webapp/js/jquery-*.js</exclude>
             <exclude>**/webapp/js/prototype.js</exclude>
