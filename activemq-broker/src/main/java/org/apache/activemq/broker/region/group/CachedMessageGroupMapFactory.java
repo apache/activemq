@@ -16,28 +16,18 @@
  */
 package org.apache.activemq.broker.region.group;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
- * A simple implementation which just uses a {@link Set}
- * 
- * 
+ * A factory to create instances of {@link org.apache.activemq.broker.region.group.SimpleMessageGroupMap} when implementing the
+ * <a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.
+ *
+ * @org.apache.xbean.XBean
+ *
+ *
  */
-public class SimpleMessageGroupSet implements MessageGroupSet {
+public class CachedMessageGroupMapFactory implements MessageGroupMapFactory {
 
-    private Set<String> set = new HashSet<String>();
-
-    public boolean contains(String groupID) {
-        return set.contains(groupID);
-    }
-
-    public void add(String group) {
-        set.add(group);
-    }
-
-    protected Set<String> getUnderlyingSet(){
-        return set;
+    public MessageGroupMap createMessageGroupMap() {
+        return new CachedMessageGroupMap();
     }
 
 }

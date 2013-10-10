@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.util.Map;
+
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 
@@ -180,4 +182,31 @@ public interface QueueViewMBean extends DestinationViewMBean {
      */
     @MBeanInfo("Caching is enabled")
     boolean isCacheEnabled();
+
+
+    /**
+     * @return a Map of groupNames and ConsumerIds
+     */
+    @MBeanInfo("Map of groupNames and ConsumerIds")
+    Map<String,String> getMessageGroups();
+
+    /**
+     * @return the message group type implementation (simple,bucket,cached)
+     */
+    @MBeanInfo("group  implementation (simple,bucket,cached)")
+    String getMessageGroupType();
+
+    /**
+     * remove a message group = has the effect of rebalancing group
+     * @param groupName
+     */
+
+    @MBeanInfo("remove a message group by its groupName")
+    void removeMessageGroup(@MBeanInfo("groupName")String groupName);
+
+    /**
+     * remove all the message groups - will rebalance all message groups across consumers
+     */
+    @MBeanInfo("emove all the message groups - will rebalance all message groups across consumers")
+    void removeAllMessageGroups();
 }

@@ -24,12 +24,11 @@ import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.QueueBrowserSubscription;
 import org.apache.activemq.broker.region.QueueSubscription;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
+import org.apache.activemq.broker.region.group.GroupFactoryFinder;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.network.NetworkBridgeFilterFactory;
@@ -54,6 +53,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
     private long memoryLimit;
+    private String messageGroupMapFactoryType = "cached";
     private MessageGroupMapFactory messageGroupMapFactory;
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
@@ -395,7 +395,11 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public MessageGroupMapFactory getMessageGroupMapFactory() {
         if (messageGroupMapFactory == null) {
-            messageGroupMapFactory = new MessageGroupHashBucketFactory();
+            try {
+            messageGroupMapFactory = GroupFactoryFinder.createMessageGroupMapFactory(getMessageGroupMapFactoryType());
+            }catch(Exception e){
+                LOG.error("Failed to create message group Factory ",e);
+            }
         }
         return messageGroupMapFactory;
     }
@@ -409,6 +413,16 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setMessageGroupMapFactory(MessageGroupMapFactory messageGroupMapFactory) {
         this.messageGroupMapFactory = messageGroupMapFactory;
     }
+
+
+    public String getMessageGroupMapFactoryType() {
+        return messageGroupMapFactoryType;
+    }
+
+    public void setMessageGroupMapFactoryType(String messageGroupMapFactoryType) {
+        this.messageGroupMapFactoryType = messageGroupMapFactoryType;
+    }
+
 
     /**
      * @return the pendingDurableSubscriberPolicy

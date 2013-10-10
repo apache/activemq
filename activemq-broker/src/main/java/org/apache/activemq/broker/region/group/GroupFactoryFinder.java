@@ -16,28 +16,24 @@
  */
 package org.apache.activemq.broker.region.group;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.IOException;
 
-/**
- * A simple implementation which just uses a {@link Set}
- * 
- * 
- */
-public class SimpleMessageGroupSet implements MessageGroupSet {
+import org.apache.activemq.util.FactoryFinder;
+import org.apache.activemq.util.IOExceptionSupport;
 
-    private Set<String> set = new HashSet<String>();
+public class GroupFactoryFinder {
+    private static final FactoryFinder GROUP_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/groups/");
 
-    public boolean contains(String groupID) {
-        return set.contains(groupID);
+    private GroupFactoryFinder() {
     }
 
-    public void add(String group) {
-        set.add(group);
+    public static MessageGroupMapFactory createMessageGroupMapFactory(String type) throws IOException {
+        try {
+            return (MessageGroupMapFactory)GROUP_FACTORY_FINDER.newInstance(type);
+        } catch (Throwable e) {
+            throw IOExceptionSupport.create("Could not load " + type + " factory:" + e, e);
+        }
     }
 
-    protected Set<String> getUnderlyingSet(){
-        return set;
-    }
 
 }

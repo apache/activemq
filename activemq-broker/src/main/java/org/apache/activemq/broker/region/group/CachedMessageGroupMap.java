@@ -19,55 +19,57 @@ package org.apache.activemq.broker.region.group;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.memory.LRUMap;
 
 /**
- * A simple implementation which tracks every individual GroupID value but
- * which can become a memory leak if clients die before they complete a message
- * group.
+ * A simple implementation which tracks every individual GroupID value in a LRUCache
  * 
  * 
  */
-public class SimpleMessageGroupMap implements MessageGroupMap {
-    private Map<String, ConsumerId> map = new ConcurrentHashMap<String, ConsumerId>();
+public class CachedMessageGroupMap implements MessageGroupMap {
+    private LRUMap<String, ConsumerId> cache = new LRUMap<String, ConsumerId>(1024);
     
-    public void put(String groupId, ConsumerId consumerId) {
-        map.put(groupId, consumerId);
+    public synchronized void put(String groupId, ConsumerId consumerId) {
+        cache.put(groupId, consumerId);
     }
 
-    public ConsumerId get(String groupId) {
-        return map.get(groupId);
+    public synchronized ConsumerId get(String groupId) {
+        return cache.get(groupId);
     }
 
-    public ConsumerId removeGroup(String groupId) {
-        return map.remove(groupId);
+    public synchronized ConsumerId removeGroup(String groupId) {
+        return cache.remove(groupId);
     }
 
-    public MessageGroupSet removeConsumer(ConsumerId consumerId) {
+    public synchronized MessageGroupSet removeConsumer(ConsumerId consumerId) {
         SimpleMessageGroupSet ownedGroups = new SimpleMessageGroupSet();
+        Map<String,ConsumerId> map = new HashMap<String, ConsumerId>();
+        map.putAll(cache);
         for (Iterator<String> iter = map.keySet().iterator(); iter.hasNext();) {
             String group = iter.next();
             ConsumerId owner = map.get(group);
             if (owner.equals(consumerId)) {
                 ownedGroups.add(group);
-                iter.remove();
             }
+        }
+        for (String group:ownedGroups.getUnderlyingSet()){
+            cache.remove(group);
         }
         return ownedGroups;
     }
 
 
     @Override
-    public void removeAll(){
-        map.clear();
+    public synchronized void removeAll(){
+        cache.clear();
     }
 
     @Override
-    public Map<String, String> getGroups() {
+    public synchronized Map<String, String> getGroups() {
         Map<String,String> result = new HashMap<String,String>();
-        for (Map.Entry<String,ConsumerId>entry:map.entrySet()){
+        for (Map.Entry<String,ConsumerId>entry: cache.entrySet()){
             result.put(entry.getKey(),entry.getValue().toString());
         }
         return result;
@@ -75,11 +77,11 @@ public class SimpleMessageGroupMap implements MessageGroupMap {
 
     @Override
     public String getType() {
-        return "simple";
+        return "cached";
     }
 
     public String toString() {
-        return "message groups: " + map.size();
+        return "message groups: " + cache.size();
     }
 
 }

@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.broker.region.group;
 
+import java.util.Map;
+
 import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.memory.LRUMap;
 
 /**
  * Uses hash-code buckets to associate consumers with sets of message group IDs.
@@ -27,30 +30,37 @@ public class MessageGroupHashBucket implements MessageGroupMap {
 
     private final int bucketCount;
     private final ConsumerId[] consumers;
+    private LRUMap<String,String>cache=new LRUMap<String,String>(64);
 
     public MessageGroupHashBucket(int bucketCount) {
         this.bucketCount = bucketCount;
         this.consumers = new ConsumerId[bucketCount];
     }
 
-    public void put(String groupId, ConsumerId consumerId) {
+    public synchronized void put(String groupId, ConsumerId consumerId) {
         int bucket = getBucketNumber(groupId);
         consumers[bucket] = consumerId;
+        if (consumerId != null){
+          cache.put(groupId,consumerId.toString());
+        }
     }
 
-    public ConsumerId get(String groupId) {
+    public synchronized ConsumerId get(String groupId) {
         int bucket = getBucketNumber(groupId);
+        //excersise cache
+        cache.get(groupId);
         return consumers[bucket];
     }
 
-    public ConsumerId removeGroup(String groupId) {
+    public synchronized ConsumerId removeGroup(String groupId) {
         int bucket = getBucketNumber(groupId);
         ConsumerId answer = consumers[bucket];
         consumers[bucket] = null;
+        cache.remove(groupId);
         return answer;
     }
 
-    public MessageGroupSet removeConsumer(ConsumerId consumerId) {
+    public synchronized MessageGroupSet removeConsumer(ConsumerId consumerId) {
         MessageGroupSet answer = null;
         for (int i = 0; i < consumers.length; i++) {
             ConsumerId owner = consumers[i];
@@ -65,6 +75,23 @@ public class MessageGroupHashBucket implements MessageGroupMap {
         }
         return answer;
     }
+
+    public synchronized void removeAll(){
+        for (int i =0; i < consumers.length; i++){
+            consumers[i] = null;
+        }
+    }
+
+    @Override
+    public Map<String, String> getGroups() {
+        return cache;
+    }
+
+    @Override
+    public String getType() {
+        return "bucket";
+    }
+
 
     public String toString() {
         int count = 0;

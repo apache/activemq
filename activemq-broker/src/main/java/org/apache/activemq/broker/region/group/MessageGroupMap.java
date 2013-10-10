@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.region.group;
 
+import java.util.Map;
+
 import org.apache.activemq.command.ConsumerId;
 
 /**
@@ -32,5 +34,14 @@ public interface MessageGroupMap {
     ConsumerId removeGroup(String groupId);
 
     MessageGroupSet removeConsumer(ConsumerId consumerId);
+
+    void removeAll();
+
+    /**
+     * @return  a map of group names and associated consumer Id
+     */
+    Map<String,String> getGroups();
+
+    String getType();
 
 }
