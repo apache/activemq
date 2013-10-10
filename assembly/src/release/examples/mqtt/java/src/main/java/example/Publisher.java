@@ -71,6 +71,9 @@ class Publisher {
                 queue.removeFirst().await();
             }
 
+            if( i % 1000 == 0 ) {
+                System.out.println(String.format("Sent %d messages.", i));
+            }
         }
 
         queue.add(connection.publish(topic, new AsciiBuffer("SHUTDOWN"), QoS.AT_LEAST_ONCE, false));

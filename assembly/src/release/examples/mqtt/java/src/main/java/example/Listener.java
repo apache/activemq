@@ -78,6 +78,7 @@ class Listener {
                     }
                     count ++;
                 }
+                ack.run();
             }
         });
         connection.connect(new Callback<Void>() {
