@@ -51,7 +51,7 @@
     </persistenceAdapter>
 
     <transportConnectors>
-       <transportConnector name="default" uri="tcp://0.0.0.0:61616"/>
+       <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
     </transportConnectors>
   </broker>
 
