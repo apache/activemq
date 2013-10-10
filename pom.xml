@@ -1363,6 +1363,7 @@
             <exclude>**/kahadb/**/*.data</exclude>
             <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
+            <exclude>**/src/test/resources/keystore</exclude>
             <!-- web, web-console, web-demo files -->
             <exclude>**/webapp/mqtt/mqttws31.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
