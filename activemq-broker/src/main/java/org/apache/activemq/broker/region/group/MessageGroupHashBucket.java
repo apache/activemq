@@ -92,6 +92,10 @@ public class MessageGroupHashBucket implements MessageGroupMap {
         return "bucket";
     }
 
+    public int getBucketCount(){
+        return bucketCount;
+    }
+
 
     public String toString() {
         int count = 0;

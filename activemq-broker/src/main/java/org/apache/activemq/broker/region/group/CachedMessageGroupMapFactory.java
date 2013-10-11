@@ -17,7 +17,7 @@
 package org.apache.activemq.broker.region.group;
 
 /**
- * A factory to create instances of {@link org.apache.activemq.broker.region.group.SimpleMessageGroupMap} when implementing the
+ * A factory to create instances of {@link org.apache.activemq.broker.region.group.CachedMessageGroupMap} when implementing the
  * <a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.
  *
  * @org.apache.xbean.XBean
@@ -26,8 +26,18 @@ package org.apache.activemq.broker.region.group;
  */
 public class CachedMessageGroupMapFactory implements MessageGroupMapFactory {
 
+    private int cacheSize = 1024;
+    public int getCacheSize() {
+        return cacheSize;
+    }
+
+    public void setCacheSize(int cacheSize) {
+        this.cacheSize = cacheSize;
+    }
+
+
     public MessageGroupMap createMessageGroupMap() {
-        return new CachedMessageGroupMap();
+        return new CachedMessageGroupMap(getCacheSize());
     }
 
 }

@@ -29,8 +29,12 @@ import org.apache.activemq.memory.LRUMap;
  * 
  */
 public class CachedMessageGroupMap implements MessageGroupMap {
-    private LRUMap<String, ConsumerId> cache = new LRUMap<String, ConsumerId>(1024);
-    
+    private final LRUMap<String, ConsumerId> cache;
+    private final int maximumCacheSize;
+    CachedMessageGroupMap(int size){
+      cache = new LRUMap<String, ConsumerId>(size);
+      maximumCacheSize = size;
+    }
     public synchronized void put(String groupId, ConsumerId consumerId) {
         cache.put(groupId, consumerId);
     }
@@ -78,6 +82,10 @@ public class CachedMessageGroupMap implements MessageGroupMap {
     @Override
     public String getType() {
         return "cached";
+    }
+
+    public int getMaximumCacheSize(){
+        return maximumCacheSize;
     }
 
     public String toString() {
