@@ -41,7 +41,7 @@ public class MemoryUsageTest {
         underTest.start();
         underTest.increaseUsage(1);
         assertEquals("usage is correct", 10, underTest.getPercentUsage());
-        assertEquals("no new thread created withough listener or callback",activeThreadCount, Thread.activeCount()); 
+        assertEquals("no new thread created without listener or callback",activeThreadCount, Thread.activeCount());
     }
     
     @Test
@@ -61,8 +61,8 @@ public class MemoryUsageTest {
             }
         });
         underTest.increaseUsage(1);
-        assertTrue("listner was called", called.await(30, TimeUnit.SECONDS));
-        assertTrue("listner called from another thread", !Thread.currentThread().toString().equals(listnerThreadNameHolder[0]));
+        assertTrue("listener was called", called.await(30, TimeUnit.SECONDS));
+        assertTrue("listener called from another thread", !Thread.currentThread().toString().equals(listnerThreadNameHolder[0]));
         assertEquals("usage is correct", 10, underTest.getPercentUsage());
         assertEquals("new thread created with listener", activeThreadCount + 1, Thread.activeCount());        
     }
@@ -71,6 +71,16 @@ public class MemoryUsageTest {
     public void testPercentOfJvmHeap() throws Exception {
         underTest.setPercentOfJvmHeap(50);
         assertEquals("limit is half jvm limit", Math.round(Runtime.getRuntime().maxMemory() / 2.0), underTest.getLimit());
+    }
+
+    @Test
+    public void testParentPortion() throws Exception {
+        underTest.setLimit(1491035750);
+        MemoryUsage child = new MemoryUsage(underTest, "child", 1f);
+        assertEquals("limits are matched whole", underTest.getLimit(), child.getLimit());
+
+        child.setUsagePortion(1f);
+        assertEquals("limits are still matched whole", underTest.getLimit(), child.getLimit());
     }
 
     @Before
@@ -84,9 +94,9 @@ public class MemoryUsageTest {
             }
         });
         underTest.setExecutor(this.executor);
-        
+
     }
-    
+
     @After
     public void tearDown() {
         assertNotNull(underTest);

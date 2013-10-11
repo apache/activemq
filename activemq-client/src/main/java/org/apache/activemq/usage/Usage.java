@@ -61,7 +61,7 @@ public abstract class Usage<T extends Usage> implements Service {
         this.parent = parent;
         this.usagePortion = portion;
         if (parent != null) {
-            this.limiter.setLimit((long) (parent.getLimit() * portion));
+            this.limiter.setLimit((long) (parent.getLimit() * (double)portion));
             name = parent.name + ":" + name;
         }
         this.name = name;
@@ -173,7 +173,7 @@ public abstract class Usage<T extends Usage> implements Service {
         if (usagePortion > 0 && parent != null) {
             usageLock.writeLock().lock();
             try {
-                this.limiter.setLimit((long) (parent.getLimit() * usagePortion));
+                this.limiter.setLimit((long) (parent.getLimit() * (double) usagePortion));
             } finally {
                 usageLock.writeLock().unlock();
             }
