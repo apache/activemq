@@ -24,7 +24,7 @@ package org.apache.activemq.broker.region.group;
 public class MessageGroupHashBucketTest extends MessageGroupMapTest {
 
     protected MessageGroupMap createMessageGroupMap() {
-        return new MessageGroupHashBucket(1024);
+        return new MessageGroupHashBucket(1024, 64);
     }
 
 }
