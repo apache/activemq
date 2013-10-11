@@ -31,7 +31,7 @@
         <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-impl/${jaxb-bundle-version}</bundle>
         <bundle dependency="false">mvn:commons-pool/commons-pool/${commons-pool-version}</bundle>
         <bundle dependency="false">mvn:commons-net/commons-net/${commons-net-version}</bundle>
-        <bundle dependency='true'>mvn:org.apache.zookeeper/zookeeper/${zookeeper-version}</bundle>
+        <bundle dependency='true'>wrap:mvn:org.apache.zookeeper/zookeeper/${zookeeper-version}$Import-Package=*;resolution:=optional&amp;Export-Package=org.apache.zookeeper*;-noimport:=true&amp;overwrite=merge</bundle>        
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
