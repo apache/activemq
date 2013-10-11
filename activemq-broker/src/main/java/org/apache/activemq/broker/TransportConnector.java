@@ -252,7 +252,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             this.statusDector.start();
         }
 
-        LOG.info("Connector {} Started", getName());
+        LOG.info("Connector {} started", getName());
     }
 
     public String getPublishableConnectString() throws Exception {
@@ -283,7 +283,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
         server = null;
         ss.throwFirstException();
-        LOG.info("Connector {} Stopped", getName());
+        LOG.info("Connector {} stopped", getName());
     }
 
     // Implementation methods

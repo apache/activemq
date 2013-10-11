@@ -91,7 +91,7 @@ public abstract class JmsConnector implements Service {
                         bridge.stop();
                         LOG.info("Expired bridge: {}", bridge);
                     } catch (Exception e) {
-                        LOG.warn("stopping expired bridge {} caused an exception", bridge, e);
+                        LOG.warn("Stopping expired bridge {} caused an exception", bridge, e);
                     }
                 }
                 return false;
@@ -160,7 +160,7 @@ public abstract class JmsConnector implements Service {
             for (DestinationBridge bridge : outboundBridges) {
                 bridge.start();
             }
-            LOG.info("JMS Connector {} Started", getName());
+            LOG.info("JMS Connector {} started", getName());
         }
     }
 
@@ -176,7 +176,7 @@ public abstract class JmsConnector implements Service {
             for (DestinationBridge bridge : outboundBridges) {
                 bridge.stop();
             }
-            LOG.info("JMS Connector {} Stopped", getName());
+            LOG.info("JMS Connector {} stopped", getName());
         }
     }
 

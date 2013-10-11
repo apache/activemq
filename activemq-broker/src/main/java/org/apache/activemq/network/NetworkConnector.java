@@ -168,11 +168,11 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         if (localURI == null) {
             throw new IllegalStateException("You must configure the 'localURI' property");
         }
-        LOG.info("Network Connector {} Started", this);
+        LOG.info("Network Connector {} started", this);
     }
 
     protected void handleStop(ServiceStopper stopper) throws Exception {
-        LOG.info("Network Connector {} Stopped", this);
+        LOG.info("Network Connector {} stopped", this);
     }
 
     public boolean isStarted() {

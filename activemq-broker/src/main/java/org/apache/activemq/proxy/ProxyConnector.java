@@ -71,7 +71,7 @@ public class ProxyConnector implements Service {
             }
         });
         getServer().start();
-        LOG.info("Proxy Connector {} Started", getName());
+        LOG.info("Proxy Connector {} started", getName());
 
     }
 
@@ -85,7 +85,7 @@ public class ProxyConnector implements Service {
             ss.stop(iter.next());
         }
         ss.throwFirstException();
-        LOG.info("Proxy Connector {} Stopped", getName());
+        LOG.info("Proxy Connector {} stopped", getName());
     }
 
     // Properties

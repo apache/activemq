@@ -45,7 +45,7 @@ public class ZooKeeperPartitionBrokerTest extends PartitionBrokerTest {
         connector = new NIOServerCnxnFactory();
         connector.configure(new InetSocketAddress(0), 100);
         connector.startup(zk_server);
-        System.out.println("ZooKeeper Started");
+        System.out.println("ZooKeeper started");
         super.setUp();
     }
 
