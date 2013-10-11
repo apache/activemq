@@ -30,12 +30,16 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates a web server and registers web socket server
  *
  */
 public class WSTransportServer extends WebTransportServerSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(WSTransportServer.class);
 
     public WSTransportServer(URI location) {
         super(location);
@@ -87,6 +91,8 @@ public class WSTransportServer extends WebTransportServerSupport {
                               boundTo.getPath(),
                               boundTo.getQuery(),
                               boundTo.getFragment()));
+
+        LOG.info("Listening for connections at {}", getConnectURI());
     }
 
     @Override
