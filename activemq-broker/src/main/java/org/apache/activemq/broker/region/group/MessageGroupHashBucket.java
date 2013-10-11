@@ -30,11 +30,12 @@ public class MessageGroupHashBucket implements MessageGroupMap {
 
     private final int bucketCount;
     private final ConsumerId[] consumers;
-    private LRUMap<String,String>cache=new LRUMap<String,String>(64);
+    private final LRUMap<String,String>cache;
 
-    public MessageGroupHashBucket(int bucketCount) {
+    public MessageGroupHashBucket(int bucketCount, int cachedSize) {
         this.bucketCount = bucketCount;
         this.consumers = new ConsumerId[bucketCount];
+        this.cache=new LRUMap<String,String>(cachedSize);
     }
 
     public synchronized void put(String groupId, ConsumerId consumerId) {
