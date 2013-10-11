@@ -50,6 +50,12 @@ public class MessageGroupConfigTest extends TestSupport {
         doTestGroupConfiguration("cached",CachedMessageGroupMap.class);
     }
 
+    public void testCachedGroupConfigurationWithCacheSize() throws Exception {
+        CachedMessageGroupMap result = (CachedMessageGroupMap) doTestGroupConfiguration("cached?cacheSize=10",CachedMessageGroupMap.class);
+        assertEquals(10,result.getMaximumCacheSize());
+
+    }
+
     public void testSimpleGroupConfiguration() throws Exception {
         doTestGroupConfiguration("simple", SimpleMessageGroupMap.class);
     }
@@ -58,7 +64,12 @@ public class MessageGroupConfigTest extends TestSupport {
         doTestGroupConfiguration("bucket", MessageGroupHashBucket.class);
     }
 
-    public void doTestGroupConfiguration(String type, Class classType) throws Exception {
+    public void testBucketGroupConfigurationWithBucketCount() throws Exception {
+        MessageGroupHashBucket result = (MessageGroupHashBucket) doTestGroupConfiguration("bucket?bucketCount=2", MessageGroupHashBucket.class);
+        assertEquals(2,result.getBucketCount());
+    }
+
+    public MessageGroupMap doTestGroupConfiguration(String type, Class classType) throws Exception {
         broker = new BrokerService();
 
         PolicyEntry defaultEntry = new PolicyEntry();
@@ -75,7 +86,7 @@ public class MessageGroupConfigTest extends TestSupport {
         MessageGroupMap messageGroupMap = brokerDestination.getMessageGroupOwners();
         assertNotNull(messageGroupMap);
         assertTrue(messageGroupMap.getClass().isAssignableFrom(classType));
-
+        return messageGroupMap;
     }
 
 
