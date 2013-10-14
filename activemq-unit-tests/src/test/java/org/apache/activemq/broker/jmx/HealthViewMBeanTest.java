@@ -59,6 +59,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         BrokerService answer = new BrokerService();
         answer.setPersistent(true);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.getSystemUsage().getMemoryUsage().setLimit(1024 * 1024 * 64);
         answer.getSystemUsage().getTempUsage().setLimit(1024 * 1024 * 64);
         answer.getSystemUsage().getStoreUsage().setLimit(1024 * 1024 * 64);
         answer.setUseJmx(true);
