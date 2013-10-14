@@ -386,6 +386,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     false
   }
 
+  def date = System.currentTimeMillis()
 
   def replicate_wal(file:File, position:Long, offset:Long, length:Long):Unit = {
     if( length > 0 ) {
@@ -393,6 +394,8 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       value.file = position;
       value.offset = offset;
       value.length = length
+      value.date = date
+      wal_date = value.date;
       value.sync = (syncToMask & SYNC_TO_REMOTE_DISK)!=0
       val frame1 = ReplicationFrame(WAL_ACTION, JsonCodec.encode(value))
       val frame2 = FileTransferFrame(file, offset, length)
@@ -412,5 +415,6 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   }
 
   def wal_append_position = client.wal_append_position
-
+  @volatile
+  var wal_date = 0L
 }

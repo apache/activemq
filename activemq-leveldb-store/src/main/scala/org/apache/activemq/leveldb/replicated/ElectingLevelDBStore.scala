@@ -463,6 +463,21 @@ class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends Replica
     null
   }
 
+  def getPositionDate:java.lang.Long = {
+    val rc = if( slave!=null ) {
+      slave.wal_date
+    } else if( master!=null ) {
+      master.wal_date
+    } else {
+      0
+    }
+    if( rc != 0 ) {
+      return new java.lang.Long(rc)
+    } else {
+      return null
+    }
+  }
+
   def getDirectory = directory.getCanonicalPath
   def getSync = sync
 

@@ -134,6 +134,8 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   var wal_append_position = 0L
   var wal_append_offset = 0L
+  @volatile
+  var wal_date = 0L
 
   def send_wal_ack = {
     queue.assertExecuting()
@@ -173,6 +175,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 //              info("Slave WAL update: %s, (offset: %d, length: %d), sending ack:%s", file, value.offset, value.length, caughtUp)
               wal_append_offset = value.offset+value.length
               wal_append_position = value.file + wal_append_offset
+              wal_date = value.date
               if( !stopped ) {
                 if( caughtUp ) {
                   client.log.current_appender.skip(value.length)

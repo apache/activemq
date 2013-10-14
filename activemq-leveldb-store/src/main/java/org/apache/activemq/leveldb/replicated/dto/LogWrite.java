@@ -43,4 +43,6 @@ public class LogWrite {
     @XmlAttribute(name="sync")
     public boolean sync=false;
 
+    @XmlAttribute(name="date")
+    public long date;
 }
