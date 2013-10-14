@@ -58,40 +58,40 @@ public class AjaxListener implements MessageAvailableListener {
 
     @Override
     public synchronized void onMessageAvailable(MessageConsumer consumer) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("message for " + consumer + " continuation=" + continuation);
-        }
+        LOG.debug("Message for consumer: {} continuation: {}", consumer, continuation);
+
         if (continuation != null) {
             try {
                 Message message = consumer.receive(10);
                 LOG.debug("message is " + message);
                 if (message != null) {
-                    if (!continuation.isResumed()) {
-                        LOG.debug("Resuming suspended continuation " + continuation);
+                    if (!continuation.isResumed() && !continuation.isInitial()) {
+                        LOG.debug("Resuming suspended continuation {}", continuation);
                         continuation.setAttribute("undelivered_message", new UndeliveredAjaxMessage(message, consumer));
                         continuation.resume();
                     } else {
-                        LOG.debug("Message available, but continuation is already resumed.  Buffer for next time.");
+                        LOG.debug("Message available, but continuation is already resumed. Buffer for next time.");
                         bufferMessageForDelivery(message, consumer);
                     }
                 }
             } catch (Exception e) {
-                LOG.error("Error receiving message " + e, e);
+                LOG.warn("Error receiving message " + e.getMessage() + ". This exception is ignored.", e);
             }
 
         } else if (System.currentTimeMillis() - lastAccess > 2 * this.maximumReadTimeout) {
             new Thread() {
                 @Override
                 public void run() {
+                    LOG.debug("Closing consumers on client: {}", client);
                     client.closeConsumers();
-                };
+                }
             }.start();
         } else {
             try {
                 Message message = consumer.receive(10);
                 bufferMessageForDelivery(message, consumer);
             } catch (Exception e) {
-                LOG.error("Error receiving message " + e, e);
+                LOG.warn("Error receiving message " + e.getMessage() + ". This exception is ignored.", e);
             }
         }
     }
