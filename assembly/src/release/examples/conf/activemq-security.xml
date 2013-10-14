@@ -27,9 +27,9 @@
     
     For more information see: http://activemq.apache.org/encrypted-passwords.html
     
-    To run ActiveMQ with this configuration add xbean:conf/activemq-security.xml to your command
+    To run ActiveMQ with this configuration add xbean:examples/conf/activemq-security.xml to your command
     
-    e.g. $ bin/activemq console xbean:conf/activemq-security.xml
+    e.g. $ bin/activemq console xbean:examples/conf/activemq-security.xml
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
