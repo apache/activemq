@@ -137,7 +137,8 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       def onAccept(transport: Transport) {
         transport.setDispatchQueue(createQueue("connection from "+transport.getRemoteAddress))
         transport.setBlockingExecutor(blocking_executor)
-        new Session(transport)
+        new Session(transport).start
+
       }
       def onAcceptError(error: Exception) {
         warn(error)

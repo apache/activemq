@@ -107,6 +107,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         session.handler = wal_handler(session)
       }
     })
+    wal_session.start
   }
 
   def stop_connections(cb:Task) = {
@@ -114,18 +115,20 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       unstash(directory)
       cb.run()
     }
-    if( wal_session !=null ) {
+    val wal_session_copy = wal_session
+    if( wal_session_copy !=null ) {
+      wal_session = null
       val next = then
       then = ^{
-        wal_session.transport.stop(next)
-        wal_session = null
+        wal_session_copy.transport.stop(next)
       }
     }
-    if( transfer_session !=null ) {
+    val transfer_session_copy = transfer_session
+    if( transfer_session_copy !=null ) {
+      transfer_session = null
       val next = then
       then = ^{
-        transfer_session.transport.stop(next)
-        transfer_session = null
+        transfer_session_copy.transport.stop(next)
       }
     }
     then.run();
@@ -414,6 +417,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         pending_log_removes.clear()
       }
     })
+    transfer_session.start
     state.snapshot_position
   }
 
