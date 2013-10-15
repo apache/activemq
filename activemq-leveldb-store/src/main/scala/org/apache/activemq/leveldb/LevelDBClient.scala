@@ -929,7 +929,7 @@ class LevelDBClient(store: LevelDBStore) {
 
   var wal_append_position = 0L
 
-  def stop() = {
+  def stop() = this.synchronized {
     if( writeExecutor!=null ) {
       writeExecutor.shutdown
       writeExecutor.awaitTermination(60, TimeUnit.SECONDS)
@@ -945,7 +945,7 @@ class LevelDBClient(store: LevelDBStore) {
           index.close
           index = null
         }
-        if (log.isOpen) {
+        if (log!=null && log.isOpen) {
           log.close
           copyDirtyIndexToSnapshot
           wal_append_position = log.appender_limit

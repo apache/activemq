@@ -33,7 +33,10 @@ abstract class TransportHandler(val transport: Transport) extends TransportListe
 
   transport.setProtocolCodec(codec)
   transport.setTransportListener(this)
-  transport.start(NOOP)
+
+  def start = {
+    transport.start(NOOP)
+  }
 
   def onTransportConnected = transport.resumeRead()
   def onTransportDisconnected() = {}
