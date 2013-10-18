@@ -16,40 +16,34 @@
  */
 package org.apache.activemq.camel;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.util.Wait;
-import org.apache.camel.test.junit4.CamelSpringTestSupport;
-import org.apache.commons.dbcp.BasicDataSource;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.support.AbstractXmlApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
+import org.apache.camel.test.spring.CamelSpringTestSupport;
+import org.apache.commons.dbcp.BasicDataSource;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.springframework.context.support.AbstractXmlApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 @Ignore("Test hangs")
 public class JmsJdbcXALoadTest extends CamelSpringTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(JmsJdbcXATest.class);
+
     BrokerService broker = null;
     int messageCount;
 
     public java.sql.Connection initDb() throws Exception {
-        String createStatement =
-                "CREATE TABLE SCP_INPUT_MESSAGES (" +
-                        "id int NOT NULL GENERATED ALWAYS AS IDENTITY, " +
-                        "messageId varchar(96) NOT NULL, " +
-                        "messageCorrelationId varchar(96) NOT NULL, " +
-                        "messageContent varchar(2048) NOT NULL, " +
-                        "PRIMARY KEY (id) )";
+        String createStatement = "CREATE TABLE SCP_INPUT_MESSAGES (" + "id int NOT NULL GENERATED ALWAYS AS IDENTITY, " + "messageId varchar(96) NOT NULL, "
+            + "messageCorrelationId varchar(96) NOT NULL, " + "messageContent varchar(2048) NOT NULL, " + "PRIMARY KEY (id) )";
 
         java.sql.Connection conn = getJDBCConnection();
         try {
@@ -82,6 +76,7 @@ public class JmsJdbcXALoadTest extends CamelSpringTestSupport {
         return count;
     }
 
+    @SuppressWarnings("unused")
     @Test
     public void testRecoveryCommit() throws Exception {
         java.sql.Connection jdbcConn = initDb();
@@ -89,14 +84,13 @@ public class JmsJdbcXALoadTest extends CamelSpringTestSupport {
 
         sendJMSMessageToKickOffRoute(count);
 
-
         final java.sql.Connection freshConnection = getJDBCConnection();
         assertTrue("did not get replay", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return count == dumpDb(freshConnection);
             }
-        }, 20*60*1000));
+        }, 20 * 60 * 1000));
         assertEquals("still one message in db", count, dumpDb(freshConnection));
     }
 
@@ -141,8 +135,6 @@ public class JmsJdbcXALoadTest extends CamelSpringTestSupport {
 
         return new ClassPathXmlApplicationContext("org/apache/activemq/camel/jmsXajdbc.xml");
     }
-
-
 
     @Override
     public void tearDown() throws Exception {

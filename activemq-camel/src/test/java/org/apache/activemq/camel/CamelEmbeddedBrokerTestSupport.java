@@ -23,22 +23,21 @@ import javax.naming.Context;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.Endpoint;
-import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.util.jndi.JndiContext;
 
 /**
- * A helper class for test cases which use an embedded broker and use Camel to do the routing
+ * A helper class for test cases which use an embedded broker and use Camel to
+ * do the routing
  *
- * 
  */
 public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestSupport {
     protected CamelContext camelContext;
     protected ProducerTemplate template;
-                           
+
     @Override
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:61616";
@@ -63,11 +62,11 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
         }
     }
 
-
     protected CamelContext createCamelContext() throws Exception {
         return new DefaultCamelContext(createJndiContext());
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Context createJndiContext() throws Exception {
         return new JndiContext(new Hashtable());
     }
@@ -75,12 +74,12 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
     protected void addCamelRoutes(CamelContext camelContext) throws Exception {
     }
 
-
-
     /**
      * Resolves a mandatory endpoint for the given URI or an exception is thrown
      *
-     * @param uri the Camel <a href="">URI</a> to use to create or resolve an endpoint
+     * @param uri
+     *            the Camel <a href="">URI</a> to use to create or resolve an
+     *            endpoint
      * @return the endpoint
      */
     protected Endpoint resolveMandatoryEndpoint(String uri) {
@@ -88,15 +87,17 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
     }
 
     /**
-     * Resolves a mandatory endpoint for the given URI and expected type or an exception is thrown
+     * Resolves a mandatory endpoint for the given URI and expected type or an
+     * exception is thrown
      *
-     * @param uri the Camel <a href="">URI</a> to use to create or resolve an endpoint
+     * @param uri
+     *            the Camel <a href="">URI</a> to use to create or resolve an
+     *            endpoint
      * @return the endpoint
      */
     protected <T extends Endpoint> T resolveMandatoryEndpoint(String uri, Class<T> endpointType) {
         return resolveMandatoryEndpoint(camelContext, uri, endpointType);
     }
-
 
     /**
      * Resolves an endpoint and asserts that it is found
@@ -112,8 +113,7 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
     /**
      * Resolves an endpoint and asserts that it is found
      */
-    protected <T extends Endpoint> T resolveMandatoryEndpoint(CamelContext context, String uri,
-                                                              Class<T> endpointType) {
+    protected <T extends Endpoint> T resolveMandatoryEndpoint(CamelContext context, String uri, Class<T> endpointType) {
         T endpoint = context.getEndpoint(uri, endpointType);
 
         assertNotNull("No endpoint found for URI: " + uri, endpoint);
@@ -122,15 +122,17 @@ public abstract class CamelEmbeddedBrokerTestSupport extends EmbeddedBrokerTestS
     }
 
     /**
-     * Resolves the mandatory Mock endpoint using a URI of the form <code>mock:someName</code>
+     * Resolves the mandatory Mock endpoint using a URI of the form
+     * <code>mock:someName</code>
      *
-     * @param uri the URI which typically starts with "mock:" and has some name
-     * @return the mandatory mock endpoint or an exception is thrown if it could not be resolved
+     * @param uri
+     *            the URI which typically starts with "mock:" and has some name
+     * @return the mandatory mock endpoint or an exception is thrown if it could
+     *         not be resolved
      */
     protected MockEndpoint getMockEndpoint(String uri) {
         return resolveMandatoryEndpoint(uri, MockEndpoint.class);
     }
-
 
     /**
      * Asserts that all the expectations of the Mock endpoints are valid

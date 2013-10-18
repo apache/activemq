@@ -23,7 +23,7 @@ import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.component.jms.JmsConsumer;
 import org.apache.camel.component.jms.JmsEndpoint;
 import org.apache.camel.component.jms.JmsProducer;
-import org.apache.camel.processor.CamelLogger;
+import org.apache.camel.processor.CamelLogProcessor;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
 import org.springframework.jms.core.JmsTemplate;
@@ -83,7 +83,7 @@ public class ActiveMQConfigureTest extends CamelTestSupport {
     @Test
     public void testListenerContainerUsesSpringConnectionFactory() throws Exception {
         JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:topic:test.foo");
-        JmsConsumer consumer = endpoint.createConsumer(new CamelLogger());
+        JmsConsumer consumer = endpoint.createConsumer(new CamelLogProcessor());
 
         AbstractMessageListenerContainer listenerContainer = consumer.getListenerContainer();
         assertEquals("pubSubDomain", true, listenerContainer.isPubSubDomain());
