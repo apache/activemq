@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.camel.component.broker;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +28,7 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
@@ -33,18 +37,13 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class BrokerComponentXMLConfigTest {
 
     protected static final String CONF_ROOT = "src/test/resources/org/apache/activemq/camel/component/broker/";
-    private static final Logger LOG = LoggerFactory.getLogger(BrokerComponentXMLConfigTest.class);
     protected static final String TOPIC_NAME = "test.broker.component.topic";
     protected static final String QUEUE_NAME = "test.broker.component.queue";
     protected static final String ROUTE_QUEUE_NAME = "test.broker.component.route";
@@ -65,15 +64,14 @@ public class BrokerComponentXMLConfigTest {
     public void setUp() throws Exception {
         brokerService = createBroker(new FileSystemResource(CONF_ROOT + "broker-camel.xml"));
 
-        factory =  new ActiveMQConnectionFactory(BrokerRegistry.getInstance().findFirst().getVmConnectorURI());
+        factory = new ActiveMQConnectionFactory(BrokerRegistry.getInstance().findFirst().getVmConnectorURI());
         consumerConnection = factory.createConnection();
         consumerConnection.start();
         producerConnection = factory.createConnection();
         producerConnection.start();
         consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        producerSession = producerConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-
+        producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     protected BrokerService createBroker(String resource) throws Exception {
@@ -96,10 +94,10 @@ public class BrokerComponentXMLConfigTest {
 
     @After
     public void tearDown() throws Exception {
-        if (producerConnection != null){
+        if (producerConnection != null) {
             producerConnection.close();
         }
-        if (consumerConnection != null){
+        if (consumerConnection != null) {
             consumerConnection.close();
         }
         if (brokerService != null) {
@@ -114,13 +112,13 @@ public class BrokerComponentXMLConfigTest {
         Topic topic = consumerSession.createTopic(TOPIC_NAME);
 
         final CountDownLatch latch = new CountDownLatch(messageCount);
-        MessageConsumer  consumer = consumerSession.createConsumer(queue);
+        MessageConsumer consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(javax.jms.Message message) {
                 try {
-                   assertEquals(9,message.getJMSPriority());
-                   latch.countDown();
+                    assertEquals(9, message.getJMSPriority());
+                    latch.countDown();
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
@@ -128,13 +126,13 @@ public class BrokerComponentXMLConfigTest {
         });
         MessageProducer producer = producerSession.createProducer(topic);
 
-        for (int i  = 0; i < messageCount; i++){
+        for (int i = 0; i < messageCount; i++) {
             javax.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
         latch.await(timeOutInSeconds, TimeUnit.SECONDS);
-        assertEquals(0,latch.getCount());
+        assertEquals(0, latch.getCount());
 
     }
 
@@ -142,9 +140,8 @@ public class BrokerComponentXMLConfigTest {
     public void testRouteWithDestinationLimit() throws Exception {
         final ActiveMQQueue routeQueue = new ActiveMQQueue(ROUTE_QUEUE_NAME);
 
-
         final CountDownLatch routeLatch = new CountDownLatch(DIVERT_COUNT);
-        MessageConsumer  messageConsumer = consumerSession.createConsumer(routeQueue);
+        MessageConsumer messageConsumer = consumerSession.createConsumer(routeQueue);
         messageConsumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(javax.jms.Message message) {
@@ -156,8 +153,8 @@ public class BrokerComponentXMLConfigTest {
             }
         });
 
-        final CountDownLatch divertLatch = new CountDownLatch(messageCount-DIVERT_COUNT);
-        MessageConsumer  divertConsumer = consumerSession.createConsumer(new ActiveMQQueue(DIVERTED_QUEUE_NAME));
+        final CountDownLatch divertLatch = new CountDownLatch(messageCount - DIVERT_COUNT);
+        MessageConsumer divertConsumer = consumerSession.createConsumer(new ActiveMQQueue(DIVERTED_QUEUE_NAME));
         divertConsumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(javax.jms.Message message) {
@@ -169,19 +166,17 @@ public class BrokerComponentXMLConfigTest {
             }
         });
 
-
         MessageProducer producer = producerSession.createProducer(routeQueue);
 
-        for (int i  = 0; i < messageCount; i++){
+        for (int i = 0; i < messageCount; i++) {
             javax.jms.Message message = producerSession.createTextMessage("test: " + i);
             producer.send(message);
         }
 
         routeLatch.await(timeOutInSeconds, TimeUnit.SECONDS);
-        divertLatch.await(timeOutInSeconds,TimeUnit.SECONDS);
-        assertEquals(0,routeLatch.getCount());
-        assertEquals(0,divertLatch.getCount());
+        divertLatch.await(timeOutInSeconds, TimeUnit.SECONDS);
+        assertEquals(0, routeLatch.getCount());
+        assertEquals(0, divertLatch.getCount());
     }
-
 
 }

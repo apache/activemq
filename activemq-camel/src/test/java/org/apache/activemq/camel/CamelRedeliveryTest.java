@@ -31,22 +31,32 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Handler;
 import org.apache.camel.RecipientList;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTests;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import static org.junit.Assert.*;
 
 /**
  * 
  */
 @ContextConfiguration
-public class CamelRedeliveryTest extends AbstractJUnit38SpringContextTests {
+@RunWith(SpringJUnit4ClassRunner.class)
+public class CamelRedeliveryTest  {
     private static final transient Logger LOG = LoggerFactory.getLogger(CamelRedeliveryTest.class);
 
     @Autowired
     protected CamelContext camelContext;
 
+    @Autowired
+    protected ApplicationContext applicationContext;
+
+    @Test
     public void testRedeliveryViaCamel() throws Exception {
         
         
