@@ -440,6 +440,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setUseCache(isUseCache);
+        policyEntry.setMaxBrowsePageSize(4096);
         policyMap.setDefaultEntry(policyEntry);
         brokerService.setDestinationPolicy(policyMap);
         return brokerService;

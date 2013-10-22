@@ -34,6 +34,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
@@ -55,13 +57,12 @@ public class AMQ4595Test {
         TransportConnector connector = broker.addConnector("vm://localhost");
         broker.deleteAllMessages();
 
-//        PolicyEntry policy = new PolicyEntry();
-//        policy.setQueue(">");
-//        policy.setMaxAuditDepth(16384);
-//        policy.setCursorMemoryHighWaterMark(95);  // More breathing room.
-//        PolicyMap pMap = new PolicyMap();
-//        pMap.setDefaultEntry(policy);
-//        broker.setDestinationPolicy(pMap);
+        //PolicyMap pMap = new PolicyMap();
+        //PolicyEntry policyEntry = new PolicyEntry();
+        //policyEntry.setMaxBrowsePageSize(10000);
+        //pMap.put(new ActiveMQQueue(">"), policyEntry);
+        // when no policy match, browserSub has maxMessages==0
+        //broker.setDestinationPolicy(pMap);
 
         broker.getSystemUsage().getMemoryUsage().setLimit(256 * 1024 * 1024);
         broker.start();

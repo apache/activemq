@@ -286,7 +286,7 @@ public abstract class BaseDestination implements Destination {
     }
 
     public int getMaxBrowsePageSize() {
-        return this.maxBrowsePageSize;
+        return this.maxBrowsePageSize > 0 ? this.maxBrowsePageSize : getMaxPageSize();
     }
 
     public void setMaxBrowsePageSize(int maxPageSize) {
