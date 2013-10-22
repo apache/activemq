@@ -275,6 +275,9 @@ public class PolicyEntry extends DestinationMapEntry {
         // we can remove this and perform a more efficient dispatch.
         sub.setMaxProducersToAudit(Integer.MAX_VALUE);
         sub.setMaxAuditDepth(Short.MAX_VALUE);
+
+        // part solution - dispatching to browsers needs to be restricted
+        sub.setMaxMessages(getMaxBrowsePageSize());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {

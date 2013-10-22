@@ -1605,7 +1605,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         LOG.debug("dispatch to browser: {}, already dispatched/paged count: {}", browser, alreadyDispatchedMessages.size());
                         boolean added = false;
                         for (QueueMessageReference node : alreadyDispatchedMessages) {
-                            if (!node.isAcked() && !browser.isDuplicate(node.getMessageId())) {
+                            if (!node.isAcked() && !browser.isDuplicate(node.getMessageId()) && !browser.atMax()) {
                                 msgContext.setMessageReference(node);
                                 if (browser.matches(node, msgContext)) {
                                     browser.add(node);
@@ -1614,7 +1614,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                             }
                         }
                         // are we done browsing? no new messages paged
-                        if (!added) {
+                        if (!added || browser.atMax()) {
                             browser.decrementQueueRef();
                             browserDispatches.remove(browserDispatch);
                         }

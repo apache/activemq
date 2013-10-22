@@ -43,6 +43,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
     boolean destinationsAdded;
 
     private final Map<MessageId, Object> audit = new HashMap<MessageId, Object>();
+    private long maxMessages;
 
     public QueueBrowserSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws JMSException {
         super(broker, usageManager, context, info);
@@ -114,5 +115,13 @@ public class QueueBrowserSubscription extends QueueSubscription {
         // there's no unacked messages that needs to be redelivered
         // in case of browser
         return new ArrayList<MessageReference>();
+    }
+
+    public boolean atMax() {
+        return maxMessages > 0 && getEnqueueCounter() >= maxMessages;
+    }
+
+    public void setMaxMessages(long max) {
+        maxMessages = max;
     }
 }
