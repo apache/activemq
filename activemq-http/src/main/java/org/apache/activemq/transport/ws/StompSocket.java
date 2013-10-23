@@ -44,6 +44,7 @@ class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, S
     ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     StompWireFormat wireFormat = new StompWireFormat();
     private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
+    private StompInactivityMonitor stompInactivityMonitor = new StompInactivityMonitor(this, wireFormat);
 
     @Override
     public void onOpen(Connection connection) {
@@ -123,7 +124,7 @@ class StompSocket extends TransportSupport implements WebSocket.OnTextMessage, S
 
     @Override
     public StompInactivityMonitor getInactivityMonitor() {
-        return null;
+        return stompInactivityMonitor;
     }
 
     @Override
