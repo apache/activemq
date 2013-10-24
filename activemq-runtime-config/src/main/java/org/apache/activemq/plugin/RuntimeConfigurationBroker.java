@@ -657,16 +657,22 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 dbf.setNamespaceAware(true);
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document doc = db.parse(configToMonitor.getInputStream());
-                Node brokerRootNode = doc.getElementsByTagName("broker").item(0);
+                Node brokerRootNode = doc.getElementsByTagNameNS("*","broker").item(0);
 
-                JAXBElement<DtoBroker> brokerJAXBElement =
-                        unMarshaller.unmarshal(brokerRootNode, DtoBroker.class);
-                jaxbConfig = brokerJAXBElement.getValue();
+                if (brokerRootNode != null) {
 
-                // if we can parse we can track mods
-                lastModified = configToMonitor.lastModified();
+                    JAXBElement<DtoBroker> brokerJAXBElement =
+                            unMarshaller.unmarshal(brokerRootNode, DtoBroker.class);
+                    jaxbConfig = brokerJAXBElement.getValue();
 
-                loadPropertiesPlaceHolderSupport(doc);
+                    // if we can parse we can track mods
+                    lastModified = configToMonitor.lastModified();
+
+                    loadPropertiesPlaceHolderSupport(doc);
+
+                } else {
+                    info("Failed to find 'broker' element by tag in: " + configToMonitor);
+                }
 
             } catch (IOException e) {
                 info("Failed to access: " + configToMonitor, e);
@@ -676,6 +682,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 info("Failed to document parse: " + configToMonitor, e);
             } catch (SAXException e) {
                 info("Failed to find broker element in: " + configToMonitor, e);
+            } catch (Exception e) {
+                info("Unexpected exception during load of: " + configToMonitor, e);
             }
         }
         return jaxbConfig;
