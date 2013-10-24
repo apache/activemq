@@ -157,6 +157,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkMode>always</forkMode>
+          <argLine>-Xmx512M -Djava.awt.headless=true</argLine>
           <systemProperties>
             <property>
               <name>org.apache.activemq.default.directory.prefix</name>
