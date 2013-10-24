@@ -20,9 +20,14 @@ import java.util.Properties;
 import org.springframework.beans.factory.FactoryBean;
 
 public class CustomPropertiesBean implements FactoryBean<Properties> {
+    Properties properties = new Properties();
+    public CustomPropertiesBean() {
+        properties.put("custom", "isKing");
+    }
+
     @Override
     public Properties getObject() throws Exception {
-        return System.getProperties();
+        return properties;
     }
 
     @Override

@@ -17,6 +17,7 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -94,6 +95,8 @@ import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.PluggableSchemaResolver;
 import org.springframework.core.io.Resource;
@@ -694,19 +697,20 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         if (brokerContext != null) {
             Properties initialProperties = new Properties(System.getProperties());
             placeHolderUtil = new PropertiesPlaceHolderUtil(initialProperties);
-            mergeProperties(doc, initialProperties);
+            mergeProperties(doc, initialProperties, brokerContext);
         }
     }
 
-    private void mergeProperties(Document doc, Properties initialProperties) {
+    private void mergeProperties(Document doc, Properties initialProperties, BrokerContext brokerContext) {
         // find resources
         //        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        //            <property name="locations">
+        //            <property name="locations" || name="properties">
         //              ...
         //            </property>
         //          </bean>
-        String resourcesString = "";
-        NodeList beans = doc.getElementsByTagName("bean");
+        LinkedList<String> resources = new LinkedList<String>();
+        LinkedList<String> propertiesClazzes = new LinkedList<String>();
+        NodeList beans = doc.getElementsByTagNameNS("*", "bean");
         for (int i = 0; i < beans.getLength(); i++) {
             Node bean = beans.item(0);
             if (bean.hasAttributes() && bean.getAttributes().getNamedItem("class").getTextContent().contains("PropertyPlaceholderConfigurer")) {
@@ -714,26 +718,50 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                     NodeList beanProps = bean.getChildNodes();
                     for (int j = 0; j < beanProps.getLength(); j++) {
                         Node beanProp = beanProps.item(j);
-                        if (Node.ELEMENT_NODE == beanProp.getNodeType() &&
-                                beanProp.hasAttributes() && beanProp.getAttributes().getNamedItem("name").getTextContent().equals("locations")) {
+                        if (Node.ELEMENT_NODE == beanProp.getNodeType() && beanProp.hasAttributes() && beanProp.getAttributes().getNamedItem("name") != null) {
+                            String propertyName = beanProp.getAttributes().getNamedItem("name").getTextContent();
+                            if ("locations".equals(propertyName)) {
 
-                            // interested in value or list/value of locations property
-                            Element beanPropElement = (Element) beanProp;
-                            NodeList values = beanPropElement.getElementsByTagName("value");
-                            for (int k = 0; k < values.getLength(); k++) {
-                                Node value = values.item(k);
-                                if (!resourcesString.isEmpty()) {
-                                    resourcesString += ",";
+                                // interested in value or list/value of locations property
+                                Element beanPropElement = (Element) beanProp;
+                                NodeList values = beanPropElement.getElementsByTagNameNS("*", "value");
+                                for (int k = 0; k < values.getLength(); k++) {
+                                    Node value = values.item(k);
+                                    resources.add(value.getFirstChild().getTextContent());
                                 }
-                                resourcesString += value.getFirstChild().getTextContent();
+                            } else if ("properties".equals(propertyName)) {
+
+                                // bean or beanFactory
+                                Element beanPropElement = (Element) beanProp;
+                                NodeList values = beanPropElement.getElementsByTagNameNS("*", "bean");
+                                for (int k = 0; k < values.getLength(); k++) {
+                                    Node value = values.item(k);
+                                    if (value.hasAttributes()) {
+                                        Node beanClassTypeNode = value.getAttributes().getNamedItem("class");
+                                        if (beanClassTypeNode != null) {
+                                            propertiesClazzes.add(beanClassTypeNode.getFirstChild().getTextContent());
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        for (String value : propertiesClazzes) {
+            try {
+                Object springBean = getClass().getClassLoader().loadClass(value).newInstance();
+                if (springBean instanceof FactoryBean) {
+                    // can't access the factory or created properties from spring context so we got to recreate
+                    initialProperties.putAll((Properties) FactoryBean.class.getMethod("getObject", null).invoke(springBean));
+                }
+            } catch (Throwable e) {
+                LOG.debug("unexpected exception processing properties bean class: " + propertiesClazzes, e);
+            }
+        }
         List<Resource> propResources = new LinkedList<Resource>();
-        for (String value : resourcesString.split(",")) {
+        for (String value : resources) {
             try {
                 if (!value.isEmpty()) {
                     propResources.add(Utils.resourceFromString(replacePlaceHolders(value)));
