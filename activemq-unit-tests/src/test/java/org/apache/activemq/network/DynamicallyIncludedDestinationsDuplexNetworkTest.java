@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.MessageProducer;
 import javax.jms.TemporaryQueue;
@@ -28,6 +29,7 @@ import javax.jms.TemporaryQueue;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
 import org.junit.Test;
 
 /**
@@ -107,10 +109,9 @@ public class DynamicallyIncludedDestinationsDuplexNetworkTest extends SimpleNetw
     }
 
     public TransportConnection getDuplexBridgeConnectionFromRemote() {
-        TransportConnection duplexBridgeConnectionFromRemote =
-                remoteBroker.getTransportConnectorByName("tcp://localhost:" + REMOTE_BROKER_TCP_PORT)
-                        .getConnections().get(0);
+        TransportConnector transportConnector = remoteBroker.getTransportConnectorByScheme("tcp");
+        CopyOnWriteArrayList<TransportConnection> transportConnections = transportConnector.getConnections();
+        TransportConnection duplexBridgeConnectionFromRemote = transportConnections.get(0);
         return duplexBridgeConnectionFromRemote;
     }
-
 }
