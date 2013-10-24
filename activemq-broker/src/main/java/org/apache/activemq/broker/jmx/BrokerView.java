@@ -352,6 +352,7 @@ public class BrokerView implements BrokerViewMBean {
         if (connector == null) {
             throw new NoSuchElementException("Not connector matched the given name: " + discoveryAddress);
         }
+        brokerService.registerNetworkConnectorMBean(connector);
         connector.start();
         return connector.getName();
     }

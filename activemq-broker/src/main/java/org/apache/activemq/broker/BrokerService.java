@@ -2061,7 +2061,7 @@ public class BrokerService implements Service {
         return BrokerMBeanSupport.createConnectorName(getBrokerObjectName(), "clientConnectors", connector.getName());
     }
 
-    protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
+    public void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
         NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
         try {
             ObjectName objectName = createNetworkConnectorObjectName(connector);
