@@ -16,14 +16,17 @@
  */
 package org.apache.activemq.console.command;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
+import org.apache.activemq.broker.jmx.QueueView;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicView;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
@@ -75,24 +78,33 @@ public class DstatCommand extends AbstractJmxCommand {
 
             // Iterate through the queue names
         } catch (Exception e) {
-            context.printException(new RuntimeException("Failed to execute dstat task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute dstat task. Reason: " + e.getMessage(), e));
             throw new Exception(e);
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void displayAllDestinations() throws Exception {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "*");
-        List<?> queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
+        List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
+
+        // sort list so the names is A..Z
+        Collections.sort(queueList, new ObjectInstanceComparator());
 
         context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
 
         // Iterate through the queue result
         for (Object view : queueList) {
-            ObjectName queueName = ((ObjectInstance)view).getObjectName();
+            ObjectInstance obj = (ObjectInstance) view;
+            if (!filterMBeans(obj)) {
+                continue;
+            }
+            ObjectName queueName = obj.getObjectName();
+
             QueueViewMBean queueView = MBeanServerInvocationHandler.
                 newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
 
@@ -107,19 +119,27 @@ public class DstatCommand extends AbstractJmxCommand {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void displayQueueStats() throws Exception {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "Queue");
-        List<?> queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
+        List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
 
         context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
 
+        Collections.sort(queueList, new ObjectInstanceComparator());
+
         // Iterate through the queue result
         for (Object view : queueList) {
-            ObjectName queueName = ((ObjectInstance)view).getObjectName();
+            ObjectInstance obj = (ObjectInstance) view;
+            if (!filterMBeans(obj)) {
+                continue;
+            }
+            ObjectName queueName = obj.getObjectName();
+
             QueueViewMBean queueView = MBeanServerInvocationHandler.
                 newProxyInstance(createJmxConnection(), queueName, QueueViewMBean.class, true);
 
@@ -134,19 +154,28 @@ public class DstatCommand extends AbstractJmxCommand {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void displayTopicStats() throws Exception {
 
         String query = JmxMBeansUtil.createQueryString(queryString, "Topic");
-        List<?> topicsList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
+        List topicsList = JmxMBeansUtil.queryMBeans(createJmxConnection(), query);
 
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
+
+        // sort list so the names is A..Z
+        Collections.sort(topicsList, new ObjectInstanceComparator());
 
         context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
 
         // Iterate through the topics result
         for (Object view : topicsList) {
-            ObjectName topicName = ((ObjectInstance)view).getObjectName();
+            ObjectInstance obj = (ObjectInstance) view;
+            if (!filterMBeans(obj)) {
+                continue;
+            }
+            ObjectName topicName = obj.getObjectName();
+
             TopicViewMBean topicView = MBeanServerInvocationHandler.
                 newProxyInstance(createJmxConnection(), topicName, TopicViewMBean.class, true);
 
@@ -177,6 +206,19 @@ public class DstatCommand extends AbstractJmxCommand {
     @Override
     protected void printHelp() {
         context.printHelp(helpFile);
+    }
+
+    protected boolean filterMBeans(ObjectInstance obj) {
+        String className = obj.getClassName();
+        return className.equals(QueueView.class.getName()) || className.equals(TopicView.class.getName());
+    }
+
+    private static class ObjectInstanceComparator implements Comparator<ObjectInstance> {
+
+        @Override
+        public int compare(ObjectInstance o1, ObjectInstance o2) {
+            return o1.getObjectName().compareTo(o2.getObjectName());
+        }
     }
 
 }
