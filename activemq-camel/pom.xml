@@ -132,13 +132,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>openejb-core</artifactId>
-      <version>3.1.2</version>
-      <optional>true</optional>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.jencks</groupId>
       <artifactId>jencks</artifactId>
       <version>2.2</version>
@@ -148,13 +141,6 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
-      <optional>true</optional>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jencks</groupId>
-      <artifactId>jencks-amqpool</artifactId>
-      <version>2.2</version>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
