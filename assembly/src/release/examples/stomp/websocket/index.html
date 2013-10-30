@@ -101,7 +101,7 @@
 
           // this allows to display debug logs directly on the web page
           client.debug = function(str) {
-            $("#debug").append(str + "\n");
+            $("#debug").append(document.createTextNode(str + "\n"));
           };
           
           // the client is notified when it is connected to the server.
@@ -110,7 +110,9 @@
             $('#connect').fadeOut({ duration: 'fast' });
             $('#connected').fadeIn();
             client.subscribe(destination, function(message) {
-              $("#messages").append("<p>" + message.body + "</p>\n");
+              var p = document.createElement("p");
+              p.appendChild(document.createTextNode(message.body));
+              $("#messages").append(p);
             });
           });
           return false;
