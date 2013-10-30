@@ -217,7 +217,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     debug("starting")
 
     // Expose a JMX bean to expose the status of the store.
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreView(this), objectName)
       } catch {
@@ -274,7 +274,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   def doStop(stopper: ServiceStopper): Unit = {
     db.stop
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
     info("Stopped "+this)
