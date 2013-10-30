@@ -156,7 +156,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   def init() {
 
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new ReplicatedLevelDBStoreView(this), objectName)
       } catch {
@@ -269,7 +269,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   }
 
   protected def doStop(stopper: ServiceStopper) {
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
     zk_group.close
