@@ -142,6 +142,11 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   var position: Long = -1L
 
+
+  override def toString: String = {
+    return "Replicated LevelDB[%s, %s/%s]".format(directory.getAbsolutePath, zkAddress, zkPath)
+  }
+
   var usageManager: SystemUsage = _
   override def setUsageManager(usageManager: SystemUsage) {
     this.usageManager = usageManager
