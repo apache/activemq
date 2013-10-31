@@ -23,6 +23,7 @@ import java.io.RandomAccessFile;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 /**
  * DataFile
@@ -67,11 +68,11 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         return file.getName() + " number = " + dataFileId + " , length = " + length;
     }
 
-    public synchronized RandomAccessFile openRandomAccessFile() throws IOException {
-        return new RandomAccessFile(file.getCanonicalPath(), "rw");
+    public synchronized RecoverableRandomAccessFile openRandomAccessFile() throws IOException {
+        return new RecoverableRandomAccessFile(file.getCanonicalPath(), "rw");
     }
 
-    public synchronized void closeRandomAccessFile(RandomAccessFile file) throws IOException {
+    public synchronized void closeRandomAccessFile(RecoverableRandomAccessFile file) throws IOException {
         file.close();
     }
 

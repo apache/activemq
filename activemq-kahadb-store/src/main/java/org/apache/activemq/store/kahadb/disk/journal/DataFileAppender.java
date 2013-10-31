@@ -28,6 +28,7 @@ import java.util.zip.Checksum;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -277,7 +278,7 @@ class DataFileAppender implements FileAppender {
      */
     protected void processQueue() {
         DataFile dataFile = null;
-        RandomAccessFile file = null;
+        RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
         try {
 
@@ -373,6 +374,7 @@ class DataFileAppender implements FileAppender {
                 signalDone(wb);
             }
         } catch (IOException e) {
+            logger.info("Journal failed while writing at: " + wb.offset);
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
                 if (wb != null) {

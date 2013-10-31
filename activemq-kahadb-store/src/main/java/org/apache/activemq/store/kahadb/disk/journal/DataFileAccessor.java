@@ -21,6 +21,7 @@ import java.io.RandomAccessFile;
 import java.util.Map;
 
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 /**
  * Optimized Store reader and updater. Single threaded and synchronous. Use in
@@ -32,7 +33,7 @@ final class DataFileAccessor {
 
     private final DataFile dataFile;
     private final Map<Journal.WriteKey, Journal.WriteCommand> inflightWrites;
-    private final RandomAccessFile file;
+    private final RecoverableRandomAccessFile file;
     private boolean disposed;
 
     /**
