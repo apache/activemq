@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.replicated
 
-import org.apache.activemq.leveldb.LevelDBStore
+import org.apache.activemq.leveldb.{LevelDBClient, LevelDBStore}
 import org.apache.activemq.util.ServiceStopper
 import java.util
 import org.fusesource.hawtdispatch._
@@ -52,6 +52,16 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   var transfer_session:Session = _
 
   var status = "initialized"
+
+  override def createClient = new LevelDBClient(this) {
+    // We don't want to start doing index snapshots until
+    // he slave is caught up.
+    override def post_log_rotate: Unit = {
+      if( caughtUp ) {
+        super.post_log_rotate
+      }
+    }
+  }
 
   override def doStart() = {
     client.init()
@@ -100,7 +110,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       // the stashed data might be the best option to become the master.
       stash(directory)
       delete_store(directory)
-      debug("Log replicaiton session connected")
+      debug("Log replication session connected")
       session.request_then(SYNC_ACTION, null) { body =>
         val response = JsonCodec.decode(body, classOf[SyncResponse])
         transfer_missing(response)
@@ -165,7 +175,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         command.action match {
           case WAL_ACTION =>
             val value = JsonCodec.decode(command.body, classOf[LogWrite])
-            if( caughtUp && value.offset ==0 ) {
+            if( caughtUp && value.offset ==0 && value.file!=0 ) {
               client.log.rotate
             }
             val file = client.log.next_log(value.file)
