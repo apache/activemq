@@ -625,11 +625,15 @@ class LevelDBClient(store: LevelDBStore) {
     log = createLog
     log.logSize = store.logSize
     log.on_log_rotate = ()=> {
+      post_log_rotate
+    }
+  }
+
+  def post_log_rotate ={
       // We snapshot the index every time we rotate the logs.
       writeExecutor {
         snapshotIndex(false)
       }
-    }
   }
 
   def replay_init() = {
@@ -927,7 +931,16 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  var wal_append_position = 0L
+
+  var stored_wal_append_position = 0L
+
+  def wal_append_position = this.synchronized {
+    if (log!=null && log.isOpen) {
+      log.appender_limit
+    } else {
+      stored_wal_append_position
+    }
+  }
 
   def stop() = this.synchronized {
     if( writeExecutor!=null ) {
@@ -948,7 +961,7 @@ class LevelDBClient(store: LevelDBStore) {
         if (log!=null && log.isOpen) {
           log.close
           copyDirtyIndexToSnapshot
-          wal_append_position = log.appender_limit
+          stored_wal_append_position = log.appender_limit
           log = null
         }
         if( plist!=null ) {
