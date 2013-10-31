@@ -22,6 +22,7 @@ import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 /**
  * An optimized writer to do batch appends to a data file. This object is thread
@@ -82,7 +83,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
     @Override
     protected void processQueue() {
         DataFile dataFile = null;
-        RandomAccessFile file = null;
+        RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
         try {
 

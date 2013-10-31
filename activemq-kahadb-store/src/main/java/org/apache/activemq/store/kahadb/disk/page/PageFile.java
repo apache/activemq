@@ -42,12 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import org.apache.activemq.util.DataByteArrayOutputStream;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IOHelper;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.LFUCache;
-import org.apache.activemq.util.LRUCache;
+import org.apache.activemq.util.*;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.slf4j.Logger;
@@ -85,11 +80,11 @@ public class PageFile {
     private final String name;
 
     // File handle used for reading pages..
-    private RandomAccessFile readFile;
+    private RecoverableRandomAccessFile readFile;
     // File handle used for writing pages..
-    private RandomAccessFile writeFile;
+    private RecoverableRandomAccessFile writeFile;
     // File handle used for writing pages..
-    private RandomAccessFile recoveryFile;
+    private RecoverableRandomAccessFile recoveryFile;
 
     // The size of pages
     private int pageSize = DEFAULT_PAGE_SIZE;
@@ -377,8 +372,8 @@ public class PageFile {
 
             File file = getMainPageFile();
             IOHelper.mkdirs(file.getParentFile());
-            writeFile = new RandomAccessFile(file, "rw");
-            readFile = new RandomAccessFile(file, "r");
+            writeFile = new RecoverableRandomAccessFile(file, "rw");
+            readFile = new RecoverableRandomAccessFile(file, "r");
 
             if (readFile.length() > 0) {
                 // Load the page size setting cause that can't change once the file is created.
@@ -397,7 +392,7 @@ public class PageFile {
             }
 
             if (enableRecoveryFile) {
-                recoveryFile = new RandomAccessFile(getRecoveryFile(), "rw");
+                recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
             if (metaData.isCleanShutdown()) {
