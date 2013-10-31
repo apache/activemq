@@ -1908,14 +1908,16 @@ public class BrokerService implements Service {
                     dir = dir.getParentFile();
                 }
                 long storeLimit = usage.getStoreUsage().getLimit();
+                long storeCurrent = usage.getStoreUsage().getUsage();
                 long dirFreeSpace = dir.getUsableSpace();
-                if (storeLimit > dirFreeSpace) {
+                if (storeLimit > (dirFreeSpace + storeCurrent)) {
                     LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
-                             " mb, whilst the data directory: " + dir.getAbsolutePath() +
+                             " mb (current store usage is " + storeCurrent / (1024 * 1024) +
+                             " mb). The data directory: " + dir.getAbsolutePath() +
                              " only has " + dirFreeSpace / (1024 * 1024) +
                              " mb of usable space - resetting to maximum available disk space: " +
-                            dirFreeSpace / (1024 * 1024) + " mb");
-                    usage.getStoreUsage().setLimit(dirFreeSpace);
+                            (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
+                    usage.getStoreUsage().setLimit(dirFreeSpace + storeCurrent);
                 }
             }
 
