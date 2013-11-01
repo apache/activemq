@@ -56,7 +56,9 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
 
     @Override
     public void close() throws IOException {
-        raf.close();
+        if (raf != null) {
+            raf.close();
+        }
     }
 
     @Override
