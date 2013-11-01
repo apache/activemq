@@ -45,7 +45,7 @@ public class TransactDatabaseLocker extends DefaultDatabaseLocker {
             try {
                 connection = dataSource.getConnection();
                 connection.setAutoCommit(false);
-                String sql = statements.getLockCreateStatement();
+                String sql = getStatements().getLockCreateStatement();
                 statement = connection.prepareStatement(sql);
                 if (statement.getMetaData() != null) {
                     ResultSet rs = statement.executeQuery();

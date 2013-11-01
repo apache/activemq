@@ -29,16 +29,25 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractJDBCLocker extends AbstractLocker {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractJDBCLocker.class);
     protected DataSource dataSource;
-    protected Statements statements;
+    private Statements statements;
+    protected JDBCPersistenceAdapter jdbcAdapter;
 
     protected boolean createTablesOnStartup;
     protected int queryTimeout = -1;
 
     public void configure(PersistenceAdapter adapter) throws IOException {
         if (adapter instanceof JDBCPersistenceAdapter) {
+            this.jdbcAdapter = (JDBCPersistenceAdapter) adapter;
             this.dataSource = ((JDBCPersistenceAdapter) adapter).getLockDataSource();
-            this.statements = ((JDBCPersistenceAdapter) adapter).getStatements();
+            // we cannot get the statements (yet) as they may be configured later
         }
+    }
+
+    protected Statements getStatements() {
+        if (statements == null && jdbcAdapter != null) {
+            statements = jdbcAdapter.getStatements();
+        }
+        return statements;
     }
 
     public void setDataSource(DataSource dataSource) {
@@ -94,7 +103,8 @@ public abstract class AbstractJDBCLocker extends AbstractLocker {
     @Override
     public void preStart() {
         if (createTablesOnStartup) {
-            String[] createStatements = this.statements.getCreateLockSchemaStatements();
+
+            String[] createStatements = getStatements().getCreateLockSchemaStatements();
 
             Connection connection = null;
             Statement statement = null;
