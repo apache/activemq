@@ -313,7 +313,7 @@ case class RecordLog(directory: File, logSuffix:String) {
       val prefix = is.readByte()
       if( prefix != LOG_HEADER_PREFIX ) {
         // Does not look like a record.
-        throw new IOException("invalid record position %d (file: %s, offset: %d)".format(record_position, file.getName, offset))
+        throw new IOException("invalid record position %d (file: %s, offset: %d)".format(record_position, file.getAbsolutePath, offset))
       }
       val id = is.readByte()
       val expectedChecksum = is.readInt()

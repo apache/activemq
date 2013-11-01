@@ -236,6 +236,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       if( login == null || slave_state == null) {
         return;
       }
+      trace("%s: Got WAL ack, position: %d, from: %s", directory, req.position, slave_state.slave_id)
       slave_state.position_update(req.position)
     }
 
@@ -398,6 +399,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       value.date = date
       wal_date = value.date;
       value.sync = (syncToMask & SYNC_TO_REMOTE_DISK)!=0
+      trace("%s: Sending WAL update: (file:%d, offset: %d, length: %d)", directory, value.file, value.offset, value.length)
       val frame1 = ReplicationFrame(WAL_ACTION, JsonCodec.encode(value))
       val frame2 = FileTransferFrame(file, offset, length)
       for( slave <- slaves.values() ) {
