@@ -602,7 +602,7 @@ class LevelDBClient(store: LevelDBStore) {
         Some(this.getClass.getClassLoader.loadClass(name).newInstance().asInstanceOf[DBFactory])
       } catch {
         case e:Throwable =>
-          debug(e, "Could not load factory: "+name+" due to: "+e)
+          debug("Could not load factory: "+name+" due to: "+e)
           None
       }
     }.headOption.getOrElse(throw new Exception("Could not load any of the index factory classes: "+factoryNames))
@@ -822,7 +822,7 @@ class LevelDBClient(store: LevelDBStore) {
           throw e;
       } finally {
         recoveryLogs = null
-        debug("Replay of journal done")
+        debug("Replay end")
       }
     }
   }

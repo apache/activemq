@@ -178,14 +178,15 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
             if( caughtUp && value.offset ==0 && value.file!=0 ) {
               client.log.rotate
             }
+            trace("%s, Slave WAL update: (file:%s, offset: %d, length: %d)".format(directory, value.file.toHexString, value.offset, value.length))
             val file = client.log.next_log(value.file)
             val buffer = map(file, value.offset, value.length, false)
             session.codec.readData(buffer, ^{
               if( value.sync ) {
                 buffer.force()
               }
+
               unmap(buffer)
-//              info("Slave WAL update: %s, (offset: %d, length: %d), sending ack:%s", file, value.offset, value.length, caughtUp)
               wal_append_offset = value.offset+value.length
               wal_append_position = value.file + wal_append_offset
               wal_date = value.date
@@ -296,7 +297,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     transport.setDispatchQueue(queue)
     transport.connecting(new URI(connect), null)
 
-    debug("Connecting download session.")
+    debug("%s: Connecting download session. Snapshot index at: %s".format(directory, state.snapshot_position.toHexString))
     transfer_session = new Session(transport, (session)=> {
 
       var total_files = 0
@@ -360,6 +361,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
             val buffer = map(target_file, 0, x.length, false)
             session.codec.readData(buffer, ^{
               unmap(buffer)
+              trace("%s, Downloaded %s, offset:%d, length:%d", directory, transfer.file, transfer.offset, transfer.length)
               downloaded_size += x.length
               downloaded_files += 1
               update_download_status
@@ -384,6 +386,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
           val buffer = map(dirty_index / x.file, 0, x.length, false)
           session.codec.readData(buffer, ^{
             unmap(buffer)
+            trace("%s, Downloaded %s, offset:%d, length:%d", directory, transfer.file, transfer.offset, transfer.length)
             downloaded_size += x.length
             downloaded_files += 1
             update_download_status
@@ -405,6 +408,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         }
         client.writeExecutor {
           if( !state.index_files.isEmpty ) {
+            trace("%s: Index sync complete, copying to snapshot.", directory)
             client.copyDirtyIndexToSnapshot(state.wal_append_position)
           }
           client.replay_init()
