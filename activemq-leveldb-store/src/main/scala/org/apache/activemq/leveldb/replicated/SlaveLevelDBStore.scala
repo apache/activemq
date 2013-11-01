@@ -332,20 +332,11 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
           if (stashed_file.length() == x.length )
             return stashed_file.cached_crc32 == x.crc32
 
-          if ( stashed_file.crc32(x.length) == x.crc32 ) {
-            // we don't want to truncate the log file currently being appended to.
-            if( x.file != state.append_log ) {
-              // Our log file might be longer. lets truncate to match.
-              val raf = new RandomAccessFile(stashed_file, "rw")
-              try {
-                raf.setLength(x.length)
-              } finally {
-                raf.close();
-              }
-            }
-            return true;
+          if( x.file == state.append_log ) {
+            return false;
           }
-          return false
+
+          return stashed_file.cached_crc32 == x.crc32
         }
 
         // We don't have to transfer log files that have been previously transferred.
