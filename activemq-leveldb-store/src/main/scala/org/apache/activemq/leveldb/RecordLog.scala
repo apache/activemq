@@ -118,7 +118,7 @@ case class RecordLog(directory: File, logSuffix:String) {
       force
     }
 
-    val flushed_offset = new AtomicLong(0)
+    val flushed_offset = new AtomicLong(append_offset)
 
     def append_position = {
       position+append_offset
