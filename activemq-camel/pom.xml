@@ -140,6 +140,12 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas</artifactId>
+      <optional>true</optional>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-ra</artifactId>
       <optional>true</optional>
       <scope>test</scope>
