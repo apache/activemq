@@ -38,15 +38,13 @@ import org.apache.camel.util.UnsafeUriCharactersEncoder;
 
 @ManagedResource(description = "Managed Camel Broker Endpoint")
 @UriEndpoint(scheme = "broker", consumerClass = BrokerConsumer.class)
-
 public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumersSupport, Service {
+
     static final String PRODUCER_BROKER_EXCHANGE = "producerBrokerExchange";
 
     @UriParam
     private final BrokerConfiguration configuration;
     private MessageInterceptorRegistry messageInterceptorRegistry;
-
-
     @UriPath
     private final ActiveMQDestination destination;
     private List<MessageInterceptor> messageInterceptorList = new CopyOnWriteArrayList<MessageInterceptor>();
@@ -70,7 +68,6 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
         return consumer;
     }
 
-
     @Override
     public boolean isSingleton() {
         return false;
@@ -84,7 +81,6 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
     public ActiveMQDestination getDestination() {
         return destination;
     }
-
 
     @Override
     protected void doStart() throws Exception {
@@ -111,7 +107,6 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
 
     protected void removeMessageInterceptor(MessageInterceptor messageInterceptor) {
         messageInterceptorRegistry.removeMessageInterceptor(destination, messageInterceptor);
-
     }
 
     protected void inject(ProducerBrokerExchange producerBrokerExchange, Message message) throws Exception {

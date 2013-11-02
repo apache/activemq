@@ -57,12 +57,11 @@ public class BrokerComponent extends UriEndpointComponent implements EndpointCom
             remaining = removeStartingCharacters(remaining.substring(JmsConfiguration.TEMP_TOPIC_PREFIX.length()), '/');
         }
 
-
         ActiveMQDestination destination = ActiveMQDestination.createDestination(remaining, destinationType);
         BrokerEndpoint brokerEndpoint = new BrokerEndpoint(uri, this, destination, brokerConfiguration);
+        setProperties(brokerEndpoint, parameters);
         return brokerEndpoint;
     }
-
 
     @Override
     public List<String> completeEndpointPath(ComponentConfiguration componentConfiguration, String completionText) {

@@ -17,10 +17,8 @@
 package org.apache.activemq.camel.component.broker;
 
 import java.util.Map;
-import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.camel.converter.ActiveMQMessageConverter;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
@@ -30,7 +28,6 @@ import org.apache.camel.converter.ObjectConverter;
 import org.apache.camel.impl.DefaultAsyncProducer;
 
 public class BrokerProducer extends DefaultAsyncProducer {
-    private final ActiveMQMessageConverter activeMQConverter = new ActiveMQMessageConverter();
     private final BrokerEndpoint brokerEndpoint;
 
     public BrokerProducer(BrokerEndpoint endpoint) {
@@ -38,24 +35,12 @@ public class BrokerProducer extends DefaultAsyncProducer {
         brokerEndpoint = endpoint;
     }
 
-
     @Override
     public boolean process(Exchange exchange, AsyncCallback callback) {
-        // deny processing if we are not started
-        if (!isRunAllowed()) {
-            if (exchange.getException() == null) {
-                exchange.setException(new RejectedExecutionException());
-            }
-            // we cannot process so invoke callback
-            callback.done(true);
-            return true;
-        }
-
         try {
             //In the middle of the broker - InOut doesn't make any sense
             //so we do in only
             return processInOnly(exchange, callback);
-
         } catch (Throwable e) {
             // must catch exception to ensure callback is invoked as expected
             // to let Camel error handling deal with this
@@ -74,8 +59,6 @@ public class BrokerProducer extends DefaultAsyncProducer {
                 ProducerBrokerExchange producerBrokerExchange = (ProducerBrokerExchange) exchange.getProperty(BrokerEndpoint.PRODUCER_BROKER_EXCHANGE);
 
                 brokerEndpoint.inject(producerBrokerExchange, message);
-
-
             }
         } catch (Exception e) {
             exchange.setException(e);
@@ -85,34 +68,34 @@ public class BrokerProducer extends DefaultAsyncProducer {
     }
 
     private ActiveMQMessage getMessage(Exchange exchange) throws Exception {
-        ActiveMQMessage result = null;
-        Message camelMesssage = null;
+        ActiveMQMessage result;
+        Message camelMessage;
         if (exchange.hasOut()) {
-            camelMesssage = exchange.getOut();
+            camelMessage = exchange.getOut();
         } else {
-            camelMesssage = exchange.getIn();
+            camelMessage = exchange.getIn();
         }
 
-        Map<String, Object> headers = camelMesssage.getHeaders();
+        Map<String, Object> headers = camelMessage.getHeaders();
 
         /**
          * We purposely don't want to support injecting messages half-way through
          * broker processing - use the activemq camel component for that - but
          * we will support changing message headers and destinations
          */
-        if (camelMesssage instanceof JmsMessage) {
-            JmsMessage jmsMessage = (JmsMessage) camelMesssage;
+        if (camelMessage instanceof JmsMessage) {
+            JmsMessage jmsMessage = (JmsMessage) camelMessage;
             if (jmsMessage.getJmsMessage() instanceof ActiveMQMessage) {
                 result = (ActiveMQMessage) jmsMessage.getJmsMessage();
                 //lets apply any new message headers
                 setJmsHeaders(result, headers);
             } else {
-
-                throw new IllegalStateException("not the original message from the broker " + jmsMessage.getJmsMessage());
+                throw new IllegalStateException("Not the original message from the broker " + jmsMessage.getJmsMessage());
             }
         } else {
-            throw new IllegalStateException("not the original message from the broker " + camelMesssage);
+            throw new IllegalStateException("Not the original message from the broker " + camelMessage);
         }
+
         return result;
     }
 
@@ -154,6 +137,6 @@ public class BrokerProducer extends DefaultAsyncProducer {
                 }
             }
         }
-
     }
+
 }
