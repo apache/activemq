@@ -17,6 +17,8 @@
 package org.apache.activemq.jaas;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.*;
@@ -225,13 +227,43 @@ public class LDAPLoginModule implements LoginModule {
             if (results.hasMore()) {
                 // ignore for now
             }
-            NameParser parser = context.getNameParser("");
-            Name contextName = parser.parse(context.getNameInNamespace());
-            Name baseName = parser.parse(getLDAPPropertyValue(USER_BASE));
-            Name entryName = parser.parse(result.getName());
-            Name name = contextName.addAll(baseName);
-            name = name.addAll(entryName);
-            String dn = name.toString();
+
+            String dn;
+            if (result.isRelative()) {
+                log.debug("LDAP returned a relative name: {}", result.getName());
+
+                NameParser parser = context.getNameParser("");
+                Name contextName = parser.parse(context.getNameInNamespace());
+                Name baseName = parser.parse(getLDAPPropertyValue(USER_BASE));
+                Name entryName = parser.parse(result.getName());
+                Name name = contextName.addAll(baseName);
+                name = name.addAll(entryName);
+                dn = name.toString();
+            } else {
+                log.debug("LDAP returned an absolute name: {}", result.getName());
+
+                try {
+                    URI uri = new URI(result.getName());
+                    String path = uri.getPath();
+
+                    if (path.startsWith("/")) {
+                        dn = path.substring(1);
+                    } else {
+                        dn = path;
+                    }
+                } catch (URISyntaxException e) {
+                    if (context != null) {
+                        close(context);
+                    }
+                    FailedLoginException ex = new FailedLoginException("Error parsing absolute name as URI.");
+                    ex.initCause(e);
+                    throw ex;
+                }
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Using DN [" + dn + "] for binding.");
+            }
 
             Attributes attrs = result.getAttributes();
             if (attrs == null) {
