@@ -23,7 +23,6 @@ public class BrokerConfiguration {
     @UriParam
     private String brokerName = "";
 
-
     public String getBrokerName() {
         return brokerName;
     }
@@ -31,6 +30,5 @@ public class BrokerConfiguration {
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }
-
 
 }

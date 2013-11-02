@@ -25,11 +25,8 @@ import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
 import org.apache.camel.component.jms.JmsBinding;
 import org.apache.camel.impl.DefaultConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BrokerConsumer extends DefaultConsumer implements MessageInterceptor {
-    protected final transient Logger logger = LoggerFactory.getLogger(BrokerConsumer.class);
     private final JmsBinding jmsBinding = new JmsBinding();
 
     public BrokerConsumer(Endpoint endpoint, Processor processor) {
@@ -58,7 +55,12 @@ public class BrokerConsumer extends DefaultConsumer implements MessageIntercepto
         try {
             getProcessor().process(exchange);
         } catch (Exception e) {
-            logger.error("Failed to process " + exchange, e);
+            exchange.setException(e);
+        }
+
+        if (exchange.getException() != null) {
+            getExceptionHandler().handleException("Error processing intercepted message: " + message, exchange, exchange.getException());
         }
     }
+
 }
