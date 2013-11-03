@@ -44,7 +44,10 @@ public final class Scheduler extends ServiceSupport {
     /*
      * execute on rough schedule based on termination of last execution. There is no
      * compensation (two runs in quick succession) for delays
+     *
+     * @deprecated use {@link #executePeriodically}
      */
+    @Deprecated
     public synchronized void schedualPeriodically(final Runnable task, long period) {
         TimerTask timerTask = new SchedulerTimerTask(task);
         timer.schedule(timerTask, period, period);
