@@ -776,7 +776,8 @@ public class FailoverTransport implements CompositeTransport {
         if (randomize) {
             // Randomly, reorder the list by random swapping
             for (int i = 0; i < l.size(); i++) {
-                int p = (int) (Math.random() * 100 % l.size());
+                // meed parenthesis due other JDKs (see AMQ-4826)
+                int p = ((int) (Math.random() * 100)) % l.size();
                 URI t = l.get(p);
                 l.set(p, l.get(i));
                 l.set(i, t);
