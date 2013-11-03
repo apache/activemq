@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Helps keep track of the current transaction/JDBC connection.
- * 
- * 
  */
 public class TransactionContext {
 
@@ -40,7 +38,7 @@ public class TransactionContext {
     private final DataSource dataSource;
     private final JDBCPersistenceAdapter persistenceAdapter;
     private Connection connection;
-    private boolean inTx;
+    private volatile boolean inTx;
     private PreparedStatement addMessageStatement;
     private PreparedStatement removedMessageStatement;
     private PreparedStatement updateLastAckStatement;
@@ -68,12 +66,14 @@ public class TransactionContext {
                 IOException ioe = IOExceptionSupport.create(e);
                 persistenceAdapter.getBrokerService().handleIOException(ioe);
                 throw ioe;
-
             }
 
             try {
                 connection.setTransactionIsolation(transactionIsolation);
             } catch (Throwable e) {
+                // ignore
+                LOG.trace("Cannot set transaction isolation to " + transactionIsolation + " due " + e.getMessage()
+                        + ". This exception is ignored.", e);
             }
         }
         return connection;
@@ -147,7 +147,8 @@ public class TransactionContext {
                         connection.close();
                     }
                 } catch (Throwable e) {
-                    LOG.warn("Close failed: " + e.getMessage(), e);
+                    // ignore
+                    LOG.trace("Closing connection failed due: " + e.getMessage() + ". This exception is ignored.", e);
                 } finally {
                     connection = null;
                 }
@@ -159,8 +160,9 @@ public class TransactionContext {
         if (inTx) {
             throw new IOException("Already started.");
         }
-        inTx = true;
         connection = getConnection();
+        // only mark in tx if we could get a connection
+        inTx = true;
     }
 
     public void commit() throws IOException {
