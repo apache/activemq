@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.filter;
 
 import java.io.StringReader;
@@ -22,33 +21,38 @@ import java.io.StringReader;
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.traversal.NodeIterator;
-import org.xml.sax.InputSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteArrayInputStream;
-import org.apache.xpath.CachedXPathAPI;
-import org.apache.xpath.objects.XObject;
 
+import org.xml.sax.InputSource;
 
 public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
 
-    private final String xpath;
+    private static final XPathFactory FACTORY = XPathFactory.newInstance();
+    private final javax.xml.xpath.XPathExpression expression;
+    private final String xpathExpression;
 
-    public XalanXPathEvaluator(String xpath) {
-        this.xpath = xpath;
+    public XalanXPathEvaluator(String xpathExpression) {
+        this.xpathExpression = xpathExpression;
+        try {
+            XPath xpath = FACTORY.newXPath();
+            expression = xpath.compile(xpathExpression);
+        } catch (XPathExpressionException e) {
+            throw new RuntimeException("Invalid XPath expression: " + xpathExpression);
+        }
     }
 
-    public boolean evaluate(Message m) throws JMSException {
-        if (m instanceof TextMessage) {
-            String text = ((TextMessage)m).getText();
+    public boolean evaluate(Message message) throws JMSException {
+        if (message instanceof TextMessage) {
+            String text = ((TextMessage)message).getText();
             return evaluate(text);
-        } else if (m instanceof BytesMessage) {
-            BytesMessage bm = (BytesMessage)m;
+        } else if (message instanceof BytesMessage) {
+            BytesMessage bm = (BytesMessage)message;
             byte data[] = new byte[(int)bm.getBodyLength()];
             bm.readBytes(data);
             return evaluate(data);
@@ -58,24 +62,9 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
 
     private boolean evaluate(byte[] data) {
         try {
-
             InputSource inputSource = new InputSource(new ByteArrayInputStream(data));
-
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            DocumentBuilder dbuilder = factory.newDocumentBuilder();
-            Document doc = dbuilder.parse(inputSource);
-            
-            CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
-            XObject result = cachedXPathAPI.eval(doc, xpath);
-            if (result.bool())
-            	return true;
-            else {
-            	NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
-            	return (iterator.nextNode() != null);
-            }  
-
-        } catch (Throwable e) {
+            return ((Boolean)expression.evaluate(inputSource, XPathConstants.BOOLEAN)).booleanValue();
+        } catch (XPathExpressionException e) {
             return false;
         }
     }
@@ -83,28 +72,14 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
     private boolean evaluate(String text) {
         try {
             InputSource inputSource = new InputSource(new StringReader(text));
-
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            DocumentBuilder dbuilder = factory.newDocumentBuilder();
-            Document doc = dbuilder.parse(inputSource);
-
-            //An XPath expression could return a true or false value instead of a node.
-            //eval() is a better way to determine the boolean value of the exp.
-            //For compliance with legacy behavior where selecting an empty node returns true,
-            //selectNodeIterator is attempted in case of a failure.
-            
-            CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
-            XObject result = cachedXPathAPI.eval(doc, xpath);
-            if (result.bool())
-            	return true;
-            else {
-            	NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
-            	return (iterator.nextNode() != null);
-            }    	
-            
-        } catch (Throwable e) {
+            return ((Boolean)expression.evaluate(inputSource, XPathConstants.BOOLEAN)).booleanValue();
+        } catch (XPathExpressionException e) {
             return false;
         }
+    }
+
+    @Override
+    public String toString() {
+        return xpathExpression;
     }
 }
