@@ -149,7 +149,7 @@ org.activemq.Amq = function() {
 		if(sessionInitializedCallback) {
 			sessionInitializedCallback();
 		}
-		sendPoll();
+		pollHandler(data);
 	}
 
 	var sendPoll = function() {
