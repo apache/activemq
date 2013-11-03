@@ -185,9 +185,12 @@ public class PooledConnectionFactoryBean implements FactoryBean {
         }
     }
 
-    // FactoryBean methods
     @Override
     public Object getObject() throws Exception {
+        // in case spring-dm calls getObject before this bean has been initialized
+        if (pooledConnectionFactory == null) {
+            afterPropertiesSet();
+        }
         return pooledConnectionFactory;
     }
 
