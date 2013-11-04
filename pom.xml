@@ -155,7 +155,7 @@
     <maven-source-plugin-version>2.2.1</maven-source-plugin-version>
     <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
-    <maven-shade-plugin-version>2.0</maven-shade-plugin-version>
+    <maven-shade-plugin-version>2.1</maven-shade-plugin-version>
     <maven-jaxb2-plugin-version>0.8.3</maven-jaxb2-plugin-version>
     <findbugs-maven-plugin-version>2.5.2</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>2.6</javacc-maven-plugin-version>
