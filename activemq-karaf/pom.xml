@@ -143,6 +143,11 @@
                   <classifier>features</classifier>
                 </artifact>
                 <artifact>
+                  <file>target/classes/features-core.xml</file>
+                  <type>xml</type>
+                  <classifier>features-core</classifier>
+                </artifact>
+                <artifact>
                   <file>target/classes/activemq.xml</file>
                   <type>xml</type>
                   <classifier>activemq</classifier>
