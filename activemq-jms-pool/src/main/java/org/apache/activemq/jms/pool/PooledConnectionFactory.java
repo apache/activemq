@@ -21,8 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
-
 import javax.jms.XAConnectionFactory;
+
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.slf4j.Logger;
@@ -71,62 +71,61 @@ public class PooledConnectionFactory implements ConnectionFactory {
     private long expiryTimeout = 0l;
     private boolean createConnectionOnStartup = true;
 
-
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
             this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
-                    new KeyedPoolableObjectFactory<ConnectionKey, ConnectionPool>() {
+                new KeyedPoolableObjectFactory<ConnectionKey, ConnectionPool>() {
 
-                        @Override
-                        public void activateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                        }
+                    @Override
+                    public void activateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                    }
 
-                        @Override
-                        public void destroyObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                            try {
-                                if (LOG.isTraceEnabled()) {
-                                    LOG.trace("Destroying connection: {}", connection);
-                                }
-                                connection.close();
-                            } catch (Exception e) {
-                                LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
-                            }
-                        }
-
-                        @Override
-                        public ConnectionPool makeObject(ConnectionKey key) throws Exception {
-                            Connection delegate = createConnection(key);
-
-                            ConnectionPool connection = createConnectionPool(delegate);
-                            connection.setIdleTimeout(getIdleTimeout());
-                            connection.setExpiryTimeout(getExpiryTimeout());
-                            connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
-                            connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
-
+                    @Override
+                    public void destroyObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                        try {
                             if (LOG.isTraceEnabled()) {
-                                LOG.trace("Created new connection: {}", connection);
+                                LOG.trace("Destroying connection: {}", connection);
+                            }
+                            connection.close();
+                        } catch (Exception e) {
+                            LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
+                        }
+                    }
+
+                    @Override
+                    public ConnectionPool makeObject(ConnectionKey key) throws Exception {
+                        Connection delegate = createConnection(key);
+
+                        ConnectionPool connection = createConnectionPool(delegate);
+                        connection.setIdleTimeout(getIdleTimeout());
+                        connection.setExpiryTimeout(getExpiryTimeout());
+                        connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
+                        connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
+
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Created new connection: {}", connection);
+                        }
+
+                        return connection;
+                    }
+
+                    @Override
+                    public void passivateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                    }
+
+                    @Override
+                    public boolean validateObject(ConnectionKey key, ConnectionPool connection) {
+                        if (connection != null && connection.expiredCheck()) {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("Connection has expired: {} and will be destroyed", connection);
                             }
 
-                            return connection;
+                            return false;
                         }
 
-                        @Override
-                        public void passivateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                        }
-
-                        @Override
-                        public boolean validateObject(ConnectionKey key, ConnectionPool connection) {
-                            if (connection != null && connection.expiredCheck()) {
-                                if (LOG.isTraceEnabled()) {
-                                    LOG.trace("Connection has expired: {} and will be destroyed", connection);
-                                }
-
-                                return false;
-                            }
-
-                            return true;
-                        }
-                    });
+                        return true;
+                    }
+                });
 
             // Set max idle (not max active) since our connections always idle in the pool.
             this.connectionsPool.setMaxIdle(1);
@@ -157,13 +156,15 @@ public class PooledConnectionFactory implements ConnectionFactory {
     public void setConnectionFactory(final ConnectionFactory toUse) {
         if (toUse instanceof XAConnectionFactory) {
             connectionFactory = new ConnectionFactory() {
-                        public Connection createConnection() throws JMSException {
-                            return ((XAConnectionFactory)toUse).createXAConnection();
-                        }
-                        public Connection createConnection(String userName, String password) throws JMSException {
-                            return ((XAConnectionFactory)toUse).createXAConnection(userName, password);
-                        }
-                    };
+                @Override
+                public Connection createConnection() throws JMSException {
+                    return ((XAConnectionFactory)toUse).createXAConnection();
+                }
+                @Override
+                public Connection createConnection(String userName, String password) throws JMSException {
+                    return ((XAConnectionFactory)toUse).createXAConnection(userName, password);
+                }
+            };
         } else {
             this.connectionFactory = toUse;
         }
@@ -475,5 +476,4 @@ public class PooledConnectionFactory implements ConnectionFactory {
     protected ConnectionPool createConnectionPool(Connection connection) {
         return new ConnectionPool(connection);
     }
-
 }
