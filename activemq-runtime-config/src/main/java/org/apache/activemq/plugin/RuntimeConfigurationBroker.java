@@ -576,24 +576,19 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         // deal with nested elements
         for (Object nested : filter(dto, Object.class)) {
             String elementName = nested.getClass().getSimpleName();
-            if (elementName.endsWith("s")) {
-                Method setter = findSetter(instance, elementName);
-                if (setter != null) {
-
-                    List<Object> argument = new LinkedList<Object>();
-                    for (Object elementContent : filter(nested, Object.class)) {
-                        argument.add(fromDto(elementContent, inferTargetObject(elementContent)));
-                    }
-                    try {
-                        setter.invoke(instance, matchType(argument, setter.getParameterTypes()[0]));
-                    } catch (Exception e) {
-                        info("failed to invoke " + setter + " on " + instance, e);
-                    }
-                } else {
-                    info("failed to find setter for " + elementName + " on :" + instance);
+            Method setter = findSetter(instance, elementName);
+            if (setter != null) {
+                List<Object> argument = new LinkedList<Object>();
+                for (Object elementContent : filter(nested, Object.class)) {
+                    argument.add(fromDto(elementContent, inferTargetObject(elementContent)));
+                }
+                try {
+                    setter.invoke(instance, matchType(argument, setter.getParameterTypes()[0]));
+                } catch (Exception e) {
+                    info("failed to invoke " + setter + " on " + instance, e);
                 }
             } else {
-                info("unsupported mapping of element for non plural:" + elementName);
+                info("failed to find setter for " + elementName + " on :" + instance);
             }
         }
         return instance;

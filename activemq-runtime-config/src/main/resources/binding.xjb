@@ -96,6 +96,22 @@
      <jxb:property name="Contents" />
    </jxb:bindings>
 
+   <jxb:bindings node="xs:element[@name='compositeQueue']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='compositeQueue']/xs:complexType/xs:choice/xs:choice/xs:element[@name='forwardTo']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='compositeTopic']/xs:complexType/xs:choice">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
+   <jxb:bindings node="xs:element[@name='compositeTopic']/xs:complexType/xs:choice/xs:choice/xs:element[@name='forwardTo']/xs:complexType/xs:sequence">
+     <jxb:property name="Contents" />
+   </jxb:bindings>
+
    <jxb:bindings node="xs:element[@name='authorizationPlugin']/xs:complexType/xs:choice">
      <jxb:property name="Contents" />
    </jxb:bindings>
