@@ -28,7 +28,7 @@ import org.fusesource.hawtbuf.AsciiBuffer
  */
 abstract class TransportHandler(val transport: Transport) extends TransportListener {
 
-  var outbound = new util.LinkedList[AnyRef]()
+  var outbound = new util.LinkedList[(AnyRef, ()=>Unit)]()
   val codec = new ReplicationProtocolCodec
 
   transport.setProtocolCodec(codec)
@@ -45,23 +45,26 @@ abstract class TransportHandler(val transport: Transport) extends TransportListe
 
   def drain:Unit = {
     while( !outbound.isEmpty ) {
-      val value = outbound.peekFirst()
+      val (value, on_send) = outbound.peekFirst()
       if( transport.offer(value) ) {
         outbound.removeFirst()
+        if( on_send!=null ) {
+          on_send()
+        }
       } else {
         return
       }
     }
   }
-
-  def send(value:AnyRef):Unit = {
+  def send(value:AnyRef):Unit = send(value, null)
+  def send(value:AnyRef, on_send: ()=>Unit):Unit = {
     transport.getDispatchQueue.assertExecuting()
-    outbound.add(value)
+    outbound.add((value, on_send))
     drain
   }
 
-  def send(action:AsciiBuffer, body:AnyRef):Unit = send(ReplicationFrame(action, if(body==null) null else JsonCodec.encode(body)))
-  def sendError(error:String) = send(ERROR_ACTION, error)
-  def sendOk(body:AnyRef) = send(OK_ACTION, body)
+  def send_replication_frame(action:AsciiBuffer, body:AnyRef):Unit = send(new ReplicationFrame(action, if(body==null) null else JsonCodec.encode(body)))
+  def sendError(error:String) = send_replication_frame(ERROR_ACTION, error)
+  def sendOk(body:AnyRef) = send_replication_frame(OK_ACTION, body)
 
 }

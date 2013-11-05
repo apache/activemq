@@ -24,6 +24,7 @@ import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
 import org.apache.activemq.leveldb.replicated.SlaveLevelDBStore;
 import org.apache.activemq.leveldb.util.FileSupport;
 import org.apache.activemq.store.MessageStore;
+import org.fusesource.hawtdispatch.transport.TcpTransport;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.activemq.leveldb.test.ReplicationTestSupport.addMessage;
+import static org.apache.activemq.leveldb.test.ReplicationTestSupport.createPlayload;
 import static org.apache.activemq.leveldb.test.ReplicationTestSupport.getMessages;
 import static org.junit.Assert.*;
 
@@ -170,13 +172,87 @@ public class ReplicatedLevelDBStoreTest {
         }
     }
 
+    @Test(timeout = 1000*60*60)
+    public void testSlowSlave() throws Exception {
+
+        File node1Dir = new File("target/activemq-data/leveldb-node1");
+        File node2Dir = new File("target/activemq-data/leveldb-node2");
+        File node3Dir = new File("target/activemq-data/leveldb-node3");
+
+        FileSupport.toRichFile(node1Dir).recursiveDelete();
+        FileSupport.toRichFile(node2Dir).recursiveDelete();
+        FileSupport.toRichFile(node3Dir).recursiveDelete();
+
+        node2Dir.mkdirs();
+        node3Dir.mkdirs();
+        FileSupport.toRichFile(new File(node2Dir, "nodeid.txt")).writeText("node2", "UTF-8");
+        FileSupport.toRichFile(new File(node3Dir, "nodeid.txt")).writeText("node3", "UTF-8");
+
+
+        ArrayList<String> expected_list = new ArrayList<String>();
+
+        MasterLevelDBStore node1 = createMaster(node1Dir);
+        CountDownFuture masterStart = asyncStart(node1);
+
+        // Lets create a 1 slow slave...
+        SlaveLevelDBStore node2 = new SlaveLevelDBStore() {
+            boolean hitOnce = false;
+            @Override
+            public TcpTransport create_transport() {
+                if( hitOnce ) {
+                    return super.create_transport();
+                }
+                hitOnce = true;
+                TcpTransport transport = super.create_transport();
+                transport.setMaxReadRate(64*1024);
+                return transport;
+            }
+        };
+        configureSlave(node2, node1, node2Dir);
+        SlaveLevelDBStore node3 = createSlave(node1, node3Dir);
+
+        asyncStart(node2);
+        asyncStart(node3);
+        masterStart.await();
+
+        LOG.info("Adding messages...");
+        String playload = createPlayload(64 * 1024);
+        MessageStore ms = node1.createQueueMessageStore(new ActiveMQQueue("TEST"));
+        final int TOTAL = 10;
+        for (int i = 0; i < TOTAL; i++) {
+            if (i == 8) {
+                // Stop the fast slave so that we wait for the slow slave to
+                // catch up..
+                node3.stop();
+            }
+
+            String msgid = "m:" + ":" + i;
+            addMessage(ms, msgid, playload);
+            expected_list.add(msgid);
+        }
+
+        LOG.info("Checking node1 state");
+        assertEquals(expected_list, getMessages(ms));
+
+        LOG.info("Stopping node1: " + node1.node_id());
+        node1.stop();
+        LOG.info("Stopping slave: " + node2.node_id());
+        node2.stop();
+    }
+
+
     private SlaveLevelDBStore createSlave(MasterLevelDBStore master, File directory) {
-        SlaveLevelDBStore slave1 = new SlaveLevelDBStore();
-        slave1.setDirectory(directory);
-        slave1.setConnect("tcp://127.0.0.1:" + master.getPort());
-        slave1.setSecurityToken("foo");
-        slave1.setLogSize(1023 * 200);
-        return slave1;
+        SlaveLevelDBStore slave = new SlaveLevelDBStore();
+        configureSlave(slave, master, directory);
+        return slave;
+    }
+
+    private SlaveLevelDBStore configureSlave(SlaveLevelDBStore slave, MasterLevelDBStore master, File directory) {
+        slave.setDirectory(directory);
+        slave.setConnect("tcp://127.0.0.1:" + master.getPort());
+        slave.setSecurityToken("foo");
+        slave.setLogSize(1023 * 200);
+        return slave;
     }
 
     private MasterLevelDBStore createMaster(File directory) {

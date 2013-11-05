@@ -64,6 +64,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   }
 
   override def doStart() = {
+    queue.setLabel("slave: "+node_id)
     client.init()
     if (purgeOnStatup) {
       purgeOnStatup = false
@@ -97,10 +98,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   }
 
   def start_slave_connections = {
-    val transport = new TcpTransport()
-    transport.setBlockingExecutor(blocking_executor)
-    transport.setDispatchQueue(queue)
-    transport.connecting(new URI(connect), null)
+    val transport: TcpTransport = create_transport
 
     status = "Attaching to master: "+connect
     info(status)
@@ -118,6 +116,14 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       }
     })
     wal_session.start
+  }
+
+  def create_transport: TcpTransport = {
+    val transport = new TcpTransport()
+    transport.setBlockingExecutor(blocking_executor)
+    transport.setDispatchQueue(queue)
+    transport.connecting(new URI(connect), null)
+    transport
   }
 
   def stop_connections(cb:Task) = {
@@ -156,7 +162,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       val ack = new WalAck()
       ack.position = wal_append_position
 //      info("Sending ack: "+wal_append_position)
-      wal_session.send(ACK_ACTION, ack)
+      wal_session.send_replication_frame(ACK_ACTION, ack)
       if( replay_from != ack.position ) {
         val old_replay_from = replay_from
         replay_from = ack.position
@@ -240,7 +246,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     }
 
     def disconnect(cb:Task) = queue {
-      send(DISCONNECT_ACTION, null)
+      send_replication_frame(DISCONNECT_ACTION, null)
       transport.flush()
       transport.stop(cb)
     }
@@ -268,7 +274,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
     def request(action:AsciiBuffer, body:AnyRef)(cb:(ReplicationFrame)=>Unit) = {
       response_callbacks.addLast(cb)
-      send(action, body)
+      send_replication_frame(action, body)
     }
 
     def response_handler: (AnyRef)=>Unit = (command)=> {

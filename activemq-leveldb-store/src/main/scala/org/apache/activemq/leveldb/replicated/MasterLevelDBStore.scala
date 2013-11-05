@@ -28,6 +28,7 @@ import java.io.{IOException, File}
 import java.net.{SocketAddress, InetSocketAddress, URI}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
 import scala.reflect.BeanProperty
+import org.fusesource.hawtbuf.{Buffer, AsciiBuffer}
 
 class PositionSync(val position:Long, count:Int) extends CountDownLatch(count)
 
@@ -132,7 +133,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   def start_protocol_server = {
     transport_server = new TcpTransportServer(new URI(bind))
     transport_server.setBlockingExecutor(blocking_executor)
-    transport_server.setDispatchQueue(createQueue("replication server"))
+    transport_server.setDispatchQueue(createQueue("master: "+node_id))
     transport_server.setTransportServerListener(new TransportServerListener(){
       def onAccept(transport: Transport) {
         transport.setDispatchQueue(createQueue("connection from "+transport.getRemoteAddress))
@@ -266,7 +267,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         sendError("Invalid length")
       }
       sendOk(null)
-      send(FileTransferFrame(file, req.offset, req.length))
+      send(new FileTransferFrame(file, req.offset, req.length))
     }
 
   }
@@ -282,6 +283,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     def start(session:Session) = {
       debug("SlaveState:start")
       socketAddress = session.transport.getRemoteAddress
+      session.queue.setLabel(transport_server.getDispatchQueue.getLabel+" -> "+slave_id)
 
       val resp = this.synchronized {
         if( this.session!=null ) {
@@ -311,16 +313,69 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       }
     }
 
-    def replicate_wal(frame1:ReplicationFrame, frame2:FileTransferFrame=null ) = {
+    def queue(func: (Session)=>Unit) = {
       val h = this.synchronized {
         session
       }
       if( h !=null ) {
         h.queue {
-          h.send(frame1)
-          if( frame2!=null ) {
-            h.send(frame2)
-          }
+          func(session)
+        }
+      }
+    }
+
+    def replicate(value:LogDelete):Unit = {
+      val frame = new ReplicationFrame(LOG_DELETE_ACTION, JsonCodec.encode(value))
+      queue { session =>
+        session.send(frame)
+      }
+    }
+
+    var unflushed_replication_frame:DeferredReplicationFrame = null
+
+    class DeferredReplicationFrame(file:File, val position:Long, _offset:Long, initialLength:Long) extends ReplicationFrame(WAL_ACTION, null) {
+      val fileTransferFrame = new FileTransferFrame(file, _offset, initialLength)
+      var encoded:Buffer = null
+
+      def offset = fileTransferFrame.offset
+      def length = fileTransferFrame.length
+
+      override def body: Buffer = {
+        if( encoded==null ) {
+          val value = new LogWrite
+          value.file = position;
+          value.offset = offset;
+          value.length = fileTransferFrame.length
+          value.date = date
+          encoded = JsonCodec.encode(value)
+        }
+        encoded
+      }
+    }
+
+    def replicate(file:File, position:Long, offset:Long, length:Long):Unit = {
+      queue { session =>
+
+        // Check to see if we can merge the replication event /w the previous event..
+        if( unflushed_replication_frame == null ||
+                unflushed_replication_frame.position!=position ||
+                (unflushed_replication_frame.offset+unflushed_replication_frame.length)!=offset ) {
+
+          // We could not merge the replication event /w the previous event..
+          val frame = new DeferredReplicationFrame(file, position, offset, length)
+          unflushed_replication_frame = frame
+          session.send(frame, ()=>{
+            trace("%s: Sent WAL update: (file:%s, offset: %d, length: %d) to %s", directory, file, frame.offset, frame.length, slave_id)
+            if( unflushed_replication_frame eq frame ) {
+              unflushed_replication_frame = null
+            }
+          })
+          session.send(frame.fileTransferFrame)
+
+        } else {
+          // We were able to merge.. yay!
+          assert(unflushed_replication_frame.encoded == null)
+          unflushed_replication_frame.fileTransferFrame.length += length
         }
       }
     }
@@ -392,18 +447,8 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   def replicate_wal(file:File, position:Long, offset:Long, length:Long):Unit = {
     if( length > 0 ) {
-      val value = new LogWrite
-      value.file = position;
-      value.offset = offset;
-      value.length = length
-      value.date = date
-      wal_date = value.date;
-      value.sync = (syncToMask & SYNC_TO_REMOTE_DISK)!=0
-      trace("%s: Sending WAL update: (file:%d, offset: %d, length: %d)", directory, value.file, value.offset, value.length)
-      val frame1 = ReplicationFrame(WAL_ACTION, JsonCodec.encode(value))
-      val frame2 = FileTransferFrame(file, offset, length)
       for( slave <- slaves.values() ) {
-        slave.replicate_wal(frame1, frame2)
+        slave.replicate(file, position, offset, length)
       }
     }
   }
@@ -411,9 +456,8 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   def replicate_log_delete(log:Long):Unit = {
     val value = new LogDelete
     value.log = log
-    val frame = ReplicationFrame(LOG_DELETE_ACTION, JsonCodec.encode(value))
     for( slave <- slaves.values() ) {
-      slave.replicate_wal(frame)
+      slave.replicate(value)
     }
   }
 
