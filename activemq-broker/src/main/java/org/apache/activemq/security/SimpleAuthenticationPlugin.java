@@ -93,12 +93,24 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
         this.anonymousAccessAllowed = anonymousAccessAllowed;
     }
 
+    public boolean isAnonymousAccessAllowed() {
+        return anonymousAccessAllowed;
+    }
+
     public void setAnonymousUser(String anonymousUser) {
         this.anonymousUser = anonymousUser;
     }
 
+    public String getAnonymousUser() {
+        return anonymousUser;
+    }
+
     public void setAnonymousGroup(String anonymousGroup) {
         this.anonymousGroup = anonymousGroup;
+    }
+
+    public String getAnonymousGroup() {
+        return anonymousGroup;
     }
 
     /**
