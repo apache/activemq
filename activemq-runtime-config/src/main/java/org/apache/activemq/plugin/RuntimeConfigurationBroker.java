@@ -17,7 +17,6 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -69,10 +68,12 @@ import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
+import org.apache.activemq.schema.core.DtoAuthenticationUser;
 import org.apache.activemq.schema.core.DtoAuthorizationEntry;
 import org.apache.activemq.schema.core.DtoAuthorizationMap;
 import org.apache.activemq.schema.core.DtoAuthorizationPlugin;
@@ -83,11 +84,15 @@ import org.apache.activemq.schema.core.DtoNetworkConnector;
 import org.apache.activemq.schema.core.DtoPolicyEntry;
 import org.apache.activemq.schema.core.DtoPolicyMap;
 import org.apache.activemq.schema.core.DtoQueue;
+import org.apache.activemq.schema.core.DtoSimpleAuthenticationPlugin;
 import org.apache.activemq.schema.core.DtoTopic;
 import org.apache.activemq.schema.core.DtoVirtualDestinationInterceptor;
 import org.apache.activemq.schema.core.DtoVirtualTopic;
+import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.AuthorizationBroker;
 import org.apache.activemq.security.AuthorizationMap;
+import org.apache.activemq.security.SimpleAuthenticationBroker;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.security.TempDestinationAuthorizationEntry;
 import org.apache.activemq.security.XBeanAuthorizationEntry;
 import org.apache.activemq.security.XBeanAuthorizationMap;
@@ -95,9 +100,7 @@ import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.PluggableSchemaResolver;
 import org.springframework.core.io.Resource;
 import org.w3c.dom.Document;
@@ -112,13 +115,15 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     public static final Logger LOG = LoggerFactory.getLogger(RuntimeConfigurationBroker.class);
     public static final String objectNamePropsAppendage = ",service=RuntimeConfiguration,name=Plugin";
     private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock addConnectionBarrier = new ReentrantReadWriteLock();
     PropertiesPlaceHolderUtil placeHolderUtil = null;
     private long checkPeriod;
     private long lastModified = -1;
     private Resource configToMonitor;
     private DtoBroker currentConfiguration;
     private Runnable monitorTask;
-    private ConcurrentLinkedQueue<Runnable> destinationInterceptorUpdateWork = new ConcurrentLinkedQueue<Runnable>();
+    private ConcurrentLinkedQueue<Runnable> addDestinationWork = new ConcurrentLinkedQueue<Runnable>();
+    private ConcurrentLinkedQueue<Runnable> addConnectionWork = new ConcurrentLinkedQueue<Runnable>();
     private ObjectName objectName;
     private String infoString;
     private Schema schema;
@@ -184,13 +189,13 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     // modification to virtual destinations interceptor needs exclusive access to destination add
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary) throws Exception {
-        Runnable work = destinationInterceptorUpdateWork.poll();
+        Runnable work = addDestinationWork.poll();
         if (work != null) {
             try {
                 addDestinationBarrier.writeLock().lockInterruptibly();
                 do {
                     work.run();
-                    work = destinationInterceptorUpdateWork.poll();
+                    work = addDestinationWork.poll();
                 } while (work != null);
                 return super.addDestination(context, destination, createIfTemporary);
             } finally {
@@ -202,6 +207,31 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 return super.addDestination(context, destination, createIfTemporary);
             } finally {
                 addDestinationBarrier.readLock().unlock();
+            }
+        }
+    }
+
+    // modification to authentication plugin needs exclusive access to connection add
+    @Override
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        Runnable work = addConnectionWork.poll();
+        if (work != null) {
+            try {
+                addConnectionBarrier.writeLock().lockInterruptibly();
+                do {
+                    work.run();
+                    work = addConnectionWork.poll();
+                } while (work != null);
+                super.addConnection(context, info);
+            } finally {
+                addConnectionBarrier.writeLock().unlock();
+            }
+        } else {
+            try {
+                addConnectionBarrier.readLock().lockInterruptibly();
+                super.addConnection(context, info);
+            } finally {
+                addConnectionBarrier.readLock().unlock();
             }
         }
     }
@@ -235,7 +265,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void info(String s) {
-        LOG.info(s);
+        LOG.info(filterPasswords(s));
         if (infoString != null) {
             infoString += s;
             infoString += ";";
@@ -243,7 +273,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void info(String s, Throwable t) {
-        LOG.info(s, t);
+        LOG.info(filterPasswords(s), t);
         if (infoString != null) {
             infoString += s;
             infoString += ", " + t;
@@ -255,8 +285,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         DtoBroker changed = loadConfiguration(configToMonitor);
         if (changed != null && !currentConfiguration.equals(changed)) {
             LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
-            LOG.debug("current:" + currentConfiguration);
-            LOG.debug("new    :" + changed);
+            LOG.debug("current:" + filterPasswords(currentConfiguration));
+            LOG.debug("new    :" + filterPasswords(changed));
             processSelectiveChanges(currentConfiguration, changed);
             currentConfiguration = changed;
         } else {
@@ -320,7 +350,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 answer.add(val);
             }
         } catch (NoSuchMethodException mappingIncomplete) {
-            LOG.debug(o + " has no modifiable elements");
+            LOG.debug(filterPasswords(o) + " has no modifiable elements");
         } catch (Exception e) {
             info("Failed to access getContents for " + o + ", runtime modifications not supported", e);
         }
@@ -358,6 +388,24 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 authorizationBroker.setAuthorizationMap(fromDto(filter(candidate, DtoAuthorizationPlugin.Map.class)));
             } catch (Exception e) {
                 info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
+            }
+
+        } else if (candidate instanceof DtoSimpleAuthenticationPlugin) {
+            try {
+                final SimpleAuthenticationPlugin updatedPlugin = fromDto(candidate, new SimpleAuthenticationPlugin());
+                final SimpleAuthenticationBroker authenticationBroker =
+                    (SimpleAuthenticationBroker) getBrokerService().getBroker().getAdaptor(SimpleAuthenticationBroker.class);
+                addConnectionWork.add(new Runnable() {
+                    public void run() {
+                        authenticationBroker.setUserGroups(updatedPlugin.getUserGroups());
+                        authenticationBroker.setUserPasswords(updatedPlugin.getUserPasswords());
+                        authenticationBroker.setAnonymousAccessAllowed(updatedPlugin.isAnonymousAccessAllowed());
+                        authenticationBroker.setAnonymousUser(updatedPlugin.getAnonymousUser());
+                        authenticationBroker.setAnonymousGroup(updatedPlugin.getAnonymousGroup());
+                    }
+                });
+            } catch (Exception e) {
+                info("failed to apply SimpleAuthenticationPlugin modifications to SimpleAuthenticationBroker", e);
             }
 
         } else if (candidate instanceof DtoPolicyMap) {
@@ -450,7 +498,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             }
         } else if (o instanceof DtoVirtualDestinationInterceptor) {
             // whack it
-            destinationInterceptorUpdateWork.add(new Runnable() {
+            addDestinationWork.add(new Runnable() {
                 public void run() {
                     List<DestinationInterceptor> interceptorsList = new ArrayList<DestinationInterceptor>();
                     for (DestinationInterceptor candidate : getBrokerService().getDestinationInterceptors()) {
@@ -500,7 +548,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             }
         } else if (o instanceof DtoVirtualDestinationInterceptor) {
             final DtoVirtualDestinationInterceptor dto = (DtoVirtualDestinationInterceptor) o;
-            destinationInterceptorUpdateWork.add(new Runnable() {
+            addDestinationWork.add(new Runnable() {
                 public void run() {
 
                     boolean updatedExistingInterceptor = false;
@@ -570,7 +618,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         Properties properties = new Properties();
         IntrospectionSupport.getProperties(dto, properties, null);
         replacePlaceHolders(properties);
-        LOG.trace("applying props: " + properties + ", to " + instance.getClass().getSimpleName());
+        LOG.trace("applying props: " + filterPasswords(properties) + ", to " + instance.getClass().getSimpleName());
         IntrospectionSupport.setProperties(instance, properties);
 
         // deal with nested elements
@@ -594,6 +642,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         return instance;
     }
 
+    Pattern matchPassword = Pattern.compile("password=.*,");
+    private String filterPasswords(Object toEscape) {
+        return matchPassword.matcher(toEscape.toString()).replaceAll("password=???,");
+    }
+
     private Object matchType(List<Object> parameterValues, Class<?> aClass) {
         Object result = parameterValues;
         if (Set.class.isAssignableFrom(aClass)) {
@@ -607,6 +660,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             return new ActiveMQTopic();
         } else if (DtoQueue.class.isAssignableFrom(elementContent.getClass())) {
             return new ActiveMQQueue();
+        } else if (DtoAuthenticationUser.class.isAssignableFrom(elementContent.getClass())) {
+            return new AuthenticationUser();
         } else {
             info("update not supported for dto: " + elementContent);
             return new Object();

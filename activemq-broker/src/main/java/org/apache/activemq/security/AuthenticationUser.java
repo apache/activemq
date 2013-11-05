@@ -28,6 +28,9 @@ public class AuthenticationUser {
     String password;
     String groups;
 
+    public AuthenticationUser() {
+    }
+
     public AuthenticationUser(String username, String password, String groups) {
         this.username = username;
         this.password = password;
