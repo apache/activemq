@@ -52,7 +52,7 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(MessageHeaderTest.class);
         suite.addTestSuite(QueueBrowserTest.class);
         suite.addTestSuite(MessageTypeTest.class);
-        suite.addTestSuite(UnifiedSessionTest.class);
+        // suite.addTestSuite(UnifiedSessionTest.class);   // https://issues.apache.org/jira/browse/AMQ-4375
         suite.addTestSuite(TemporaryTopicTest.class);
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(SelectorSyntaxTest.class);
