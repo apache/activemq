@@ -119,6 +119,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private final AtomicBoolean started = new AtomicBoolean();
     private TransportConnection duplexInitiatingConnection;
+    private final AtomicBoolean duplexInitiatingConnectionInfoReceived = new AtomicBoolean();
     protected BrokerService brokerService = null;
     private ObjectName mbeanObjectName;
     private final ExecutorService serialExecutor = Executors.newSingleThreadExecutor();
@@ -610,6 +611,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         } else {
                             switch (command.getDataStructureType()) {
                                 case ConnectionInfo.DATA_STRUCTURE_TYPE:
+                                    if (duplexInitiatingConnection != null && duplexInitiatingConnectionInfoReceived.compareAndSet(false, true)) {
+                                        // end of initiating connection setup - propogate to initial connection to get mbean by clientid
+                                        duplexInitiatingConnection.processAddConnection((ConnectionInfo) command);
+                                    } else {
+                                        localBroker.oneway(command);
+                                    }
+                                    break;
                                 case SessionInfo.DATA_STRUCTURE_TYPE:
                                     localBroker.oneway(command);
                                     break;
