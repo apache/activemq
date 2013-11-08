@@ -51,7 +51,7 @@ public class WSServlet extends WebSocketServlet {
     @Override
     public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
         WebSocket socket;
-        if (protocol.startsWith("mqtt")) {
+        if (protocol != null && protocol.startsWith("mqtt")) {
             socket = new MQTTSocket();
         } else {
             socket = new StompSocket();
