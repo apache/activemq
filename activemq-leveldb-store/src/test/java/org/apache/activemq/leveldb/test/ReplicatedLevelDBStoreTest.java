@@ -118,21 +118,22 @@ public class ReplicatedLevelDBStoreTest {
         return f;
     }
 
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*20)
     public void testReplication() throws Exception {
 
         LinkedList<File> directories = new LinkedList<File>();
         directories.add(new File("target/activemq-data/leveldb-node1"));
         directories.add(new File("target/activemq-data/leveldb-node2"));
         directories.add(new File("target/activemq-data/leveldb-node3"));
+        resetDirectories(directories);
 
-        for (File f : directories) {
-            FileSupport.toRichFile(f).recursiveDelete();
-        }
+        // For some reason this had to be 64k to trigger a bug where
+        // slave index snapshots were being done incorrectly.
+        String playload = createPlayload(64*1024);
 
         ArrayList<String> expected_list = new ArrayList<String>();
         // We will rotate between 3 nodes the task of being the master.
-        for (int j = 0; j < 10; j++) {
+        for (int j = 0; j < 5; j++) {
 
             MasterLevelDBStore master = createMaster(directories.get(0));
             CountDownFuture masterStart = asyncStart(master);
@@ -141,8 +142,12 @@ public class ReplicatedLevelDBStoreTest {
             asyncStart(slave2);
             masterStart.await();
 
-            LOG.info("Adding messages...");
             MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
+
+            LOG.info("Checking: "+master.getDirectory());
+            assertEquals(expected_list, getMessages(ms));
+
+            LOG.info("Adding messages...");
             final int TOTAL = 500;
             for (int i = 0; i < TOTAL; i++) {
                 if (i % ((int) (TOTAL * 0.10)) == 0) {
@@ -152,19 +157,23 @@ public class ReplicatedLevelDBStoreTest {
                 if (i == 250) {
                     slave1.start();
                     slave2.stop();
+                    LOG.info("Checking: "+master.getDirectory());
+                    assertEquals(expected_list, getMessages(ms));
                 }
 
                 String msgid = "m:" + j + ":" + i;
-                addMessage(ms, msgid);
+                addMessage(ms, msgid, playload);
                 expected_list.add(msgid);
             }
 
-            LOG.info("Checking master state");
+            LOG.info("Checking: "+master.getDirectory());
             assertEquals(expected_list, getMessages(ms));
 
-            LOG.info("Stopping master: " + master.node_id());
+            LOG.info("Stopping master: " + master.getDirectory());
             master.stop();
-            LOG.info("Stopping slave: " + slave1.node_id());
+
+            Thread.sleep(3*1000);
+            LOG.info("Stopping slave: " + slave1.getDirectory());
             slave1.stop();
 
             // Rotate the dir order so that slave1 becomes the master next.
@@ -172,22 +181,26 @@ public class ReplicatedLevelDBStoreTest {
         }
     }
 
+    void resetDirectories(LinkedList<File> directories) {
+        for (File directory : directories) {
+            FileSupport.toRichFile(directory).recursiveDelete();
+            directory.mkdirs();
+            FileSupport.toRichFile(new File(directory, "nodeid.txt")).writeText(directory.getName(), "UTF-8");
+        }
+    }
+
     @Test(timeout = 1000*60*60)
     public void testSlowSlave() throws Exception {
 
-        File node1Dir = new File("target/activemq-data/leveldb-node1");
-        File node2Dir = new File("target/activemq-data/leveldb-node2");
-        File node3Dir = new File("target/activemq-data/leveldb-node3");
+        LinkedList<File> directories = new LinkedList<File>();
+        directories.add(new File("target/activemq-data/leveldb-node1"));
+        directories.add(new File("target/activemq-data/leveldb-node2"));
+        directories.add(new File("target/activemq-data/leveldb-node3"));
+        resetDirectories(directories);
 
-        FileSupport.toRichFile(node1Dir).recursiveDelete();
-        FileSupport.toRichFile(node2Dir).recursiveDelete();
-        FileSupport.toRichFile(node3Dir).recursiveDelete();
-
-        node2Dir.mkdirs();
-        node3Dir.mkdirs();
-        FileSupport.toRichFile(new File(node2Dir, "nodeid.txt")).writeText("node2", "UTF-8");
-        FileSupport.toRichFile(new File(node3Dir, "nodeid.txt")).writeText("node3", "UTF-8");
-
+        File node1Dir = directories.get(0);
+        File node2Dir = directories.get(1);
+        File node3Dir = directories.get(2);
 
         ArrayList<String> expected_list = new ArrayList<String>();
 

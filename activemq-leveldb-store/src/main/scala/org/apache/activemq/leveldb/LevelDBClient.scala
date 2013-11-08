@@ -671,6 +671,7 @@ class LevelDBClient(store: LevelDBStore) {
       for( (id, file)<- lastSnapshotIndex ) {
         try {
           copyIndex(file, dirtyIndexFile)
+          debug("Recovering from last index snapshot at: "+dirtyIndexFile)
         } catch {
           case e:Exception =>
             warn(e, "Could not recover snapshot of the index: "+e)
@@ -678,11 +679,9 @@ class LevelDBClient(store: LevelDBStore) {
         }
       }
       index = new RichDB(factory.open(dirtyIndexFile, indexOptions));
-      if ( store.paranoidChecks ) {
-        for(value <- index.get(DIRTY_INDEX_KEY) ) {
-          if( java.util.Arrays.equals(value, TRUE) ) {
-            warn("Recovering from a dirty index.")
-          }
+      for(value <- index.get(DIRTY_INDEX_KEY) ) {
+        if( java.util.Arrays.equals(value, TRUE) ) {
+          warn("Recovering from a dirty index.")
         }
       }
       index.put(DIRTY_INDEX_KEY, TRUE)
@@ -691,6 +690,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   var replay_write_batch: WriteBatch = null
+  var indexRecoveryPosition = 0L
 
   def replay_from(from:Long, limit:Long, print_progress:Boolean=true) = {
     debug("Replay of journal from: %d to %d.", from, limit)
@@ -700,19 +700,19 @@ class LevelDBClient(store: LevelDBStore) {
     might_fail {
       try {
         // Update the index /w what was stored on the logs..
-        var pos = from;
+        indexRecoveryPosition = from;
         var last_reported_at = System.currentTimeMillis();
         var showing_progress = false
         var last_reported_pos = 0L
         try {
-          while (pos < limit) {
+          while (indexRecoveryPosition < limit) {
 
             if( print_progress ) {
               val now = System.currentTimeMillis();
               if( now > last_reported_at+1000 ) {
-                val at = pos-from
+                val at = indexRecoveryPosition-from
                 val total = limit-from
-                val rate = (pos-last_reported_pos)*1000.0 / (now - last_reported_at)
+                val rate = (indexRecoveryPosition-last_reported_pos)*1000.0 / (now - last_reported_at)
                 val eta = (total-at)/rate
                 val remaining = if(eta > 60*60) {
                   "%.2f hrs".format(eta/(60*60))
@@ -726,24 +726,24 @@ class LevelDBClient(store: LevelDBStore) {
                   at*100.0/total, at, total, rate/1024, remaining))
                 showing_progress = true;
                 last_reported_at = now
-                last_reported_pos = pos
+                last_reported_pos = indexRecoveryPosition
               }
             }
 
 
-            log.read(pos).map {
+            log.read(indexRecoveryPosition).map {
               case (kind, data, nextPos) =>
                 kind match {
                   case LOG_DATA =>
                     val message = decodeMessage(data)
                     store.db.producerSequenceIdTracker.isDuplicate(message.getMessageId)
-                    trace("Replay of LOG_DATA at %d, message id: ", pos, message.getMessageId)
+                    trace("Replay of LOG_DATA at %d, message id: ", indexRecoveryPosition, message.getMessageId)
 
                   case LOG_ADD_COLLECTION =>
                     val record= decodeCollectionRecord(data)
                     replay_write_batch.put(encodeLongKey(COLLECTION_PREFIX, record.getKey), data)
                     collectionMeta.put(record.getKey, new CollectionMeta)
-                    trace("Replay of LOG_ADD_COLLECTION at %d, collection: %s", pos, record.getKey)
+                    trace("Replay of LOG_ADD_COLLECTION at %d, collection: %s", indexRecoveryPosition, record.getKey)
 
                   case LOG_REMOVE_COLLECTION =>
                     val record = decodeCollectionKeyRecord(data)
@@ -761,7 +761,7 @@ class LevelDBClient(store: LevelDBStore) {
                     }
                     index.delete(data)
                     collectionMeta.remove(record.getKey)
-                    trace("Replay of LOG_REMOVE_COLLECTION at %d, collection: %s", pos, record.getKey)
+                    trace("Replay of LOG_REMOVE_COLLECTION at %d, collection: %s", indexRecoveryPosition, record.getKey)
 
                   case LOG_ADD_ENTRY | LOG_UPDATE_ENTRY =>
                     val record = decodeEntryRecord(data)
@@ -779,7 +779,8 @@ class LevelDBClient(store: LevelDBStore) {
                       }
                       collectionIncrementSize(record.getCollectionKey, record.getEntryKey.toByteArray)
                     }
-                    trace("Replay of LOG_ADD_ENTRY at %d, collection: %s, entry: %s", pos, record.getCollectionKey, record.getEntryKey)
+                    trace("Replay of LOG_ADD_ENTRY at %d, collection: %s, entry: %s", indexRecoveryPosition, record.getCollectionKey, record.getEntryKey)
+
 
                   case LOG_REMOVE_ENTRY =>
                     val record = decodeEntryRecord(data)
@@ -791,19 +792,19 @@ class LevelDBClient(store: LevelDBStore) {
 
                     replay_write_batch.delete(encodeEntryKey(ENTRY_PREFIX, record.getCollectionKey, record.getEntryKey))
                     collectionDecrementSize( record.getCollectionKey)
-                    trace("Replay of LOG_REMOVE_ENTRY collection: %s, entry: %s", pos, record.getCollectionKey, record.getEntryKey)
+                    trace("Replay of LOG_REMOVE_ENTRY collection: %s, entry: %s", indexRecoveryPosition, record.getCollectionKey, record.getEntryKey)
 
                   case LOG_TRACE =>
-                    trace("Replay of LOG_TRACE, message: %s", pos, data.ascii())
+                    trace("Replay of LOG_TRACE, message: %s", indexRecoveryPosition, data.ascii())
                   case RecordLog.UOW_END_RECORD =>
                     trace("Replay of UOW_END_RECORD")
                     index.db.write(replay_write_batch)
                     replay_write_batch=index.db.createWriteBatch()
                   case kind => // Skip other records, they don't modify the index.
-                    trace("Skipping replay of %d record kind at %d", kind, pos)
+                    trace("Skipping replay of %d record kind at %d", kind, indexRecoveryPosition)
 
                 }
-                pos = nextPos
+                indexRecoveryPosition = nextPos
             }
           }
         }
@@ -989,10 +990,11 @@ class LevelDBClient(store: LevelDBStore) {
           index.put(DIRTY_INDEX_KEY, FALSE, new WriteOptions().sync(true))
           index.close
           index = null
+          debug("Gracefuly closed the index")
+          copyDirtyIndexToSnapshot
         }
         if (log!=null && log.isOpen) {
           log.close
-          copyDirtyIndexToSnapshot
           stored_wal_append_position = log.appender_limit
           log = null
         }
@@ -1043,15 +1045,18 @@ class LevelDBClient(store: LevelDBStore) {
     snapshotRwLock.writeLock().unlock()
   }
 
+  def nextIndexSnapshotPos:Long = wal_append_position
+
   def copyDirtyIndexToSnapshot:Unit = {
-    if( log.appender_limit == lastIndexSnapshotPos  ) {
+    if( nextIndexSnapshotPos == lastIndexSnapshotPos  ) {
       // no need to snapshot again...
       return
     }
-    copyDirtyIndexToSnapshot(log.appender_limit)
+    copyDirtyIndexToSnapshot(nextIndexSnapshotPos)
   }
 
   def copyDirtyIndexToSnapshot(walPosition:Long):Unit = {
+    debug("Taking a snapshot of the current index: "+snapshotIndexFile(walPosition))
     // Where we start copying files into.  Delete this on
     // restart.
     val tmpDir = tempIndexFile
