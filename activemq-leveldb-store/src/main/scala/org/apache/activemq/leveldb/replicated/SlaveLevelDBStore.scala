@@ -58,9 +58,14 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     // he slave is caught up.
     override def post_log_rotate: Unit = {
       if( caughtUp ) {
-        super.post_log_rotate
+        writeExecutor {
+          snapshotIndex(false)
+        }
       }
     }
+
+    // The snapshots we create are based on what has been replayed.
+    override def nextIndexSnapshotPos:Long = indexRecoveryPosition
   }
 
   override def doStart() = {
