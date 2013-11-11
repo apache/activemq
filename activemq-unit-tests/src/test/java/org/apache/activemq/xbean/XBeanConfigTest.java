@@ -17,7 +17,9 @@
 package org.apache.activemq.xbean;
 
 import java.net.URI;
+
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -36,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class XBeanConfigTest extends TestCase {
 
@@ -71,8 +73,8 @@ public class XBeanConfigTest extends TestCase {
         subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
         assertTrue("subscriptionRecoveryPolicy should be TimedSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
                    subscriptionRecoveryPolicy instanceof TimedSubscriptionRecoveryPolicy);
-        TimedSubscriptionRecoveryPolicy timedSubcriptionPolicy = (TimedSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy;
-        assertEquals("getRecoverDuration()", 60000, timedSubcriptionPolicy.getRecoverDuration());
+        TimedSubscriptionRecoveryPolicy timedSubscriptionPolicy = (TimedSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy;
+        assertEquals("getRecoverDuration()", 60000, timedSubscriptionPolicy.getRecoverDuration());
 
         LOG.info("destination: " + topic);
         LOG.info("dispatchPolicy: " + dispatchPolicy);
