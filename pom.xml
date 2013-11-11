@@ -97,6 +97,7 @@
     <org-apache-derby-version>10.10.1.1</org-apache-derby-version>
     <org.osgi.core-version>4.3.1</org.osgi.core-version>
     <p2psockets-version>1.1.2</p2psockets-version>
+    <paho-version>0.4.0</paho-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.5</zookeeper-version>
     <qpid-proton-version>0.5</qpid-proton-version>
@@ -364,6 +365,11 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.paho</groupId>
+        <artifactId>mqtt-client</artifactId>
+        <version>${paho-version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -1591,12 +1597,19 @@
       <releases><enabled>true</enabled></releases>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
+    <!-- for the paho dependency -->
+    <repository>
+      <id>eclipse.m2</id>
+      <url>https://repo.eclipse.org/content/groups/releases/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
     <repository>
         <id>com.fusesource.m2.snapshot</id>
         <url>http://repo.fusesource.com/nexus/content/repositories/snapshots/</url>
         <releases><enabled>false</enabled></releases>
         <snapshots><enabled>true</enabled></snapshots>
-      </repository>
+    </repository>
 
   </repositories>
 
