@@ -45,13 +45,11 @@ import org.slf4j.LoggerFactory;
 /**
  * A {@link BrokerFacade} which uses a JMX-Connection to communicate with a
  * broker
- * 
- * 
  */
 public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
-    
+
     private static final transient Logger LOG = LoggerFactory.getLogger(RemoteJMXBrokerFacade.class);
-    
+
     private String brokerName;
     private JMXConnector connector;
     private WebConsoleConfiguration configuration;
@@ -61,47 +59,38 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     }
 
     public WebConsoleConfiguration getConfiguration() {
-		return configuration;
-	}
+        return configuration;
+    }
 
-	public void setConfiguration(WebConsoleConfiguration configuration) {
-		this.configuration = configuration;
-	}
+    public void setConfiguration(WebConsoleConfiguration configuration) {
+        this.configuration = configuration;
+    }
 
-	/**
+    /**
      * Shutdown this facade aka close any open connection.
      */
     public void shutdown() {
         closeConnection();
     }
 
-    private ObjectName getBrokerObjectName(MBeanServerConnection connection)
-			throws IOException, MalformedObjectNameException {
-		Set<ObjectName> brokers = findBrokers(connection);
-		if (brokers.size() == 0) {
-			throw new IOException("No broker could be found in the JMX.");
-		}
-		ObjectName name = brokers.iterator().next();
-		return name;
-	}
-
+    @Override
     public BrokerViewMBean getBrokerAdmin() throws Exception {
         MBeanServerConnection connection = getMBeanServerConnection();
 
-        Set brokers = findBrokers(connection);
+        Set<ObjectName> brokers = findBrokers(connection);
         if (brokers.size() == 0) {
             throw new IOException("No broker could be found in the JMX.");
         }
-        ObjectName name = (ObjectName)brokers.iterator().next();
-        BrokerViewMBean mbean = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(connection, name, BrokerViewMBean.class, true);
+        ObjectName name = brokers.iterator().next();
+        BrokerViewMBean mbean = MBeanServerInvocationHandler.newProxyInstance(connection, name, BrokerViewMBean.class, true);
         return mbean;
     }
 
-    public String getBrokerName() throws Exception,
-			MalformedObjectNameException {
+    @Override
+    public String getBrokerName() throws Exception, MalformedObjectNameException {
         return getBrokerAdmin().getBrokerName();
     }
-    
+
     protected MBeanServerConnection getMBeanServerConnection() throws Exception {
         JMXConnector connector = this.connector;
         if (isConnectionActive(connector)) {
@@ -110,7 +99,6 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 
         synchronized (this) {
             closeConnection();
-
             LOG.debug("Creating a new JMX-Connection to the broker");
             this.connector = createConnection();
             return this.connector.getMBeanServerConnection();
@@ -134,117 +122,108 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     protected JMXConnector createConnection() {
 
         Map<String, Object> env = new HashMap<String, Object>();
-		if (this.configuration.getJmxUser() != null) {
-			env.put("jmx.remote.credentials", new String[] {
-					this.configuration.getJmxUser(),
-					this.configuration.getJmxPassword() });
-		}
+        if (this.configuration.getJmxUser() != null) {
+            env.put("jmx.remote.credentials", new String[] { this.configuration.getJmxUser(), this.configuration.getJmxPassword() });
+        }
         Collection<JMXServiceURL> jmxUrls = this.configuration.getJmxUrls();
 
         Exception exception = null;
-		for (JMXServiceURL url : jmxUrls) {
-			try {
-				JMXConnector connector = JMXConnectorFactory.connect(url, env);
-				connector.connect();
-				MBeanServerConnection connection = connector
-						.getMBeanServerConnection();
+        for (JMXServiceURL url : jmxUrls) {
+            try {
+                JMXConnector connector = JMXConnectorFactory.connect(url, env);
+                connector.connect();
+                MBeanServerConnection connection = connector.getMBeanServerConnection();
 
-				Set<ObjectName> brokers = findBrokers(connection);
-				if (brokers.size() > 0) {
-					LOG.info("Connected via JMX to the broker at " + url);
-					return connector;
-				}
-			} catch (Exception e) {
-				// Keep the exception for later
-				exception = e;
-			}
-		}
-		if (exception != null) {
-			if (exception instanceof RuntimeException) {
-				throw (RuntimeException) exception;
-			} else {
-				throw new RuntimeException(exception);
-			}
-		}
-		throw new IllegalStateException("No broker is found at any of the "
-				+ jmxUrls.size() + " configured urls");
-	}
+                Set<ObjectName> brokers = findBrokers(connection);
+                if (brokers.size() > 0) {
+                    LOG.info("Connected via JMX to the broker at " + url);
+                    return connector;
+                }
+            } catch (Exception e) {
+                // Keep the exception for later
+                exception = e;
+            }
+        }
+        if (exception != null) {
+            if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new RuntimeException(exception);
+            }
+        }
+        throw new IllegalStateException("No broker is found at any of the " + jmxUrls.size() + " configured urls");
+    }
 
     protected synchronized void closeConnection() {
         if (connector != null) {
             try {
                 LOG.debug("Closing a connection to a broker (" + connector.getConnectionId() + ")");
-
                 connector.close();
             } catch (IOException e) {
-                // Ignore the exception, since it most likly won't matter
-                // anymore
+                // Ignore the exception, since it most likly won't matter anymore
             }
         }
     }
 
-	/**
-	 * Finds all ActiveMQ-Brokers registered on a certain JMX-Server or, if a
-	 * JMX-BrokerName has been set, the broker with that name.
-	 * 
-	 * @param connection
-	 *            not <code>null</code>
-	 * @return Set with ObjectName-elements
-	 * @throws IOException
-	 * @throws MalformedObjectNameException
-	 */
-	@SuppressWarnings("unchecked")
-	protected Set<ObjectName> findBrokers(MBeanServerConnection connection)
-			throws IOException, MalformedObjectNameException {
-		ObjectName name;
-		if (this.brokerName == null) {
-			name = new ObjectName("org.apache.activemq:type=Broker,brokerName=*");
-		} else {
-			name = new ObjectName("org.apache.activemq:brokerName="
-					+ this.brokerName + ",Type=broker");
-		}
+    /**
+     * Finds all ActiveMQ-Brokers registered on a certain JMX-Server or, if a
+     * JMX-BrokerName has been set, the broker with that name.
+     *
+     * @param connection
+     *            not <code>null</code>
+     * @return Set with ObjectName-elements
+     * @throws IOException
+     * @throws MalformedObjectNameException
+     */
+    protected Set<ObjectName> findBrokers(MBeanServerConnection connection) throws IOException, MalformedObjectNameException {
+        ObjectName name;
+        if (this.brokerName == null) {
+            name = new ObjectName("org.apache.activemq:type=Broker,brokerName=*");
+        } else {
+            name = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + this.brokerName);
+        }
 
-		Set<ObjectName> brokers = connection.queryNames(name, null);
-		Set<ObjectName> masterBrokers = new HashSet<ObjectName>();
-		for (ObjectName objectName : brokers) {
-			BrokerViewMBean mbean = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(connection, objectName, BrokerViewMBean.class, true);
-			if (!mbean.isSlave()) masterBrokers.add(objectName);
-		}
-		return masterBrokers;
-	}
-	
-	public void purgeQueue(ActiveMQDestination destination) throws Exception {
-		QueueViewMBean queue = getQueue(destination.getPhysicalName());
-		queue.purge();
-	}
-	
-	public ManagementContext getManagementContext() {
-		throw new IllegalStateException("not supported");
-	}
+        Set<ObjectName> brokers = connection.queryNames(name, null);
+        Set<ObjectName> masterBrokers = new HashSet<ObjectName>();
+        for (ObjectName objectName : brokers) {
+            BrokerViewMBean mbean = MBeanServerInvocationHandler.newProxyInstance(connection, objectName, BrokerViewMBean.class, true);
+            if (!mbean.isSlave())
+                masterBrokers.add(objectName);
+        }
+        return masterBrokers;
+    }
 
-	
-	@SuppressWarnings("unchecked")
-	protected <T> Collection<T> getManagedObjects(ObjectName[] names,
-			Class<T> type) {
-		MBeanServerConnection connection;
-		try {
-			connection = getMBeanServerConnection();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+    @Override
+    public void purgeQueue(ActiveMQDestination destination) throws Exception {
+        QueueViewMBean queue = getQueue(destination.getPhysicalName());
+        queue.purge();
+    }
 
-		List<T> answer = new ArrayList<T>();
-		if (connection != null) {
-			for (int i = 0; i < names.length; i++) {
-				ObjectName name = names[i];
-				T value = (T) MBeanServerInvocationHandler.newProxyInstance(
-						connection, name, type, true);
-				if (value != null) {
-					answer.add(value);
-				}
-			}
-		}
-		return answer;
+    @Override
+    public ManagementContext getManagementContext() {
+        throw new IllegalStateException("not supported");
+    }
+
+    @Override
+    protected <T> Collection<T> getManagedObjects(ObjectName[] names, Class<T> type) {
+        MBeanServerConnection connection;
+        try {
+            connection = getMBeanServerConnection();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        List<T> answer = new ArrayList<T>();
+        if (connection != null) {
+            for (int i = 0; i < names.length; i++) {
+                ObjectName name = names[i];
+                T value = MBeanServerInvocationHandler.newProxyInstance(connection, name, type, true);
+                if (value != null) {
+                    answer.add(value);
+                }
+            }
+        }
+        return answer;
     }
 
     @Override
@@ -253,8 +232,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     }
 
     @Override
-    public Object newProxyInstance(ObjectName objectName, Class interfaceClass,boolean notificationBroadcaster) throws Exception {
+    public Object newProxyInstance(ObjectName objectName, Class interfaceClass, boolean notificationBroadcaster) throws Exception {
         return MBeanServerInvocationHandler.newProxyInstance(getMBeanServerConnection(), objectName, interfaceClass, notificationBroadcaster);
     }
-
 }
