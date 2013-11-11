@@ -51,21 +51,23 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     /**
      * @return the id of the Subscription
      */
-    public long getSubcriptionId() {
+    @Override
+    public long getSubscriptionId() {
         return -1;
     }
 
     /**
      * @return the destination name
      */
+    @Override
     public String getDestinationName() {
         return subscriptionInfo.getDestination().getPhysicalName();
-
     }
 
     /**
      * @return true if the destination is a Queue
      */
+    @Override
     public boolean isDestinationQueue() {
         return false;
     }
@@ -73,6 +75,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     /**
      * @return true of the destination is a Topic
      */
+    @Override
     public boolean isDestinationTopic() {
         return true;
     }
@@ -80,6 +83,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     /**
      * @return true if the destination is temporary
      */
+    @Override
     public boolean isDestinationTemporary() {
         return false;
     }
@@ -87,6 +91,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     /**
      * @return name of the durable consumer
      */
+    @Override
     public String getSubscriptionName() {
         return subscriptionInfo.getSubscriptionName();
     }
@@ -94,6 +99,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
     /**
      * @return true if the subscriber is active
      */
+    @Override
     public boolean isActive() {
         return false;
     }
@@ -110,6 +116,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      * @return messages
      * @throws OpenDataException
      */
+    @Override
     public CompositeData[] browse() throws OpenDataException {
         return broker.browse(this);
     }
@@ -120,6 +127,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      * @return messages
      * @throws OpenDataException
      */
+    @Override
     public TabularData browseAsTable() throws OpenDataException {
         return broker.browseAsTable(this);
     }
@@ -128,6 +136,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
      * Destroys the durable subscription so that messages will no longer be
      * stored for this subscription
      */
+    @Override
     public void destroy() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
@@ -138,6 +147,7 @@ public class InactiveDurableSubscriptionView extends DurableSubscriptionView imp
         brokerService.getBroker().removeSubscription(context, info);
     }
 
+    @Override
     public String toString() {
         return "InactiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
     }

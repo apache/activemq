@@ -195,7 +195,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     def size = (if(messageRecord!=null) messageRecord.data.length+20 else 0) + ((enqueues.size+dequeues.size)*50) + xaAcks.foldLeft(0L){ case (sum, entry) =>
       sum + 100
     }
-    
+
     def addToPendingStore() = {
       var set = manager.pendingStores.get(id)
       if(set==null) {
@@ -214,7 +214,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         }
       }
     }
-    
+
   }
 
   def completeAsap() = this.synchronized { disableDelay=true }
@@ -443,7 +443,7 @@ class DBManager(val parent:LevelDBStore) {
   var uowStoringCounter = 0L
   var uowStoredCounter = 0L
 
-  val uow_complete_latency = TimeMetric() 
+  val uow_complete_latency = TimeMetric()
 
 //  val closeSource = createSource(new ListEventAggregator[DelayableUOW](), dispatchQueue)
 //  closeSource.setEventHandler(^{
@@ -454,7 +454,7 @@ class DBManager(val parent:LevelDBStore) {
 //  closeSource.resume
 
   var pendingStores = new ConcurrentHashMap[MessageId, HashSet[DelayableUOW#MessageAction]]()
-  
+
   var cancelable_enqueue_actions = new HashMap[QueueEntryKey, DelayableUOW#MessageAction]()
 
   val lastUowId = new AtomicInteger(1)
@@ -479,7 +479,7 @@ class DBManager(val parent:LevelDBStore) {
 
         // The UoW may have been canceled.
         if( action.messageRecord!=null && action.enqueues.isEmpty ) {
-          action.removeFromPendingStore() 
+          action.removeFromPendingStore()
           action.messageRecord = null
           uow.delayableActions -= 1
         }
@@ -701,7 +701,7 @@ class DBManager(val parent:LevelDBStore) {
   def collectionIsEmpty(key:Long) = {
     client.collectionIsEmpty(key)
   }
-  
+
   def cursorMessages(preparedAcks:java.util.HashSet[MessageId], key:Long, listener:MessageRecoveryListener, startPos:Long, max:Long=Long.MaxValue) = {
     var lastmsgid:MessageId = null
     var count = 0L
@@ -751,7 +751,7 @@ class DBManager(val parent:LevelDBStore) {
     val record = new SubscriptionRecord.Bean
     record.setTopicKey(topic_key)
     record.setClientId(info.getClientId)
-    record.setSubscriptionName(info.getSubcriptionName)
+    record.setSubscriptionName(info.getSubscriptionName)
     if( info.getSelector!=null ) {
       record.setSelector(info.getSelector)
     }
@@ -821,7 +821,7 @@ class DBManager(val parent:LevelDBStore) {
           val sr = SubscriptionRecord.FACTORY.parseUnframed(record.getMeta)
           val info = new SubscriptionInfo
           info.setClientId(sr.getClientId)
-          info.setSubcriptionName(sr.getSubscriptionName)
+          info.setSubscriptionName(sr.getSubscriptionName)
           if( sr.hasSelector ) {
             info.setSelector(sr.getSelector)
           }

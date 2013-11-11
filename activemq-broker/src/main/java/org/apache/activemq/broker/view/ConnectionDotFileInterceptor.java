@@ -16,6 +16,17 @@
  */
 package org.apache.activemq.broker.view;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -28,18 +39,9 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.DestinationMapNode;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import javax.management.ObjectName;
 
 /**
- * 
+ *
  */
 public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
@@ -47,26 +49,28 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     private final boolean redrawOnRemove;
     private boolean clearProducerCacheAfterRender;
-    private String domain = "org.apache.activemq";
+    private final String domain = "org.apache.activemq";
     private BrokerViewMBean brokerView;
 
     // until we have some MBeans for producers, lets do it all ourselves
-    private Map<ProducerId, ProducerInfo> producers = new HashMap<ProducerId, ProducerInfo>();
-    private Map<ProducerId, Set<ActiveMQDestination>> producerDestinations = new HashMap<ProducerId, Set<ActiveMQDestination>>();
-    private Object lock = new Object();
+    private final Map<ProducerId, ProducerInfo> producers = new HashMap<ProducerId, ProducerInfo>();
+    private final Map<ProducerId, Set<ActiveMQDestination>> producerDestinations = new HashMap<ProducerId, Set<ActiveMQDestination>>();
+    private final Object lock = new Object();
 
     public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws IOException {
         super(next, file);
         this.redrawOnRemove = redrawOnRemove;
-        
+
     }
 
+    @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         Subscription answer = super.addConsumer(context, info);
         generateFile();
         return answer;
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.addProducer(context, info);
         ProducerId producerId = info.getProducerId();
@@ -76,6 +80,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         generateFile();
     }
 
+    @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         super.removeConsumer(context, info);
         if (redrawOnRemove) {
@@ -83,6 +88,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         super.removeProducer(context, info);
         ProducerId producerId = info.getProducerId();
@@ -95,6 +101,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
+    @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         super.send(producerExchange, messageSend);
         ProducerId producerId = messageSend.getProducerId();
@@ -109,6 +116,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
+    @Override
     protected void generateFile(PrintWriter writer) throws Exception {
 
         writer.println("digraph \"ActiveMQ Connections\" {");
@@ -213,7 +221,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             String selector = subscriber.getSelector();
 
             // lets write out the links
-            String subscriberId = safeClientId + "_" + subscriber.getSessionId() + "_" + subscriber.getSubcriptionId();
+            String subscriberId = safeClientId + "_" + subscriber.getSessionId() + "_" + subscriber.getSubscriptionId();
 
             writer.print(subscriberId);
             writer.print(" -> ");
@@ -228,7 +236,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             // now lets write out the label
             writer.print(subscriberId);
             writer.print(" [label = \"");
-            String label = "Subscription: " + subscriber.getSessionId() + "-" + subscriber.getSubcriptionId();
+            String label = "Subscription: " + subscriber.getSessionId() + "-" + subscriber.getSubscriptionId();
             if (selector != null && selector.length() > 0) {
                 label = label + "\\nSelector: " + selector;
             }
@@ -322,7 +330,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
         return path;
     }
-    
+
     BrokerViewMBean getBrokerView() throws Exception {
         if (this.brokerView == null) {
             ObjectName brokerName = getBrokerService().getBrokerObjectName();

@@ -123,8 +123,17 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Subscription
      */
+    @Deprecated
     @Override
     public long getSubcriptionId() {
+        return getSubscriptionId();
+    }
+
+    /**
+     * @return the id of the Subscription
+     */
+    @Override
+    public long getSubscriptionId() {
         ConsumerInfo info = getConsumerInfo();
         if (info != null) {
             return info.getConsumerId().getValue();
@@ -289,8 +298,18 @@ public class SubscriptionView implements SubscriptionViewMBean {
      * @return the name of the consumer which is only used for durable
      *         consumers.
      */
+    @Deprecated
     @Override
     public String getSubcriptionName() {
+        return getSubscriptionName();
+    }
+
+    /**
+     * @return the name of the consumer which is only used for durable
+     *         consumers.
+     */
+    @Override
+    public String getSubscriptionName() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getSubscriptionName() : null;
     }

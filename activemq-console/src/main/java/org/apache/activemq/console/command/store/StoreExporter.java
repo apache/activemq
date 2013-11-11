@@ -16,19 +16,6 @@
  */
 package org.apache.activemq.console.command.store;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.*;
-import org.apache.activemq.console.command.store.proto.MessagePB;
-import org.apache.activemq.console.command.store.proto.QueueEntryPB;
-import org.apache.activemq.console.command.store.proto.QueuePB;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.store.*;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.fusesource.hawtbuf.AsciiBuffer;
-import org.fusesource.hawtbuf.DataByteArrayOutputStream;
-import org.fusesource.hawtbuf.UTF8Buffer;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +23,30 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.console.command.store.proto.MessagePB;
+import org.apache.activemq.console.command.store.proto.QueueEntryPB;
+import org.apache.activemq.console.command.store.proto.QueuePB;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionRecoveryListener;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.fusesource.hawtbuf.AsciiBuffer;
+import org.fusesource.hawtbuf.DataByteArrayOutputStream;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -48,7 +59,7 @@ public class StoreExporter {
     URI config;
     File file;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
     private final AsciiBuffer ds_kind = new AsciiBuffer("ds");
     private final AsciiBuffer ptp_kind = new AsciiBuffer("ptp");
     private final AsciiBuffer codec_id = new AsciiBuffer("openwire");
@@ -97,6 +108,7 @@ public class StoreExporter {
 
         final int[] preparedTxs = new int[]{0};
         store.createTransactionStore().recover(new TransactionRecoveryListener() {
+            @Override
             public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] aks) {
                 preparedTxs[0] += 1;
             }
@@ -127,18 +139,22 @@ public class StoreExporter {
                 manager.store_queue(destRecord);
 
                 queue.recover(new MessageRecoveryListener() {
+                    @Override
                     public boolean hasSpace() {
                         return true;
                     }
 
+                    @Override
                     public boolean recoverMessageReference(MessageId ref) throws Exception {
                         return true;
                     }
 
+                    @Override
                     public boolean isDuplicate(MessageId ref) {
                         return false;
                     }
 
+                    @Override
                     public boolean recoverMessage(Message message) throws IOException {
                         messageKeyCounter[0]++;
                         seqKeyCounter[0]++;
@@ -166,7 +182,7 @@ public class StoreExporter {
                     // TODO: use a real JSON encoder like jackson.
                     HashMap<String, Object> jsonMap = new HashMap<String, Object>();
                     jsonMap.put("@class", "dsub_destination");
-                    jsonMap.put("name", sub.getClientId() + ":" + sub.getSubcriptionName());
+                    jsonMap.put("name", sub.getClientId() + ":" + sub.getSubscriptionName());
                     HashMap<String, Object> jsonTopic = new HashMap<String, Object>();
                     jsonTopic.put("name", dest.getTopicName());
                     jsonMap.put("topics", new Object[]{jsonTopic});
@@ -180,19 +196,23 @@ public class StoreExporter {
                     manager.store_queue(destRecord);
 
                     final long seqKeyCounter[] = new long[]{0};
-                    topic.recoverSubscription(sub.getClientId(), sub.getSubcriptionName(), new MessageRecoveryListener() {
+                    topic.recoverSubscription(sub.getClientId(), sub.getSubscriptionName(), new MessageRecoveryListener() {
+                        @Override
                         public boolean hasSpace() {
                             return true;
                         }
 
+                        @Override
                         public boolean recoverMessageReference(MessageId ref) throws Exception {
                             return true;
                         }
 
+                        @Override
                         public boolean isDuplicate(MessageId ref) {
                             return false;
                         }
 
+                        @Override
                         public boolean recoverMessage(Message message) throws IOException {
                             messageKeyCounter[0]++;
                             seqKeyCounter[0]++;
