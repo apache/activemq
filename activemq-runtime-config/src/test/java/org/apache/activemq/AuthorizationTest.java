@@ -49,6 +49,25 @@ public class AuthorizationTest extends RuntimeConfigTestSupport {
         assertAllowedTemp("guest");
     }
 
+    @Test
+    public void testModRm() throws Exception {
+        final String brokerConfig = configurationSeed + "-auth-rm-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-users-guests");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+
+        assertAllowed("user", "USERS.A");
+        assertAllowed("guest", "GUESTS.A");
+        assertDenied("user", "GUESTS.A");
+        assertAllowedTemp("guest");
+
+        applyNewConfig(brokerConfig, configurationSeed + "-users", SLEEP);
+
+        assertAllowed("user", "USERS.A");
+        assertDenied("user", "GUESTS.A");
+        assertDeniedTemp("guest");
+    }
+
     private void assertDeniedTemp(String userPass) {
         try {
             assertAllowedTemp(userPass);
