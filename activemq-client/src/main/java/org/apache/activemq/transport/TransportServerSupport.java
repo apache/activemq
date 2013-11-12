@@ -32,6 +32,7 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
     private URI bindLocation;
     private TransportAcceptListener acceptListener;
     protected Map<String, Object> transportOptions;
+    protected boolean allowLinkStealing;
 
     public TransportServerSupport() {
     }
@@ -89,5 +90,13 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
         this.transportOptions = transportOptions;
     }
 
+    @Override
+    public boolean isAllowLinkStealing() {
+        return allowLinkStealing;
+    }
+
+    public void setAllowLinkStealing(boolean allowLinkStealing) {
+        this.allowLinkStealing = allowLinkStealing;
+    }
 
 }
