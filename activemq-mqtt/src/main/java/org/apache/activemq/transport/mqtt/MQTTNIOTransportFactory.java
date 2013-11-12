@@ -49,11 +49,13 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
     }
 
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        return new TcpTransportServer(this, location, serverSocketFactory) {
+        TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory) {
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 return new MQTTNIOTransport(format, socket);
             }
         };
+        result.setAllowLinkStealing(true);
+        return result;
     }
 
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
