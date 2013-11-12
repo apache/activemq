@@ -1116,7 +1116,11 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
 
-    public void testOrderOnActivateDeactivate() throws Exception {
+
+    /*
+     * Ignoring for now, see https://issues.apache.org/jira/browse/AMQ-4874
+     */
+    public void XXXtestOrderOnActivateDeactivate() throws Exception {
         for (int i=0;i<10;i++) {
             LOG.info("Iteration: " + i);
             doTestOrderOnActivateDeactivate();
@@ -1125,6 +1129,7 @@ public class DurableSubscriptionOfflineTest extends org.apache.activemq.TestSupp
             createBroker(true /*deleteAllMessages*/);
         }
     }
+
 
     public void doTestOrderOnActivateDeactivate() throws Exception {
         final int messageCount = 1000;
