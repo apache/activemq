@@ -72,6 +72,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected long maxInactivityDurationInitalDelay = 10000;
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept = true;
+    protected boolean allowLinkStealing;
+
 
     /**
      * trace=true -> the Transport stack where this TcpTransport object will be, will have a TransportLogger layer
@@ -343,7 +345,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     /**
      * @param socket
-     * @param inetAddress
+     * @param bindAddress
      * @return real hostName
      * @throws UnknownHostException
      */
@@ -510,5 +512,14 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     @Override
     public boolean isSslServer() {
         return false;
+    }
+
+    @Override
+    public boolean isAllowLinkStealing() {
+        return allowLinkStealing;
+    }
+
+    public void setAllowLinkStealing(boolean allowLinkStealing) {
+        this.allowLinkStealing = allowLinkStealing;
     }
 }
