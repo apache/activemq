@@ -97,4 +97,31 @@ public abstract class AbstractMQTTTest extends AutoFailTestSupport {
         provider.connect("tcp://localhost:"+mqttConnector.getConnectUri().getPort());
     }
 
+    protected static interface Task {
+        public void run() throws Exception;
+    }
+
+    protected  void within(int time, TimeUnit unit, Task task) throws InterruptedException {
+        long timeMS = unit.toMillis(time);
+        long deadline = System.currentTimeMillis() + timeMS;
+        while (true) {
+            try {
+                task.run();
+                return;
+            } catch (Throwable e) {
+                long remaining = deadline - System.currentTimeMillis();
+                if( remaining <=0 ) {
+                    if( e instanceof RuntimeException ) {
+                        throw (RuntimeException)e;
+                    }
+                    if( e instanceof Error ) {
+                        throw (Error)e;
+                    }
+                    throw new RuntimeException(e);
+                }
+                Thread.sleep(Math.min(timeMS/10, remaining));
+            }
+        }
+    }
+
 }

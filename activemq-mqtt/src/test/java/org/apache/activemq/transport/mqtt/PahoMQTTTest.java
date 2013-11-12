@@ -20,6 +20,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnector;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class PahoMQTTTest extends AbstractMQTTTest {
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = s.createConsumer(s.createTopic("test"));
 
-        MqttClient client = new MqttClient("tcp://localhost:" + mqttConnector.getConnectUri().getPort(), "clientid");
+        MqttClient client = new MqttClient("tcp://localhost:" + mqttConnector.getConnectUri().getPort(), "clientid", new MemoryPersistence());
         client.connect();
         client.publish("test", "hello".getBytes(), 1, false);
 
