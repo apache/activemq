@@ -33,14 +33,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.Connection;
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.ConsumerBrokerExchange;
-import org.apache.activemq.broker.EmptyBroker;
-import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.*;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -234,8 +227,14 @@ public class RegionBroker extends EmptyBroker {
                 if (context.isAllowLinkStealing()){
                      clientIdSet.remove(clientId);
                      if (oldContext.getConnection() != null) {
-                        LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
-                        oldContext.getConnection().stop();
+                         Connection connection = oldContext.getConnection();
+                         LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
+                         if (connection instanceof TransportConnection){
+                            TransportConnection transportConnection = (TransportConnection) connection;
+                             transportConnection.stopAsync();
+                         }else{
+                             connection.stop();
+                         }
                      }else{
                          LOG.error("Not Connection for {}", oldContext);
                      }
