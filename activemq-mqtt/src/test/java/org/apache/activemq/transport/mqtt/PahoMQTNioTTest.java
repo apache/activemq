@@ -46,7 +46,8 @@ public class PahoMQTNioTTest extends PahoMQTTTest {
     @Test(timeout=300000)
     public void testLotsOfClients() throws Exception {
 
-        final int CLIENTS = 100;
+        final int CLIENTS = Integer.getInteger("PahoMQTNioTTest.CLIENTS", 100);
+        LOG.info("Using: "+CLIENTS+" clients");
         addMQTTConnector();
         TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
         brokerService.start();
@@ -78,7 +79,10 @@ public class PahoMQTNioTTest extends PahoMQTTTest {
                         client.connect();
                         connectedDoneLatch.countDown();
                         sendBarrier.await();
-                        client.publish("test", "hello".getBytes(), 1, false);
+                        for( int i=0; i < 10; i++) {
+                           Thread.sleep(1000);
+                           client.publish("test", "hello".getBytes(), 1, false);
+                        }
                         client.disconnect();
                         client.close();
                     } catch (Throwable e) {
@@ -93,16 +97,19 @@ public class PahoMQTNioTTest extends PahoMQTTTest {
 
         connectedDoneLatch.await();
         assertNull("Async error: "+asyncError.get(),asyncError.get());
-        System.out.println("All clients connected...");
         sendBarrier.countDown();
+
+        LOG.info("All clients connected... waiting to receive sent messages...");
 
         // We should eventually get all the messages.
         within(30, TimeUnit.SECONDS, new Task() {
             @Override
             public void run() throws Exception {
-                assertTrue(receiveCounter.get() == CLIENTS);
+                assertTrue(receiveCounter.get() == CLIENTS*10);
             }
         });
+
+        LOG.info("All messages received.");
 
         disconnectDoneLatch.await();
         assertNull("Async error: "+asyncError.get(),asyncError.get());
