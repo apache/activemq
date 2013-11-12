@@ -90,6 +90,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 setEnableStatusMonitor(false);
             }
         }
+        if (server != null){
+            setAllowLinkStealing(server.isAllowLinkStealing());
+        }
     }
 
     /**
@@ -123,6 +126,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
+        rc.setAllowLinkStealing(isAllowLinkStealing());
         return rc;
     }
 
