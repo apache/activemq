@@ -20,14 +20,11 @@ package org.apache.activemq.filter;
 import java.io.IOException;
 
 import javax.jms.JMSException;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * Represents a filter which only operates on Destinations
- * 
- * 
  */
 public abstract class DestinationFilter implements BooleanExpression {
 
@@ -56,6 +53,7 @@ public abstract class DestinationFilter implements BooleanExpression {
             return new CompositeDestinationFilter(destination);
         }
         String[] paths = DestinationPath.getDestinationPaths(destination);
+        paths = rationalizePaths(paths);
         int idx = paths.length - 1;
         if (idx >= 0) {
             String lastPath = paths[idx];
@@ -74,4 +72,27 @@ public abstract class DestinationFilter implements BooleanExpression {
         // if none of the paths contain a wildcard then use equality
         return new SimpleDestinationFilter(destination);
     }
+
+    /**
+     * Look for the case where any CHILD is followed by any decsendant
+     */
+    public static String[] rationalizePaths(String[] paths) {
+        String[] result = paths;
+        if (paths != null && paths.length > 1) {
+            int last = paths.length - 1;
+            if (paths[last].equals(ANY_DESCENDENT)) {
+                last -= 1;
+                if (paths[last].equals(ANY_DESCENDENT) || paths[last].equals(ANY_CHILD)) {
+
+                    result = new String[paths.length-1];
+                    System.arraycopy(paths,0,result,0,result.length);
+                    result[result.length-1] = ANY_DESCENDENT;
+                    result = rationalizePaths(result);
+                }
+            }
+        }
+
+        return result;
+    }
+
 }
