@@ -92,7 +92,7 @@ REM Setup ActiveMQ Classpath.
 REM Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_CONF%;%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_HOME%/conf;%ACTIVEMQ_CLASSPATH%
 
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -Dactivemq.conf="%ACTIVEMQ_CONF%" -Dactivemq.data="%ACTIVEMQ_DATA%" -Djava.io.tmpdir="%ACTIVEMQ_TMP%" -jar "%ACTIVEMQ_HOME%/bin/activemq.jar" start %*
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -Dactivemq.conf="%ACTIVEMQ_CONF%" -Dactivemq.data="%ACTIVEMQ_DATA%" -Djava.io.tmpdir="%ACTIVEMQ_TMP%" -jar "%ACTIVEMQ_HOME%/bin/activemq.jar" %*
 
 goto end
 
