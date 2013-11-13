@@ -21,8 +21,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
-import java.net.*;
-import java.util.*;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -90,6 +101,7 @@ public class FailoverTransport implements CompositeTransport {
     private int maxReconnectAttempts = INFINITE;
     private int startupMaxReconnectAttempts = INFINITE;
     private int connectFailures;
+    private int warnAfterReconnectAttempts = 10;
     private long reconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private Exception connectionFailure;
     private boolean firstConnection = true;
@@ -1089,6 +1101,12 @@ public class FailoverTransport implements CompositeTransport {
                 propagateFailureToExceptionListener(connectionFailure);
                 return false;
             }
+
+            int warnInterval = getWarnAfterReconnectAttempts();
+            if (warnInterval > 0 && (connectFailures % warnInterval) == 0) {
+                LOG.warn("Failed to connect to {} after: {} attempt(s) continuing to retry.",
+                         uris, connectFailures);
+            }
         }
 
         if (!disposed) {
@@ -1409,6 +1427,24 @@ public class FailoverTransport implements CompositeTransport {
 
     public void setNestedExtraQueryOptions(String nestedExtraQueryOptions) {
         this.nestedExtraQueryOptions = nestedExtraQueryOptions;
+    }
+
+    public int getWarnAfterReconnectAttempts() {
+        return warnAfterReconnectAttempts;
+    }
+
+    /**
+     * Sets the number of Connect / Reconnect attempts that must occur before a warn message
+     * is logged indicating that the transport is not connected.  This can be useful when the
+     * client is running inside some container or service as it give an indication of some
+     * problem with the client connection that might not otherwise be visible.  To disable the
+     * log messages this value should be set to a value @{code attempts <= 0}
+     *
+     * @param warnAfterReconnectAttempts
+     *      The number of failed connection attempts that must happen before a warning is logged.
+     */
+    public void setWarnAfterReconnectAttempts(int warnAfterReconnectAttempts) {
+        this.warnAfterReconnectAttempts = warnAfterReconnectAttempts;
     }
 
 }
