@@ -136,6 +136,8 @@ public class DestinationMapTest extends TestCase {
         assertMapValue(">", allValues);
         assertMapValue("TEST.>", allValues);
         assertMapValue("*.>", allValues);
+        assertMapValue("TEST.*.>", allValues);
+        assertMapValue("TEST.*.*.>", v2,v3);
 
         assertMapValue("FOO.>", null);
     }
