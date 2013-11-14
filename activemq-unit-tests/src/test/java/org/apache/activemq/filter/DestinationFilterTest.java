@@ -41,4 +41,25 @@ public class DestinationFilterTest extends TestCase {
 		assertTrue("Filter not parsed well: " + filter.getClass(), filter instanceof CompositeDestinationFilter);
 		assertFalse("Filter matched wrong destination type", filter.matches(new ActiveMQTopic("A.B")));
 	}
+
+    public void testMatchesChild() throws Exception{
+        DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue("A.*.C"));
+        assertFalse("Filter matched wrong destination type", filter.matches(new ActiveMQTopic("A.B")));
+        assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A.B.C")));
+
+        filter = DestinationFilter.parseFilter(new ActiveMQQueue("A.*"));
+        assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A.B")));
+        assertFalse("Filter did match", filter.matches(new ActiveMQQueue("A")));
+    }
+
+    public void testMatchesAny() throws Exception{
+        DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue("A.>.>"));
+
+        assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A.C")));
+
+        assertFalse("Filter did match", filter.matches(new ActiveMQQueue("B")));
+        assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A.B")));
+        assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A.B.C.D.E.F")));
+        assertTrue("Filter did not match", filter.matches(new ActiveMQQueue("A")));
+    }
 }
