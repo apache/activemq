@@ -23,27 +23,43 @@ import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.jms.*;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.util.LoggingBrokerPlugin;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 interface Configurer {
     public void configure(BrokerService broker) throws Exception;
 }
 
-public class AMQ2149Test extends AutoFailTestSupport {
+public class AMQ2149Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2149Test.class);
+    @Rule
+    public TestName testName = new TestName();
 
     private static final String BROKER_CONNECTOR = "tcp://localhost:61617";
     private static final String DEFAULT_BROKER_URL = "failover:("+ BROKER_CONNECTOR
@@ -80,7 +96,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
         broker.getSystemUsage().getMemoryUsage().setLimit(MESSAGE_LENGTH_BYTES * 200 * NUM_SENDERS_AND_RECEIVERS);
 
         broker.addConnector(BROKER_CONNECTOR);        
-        broker.setBrokerName(getName());
+        broker.setBrokerName(testName.getMethodName());
         broker.setDataDirectoryFile(dataDirFile);
         if (configurer != null) {
             configurer.configure(broker);
@@ -91,23 +107,31 @@ public class AMQ2149Test extends AutoFailTestSupport {
     protected void configurePersistenceAdapter(BrokerService brokerService) throws Exception {
     }
 
+    @Before
     public void setUp() throws Exception {
-        setMaxTestTime(30*60*1000);
-        setAutoFail(true);
-        dataDirFile = new File("target/"+ getName());
+        LOG.debug("Starting test {}", testName.getMethodName());
+        dataDirFile = new File("target/"+ testName.getMethodName());
         numtoSend = DEFAULT_NUM_TO_SEND;
         brokerStopPeriod = DEFAULT_BROKER_STOP_PERIOD;
         sleepBetweenSend = SLEEP_BETWEEN_SEND_MS;
         brokerURL = DEFAULT_BROKER_URL;
     }
-    
+
+    @After
     public void tearDown() throws Exception {
-        synchronized(brokerLock) {
-            if (broker!= null) {
-                broker.stop();
-                broker.waitUntilStopped();
-            }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = executor.submit(new TeardownTask(brokerLock, broker));
+        try {
+            LOG.debug("Teardown started.");
+            long start = System.currentTimeMillis();
+            Boolean result =  future.get(30, TimeUnit.SECONDS);
+            long finish = System.currentTimeMillis();
+            LOG.debug("Result of teardown: {} after {} ms ", result, (finish - start));
+        } catch (TimeoutException e) {
+            fail("Teardown timed out");
+            AutoFailTestSupport.dumpAllThreads(testName.getMethodName());
         }
+        executor.shutdownNow();
         exceptions.clear();
     }
     
@@ -339,6 +363,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
         verifyStats(false);
     }
 
+    @Test(timeout = 5 * 60 * 1000)
     public void testOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -360,7 +385,8 @@ public class AMQ2149Test extends AutoFailTestSupport {
         
         verifyStats(true);
     }
-        
+
+    @Test(timeout = 5 * 60 * 1000)
     public void testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -380,10 +406,12 @@ public class AMQ2149Test extends AutoFailTestSupport {
         verifyStats(true);
     }
 
+    @Test(timeout = 5 * 60 * 1000)
     public void testQueueTransactionalOrderWithRestart() throws Exception {
         doTestTransactionalOrderWithRestart(ActiveMQDestination.QUEUE_TYPE);
     }
-    
+
+    @Test(timeout = 5 * 60 * 1000)
     public void testTopicTransactionalOrderWithRestart() throws Exception {
         doTestTransactionalOrderWithRestart(ActiveMQDestination.TOPIC_TYPE);
     }
@@ -477,7 +505,7 @@ public class AMQ2149Test extends AutoFailTestSupport {
     }
     
     private void verifyOrderedMessageReceipt(byte destinationType, int concurrentPairs, boolean transactional) throws Exception {
-                
+
         Vector<Thread> threads = new Vector<Thread>();
         Vector<Receiver> receivers = new Vector<Receiver>();
         
@@ -528,4 +556,25 @@ public class AMQ2149Test extends AutoFailTestSupport {
         assertTrue("No exceptions", exceptions.isEmpty());
     }
 
+}
+
+class TeardownTask implements Callable<Boolean> {
+    private Object brokerLock;
+    private BrokerService broker;
+
+    public TeardownTask(Object brokerLock, BrokerService broker) {
+        this.brokerLock = brokerLock;
+        this.broker = broker;
+    }
+
+    @Override
+    public Boolean call() throws Exception {
+        synchronized(brokerLock) {
+            if (broker!= null) {
+                broker.stop();
+                broker.waitUntilStopped();
+            }
+        }
+        return Boolean.TRUE;
+    }
 }
