@@ -126,9 +126,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
-                    if (protocolConverter != null) {
-                        protocolConverter.onTransportError();
-                    }
                     onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
                 }
             });
@@ -172,6 +169,10 @@ public class MQTTInactivityMonitor extends TransportFilter {
     public void onException(IOException error) {
         if (failed.compareAndSet(false, true)) {
             stopMonitorThread();
+            if (protocolConverter != null) {
+                protocolConverter.onTransportError();
+            }
+            protocolConverter.onTransportError();
             transportListener.onException(error);
         }
     }
