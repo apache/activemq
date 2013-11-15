@@ -171,6 +171,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
             }
         }
         startAdapter(filteredAdapter.getPersistenceAdapter(), destination.getQualifiedName());
+        LOG.debug("destination {} matched persistence adapter {}", new Object[]{destination.getQualifiedName(), filteredAdapter.getPersistenceAdapter()});
         return filteredAdapter.getPersistenceAdapter();
     }
 
