@@ -21,6 +21,7 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private boolean storeHasMessages = false;
     protected int size;
     private MessageId lastCachedId;
+    private TransactionId lastTx;
     protected boolean hadSpace = false;
 
     protected AbstractStoreCursor(Destination destination) {
@@ -176,6 +178,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             if (isCacheEnabled()) {
                 if (recoverMessage(node.getMessage(),true)) {
                     lastCachedId = node.getMessageId();
+                    lastTx = node.getMessage().getTransactionId();
                 } else {
                     // failed to recover, possible duplicate from concurrent dispatchPending,
                     // lets not recover further in case of out of order
@@ -190,9 +193,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             setCacheEnabled(false);
             // sync with store on disabling the cache
             if (lastCachedId != null) {
-                LOG.trace(this + "{} - disabling cache, lastCachedId: {} current node Id: {} batchList size: {}", new Object[]{ this, lastCachedId, node.getMessageId(), batchList.size() });
+                LOG.debug("{} - disabling cache, lastCachedId: {} last-tx: {} current node Id: {} node-tx: {} batchList size: {}",
+                        new Object[]{ this, lastCachedId, lastTx, node.getMessageId(), node.getMessage().getTransactionId(), batchList.size() });
                 setBatch(lastCachedId);
                 lastCachedId = null;
+                lastTx = null;
             }
         }
         this.storeHasMessages = true;
@@ -287,7 +292,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public String toString() {
         return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
                     + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled()
-                    + ",maxBatchSize:" + maxBatchSize;
+                    + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace();
     }
     
     protected abstract void doFillBatch() throws Exception;
