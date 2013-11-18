@@ -35,6 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.ResourceAllocationException;
+import javax.transaction.xa.XAException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -714,7 +715,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     final ConcurrentHashMap<Transaction, SendSync> sendSyncs = new ConcurrentHashMap<Transaction, SendSync>();
-    private volatile LinkedList<Transaction> orderIndexUpdates = new LinkedList<Transaction>();
+    private LinkedList<Transaction> orderIndexUpdates = new LinkedList<Transaction>();
 
     // roll up all message sends
     class SendSync extends Synchronization {
@@ -742,40 +743,31 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
         @Override
         public void beforeCommit() throws Exception {
-            synchronized (sendLock) {
+            synchronized (orderIndexUpdates) {
                 orderIndexUpdates.addLast(transaction);
             }
         }
 
         @Override
         public void afterCommit() throws Exception {
-            LinkedList<Transaction> orderedWork = new LinkedList<Transaction>();;
-            // use existing object to sync orderIndexUpdates that can be reassigned
-            synchronized (sendLock) {
-                Transaction next = orderIndexUpdates.peek();
-                while( next!=null && next.isCommitted() ) {
-                    orderedWork.addLast(orderIndexUpdates.removeFirst());
-                    next = orderIndexUpdates.peek();
-                }
-            }
-            // do the ordered work
-            if (!orderedWork.isEmpty()) {
-
-                ArrayList<SendSync> syncs = new ArrayList<SendSync>(orderedWork.size());;
-                for (Transaction tx : orderedWork) {
-                    syncs.add(sendSyncs.remove(tx));
-                }
-                sendLock.lockInterruptibly();
-                try {
-                    for (SendSync sync : syncs) {
-                        sync.processSend();
+            ArrayList<SendSync> syncs = new ArrayList<SendSync>(200);
+            sendLock.lockInterruptibly();
+            try {
+                synchronized (orderIndexUpdates) {
+                    Transaction next = orderIndexUpdates.peek();
+                    while( next!=null && next.isCommitted() ) {
+                        syncs.add(sendSyncs.remove(orderIndexUpdates.removeFirst()));
+                        next = orderIndexUpdates.peek();
                     }
-                } finally {
-                    sendLock.unlock();
                 }
                 for (SendSync sync : syncs) {
-                    sync.processSent();
+                    sync.processSend();
                 }
+            } finally {
+                sendLock.unlock();
+            }
+            for (SendSync sync : syncs) {
+                sync.processSent();
             }
         }
 
@@ -815,9 +807,51 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         }
     }
 
+    class OrderedNonTransactionWorkTx extends Transaction {
+
+        @Override
+        public void commit(boolean onePhase) throws XAException, IOException {
+        }
+
+        @Override
+        public void rollback() throws XAException, IOException {
+        }
+
+        @Override
+        public int prepare() throws XAException, IOException {
+            return 0;
+        }
+
+        @Override
+        public TransactionId getTransactionId() {
+            return null;
+        }
+
+        @Override
+        public Logger getLog() {
+            return null;
+        }
+
+        @Override
+        public boolean isCommitted() {
+            return true;
+        }
+
+        @Override
+        public void addSynchronization(Synchronization s) {
+            try {
+                s.beforeCommit();
+            } catch (Exception e) {
+                LOG.error("Failed to add not transactional message to orderedWork", e);
+            }
+        }
+    }
+
     // called while holding the sendLock
     private void registerSendSync(Message message, ConnectionContext context) {
-        final Transaction transaction = context.getTransaction();
+        final Transaction transaction =
+                message.isInTransaction() ? context.getTransaction()
+                        : new OrderedNonTransactionWorkTx();
         Queue.SendSync currentSync = sendSyncs.get(transaction);
         if (currentSync == null) {
             currentSync = new Queue.SendSync(transaction);
@@ -831,6 +865,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         Future<Object> result = null;
+        boolean needsOrderingWithTransactions = context.isInTransaction();
 
         producerExchange.incrementSend();
         checkUsage(context, producerExchange, message);
@@ -847,7 +882,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     message.clearMarshalledState();
                 }
             }
-            if (context.isInTransaction()) {
+            // did a transaction commit beat us to the index?
+            synchronized (orderIndexUpdates) {
+                needsOrderingWithTransactions |= !orderIndexUpdates.isEmpty();
+            }
+            if (needsOrderingWithTransactions ) {
                 // If this is a transacted message.. increase the usage now so that
                 // a big TX does not blow up
                 // our memory. This increment is decremented once the tx finishes..
@@ -862,7 +901,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } finally {
             sendLock.unlock();
         }
-        if (!context.isInTransaction()) {
+        if (!needsOrderingWithTransactions) {
             messageSent(context, message);
         }
         if (result != null && !result.isCancelled()) {
