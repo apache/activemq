@@ -196,7 +196,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      * @see javax.resource.spi.ManagedConnection#destroy()
      */
     public void destroy() throws ResourceException {
-        // Have we allready been destroyed??
+        // Have we already been destroyed??
         if (isDestroyed()) {
             return;
         }
@@ -207,7 +207,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             physicalConnection.close();
             destroyed = true;
         } catch (JMSException e) {
-            LOG.info("Error occured during close of a JMS connection.", e);
+            LOG.info("Error occurred during close of a JMS connection.", e);
         }
     }
 
@@ -219,7 +219,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      */
     public void cleanup() throws ResourceException {
 
-        // Have we allready been destroyed??
+        // Have we already been destroyed??
         if (isDestroyed()) {
             return;
         }
@@ -368,7 +368,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     }
 
     /**
-     * When a proxy is closed this cleans up the proxy and notifys the
+     * When a proxy is closed this cleans up the proxy and notifies the
      * ConnectionEventListeners that a connection closed.
      * 
      * @param proxy
@@ -386,7 +386,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         for (ManagedConnectionProxy proxy:proxyConnections) {
             proxy.onException(e);
         }
-        // Let the container know that the error occured.
+        // Let the container know that the error occurred.
         fireErrorOccurredEvent(e);
     }
 
