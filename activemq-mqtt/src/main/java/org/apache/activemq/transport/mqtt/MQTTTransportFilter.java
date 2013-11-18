@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.BrokerContext;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
@@ -50,9 +51,9 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     private boolean trace;
 
-    public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
+    public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
-        this.protocolConverter = new MQTTProtocolConverter(this, brokerContext);
+        this.protocolConverter = new MQTTProtocolConverter(this, brokerService);
 
         if (wireFormat instanceof MQTTWireFormat) {
             this.wireFormat = (MQTTWireFormat) wireFormat;

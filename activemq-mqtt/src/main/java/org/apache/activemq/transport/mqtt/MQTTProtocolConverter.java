@@ -17,6 +17,8 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,29 +30,10 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import org.apache.activemq.broker.BrokerContext;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMapMessage;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionError;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionId;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.*;
+import org.apache.activemq.store.PersistenceAdapterSupport;
+import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -102,6 +85,7 @@ public class MQTTProtocolConverter {
     private final Map<Short, MessageAck> consumerAcks = new LRUCache<Short, MessageAck>(DEFAULT_CACHE_SIZE);
     private final Map<Short, PUBREC> publisherRecs = new LRUCache<Short, PUBREC>(DEFAULT_CACHE_SIZE);
     private final MQTTTransport mqttTransport;
+    private final BrokerService brokerService;
 
     private final Object commnadIdMutex = new Object();
     private int lastCommandId;
@@ -113,8 +97,9 @@ public class MQTTProtocolConverter {
     private int activeMQSubscriptionPrefetch=1;
     private final String QOS_PROPERTY_NAME = "QoSPropertyName";
 
-    public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerContext brokerContext) {
+    public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
+        this.brokerService = brokerService;
         this.defaultKeepAlive = 0;
     }
 
@@ -269,10 +254,41 @@ public class MQTTProtocolConverter {
                         connected.set(true);
                         getMQTTTransport().sendToMQTT(ack.encode());
 
+                        List<SubscriptionInfo> subs = PersistenceAdapterSupport.listSubscriptions(brokerService.getPersistenceAdapter(), connectionInfo.getClientId());
+                        if( connect.cleanSession() ) {
+                            deleteDurableSubs(subs);
+                        } else {
+                            restoreDurableSubs(subs);
+                        }
                     }
                 });
             }
         });
+    }
+
+    public void deleteDurableSubs(List<SubscriptionInfo> subs) {
+        try {
+            for (SubscriptionInfo sub : subs) {
+                TopicMessageStore store = brokerService.getPersistenceAdapter().createTopicMessageStore((ActiveMQTopic) sub.getDestination());
+                store.deleteSubscription(connectionInfo.getClientId(), sub.getSubscriptionName());
+            }
+        } catch (IOException e) {
+            LOG.warn("Could not delete the MQTT durable subs.", e);
+        }
+    }
+
+    public void restoreDurableSubs(List<SubscriptionInfo> subs) {
+        try {
+            SUBSCRIBE command = new SUBSCRIBE();
+            for (SubscriptionInfo sub : subs) {
+                String name = sub.getSubcriptionName();
+                String[] split = name.split(":", 2);
+                QoS qoS = QoS.valueOf(split[0]);
+                onSubscribe(new Topic(split[1], qoS));
+            }
+        } catch (IOException e) {
+            LOG.warn("Could not restore the MQTT durable subs.", e);
+        }
     }
 
     void onMQTTDisconnect() throws MQTTProtocolException {
@@ -290,7 +306,7 @@ public class MQTTProtocolConverter {
         if (topics != null) {
             byte[] qos = new byte[topics.length];
             for (int i = 0; i < topics.length; i++) {
-                qos[i] = (byte) onSubscribe(command, topics[i]).ordinal();
+                qos[i] = (byte) onSubscribe(topics[i]).ordinal();
             }
             SUBACK ack = new SUBACK();
             ack.messageId(command.messageId());
@@ -305,25 +321,25 @@ public class MQTTProtocolConverter {
         }
     }
 
-    QoS onSubscribe(SUBSCRIBE command, Topic topic) throws MQTTProtocolException {
-        ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
+    QoS onSubscribe(Topic topic) throws MQTTProtocolException {
+        if( !mqttSubscriptionByTopic.containsKey(topic.name()) ) {
+            ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
 
-        ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
-        ConsumerInfo consumerInfo = new ConsumerInfo(id);
-        consumerInfo.setDestination(destination);
-        consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
-        consumerInfo.setDispatchAsync(true);
-        if (!connect.cleanSession() && (connect.clientId() != null)) {
-            //by default subscribers are persistent
-            consumerInfo.setSubscriptionName(
-                connect.clientId().toString() + topic.name().toString());
+            ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
+            ConsumerInfo consumerInfo = new ConsumerInfo(id);
+            consumerInfo.setDestination(destination);
+            consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
+            consumerInfo.setDispatchAsync(true);
+            if (!connect.cleanSession() && (connect.clientId() != null)) {
+                consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
+            }
+            MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
+
+            subscriptionsByConsumerId.put(id, mqttSubscription);
+            mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
+
+            sendToActiveMQ(consumerInfo, null);
         }
-        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
-
-        subscriptionsByConsumerId.put(id, mqttSubscription);
-        mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
-
-        sendToActiveMQ(consumerInfo, null);
         return topic.qos();
     }
 

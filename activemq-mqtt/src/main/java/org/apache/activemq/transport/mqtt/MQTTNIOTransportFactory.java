@@ -42,7 +42,7 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class MQTTNIOTransportFactory extends NIOTransportFactory implements BrokerServiceAware {
 
-    private BrokerContext brokerContext = null;
+    private BrokerService brokerService = null;
 
     protected String getDefaultWireFormatType() {
         return "mqtt";
@@ -77,13 +77,13 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
 
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new MQTTTransportFilter(transport, format, brokerContext);
+        transport = new MQTTTransportFilter(transport, format, brokerService);
         IntrospectionSupport.setProperties(transport, options);
         return super.compositeConfigure(transport, format, options);
     }
 
     public void setBrokerService(BrokerService brokerService) {
-        this.brokerContext = brokerService.getBrokerContext();
+        this.brokerService = brokerService;
     }
 
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {

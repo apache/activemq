@@ -137,6 +137,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.stopTaskRunnerFactory = stopTaskRunnerFactory;
         this.transport = transport;
         final BrokerService brokerService = this.broker.getBrokerService();
+        if( this.transport instanceof BrokerServiceAware ) {
+            ((BrokerServiceAware)this.transport).setBrokerService(brokerService);
+        }
         this.transport.setTransportListener(new DefaultTransportListener() {
             @Override
             public void onCommand(Object o) {
