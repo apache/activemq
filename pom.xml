@@ -65,7 +65,7 @@
     <hadoop-version>1.0.0</hadoop-version>
     <hawtbuf-version>1.9</hawtbuf-version>
     <hawtdispatch-version>1.18</hawtdispatch-version>
-    <hawtio-version>1.2-M27</hawtio-version>
+    <hawtio-version>1.2.0</hawtio-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.2.5</httpclient-version>
