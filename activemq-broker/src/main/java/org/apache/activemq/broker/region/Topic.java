@@ -255,7 +255,7 @@ public class Topic extends BaseDestination implements Task {
                 // This destination might be a pattern
                 synchronized (consumers) {
                     consumers.add(subscription);
-                    topicStore.addSubsciption(info, subscription.getConsumerInfo().isRetroactive());
+                    topicStore.addSubscription(info, subscription.getConsumerInfo().isRetroactive());
                 }
             }
 

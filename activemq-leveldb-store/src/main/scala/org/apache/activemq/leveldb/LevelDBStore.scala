@@ -816,7 +816,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
-    def addSubsciption(info: SubscriptionInfo, retroactive: Boolean) = {
+    def addSubscription(info: SubscriptionInfo, retroactive: Boolean) = {
       check_running
       var sub = db.addSubscription(key, info)
       subscriptions.synchronized {

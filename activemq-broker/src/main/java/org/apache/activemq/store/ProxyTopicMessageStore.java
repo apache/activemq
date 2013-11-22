@@ -94,8 +94,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     }
 
     @Override
-    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
-        delegate.addSubsciption(subscriptionInfo, retroactive);
+    public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+        delegate.addSubscription(subscriptionInfo, retroactive);
     }
 
     @Override
