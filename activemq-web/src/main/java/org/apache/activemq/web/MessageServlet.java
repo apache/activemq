@@ -62,7 +62,7 @@ public class MessageServlet extends MessageServletSupport {
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 20000;
     private long requestTimeout = 1000;
-    private String defaultContentType = "text/xml";
+    private String defaultContentType = "application/xml";
 
     private final HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
 
@@ -323,7 +323,7 @@ public class MessageServlet extends MessageServletSupport {
     protected String getContentType(HttpServletRequest request) {
         String value = request.getParameter("xml");
         if (value != null && "true".equalsIgnoreCase(value)) {
-            return "text/xml";
+            return "application/xml";
         }
         value = request.getParameter("json");
         if (value != null && "true".equalsIgnoreCase(value)) {
