@@ -147,10 +147,10 @@ public interface MessageStore extends Service {
     ActiveMQDestination getDestination();
 
     /**
-     * @param memoeyUSage The SystemUsage that is controlling the
+     * @param memoryUsage The SystemUsage that is controlling the
      *                destination's memory usage.
      */
-    void setMemoryUsage(MemoryUsage memoeyUSage);
+    void setMemoryUsage(MemoryUsage memoryUsage);
 
     /**
      * @return the number of messages ready to deliver

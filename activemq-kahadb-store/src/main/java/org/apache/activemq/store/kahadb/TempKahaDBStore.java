@@ -265,7 +265,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         @Override
-        public void setMemoryUsage(MemoryUsage memoeyUSage) {
+        public void setMemoryUsage(MemoryUsage memoryUsage) {
         }
         @Override
         public void start() throws Exception {
@@ -294,7 +294,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             processRemove(command, null);
         }
 
-        public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+        public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
             String subscriptionKey = subscriptionKey(subscriptionInfo.getClientId(), subscriptionInfo.getSubscriptionName());
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
             command.setDestination(dest);

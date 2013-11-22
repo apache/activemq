@@ -330,7 +330,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
     }
 
 
-    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+    public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             c = persistenceAdapter.getTransactionContext();

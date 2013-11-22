@@ -662,7 +662,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         @Override
-        public void setMemoryUsage(MemoryUsage memoeyUSage) {
+        public void setMemoryUsage(MemoryUsage memoryUsage) {
         }
         @Override
         public void start() throws Exception {
@@ -765,7 +765,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         @Override
-        public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+        public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
             String subscriptionKey = subscriptionKey(subscriptionInfo.getClientId(), subscriptionInfo
                     .getSubscriptionName());
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
