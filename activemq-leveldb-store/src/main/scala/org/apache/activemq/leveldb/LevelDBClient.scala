@@ -52,6 +52,7 @@ import org.apache.activemq.leveldb.MessageRecord
 import org.apache.activemq.leveldb.EntryLocator
 import org.apache.activemq.leveldb.DataLocator
 import org.fusesource.hawtbuf.ByteArrayOutputStream
+import org.apache.activemq.broker.SuppressReplyException
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -545,7 +546,7 @@ class LevelDBClient(store: LevelDBStore) {
           Thread.sleep(100);
         }
       }
-      throw failure;
+      throw new SuppressReplyException(failure);
     }
     try {
       func
@@ -1244,7 +1245,7 @@ class LevelDBClient(store: LevelDBStore) {
     collectionCursor(collectionKey, encodeLong(seq)) { (key, value) =>
       val seq = decodeLong(key)
       var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
-      val msg = getMessage(locator)
+      val msg = getMessageWithRetry(locator)
       msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
       msg.getMessageId().setDataLocator(locator)
       msg.setRedeliveryCounter(decodeQueueEntryMeta(value))
@@ -1270,7 +1271,7 @@ class LevelDBClient(store: LevelDBStore) {
         func(XaAckRecord(collectionKey, seq, ack, sub))
       } else {
         var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
-        val msg = getMessage(locator)
+        val msg = getMessageWithRetry(locator)
         msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
         msg.getMessageId().setDataLocator(locator)
         func(msg)
@@ -1287,6 +1288,22 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
+  def getMessageWithRetry(locator:AnyRef):Message = {
+    var retry = 0
+    var rc = getMessage(locator);
+    while( rc == null ) {
+      if( retry > 10 )
+        return null;
+      Thread.sleep(retry*10)
+      rc = getMessage(locator);
+      retry+=1
+    }
+    if( retry > 0 ) {
+      info("Recovered from 'failed getMessage' on retry: "+retry)
+    }
+    rc
+  }
+  
   def getMessage(locator:AnyRef):Message = {
     assert(locator!=null)
     val buffer = locator match {

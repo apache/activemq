@@ -860,7 +860,7 @@ class DBManager(val parent:LevelDBStore) {
   def getMessage(x: MessageId):Message = {
     val id = Option(pendingStores.get(x)).flatMap(_.headOption).map(_.id).getOrElse(x)
     val locator = id.getDataLocator()
-    val msg = client.getMessage(locator)
+    val msg = client.getMessageWithRetry(locator)
     msg.setMessageId(id)
     msg
   }
