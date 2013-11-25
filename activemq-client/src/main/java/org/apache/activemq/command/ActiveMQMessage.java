@@ -38,6 +38,7 @@ import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 /**
  *
@@ -482,6 +483,10 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
         if (name == null || name.equals("")) {
             throw new IllegalArgumentException("Property name cannot be empty or null");
+        }
+
+        if (value instanceof UTF8Buffer) {
+            value = value.toString();
         }
 
         checkValidObject(value);
