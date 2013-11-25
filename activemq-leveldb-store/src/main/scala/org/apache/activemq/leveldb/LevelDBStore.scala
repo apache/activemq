@@ -17,7 +17,7 @@
 
 package org.apache.activemq.leveldb
 
-import org.apache.activemq.broker.{LockableServiceSupport, BrokerServiceAware, ConnectionContext}
+import org.apache.activemq.broker.{SuppressReplyException, LockableServiceSupport, BrokerServiceAware, ConnectionContext}
 import org.apache.activemq.command._
 import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
@@ -186,7 +186,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   def check_running = {
     if( this.isStopped ) {
-      throw new IOException("Store has been stopped")
+      throw new SuppressReplyException("Store has been stopped")
     }
   }
 
@@ -437,7 +437,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   def verify_running = {
     if( isStopping || isStopped ) {
       try {
-        throw new IOException("Not running")
+        throw new SuppressReplyException("Not running")
       } catch {
         case e:IOException =>
           if( broker_service!=null ) {
