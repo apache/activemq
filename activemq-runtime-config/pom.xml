@@ -115,9 +115,30 @@
                 <artifactItem>
                   <groupId>org.apache.activemq</groupId>
                   <artifactId>activemq-spring</artifactId>
+                  <version>${project.version}</version>
                   <type>jar</type>
                   <overWrite>true</overWrite>
                   <includes>activemq.xsd</includes>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>src/main/resources</outputDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>unpack-spring-xsd</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.springframework</groupId>
+                  <artifactId>spring-beans</artifactId>
+                  <version>${spring-version}</version>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <includes>org/springframework/beans/factory/xml/spring-beans-3.0.xsd</includes>
                 </artifactItem>
               </artifactItems>
               <outputDirectory>src/main/resources</outputDirectory>

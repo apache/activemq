@@ -809,7 +809,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 Object springBean = getClass().getClassLoader().loadClass(value).newInstance();
                 if (springBean instanceof FactoryBean) {
                     // can't access the factory or created properties from spring context so we got to recreate
-                    initialProperties.putAll((Properties) FactoryBean.class.getMethod("getObject", null).invoke(springBean));
+                    initialProperties.putAll((Properties) FactoryBean.class.getMethod("getObject", (Class<?>[]) null).invoke(springBean));
                 }
             } catch (Throwable e) {
                 LOG.debug("unexpected exception processing properties bean class: " + propertiesClazzes, e);
@@ -856,20 +856,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
-
-            // avoid going to the net to pull down the spring schema,
-            // REVISIT may need to be smarter in osgi
-            final PluggableSchemaResolver springResolver =
-                    new PluggableSchemaResolver(getClass().getClassLoader());
-            final InputSource beanInputSource =
-                    springResolver.resolveEntity(
-                            "http://www.springframework.org/schema/beans",
-                            "http://www.springframework.org/schema/beans/spring-beans.xsd");
-            if (beanInputSource != null) {
-                schemas.add(new StreamSource(beanInputSource.getByteStream()));
-            } else {
-                schemas.add(new StreamSource("http://www.springframework.org/schema/beans/spring-beans.xsd"));
-            }
+            schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd").toExternalForm()));
             schema = schemaFactory.newSchema(schemas.toArray(new Source[]{}));
         }
         return schema;
