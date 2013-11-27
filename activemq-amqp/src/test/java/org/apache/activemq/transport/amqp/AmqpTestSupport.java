@@ -70,12 +70,14 @@ public class AmqpTestSupport {
         autoFailTestSupport.startAutoFailThread();
         exceptions.clear();
         startBroker();
+        this.numberOfMessages = 2000;
     }
 
-    public void startBroker() throws Exception {
+    private void createBroker(boolean deleteAllMessages) throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
+        brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
 
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
@@ -93,8 +95,6 @@ public class AmqpTestSupport {
         brokerService.setSslContext(sslContext);
 
         addAMQPConnector();
-        brokerService.start();
-        this.numberOfMessages = 2000;
     }
 
     protected void addAMQPConnector() throws Exception {
@@ -112,12 +112,34 @@ public class AmqpTestSupport {
         LOG.debug("Using amqp+nio+ssl port " + nioPlusSslPort);
     }
 
-    @After
+    public void startBroker() throws Exception {
+        if (brokerService != null) {
+            throw new IllegalStateException("Broker is already created.");
+        }
+
+        createBroker(true);
+        brokerService.start();
+        brokerService.waitUntilStarted();
+    }
+
+    public void restartBroker() throws Exception {
+        stopBroker();
+        createBroker(false);
+        brokerService.start();
+        brokerService.waitUntilStarted();
+    }
+
     public void stopBroker() throws Exception {
         if (brokerService != null) {
             brokerService.stop();
+            brokerService.waitUntilStopped();
             brokerService = null;
         }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        stopBroker();
         autoFailTestSupport.stopAutoFailThread();
     }
 
