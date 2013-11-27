@@ -94,10 +94,12 @@ import org.slf4j.LoggerFactory;
                                             LOG.info("waiting for broker persistence adapter checkpoint to succeed before restarting transports");
                                             TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
                                         }
-                                        broker.startAllConnectors();
-                                        LOG.info("Successfully restarted transports on " + broker);
+                                        if (hasLockOwnership()) {
+                                            broker.startAllConnectors();
+                                            LOG.info("Successfully restarted transports on " + broker);
+                                        }
                                     } catch (Exception e) {
-                                        LOG.warn("Stopping " + broker + " due to failure while restarting transports", e);
+                                        LOG.warn("Stopping " + broker + " due to failure restarting transports", e);
                                         stopBroker(e);
                                     } finally {
                                         handlingException.compareAndSet(true, false);

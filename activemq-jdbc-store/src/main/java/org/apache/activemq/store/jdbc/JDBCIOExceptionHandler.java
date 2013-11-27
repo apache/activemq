@@ -21,11 +21,14 @@ import java.io.IOException;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.SuppressReplyException;
 import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
  */
 public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandler.class);
 
     public JDBCIOExceptionHandler() {
         setIgnoreSQLExceptions(false);
@@ -49,6 +52,7 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
                 }
 
                 if (!hasLock) {
+                    LOG.warn("Lock keepAlive failed, no longer lock owner with: {}", locker);
                     throw new IOException("Lock keepAlive failed, no longer lock owner with: " + locker);
                 }
             }
