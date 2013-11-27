@@ -39,7 +39,7 @@
 
     <!-- All bundles needed by the broker -->
     <feature name="activemq" description="ActiveMQ broker libraries" version="${project.version}" resolver="(obr)" start-level="50">
-      <feature>jetty</feature>
+      <feature>http</feature>
       <feature version="${project.version}">activemq-client</feature>
       <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
       <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean-version}</bundle>
