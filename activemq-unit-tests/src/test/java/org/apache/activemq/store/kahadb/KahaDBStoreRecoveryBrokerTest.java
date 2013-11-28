@@ -46,7 +46,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     public static final String KAHADB_DIR_BASE = "target/activemq-data/kahadb";
     public static String kahaDbDirectoryName;
 
-    enum CorruptionType { None, FailToLoad, LoadInvalid, LoadCorrupt };
+    enum CorruptionType { None, FailToLoad, LoadInvalid, LoadCorrupt, LoadOrderIndex0 };
     public CorruptionType  failTest = CorruptionType.None;
 
     @Override
@@ -71,6 +71,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         KahaDBStore kaha = new KahaDBStore();
         kaha.setDirectory(new File(kahaDbDirectoryName));
         kaha.deleteAllMessages();
+        kaha.setCheckForCorruptJournalFiles(failTest == CorruptionType.LoadOrderIndex0);
         broker.setPersistenceAdapter(kaha);
         return broker;
     }
@@ -100,6 +101,16 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
                 raf.seek(8*1024 + 57);
                 raf.writeLong(Integer.MAX_VALUE-10);
                 break;
+            case LoadOrderIndex0:
+                // loadable but invalid metadata
+                // location of order index default priority index size
+                // so looks like there are no ids in the order index
+                // picked up by setCheckForCorruptJournalFiles
+                raf.seek(12*1024 + 21);
+                raf.writeShort(0);
+                raf.writeChar(0);
+                raf.writeLong(-1);
+                break;
             default:
         }
         raf.close();
@@ -107,6 +118,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
         // starting broker
         BrokerService broker = new BrokerService();
         KahaDBStore kaha = new KahaDBStore();
+        kaha.setCheckForCorruptJournalFiles(failTest == CorruptionType.LoadOrderIndex0);
         // uncomment if you want to test archiving
         //kaha.setArchiveCorruptedIndex(true);
         kaha.setDirectory(new File(kahaDbDirectoryName));
@@ -123,7 +135,7 @@ public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
     }
 
     public void initCombosForTestLargeQueuePersistentMessagesNotLostOnRestart() {
-        this.addCombinationValues("failTest", new CorruptionType[]{CorruptionType.FailToLoad, CorruptionType.LoadInvalid, CorruptionType.LoadCorrupt} );
+        this.addCombinationValues("failTest", new CorruptionType[]{CorruptionType.FailToLoad, CorruptionType.LoadInvalid, CorruptionType.LoadCorrupt, CorruptionType.LoadOrderIndex0} );
     }
 
     public void testLargeQueuePersistentMessagesNotLostOnRestart() throws Exception {

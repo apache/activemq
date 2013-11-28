@@ -303,6 +303,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         Entry<String, StoredDestination> entry = iterator.next();
                         StoredDestination sd = loadStoredDestination(tx, entry.getKey(), entry.getValue().subscriptions!=null);
                         storedDestinations.put(entry.getKey(), sd);
+
+                        if (checkForCorruptJournalFiles) {
+                            // sanity check the index also
+                            if (!entry.getValue().locationIndex.isEmpty(tx)) {
+                                if (entry.getValue().orderIndex.nextMessageId <= 0) {
+                                    throw new IOException("Detected uninitialized orderIndex nextMessageId with pending messages for " + entry.getKey());
+                                }
+                            }
+                        }
                     }
                 }
             });
