@@ -21,6 +21,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -78,6 +79,19 @@ public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements C
         consumerSession2.close();
         consumerSession2 = null;
         assertConsumerEvent(0, false);
+    }
+
+    public void testConsumerEventsOnTemporaryDestination() throws Exception {
+
+        Session s = connection.createSession(true,Session.AUTO_ACKNOWLEDGE);
+        Destination dest = useTopic ? s.createTemporaryTopic() : s.createTemporaryQueue();
+        consumerEventSource = new ConsumerEventSource(connection, dest);
+        consumerEventSource.setConsumerListener(this);
+        consumerEventSource.start();
+        MessageConsumer consumer = s.createConsumer(dest);
+        assertConsumerEvent(1,true);
+        consumer.close();
+        assertConsumerEvent(0,false);
     }
 
     public void onConsumerEvent(ConsumerEvent event) {
