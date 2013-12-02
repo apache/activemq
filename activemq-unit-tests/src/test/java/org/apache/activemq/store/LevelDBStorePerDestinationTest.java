@@ -18,7 +18,6 @@ package org.apache.activemq.store;
 
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import java.io.IOException;
 
@@ -35,12 +34,10 @@ public class LevelDBStorePerDestinationTest extends StorePerDestinationTest  {
         return store;
     }
 
-   @Ignore("needs some investigation w.r.t to SuppressReplyException - broken by: https://git-wip-us.apache.org/repos/asf?p=activemq.git;a=commit;h=b0e91d47")
    @Test
    @Override
    public void testRollbackRecovery() throws Exception {}
 
-   @Ignore("needs some investigation w.r.t to SuppressReplyException - broken by: https://git-wip-us.apache.org/repos/asf?p=activemq.git;a=commit;h=b0e91d47")
    @Test
    @Override
    public void testCommitRecovery() throws Exception {}
