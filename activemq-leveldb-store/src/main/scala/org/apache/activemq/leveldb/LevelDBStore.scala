@@ -437,13 +437,13 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   def verify_running = {
     if( isStopping || isStopped ) {
       try {
-        throw new SuppressReplyException("Not running")
+        throw new IOException("Not running")
       } catch {
         case e:IOException =>
           if( broker_service!=null ) {
             broker_service.handleIOException(e)
           }
-          throw e
+          throw new SuppressReplyException(e);
       }
     }
   }
