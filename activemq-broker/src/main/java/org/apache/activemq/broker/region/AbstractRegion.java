@@ -392,6 +392,9 @@ public abstract class AbstractRegion implements Region {
         }
 
         producerExchange.getRegionDestination().send(producerExchange, messageSend);
+        if (producerExchange.getProducerState() != null && producerExchange.getProducerState().getInfo() != null){
+            producerExchange.getProducerState().getInfo().getSentCount().increment();
+        }
     }
 
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {

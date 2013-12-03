@@ -36,6 +36,7 @@ import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NoLocalExpression;
+import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.selector.SelectorParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,7 @@ public abstract class AbstractSubscription implements Subscription {
     private int cursorMemoryHighWaterMark = 70;
     private boolean slowConsumer;
     private long lastAckTime;
+    private CountStatisticImpl consumedCount = new CountStatisticImpl("consumed","The number of messages consumed");
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -88,6 +90,7 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         this.lastAckTime = System.currentTimeMillis();
+        this.consumedCount.increment();
     }
 
     @Override
@@ -275,5 +278,9 @@ public abstract class AbstractSubscription implements Subscription {
 
     public void setTimeOfLastMessageAck(long value) {
         this.lastAckTime = value;
+    }
+
+    public CountStatisticImpl getConsumedCount(){
+        return consumedCount;
     }
 }

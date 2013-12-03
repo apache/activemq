@@ -44,6 +44,7 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -338,6 +339,11 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             @Override
             public long getTimeOfLastMessageAck() {
                 return 0;
+            }
+
+            @Override
+            public CountStatisticImpl getConsumedCount() {
+                return null;
             }
         };
 
