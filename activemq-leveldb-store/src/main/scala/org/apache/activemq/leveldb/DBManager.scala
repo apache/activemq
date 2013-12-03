@@ -798,7 +798,7 @@ class DBManager(val parent:LevelDBStore) {
   def createTransactionContainer(id:XATransactionId) =
     createCollection(buffer(parent.wireFormat.marshal(id)), TRANSACTION_COLLECTION_TYPE)
 
-  def removeTransactionContainer(key:Long) = { // writeExecutor.sync {
+  def removeTransactionContainer(key:Long) = writeExecutor.sync {
     client.removeCollection(key)
   }
 
