@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
@@ -32,6 +33,7 @@ public class ProducerInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean dispatchAsync;
     protected int windowSize;
+    protected CountStatisticImpl sentCount = new CountStatisticImpl("sentCount","number of messages sent to a broker");
 
     public ProducerInfo() {
     }
@@ -133,6 +135,10 @@ public class ProducerInfo extends BaseCommand {
 
     public void setWindowSize(int windowSize) {
         this.windowSize = windowSize;
+    }
+
+    public CountStatisticImpl getSentCount(){
+        return sentCount;
     }
 
 }

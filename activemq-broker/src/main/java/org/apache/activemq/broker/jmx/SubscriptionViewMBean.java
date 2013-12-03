@@ -242,4 +242,11 @@ public interface SubscriptionViewMBean {
     @MBeanInfo("ObjectName of the Connection that created this Subscription")
     ObjectName getConnection();
 
+
+    @MBeanInfo("Resets statistics.")
+    void resetStatistics();
+
+    @MBeanInfo("Messages consumed")
+    long getConsumedCount();
+
 }

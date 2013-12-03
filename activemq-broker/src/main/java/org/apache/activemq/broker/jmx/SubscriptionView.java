@@ -88,6 +88,8 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return result;
     }
 
+
+
     private ObjectName createConnectionQuery(ManagementContext ctx, String brokerName) throws IOException {
         try {
             return BrokerMBeanSupport.createConnectionQuery(ctx.getJmxDomainName(), brokerName, clientId);
@@ -414,5 +416,17 @@ public class SubscriptionView implements SubscriptionViewMBean {
     @Override
     public String getUserName() {
         return userName;
+    }
+
+    @Override
+    public void resetStatistics() {
+        if (subscription != null){
+            subscription.getConsumedCount().reset();
+        }
+    }
+
+    @Override
+    public long getConsumedCount() {
+        return subscription != null ? subscription.getConsumedCount().getCount() : 0;
     }
 }

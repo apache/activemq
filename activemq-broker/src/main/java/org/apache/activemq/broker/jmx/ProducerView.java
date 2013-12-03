@@ -184,4 +184,16 @@ public class ProducerView implements ProducerViewMBean {
             producerBrokerExchange.resetFlowControl();
         }
     }
+
+    @Override
+    public void resetStatistics() {
+       if (info != null){
+           info.getSentCount().reset();
+       }
+    }
+
+    @Override
+    public long getSentCount() {
+        return info != null ? info.getSentCount().getCount() :0;
+    }
 }

@@ -30,6 +30,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.management.CountStatisticImpl;
 
 /**
  *
@@ -233,5 +234,7 @@ public interface Subscription extends SubscriptionRecovery {
      * @return time of last received Ack message or Subscription create time if no Acks.
      */
     long getTimeOfLastMessageAck();
+
+    CountStatisticImpl getConsumedCount();
 
 }
