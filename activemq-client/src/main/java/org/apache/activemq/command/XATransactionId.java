@@ -50,7 +50,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         this.branchQualifier = xid.getBranchQualifier();
     }
 
-    public XATransactionId(byte[] encodedBytes) {
+    public XATransactionId(byte[] encodedBytes) throws IOException {
         encodedXidBytes = encodedBytes;
         initFromEncodedBytes();
     }
@@ -61,7 +61,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
 
     final int XID_PREFIX_SIZE = 16;
     //+|-,(long)lastAck,(byte)priority,(int)formatid,(short)globalLength....
-    private void initFromEncodedBytes() {
+    private void initFromEncodedBytes() throws IOException {
         DataByteArrayInputStream inputStream = new DataByteArrayInputStream(encodedXidBytes);
         inputStream.skipBytes(10);
         formatId = inputStream.readInt();
