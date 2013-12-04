@@ -25,10 +25,12 @@ public class NetworkDestinationView implements NetworkDestinationViewMBean {
     private TimeStatisticImpl timeStatistic = new TimeStatisticImpl("networkEnqueue","network messages enqueued");
 
     private final String name;
+    private final NetworkBridgeView networkBridgeView;
     private long lastTime = -1;
 
-    public NetworkDestinationView(String name){
-       this.name = name;
+    public NetworkDestinationView(NetworkBridgeView networkBridgeView, String name){
+       this.networkBridgeView = networkBridgeView;
+       this.name=name;
     }
     /**
      * Returns the name of this destination
@@ -42,7 +44,7 @@ public class NetworkDestinationView implements NetworkDestinationViewMBean {
      * Resets the managment counters.
      */
     @Override
-    public void resetStatistics() {
+    public void resetStats() {
         timeStatistic.reset();
         lastTime = -1;
     }
@@ -69,5 +71,9 @@ public class NetworkDestinationView implements NetworkDestinationViewMBean {
         }
         timeStatistic.addTime(time);
         lastTime=currentTime;
+    }
+
+    public void close(){
+        networkBridgeView.removeNetworkDestinationView(this);
     }
 }

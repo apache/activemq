@@ -23,6 +23,7 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
+import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkDestinationView;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -33,13 +34,15 @@ public class MBeanBridgeDestination {
     private static final Logger LOG = LoggerFactory.getLogger(MBeanBridgeDestination.class);
     private final BrokerService brokerService;
     private final NetworkBridge bridge;
+    private final NetworkBridgeView networkBridgeView;
     private Map<ActiveMQDestination, ObjectName> destinationObjectNameMap = new ConcurrentHashMap<ActiveMQDestination, ObjectName>();
     private Map<ActiveMQDestination, NetworkDestinationView> outboundDestinationViewMap = new ConcurrentHashMap<ActiveMQDestination, NetworkDestinationView>();
     private Map<ActiveMQDestination, NetworkDestinationView> inboundDestinationViewMap = new ConcurrentHashMap<ActiveMQDestination, NetworkDestinationView>();
 
-    public MBeanBridgeDestination(BrokerService brokerService, NetworkBridge bridge) {
+    public MBeanBridgeDestination(BrokerService brokerService, NetworkBridge bridge, NetworkBridgeView networkBridgeView) {
         this.brokerService = brokerService;
         this.bridge = bridge;
+        this.networkBridgeView = networkBridgeView;
     }
 
 
@@ -48,11 +51,11 @@ public class MBeanBridgeDestination {
         NetworkDestinationView networkDestinationView = outboundDestinationViewMap.get(destination);
         if (networkDestinationView == null) {
             synchronized (destinationObjectNameMap) {
-                if (!destinationObjectNameMap.containsKey(destination)) {
+                if ((networkDestinationView = outboundDestinationViewMap.get(destination)) == null) {
                     ObjectName bridgeObjectName = bridge.getMbeanObjectName();
                     try {
                         ObjectName objectName = BrokerMBeanSupport.createNetworkOutBoundDestinationObjectName(bridgeObjectName, destination);
-                        networkDestinationView = new NetworkDestinationView(destination.getPhysicalName());
+                        networkDestinationView = new NetworkDestinationView(networkBridgeView,destination.getPhysicalName());
                         AnnotatedMBean.registerMBean(brokerService.getManagementContext(), networkDestinationView, objectName);
                         destinationObjectNameMap.put(destination, objectName);
                         outboundDestinationViewMap.put(destination, networkDestinationView);
@@ -72,11 +75,12 @@ public class MBeanBridgeDestination {
         NetworkDestinationView networkDestinationView = inboundDestinationViewMap.get(destination);
         if (networkDestinationView == null) {
             synchronized (destinationObjectNameMap) {
-                if (!destinationObjectNameMap.containsKey(destination)) {
+                if ((networkDestinationView = inboundDestinationViewMap.get(destination)) == null) {
                     ObjectName bridgeObjectName = bridge.getMbeanObjectName();
                     try {
                         ObjectName objectName = BrokerMBeanSupport.createNetworkInBoundDestinationObjectName(bridgeObjectName, destination);
-                        networkDestinationView= new NetworkDestinationView(destination.getPhysicalName());
+                        networkDestinationView= new NetworkDestinationView(networkBridgeView,destination.getPhysicalName());
+                        networkBridgeView.addNetworkDestinationView(networkDestinationView);
                         AnnotatedMBean.registerMBean(brokerService.getManagementContext(), networkDestinationView, objectName);
                         destinationObjectNameMap.put(destination, objectName);
                         inboundDestinationViewMap.put(destination, networkDestinationView);
