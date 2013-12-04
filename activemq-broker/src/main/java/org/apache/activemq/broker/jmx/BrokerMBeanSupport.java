@@ -173,6 +173,21 @@ public class BrokerMBeanSupport {
         return new ObjectName(connectorName.getDomain(), map);
     }
 
+    public static ObjectName createNetworkOutBoundDestinationObjectName(ObjectName networkName, ActiveMQDestination destination) throws MalformedObjectNameException {
+        String str = networkName.toString();
+        str += ",direction=outbound" + createDestinationProperties(destination);
+        return new ObjectName(str);
+
+    }
+
+    public static ObjectName createNetworkInBoundDestinationObjectName(ObjectName networkName, ActiveMQDestination destination) throws MalformedObjectNameException {
+        String str = networkName.toString();
+        str += ",direction=inbound" + createDestinationProperties(destination);
+        return new ObjectName(str);
+
+    }
+
+
     public static ObjectName createProxyConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
         return createProxyConnectorName(brokerObjectName.toString(), type, name);
     }

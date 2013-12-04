@@ -607,6 +607,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 } else {
                                     duplexInboundLocalBroker.oneway(message);
                                 }
+                                serviceInboundMessage(message);
                             }
                         } else {
                             switch (command.getDataStructureType()) {
@@ -985,6 +986,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 sub.decrementOutstandingResponses();
                             }
                         }
+                        serviceOutbound(message);
                     } else {
                         LOG.debug("No subscription registered with this network bridge for consumerId: {} for message: {}", md.getConsumerId(), md.getMessage());
                     }
@@ -1609,6 +1611,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         public void set(BrokerInfo info) {
             this.info = info;
             this.slot.countDown();
+        }
+    }
+
+    protected void serviceOutbound(Message message){
+        NetworkBridgeListener l = this.networkBridgeListener;
+        if (l != null){
+            l.onOutboundMessage(this,message);
+        }
+    }
+
+    protected void serviceInboundMessage(Message message){
+        NetworkBridgeListener l = this.networkBridgeListener;
+        if (l != null){
+            l.onInboundMessage(this,message);
         }
     }
 
