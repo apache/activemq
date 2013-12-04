@@ -16,12 +16,16 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.activemq.network.NetworkBridge;
 
 public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     private final NetworkBridge bridge;
     private boolean createByDuplex = false;
+    private List<NetworkDestinationView> networkDestinationViewList = new CopyOnWriteArrayList<NetworkDestinationView>();
 
     public NetworkBridgeView(NetworkBridge bridge) {
         this.bridge = bridge;
@@ -65,5 +69,19 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     public void setCreateByDuplex(boolean createByDuplex) {
         this.createByDuplex = createByDuplex;
+    }
+
+    public void resetStats(){
+        for (NetworkDestinationView networkDestinationView:networkDestinationViewList){
+            networkDestinationView.resetStats();
+        }
+    }
+
+    public void addNetworkDestinationView(NetworkDestinationView networkDestinationView){
+        networkDestinationViewList.add(networkDestinationView);
+    }
+
+    public void removeNetworkDestinationView(NetworkDestinationView networkDestinationView){
+        networkDestinationViewList.remove(networkDestinationView);
     }
 }

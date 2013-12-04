@@ -28,7 +28,7 @@ public interface NetworkDestinationViewMBean {
      * Resets the managment counters.
      */
     @MBeanInfo("Resets statistics.")
-    void resetStatistics();
+    void resetStats();
 
     /**
      * Returns the number of messages that have been sent to the destination.

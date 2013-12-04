@@ -34,4 +34,6 @@ public interface NetworkBridgeViewMBean extends Service {
 
     boolean isCreatedByDuplex();
 
+    void resetStats();
+
 }

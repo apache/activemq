@@ -25,7 +25,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
-import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,13 +51,13 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
         if (!brokerService.isUseJmx()) {
             return;
         }
-        NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
-        ((NetworkBridgeView)view).setCreateByDuplex(createdByDuplex);
+        NetworkBridgeView view = new NetworkBridgeView(bridge);
+        view.setCreateByDuplex(createdByDuplex);
         try {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view, objectName);
             bridge.setMbeanObjectName(objectName);
-            MBeanBridgeDestination mBeanBridgeDestination = new MBeanBridgeDestination(brokerService,bridge);
+            MBeanBridgeDestination mBeanBridgeDestination = new MBeanBridgeDestination(brokerService,bridge,view);
             destinationObjectNameMap.put(bridge,mBeanBridgeDestination);
             LOG.debug("registered: {} as: {}", bridge, objectName);
         } catch (Throwable e) {
