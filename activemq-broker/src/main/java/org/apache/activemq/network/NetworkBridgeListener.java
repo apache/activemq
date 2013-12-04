@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.network;
 
+import org.apache.activemq.command.Message;
+
 /**
  * called when a bridge fails
  * 
@@ -37,5 +39,19 @@ public interface NetworkBridgeListener {
      * called before the bridge is stopped.
      */
     void onStop(NetworkBridge bridge);
+
+    /**
+     * Called when message forwarded over the network
+     * @param bridge
+     * @param message
+     */
+    void onOutboundMessage (NetworkBridge bridge,Message message);
+
+    /**
+     * Called for when a message arrives over the network
+     * @param bridge
+     * @param message
+     */
+    void onInboundMessage (NetworkBridge bridge,Message message);
 
 }

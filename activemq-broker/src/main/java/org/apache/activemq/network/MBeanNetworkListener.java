@@ -16,14 +16,17 @@
  */
 package org.apache.activemq.network;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
+import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +37,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
     BrokerService brokerService;
     ObjectName connectorName;
     boolean createdByDuplex = false;
-
+    private Map<NetworkBridge,MBeanBridgeDestination> destinationObjectNameMap = new ConcurrentHashMap<NetworkBridge,MBeanBridgeDestination>();
     public MBeanNetworkListener(BrokerService brokerService, ObjectName connectorName) {
         this.brokerService = brokerService;
         this.connectorName = connectorName;
@@ -55,6 +58,8 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view, objectName);
             bridge.setMbeanObjectName(objectName);
+            MBeanBridgeDestination mBeanBridgeDestination = new MBeanBridgeDestination(brokerService,bridge);
+            destinationObjectNameMap.put(bridge,mBeanBridgeDestination);
             LOG.debug("registered: {} as: {}", bridge, objectName);
         } catch (Throwable e) {
             LOG.debug("Network bridge could not be registered in JMX: {}", e.getMessage(), e);
@@ -71,10 +76,16 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             if (objectName != null) {
                 brokerService.getManagementContext().unregisterMBean(objectName);
             }
+            MBeanBridgeDestination mBeanBridgeDestination = destinationObjectNameMap.remove(bridge);
+            if (mBeanBridgeDestination != null){
+                mBeanBridgeDestination.close();
+            }
         } catch (Throwable e) {
             LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);
         }
     }
+
+
 
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
         return BrokerMBeanSupport.createNetworkBridgeObjectName(connectorName, bridge.getRemoteAddress());
@@ -83,4 +94,23 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
     public void setCreatedByDuplex(boolean createdByDuplex) {
         this.createdByDuplex = createdByDuplex;
     }
+
+
+
+    @Override
+    public void onOutboundMessage(NetworkBridge bridge,Message message) {
+        MBeanBridgeDestination mBeanBridgeDestination = destinationObjectNameMap.get(bridge);
+        if (mBeanBridgeDestination != null){
+            mBeanBridgeDestination.onOutboundMessage(message);
+        }
+    }
+
+    @Override
+    public void onInboundMessage(NetworkBridge bridge,Message message) {
+        MBeanBridgeDestination mBeanBridgeDestination = destinationObjectNameMap.get(bridge);
+        if (mBeanBridgeDestination != null){
+            mBeanBridgeDestination.onInboundMessage(message);
+        }
+    }
+
 }
