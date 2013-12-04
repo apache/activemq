@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.util;
 
-import java.io.DataInput;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UTFDataFormatException;
+import java.io.*;
 
 /**
  * Optimized ByteArrayInputStream that can be used more than once
@@ -124,6 +121,14 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         return (pos < buf.length) ? (buf[pos++] & 0xff) : -1;
     }
 
+    public int readOrIOException() throws IOException {
+        int rc = read();
+        if( rc == -1 ) {
+            throw new EOFException();
+        }
+        return rc;
+    }
+
     /**
      * Reads up to <code>len</code> bytes of data into an array of bytes from
      * this input stream.
@@ -180,45 +185,48 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         return n;
     }
 
-    public boolean readBoolean() {
-        return read() != 0;
+    public boolean readBoolean() throws IOException {
+        return readOrIOException() != 0;
     }
 
-    public byte readByte() {
-        return (byte)read();
+    public byte readByte() throws IOException {
+        return (byte)readOrIOException();
     }
 
-    public int readUnsignedByte() {
-        return read();
+    public int readUnsignedByte() throws IOException {
+        return readOrIOException();
     }
 
-    public short readShort() {
-        int ch1 = read();
-        int ch2 = read();
+    public short readShort() throws IOException {
+        int ch1 = readOrIOException();
+        int ch2 = readOrIOException();
         return (short)((ch1 << 8) + (ch2 << 0));
     }
 
-    public int readUnsignedShort() {
-        int ch1 = read();
-        int ch2 = read();
+    public int readUnsignedShort() throws IOException {
+        int ch1 = readOrIOException();
+        int ch2 = readOrIOException();
         return (ch1 << 8) + (ch2 << 0);
     }
 
-    public char readChar() {
-        int ch1 = read();
-        int ch2 = read();
+    public char readChar() throws IOException {
+        int ch1 = readOrIOException();
+        int ch2 = readOrIOException();
         return (char)((ch1 << 8) + (ch2 << 0));
     }
 
-    public int readInt() {
-        int ch1 = read();
-        int ch2 = read();
-        int ch3 = read();
-        int ch4 = read();
+    public int readInt() throws IOException {
+        int ch1 = readOrIOException();
+        int ch2 = readOrIOException();
+        int ch3 = readOrIOException();
+        int ch4 = readOrIOException();
         return (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
     }
 
-    public long readLong() {
+    public long readLong() throws IOException {
+        if (pos >= buf.length ) {
+            throw new EOFException();
+        }
         long rc = ((long)buf[pos++] << 56) + ((long)(buf[pos++] & 255) << 48) + ((long)(buf[pos++] & 255) << 40) + ((long)(buf[pos++] & 255) << 32);
         return rc + ((long)(buf[pos++] & 255) << 24) + ((buf[pos++] & 255) << 16) + ((buf[pos++] & 255) << 8) + ((buf[pos++] & 255) << 0);
     }
