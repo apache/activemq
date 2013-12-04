@@ -517,42 +517,43 @@ case class RecordLog(directory: File, logSuffix:String) {
     log_infos.map(_._2.position).toArray
   }
 
-  private def get_reader[T](record_position:Long)(func: (LogReader)=>T) = {
+  private def get_reader[T](record_position:Long)(func: (LogReader)=>T):Option[T] = {
 
-    val lookup = log_mutex.synchronized {
-      val info = log_info(record_position)
-      info.map { info=>
-        if(info.position == current_appender.position) {
-          current_appender.retain()
-          (info, current_appender)
-        } else {
-          (info, null)
-        }
+    val (info, appender) = log_mutex.synchronized {
+      log_info(record_position) match {
+        case None =>
+          warn("No reader available for position: %x, log_infos: %s", record_position, log_infos)
+          return None
+        case Some(info) =>
+          if(info.position == current_appender.position) {
+            current_appender.retain()
+            (info, current_appender)
+          } else {
+            (info, null)
+          }
       }
     }
 
-    lookup.map { case (info, appender) =>
-      val reader = if( appender!=null ) {
-        // read from the current appender.
-        appender
-      } else {
-        // Checkout a reader from the cache...
-        reader_cache.synchronized {
-          var reader = reader_cache.get(info.file)
-          if(reader==null) {
-            reader = LogReader(info.file, info.position)
-            reader_cache.put(info.file, reader)
-          }
-          reader.retain()
-          reader
+    val reader = if( appender!=null ) {
+      // read from the current appender.
+      appender
+    } else {
+      // Checkout a reader from the cache...
+      reader_cache.synchronized {
+        var reader = reader_cache.get(info.file)
+        if(reader==null) {
+          reader = LogReader(info.file, info.position)
+          reader_cache.put(info.file, reader)
         }
+        reader.retain()
+        reader
       }
+    }
 
-      try {
-        func(reader)
-      } finally {
-        reader.release
-      }
+    try {
+      Some(func(reader))
+    } finally {
+      reader.release
     }
   }
 

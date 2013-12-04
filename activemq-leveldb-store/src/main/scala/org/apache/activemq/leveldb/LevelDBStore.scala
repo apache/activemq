@@ -669,6 +669,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     lastSeq.set(db.getLastQueueEntrySeq(key))
 
+    def cursorResetPosition = 0L
+
     def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
       val seq = lastSeq.incrementAndGet()
@@ -731,7 +733,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     def removeAllMessages(context: ConnectionContext): Unit = {
       check_running
       db.collectionEmpty(key)
-      cursorPosition = 0
+      cursorPosition = cursorResetPosition
     }
 
     def getMessageCount: Int = {
@@ -744,11 +746,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def recover(listener: MessageRecoveryListener): Unit = {
       check_running
-      cursorPosition = db.cursorMessages(preparedAcks, key, listener, 0)
+      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorResetPosition)
     }
 
     def resetBatching: Unit = {
-      cursorPosition = 0
+      cursorPosition = cursorResetPosition
     }
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
@@ -788,6 +790,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   class LevelDBTopicMessageStore(dest: ActiveMQDestination, key: Long) extends LevelDBMessageStore(dest, key) with TopicMessageStore {
     val subscriptions = collection.mutable.HashMap[(String, String), DurableSubscription]()
     var firstSeq = 0L
+
+    override def cursorResetPosition = firstSeq
 
     def subscription_with_key(key:Long) = subscriptions.find(_._2.subKey == key).map(_._2)
 

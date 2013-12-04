@@ -37,7 +37,9 @@ import org.apache.activemq.ActiveMQMessageAuditNoSync
 import org.fusesource.hawtdispatch
 
 case class EntryLocator(qid:Long, seq:Long)
-case class DataLocator(store:LevelDBStore, pos:Long, len:Int)
+case class DataLocator(store:LevelDBStore, pos:Long, len:Int) {
+  override def toString: String = "DataLocator(%x, %d)".format(pos, len)
+}
 case class MessageRecord(store:LevelDBStore, id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:DataLocator = _
 }
@@ -860,8 +862,12 @@ class DBManager(val parent:LevelDBStore) {
   def getMessage(x: MessageId):Message = {
     val id = Option(pendingStores.get(x)).flatMap(_.headOption).map(_.id).getOrElse(x)
     val locator = id.getDataLocator()
-    val msg = client.getMessageWithRetry(locator)
-    msg.setMessageId(id)
+    val msg = client.getMessage(locator)
+    if( msg!=null ) {
+      msg.setMessageId(id)
+    } else {
+      LevelDBStore.warn("Could not load messages for: "+x+" at: "+locator)
+    }
     msg
   }
 
