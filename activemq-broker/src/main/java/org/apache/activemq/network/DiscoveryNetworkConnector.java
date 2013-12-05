@@ -231,7 +231,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         class DiscoverNetworkBridgeListener extends MBeanNetworkListener {
 
             public DiscoverNetworkBridgeListener(BrokerService brokerService, ObjectName connectorName) {
-                super(brokerService, connectorName);
+                super(brokerService, DiscoveryNetworkConnector.this, connectorName);
             }
 
             @Override

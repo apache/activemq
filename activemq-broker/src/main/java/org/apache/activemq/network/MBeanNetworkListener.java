@@ -33,12 +33,15 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MBeanNetworkListener.class);
 
-    BrokerService brokerService;
-    ObjectName connectorName;
-    boolean createdByDuplex = false;
+    private final BrokerService brokerService;
+    private final ObjectName connectorName;
+    private final NetworkBridgeConfiguration networkBridgeConfiguration;
+    private boolean createdByDuplex = false;
     private Map<NetworkBridge,MBeanBridgeDestination> destinationObjectNameMap = new ConcurrentHashMap<NetworkBridge,MBeanBridgeDestination>();
-    public MBeanNetworkListener(BrokerService brokerService, ObjectName connectorName) {
+
+    public MBeanNetworkListener(BrokerService brokerService, NetworkBridgeConfiguration networkBridgeConfiguration, ObjectName connectorName) {
         this.brokerService = brokerService;
+        this.networkBridgeConfiguration = networkBridgeConfiguration;
         this.connectorName = connectorName;
     }
 
@@ -57,8 +60,9 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             ObjectName objectName = createNetworkBridgeObjectName(bridge);
             AnnotatedMBean.registerMBean(brokerService.getManagementContext(), view, objectName);
             bridge.setMbeanObjectName(objectName);
-            MBeanBridgeDestination mBeanBridgeDestination = new MBeanBridgeDestination(brokerService,bridge,view);
+            MBeanBridgeDestination mBeanBridgeDestination = new MBeanBridgeDestination(brokerService,networkBridgeConfiguration,bridge,view);
             destinationObjectNameMap.put(bridge,mBeanBridgeDestination);
+            mBeanBridgeDestination.start();
             LOG.debug("registered: {} as: {}", bridge, objectName);
         } catch (Throwable e) {
             LOG.debug("Network bridge could not be registered in JMX: {}", e.getMessage(), e);
@@ -77,7 +81,7 @@ public class MBeanNetworkListener implements NetworkBridgeListener {
             }
             MBeanBridgeDestination mBeanBridgeDestination = destinationObjectNameMap.remove(bridge);
             if (mBeanBridgeDestination != null){
-                mBeanBridgeDestination.close();
+                mBeanBridgeDestination.stop();
             }
         } catch (Throwable e) {
             LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);

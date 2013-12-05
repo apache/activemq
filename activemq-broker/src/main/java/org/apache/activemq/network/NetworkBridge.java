@@ -83,4 +83,6 @@ public interface NetworkBridge extends Service {
      * @return the MBean name used to identify this bridge in the MBean server.
      */
     ObjectName getMbeanObjectName();
+
+    void resetStats();
 }

@@ -73,7 +73,13 @@ public class NetworkDestinationView implements NetworkDestinationViewMBean {
         lastTime=currentTime;
     }
 
+    public long getLastAccessTime(){
+        return timeStatistic.getLastSampleTime();
+    }
+
     public void close(){
         networkBridgeView.removeNetworkDestinationView(this);
     }
+
+
 }
