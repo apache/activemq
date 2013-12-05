@@ -35,6 +35,7 @@ import util.TimeMetric
 import scala.Some
 import org.apache.activemq.ActiveMQMessageAuditNoSync
 import org.fusesource.hawtdispatch
+import org.apache.activemq.broker.SuppressReplyException
 
 case class EntryLocator(qid:Long, seq:Long)
 case class DataLocator(store:LevelDBStore, pos:Long, len:Int) {
@@ -569,9 +570,6 @@ class DBManager(val parent:LevelDBStore) {
 
   def drainFlushes:Unit = {
     dispatchQueue.assertExecuting()
-    if( !started ) {
-      return
-    }
 
     // Some UOWs may have been canceled.
     import collection.JavaConversions._
@@ -590,7 +588,12 @@ class DBManager(val parent:LevelDBStore) {
             assert(action!=null)
           }
         }
-        Some(uow)
+        if( !started ) {
+          uow.onCompleted(new SuppressReplyException("Store stopped"))
+          None
+        } else {
+          Some(uow)
+        }
       }
     }
 

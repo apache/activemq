@@ -878,6 +878,10 @@ public class BrokerService implements Service {
         }
     }
 
+    public boolean isStopped() {
+        return stopped.get();
+    }
+
     /**
      * A helper method to block the caller thread until the broker has fully started
      * @return boolean true if wait succeeded false if broker was not started or was stopped
