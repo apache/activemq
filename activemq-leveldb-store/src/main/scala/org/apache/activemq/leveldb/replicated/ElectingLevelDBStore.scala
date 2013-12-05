@@ -243,6 +243,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       master_stopped.set(true)
       position = master.wal_append_position
       stopped_latch.countDown()
+      master = null
       func
     })
     master.blocking_executor.execute(^{

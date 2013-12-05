@@ -971,7 +971,15 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  def stop() = this.synchronized {
+  def dirty_stop = this.synchronized {
+    def ingorefailure(func: =>Unit) = try { func } catch { case e:Throwable=> }
+    ingorefailure(index.close)
+    ingorefailure(log.close)
+    ingorefailure(plist.close)
+    ingorefailure(might_fail(throw new IOException("non-clean close")))
+  }
+
+  def stop():Unit = this.synchronized {
     if( writeExecutor!=null ) {
       writeExecutor.shutdown
       writeExecutor.awaitTermination(60, TimeUnit.SECONDS)
