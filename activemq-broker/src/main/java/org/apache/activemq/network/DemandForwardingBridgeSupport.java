@@ -1538,6 +1538,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         return mbeanObjectName;
     }
 
+    public void resetStats(){
+        enqueueCounter.set(0);
+        dequeueCounter.set(0);
+    }
+
     /*
      * Used to allow for async tasks to await receipt of the BrokerInfo from the local and
      * remote sides of the network bridge.

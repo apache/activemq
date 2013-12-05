@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.network;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,6 +28,7 @@ import org.apache.activemq.broker.jmx.NetworkBridgeView;
 import org.apache.activemq.broker.jmx.NetworkDestinationView;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.thread.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,14 +37,24 @@ public class MBeanBridgeDestination {
     private final BrokerService brokerService;
     private final NetworkBridge bridge;
     private final NetworkBridgeView networkBridgeView;
+    private final NetworkBridgeConfiguration networkBridgeConfiguration;
+    private final Scheduler scheduler;
+    private final Runnable purgeInactiveDestinationViewTask;
     private Map<ActiveMQDestination, ObjectName> destinationObjectNameMap = new ConcurrentHashMap<ActiveMQDestination, ObjectName>();
     private Map<ActiveMQDestination, NetworkDestinationView> outboundDestinationViewMap = new ConcurrentHashMap<ActiveMQDestination, NetworkDestinationView>();
     private Map<ActiveMQDestination, NetworkDestinationView> inboundDestinationViewMap = new ConcurrentHashMap<ActiveMQDestination, NetworkDestinationView>();
 
-    public MBeanBridgeDestination(BrokerService brokerService, NetworkBridge bridge, NetworkBridgeView networkBridgeView) {
+    public MBeanBridgeDestination(BrokerService brokerService, NetworkBridgeConfiguration networkBridgeConfiguration, NetworkBridge bridge, NetworkBridgeView networkBridgeView) {
         this.brokerService = brokerService;
+        this.networkBridgeConfiguration = networkBridgeConfiguration;
         this.bridge = bridge;
         this.networkBridgeView = networkBridgeView;
+        this.scheduler = brokerService.getScheduler();
+        purgeInactiveDestinationViewTask = new Runnable() {
+            public void run() {
+                purgeInactiveDestinationViews();
+            }
+        };
     }
 
 
@@ -55,7 +67,7 @@ public class MBeanBridgeDestination {
                     ObjectName bridgeObjectName = bridge.getMbeanObjectName();
                     try {
                         ObjectName objectName = BrokerMBeanSupport.createNetworkOutBoundDestinationObjectName(bridgeObjectName, destination);
-                        networkDestinationView = new NetworkDestinationView(networkBridgeView,destination.getPhysicalName());
+                        networkDestinationView = new NetworkDestinationView(networkBridgeView, destination.getPhysicalName());
                         AnnotatedMBean.registerMBean(brokerService.getManagementContext(), networkDestinationView, objectName);
                         destinationObjectNameMap.put(destination, objectName);
                         outboundDestinationViewMap.put(destination, networkDestinationView);
@@ -79,7 +91,7 @@ public class MBeanBridgeDestination {
                     ObjectName bridgeObjectName = bridge.getMbeanObjectName();
                     try {
                         ObjectName objectName = BrokerMBeanSupport.createNetworkInBoundDestinationObjectName(bridgeObjectName, destination);
-                        networkDestinationView= new NetworkDestinationView(networkBridgeView,destination.getPhysicalName());
+                        networkDestinationView = new NetworkDestinationView(networkBridgeView, destination.getPhysicalName());
                         networkBridgeView.addNetworkDestinationView(networkDestinationView);
                         AnnotatedMBean.registerMBean(brokerService.getManagementContext(), networkDestinationView, objectName);
                         destinationObjectNameMap.put(destination, objectName);
@@ -93,11 +105,21 @@ public class MBeanBridgeDestination {
         networkDestinationView.messageSent();
     }
 
-    public void close() {
+    public void start() {
+        if (networkBridgeConfiguration.isGcDestinationViews()) {
+            long period = networkBridgeConfiguration.getGcSweepTime();
+            if (period > 0) {
+                scheduler.executePeriodically(purgeInactiveDestinationViewTask, period);
+            }
+        }
+    }
+
+    public void stop() {
         if (!brokerService.isUseJmx()) {
             return;
         }
 
+        scheduler.cancel(purgeInactiveDestinationViewTask);
         for (ObjectName objectName : destinationObjectNameMap.values()) {
             try {
                 if (objectName != null) {
@@ -110,6 +132,44 @@ public class MBeanBridgeDestination {
         destinationObjectNameMap.clear();
         outboundDestinationViewMap.clear();
         inboundDestinationViewMap.clear();
+    }
+
+    private void purgeInactiveDestinationViews() {
+        if (!brokerService.isUseJmx()) {
+            return;
+        }
+        purgeInactiveDestinationView(inboundDestinationViewMap);
+        purgeInactiveDestinationView(outboundDestinationViewMap);
+    }
+
+    private void purgeInactiveDestinationView(Map<ActiveMQDestination, NetworkDestinationView> map) {
+        long time = System.currentTimeMillis() - networkBridgeConfiguration.getGcSweepTime();
+        Map<ActiveMQDestination, NetworkDestinationView> gc = null;
+        for (Map.Entry<ActiveMQDestination, NetworkDestinationView> entry : map.entrySet()) {
+            if (entry.getValue().getLastAccessTime() <= time) {
+                if (gc == null) {
+                    gc = new HashMap<ActiveMQDestination, NetworkDestinationView>();
+                }
+                gc.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (gc != null) {
+            for (Map.Entry<ActiveMQDestination, NetworkDestinationView> entry : gc.entrySet()) {
+                map.remove(entry.getKey());
+                ObjectName objectName = destinationObjectNameMap.get(entry.getKey());
+                if (objectName != null) {
+                    try {
+                        if (objectName != null) {
+                            brokerService.getManagementContext().unregisterMBean(objectName);
+                        }
+                    } catch (Throwable e) {
+                        LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);
+                    }
+                }
+                entry.getValue().close();
+            }
+        }
     }
 
 }

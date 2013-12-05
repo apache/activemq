@@ -331,6 +331,10 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     public ObjectName getMbeanObjectName() {
                         return next.getMbeanObjectName();
                     }
+
+                    public void resetStats(){
+                        next.resetStats();
+                    }
                 };
             }
         };

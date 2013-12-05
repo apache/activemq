@@ -72,6 +72,7 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
     }
 
     public void resetStats(){
+        bridge.resetStats();
         for (NetworkDestinationView networkDestinationView:networkDestinationViewList){
             networkDestinationView.resetStats();
         }
