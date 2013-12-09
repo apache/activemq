@@ -1777,14 +1777,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * @return the sendTimeout
+     * @return the sendTimeout (in milliseconds)
      */
     public int getSendTimeout() {
         return sendTimeout;
     }
 
     /**
-     * @param sendTimeout the sendTimeout to set
+     * @param sendTimeout the sendTimeout to set (in milliseconds)
      */
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
