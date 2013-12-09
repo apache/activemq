@@ -104,6 +104,8 @@ public class StatisticsBroker extends BrokerFilter {
                     DestinationStatistics stats = dest.getDestinationStatistics();
                     if (stats != null) {
                         ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
+                        statsMessage.setString("brokerName", regionBroker.getBrokerName());
+                        statsMessage.setString("brokerId", regionBroker.getBrokerId().toString());
                         statsMessage.setString("destinationName", dest.getActiveMQDestination().toString());
                         statsMessage.setLong("size", stats.getMessages().getCount());
                         statsMessage.setLong("enqueueCount", stats.getEnqueues().getCount());
@@ -223,7 +225,10 @@ public class StatisticsBroker extends BrokerFilter {
     }
 
     protected ActiveMQMapMessage prepareSubscriptionMessage(SubscriptionViewMBean subscriber) throws JMSException {
+        Broker regionBroker = getBrokerService().getRegionBroker();
         ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
+        statsMessage.setString("brokerName", regionBroker.getBrokerName());
+        statsMessage.setString("brokerId", regionBroker.getBrokerId().toString());
         statsMessage.setString("destinationName", subscriber.getDestinationName());
         statsMessage.setString("clientId", subscriber.getClientId());
         statsMessage.setString("connectionId", subscriber.getConnectionId());
