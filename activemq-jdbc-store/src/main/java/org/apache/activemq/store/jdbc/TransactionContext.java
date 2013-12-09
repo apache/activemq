@@ -38,7 +38,7 @@ public class TransactionContext {
     private final DataSource dataSource;
     private final JDBCPersistenceAdapter persistenceAdapter;
     private Connection connection;
-    private volatile boolean inTx;
+    private boolean inTx;
     private PreparedStatement addMessageStatement;
     private PreparedStatement removedMessageStatement;
     private PreparedStatement updateLastAckStatement;
@@ -63,6 +63,8 @@ public class TransactionContext {
                 }
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
+                inTx = false;
+                close();
                 IOException ioe = IOExceptionSupport.create(e);
                 persistenceAdapter.getBrokerService().handleIOException(ioe);
                 throw ioe;
@@ -160,9 +162,8 @@ public class TransactionContext {
         if (inTx) {
             throw new IOException("Already started.");
         }
-        connection = getConnection();
-        // only mark in tx if we could get a connection
         inTx = true;
+        connection = getConnection();
     }
 
     public void commit() throws IOException {
