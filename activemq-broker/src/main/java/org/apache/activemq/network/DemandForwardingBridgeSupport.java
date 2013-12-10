@@ -1499,6 +1499,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     @Override
+    public String getRemoteBrokerId() {
+        return (remoteBrokerInfo == null || remoteBrokerInfo.getBrokerId() ==null)? null : remoteBrokerInfo.getBrokerId().toString();
+    }
+
+    @Override
     public String getLocalBrokerName() {
         return localBrokerInfo == null ? null : localBrokerInfo.getBrokerName();
     }
