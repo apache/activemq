@@ -176,6 +176,8 @@
             <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
             <Import-Package>
               org.apache.felix.gogo.commands,
+              org.apache.karaf.shell.console;version="[2,4)",
+              org.apache.karaf.shell.console.commands;version="[2,4)",
               *
             </Import-Package>
             <Private-Package>!*</Private-Package>
