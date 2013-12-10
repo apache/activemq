@@ -421,12 +421,12 @@ public class SubscriptionView implements SubscriptionViewMBean {
     @Override
     public void resetStatistics() {
         if (subscription != null){
-            subscription.getConsumedCount().reset();
+            subscription.resetConsumedCount();
         }
     }
 
     @Override
     public long getConsumedCount() {
-        return subscription != null ? subscription.getConsumedCount().getCount() : 0;
+        return subscription != null ? subscription.getConsumedCount() : 0;
     }
 }

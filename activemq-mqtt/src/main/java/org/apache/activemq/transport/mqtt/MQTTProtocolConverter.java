@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,8 +27,6 @@ import java.util.zip.Inflater;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
-
-import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.*;
 import org.apache.activemq.store.PersistenceAdapterSupport;
@@ -44,21 +41,7 @@ import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
-import org.fusesource.mqtt.codec.CONNACK;
-import org.fusesource.mqtt.codec.CONNECT;
-import org.fusesource.mqtt.codec.DISCONNECT;
-import org.fusesource.mqtt.codec.MQTTFrame;
-import org.fusesource.mqtt.codec.PINGREQ;
-import org.fusesource.mqtt.codec.PINGRESP;
-import org.fusesource.mqtt.codec.PUBACK;
-import org.fusesource.mqtt.codec.PUBCOMP;
-import org.fusesource.mqtt.codec.PUBLISH;
-import org.fusesource.mqtt.codec.PUBREC;
-import org.fusesource.mqtt.codec.PUBREL;
-import org.fusesource.mqtt.codec.SUBACK;
-import org.fusesource.mqtt.codec.SUBSCRIBE;
-import org.fusesource.mqtt.codec.UNSUBACK;
-import org.fusesource.mqtt.codec.UNSUBSCRIBE;
+import org.fusesource.mqtt.codec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,10 +79,12 @@ public class MQTTProtocolConverter {
     private long defaultKeepAlive;
     private int activeMQSubscriptionPrefetch=1;
     private final String QOS_PROPERTY_NAME = "QoSPropertyName";
+    private final MQTTRetainedMessages retainedMessages;
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
         this.brokerService = brokerService;
+        this.retainedMessages = MQTTRetainedMessages.getMQTTRetainedMessages(brokerService);
         this.defaultKeepAlive = 0;
     }
 
@@ -319,6 +304,23 @@ public class MQTTProtocolConverter {
         } else {
             LOG.warn("No topics defined for Subscription " + command);
         }
+        //check retained messages
+        if (topics != null){
+            for (Topic topic:topics){
+                Buffer buffer = retainedMessages.getMessage(topic.name().toString());
+                if (buffer != null){
+                    PUBLISH msg = new PUBLISH();
+                    msg.payload(buffer);
+                    msg.topicName(topic.name());
+                    try {
+                        getMQTTTransport().sendToMQTT(msg.encode());
+                    } catch (IOException e) {
+                        LOG.warn("Couldn't send retained message " + msg, e);
+                    }
+                }
+            }
+        }
+
     }
 
     QoS onSubscribe(Topic topic) throws MQTTProtocolException {
@@ -415,6 +417,9 @@ public class MQTTProtocolConverter {
 
     void onMQTTPublish(PUBLISH command) throws IOException, JMSException {
         checkConnected();
+        if (command.retain()){
+            retainedMessages.addMessage(command.topicName().toString(),command.payload());
+        }
         ActiveMQMessage message = convertMessage(command);
         message.setProducerId(producerId);
         message.onSend();

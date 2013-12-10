@@ -188,12 +188,12 @@ public class ProducerView implements ProducerViewMBean {
     @Override
     public void resetStatistics() {
        if (info != null){
-           info.getSentCount().reset();
+           info.resetSentCount();
        }
     }
 
     @Override
     public long getSentCount() {
-        return info != null ? info.getSentCount().getCount() :0;
+        return info != null ? info.getSentCount() :0;
     }
 }

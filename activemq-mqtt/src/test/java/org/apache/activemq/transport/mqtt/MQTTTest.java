@@ -16,9 +16,18 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnector;
@@ -35,9 +44,6 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-
 import static org.junit.Assert.assertArrayEquals;
 
 public class MQTTTest extends AbstractMQTTTest {
@@ -279,6 +285,45 @@ public class MQTTTest extends AbstractMQTTTest {
         subscriber.disconnect();
         publisher.disconnect();
     }
+
+    @Test(timeout=60 * 1000)
+    public void testSendAndReceiveRetainedMessages() throws Exception {
+
+        addMQTTConnector();
+        brokerService.start();
+
+        final MQTTClientProvider publisher = getMQTTClientProvider();
+        initializeConnection(publisher);
+
+        final MQTTClientProvider subscriber = getMQTTClientProvider();
+        initializeConnection(subscriber);
+
+        String RETAINED = "retained";
+        publisher.publish("foo",RETAINED.getBytes(),AT_LEAST_ONCE,true);
+
+        List<String> messages = new ArrayList<String>();
+        for (int i = 0; i < 10; i++){
+            messages.add("TEST MESSAGE:" + i);
+        }
+
+        subscriber.subscribe("foo",AT_LEAST_ONCE);
+
+        for (int i = 0; i < 10; i++) {
+            publisher.publish("foo", messages.get(i).getBytes(), AT_LEAST_ONCE);
+        }
+        byte[] msg = subscriber.receive(5000);
+        assertNotNull(msg);
+        assertEquals(RETAINED,new String(msg));
+
+        for (int i =0; i < 10; i++){
+            msg = subscriber.receive(5000);
+            assertNotNull(msg);
+            assertEquals(messages.get(i),new String(msg));
+        }
+        subscriber.disconnect();
+        publisher.disconnect();
+    }
+
 
     @Test(timeout=60 * 1000)
     public void testSendMQTTReceiveJMS() throws Exception {

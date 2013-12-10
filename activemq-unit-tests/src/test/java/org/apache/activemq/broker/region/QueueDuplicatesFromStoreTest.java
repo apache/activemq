@@ -342,8 +342,16 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             }
 
             @Override
-            public CountStatisticImpl getConsumedCount() {
-                return null;
+            public long getConsumedCount() {
+                return 0;
+            }
+
+            public void incrementConsumedCount(){
+
+            }
+
+            public void resetConsumedCount(){
+
             }
         };
 
