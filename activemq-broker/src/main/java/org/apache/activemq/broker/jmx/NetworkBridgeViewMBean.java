@@ -26,6 +26,8 @@ public interface NetworkBridgeViewMBean extends Service {
 
     String getRemoteBrokerName();
 
+    String getRemoteBrokerId();
+
     String getLocalBrokerName();
 
     long getEnqueueCounter();

@@ -303,6 +303,11 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     }
 
                     @Override
+                    public String getRemoteBrokerId() {
+                        return next.getRemoteBrokerId();
+                    }
+
+                    @Override
                     public String getLocalAddress() {
                         return next.getLocalAddress();
                     }

@@ -51,6 +51,11 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
         return bridge.getRemoteBrokerName();
     }
 
+
+    public String getRemoteBrokerId() {
+        return bridge.getRemoteBrokerId();
+    }
+
     public String getLocalBrokerName() {
         return bridge.getLocalBrokerName();
     }
