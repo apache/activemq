@@ -61,6 +61,7 @@ public class NetworkBridgeConfiguration {
     private boolean useBrokerNamesAsIdSeed = true;
     private boolean gcDestinationViews = true;
     private long gcSweepTime = 60 * 1000;
+    private boolean checkDuplicateMessagesOnDuplex = false;
 
     /**
      * @return the conduitSubscriptions
@@ -438,6 +439,14 @@ public class NetworkBridgeConfiguration {
 
     public void setGcSweepTime(long gcSweepTime) {
         this.gcSweepTime = gcSweepTime;
+    }
+
+    public boolean isCheckDuplicateMessagesOnDuplex() {
+        return checkDuplicateMessagesOnDuplex;
+    }
+
+    public void setCheckDuplicateMessagesOnDuplex(boolean checkDuplicateMessagesOnDuplex) {
+        this.checkDuplicateMessagesOnDuplex = checkDuplicateMessagesOnDuplex;
     }
 
 }
