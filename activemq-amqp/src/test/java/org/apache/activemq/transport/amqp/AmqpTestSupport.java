@@ -73,7 +73,7 @@ public class AmqpTestSupport {
         this.numberOfMessages = 2000;
     }
 
-    private void createBroker(boolean deleteAllMessages) throws Exception {
+    protected void createBroker(boolean deleteAllMessages) throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
