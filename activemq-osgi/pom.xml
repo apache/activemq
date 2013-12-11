@@ -41,6 +41,7 @@
       javax.servlet*;resolution:=optional,
       com.thoughtworks.xstream*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
+      org.apache.activemq.camel*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
       org.apache.derby.jdbc*;resolution:=optional,
       org.apache.geronimo.transaction.manager*;resolution:=optional,
@@ -141,11 +142,6 @@
     </dependency>
 
     <!-- Additional Dependencies. -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-camel</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
@@ -279,6 +275,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
+          <excludeDependencies>activemq-all;scope=compile|runtime</excludeDependencies>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
             <Embed-Dependency>
@@ -289,7 +286,7 @@
               groupId=org.xerial.snappy;inline=org/xerial/snappy/*
               -->
             </Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive> 
+            <Embed-Transitive>true</Embed-Transitive>
             <!--
             <Bundle-NativeCode>
               META-INF/native/windows32/leveldbjni.dll;osname=Win32;processor=x86,
@@ -353,13 +350,6 @@
         <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-openwire-legacy</artifactId>
-          <version>${project.version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>activemq-camel</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>

@@ -39,7 +39,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeature
         // copy camel.xml into a temporary directory in karaf, so we later can hot-deploy it
         Option[] baseOptions = append(
                 replaceConfigurationFile("data/tmp/camel.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/camel.xml")),
-                configure("activemq"));
+                configure("activemq", "activemq-camel"));
         return configureBrokerStart(append(scanFeatures(getCamelFeatureUrl(
                 MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")
         ), "activemq-camel"), baseOptions));
