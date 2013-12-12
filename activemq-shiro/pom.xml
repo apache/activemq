@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-parent</artifactId>
+        <version>5.10-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>activemq-shiro</artifactId>
+    <packaging>bundle</packaging>
+    <name>ActiveMQ :: Shiro</name>
+    <description>ActiveMQ secured by Apache Shiro</description>
+
+    <dependencies>
+
+        <!-- =============================== -->
+        <!-- Required Dependencies -->
+        <!-- =============================== -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-broker</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-spring</artifactId>
+        </dependency>
+
+        <!-- =============================== -->
+        <!-- Optional Dependencies           -->
+        <!-- =============================== -->
+        <!-- <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+            <optional>true</optional>
+        </dependency> -->
+
+        <!-- =============================== -->
+        <!-- Testing Dependencies            -->
+        <!-- =============================== -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-unit-tests</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <!-- <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-jaas</artifactId>
+            <scope>test</scope>
+        </dependency> -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>org.apache.activemq.shiro</Bundle-SymbolicName>
+                        <Export-Package>org.apache.activemq.shiro*;version=${project.version};-noimport:=true;-split-package:=merge-first</Export-Package>
+                        <Import-Package>
+                            org.apache.activemq*;version=${project.version};resolution:=optional,
+                            org.apache.shiro*;version="[1.2,2]",
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkMode>always</forkMode>
+                    <argLine>${surefire.argLine}</argLine>
+                    <runOrder>alphabetical</runOrder>
+                    <failIfNoTests>false</failIfNoTests>
+                    <systemProperties>
+                        <property>
+                            <name>org.apache.activemq.default.directory.prefix</name>
+                            <value>target/</value>
+                        </property>
+                        <!- - Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
+                             while running mvn:test
+                             Note: if you want to see log messages on the console window remove
+                                   "redirectTestOutputToFile" from the parent pom
+                        - ->
+                        <!- -
+                        <property>
+                          <name>log4j.configuration</name>
+                          <value>file:target/test-classes/log4j.properties</value>
+                        </property>
+                        - ->
+                    </systemProperties>
+                    <includes>
+                        <include>**/*Test.*</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build> -->
+</project>

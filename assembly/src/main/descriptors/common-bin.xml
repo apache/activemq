@@ -172,6 +172,7 @@
         <include>${pom.groupId}:activemq-jms-pool</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-partition</include>
+        <include>${pom.groupId}:activemq-shiro</include>
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
@@ -223,7 +224,11 @@
         <include>org.linkedin:org.linkedin.zookeeper-impl</include>
         <include>org.linkedin:org.linkedin.util-core</include>
         <include>org.apache.zookeeper:zookeeper</include>
-        
+
+        <!-- Apache Shiro dependencies: -->
+        <include>org.apache.shiro:shiro-core</include>
+        <include>org.apache.shiro:shiro-spring</include>
+
       </includes>
     </dependencySet>
     <dependencySet>

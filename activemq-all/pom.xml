@@ -106,6 +106,7 @@
                   <include>${project.groupId}:activemq-jaas</include>
                   <include>${project.groupId}:activemq-broker</include>
                   <include>${project.groupId}:activemq-console</include>
+                  <include>${project.groupId}:activemq-shiro</include>
                   <include>${project.groupId}:activemq-spring</include>
                   <include>${project.groupId}:activemq-pool</include>
                   <include>${project.groupId}:activemq-jms-pool</include>
@@ -225,6 +226,13 @@
             <dependency>
               <groupId>${project.groupId}</groupId>
               <artifactId>activemq-console</artifactId>
+              <version>${project.version}</version>
+              <classifier>sources</classifier>
+              <optional>true</optional>
+            </dependency>
+            <dependency>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>activemq-shiro</artifactId>
               <version>${project.version}</version>
               <classifier>sources</classifier>
               <optional>true</optional>

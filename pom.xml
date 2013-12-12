@@ -107,7 +107,9 @@
     <scala-plugin-version>3.1.0</scala-plugin-version>
     <scala-version>2.9.1</scala-version>
     <scala-bundle-version>2.9.1_3</scala-bundle-version>
+    <shiro-version>1.2.2</shiro-version>
     <scalatest-version>1.8</scalatest-version>
+    <shiro-version>1.2.2</shiro-version>
     <slf4j-version>1.7.5</slf4j-version>
     <snappy-version>1.1.0.1</snappy-version>
     <spring-version>3.2.5.RELEASE</spring-version>
@@ -244,6 +246,7 @@
     <module>activemq-ra</module>
     <module>activemq-rar</module>
     <module>activemq-run</module>
+    <module>activemq-shiro</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -382,6 +385,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-pool</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-shiro</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -666,6 +674,34 @@
         <groupId>org.apache.openjpa</groupId>
         <artifactId>openjpa-persistence-jdbc</artifactId>
         <version>${openjpa-version}</version>
+      </dependency>
+      
+      <!-- Optional Shiro Support -->
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-core</artifactId>
+        <version>${shiro-version}</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-spring</artifactId>
+        <version>${shiro-version}</version>
+        <optional>true</optional>
+      </dependency>
+
+      <!-- Optional Shiro Support -->
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-core</artifactId>
+        <version>${shiro-version}</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-spring</artifactId>
+        <version>${shiro-version}</version>
+        <optional>true</optional>
       </dependency>
 
       <!-- Optional Spring Support -->
