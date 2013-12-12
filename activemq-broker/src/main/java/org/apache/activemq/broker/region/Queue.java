@@ -109,6 +109,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     private final AtomicLong pendingWakeups = new AtomicLong();
     private boolean allConsumersExclusiveByDefault = false;
 
+    private boolean resetNeeded;
+
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
         public void run() {
@@ -872,14 +874,21 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         sendLock.lockInterruptibly();
         try {
             if (store != null && message.isPersistent()) {
-                message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
-                if (messages.isCacheEnabled()) {
-                    result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
-                } else {
-                    store.addMessage(context, message);
-                }
-                if (isReduceMemoryFootprint()) {
-                    message.clearMarshalledState();
+                try {
+                    message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+                    if (messages.isCacheEnabled()) {
+                        result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
+                    } else {
+                        store.addMessage(context, message);
+                    }
+                    if (isReduceMemoryFootprint()) {
+                        message.clearMarshalledState();
+                    }
+                } catch (Exception e) {
+                    // we may have a store in inconsistent state, so reset the cursor
+                    // before restarting normal broker operations
+                    resetNeeded = true;
+                    throw e;
                 }
             }
             // did a transaction commit beat us to the index?
@@ -1113,6 +1122,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     public boolean isAllConsumersExclusiveByDefault() {
         return allConsumersExclusiveByDefault;
+    }
+
+    public boolean isResetNeeded() {
+        return resetNeeded;
     }
 
     // Implementation methods

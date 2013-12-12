@@ -18,11 +18,16 @@ package org.apache.activemq.util;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SuppressReplyException;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Queue;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +100,16 @@ import org.slf4j.LoggerFactory;
                                             TimeUnit.MILLISECONDS.sleep(resumeCheckSleepPeriod);
                                         }
                                         if (hasLockOwnership()) {
+                                            Map<ActiveMQDestination, Destination> destinations = ((RegionBroker)broker.getRegionBroker()).getDestinationMap();
+                                            for (Destination destination : destinations.values()) {
+
+                                                if (destination instanceof Queue) {
+                                                    Queue queue = (Queue)destination;
+                                                    if (queue.isResetNeeded()) {
+                                                        queue.clearPendingMessages();
+                                                    }
+                                                }
+                                            }
                                             broker.startAllConnectors();
                                             LOG.info("Successfully restarted transports on " + broker);
                                         }
