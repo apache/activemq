@@ -856,6 +856,42 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             }
             this.dataOut = new DataOutputStream(os);
         }
+
+        restoreOldContent();
+    }
+
+    private void restoreOldContent() throws JMSException {
+        // For a message that already had a body and was sent we need to restore the content
+        // if the message is used again without having its clearBody method called.
+        if (this.content != null && this.content.length > 0) {
+            try {
+                ByteSequence toRestore = this.content;
+                if (compressed) {
+                    InputStream is = new ByteArrayInputStream(toRestore);
+                    int length = 0;
+                    try {
+                        DataInputStream dis = new DataInputStream(is);
+                        length = dis.readInt();
+                        dis.close();
+                    } catch (IOException e) {
+                        throw JMSExceptionSupport.create(e);
+                    }
+                    is = new InflaterInputStream(is);
+                    DataInputStream input = new DataInputStream(is);
+
+                    byte[] buffer = new byte[length];
+                    input.readFully(buffer);
+                    toRestore = new ByteSequence(buffer);
+                }
+
+                this.dataOut.write(toRestore.getData(), toRestore.getOffset(), toRestore.getLength());
+                // Free up the buffer from the old content, will be re-written when
+                // the message is sent again and storeContent() is called.
+                this.content = null;
+            } catch (IOException ioe) {
+                throw JMSExceptionSupport.create(ioe);
+            }
+        }
     }
 
     protected void checkWriteOnlyBody() throws MessageNotReadableException {
