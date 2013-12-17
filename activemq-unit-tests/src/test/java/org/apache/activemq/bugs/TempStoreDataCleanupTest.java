@@ -115,7 +115,7 @@ public class TempStoreDataCleanupTest {
     public void testIt() throws Exception {
 
         int startPercentage = broker.getAdminView().getMemoryPercentUsage();
-        LOG.info("MemoryUseage at test start = " + startPercentage);
+        LOG.info("MemoryUsage at test start = " + startPercentage);
 
         for (int i = 0; i < 2; i++) {
             LOG.info("Started the test iteration: " + i + " using queueName = " + queueName);
@@ -146,7 +146,7 @@ public class TempStoreDataCleanupTest {
             TimeUnit.SECONDS.sleep(2);
         }
 
-        LOG.info("MemoryUseage before awaiting temp store cleanup = " + broker.getAdminView().getMemoryPercentUsage());
+        LOG.info("MemoryUsage before awaiting temp store cleanup = " + broker.getAdminView().getMemoryPercentUsage());
 
         final PListStoreImpl pa = (PListStoreImpl) broker.getTempDataStore();
         assertTrue("only one journal file should be left: " + pa.getJournal().getFileMap().size(),
