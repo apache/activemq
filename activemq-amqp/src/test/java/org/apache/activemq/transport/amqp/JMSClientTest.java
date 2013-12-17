@@ -45,6 +45,7 @@ import org.apache.activemq.util.Wait;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -350,6 +351,7 @@ public class JMSClientTest extends AmqpTestSupport {
         assertNull(message);
     }
 
+    @Ignore
     @Test(timeout=30000)
     public void testTTL() throws Exception {
         Connection connection = null;
