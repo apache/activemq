@@ -1029,6 +1029,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             messages.stop();
         }
 
+        for (MessageReference messageReference : pagedInMessages.values()) {
+            messageReference.decrementReferenceCount();
+        }
+        pagedInMessages.clear();
+
         systemUsage.getMemoryUsage().removeUsageListener(this);
         if (memoryUsage != null) {
             memoryUsage.stop();
@@ -1145,7 +1150,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void doBrowse(List<Message> browseList, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
-            pageInMessages(true);
+            // allow some page in even if we are full and producers are blocked on pfc
+            pageInMessages(!memoryUsage.isFull(110));
             List<MessageReference> toExpire = new ArrayList<MessageReference>();
 
             pagedInPendingDispatchLock.writeLock().lock();
@@ -1156,6 +1162,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     if (broker.isExpired(ref)) {
                         LOG.debug("expiring from pagedInPending: {}", ref);
                         messageExpired(connectionContext, ref);
+                    } else {
+                        ref.decrementReferenceCount();
                     }
                 }
             } finally {
@@ -1179,45 +1187,20 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     } finally {
                         pagedInMessagesLock.writeLock().unlock();
                     }
+                    ref.decrementReferenceCount();
                 }
             }
 
-            if (browseList.size() < getMaxBrowsePageSize()) {
-                messagesLock.writeLock().lock();
-                try {
-                    try {
-                        messages.reset();
-                        while (messages.hasNext() && browseList.size() < max) {
-                            MessageReference node = messages.next();
-                            if (node.isExpired()) {
-                                if (broker.isExpired(node)) {
-                                    LOG.debug("expiring from messages: {}", node);
-                                    messageExpired(connectionContext, createMessageReference(node.getMessage()));
-                                }
-                                messages.remove();
-                            } else {
-                                messages.rollback(node.getMessageId());
-                                if (browseList.contains(node.getMessage()) == false) {
-                                    browseList.add(node.getMessage());
-                                }
-                            }
-                            node.decrementReferenceCount();
-                        }
-                    } finally {
-                        messages.release();
-                    }
-                } finally {
-                    messagesLock.writeLock().unlock();
-                }
-            }
+            // we need a store iterator to walk messages on disk, independent of the cursor which is tracking
+            // the next message batch
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
         }
     }
 
-    private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int maxBrowsePageSize,
+    private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int max,
             List<MessageReference> toExpire) throws Exception {
-        for (Iterator<? extends MessageReference> i = refs.iterator(); i.hasNext() && l.size() < getMaxBrowsePageSize();) {
+        for (Iterator<? extends MessageReference> i = refs.iterator(); i.hasNext() && l.size() < max;) {
             QueueMessageReference ref = (QueueMessageReference) i.next();
             if (ref.isExpired()) {
                 toExpire.add(ref);
@@ -1896,26 +1879,29 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         PendingList resultList = null;
 
         int toPageIn = Math.min(getMaxPageSize(), messages.size());
-        LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, enqueueCount: {}, dequeueCount: {}",
-                new Object[]{
-                        destination.getPhysicalName(),
-                        toPageIn,
-                        destinationStatistics.getInflight().getCount(),
-                        pagedInMessages.size(),
-                        destinationStatistics.getEnqueues().getCount(),
-                        destinationStatistics.getDequeues().getCount()
-                });
-        if (isLazyDispatch() && !force) {
-            // Only page in the minimum number of messages which can be
-            // dispatched immediately.
-            toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
-        }
         int pagedInPendingSize = 0;
         pagedInPendingDispatchLock.readLock().lock();
         try {
             pagedInPendingSize = pagedInPendingDispatch.size();
         } finally {
             pagedInPendingDispatchLock.readLock().unlock();
+        }
+
+        LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}",
+                new Object[]{
+                        destination.getPhysicalName(),
+                        toPageIn,
+                        destinationStatistics.getInflight().getCount(),
+                        pagedInMessages.size(),
+                        pagedInPendingSize,
+                        destinationStatistics.getEnqueues().getCount(),
+                        destinationStatistics.getDequeues().getCount(),
+                        getMemoryUsage().getUsage()
+                });
+        if (isLazyDispatch() && !force) {
+            // Only page in the minimum number of messages which can be
+            // dispatched immediately.
+            toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
         }
         if (toPageIn > 0 && (force || (!consumers.isEmpty() && pagedInPendingSize < getMaxPageSize()))) {
             int count = 0;

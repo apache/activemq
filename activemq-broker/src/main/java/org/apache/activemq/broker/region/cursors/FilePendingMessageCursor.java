@@ -411,10 +411,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return true;
     }
 
-    protected boolean isSpaceInMemoryList() {
-        return hasSpace() && isDiskListEmpty();
-    }
-
     protected synchronized void expireOldMessages() {
         if (!memoryList.isEmpty()) {
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
