@@ -16,7 +16,12 @@
  */
 package org.apache.activemq.util;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 
 public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.DataInput, java.io.Closeable {
 
@@ -384,6 +389,17 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
         try {
             return getRaf().getFD();
         } catch (IOException ioe) {
+            handleException();
+            throw ioe;
+        }
+    }
+    
+    public FileChannel getChannel() throws IOException {
+    	
+    	try {
+    		return getRaf().getChannel();
+        } catch (IOException ioe)
+        {
             handleException();
             throw ioe;
         }

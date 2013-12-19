@@ -155,7 +155,7 @@ final class DataFileAccessor {
         int size = Math.min(data.getLength(), location.getSize());
         file.write(data.getData(), data.getOffset(), size);
         if (sync) {
-            file.getFD().sync();
+        	file.getChannel().force(false);
         }
 
     }
