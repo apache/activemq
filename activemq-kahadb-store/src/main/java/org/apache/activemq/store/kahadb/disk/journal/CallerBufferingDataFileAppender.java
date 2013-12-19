@@ -155,7 +155,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 }
                 
                 if (forceToDisk) {
-                    file.getFD().sync();
+                	file.getChannel().force(false);
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();
