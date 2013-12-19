@@ -107,6 +107,8 @@
                   <include>${project.groupId}:activemq-broker</include>
                   <include>${project.groupId}:activemq-console</include>
                   <include>${project.groupId}:activemq-spring</include>
+                  <include>${project.groupId}:activemq-pool</include>
+                  <include>${project.groupId}:activemq-jms-pool</include>
 
                   <include>${project.groupId}:activemq-amqp</include>
                   <include>${project.groupId}:activemq-http</include>
@@ -230,6 +232,20 @@
             <dependency>
               <groupId>${project.groupId}</groupId>
               <artifactId>activemq-spring</artifactId>
+              <version>${project.version}</version>
+              <classifier>sources</classifier>
+              <optional>true</optional>
+            </dependency>
+            <dependency>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>activemq-pool</artifactId>
+              <version>${project.version}</version>
+              <classifier>sources</classifier>
+              <optional>true</optional>
+            </dependency>
+            <dependency>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>activemq-jms-pool</artifactId>
               <version>${project.version}</version>
               <classifier>sources</classifier>
               <optional>true</optional>
