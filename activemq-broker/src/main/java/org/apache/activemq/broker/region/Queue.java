@@ -1150,8 +1150,11 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void doBrowse(List<Message> browseList, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
-            // allow some page in even if we are full and producers are blocked on pfc
-            pageInMessages(!memoryUsage.isFull(110));
+
+            while (shouldPageInMoreForBrowse(max)) {
+                pageInMessages(!memoryUsage.isFull(110));
+            };
+
             List<MessageReference> toExpire = new ArrayList<MessageReference>();
 
             pagedInPendingDispatchLock.writeLock().lock();
@@ -1195,6 +1198,18 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             // the next message batch
         } catch (Exception e) {
             LOG.error("Problem retrieving message for browse", e);
+        }
+    }
+
+    private boolean shouldPageInMoreForBrowse(int max) {
+        pagedInMessagesLock.readLock().lock();
+        try {
+            int alreadyPagedIn = pagedInMessages.size();
+            return  alreadyPagedIn < max
+                    && alreadyPagedIn < getDestinationStatistics().getMessages().getCount()
+                    && !memoryUsage.isFull(110);
+        } finally {
+            pagedInMessagesLock.readLock().unlock();
         }
     }
 
