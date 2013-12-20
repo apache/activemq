@@ -111,10 +111,12 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
 
         public void onResponse(Command command) {
-            IntegerResponse response = (IntegerResponse) command;
-            if (XAResource.XA_RDONLY == response.getResult()) {
-                // all done, no commit or rollback from TM
-                super.onResponse(command);
+            if (command instanceof IntegerResponse) {
+                IntegerResponse response = (IntegerResponse) command;
+                if (XAResource.XA_RDONLY == response.getResult()) {
+                    // all done, no commit or rollback from TM
+                    super.onResponse(command);
+                }
             }
         }
     }
