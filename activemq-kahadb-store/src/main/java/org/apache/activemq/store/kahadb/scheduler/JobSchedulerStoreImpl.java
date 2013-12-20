@@ -30,8 +30,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.broker.LockableServiceSupport;
+import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
@@ -45,11 +48,10 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LockFile;
 import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedulerStore {
+public class JobSchedulerStoreImpl extends LockableServiceSupport implements JobSchedulerStore {
     static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStoreImpl.class);
     private static final int DATABASE_LOCKED_WAIT_DELAY = 10 * 1000;
 
@@ -60,7 +62,6 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
     PageFile pageFile;
     private Journal journal;
     protected AtomicLong journalSize = new AtomicLong(0);
-    private LockFile lockFile;
     private boolean failIfDatabaseIsLocked;
     private int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     private int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
@@ -404,5 +405,16 @@ public class JobSchedulerStoreImpl extends ServiceSupport implements JobSchedule
     @Override
     public String toString() {
         return "JobSchedulerStore:" + this.directory;
+    }
+
+    @Override
+    public Locker createDefaultLocker() throws IOException {
+        SharedFileLocker locker = new SharedFileLocker();
+        locker.configure(this);
+        return locker;
+    }
+
+    @Override
+    public void init() throws Exception {
     }
 }
