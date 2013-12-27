@@ -31,8 +31,9 @@ public class ClientIdFilterDispatchPolicy extends SimpleDispatchPolicy {
 	public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers) throws Exception {
 
 		Object _clientId = node.getMessage().getProperty(ptpClientId);
+		if (_clientId == null) return super.dispatch(node, msgContext, consumers);
+		
 		ActiveMQDestination _destination = node.getMessage().getDestination();
-
 		int count = 0;
 		for (Subscription sub : consumers) {
 			// Don't deliver to browsers
