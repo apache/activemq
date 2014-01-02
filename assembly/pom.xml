@@ -411,12 +411,6 @@
       <version>1.1.1</version>
     </dependency>
     <dependency>
-      <groupId>io.hawt</groupId>
-      <artifactId>hawtio-web</artifactId>
-      <version>${hawtio-version}</version>
-      <type>war</type>
-    </dependency>
-    <dependency>
       <groupId>org.fusesource.insight</groupId>
       <artifactId>insight-log-core</artifactId>
       <version>${insight-version}</version>

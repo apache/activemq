@@ -148,7 +148,7 @@ ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};"$ACTIVEMQ_CLASSPATH
 
 if [ ""$1 = "start" ] ; then
     if [ -z "$ACTIVEMQ_OPTS" ] ; then
-        ACTIVEMQ_OPTS="-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Dhawtio.realm=activemq -Dhawtio.role=admins -Dhawtio.rolePrincipalClasses=org.apache.activemq.jaas.GroupPrincipal -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+        ACTIVEMQ_OPTS="-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
     fi
 
     if [ -z "$SUNJMX" ] ; then

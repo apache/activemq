@@ -100,22 +100,6 @@
   </fileSets>
 
   <dependencySets>
-    <dependencySet>
-      <outputDirectory>/webapps/hawtio</outputDirectory>
-      <unpack>true</unpack>
-      <unpackOptions>
-        <excludes>
-          <exclude>WEB-INF/lib/slf4j-api-*.jar</exclude>
-          <exclude>WEB-INF/lib/log4j-*.jar</exclude>
-          <exclude>WEB-INF/lib/commons-codec-*.jar</exclude>
-          <exclude>WEB-INF/lib/org.eclipse.jgit-*.jar</exclude>
-        </excludes>
-      </unpackOptions>
-      <scope>runtime</scope>
-      <includes>
-        <include>io.hawt:hawtio-web:war</include>
-      </includes>
-    </dependencySet>
 
     <!-- Copy over jar files -->
     <dependencySet>
@@ -278,8 +262,6 @@
         <!-- REST API -->
         <include>org.jolokia:jolokia-core</include>
         <include>com.googlecode.json-simple:json-simple</include>
-        <!-- ADDITIONAL HAWTIO PLUGINS -->
-        <include>org.ops4j.pax.url:pax-url-aether</include>
       </includes>
     </dependencySet>
   </dependencySets>
