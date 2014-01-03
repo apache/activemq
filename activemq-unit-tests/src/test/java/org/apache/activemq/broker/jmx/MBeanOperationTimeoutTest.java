@@ -52,7 +52,7 @@ public class MBeanOperationTimeoutTest {
 
     protected int messageCount = 50000;
 
-    @Test
+    @Test(expected = TimeoutException.class)
     public void testLongOperationTimesOut() throws Exception {
 
         sendMessages(messageCount);
@@ -68,13 +68,8 @@ public class MBeanOperationTimeoutTest {
         long count = proxy.getQueueSize();
         assertEquals("Queue size", count, messageCount);
 
-        try {
-            LOG.info("Attempting to move one message.");
-            proxy.moveMatchingMessagesTo(null, moveToDestinationName);
-            fail("Queue purge should have timed out.");
-        } catch (TimeoutException e) {
-            LOG.info("Queue message move Timed out as expected.");
-        }
+        LOG.info("Attempting to move one message, TimeoutException expected");
+        proxy.moveMatchingMessagesTo(null, moveToDestinationName);
     }
 
     private void sendMessages(int count) throws Exception {
@@ -106,7 +101,6 @@ public class MBeanOperationTimeoutTest {
 
     @Before
     public void setUp() throws Exception {
-
         broker = createBroker();
         broker.start();
         broker.waitUntilStarted();
@@ -118,6 +112,7 @@ public class MBeanOperationTimeoutTest {
 
     @After
     public void tearDown() throws Exception {
+        Thread.sleep(500);
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
