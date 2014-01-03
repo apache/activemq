@@ -194,11 +194,15 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     }
     
     private void validateConsumerPrefetch(String destination, long expectedCount) {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
         RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
         for (org.apache.activemq.broker.region.Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
             if (dest.getName().equals(destination)) {
                 DestinationStatistics stats = dest.getDestinationStatistics();
-                LOG.info("inflight for : " + dest.getName() + ": " + stats.getInflight().getCount());
+                LOG.info(">>>> inflight for : " + dest.getName() + ": " + stats.getInflight().getCount());
                 assertEquals("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " matches", 
                         expectedCount, stats.getInflight().getCount());      
             }
