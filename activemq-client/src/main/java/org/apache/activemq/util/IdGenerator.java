@@ -33,7 +33,7 @@ public class IdGenerator {
     private static int instanceCount;
     private static String hostName;
     private String seed;
-    private AtomicLong sequence = new AtomicLong(1);
+    private final AtomicLong sequence = new AtomicLong(1);
     private int length;
     public static final String PROPERTY_IDGENERATOR_PORT ="activemq.idgenerator.port";
 
@@ -59,11 +59,16 @@ public class IdGenerator {
                 ss = new ServerSocket(idGeneratorPort);
                 stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
                 Thread.sleep(100);
-            } catch (Exception ioe) {
+            } catch (Exception e) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("could not generate unique stub by using DNS and binding to local port", ioe);
+                    LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
                 } else {
-                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", ioe.getClass().getCanonicalName(), ioe.getMessage());
+                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", e.getClass().getCanonicalName(), e.getMessage());
+                }
+
+                // Restore interrupted state so higher level code can deal with it.
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
                 }
             } finally {
                 if (ss != null) {
