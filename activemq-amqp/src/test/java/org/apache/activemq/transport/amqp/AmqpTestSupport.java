@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.File;
 import java.security.SecureRandom;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.jms.Connection;
@@ -36,6 +37,7 @@ import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.spring.SpringSslContext;
 import org.junit.After;
@@ -78,6 +80,7 @@ public class AmqpTestSupport {
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        brokerService.setUseJmx(true);
 
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
@@ -161,6 +164,21 @@ public class AmqpTestSupport {
             "org.apache.activemq:type=Broker,brokerName=localhost");
         BrokerViewMBean proxy = (BrokerViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(brokerViewMBean, BrokerViewMBean.class, true);
+        return proxy;
+    }
+
+    protected ConnectorViewMBean getProxyToConnectionView(String connectionType) throws Exception {
+        ObjectName connectorQuery = new ObjectName(
+            "org.apache.activemq:type=Broker,brokerName=localhost,connector=clientConnectors,connectorName="+connectionType+"_//*");
+
+        Set<ObjectName> results = brokerService.getManagementContext().queryNames(connectorQuery, null);
+
+        if (results == null || results.isEmpty() || results.size() > 1) {
+            throw new Exception("Unable to find the exact Connector instance.");
+        }
+
+        ConnectorViewMBean proxy = (ConnectorViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(results.iterator().next(), ConnectorViewMBean.class, true);
         return proxy;
     }
 

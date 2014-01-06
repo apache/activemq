@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,7 @@ import javax.jms.QueueBrowser;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
@@ -519,10 +521,45 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    @Test(timeout=60000)
+    public void testConnectionsAreClosed() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final ConnectorViewMBean connector = getProxyToConnectionView("amqp");
+        LOG.info("Current number of Connections is: {}", connector.connectionCount());
+
+        ArrayList<Connection> connections = new ArrayList<Connection>();
+
+        for (int i = 0; i < 10; i++) {
+            connections.add(createConnection(null));
+        }
+
+        LOG.info("Current number of Connections is: {}", connector.connectionCount());
+
+        for (Connection connection : connections) {
+            connection.close();
+        }
+
+        assertTrue("Should have no connections left.", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Current number of Connections is: {}", connector.connectionCount());
+                return connector.connectionCount() == 0;
+            }
+        }));
+    }
+
     private Connection createConnection() throws JMSException {
+        return createConnection(name.toString());
+    }
+
+    private Connection createConnection(String clientId) throws JMSException {
         final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
         final Connection connection = factory.createConnection();
-        connection.setClientID(name.toString());
+        if (clientId != null && !clientId.isEmpty()) {
+            connection.setClientID(clientId);
+        }
         connection.setExceptionListener(new ExceptionListener() {
             @Override
             public void onException(JMSException exception) {
