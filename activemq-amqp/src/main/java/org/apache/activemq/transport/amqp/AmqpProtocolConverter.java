@@ -50,6 +50,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -318,6 +319,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     }
                 }
             });
+            sendToActiveMQ(new ShutdownInfo(), null);
         }
     }
 
