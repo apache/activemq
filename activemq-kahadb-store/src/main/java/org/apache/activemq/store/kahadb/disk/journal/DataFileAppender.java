@@ -365,7 +365,7 @@ class DataFileAppender implements FileAppender {
                 }
 
                 if (forceToDisk) {
-                	file.getChannel().force(false);
+                    file.getFD().sync();
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();
