@@ -1291,7 +1291,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             } else {
                 // If the message ID as indexed, then the broker asked us to
                 // store a DUP message. Bad BOY! Don't do it, and log a warning.
-                LOG.warn("Duplicate message add attempt rejected. Destination: " + command.getDestination().getName() + ", Message id: " + command.getMessageId());
+                LOG.warn("Duplicate message add attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
                 sd.locationIndex.remove(tx, location);
                 rollbackStatsOnDuplicate(command.getDestination());

@@ -1747,6 +1747,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
 
     protected void removeMessage(ConnectionContext context, Subscription sub, final QueueMessageReference reference,
             MessageAck ack) throws IOException {
+        LOG.trace("ack of {} with {}", reference.getMessageId(), ack);
         reference.setAcked(true);
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
@@ -2049,6 +2050,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
                             // Dispatch it.
                             s.add(node);
+                            LOG.trace("assigned {} to consumer {}", node.getMessageId(), s.getConsumerInfo().getConsumerId());
                             iterator.remove();
                             target = s;
                             break;

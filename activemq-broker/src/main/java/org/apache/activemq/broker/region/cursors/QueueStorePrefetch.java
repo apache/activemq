@@ -104,6 +104,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         hadSpace = this.hasSpace();
         if (!broker.getBrokerService().isPersistent() || hadSpace) {
             this.store.recoverNextMessages(this.maxBatchSize, this);
+            dealWithDuplicates(); // without the index lock
         }
     }
 

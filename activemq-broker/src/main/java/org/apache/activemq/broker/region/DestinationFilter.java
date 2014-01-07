@@ -388,6 +388,11 @@ public class DestinationFilter implements Destination {
         return next.isDLQ();
     }
 
+    @Override
+    public void duplicateFromStore(Message message, Subscription subscription) {
+        next.duplicateFromStore(message, subscription);
+    }
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (next instanceof DestinationFilter) {
             DestinationFilter filter = (DestinationFilter) next;
