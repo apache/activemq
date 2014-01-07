@@ -777,7 +777,9 @@ class DBManager(val parent:LevelDBStore) {
   }
 
   def removeSubscription(sub:DurableSubscription) {
-    client.removeCollection(sub.subKey)
+    writeExecutor.sync {
+      client.removeCollection(sub.subKey)
+    }
   }
 
   def createTopicStore(dest:ActiveMQTopic) = {
