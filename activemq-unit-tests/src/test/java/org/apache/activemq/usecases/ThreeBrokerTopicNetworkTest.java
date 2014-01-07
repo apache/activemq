@@ -58,7 +58,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientB = createConsumer("BrokerB", dest);
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
-//      let consumers propogate around the network
+        //let consumers propagate around the network
         Thread.sleep(2000);
         // Send messages
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
@@ -143,7 +143,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientB = createConsumer("BrokerB", dest);
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
-//      let consumers propogate around the network
+        //let consumers propagate around the network
         Thread.sleep(2000);
         // Send messages
         sendMessages("BrokerA", dest, MESSAGE_COUNT);
@@ -182,7 +182,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         MessageConsumer clientB = createConsumer("BrokerB", dest);
         MessageConsumer clientC = createConsumer("BrokerC", dest);
 
-//      let consumers propogate around the network
+        //let consumers propagate around the network
         Thread.sleep(2000);
 
         // Send messages
@@ -254,7 +254,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         // default (true) is present in a matching destination policy entry
         int networkTTL = 2;
         boolean conduitSubs = true;
-        // Setup broker networks
+        // Setup ring broker networks
         bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
         bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
         bridgeBrokers("BrokerB", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
@@ -307,7 +307,7 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
     public void testAllConnectedBrokerNetworkDurableSubTTL() throws Exception {
         int networkTTL = 2;
         boolean conduitSubs = true;
-        // Setup broker networks
+        // Setup ring broker network
         bridgeBrokers("BrokerA", "BrokerB", dynamicOnly, networkTTL, conduitSubs);
         bridgeBrokers("BrokerB", "BrokerA", dynamicOnly, networkTTL, conduitSubs);
         bridgeBrokers("BrokerB", "BrokerC", dynamicOnly, networkTTL, conduitSubs);
@@ -394,6 +394,11 @@ public class ThreeBrokerTopicNetworkTest extends JmsMultipleBrokersTestSupport {
         createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA" + options));
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB" + options));
         createBroker(new URI("broker:(tcp://localhost:61618)/BrokerC" + options));
+    }
+
+    @Override
+    protected void configureBroker(BrokerService broker) {
+        broker.setBrokerId(broker.getBrokerName());
     }
 
     public static Test suite() {

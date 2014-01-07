@@ -69,7 +69,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         
     @Override
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
-        LOG.trace("recover: {}, priority: {}", message.getMessageId(), message.getPriority());
+        LOG.trace("{} recover: {}, priority: {}", this, message.getMessageId(), message.getPriority());
         boolean recovered = false;
         MessageEvaluationContext messageEvaluationContext = new NonCachedMessageEvaluationContext();
         messageEvaluationContext.setMessageReference(message);
@@ -120,6 +120,11 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     public final boolean isPaging() {
         return !isCacheEnabled() && !batchList.isEmpty();
+    }
+
+    @Override
+    public Subscription getSubscription() {
+        return subscription;
     }
 
     @Override

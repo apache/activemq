@@ -17,8 +17,10 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
@@ -93,17 +95,25 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             recovered = true;
             storeHasMessages = true;
         } else {
-            /*
-             * we should expect to get these - as the message is recorded as it before it goes into
-             * the cache. If subsequently, we pull out that message from the store (before its deleted)
-             * it will be a duplicate - but should be ignored
-             */
-            LOG.trace("{} - cursor got duplicate: {}, {}", new Object[]{ this, message.getMessageId(), message.getPriority() });
+            LOG.warn("{} - cursor got duplicate: {}, {}", new Object[]{ this, message.getMessageId(), message.getPriority() });
+            duplicate(message);
         }
         return recovered;
     }
-    
-    
+
+    // track for processing outside of store index lock so we can dlq
+    final LinkedList<Message> duplicatesFromStore = new LinkedList<Message>();
+    private void duplicate(Message message) {
+        duplicatesFromStore.add(message);
+    }
+
+    void dealWithDuplicates() {
+        for (Message message : duplicatesFromStore) {
+            regionDestination.duplicateFromStore(message, getSubscription());
+        }
+        duplicatesFromStore.clear();
+    }
+
     public final synchronized void reset() {
         if (batchList.isEmpty()) {
             try {
@@ -180,9 +190,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                     lastCachedId = node.getMessageId();
                     lastTx = node.getMessage().getTransactionId();
                 } else {
-                    // failed to recover, possible duplicate from concurrent dispatchPending,
-                    // lets not recover further in case of out of order
-                    disableCache = true;
+                    LOG.debug(this + " duplicate add {}", node.getMessage(), new Throwable("duplicated detected"));
+                    dealWithDuplicates();
                 }
             }
         } else {
@@ -251,7 +260,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     protected final synchronized void fillBatch() {
-        LOG.trace("{} - fillBatch", this);
+        //LOG.trace("{} - fillBatch", this);
         if (batchResetNeeded) {
             resetSize();
             setMaxBatchSize(Math.min(regionDestination.getMaxPageSize(), size));
@@ -302,4 +311,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected abstract int getStoreSize();
     
     protected abstract boolean isStoreEmpty();
+
+    public Subscription getSubscription() {
+        return null;
+    }
 }

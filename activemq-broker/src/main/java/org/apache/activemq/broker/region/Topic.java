@@ -805,6 +805,17 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
+    private void rollback(MessageId poisoned) {
+        dispatchLock.readLock().lock();
+        try {
+            for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {
+                durableTopicSubscription.getPending().rollback(poisoned);
+            }
+        } finally {
+            dispatchLock.readLock().unlock();
+        }
+    }
+
     public Map<SubscriptionKey, DurableTopicSubscription> getDurableTopicSubs() {
         return durableSubscribers;
     }

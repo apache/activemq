@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import javax.jms.ResourceAllocationException;
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -32,6 +33,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
@@ -761,7 +763,7 @@ public abstract class BaseDestination implements Destination {
         return hasRegularConsumers;
     }
 
-    protected ConnectionContext createConnectionContext() {
+    public ConnectionContext createConnectionContext() {
         ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
         answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
@@ -788,6 +790,38 @@ public abstract class BaseDestination implements Destination {
 
     public boolean isDLQ() {
         return getDeadLetterStrategy().isDLQ(this.getActiveMQDestination());
+    }
+
+    public void duplicateFromStore(Message message, Subscription durableSub) {
+        ConnectionContext connectionContext = createConnectionContext();
+
+        TransactionId transactionId = message.getTransactionId();
+        if (transactionId != null && transactionId.isXATransaction()) {
+            try {
+                List<TransactionId> preparedTx = Arrays.asList(broker.getRoot().getPreparedTransactions(connectionContext));
+                getLog().trace("processing duplicate in {}, prepared {} ", transactionId, preparedTx);
+                if (!preparedTx.contains(transactionId)) {
+                    // duplicates from past transactions expected after org.apache.activemq.broker.region.Destination#clearPendingMessages
+                    // till they are acked
+                    getLog().debug("duplicate message from store {}, from historical transaction {}, ignoring", message.getMessageId(), transactionId);
+                    return;
+                }
+            } catch (Exception ignored) {
+                getLog().debug("failed to determine state of transaction {} on duplicate message {}", transactionId, message.getMessageId(), ignored);
+            }
+        }
+
+        getLog().warn("duplicate message from store {}, redirecting for dlq processing", message.getMessageId());
+        Throwable cause = new Throwable("duplicate from store for " + destination);
+        message.setRegionDestination(this);
+        broker.getRoot().sendToDeadLetterQueue(connectionContext, message, null, cause);
+        MessageAck messageAck = new MessageAck(message, MessageAck.POSION_ACK_TYPE, 1);
+        messageAck.setPoisonCause(cause);
+        try {
+            acknowledge(connectionContext, durableSub, messageAck, message);
+        } catch (IOException e) {
+            getLog().error("Failed to acknowledge duplicate message {} from {} with {}", message.getMessageId(), destination, messageAck);
+        }
     }
 
 }
