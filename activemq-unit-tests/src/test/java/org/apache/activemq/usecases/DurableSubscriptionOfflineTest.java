@@ -386,8 +386,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
     }
 
 
-    @Ignore("see https://issues.apache.org/jira/browse/AMQ-4874")
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testOrderOnActivateDeactivate() throws Exception {
         for (int i=0;i<10;i++) {
             LOG.info("Iteration: " + i);
