@@ -579,6 +579,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         }
                     }
                     receiver.flow(1);
+                    delivery.disposition(Accepted.getInstance());
                     delivery.settle();
                     pumpProtonToSocket();
                 }
