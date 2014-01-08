@@ -16,15 +16,9 @@
  */
 package org.apache.activemq.transport.amqp.bugs;
 
-import org.apache.activemq.transport.amqp.AmqpTestSupport;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
 import javax.jms.ExceptionListener;
@@ -35,7 +29,15 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import static org.junit.Assert.*;
+import org.apache.activemq.transport.amqp.AmqpTestSupport;
+import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AMQ4914Test extends AmqpTestSupport {
     @Rule
@@ -65,6 +67,13 @@ public class AMQ4914Test extends AmqpTestSupport {
         for (int i = 512; i <= (16 * 1024); i += 512) {
             doTestSendLargeMessage(i);
         }
+    }
+
+    @Test(timeout = 2 * 60 * 1000)
+    public void testSendFixedSizedMessages() throws JMSException {
+        doTestSendLargeMessage(65536);
+        doTestSendLargeMessage(65536 * 2);
+        doTestSendLargeMessage(65536 * 4);
     }
 
     @Ignore("AMQ-4914")
