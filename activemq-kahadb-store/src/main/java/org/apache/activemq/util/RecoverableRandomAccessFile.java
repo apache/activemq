@@ -16,9 +16,17 @@
  */
 package org.apache.activemq.util;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 
 public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.DataInput, java.io.Closeable {
+
+    private static final boolean SKIP_METADATA_UPDATE =
+        Boolean.getBoolean("org.apache.activemq.kahaDB.files.skipMetadataUpdate");
 
     RandomAccessFile raf;
     File file;
@@ -383,6 +391,24 @@ public class RecoverableRandomAccessFile implements java.io.DataOutput, java.io.
     public FileDescriptor getFD() throws IOException {
         try {
             return getRaf().getFD();
+        } catch (IOException ioe) {
+            handleException();
+            throw ioe;
+        }
+    }
+
+    public void sync() throws IOException {
+        try {
+            getRaf().getChannel().force(!SKIP_METADATA_UPDATE);;
+        } catch (IOException ioe) {
+            handleException();
+            throw ioe;
+        }
+    }
+
+    public FileChannel getChannel() throws IOException {
+        try {
+            return getRaf().getChannel();
         } catch (IOException ioe) {
             handleException();
             throw ioe;

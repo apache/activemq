@@ -17,7 +17,6 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.Map;
 
 import org.apache.activemq.util.ByteSequence;
@@ -26,8 +25,8 @@ import org.apache.activemq.util.RecoverableRandomAccessFile;
 /**
  * Optimized Store reader and updater. Single threaded and synchronous. Use in
  * conjunction with the DataFileAccessorPool of concurrent use.
- * 
- * 
+ *
+ *
  */
 final class DataFileAccessor {
 
@@ -38,7 +37,7 @@ final class DataFileAccessor {
 
     /**
      * Construct a Store reader
-     * 
+     *
      * @param fileId
      * @throws IOException
      */
@@ -70,7 +69,7 @@ final class DataFileAccessor {
             throw new IOException("Invalid location: " + location);
         }
 
-        Journal.WriteCommand asyncWrite = (Journal.WriteCommand)inflightWrites.get(new Journal.WriteKey(location));
+        Journal.WriteCommand asyncWrite = inflightWrites.get(new Journal.WriteKey(location));
         if (asyncWrite != null) {
             return asyncWrite.data;
         }
@@ -93,7 +92,7 @@ final class DataFileAccessor {
             throw new IOException("Invalid location: " + location + ", : " + e, e);
         }
     }
-    
+
     public void readFully(long offset, byte data[]) throws IOException {
        file.seek(offset);
        file.readFully(data);
@@ -105,7 +104,7 @@ final class DataFileAccessor {
     }
 
     public void readLocationDetails(Location location) throws IOException {
-        Journal.WriteCommand asyncWrite = (Journal.WriteCommand)inflightWrites.get(new Journal.WriteKey(location));
+        Journal.WriteCommand asyncWrite = inflightWrites.get(new Journal.WriteKey(location));
         if (asyncWrite != null) {
             location.setSize(asyncWrite.location.getSize());
             location.setType(asyncWrite.location.getType());
@@ -155,9 +154,7 @@ final class DataFileAccessor {
         int size = Math.min(data.getLength(), location.getSize());
         file.write(data.getData(), data.getOffset(), size);
         if (sync) {
-            file.getFD().sync();
+            file.sync();
         }
-
     }
-
 }
