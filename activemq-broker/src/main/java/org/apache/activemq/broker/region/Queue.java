@@ -1964,6 +1964,15 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                         resultList.addMessageLast(ref);
                     } else {
                         ref.decrementReferenceCount();
+                        // store should have trapped duplicate in it's index, also cursor audit
+                        // we need to remove the duplicate from the store in the knowledge that the original message may be inflight
+                        // note: jdbc store will not trap unacked messages as a duplicate b/c it gives each message a unique sequence id
+                        LOG.warn("{}, duplicate message {} paged in, is cursor audit disabled? Removing from store and redirecting to dlq", this, ref.getMessage());
+                        if (store != null) {
+                            ConnectionContext connectionContext = createConnectionContext();
+                            store.removeMessage(connectionContext, new MessageAck(ref.getMessage(), MessageAck.POSION_ACK_TYPE, 1));
+                            broker.getRoot().sendToDeadLetterQueue(connectionContext, ref.getMessage(), null, new Throwable("duplicate paged in from store for " + destination));
+                        }
                     }
                 }
             } finally {
