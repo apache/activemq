@@ -13,6 +13,11 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +60,7 @@ import java.util.concurrent.*;
  * the message after shutdown.
  */
 
+@RunWith(value = Parameterized.class)
 public class AMQ4952Test extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4952Test.class);
@@ -72,7 +78,15 @@ public class AMQ4952Test extends TestCase {
 
     private EmbeddedDataSource localDataSource;
 
+    @Parameterized.Parameter(0)
+    public boolean enableCursorAudit;
 
+    @Parameterized.Parameters(name="enableAudit={0}")
+    public static Iterable<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{Boolean.TRUE},{Boolean.FALSE}});
+    }
+
+    @Test
     public void testConsumerBrokerRestart() throws Exception {
 
         Callable consumeMessageTask = new Callable() {
@@ -209,13 +223,15 @@ public class AMQ4952Test extends TestCase {
     }
 
     @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         super.setUp();
-        doSetUp(true);
+        doSetUp();
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         doTearDown();
         super.tearDown();
     }
@@ -223,7 +239,7 @@ public class AMQ4952Test extends TestCase {
     protected void doTearDown() throws Exception {
 
         try {
-            consumerBroker.stop();
+            producerBroker.stop();
         } catch (Exception ex) {
         }
         try {
@@ -232,7 +248,7 @@ public class AMQ4952Test extends TestCase {
         }
     }
 
-    protected void doSetUp(boolean deleteAllMessages) throws Exception {
+    protected void doSetUp() throws Exception {
         producerBroker = createProducerBroker();
         consumerBroker = createConsumerBroker(true);
     }
@@ -347,7 +363,7 @@ public class AMQ4952Test extends TestCase {
         PolicyEntry policy = new PolicyEntry();
 
         policy.setQueue(">");
-        policy.setUseCache(false);
+        policy.setEnableAudit(enableCursorAudit);
         policy.setExpireMessagesPeriod(0);
 
         // set replay with no consumers
