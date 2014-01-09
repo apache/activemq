@@ -553,7 +553,8 @@ public class JMSClientTest extends AmqpTestSupport {
     private Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
 
         final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
-        factory.setSyncPublish(syncPublish);
+        // seems to require unreleased .026
+        // factory.setSyncPublish(syncPublish);
 
         final Connection connection = factory.createConnection();
         if (clientId != null && !clientId.isEmpty()) {
