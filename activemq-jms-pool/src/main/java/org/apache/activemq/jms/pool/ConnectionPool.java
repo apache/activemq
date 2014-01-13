@@ -22,9 +22,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.Session;
-import javax.jms.IllegalStateException;
 
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
@@ -51,6 +51,7 @@ public class ConnectionPool {
     private boolean hasExpired;
     private int idleTimeout = 30 * 1000;
     private long expiryTimeout = 0l;
+    private boolean useAnonymousProducers = true;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final GenericKeyedObjectPool<SessionKey, PooledSession> sessionPool;
@@ -78,7 +79,7 @@ public class ConnectionPool {
                 @Override
                 public PooledSession makeObject(SessionKey key) throws Exception {
                     Session session = makeSession(key);
-                    return new PooledSession(key, session, sessionPool, key.isTransacted());
+                    return new PooledSession(key, session, sessionPool, key.isTransacted(), useAnonymousProducers);
                 }
 
                 @Override
@@ -246,6 +247,14 @@ public class ConnectionPool {
 
     public void setMaximumActiveSessionPerConnection(int maximumActiveSessionPerConnection) {
         this.sessionPool.setMaxActive(maximumActiveSessionPerConnection);
+    }
+
+    public boolean isUseAnonymousProducers() {
+        return this.useAnonymousProducers;
+    }
+
+    public void setUseAnonymousProducers(boolean value) {
+        this.useAnonymousProducers = value;
     }
 
     /**

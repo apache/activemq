@@ -16,8 +16,7 @@
  */
 package org.apache.activemq.jms.pool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.fail;
 
 import javax.jms.Queue;
@@ -33,7 +32,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PooledSessionTest {
+public class PooledSessionNoPublisherCachingTest {
 
     private BrokerService broker;
     private ActiveMQConnectionFactory factory;
@@ -53,6 +52,7 @@ public class PooledSessionTest {
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
         pooledFactory.setBlockIfSessionPoolIsFull(false);
+        pooledFactory.setUseAnonymousProducers(false);
     }
 
     @After
@@ -63,20 +63,7 @@ public class PooledSessionTest {
     }
 
     @Test
-    public void testPooledSessionStats() throws Exception {
-        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
-
-        assertEquals(0, connection.getNumActiveSessions());
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        assertEquals(1, connection.getNumActiveSessions());
-        session.close();
-        assertEquals(0, connection.getNumActiveSessions());
-        assertEquals(1, connection.getNumtIdleSessions());
-        assertEquals(1, connection.getNumSessions());
-    }
-
-    @Test
-    public void testMessageProducersAreAllTheSame() throws Exception {
+    public void testMessageProducersAreUnique() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -86,11 +73,11 @@ public class PooledSessionTest {
         PooledProducer producer1 = (PooledProducer) session.createProducer(queue1);
         PooledProducer producer2 = (PooledProducer) session.createProducer(queue2);
 
-        assertSame(producer1.getMessageProducer(), producer2.getMessageProducer());
+        assertNotSame(producer1.getMessageProducer(), producer2.getMessageProducer());
     }
 
     @Test
-    public void testThrowsWhenDifferentDestinationGiven() throws Exception {
+    public void testThrowsWhenDestinationGiven() throws Exception {
         PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -123,7 +110,7 @@ public class PooledSessionTest {
         PooledTopicPublisher publisher1 = (PooledTopicPublisher) session.createPublisher(topic1);
         PooledTopicPublisher publisher2 = (PooledTopicPublisher) session.createPublisher(topic2);
 
-        assertSame(publisher1.getMessageProducer(), publisher2.getMessageProducer());
+        assertNotSame(publisher1.getMessageProducer(), publisher2.getMessageProducer());
     }
 
     @Test
@@ -137,6 +124,6 @@ public class PooledSessionTest {
         PooledQueueSender sender1 = (PooledQueueSender) session.createSender(queue1);
         PooledQueueSender sender2 = (PooledQueueSender) session.createSender(queue2);
 
-        assertSame(sender1.getMessageProducer(), sender2.getMessageProducer());
+        assertNotSame(sender1.getMessageProducer(), sender2.getMessageProducer());
     }
 }
