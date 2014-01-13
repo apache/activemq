@@ -33,6 +33,7 @@
   <properties>
     <activemq.osgi.import.pkg>
        org.springframework.jms*;version="[3,4)",
+       org.apache.activemq.pool,
        *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
