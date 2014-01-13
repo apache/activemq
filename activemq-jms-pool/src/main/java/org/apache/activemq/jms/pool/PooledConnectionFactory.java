@@ -70,6 +70,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
     private boolean blockIfSessionPoolIsFull = true;
     private long expiryTimeout = 0l;
     private boolean createConnectionOnStartup = true;
+    private boolean useAnonymousProducers = true;
 
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
@@ -101,6 +102,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
                         connection.setExpiryTimeout(getExpiryTimeout());
                         connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
                         connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
+                        connection.setUseAnonymousProducers(isUseAnonymousProducers());
 
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("Created new connection: {}", connection);
@@ -424,6 +426,32 @@ public class PooledConnectionFactory implements ConnectionFactory {
      */
     public void setCreateConnectionOnStartup(boolean createConnectionOnStartup) {
         this.createConnectionOnStartup = createConnectionOnStartup;
+    }
+
+    /**
+     * Should Sessions use one anonymous producer for all producer requests or should a new
+     * MessageProducer be created for each request to create a producer object, default is true.
+     *
+     * When enabled the session only needs to allocate one MessageProducer for all requests and
+     * the MessageProducer#send(destination, message) method can be used.  Normally this is the
+     * right thing to do however it does result in the Broker not showing the producers per
+     * destination.
+     *
+     * @return true if a PooledSession will use only a single anonymous message producer instance.
+     */
+    public boolean isUseAnonymousProducers() {
+        return this.useAnonymousProducers;
+    }
+
+    /**
+     * Sets whether a PooledSession uses only one anonymous MessageProducer instance or creates
+     * a new MessageProducer for each call the create a MessageProducer.
+     *
+     * @param value
+     *      Boolean value that configures whether anonymous producers are used.
+     */
+    public void setUseAnonymousProducers(boolean value) {
+        this.useAnonymousProducers = value;
     }
 
     /**

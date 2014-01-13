@@ -57,22 +57,24 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     private final KeyedObjectPool<SessionKey, PooledSession> sessionPool;
     private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
     private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
-    private final CopyOnWriteArrayList<PooledSessionEventListener> sessionEventListeners =
-        new CopyOnWriteArrayList<PooledSessionEventListener>();
+    private final CopyOnWriteArrayList<PooledSessionEventListener> sessionEventListeners = new CopyOnWriteArrayList<PooledSessionEventListener>();
+
+    private MessageProducer producer;
+    private TopicPublisher publisher;
+    private QueueSender sender;
 
     private Session session;
-    private MessageProducer messageProducer;
-    private QueueSender queueSender;
-    private TopicPublisher topicPublisher;
     private boolean transactional = true;
     private boolean ignoreClose;
     private boolean isXa;
+    private boolean useAnonymousProducers = true;
 
-    public PooledSession(SessionKey key, Session session, KeyedObjectPool<SessionKey, PooledSession> sessionPool, boolean transactional) {
+    public PooledSession(SessionKey key, Session session, KeyedObjectPool<SessionKey, PooledSession> sessionPool, boolean transactional, boolean anonymous) {
         this.key = key;
         this.session = session;
         this.sessionPool = sessionPool;
         this.transactional = transactional;
+        this.useAnonymousProducers = anonymous;
     }
 
     public void addSessionEventListener(PooledSessionEventListener listener) {
@@ -268,7 +270,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     @Override
     public XAResource getXAResource() {
         if (session instanceof XASession) {
-            return ((XASession)session).getXAResource();
+            return ((XASession) session).getXAResource();
         }
         return null;
     }
@@ -334,53 +336,39 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
-        return addTopicSubscriber(((TopicSession)getInternalSession()).createSubscriber(topic));
+        return addTopicSubscriber(((TopicSession) getInternalSession()).createSubscriber(topic));
     }
 
     @Override
     public TopicSubscriber createSubscriber(Topic topic, String selector, boolean local) throws JMSException {
-        return addTopicSubscriber(((TopicSession)getInternalSession()).createSubscriber(topic, selector, local));
+        return addTopicSubscriber(((TopicSession) getInternalSession()).createSubscriber(topic, selector, local));
     }
 
     @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
-        return addQueueReceiver(((QueueSession)getInternalSession()).createReceiver(queue));
+        return addQueueReceiver(((QueueSession) getInternalSession()).createReceiver(queue));
     }
 
     @Override
     public QueueReceiver createReceiver(Queue queue, String selector) throws JMSException {
-        return addQueueReceiver(((QueueSession)getInternalSession()).createReceiver(queue, selector));
+        return addQueueReceiver(((QueueSession) getInternalSession()).createReceiver(queue, selector));
     }
 
     // Producer related methods
     // -------------------------------------------------------------------------
     @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
-        return new PooledProducer(getMessageProducer(), destination);
+        return new PooledProducer(getMessageProducer(destination), destination);
     }
 
     @Override
     public QueueSender createSender(Queue queue) throws JMSException {
-        return new PooledQueueSender(getQueueSender(), queue);
+        return new PooledQueueSender(getQueueSender(queue), queue);
     }
 
     @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
-        return new PooledTopicPublisher(getTopicPublisher(), topic);
-    }
-
-    /**
-     * Callback invoked when the consumer is closed.
-     * <p/>
-     * This is used to keep track of an explicit closed consumer created by this
-     * session, by which we know do not need to keep track of the consumer, as
-     * its already closed.
-     *
-     * @param consumer
-     *            the consumer which is being closed
-     */
-    protected void onConsumerClose(MessageConsumer consumer) {
-        consumers.remove(consumer);
+        return new PooledTopicPublisher(getTopicPublisher(topic), topic);
     }
 
     public Session getInternalSession() throws IllegalStateException {
@@ -391,24 +379,78 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     }
 
     public MessageProducer getMessageProducer() throws JMSException {
-        if (messageProducer == null) {
-            messageProducer = getInternalSession().createProducer(null);
+        return getMessageProducer(null);
+    }
+
+    public MessageProducer getMessageProducer(Destination destination) throws JMSException {
+        MessageProducer result = null;
+
+        if (useAnonymousProducers) {
+            if (producer == null) {
+                // Don't allow for duplicate anonymous producers.
+                synchronized (this) {
+                    if (producer == null) {
+                        producer = getInternalSession().createProducer(null);
+                    }
+                }
+            }
+
+            result = producer;
+        } else {
+            result = getInternalSession().createProducer(destination);
         }
-        return messageProducer;
+
+        return result;
     }
 
     public QueueSender getQueueSender() throws JMSException {
-        if (queueSender == null) {
-            queueSender = ((QueueSession)getInternalSession()).createSender(null);
+        return getQueueSender(null);
+    }
+
+    public QueueSender getQueueSender(Queue destination) throws JMSException {
+        QueueSender result = null;
+
+        if (useAnonymousProducers) {
+            if (sender == null) {
+                // Don't allow for duplicate anonymous producers.
+                synchronized (this) {
+                    if (sender == null) {
+                        sender = ((QueueSession) getInternalSession()).createSender(null);
+                    }
+                }
+            }
+
+            result = sender;
+        } else {
+            result = ((QueueSession) getInternalSession()).createSender(destination);
         }
-        return queueSender;
+
+        return result;
     }
 
     public TopicPublisher getTopicPublisher() throws JMSException {
-        if (topicPublisher == null) {
-            topicPublisher = ((TopicSession)getInternalSession()).createPublisher(null);
+        return getTopicPublisher(null);
+    }
+
+    public TopicPublisher getTopicPublisher(Topic destination) throws JMSException {
+        TopicPublisher result = null;
+
+        if (useAnonymousProducers) {
+            if (publisher == null) {
+                // Don't allow for duplicate anonymous producers.
+                synchronized (this) {
+                    if (publisher == null) {
+                        publisher = ((TopicSession) getInternalSession()).createPublisher(null);
+                    }
+                }
+            }
+
+            result = publisher;
+        } else {
+            result = ((TopicSession) getInternalSession()).createPublisher(destination);
         }
-        return topicPublisher;
+
+        return result;
     }
 
     private QueueBrowser addQueueBrowser(QueueBrowser browser) {
@@ -418,9 +460,9 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     private MessageConsumer addConsumer(MessageConsumer consumer) {
         consumers.add(consumer);
-        // must wrap in PooledMessageConsumer to ensure the onConsumerClose method is
-        // invoked when the returned consumer is closed, to avoid memory leak in this
-        // session class in case many consumers is created
+        // must wrap in PooledMessageConsumer to ensure the onConsumerClose
+        // method is invoked when the returned consumer is closed, to avoid memory
+        // leak in this session class in case many consumers is created
         return new PooledMessageConsumer(this, consumer);
     }
 
@@ -441,5 +483,19 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     @Override
     public String toString() {
         return "PooledSession { " + session + " }";
+    }
+
+    /**
+     * Callback invoked when the consumer is closed.
+     * <p/>
+     * This is used to keep track of an explicit closed consumer created by this
+     * session, by which we know do not need to keep track of the consumer, as
+     * its already closed.
+     *
+     * @param consumer
+     *            the consumer which is being closed
+     */
+    protected void onConsumerClose(MessageConsumer consumer) {
+        consumers.remove(consumer);
     }
 }
