@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 public class XaPooledConnectionFactory extends org.apache.activemq.jms.pool.XaPooledConnectionFactory implements JNDIStorableInterface, Service {
     public static final String POOL_PROPS_PREFIX = "pool";
     private static final transient Logger LOG = LoggerFactory.getLogger(org.apache.activemq.jms.pool.XaPooledConnectionFactory.class);
+    private String brokerUrl;
 
     public XaPooledConnectionFactory() {
         super();
@@ -154,5 +155,16 @@ public class XaPooledConnectionFactory extends org.apache.activemq.jms.pool.XaPo
     @Override
     public Reference getReference() throws NamingException {
         return JNDIReferenceFactory.createReference(this.getClass().getName(), this);
+    }
+
+    public void setBrokerUrl(String url) {
+        if (brokerUrl == null || !brokerUrl.equals(url)) {
+            brokerUrl = url;
+            setConnectionFactory(new ActiveMQXAConnectionFactory(brokerUrl));
+        }
+    }
+
+    public String getBrokerUrl() {
+        return brokerUrl;
     }
 }
