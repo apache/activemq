@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 import javax.jms.*;
 import javax.jms.Connection;
 import javax.sql.DataSource;
-import scala.actors.threadpool.Arrays;
 import java.net.URI;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.*;
@@ -296,7 +296,7 @@ public class AMQ4952Test extends TestCase {
             if (networkProps != null) {
                 IntrospectionSupport.setProperties(nc, networkProps);
             }
-            nc.setStaticallyIncludedDestinations(Arrays.asList(new ActiveMQQueue[]{QUEUE_NAME}));
+            nc.setStaticallyIncludedDestinations(Arrays.<ActiveMQDestination>asList(new ActiveMQQueue[]{QUEUE_NAME}));
         }
 
         //Persistence adapter
