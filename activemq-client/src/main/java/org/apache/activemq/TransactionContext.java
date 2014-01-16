@@ -347,7 +347,7 @@ public class TransactionContext implements XAResource {
     public void start(Xid xid, int flags) throws XAException {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Start: " + xid);
+            LOG.debug("Start: " + xid + ", flags:" + flags);
         }
         if (isInLocalTransaction()) {
             throw new XAException(XAException.XAER_PROTO);
@@ -380,7 +380,7 @@ public class TransactionContext implements XAResource {
     public void end(Xid xid, int flags) throws XAException {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("End: " + xid);
+            LOG.debug("End: " + xid + ", flags:" + flags);
         }
 
         if (isInLocalTransaction()) {
