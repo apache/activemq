@@ -33,67 +33,33 @@ package org.apache.activemq.maven;
  * limitations under the License.
  */
 
-import java.util.Properties;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 
-/**
- * Goal which starts an activemq broker.
- * 
- * @goal run
- * @phase process-sources
- */
-public class BrokerMojo extends AbstractMojo {
-    /**
-     * The maven project.
-     * 
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
-     */
-    protected MavenProject project;
+public class Broker {
+    private static BrokerService broker;
 
-    /**
-     * The broker configuration uri The list of currently supported URI syntaxes
-     * is described <a
-     * href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
-     * 
-     * @parameter expression="${configUri}"
-     *            default-value="broker:(tcp://localhost:61616)?useJmx=false&persistent=false"
-     * @required
-     */
-    private String configUri;
+    private static boolean[] shutdown;
+    
+    private static Thread shutdownThread;
+    
+    public static void start(boolean fork, String configUri) throws MojoExecutionException {
+        
+        if (broker != null) {
+            throw new MojoExecutionException("A local broker is already running");
+        }
 
-    /**
-     * Indicates whether to fork the broker, useful for integration tests.
-     * 
-     * @parameter expression="${fork}" default-value="false"
-     */
-    private boolean fork;
-
-    /**
-     * System properties to add
-     * 
-     * @parameter expression="${systemProperties}"
-     */
-    private Properties systemProperties;
-
-    public void execute() throws MojoExecutionException {
         try {
-            setSystemProperties();
-            getLog().info("Loading broker configUri: " + configUri);
-
-            final BrokerService broker = BrokerFactory.createBroker(configUri);
+            broker = BrokerFactory.createBroker(configUri);
             if (fork) {
                 new Thread(new Runnable() {
+                    @Override
                     public void run() {
                         try {
                             broker.start();
-                            waitForShutdown(broker);
+                            shutdown = new boolean[] { false };
+                            waitForShutdown();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -101,30 +67,54 @@ public class BrokerMojo extends AbstractMojo {
                 }).start();
             } else {
                 broker.start();
-                waitForShutdown(broker);
+                shutdown = new boolean[] { false };
+                waitForShutdown();
             }
         } catch (Exception e) {
-            throw new MojoExecutionException("Failed to start ActiveMQ Broker", e);
+            throw new MojoExecutionException("Failed to start the ActiveMQ Broker", e);
+        }
+    }
+    
+    public static void stop() throws MojoExecutionException {
+
+        if (broker == null) {
+            throw new MojoExecutionException("The local broker is not running");
+        }
+        
+        try {
+            broker.stop();
+            broker.waitUntilStopped();
+            broker = null;
+            
+            Runtime.getRuntime().removeShutdownHook(shutdownThread);
+            
+            // Terminate the shutdown hook thread
+            synchronized (shutdown) {
+                shutdown[0] = true;
+                shutdown.notify();
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException("Failed to stop the ActiveMQ Broker", e);
         }
     }
 
     /**
      * Wait for a shutdown invocation elsewhere
-     * 
+     *
      * @throws Exception
      */
-    protected void waitForShutdown(BrokerService broker) throws Exception {
-        final boolean[] shutdown = new boolean[] {
-            false
-        };
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+    protected static void waitForShutdown() throws Exception {
+        shutdownThread = new Thread() {
+            @Override
             public void run() {
                 synchronized (shutdown) {
                     shutdown[0] = true;
                     shutdown.notify();
                 }
             }
-        });
+        };
+        
+        Runtime.getRuntime().addShutdownHook(shutdownThread);
 
         // Wait for any shutdown event
         synchronized (shutdown) {
@@ -137,22 +127,8 @@ public class BrokerMojo extends AbstractMojo {
         }
 
         // Stop broker
-        broker.stop();
-    }
-
-    /**
-     * Set system properties
-     */
-    protected void setSystemProperties() {
-        // Set the default properties
-        System.setProperty("activemq.base", project.getBuild().getDirectory() + "/");
-        System.setProperty("activemq.home", project.getBuild().getDirectory() + "/");
-        System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "true");
-        System.setProperty("org.apache.activemq.default.directory.prefix", project.getBuild().getDirectory() + "/");
-        System.setProperty("derby.system.home", project.getBuild().getDirectory() + "/");
-        System.setProperty("derby.storage.fileSyncTransactionLog", "true");
-
-        // Overwrite any custom properties
-        System.getProperties().putAll(systemProperties);
+        if (broker != null) {
+            broker.stop();
+        }
     }
 }

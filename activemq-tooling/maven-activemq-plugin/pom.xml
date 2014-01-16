@@ -26,7 +26,8 @@
 
   <artifactId>maven-activemq-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <name>ActiveMQ :: StartUp Plugin</name>
+  <name>ActiveMQ :: Start/Stop Plugin</name>
+  <version>5.5.1.1</version>
 
   <dependencies>
     <dependency>
