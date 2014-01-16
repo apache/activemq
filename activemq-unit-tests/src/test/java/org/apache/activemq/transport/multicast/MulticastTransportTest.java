@@ -59,5 +59,13 @@ public class MulticastTransportTest extends UdpTransportTest {
         return new CommandJoiner(transport, wireFormat);
     }
 
+    @Override
+    public void testSendingMediumMessage() throws Exception {
+        // Ignoring, see AMQ-4973
+    }
 
+    @Override
+    public void testSendingLargeMessage() throws Exception {
+        // Ignoring, see AMQ-4973
+    }
 }
