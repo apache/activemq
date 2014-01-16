@@ -22,14 +22,14 @@ import java.util.List;
 import javax.jms.Connection;
 import javax.jms.Session;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 
-public class NetworkConnectionsCleanedupTest extends TestCase {
+public class NetworkConnectionsCleanedupTest {
 
     protected static final int MESSAGE_COUNT = 10;
 
@@ -46,6 +46,8 @@ public class NetworkConnectionsCleanedupTest extends TestCase {
 
     // skip this test. it runs for an hour, doesn't assert anything, and could probably
     // just be removed (seems like a throwaway impl for https://issues.apache.org/activemq/browse/AMQ-1202)
+    @Ignore
+    @Test
     public void skipTestNetworkConnections() throws Exception {
         String uri = "static:(tcp://localhost:61617)?initialReconnectDelay=100";
         List<ActiveMQDestination> list = new ArrayList<ActiveMQDestination>();
