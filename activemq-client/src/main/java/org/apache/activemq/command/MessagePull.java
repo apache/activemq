@@ -20,10 +20,10 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * Used to pull messages on demand.
- * 
+ *
  * @openwire:marshaller code="20"
- * 
- * 
+ *
+ *
  */
 public class MessagePull extends BaseCommand {
 
@@ -35,10 +35,14 @@ public class MessagePull extends BaseCommand {
     private MessageId messageId;
     private String correlationId;
 
+    private transient boolean tracked = false;
+
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processMessagePull(this);
     }
@@ -111,5 +115,13 @@ public class MessagePull extends BaseCommand {
 
     public void setMessageId(MessageId messageId) {
         this.messageId = messageId;
+    }
+
+    public void setTracked(boolean tracked) {
+        this.tracked = tracked;
+    }
+
+    public boolean isTracked() {
+        return this.tracked;
     }
 }
