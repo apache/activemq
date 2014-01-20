@@ -35,8 +35,6 @@ package org.apache.activemq.maven;
 
 import java.util.Properties;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -47,7 +45,7 @@ import org.apache.maven.project.MavenProject;
  * @goal run
  * @phase process-sources
  */
-public class BrokerMojo extends AbstractMojo {
+public class StartBrokerMojo extends AbstractMojo {
     /**
      * The maven project.
      *
@@ -91,74 +89,23 @@ public class BrokerMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-        try {
-            if (skip) {
-                getLog().info("Skipped execution of ActiveMQ Broker");
-                return;
-            }
+		if (skip) {
+			getLog().info("Skipped execution of ActiveMQ Broker");
+			return;
+		}
 
-            setSystemProperties();
+		setSystemProperties();
 
-            getLog().info("Loading broker configUri: " + configUri);
-            if (XBeanFileResolver.isXBeanFile(configUri)) {
-                getLog().debug("configUri before transformation: " + configUri);
-                configUri = XBeanFileResolver.toUrlCompliantAbsolutePath(configUri);
-                getLog().debug("configUri after transformation: " + configUri);
-            }
+		getLog().info("Loading broker configUri: " + configUri);
+		if (XBeanFileResolver.isXBeanFile(configUri)) {
+			getLog().debug("configUri before transformation: " + configUri);
+			configUri = XBeanFileResolver.toUrlCompliantAbsolutePath(configUri);
+			getLog().debug("configUri after transformation: " + configUri);
+		}
 
-            final BrokerService broker = BrokerFactory.createBroker(configUri);
-            if (fork) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            broker.start();
-                            waitForShutdown(broker);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            } else {
-                broker.start();
-                waitForShutdown(broker);
-            }
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed to start ActiveMQ Broker", e);
-        }
-    }
+        Broker.start(fork, configUri);
 
-    /**
-     * Wait for a shutdown invocation elsewhere
-     *
-     * @throws Exception
-     */
-    protected void waitForShutdown(BrokerService broker) throws Exception {
-        final boolean[] shutdown = new boolean[] {
-            false
-        };
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                synchronized (shutdown) {
-                    shutdown[0] = true;
-                    shutdown.notify();
-                }
-            }
-        });
-
-        // Wait for any shutdown event
-        synchronized (shutdown) {
-            while (!shutdown[0]) {
-                try {
-                    shutdown.wait();
-                } catch (InterruptedException e) {
-                }
-            }
-        }
-
-        // Stop broker
-        broker.stop();
+        getLog().info("Started the ActiveMQ Broker");
     }
 
     /**
