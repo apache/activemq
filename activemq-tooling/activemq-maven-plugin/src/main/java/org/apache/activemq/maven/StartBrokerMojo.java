@@ -89,19 +89,19 @@ public class StartBrokerMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-		if (skip) {
-			getLog().info("Skipped execution of ActiveMQ Broker");
-			return;
-		}
+        if (skip) {
+            getLog().info("Skipped execution of ActiveMQ Broker");
+            return;
+        }
 
-		setSystemProperties();
+        setSystemProperties();
 
-		getLog().info("Loading broker configUri: " + configUri);
-		if (XBeanFileResolver.isXBeanFile(configUri)) {
-			getLog().debug("configUri before transformation: " + configUri);
-			configUri = XBeanFileResolver.toUrlCompliantAbsolutePath(configUri);
-			getLog().debug("configUri after transformation: " + configUri);
-		}
+        getLog().info("Loading broker configUri: " + configUri);
+        if (XBeanFileResolver.isXBeanFile(configUri)) {
+            getLog().debug("configUri before transformation: " + configUri);
+            configUri = XBeanFileResolver.toUrlCompliantAbsolutePath(configUri);
+            getLog().debug("configUri after transformation: " + configUri);
+        }
 
         Broker.start(fork, configUri);
 

@@ -105,7 +105,7 @@ public class Broker {
      * @throws Exception
      */
     protected static void waitForShutdown() throws Exception {
-		shutdown = new boolean[] { false };
+        shutdown = new boolean[] { false };
 
         shutdownThread = new Thread() {
             @Override

@@ -52,10 +52,10 @@ public class StopBrokerMojo extends AbstractMojo {
     private boolean skip;
 
     public void execute() throws MojoExecutionException {
-		if (skip) {
-			getLog().info("Skipped execution of ActiveMQ Broker");
-			return;
-		}
+        if (skip) {
+            getLog().info("Skipped execution of ActiveMQ Broker");
+            return;
+        }
 
         Broker.stop();
 
