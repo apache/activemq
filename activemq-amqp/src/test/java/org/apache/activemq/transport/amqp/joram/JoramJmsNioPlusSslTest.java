@@ -50,22 +50,22 @@ import org.slf4j.LoggerFactory;
 @Suite.SuiteClasses({
     //    TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
     MessageHeaderTest.class,
-    QueueBrowserTest.class,
-    MessageTypeTest.class,
+    //QueueBrowserTest.class,
+    //MessageTypeTest.class,
     //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
-    TemporaryTopicTest.class,
+    //TemporaryTopicTest.class,
     //,TopicConnectionTest.class    // https://issues.apache.org/jira/browse/AMQ-4654
-    SelectorSyntaxTest.class,
-    QueueSessionTest.class,
-    SelectorTest.class,
-    TemporaryQueueTest.class,
-    ConnectionTest.class,
-    SessionTest.class,
-    JMSXPropertyTest.class,
-    MessageBodyTest.class,
-    MessageDefaultTest.class,
-    MessagePropertyConversionTest.class,
-    MessagePropertyTest.class
+    //SelectorSyntaxTest.class,
+    //QueueSessionTest.class,
+    //SelectorTest.class,
+    //TemporaryQueueTest.class,
+    //ConnectionTest.class,
+    //SessionTest.class,
+    //JMSXPropertyTest.class,
+    //MessageBodyTest.class,
+    //MessageDefaultTest.class,
+    //MessagePropertyConversionTest.class,
+    //MessagePropertyTest.class
 })
 
 public class JoramJmsNioPlusSslTest {
