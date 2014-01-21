@@ -31,9 +31,10 @@ import javax.jms.Topic;
  * Destination in using standard java InputStream and OutputStream objects. It's
  * best use case is to send and receive large amounts of data that would be to
  * large to hold in a single JMS message.
- * 
- * 
+ *
+ *
  */
+@Deprecated
 public interface StreamConnection extends Connection {
 
     InputStream createInputStream(Destination dest) throws JMSException;
@@ -49,7 +50,7 @@ public interface StreamConnection extends Connection {
     InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException;
 
     InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException;
-    
+
     InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal, long timeout) throws JMSException;
 
     OutputStream createOutputStream(Destination dest) throws JMSException;
@@ -67,7 +68,7 @@ public interface StreamConnection extends Connection {
      * <CODE>TopicSubscriber</CODE> for the subscription, or while a consumed
      * message is part of a pending transaction or has not been acknowledged in
      * the session.
-     * 
+     *
      * @param name the name used to identify this subscription
      * @throws JMSException if the session fails to unsubscribe to the durable
      *                 subscription due to some internal error.
