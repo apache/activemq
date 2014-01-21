@@ -24,17 +24,28 @@ import org.apache.activemq.security.*;
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
 import java.util.LinkedList;
 
 import static org.junit.Assert.assertTrue;
 
+@RunWith(BlockJUnit4ClassRunner.class)
 public class MQTTNioTest extends MQTTTest {
 
     @Override
     protected String getProtocolScheme() {
         return "mqtt+nio";
+    }
+
+    @Ignore("See AMQ-4712")
+    @Override
+    @Test
+    public void testReceiveMessageSentWhileOffline() throws Exception {
+        super.testReceiveMessageSentWhileOffline();
     }
 
     @Test
