@@ -170,9 +170,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final AtomicBoolean transportFailed = new AtomicBoolean(false);
     private final CopyOnWriteArrayList<ActiveMQSession> sessions = new CopyOnWriteArrayList<ActiveMQSession>();
     private final CopyOnWriteArrayList<ActiveMQConnectionConsumer> connectionConsumers = new CopyOnWriteArrayList<ActiveMQConnectionConsumer>();
+    private final CopyOnWriteArrayList<TransportListener> transportListeners = new CopyOnWriteArrayList<TransportListener>();
+    // Stream are deprecated and will be removed in a later release.
     private final CopyOnWriteArrayList<ActiveMQInputStream> inputStreams = new CopyOnWriteArrayList<ActiveMQInputStream>();
     private final CopyOnWriteArrayList<ActiveMQOutputStream> outputStreams = new CopyOnWriteArrayList<ActiveMQOutputStream>();
-    private final CopyOnWriteArrayList<TransportListener> transportListeners = new CopyOnWriteArrayList<TransportListener>();
 
     // Maps ConsumerIds to ActiveMQConsumer objects
     private final ConcurrentHashMap<ConsumerId, ActiveMQDispatcher> dispatchers = new ConcurrentHashMap<ConsumerId, ActiveMQDispatcher>();
@@ -677,6 +678,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         ActiveMQConnectionConsumer c = i.next();
                         c.dispose();
                     }
+                    // Stream are deprecated and will be removed in a later release.
                     for (Iterator<ActiveMQInputStream> i = this.inputStreams.iterator(); i.hasNext();) {
                         ActiveMQInputStream c = i.next();
                         c.dispose();
@@ -1598,6 +1600,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             ActiveMQConnectionConsumer c = i.next();
             c.dispose();
         }
+
+        // Stream are deprecated and will be removed in a later release.
         for (Iterator<ActiveMQInputStream> i = this.inputStreams.iterator(); i.hasNext();) {
             ActiveMQInputStream c = i.next();
             c.dispose();
@@ -2186,45 +2190,54 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest) throws JMSException {
         return createInputStream(dest, null);
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector) throws JMSException {
         return createInputStream(dest, messageSelector, false);
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException {
         return createInputStream(dest, messageSelector, noLocal,  -1);
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal, long timeout) throws JMSException {
         return doCreateInputStream(dest, messageSelector, noLocal, null, timeout);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name) throws JMSException {
         return createInputStream(dest, null, false);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException {
         return createDurableInputStream(dest, name, messageSelector, false);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException {
         return createDurableInputStream(dest, name, messageSelector, noLocal, -1);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal, long timeout) throws JMSException {
         return doCreateInputStream(dest, messageSelector, noLocal, name, timeout);
     }
 
+    @Deprecated
     private InputStream doCreateInputStream(Destination dest, String messageSelector, boolean noLocal, String subName, long timeout) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
@@ -2236,6 +2249,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * to disk/database by the broker
      */
     @Override
+    @Deprecated
     public OutputStream createOutputStream(Destination dest) throws JMSException {
         return createOutputStream(dest, null, ActiveMQMessage.DEFAULT_DELIVERY_MODE, ActiveMQMessage.DEFAULT_PRIORITY, ActiveMQMessage.DEFAULT_TIME_TO_LIVE);
     }
@@ -2244,6 +2258,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Creates a non persistent output stream; messages will not be written to
      * disk
      */
+    @Deprecated
     public OutputStream createNonPersistentOutputStream(Destination dest) throws JMSException {
         return createOutputStream(dest, null, DeliveryMode.NON_PERSISTENT, ActiveMQMessage.DEFAULT_PRIORITY, ActiveMQMessage.DEFAULT_TIME_TO_LIVE);
     }
@@ -2261,6 +2276,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                method
      */
     @Override
+    @Deprecated
     public OutputStream createOutputStream(Destination dest, Map<String, Object> streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
@@ -2338,18 +2354,22 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
     }
 
+    @Deprecated
     public void addOutputStream(ActiveMQOutputStream stream) {
         outputStreams.add(stream);
     }
 
+    @Deprecated
     public void removeOutputStream(ActiveMQOutputStream stream) {
         outputStreams.remove(stream);
     }
 
+    @Deprecated
     public void addInputStream(ActiveMQInputStream stream) {
         inputStreams.add(stream);
     }
 
+    @Deprecated
     public void removeInputStream(ActiveMQInputStream stream) {
         inputStreams.remove(stream);
     }
