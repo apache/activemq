@@ -25,8 +25,17 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.fusesource.mqtt.client.MQTT;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@RunWith(BlockJUnit4ClassRunner.class)
 public class MQTTSSLTest extends MQTTTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MQTTSSLTest.class);
 
     public void setUp() throws Exception {
         String basedir = basedir().getPath();
@@ -43,6 +52,14 @@ public class MQTTSSLTest extends MQTTTest {
     protected String getProtocolScheme() {
         return "mqtt+ssl";
     }
+
+    @Ignore("See AMQ-4712")
+    @Override
+    @Test
+    public void testReceiveMessageSentWhileOffline() throws Exception {
+        super.testReceiveMessageSentWhileOffline();
+    }
+
 
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
