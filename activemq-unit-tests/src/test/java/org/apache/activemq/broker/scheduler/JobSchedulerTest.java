@@ -252,6 +252,7 @@ public class JobSchedulerTest {
 
     @After
     public void tearDown() throws Exception {
+        scheduler.stopDispatching();
         store.stop();
     }
 }
