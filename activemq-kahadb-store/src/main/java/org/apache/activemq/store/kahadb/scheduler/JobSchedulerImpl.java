@@ -435,16 +435,15 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
         for (Iterator<Map.Entry<Long, List<JobLocation>>> i = this.index.iterator(tx); i.hasNext();) {
             Map.Entry<Long, List<JobLocation>> entry = i.next();
             keys.add(entry.getKey());
-            List<JobLocation> values = entry.getValue();
+        }
+
+        for (Long l : keys) {
+            List<JobLocation> values = this.index.remove(tx, l);
             if (values != null) {
                 for (JobLocation jl : values) {
                     this.store.decrementJournalCount(tx, jl.getLocation());
                 }
             }
-        }
-
-        for (Long l : keys) {
-            this.index.remove(tx, l);
         }
     }
 
@@ -454,19 +453,18 @@ class JobSchedulerImpl extends ServiceSupport implements Runnable, JobScheduler 
             Map.Entry<Long, List<JobLocation>> entry = i.next();
             if (entry.getKey().longValue() <= finish) {
                 keys.add(entry.getKey());
-                List<JobLocation> values = entry.getValue();
-                if (values != null) {
-                    for (JobLocation jl : values) {
-                        this.store.decrementJournalCount(tx, jl.getLocation());
-                    }
-                }
             } else {
                 break;
             }
         }
 
         for (Long l : keys) {
-            this.index.remove(tx, l);
+            List<JobLocation> values = this.index.remove(tx, l);
+            if (values != null) {
+                for (JobLocation jl : values) {
+                    this.store.decrementJournalCount(tx, jl.getLocation());
+                }
+            }
         }
     }
 
