@@ -374,7 +374,16 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                         while (!isStopped() && !isStopping()) {
                             Socket sock = socketQueue.poll(1, TimeUnit.SECONDS);
                             if (sock != null) {
-                                handleSocket(sock);
+                                try {
+                                    handleSocket(sock);
+                                } catch (Throwable thrown) {
+                                    if (!isStopping()) {
+                                        onAcceptError(new Exception(thrown));
+                                    } else if (!isStopped()) {
+                                        LOG.warn("Unexpected error thrown during accept handling: ", thrown);
+                                        onAcceptError(new Exception(thrown));
+                                    }
+                                }
                             }
                         }
 
@@ -519,6 +528,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return allowLinkStealing;
     }
 
+    @Override
     public void setAllowLinkStealing(boolean allowLinkStealing) {
         this.allowLinkStealing = allowLinkStealing;
     }
