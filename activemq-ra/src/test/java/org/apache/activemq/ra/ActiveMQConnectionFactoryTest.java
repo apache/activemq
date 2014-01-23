@@ -113,9 +113,9 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
         ra.setUserName(user);
         ra.setPassword(pwd);
 
-        XAResource[] resoruces = ra.getXAResources(null);
-        assertEquals("one resource", 1, resoruces.length);
+        XAResource[] resources = ra.getXAResources(null);
+        assertEquals("one resource", 1, resources.length);
 
-        assertEquals("no pending transactions", 0, resoruces[0].recover(100).length);
+        assertEquals("no pending transactions", 0, resources[0].recover(100).length);
     }
 }

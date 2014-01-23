@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.ra;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.HashMap;
 
@@ -102,9 +103,6 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         }
     }
 
-    /**
-     * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection()
-     */
     public ActiveMQConnection makeConnection() throws JMSException {
         if( connectionFactory == null ) {
             return makeConnection(getInfo());
@@ -235,18 +233,23 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      */
     public XAResource[] getXAResources(ActivationSpec[] activationSpecs) throws ResourceException {
         try {
-            final ActiveMQConnection connection = makeConnection();
-            return new XAResource[]{new LocalAndXATransaction(new TransactionContext(connection)) {
-                public void finalize() throws Throwable {
-                    try {
-                        connection.close();
-                    } catch (Throwable ignore) {
-                    } finally {
-                        super.finalize();
-                    }
-                }
-            }};
-        } catch (JMSException e) {
+            return new XAResource[]{(XAResource)
+                    java.lang.reflect.Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[]{XAResource.class},
+                            new java.lang.reflect.InvocationHandler () {
+                                @Override
+                                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                    ActiveMQConnection connection = makeConnection();
+                                    try {
+                                        return method.invoke(new TransactionContext(connection), args);
+                                    } finally {
+                                        try {
+                                            connection.close();
+                                        } catch (Throwable ignore) {}
+                                    }
+                                }
+                            })};
+
+        } catch (Exception e) {
             throw new ResourceException(e);
         }
     }
