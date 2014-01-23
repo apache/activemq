@@ -154,12 +154,13 @@ public class MQTTProtocolConverter {
                 break;
             }
             case CONNECT.TYPE: {
-                onMQTTConnect(new CONNECT().decode(frame));
-                LOG.debug("MQTT Client " + getClientId() + " connected.");
+                CONNECT connect = new CONNECT().decode(frame);
+                onMQTTConnect(connect);
+                LOG.debug("MQTT Client {} connected. (version: {})", getClientId(), connect.version());
                 break;
             }
             case DISCONNECT.TYPE: {
-                LOG.debug("MQTT Client " + getClientId() + " disconnecting");
+                LOG.debug("MQTT Client {} disconnecting", getClientId());
                 onMQTTDisconnect();
                 break;
             }

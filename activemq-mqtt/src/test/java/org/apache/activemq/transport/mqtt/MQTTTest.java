@@ -325,9 +325,21 @@ public class MQTTTest extends AbstractMQTTTest {
 
             @Override
             public void debug(String message, Object... args) {
-                LOG.info(message, args);
+                LOG.info(String.format(message, args));
             }
         };
+    }
+
+    @Test(timeout=60 * 1000)
+    public void testMQTT311Connection()throws Exception{
+        addMQTTConnector();
+        brokerService.start();
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo");
+        mqtt.setVersion("3.1.1");
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.disconnect();
     }
 
 }
