@@ -86,7 +86,7 @@ public class PooledProducer implements MessageProducer {
         // just in case let only one thread send at once
         synchronized (messageProducer) {
 
-            if (anonymous && !this.destination.equals(destination)) {
+            if (anonymous && this.destination != null && !this.destination.equals(destination)) {
                 throw new UnsupportedOperationException("This producer can only send messages to: " + this.destination);
             }
 
