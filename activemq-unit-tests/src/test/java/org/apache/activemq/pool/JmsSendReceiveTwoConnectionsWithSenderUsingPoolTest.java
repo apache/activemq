@@ -44,11 +44,4 @@ public class JmsSendReceiveTwoConnectionsWithSenderUsingPoolTest extends JmsTopi
         super.tearDown();
         senderConnectionFactory.stop();
     }
-
-    @Override   // TODO remove this method when AMQ-4991 is fixed
-    @Ignore("See AMQ-4991") // Ignore doesn't really work here with JUnit3 runner, just adding as documentation
-    public void testSendReceive() throws Exception {
-        //super.testSendReceive();
-    }
-
 }
