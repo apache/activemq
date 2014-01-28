@@ -583,16 +583,23 @@ public abstract class AbstractRegion implements Region {
     }
 
     public void reapplyInterceptor() {
-        DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
-        Map<ActiveMQDestination, Destination> map = getDestinationMap();
-        for (ActiveMQDestination key : map.keySet()) {
-            Destination destination = map.get(key);
-            if (destination instanceof CompositeDestinationFilter) {
-                destination = ((CompositeDestinationFilter)destination).next;
+        destinationsLock.writeLock().lock();
+        try {
+            DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
+            Map<ActiveMQDestination, Destination> map = getDestinationMap();
+            for (ActiveMQDestination key : map.keySet()) {
+                Destination destination = map.get(key);
+                if (destination instanceof CompositeDestinationFilter) {
+                    destination = ((CompositeDestinationFilter) destination).next;
+                }
+                if (destinationInterceptor != null) {
+                    destination = destinationInterceptor.intercept(destination);
+                }
+                getDestinationMap().put(key, destination);
+                destinations.put(key, destination);
             }
-            destination = destinationInterceptor.intercept(destination);
-            getDestinationMap().put(key, destination);
-            destinations.put(key, destination);
+        } finally {
+            destinationsLock.writeLock().unlock();
         }
     }
 }

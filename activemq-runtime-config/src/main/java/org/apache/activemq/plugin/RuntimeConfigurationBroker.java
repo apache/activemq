@@ -552,6 +552,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 public void run() {
 
                     boolean updatedExistingInterceptor = false;
+                    RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
 
                     for (DestinationInterceptor destinationInterceptor : getBrokerService().getDestinationInterceptors()) {
                         if (destinationInterceptor instanceof VirtualDestinationInterceptor) {
@@ -577,11 +578,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
                         DestinationInterceptor[] destinationInterceptors = interceptorsList.toArray(new DestinationInterceptor[]{});
                         getBrokerService().setDestinationInterceptors(destinationInterceptors);
-                        RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
+
                         ((CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor()).setInterceptors(destinationInterceptors);
                         info("applied new: " + interceptorsList);
-                        regionBroker.reapplyInterceptor();
                     }
+                    regionBroker.reapplyInterceptor();
                 }
             });
         } else if (o instanceof DtoPolicyEntry) {
