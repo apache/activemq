@@ -377,6 +377,11 @@ public class MutableBrokerFilter implements Broker {
     }
 
     @Override
+    public void reapplyInterceptor() {
+        getNext().reapplyInterceptor();
+    }
+
+    @Override
     public Scheduler getScheduler() {
        return getNext().getScheduler();
     }

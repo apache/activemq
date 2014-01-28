@@ -368,6 +368,11 @@ public class ErrorBroker implements Broker {
     }
 
     @Override
+    public void reapplyInterceptor() {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    @Override
     public Scheduler getScheduler() {
         throw new BrokerStoppedException(this.message);
     }

@@ -366,6 +366,11 @@ public class BrokerFilter implements Broker {
     }
 
     @Override
+    public void reapplyInterceptor() {
+        next.reapplyInterceptor();
+    }
+
+    @Override
     public Scheduler getScheduler() {
        return next.getScheduler();
     }

@@ -70,6 +70,20 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
 
 
     @Test
+    public void testModComposite() throws Exception {
+        final String brokerConfig = configurationSeed + "-mod-composite-vd-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-add-composite-vd");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+        exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
+
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-composite-vd", SLEEP);
+        exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
+
+        exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.CompositeQueue");
+    }
+
+    @Test
     public void testNewNoDefaultVirtualTopicSupport() throws Exception {
         final String brokerConfig = configurationSeed + "-no-vd-vt-broker";
         applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
