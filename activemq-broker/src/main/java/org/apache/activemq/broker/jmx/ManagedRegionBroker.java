@@ -61,6 +61,7 @@ import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
@@ -223,6 +224,19 @@ public class ManagedRegionBroker extends RegionBroker {
             LOG.error("Failed to register subscription {}", sub, e);
             return null;
         }
+    }
+
+    @Override
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        super.addConnection(context, info);
+        this.contextBroker.getBrokerService().incrementCurrentConnections();
+        this.contextBroker.getBrokerService().incrementTotalConnections();
+    }
+
+    @Override
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+        super.removeConnection(context, info, error);
+        this.contextBroker.getBrokerService().decrementCurrentConnections();
     }
 
     @Override
@@ -440,7 +454,6 @@ public class ManagedRegionBroker extends RegionBroker {
             LOG.warn("Failed to register MBean {}", key);
             LOG.debug("Failure reason: ", e);
         }
-
     }
 
     protected void unregisterSubscription(ObjectName key, boolean addToInactive) throws Exception {

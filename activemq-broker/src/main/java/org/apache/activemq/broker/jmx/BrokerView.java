@@ -89,6 +89,16 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
+    public int getCurrentConnectionsCount() {
+        return brokerService.getCurrentConnections();
+    }
+
+    @Override
+    public long getTotalConnectionsCount() {
+        return brokerService.getTotalConnections();
+    }
+
+    @Override
     public void gc() throws Exception {
         brokerService.getBroker().gc();
         try {
@@ -148,6 +158,7 @@ public class BrokerView implements BrokerViewMBean {
     /**
      * @return the average size of a message (bytes)
      */
+    @Override
     public double getAverageMessageSize() {
         return safeGetBroker().getDestinationStatistics().getMessageSize().getAverageSize();
     }
@@ -155,6 +166,7 @@ public class BrokerView implements BrokerViewMBean {
     /**
      * @return the max size of a message (bytes)
      */
+    @Override
     public long getMaxMessageSize() {
         return safeGetBroker().getDestinationStatistics().getMessageSize().getMaxSize();
     }
@@ -162,10 +174,10 @@ public class BrokerView implements BrokerViewMBean {
     /**
      * @return the min size of a message (bytes)
      */
+    @Override
     public long getMinMessageSize() {
         return safeGetBroker().getDestinationStatistics().getMessageSize().getMinSize();
     }
-
 
     public long getTotalMessagesCached() {
         return safeGetBroker().getDestinationStatistics().getMessagesCached().getCount();
@@ -431,7 +443,6 @@ public class BrokerView implements BrokerViewMBean {
         brokerService.getBroker().removeSubscription(context, info);
     }
 
-    //  doc comment inherited from BrokerViewMBean
     @Override
     public void reloadLog4jProperties() throws Throwable {
 
