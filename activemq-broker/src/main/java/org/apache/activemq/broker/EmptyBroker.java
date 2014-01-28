@@ -358,6 +358,11 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
+    public void reapplyInterceptor() {
+
+    }
+
+    @Override
     public Scheduler getScheduler() {
         return null;
     }

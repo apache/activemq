@@ -31,6 +31,7 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.virtual.CompositeDestinationFilter;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
@@ -578,6 +579,20 @@ public abstract class AbstractRegion implements Region {
             } catch (Exception e) {
                 LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: {}", control.getDestination(), e);
             }
+        }
+    }
+
+    public void reapplyInterceptor() {
+        DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
+        Map<ActiveMQDestination, Destination> map = getDestinationMap();
+        for (ActiveMQDestination key : map.keySet()) {
+            Destination destination = map.get(key);
+            if (destination instanceof CompositeDestinationFilter) {
+                destination = ((CompositeDestinationFilter)destination).next;
+            }
+            destination = destinationInterceptor.intercept(destination);
+            getDestinationMap().put(key, destination);
+            destinations.put(key, destination);
         }
     }
 }

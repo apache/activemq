@@ -859,4 +859,11 @@ public class RegionBroker extends EmptyBroker {
     public void setAllowTempAutoCreationOnSend(boolean allowTempAutoCreationOnSend) {
         this.allowTempAutoCreationOnSend = allowTempAutoCreationOnSend;
     }
+
+    public void reapplyInterceptor() {
+        queueRegion.reapplyInterceptor();
+        topicRegion.reapplyInterceptor();
+        tempQueueRegion.reapplyInterceptor();
+        tempTopicRegion.reapplyInterceptor();
+    }
 }
