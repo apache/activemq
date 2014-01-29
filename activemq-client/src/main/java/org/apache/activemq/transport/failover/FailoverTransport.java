@@ -243,7 +243,7 @@ public class FailoverTransport implements CompositeTransport {
     public final void handleTransportFailure(IOException e) throws InterruptedException {
         synchronized (reconnectMutex) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " handleTransportFailure: " + e);
+                LOG.trace(this + " handleTransportFailure: " + e, e);
             }
 
             Transport transport = connectedTransport.getAndSet(null);
