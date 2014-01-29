@@ -27,7 +27,13 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.util.MessageIdList;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
+import static org.junit.Assert.*;
+
+@RunWith(BlockJUnit4ClassRunner.class)
 public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
 
     @Override
@@ -46,6 +52,7 @@ public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
     }
 
     @Override
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
 
@@ -54,6 +61,7 @@ public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
     }
 
     @Override
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersLargeMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesLargePrefetch();
 

@@ -43,6 +43,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.MessageIdList;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 /**
  * Test case support used to test multiple message comsumers and message
@@ -50,7 +58,12 @@ import org.apache.activemq.util.MessageIdList;
  * 
  * 
  */
-public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
+public class JmsMultipleClientsTestSupport {
+
+    @Rule
+    public TestName testName = new TestName();
+
+    protected static final Logger LOG = LoggerFactory.getLogger(JmsMultipleClientsTestSupport.class);
 
     protected Map<MessageConsumer, MessageIdList> consumers = new HashMap<MessageConsumer, MessageIdList>(); // Map of consumer with messages
                                                 // received
@@ -217,14 +230,14 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
         return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false&useJmx=true"));
     }
 
-    protected void setUp() throws Exception {
-        super.setAutoFail(autoFail);
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         broker = createBroker();
         broker.start();
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
             Connection conn = iter.next();
             try {
@@ -232,10 +245,11 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
             } catch (Throwable e) {
             }
         }
+        if (broker !=null ) { // FIXME remove
         broker.stop();
         allMessagesList.flushMessages();
         consumers.clear();
-        super.tearDown();
+        }
     }
 
     /*
@@ -284,5 +298,32 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
             totalMsg += messageIdList.getMessageCount();
         }
         assertEquals("Total of consumers message count", msgCount, totalMsg);
+    }
+
+
+    public String getName() {
+        return getName(false);
+    }
+
+    public String getName(boolean original) {
+        String currentTestName = testName.getMethodName();
+        currentTestName = currentTestName.replace("[","");
+        currentTestName = currentTestName.replace("]","");
+        return currentTestName;
+    }
+
+
+    /*
+     * This is copied from AutoFailTestSupport.  We may want to move it to someplace where more
+     * tests can use it.
+     */
+    public static void dumpAllThreads(String prefix) {
+        Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+        for (Map.Entry<Thread, StackTraceElement[]> stackEntry : stacks.entrySet()) {
+            System.err.println(prefix + " " + stackEntry.getKey());
+            for(StackTraceElement element : stackEntry.getValue()) {
+                System.err.println("     " + element);
+            }
+        }
     }
 }
