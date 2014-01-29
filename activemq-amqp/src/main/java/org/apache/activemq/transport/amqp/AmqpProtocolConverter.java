@@ -371,6 +371,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     LOG.trace("Dispatching End of Browse Command to consumer {}", md.getConsumerId());
                 }
                 consumerContext.onMessageDispatch(md);
+                if (md.getMessage() != null) {
+                    LOG.trace("Finished Dispatch of MessageId: {} to consumer", md.getMessage().getMessageId());
+                }
             }
         } else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
             // Pass down any unexpected async errors. Should this close the connection?
