@@ -32,7 +32,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.transport.amqp.AmqpTestSupport;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -76,12 +75,9 @@ public class AMQ4914Test extends AmqpTestSupport {
         doTestSendLargeMessage(65536 * 4);
     }
 
-    @Ignore("AMQ-4914")
     @Test(timeout = 2 * 60 * 1000)
-    public void testSendLargeMessages() throws JMSException {
-        //for (int i = 32000; i < (32 *1024); i++) {
-            doTestSendLargeMessage(32604);       // Fails at 32614; or 32604 with my changes to AmqpProtocolBuffer
-        //}
+    public void testSendHugeMessage() throws JMSException {
+        doTestSendLargeMessage(1024 * 1024 * 10);
     }
 
     public void doTestSendLargeMessage(int expectedSize) throws JMSException{
@@ -91,21 +87,27 @@ public class AMQ4914Test extends AmqpTestSupport {
 
         Connection connection = createAMQPConnection(port, false);
 
+        long startTime = System.currentTimeMillis();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         QueueImpl queue = new QueueImpl(QUEUE_NAME);
         MessageProducer producer = session.createProducer(queue);
         TextMessage message = session.createTextMessage();
         message.setText(payload);
         producer.send(message);
-        LOG.debug("Returned from send");
+        long endTime = System.currentTimeMillis();
+        LOG.info("Returned from send after {} ms", endTime - startTime);
 
+        startTime = System.currentTimeMillis();
         MessageConsumer consumer = session.createConsumer(queue);
         connection.start();
-        LOG.debug("Calling receive");
+        LOG.info("Calling receive");
         Message receivedMessage = consumer.receive();
         assertNotNull(receivedMessage);
         assertTrue(receivedMessage instanceof TextMessage);
         TextMessage receivedTextMessage = (TextMessage) receivedMessage;
+        assertNotNull(receivedMessage);
+        endTime = System.currentTimeMillis();
+        LOG.info("Returned from receive after {} ms", endTime - startTime);
         String receivedText = receivedTextMessage.getText();
         assertEquals(expectedSize, receivedText.getBytes().length);
         assertEquals(payload, receivedText);
@@ -115,6 +117,7 @@ public class AMQ4914Test extends AmqpTestSupport {
     private Connection createAMQPConnection(int testPort, boolean useSSL) throws JMSException {
         LOG.debug("In createConnection using port {} ssl? {}", testPort, useSSL);
         final ConnectionFactoryImpl connectionFactory = new ConnectionFactoryImpl("localhost", testPort, "admin", "password", null, useSSL);
+        connectionFactory.setSyncPublish(true);
         final Connection connection = connectionFactory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override
