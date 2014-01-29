@@ -16,11 +16,18 @@
  */
 package org.apache.activemq.broker.policy;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import javax.jms.ConnectionFactory;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
-import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.Ignore;
@@ -30,18 +37,12 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
 @RunWith(value = BlockJUnit4ClassRunner.class)
 public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowAckConsumer0Test.class);
     protected long maxTimeSinceLastAck = 5 * 1000;
+
+    AbortSlowAckConsumerStrategy strategy;
 
     @Override
     protected AbortSlowAckConsumerStrategy createSlowConsumerStrategy() {
@@ -59,7 +60,8 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         BrokerService broker = super.createBroker();
         PolicyEntry policy = new PolicyEntry();
 
-        AbortSlowAckConsumerStrategy strategy = createSlowConsumerStrategy();
+        strategy = createSlowConsumerStrategy();
+        underTest = strategy;
 
         policy.setSlowConsumerStrategy(strategy);
         policy.setQueuePrefetch(10);
@@ -77,12 +79,9 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         return factory;
     }
 
-
-    @Ignore("AMQ-5001")
     @Override
     @Test
     public void testSlowConsumerIsAbortedViaJmx() throws Exception {
-        AbortSlowAckConsumerStrategy strategy = createSlowConsumerStrategy();
         strategy.setMaxTimeSinceLastAck(500); // so jmx does the abort
         super.testSlowConsumerIsAbortedViaJmx();
     }
@@ -106,14 +105,13 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         try {
             consumer.receive(20000);
             fail("Slow consumer not aborted.");
-        } catch(Exception ex) {
+        } catch (Exception ex) {
         }
     }
 
     @Ignore("AMQ-5001")
     @Test
     public void testIdleConsumerCanBeAbortedNoMessages() throws Exception {
-        AbortSlowAckConsumerStrategy strategy = createSlowConsumerStrategy();
         strategy.setIgnoreIdleConsumers(false);
 
         ActiveMQConnection conn = (ActiveMQConnection) createConnectionFactory().createConnection();
@@ -124,12 +122,11 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         final MessageConsumer consumer = sess.createConsumer(destination);
         assertNotNull(consumer);
         conn.start();
-        startProducers(destination, 20);
 
         try {
             consumer.receive(20000);
             fail("Idle consumer not aborted.");
-        } catch(Exception ex) {
+        } catch (Exception ex) {
         }
     }
 
@@ -156,9 +153,7 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         try {
             consumer.receive(20000);
             fail("Slow consumer not aborted.");
-        } catch(Exception ex) {
+        } catch (Exception ex) {
         }
     }
-
-
 }
