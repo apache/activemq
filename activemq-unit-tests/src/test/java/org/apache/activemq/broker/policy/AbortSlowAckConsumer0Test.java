@@ -19,6 +19,8 @@ package org.apache.activemq.broker.policy;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.ConnectionFactory;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -30,7 +32,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -86,9 +87,10 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         super.testSlowConsumerIsAbortedViaJmx();
     }
 
-    @Ignore("AMQ-5001")
     @Test
     public void testZeroPrefetchConsumerIsAborted() throws Exception {
+        strategy.setMaxTimeSinceLastAck(2000); // Make it shorter
+
         ActiveMQConnection conn = (ActiveMQConnection) createConnectionFactory().createConnection();
         conn.setExceptionListener(this);
         connections.add(conn);
@@ -102,17 +104,19 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         Message message = consumer.receive(5000);
         assertNotNull(message);
 
+        TimeUnit.SECONDS.sleep(15);
+
         try {
-            consumer.receive(20000);
+            consumer.receive(5000);
             fail("Slow consumer not aborted.");
         } catch (Exception ex) {
         }
     }
 
-    @Ignore("AMQ-5001")
     @Test
     public void testIdleConsumerCanBeAbortedNoMessages() throws Exception {
         strategy.setIgnoreIdleConsumers(false);
+        strategy.setMaxTimeSinceLastAck(2000); // Make it shorter
 
         ActiveMQConnection conn = (ActiveMQConnection) createConnectionFactory().createConnection();
         conn.setExceptionListener(this);
@@ -123,18 +127,26 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         assertNotNull(consumer);
         conn.start();
 
+        startProducers(destination, 1);
+
+        Message message = consumer.receive(5000);
+        assertNotNull(message);
+
+        // Consumer needs to be closed before the reeive call.
+        TimeUnit.SECONDS.sleep(15);
+
         try {
-            consumer.receive(20000);
+            consumer.receive(5000);
             fail("Idle consumer not aborted.");
         } catch (Exception ex) {
         }
     }
 
-    @Ignore("AMQ-5001")
     @Test
     public void testIdleConsumerCanBeAborted() throws Exception {
         AbortSlowAckConsumerStrategy strategy = createSlowConsumerStrategy();
         strategy.setIgnoreIdleConsumers(false);
+        strategy.setMaxTimeSinceLastAck(2000); // Make it shorter
 
         ActiveMQConnection conn = (ActiveMQConnection) createConnectionFactory().createConnection();
         conn.setExceptionListener(this);
@@ -144,15 +156,18 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
         final MessageConsumer consumer = sess.createConsumer(destination);
         assertNotNull(consumer);
         conn.start();
-        startProducers(destination, 20);
+        startProducers(destination, 1);
 
         Message message = consumer.receive(5000);
         assertNotNull(message);
         message.acknowledge();
 
+        // Consumer needs to be closed before the reeive call.
+        TimeUnit.SECONDS.sleep(15);
+
         try {
-            consumer.receive(20000);
-            fail("Slow consumer not aborted.");
+            consumer.receive(5000);
+            fail("Idle consumer not aborted.");
         } catch (Exception ex) {
         }
     }
