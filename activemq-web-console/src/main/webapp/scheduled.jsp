@@ -16,9 +16,14 @@
 --%>
 <html>
 <head>
-<title>Messages Scheduled for Future Delivery</title>
+<c:set var="pageTitle" value="Messages Scheduled for Future Delivery"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
 
 <c:choose>
 <c:when test="${requestContext.brokerQuery.jobSchedulerStarted}">
@@ -61,6 +66,7 @@
 </div>
 </c:otherwise>
 </c:choose>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

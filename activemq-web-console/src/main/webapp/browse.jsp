@@ -16,9 +16,15 @@
 --%>
 <html>
 <head>
-<title>Browse <form:short text="${requestContext.queueBrowser.JMSDestination}"/></title>
+<c:set var="pageTitle" value="Browse ${requestContext.queueBrowser.JMSDestination}"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
+
 
 <h2>Browse <form:tooltip text="${requestContext.queueBrowser.JMSDestination}"/></h2>
 
@@ -59,6 +65,9 @@
 <div>
 <a href="queueConsumers.jsp?JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}"/>">View Consumers</a>
 </div>
+
+<%@include file="decorators/footer.jsp" %>
+
 </body>
 </html>
 	

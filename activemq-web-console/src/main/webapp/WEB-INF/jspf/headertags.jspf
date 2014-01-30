@@ -14,7 +14,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 --%>
-<%@ taglib prefix="decorator" uri="http://www.opensymphony.com/sitemesh/decorator" %>
 <%@ taglib prefix="form" tagdir="/WEB-INF/tags/form" %>
 <%@ taglib prefix="jms" tagdir="/WEB-INF/tags/jms" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
