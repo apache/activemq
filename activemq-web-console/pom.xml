@@ -240,12 +240,6 @@
       <artifactId>log4j</artifactId>
     </dependency>
 
-    <!-- SiteMesh for layout -->
-    <dependency>
-      <groupId>opensymphony</groupId>
-      <artifactId>sitemesh</artifactId>
-    </dependency>
-
     <!-- JSTL support -->
     <dependency>
       <groupId>javax.servlet</groupId>
