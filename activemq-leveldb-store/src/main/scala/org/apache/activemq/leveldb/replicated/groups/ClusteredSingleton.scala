@@ -163,7 +163,8 @@ class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends
 
   def masters = this.synchronized {
     _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassManifest[T] {
-      def erasure = stateClass
+      def runtimeClass = stateClass
+      override def erasure = stateClass
     })
   }
 
