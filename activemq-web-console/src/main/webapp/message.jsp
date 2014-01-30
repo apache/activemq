@@ -17,10 +17,13 @@
 <html>
 <head>
 <c:set var="row" value="${requestContext.messageQuery.message}"/>
-<title>Message <c:out value="${requestContext.messageQuery.id}"/></title>
+<c:set var="pageTitle" value="Message ${requestContext.messageQuery.id}"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
 
+<%@include file="decorators/header.jsp" %>
 
 <c:choose>
 <c:when test="${empty row}">
@@ -178,6 +181,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
 
 
+<%@include file="decorators/footer.jsp" %>
 
 
 </body>
