@@ -16,9 +16,13 @@
 --%>
 <html>
 <head>
-<title>ActiveMQ Console</title>
+<c:set var="pageTitle" value="ActiveMQ Console"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <h2>Welcome!</h2>
 
@@ -63,6 +67,7 @@ You can find more information about Apache ActiveMQ on the <a href="http://activ
         <td><b>${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}</b></td>
     </tr>
 </table>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

@@ -16,9 +16,10 @@
 --%>
 <html>
 <head>
-<title>Queues</title>
+<c:set var="pageTitle" value="Queues"/>
+<c:set var="disableJavaScript" value="true" scope="request"/>
 
-    <c:set var="disableJavaScript" value="true" scope="request"/>
+<%@include file="decorators/head.jsp" %>
 
    <script src='<c:url value="/js/mochi/MochiKit.js"/>' type="text/javascript"></script>
    <script src='<c:url value="/js/plotkit/Base.js"/>' type="text/javascript"></script>
@@ -27,6 +28,8 @@
    <script src='<c:url value="/js/plotkit/SweetCanvas.js"/>' type="text/javascript"></script>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <script>
 var options = {
@@ -62,6 +65,7 @@ Other values we can graph...
 <td>${row.dequeueCount}</td>
 --%>
 
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>
