@@ -16,9 +16,14 @@
 --%>
 <html>
 <head>
-<title>Send Messages</title>
+<c:set var="pageTitle" value="Send Messages"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
 
 <h2>Send a JMS Message</h2>
 
@@ -168,6 +173,7 @@
 </table>
 
 </form>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

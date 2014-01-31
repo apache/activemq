@@ -16,9 +16,15 @@
 --%>
 <html>
 <head>
-<title>Consumers for <c:out value="${requestContext.queueConsumerQuery.JMSDestination}" /></title>
+<c:set var="pageTitle" value="Consumers for ${requestContext.queueConsumerQuery.JMSDestination}"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
+
 
 <h2>Active Consumers for <c:out value="${requestContext.queueConsumerQuery.JMSDestination}" /></h2>
 
@@ -80,6 +86,7 @@
 </c:forEach>
 </tbody>
 </table>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

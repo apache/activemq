@@ -16,9 +16,13 @@
 --%>
 <html>
 <head>
-<title>Queues</title>
+<c:set var="pageTitle" value="Queues"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <div>
 <form action="createDestination.action" method="post">
@@ -83,6 +87,7 @@
 </tbody>
 </table>
 
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>
