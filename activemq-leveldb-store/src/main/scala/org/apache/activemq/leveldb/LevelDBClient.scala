@@ -836,7 +836,7 @@ class LevelDBClient(store: LevelDBStore) {
 
   private def logRefIncrement(pos: Long) {
     for( key <- logRefKey(pos) ) {
-      logRefs.getOrElseUpdate(key, new LongCounter()).incrementAndGet()
+      logRefs.getOrElseUpdate(key, new LongCounter(0)).incrementAndGet()
     }
   }
 

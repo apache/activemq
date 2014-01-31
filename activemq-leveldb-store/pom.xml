@@ -382,7 +382,6 @@
         <configuration>
           <!-- we must turn off the use of system class loader so our tests can find stuff - otherwise ScalaSupport compiler can't find stuff -->
           <useSystemClassLoader>false</useSystemClassLoader>
-          <!--forkMode>pertest</forkMode-->
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <failIfNoTests>false</failIfNoTests>

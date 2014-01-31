@@ -84,7 +84,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         assertTotalMessagesReceived(messageCount * producerCount);
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -136,7 +136,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         assertTotalMessagesReceived(messageCount * producerCount);
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testManyProducersManyConsumers() throws Exception {
         consumerCount = 200;
         producerCount = 50;
