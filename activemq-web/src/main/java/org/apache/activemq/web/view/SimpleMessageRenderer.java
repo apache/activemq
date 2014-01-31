@@ -37,6 +37,8 @@ public class SimpleMessageRenderer implements MessageRenderer {
 
     private String contentType = "text/xml";
     private int maxMessages;
+    private long start = -1;
+    private long end = -1;
 
     public void renderMessages(HttpServletRequest request, HttpServletResponse response, QueueBrowser browser) throws IOException, JMSException, ServletException {
         // lets use XML by default
@@ -45,6 +47,9 @@ public class SimpleMessageRenderer implements MessageRenderer {
         printHeader(writer, browser, request);
 
         Enumeration iter = browser.getEnumeration();
+        if ( ( start != -1 ) && ( end != -1 ) ) {
+            iter = new EnumerationPage(iter, start, end);
+        }
         for (int counter = 0; iter.hasMoreElements() && (maxMessages <= 0 || counter < maxMessages); counter++) {
             Message message = (Message)iter.nextElement();
             renderMessage(writer, request, response, browser, message);
@@ -68,6 +73,22 @@ public class SimpleMessageRenderer implements MessageRenderer {
 
     public void setMaxMessages(int maxMessages) {
         this.maxMessages = maxMessages;
+    }
+
+    public long getStart() {
+        return this.start;
+    }
+
+    public void setStart(long start_val) {
+        this.start = start_val;
+    }
+
+    public long getEnd() {
+        return this.start;
+    }
+
+    public void setEnd(long end_val) {
+        this.end = end_val;
     }
 
     public String getContentType() {
