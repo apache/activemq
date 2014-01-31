@@ -59,6 +59,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
         MapMessage reply = (MapMessage) consumer.receive(10*1000);
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
+        assertTrue(reply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
         /*
         for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
             String name = e.nextElement().toString();
@@ -93,6 +95,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
         assertEquals(0, reply.getLong("enqueueCount"));
+        assertTrue(reply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
     }
 
     public void testDestinationStats() throws Exception{
@@ -111,6 +115,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
         MapMessage reply = (MapMessage) consumer.receive();
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
+        assertTrue(reply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
         /*
         for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
             String name = e.nextElement().toString();
@@ -137,6 +143,8 @@ public class BrokerStatisticsPluginTest extends TestCase{
         MapMessage reply = (MapMessage) consumer.receive();
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
+        assertTrue(reply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
 
         /*for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
             String name = e.nextElement().toString();
@@ -144,6 +152,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
         }*/
     }
 
+    @Override
     protected void setUp() throws Exception {
         broker = createBroker();
         ConnectionFactory factory = new ActiveMQConnectionFactory(broker.getTransportConnectorURIsAsMap().get("tcp"));
@@ -151,6 +160,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
         connection.start();
     }
 
+    @Override
     protected void tearDown() throws Exception{
         if (this.connection != null) {
             this.connection.close();
