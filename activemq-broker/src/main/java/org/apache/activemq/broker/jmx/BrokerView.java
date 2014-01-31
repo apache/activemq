@@ -120,8 +120,12 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public void restart() throws Exception {
-        brokerService.requestRestart();
-        brokerService.stop();
+        if (brokerService.isRestartAllowed()) {
+            brokerService.requestRestart();
+            brokerService.stop();
+        } else {
+            throw new Exception("Restart is not allowed");
+        }
     }
 
     @Override
