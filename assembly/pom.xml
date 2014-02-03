@@ -354,10 +354,6 @@
         <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
     <dependency>
-      <groupId>opensymphony</groupId>
-      <artifactId>sitemesh</artifactId>
-    </dependency>
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
     </dependency>

@@ -252,9 +252,6 @@
         <include>org.mortbay.jetty:jsp-api-2.1-glassfish</include>
         <include>org.eclipse.jdt:core</include>
 
-        <!-- JSTL and other web stuff -->
-        <include>opensymphony:sitemesh</include>
-
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
         <include>jdom:jdom</include>
