@@ -36,9 +36,18 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runner.RunWith;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.*;
+
+
+@RunWith(BlockJUnit4ClassRunner.class)
 public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.UncaughtExceptionHandler {
 
     public int deliveryMode = DeliveryMode.PERSISTENT;
@@ -59,6 +68,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
     private String connectionUri;
     private final Vector<Throwable> exceptions = new Vector<Throwable>();
 
+    @Test(timeout = 60 * 1000)
     public void testBlockByOtherResumeNoException() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
@@ -172,6 +182,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
     }
 
     @Override
+    @Before
     public void setUp() throws Exception {
 
         Thread.setDefaultUncaughtExceptionHandler(this);
@@ -198,6 +209,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
     }
 
     @Override
+    @After
     public void tearDown() throws Exception {
         if (broker != null) {
             broker.stop();
