@@ -31,8 +31,11 @@ import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.io.ByteArrayBuffer;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 public class AjaxTest extends JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(AjaxTest.class);
@@ -70,6 +73,7 @@ public class AjaxTest extends JettyTestSupport {
         assertEquals( "Expected number of <response> elements is not correct.", expected, occurrences );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreSentToQueueWhileClientIsPolling() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreSentToQueueWhileClientIsPolling ***" );
 
@@ -132,6 +136,7 @@ public class AjaxTest extends JettyTestSupport {
         assertResponseCount( 3, fullResponse );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreSentToTopicWhileClientIsPolling() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreSentToTopicWhileClientIsPolling ***" );
 
@@ -194,6 +199,7 @@ public class AjaxTest extends JettyTestSupport {
         assertResponseCount( 3, fullResponse );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreQueuedBeforeClientSubscribes() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreQueuedBeforeClientSubscribes ***" );
         // send messages to queue://test
@@ -234,6 +240,7 @@ public class AjaxTest extends JettyTestSupport {
         assertResponseCount( 3, response );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testStompMessagesAreReceivedByAjaxClient() throws Exception {
         LOG.debug( "*** testStompMessagesAreRecievedByAjaxClient ***" );
 
@@ -302,6 +309,7 @@ public class AjaxTest extends JettyTestSupport {
         assertResponseCount( 5, fullResponse );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testAjaxMessagesAreReceivedByStompClient() throws Exception {
         LOG.debug( "*** testAjaxMessagesAreReceivedByStompClient ***" );
 
@@ -343,6 +351,7 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "msg4", allMessageBodies );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testAjaxClientMayUseSelectors() throws Exception {
         LOG.debug( "*** testAjaxClientMayUseSelectors ***" );
 
@@ -388,6 +397,7 @@ public class AjaxTest extends JettyTestSupport {
 
     }
 
+    @Test(timeout = 60 * 1000)
     public void testMultipleAjaxClientsMayExistInTheSameSession() throws Exception {
         LOG.debug( "*** testMultipleAjaxClientsMayExistInTheSameSession ***" );
 
@@ -465,6 +475,7 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( expected2, poll.getResponseContent() );
     }
 
+    @Test(timeout = 60 * 1000)
     public void testAjaxClientReceivesMessagesForMultipleTopics() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesForMultipleTopics ***" );
         HttpClient httpClient = new HttpClient();

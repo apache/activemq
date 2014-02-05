@@ -21,6 +21,10 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -53,8 +57,21 @@ public class AmqpWireFormat implements WireFormat {
 
     @Override
     public void marshal(Object command, DataOutput dataOut) throws IOException {
-        Buffer frame = (Buffer) command;
-        frame.writeTo(dataOut);
+        if (command instanceof ByteBuffer) {
+            ByteBuffer buffer = (ByteBuffer) command;
+
+            if (dataOut instanceof OutputStream) {
+                WritableByteChannel channel = Channels.newChannel((OutputStream) dataOut);
+                channel.write(buffer);
+            } else {
+                while (buffer.hasRemaining()) {
+                    dataOut.writeByte(buffer.get());
+                }
+            }
+        } else {
+            Buffer frame = (Buffer) command;
+            frame.writeTo(dataOut);
+        }
     }
 
     boolean magicRead = false;

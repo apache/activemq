@@ -185,6 +185,20 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
+      <exclusions>
+          <exclusion>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>activemq-all</artifactId>
+          </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>activemq-stomp</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>activemq-spring</artifactId>
     </dependency>
 
     <!-- XMPP support -->
@@ -204,11 +218,6 @@
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-all</artifactId>
     </dependency>
 
     <dependency>
@@ -238,12 +247,6 @@
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-    </dependency>
-
-    <!-- SiteMesh for layout -->
-    <dependency>
-      <groupId>opensymphony</groupId>
-      <artifactId>sitemesh</artifactId>
     </dependency>
 
     <!-- JSTL support -->

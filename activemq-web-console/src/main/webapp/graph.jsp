@@ -16,9 +16,14 @@
 --%>
 <html>
 <head>
-<title>Browse ${requestContext.queueBrowser.JMSDestination}</title>
+<c:set var="pageTitle" value="Browse ${requestContext.queueBrowser.JMSDestination}"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
 
 <h2>Browse ${requestContext.queueBrowser.JMSDestination}</h2>
 
@@ -61,6 +66,7 @@
 </tbody>
 </table>
 
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>
