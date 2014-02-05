@@ -331,6 +331,7 @@
   </dependencies>
 
   <build>
+      
     <plugins>
       <plugin>
         <groupId>net.alchim31.maven</groupId>
@@ -406,6 +407,36 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <executions>
+              <execution>
+                  <id>add-source</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                      <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                      <sources>
+                          <source>${basedir}/src/main/scala</source>
+                      </sources>
+                  </configuration>
+              </execution>
+              <execution>
+                  <id>add-test-source</id>
+                  <phase>generate-test-sources</phase>
+                  <goals>
+                      <goal>add-test-source</goal>
+                  </goals>
+                  <configuration>
+                      <sources>
+                          <source>${basedir}/src/test/scala</source>
+                      </sources>
+                  </configuration>
+              </execution>
+           </executions>
+        </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -434,6 +465,22 @@
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-eclipse-plugin</artifactId>
+            <configuration>
+                <buildcommands>
+                    <java.lang.String>org.scala-ide.sdt.core.scalabuilder</java.lang.String>
+                </buildcommands>
+                <projectnatures>
+                    <nature>org.scala-ide.sdt.core.scalanature</nature>
+                    <nature>org.eclipse.jdt.core.javanature</nature>
+                </projectnatures>
+                <sourceIncludes>
+                    <sourceInclude>**/*.scala</sourceInclude>
+                </sourceIncludes>
+            </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
