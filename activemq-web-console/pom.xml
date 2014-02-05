@@ -78,6 +78,10 @@
               <name>webconsole.type</name>
               <value>embedded</value>
             </systemProperty>
+            <systemProperty>
+                <name>activemq.data</name>
+                <value>${project.build.directory}/activemq-data</value>
+            </systemProperty>
 
             <!--
                Use the following configuration to connect to a remote broker using JMX
