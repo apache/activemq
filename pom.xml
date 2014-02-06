@@ -64,7 +64,7 @@
     <geronimo-version>1.0</geronimo-version>
     <hadoop-version>1.0.0</hadoop-version>
     <hawtbuf-version>1.9</hawtbuf-version>
-    <hawtdispatch-version>1.19</hawtdispatch-version>
+    <hawtdispatch-version>1.20</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.2.5</httpclient-version>
@@ -90,7 +90,7 @@
     <leveldb-version>0.6</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
-    <mqtt-client-version>1.7</mqtt-client-version>
+    <mqtt-client-version>1.8</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
     <org-apache-derby-version>10.10.1.1</org-apache-derby-version>
     <org.osgi.core-version>4.3.1</org.osgi.core-version>
@@ -124,7 +124,7 @@
     <xbean-version>3.15</xbean-version>
     <xerces-version>2.11.0</xerces-version>
     <jaxb-basics-version>0.6.4</jaxb-basics-version>
-    <stompjms-version>1.18</stompjms-version>
+    <stompjms-version>1.19</stompjms-version>
 
     <pax-exam-version>2.6.0</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
@@ -1591,6 +1591,15 @@
       <releases><enabled>true</enabled></releases>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
+
+    <!-- for the patched proton build: http://is.gd/WjuHvH -->
+    <repository>
+      <id>jboss.org-fs-releases</id>
+      <url>https://repository.jboss.org/nexus/content/repositories/fs-releases/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    
   </repositories>
 
 </project>
