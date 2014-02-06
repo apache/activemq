@@ -45,7 +45,9 @@
 <tbody>
 <jms:forEachMessage queueBrowser="${requestContext.queueBrowser.browser}" var="row">
 <tr>
-<td><a href="message.jsp?id=${row.JMSMessageID}&JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}" />" 
+<td><a href="<c:url value="message.jsp">
+                 <c:param name="id" value="${row.JMSMessageID}" />
+                 <c:param name="JMSDestination" value="${requestContext.queueBrowser.JMSDestination}"/></c:url>"
     title="${row.properties}">${row.JMSMessageID}</a></td>
 <td><c:out value="${row.JMSCorrelationID}"/></td>
 <td><jms:persistent message="${row}"/></td>
@@ -55,7 +57,10 @@
 <td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
 <td><c:out value="${row.JMSType}"/></td>
 <td>
-    <a href="deleteMessage.action?JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}"/>&messageId=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+    <a href="<c:url value="deleteMessage.action">
+                 <c:param name="JMSDestination" value="${requestContext.queueBrowser.JMSDestination}"/>
+                 <c:param name="messageId" value="${row.JMSMessageID}"/>
+                 <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>">Delete</a>
 </td>
 </tr>
 </jms:forEachMessage>
@@ -70,4 +75,4 @@
 
 </body>
 </html>
-	
+
