@@ -185,6 +185,46 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         }
     }
 
+    public void testIsSameRMOverride() throws URISyntaxException, JMSException, XAException {
+
+        XAConnection connection1 = null;
+        XAConnection connection2 = null;
+        try {
+            ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false&jms.rmIdFromConnectionId=true");
+            connection1 = (XAConnection)cf1.createConnection();
+            XASession session1 = connection1.createXASession();
+            XAResource resource1 = session1.getXAResource();
+
+            ActiveMQXAConnectionFactory cf2 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+            connection2 = (XAConnection)cf2.createConnection();
+            XASession session2 = connection2.createXASession();
+            XAResource resource2 = session2.getXAResource();
+
+            assertFalse(resource1.isSameRM(resource2));
+
+            // ensure identity is preserved
+            XASession session1a = connection1.createXASession();
+            assertTrue(resource1.isSameRM(session1a.getXAResource()));
+            session1.close();
+            session2.close();
+        } finally {
+            if (connection1 != null) {
+                try {
+                    connection1.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+            if (connection2 != null) {
+                try {
+                    connection2.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+        }
+    }
+
     public void testVanilaTransactionalProduceReceive() throws Exception {
 
         XAConnection connection1 = null;

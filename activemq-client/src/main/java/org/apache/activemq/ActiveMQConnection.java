@@ -205,6 +205,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
+    private boolean rmIdFromConnectionId = false;
 
     private int maxThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
@@ -1654,6 +1655,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public String getResourceManagerId() throws JMSException {
+        if (isRmIdFromConnectionId()) {
+            return info.getConnectionId().getValue();
+        }
         waitForBrokerInfo();
         if (brokerInfo == null) {
             throw new JMSException("Connection failed before Broker info was received.");
@@ -2588,6 +2592,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     public void setNonBlockingRedelivery(boolean nonBlockingRedelivery) {
         this.nonBlockingRedelivery = nonBlockingRedelivery;
+    }
+
+    public boolean isRmIdFromConnectionId() {
+        return rmIdFromConnectionId;
+    }
+
+    public void setRmIdFromConnectionId(boolean rmIdFromConnectionId) {
+        this.rmIdFromConnectionId = rmIdFromConnectionId;
     }
 
     /**
