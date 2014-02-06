@@ -1,0 +1,37 @@
+FRM:RECV[localhost/127.0.0.1:46533|0] : SaslMechanisms{saslServerMechanisms=[ANONYMOUS, PLAIN]}
+FRM:SEND[localhost/127.0.0.1:46533|0] : SaslInit{mechanism=PLAIN,initialResponse=\x00admin\x00password}
+FRM:RECV[localhost/127.0.0.1:46533|0] : SaslOutcome{code=ok}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Open{containerId=org.junit.rules.TestName@6c21fb84,maxFrameSize=65536,channelMax=255}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Begin{nextOutgoingId=0,incomingWindow=2048,outgoingWindow=2048,handleMax=4294967295}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Attach{name=queue://org.junit.rules.TestName@6c21fb84<-42d7d55a-9c9f-4be8-9138-adcb9f0bf413,handle=0,role=sender,sndSettleMode=unsettled,rcvSettleMode=first,source=Source{address=42d7d55a-9c9f-4be8-9138-adcb9f0bf413,defaultOutcome=Accepted{},outcomes=[Lorg.apache.qpid.amqp_1_0.type.Symbol;@2e026ac3},target=Target{address=queue://org.junit.rules.TestName@6c21fb84},initialDeliveryCount=0}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Open{containerId=,hostname=,maxFrameSize=1048576}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Begin{remoteChannel=0,nextOutgoingId=1,incomingWindow=0,outgoingWindow=0,handleMax=1024}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Attach{name=queue://org.junit.rules.TestName@6c21fb84<-42d7d55a-9c9f-4be8-9138-adcb9f0bf413,handle=0,role=receiver,sndSettleMode=mixed,rcvSettleMode=first,source=Source{address=42d7d55a-9c9f-4be8-9138-adcb9f0bf413,durable=none,expiryPolicy=session-end,timeout=0,dynamic=false,defaultOutcome=Accepted{},outcomes=[Lorg.apache.qpid.amqp_1_0.type.Symbol;@22dde457},target=Target{address=queue://org.junit.rules.TestName@6c21fb84}}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=0,incomingWindow=1,nextOutgoingId=1,outgoingWindow=0,handle=0,deliveryCount=0,linkCredit=100}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Transfer{handle=0,deliveryId=0,deliveryTag=0,messageFormat=0,settled=false}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Attach{name=queue://org.junit.rules.TestName@6c21fb84-> (c60c4582-3dfe-4875-8903-cf35e8d4b929),handle=1,role=receiver,sndSettleMode=settled,rcvSettleMode=first,source=Source{address=queue://org.junit.rules.TestName@6c21fb84,durable=none,expiryPolicy=link-detach,distributionMode=copy},target=Target{}}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=1,incomingWindow=1,nextOutgoingId=1,outgoingWindow=0,handle=0,deliveryCount=1,linkCredit=100}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Disposition{role=receiver,first=0,last=0,settled=true,state=Accepted{}}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Attach{name=queue://org.junit.rules.TestName@6c21fb84-> (c60c4582-3dfe-4875-8903-cf35e8d4b929),handle=1,role=sender,sndSettleMode=mixed,rcvSettleMode=first,source=Source{address=queue://org.junit.rules.TestName@6c21fb84,durable=none,expiryPolicy=link-detach,timeout=0,dynamic=false,distributionMode=copy},target=Target{},incompleteUnsettled=false,initialDeliveryCount=0}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=1,incomingWindow=2048,nextOutgoingId=1,outgoingWindow=2048,handle=1,deliveryCount=0,linkCredit=100,drain=false,echo=false}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=1,incomingWindow=2048,nextOutgoingId=1,outgoingWindow=2048,handle=1,deliveryCount=0,linkCredit=100,drain=true,echo=true}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Transfer{handle=1,deliveryId=0,deliveryTag=,messageFormat=0,settled=true}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=2,incomingWindow=2048,nextOutgoingId=1,outgoingWindow=2048,handle=1,deliveryCount=1,linkCredit=99,drain=false,echo=false}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=2,incomingWindow=2048,nextOutgoingId=1,outgoingWindow=2048,handle=1,deliveryCount=1,linkCredit=100,drain=true,echo=true}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=1,incomingWindow=1,nextOutgoingId=2,outgoingWindow=0,handle=1,deliveryCount=100,linkCredit=0,drain=true}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=1,incomingWindow=1,nextOutgoingId=2,outgoingWindow=0,handle=1,deliveryCount=101,linkCredit=0,drain=true}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Detach{handle=1,closed=true}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Attach{name=queue://org.junit.rules.TestName@6c21fb84-> (b86cc951-d367-489a-96ea-4638844ec1cf),handle=2,role=receiver,sndSettleMode=unsettled,rcvSettleMode=first,source=Source{address=queue://org.junit.rules.TestName@6c21fb84,durable=none,expiryPolicy=link-detach},target=Target{}}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Detach{handle=1,closed=true}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Attach{name=queue://org.junit.rules.TestName@6c21fb84-> (b86cc951-d367-489a-96ea-4638844ec1cf),handle=1,role=sender,sndSettleMode=mixed,rcvSettleMode=first,source=Source{address=queue://org.junit.rules.TestName@6c21fb84,durable=none,expiryPolicy=link-detach},target=Target{},incompleteUnsettled=false,initialDeliveryCount=0}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Flow{nextIncomingId=2,incomingWindow=2048,nextOutgoingId=1,outgoingWindow=2048,handle=2,deliveryCount=0,linkCredit=100,drain=false,echo=false}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Transfer{handle=1,deliveryId=1,deliveryTag=0,messageFormat=0}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Disposition{role=receiver,first=1,last=1,settled=true,state=Accepted{}}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Detach{handle=2,closed=true}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Detach{handle=1,closed=true}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Detach{handle=0}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Detach{handle=0,closed=true}
+FRM:SEND[localhost/127.0.0.1:46533|0] : End{}
+FRM:SEND[localhost/127.0.0.1:46533|0] : Close{}
+FRM:RECV[localhost/127.0.0.1:46533|0] : End{}
+FRM:RECV[localhost/127.0.0.1:46533|0] : Close{}

@@ -20,22 +20,22 @@
 </head>
 <body>
 
-<div>
-<form action="createDestination.action" method="post">
+<div style="width:60%;" class="form-group" role="form">
+<form action="createDestination.action" method="post" class="form-horizontal">
     <input type="hidden" name="JMSDestinationType" value="queue"/>
     <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
-    <label name="destination">Queue Name</label>
-    <input type="text" name="JMSDestination" value=""/>
+    <label name="destination" class="control-label" style="font-size:15px; padding:20px 0px;">Queue Name: </label>
+    <input type="text" class="form-control"  name="JMSDestination" value=""/>
 
-    <input type="submit" value="Create"/>
+    <input type="submit" class="btn" value="Create" style="margin:20px 0px;"/>
 </form>
 </div>
 
 
 <h2>Queues</h2>
 
-<table id="queues" class="sortable autostripe">
+<table id="queues" class="table table-striped">
 <thead>
 <tr>
 <th>Name</th>

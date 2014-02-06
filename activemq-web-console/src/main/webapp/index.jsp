@@ -19,21 +19,23 @@
 <title>ActiveMQ Console</title>
 </head>
 <body>
+<div style="margin-right:30px;">
+<div class="well well-sm body-content panel">
+<h2 class="panel-heading"> Welcome! </h2>
 
-<h2>Welcome!</h2>
+<div  class="panel-body">
+    <p>
+        Welcome to the Apache ActiveMQ Console of <b>${requestContext.brokerQuery.brokerName}</b> (${requestContext.brokerQuery.brokerAdmin.brokerId})
+    </p>
+    <p>
+        You can find more information about Apache ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
+    </p>
+</div>
 
-<p>
-Welcome to the Apache ActiveMQ Console of <b>${requestContext.brokerQuery.brokerName}</b> (${requestContext.brokerQuery.brokerAdmin.brokerId})
-</p>
+<h2 class="panel-heading">Broker</h2>
 
-<p>
-You can find more information about Apache ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
-</p>
-
-<h2>Broker</h2>
-
-
-<table>
+<div class="panel-body">
+<table class="table table-stripped">
     <tr>
         <td>Name</td>
         <td><b>${requestContext.brokerQuery.brokerAdmin.brokerName}</b></td>
@@ -63,6 +65,8 @@ You can find more information about Apache ActiveMQ on the <a href="http://activ
         <td><b>${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}</b></td>
     </tr>
 </table>
+</div>
+</div>
 
 </body>
 </html>

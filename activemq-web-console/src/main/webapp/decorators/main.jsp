@@ -21,11 +21,32 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
+    <!-- BOOTSTRAP CSS LIBRARY -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap-theme.min.css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <!-- TODO: REMOVE @import url('/admin/styles/sorttable.css'); -->
+    <!-- GOOGLE FONTS -->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+        body {
+            font-family: 'Open Sans Condensed', sans-serif;
+        }
+    </style>
     <style type="text/css" media="screen">
-        @import url('${pageContext.request.contextPath}/styles/sorttable.css');
+
         @import url('${pageContext.request.contextPath}/styles/type-settings.css');
         @import url('${pageContext.request.contextPath}/styles/site.css');
         @import url('${pageContext.request.contextPath}/styles/prettify.css');
+
+footer-flot-bottom {
+left: 0;
+position: fixed;
+text-align: center;
+bottom: 0;
+width: 100%;
+}
+
     </style>
     <c:if test="${!disableJavaScript}">
         <script type='text/javascript' src='${pageContext.request.contextPath}/js/common.js'></script>
@@ -40,7 +61,7 @@
 
 <body>
 
-<div class="white_box">
+<div class=" ">
     <div class="header">
         <div class="header_l">
             <div class="header_r">
@@ -62,26 +83,42 @@
                                 href="http://www.apache.org/" title="The Apache Software Foundation">ASF</a>
                         </div>
                     </div>
+<!--
+<ul class="nav nav-tabs">
+  <li> <a href="/admin/index.jsp" title="Home">Home</a></li><li><a href="/admin/queues.jsp" title="Queues">Queues</a></li><li><a href="/admin/topics.jsp" title="Topics">Topics</a></li><li><a href="/admin/subscribers.jsp" title="Subscribers">Subscribers</a></li><li><a href="/admin/connections.jsp" title="Connections">Connections</a></li><li><a href="/admin/network.jsp" title="Network">Network</a></li><li><a href="/admin/scheduled.jsp" title="Scheduled">Scheduled</a></li><li><a href="/admin/send.jsp" title="Send">Send</a>
+  </li><li></li></ul>
+-->
 
 
-                    <div class="top_red_bar">
-                        <div id="site-breadcrumbs">
-                            <a href="<c:url value='/index.jsp'/>" title="Home">Home</a>
-                            &#124;
-                            <a href="<c:url value='/queues.jsp'/>" title="Queues">Queues</a>
-                            &#124;
-                            <a href="<c:url value='/topics.jsp'/>" title="Topics">Topics</a>
-                            &#124;
-                            <a href="<c:url value='/subscribers.jsp'/>" title="Subscribers">Subscribers</a>
-                            &#124;
-                            <a href="<c:url value='/connections.jsp'/>" title="Connections">Connections</a>
-                            &#124;
-                            <a href="<c:url value='/network.jsp'/>" title="Network">Network</a>
-                            &#124;
+                    <div id="navWrapper">
+                        <div id="">
+                         <ul class="nav nav-tabs">
+                           <li>
+                                <a href="<c:url value='/index.jsp'/>" title="Home">Home</a>
+                           </li>
+                           <li>
+                                <a href="<c:url value='/queues.jsp'/>" title="Queues">Queues</a>
+                           </li>
+                            <li>
+                                <a href="<c:url value='/topics.jsp'/>" title="Topics">Topics</a>
+                            </li>
+                            <li>
+                                <a href="<c:url value='/subscribers.jsp'/>" title="Subscribers">Subscribers</a>
+                            </li>
+                            <li>
+                                <a href="<c:url value='/connections.jsp'/>" title="Connections">Connections</a>
+                            </li>
+                            <li>
+                                <a href="<c:url value='/network.jsp'/>" title="Network">Network</a>
+                            </li>
+                            <li>
                              <a href="<c:url value='/scheduled.jsp'/>" title="Scheduled">Scheduled</a>
-                            &#124;
+                            </li>
+                            <li>
                             <a href="<c:url value='/send.jsp'/>"
                                title="Send">Send</a>
+                               </li>
+                               </ul>
                         </div>
                         <div id="site-quicklinks"><P>
                             <a href="http://activemq.apache.org/support.html"
@@ -98,44 +135,43 @@
                                     </div>
                                 </td>
                                 <td valign="top">
-
-                                    <div class="navigation">
-                                        <div class="navigation_top">
-                                            <div class="navigation_bottom">
+                                    <div class=" ">
+                                        <div class=" ">
+                                            <div class=" ">
                                                 <H3>Queue Views</H3>
+                                                <div class="list-group">
+                                                <ul>
 
-                                                <ul class="alternate" type="square">
 
 
-
-                                                    <li><a href="queueGraph.jsp" title="View the queue depths as a graph">Graph</a></li>
-                                                    <li><a href="xml/queues.jsp" title="View the queues as XML">XML</a></li>
+                                                    <li class="list-group-item"><a href="queueGraph.jsp" title="View the queue depths as a graph">Graph</a></li>
+                                                    <li class="list-group-item"><a href="xml/queues.jsp" title="View the queues as XML">XML</a></li>
                                                 </ul>
                                                 <H3>Topic Views</H3>
 
-                                                <ul class="alternate" type="square">
+                                                <ul  class="list-group">
 
 
 
-                                                    <li><a href="xml/topics.jsp" title="View the topics as XML">XML</a></li>
+                                                    <li class="list-group-item"><a href="xml/topics.jsp" title="View the topics as XML">XML</a></li>
                                                 </ul>
                                                 <H3>Subscribers Views</H3>
 
-                                                <ul class="alternate" type="square">
+                                                <ul class="list-group">
 
 
 
-                                                    <li><a href="xml/subscribers.jsp" title="View the subscribers as XML">XML</a></li>
+                                                    <li  class="list-group-item"><a href="xml/subscribers.jsp" title="View the subscribers as XML">XML</a></li>
                                                 </ul>
                                                 <H3>Useful Links</H3>
 
-                                                <ul class="alternate" type="square">
-                                                    <li><a href="http://activemq.apache.org/"
+                                                <ul  class="list-group">
+                                                    <li  class="list-group-item"><a href="http://activemq.apache.org/"
                                                            title="The most popular and powerful open source Message Broker">Documentation</a></li>
-                                                    <li><a href="http://activemq.apache.org/faq.html">FAQ</a></li>
-                                                    <li><a href="http://activemq.apache.org/download.html">Downloads</a>
+                                                    <li  class="list-group-item"><a href="http://activemq.apache.org/faq.html">FAQ</a></li>
+                                                    <li  class="list-group-item"><a href="http://activemq.apache.org/download.html">Downloads</a>
                                                     </li>
-                                                    <li><a href="http://activemq.apache.org/discussion-forums.html">Forums</a>
+                                                    <li  class="list-group-item"><a href="http://activemq.apache.org/discussion-forums.html">Forums</a>
                                                     </li>
                                                 </ul>
                                             </div>
@@ -147,15 +183,16 @@
                     </table>
 
 
-                    <div class="bottom_red_bar"></div>
-                </div>
+                 </div>
             </div>
         </div>
     </div>
-    <div class="black_box">
+    <div class="panel" id="footer-flot-bottom">
+<div class="bottom_red_bar"></div>
         <div class="footer">
             <div class="footer_l">
-                <div class="footer_r">
+
+                <div class="panel-heading">
                     <div>
                         Copyright 2005-2013 The Apache Software Foundation.
 
@@ -165,8 +202,8 @@
             </div>
         </div>
     </div>
+<div class="panel-body design_attribution"><a href="http://hiramchirino.com/">Graphic Design By Hiram</a></div>
 </div>
-<div class="design_attribution"><a href="http://hiramchirino.com/">Graphic Design By Hiram</a></div>
 
 </body>
 </html>
