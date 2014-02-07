@@ -54,9 +54,9 @@
 <td><a href="<c:url value="send.jsp">
                         <c:param name="JMSDestination" value="${row.name}" />
                         <c:param name="JMSDestinationType" value="topic"/></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
-<td>${row.consumerCount}</td>
-<td>${row.enqueueCount}</td>
-<td>${row.dequeueCount}</td>
+<td><c:out value="${row.consumerCount}" /></td>
+<td><c:out value="${row.enqueueCount}" /></td>
+<td><c:out value="${row.dequeueCount}" /></td>
 <td>
     <a href="<c:url value="send.jsp">
                         <c:param name="JMSDestination" value="${row.name}" />
