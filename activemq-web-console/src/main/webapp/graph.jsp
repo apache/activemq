@@ -25,7 +25,7 @@
 <%@include file="decorators/header.jsp" %>
 
 
-<h2>Browse ${requestContext.queueBrowser.JMSDestination}</h2>
+<h2>Browse <c:out value="${requestContext.queueBrowser.JMSDestination}" /></h2>
 
 <table id="messages" class="sortable autostripe">
 <thead>
@@ -47,16 +47,16 @@
 ---%>
 <jms:forEachMessage queueBrowser="${requestContext.queueBrowser.browser}" var="row">
 <tr>
-<td><a href="message.jsp?id=${row.JMSMessageID}" title="${row.JMSDestination}">${row.JMSMessageID}</a></td>
-<td>${row.JMSCorrelationID}</td>
+<td><a href="<c:url value='message.jsp?id=${row.JMSMessageID}' />" title="<c:out value='${row.JMSDestination}' />"><c:out value="${row.JMSMessageID}" /></a></td>
+<td><c:out value="${row.JMSCorrelationID}" /></td>
 <td><jms:persistent message="${row}"/></td>
-<td>${row.JMSPriority}</td>
-<td>${row.JMSRedelivered}</td>
-<td>${row.JMSReplyTo}</td>
-<td>${row.JMSTimestamp}</td>
-<td>${row.JMSType}</td>
+<td><c:out value="${row.JMSPriority}" /></td>
+<td><c:out value="${row.JMSRedelivered}" /></td>
+<td><c:out value="${row.JMSReplyTo}" /></td>
+<td><c:out value="${row.JMSTimestamp}" /></td>
+<td><c:out value="${row.JMSType}" /></td>
 <td>
-    <a href="deleteDestination.action?destination=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+    <a href="<c:url value='deleteDestination.action?destination=${row.JMSMessageID}&secret=${sessionScope["secret"]}'/>">Delete</a>
 </td>
 </tr>
 </jms:forEachMessage>

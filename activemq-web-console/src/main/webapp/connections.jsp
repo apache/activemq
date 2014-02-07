@@ -29,7 +29,7 @@
 <h2>Connections</h2>
 
 <c:forEach items="${requestContext.brokerQuery.connectors}" var="connectorName">
-<h3>Connector ${connectorName}</h3>
+<h3>Connector <c:out value="${connectorName}" /></h3>
 
 <table id="connections" class="sortable autostripe">
 <thead>
@@ -44,10 +44,10 @@
 <jms:forEachConnection broker="${requestContext.brokerQuery}" connectorName="${connectorName}"
 	connection="con" connectionName="conName">
 <tr>
-	<td><a href="connection.jsp?connectionID=${conName}">${conName}</a></td>
-	<td>${con.remoteAddress}</td>
-	<td>${con.active}</td>
-	<td>${con.slow}</td>
+	<td><a href="<c:url value='connection.jsp?connectionID=${conName}' />"><c:out value="${conName}" /></a></td>
+	<td><c:out value="${con.remoteAddress}" /></td>
+	<td><c:out value="${con.active}" /></td>
+	<td><c:out value="${con.slow}" /></td>
 </tr>
 </jms:forEachConnection>
 </tbody>
@@ -73,13 +73,13 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.networkConnectors}" var="nc">
 <tr>
-	<td>${nc.name}</td>
-	<td>${nc.networkTTL}</td>
-	<td>${nc.dynamicOnly}</td>
-	<td>${nc.conduitSubscriptions}</td>
-	<td>${nc.bridgeTempDestinations}</td>
-	<td>${nc.decreaseNetworkConsumerPriority}</td>
-	<td>${nc.dispatchAsync}</td>
+	<td><c:out value="${nc.name}" /></td>
+	<td><c:out value="${nc.networkTTL}" /></td>
+	<td><c:out value="${nc.dynamicOnly}" /></td>
+	<td><c:out value="${nc.conduitSubscriptions}" /></td>
+	<td><c:out value="${nc.bridgeTempDestinations}" /></td>
+	<td><c:out value="${nc.decreaseNetworkConsumerPriority}" /></td>
+	<td><c:out value="${nc.dispatchAsync}" /></td>
 </tr>
 </c:forEach>
 </tbody>
