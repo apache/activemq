@@ -27,6 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.util.EnumerationPage;
+
 /**
  * A simple rendering of the contents of a queue appear as a list of message
  * elements which just contain an ID attribute.

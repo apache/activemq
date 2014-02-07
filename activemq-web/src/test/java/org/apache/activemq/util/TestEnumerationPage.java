@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.web.view;
+package org.apache.activemq.util;
 
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
