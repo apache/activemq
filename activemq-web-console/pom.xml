@@ -194,6 +194,14 @@
               <groupId>${project.groupId}</groupId>
               <artifactId>activemq-all</artifactId>
           </exclusion>
+          <exclusion>
+              <groupId>org.eclipse.jetty</groupId>
+              <artifactId>jetty-websocket</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.eclipse.jetty</groupId>
+              <artifactId>jetty-continuation</artifactId>
+          </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -239,6 +247,7 @@
       <groupId>org.eclipse.jdt</groupId>
       <artifactId>core</artifactId>
       <version>3.1.1</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -261,16 +270,6 @@
     <dependency>
       <groupId>taglibs</groupId>
       <artifactId>standard</artifactId>
-    </dependency>
-
-    <!-- XStream marshalling -->
-    <dependency>
-      <groupId>xpp3</groupId>
-      <artifactId>xpp3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
     </dependency>
 
     <!-- used for testing -->
