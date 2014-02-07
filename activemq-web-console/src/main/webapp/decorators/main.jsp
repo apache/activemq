@@ -22,10 +22,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
     <!-- BOOTSTRAP CSS LIBRARY -->
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap-theme.min.css">
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
-    <!-- TODO: REMOVE @import url('/admin/styles/sorttable.css'); -->
+    <!-- If anyone uses sorttable in any other page you can put it back by adding: @import url('/admin/styles/sorttable.css'); -->
     <!-- GOOGLE FONTS -->
     <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
     <style type="text/css">

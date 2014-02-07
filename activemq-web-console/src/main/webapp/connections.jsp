@@ -20,12 +20,12 @@
 </head>
 <body>
 
-<h2>Connections</h2>
+<h1 class="page-header">Connections</h1>
 
 <c:forEach items="${requestContext.brokerQuery.connectors}" var="connectorName">
 <h3>Connector ${connectorName}</h3>
 
-<table id="connections" class="sortable autostripe">
+<table id="connections" class="table table-striped">
 <thead>
 <tr>
 	<th>Name</th>
@@ -52,7 +52,7 @@
 <div style="margin-top: 5em">
 <h2>Network Connectors</h2>
 
-<table id="connections" class="sortable autostripe">
+<table id="connections" class="table table-striped">
 <thead>
 <tr>
 	<th>Name</th>

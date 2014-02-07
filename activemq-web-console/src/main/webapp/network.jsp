@@ -23,7 +23,7 @@
 <div style="margin-top: 5em">
 <h2>Network Bridges</h2>
 
-<table id="bridges" class="sortable autostripe">
+<table id="bridges" class="table table-striped">
 <thead>
 <tr>
     <th>Remote Broker</th>

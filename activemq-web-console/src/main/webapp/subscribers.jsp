@@ -24,7 +24,7 @@
     <input type="hidden" name="JMSDestinationType" value="topic"/>
     <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
-<table id="createSubscribers" class="sortable autostripe">
+<table id="createSubscribers" class="table table-striped">
 <thead>
 <tr>
     <th colspan="4">Create Durable Topic Subscribers</th>
@@ -33,17 +33,17 @@
 <tbody>
 
 <tr>
-	<td class="label">
+	<td>
 	    <label name="clientId">Client ID</label>
 	</td>
     <td>
-        <input type="text" name="clientId" value=""/>
+        <input type="text" class="form-control" name="clientId" value=""/>
     </td>
-    <td class="label">
+    <td>
         <label name="subscriberName">Subscriber Name</label>
     </td>
     <td>
-        <input type="text" name="subscriberName" value=""/>
+        <input type="text"  class="form-control" name="subscriberName" value=""/>
     </td>
 </tr>
 <tr>
@@ -51,18 +51,18 @@
 		<label name="JMSDestination">Topic Name</label>
     </td>
     <td>
-		<input type="text" name="JMSDestination" value=""/>
+		<input type="text"  class="form-control" name="JMSDestination" value=""/>
     </td>
     <td>
         <label name="selector">JMS Selector</label>
     </td>
     <td>
-        <input type="text" name="selector" value=""/>
+        <input type="text"  class="form-control" name="selector" value=""/>
     </td>
 </tr>
 <tr>
     <td colspan="4" align="center">
-        <input type="submit" value="Create Durable Topic Subscriber"/>
+        <input type="submit"  class="btn" value="Create Durable Topic Subscriber"/>
     </td>
 </tr>
 </tbody>
@@ -73,7 +73,7 @@
 <h2>Active Durable Topic Subscribers</h2>
 
 
-<table id="topics" class="sortable autostripe">
+<table id="topics" class="table table-striped">
 <thead>
 <tr>
 <th>Client ID</th>
@@ -117,7 +117,7 @@
 <h2>Offline Durable Topic Subscribers</h2>
 
 
-<table id="topics" class="sortable autostripe">
+<table id="topics" class="table table-striped">
 <thead>
 <tr>
 <th>Client ID</th>
