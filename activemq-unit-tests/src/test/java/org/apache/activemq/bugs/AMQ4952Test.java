@@ -41,8 +41,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.sql.DataSource;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -67,6 +65,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 /**
  * Test creates a broker network with two brokers - producerBroker (with a
@@ -100,7 +100,7 @@ import org.slf4j.LoggerFactory;
  */
 
 @RunWith(value = Parameterized.class)
-public class AMQ4952Test extends TestCase {
+public class AMQ4952Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4952Test.class);
 
@@ -254,18 +254,15 @@ public class AMQ4952Test extends TestCase {
         }
     }
 
-    @Override
     @Before
     public void setUp() throws Exception {
-        super.setUp();
+        LOG.debug("Running with enableCursorAudit set to {}", this.enableCursorAudit);
         doSetUp();
     }
 
-    @Override
     @After
     public void tearDown() throws Exception {
         doTearDown();
-        super.tearDown();
     }
 
     protected void doTearDown() throws Exception {
