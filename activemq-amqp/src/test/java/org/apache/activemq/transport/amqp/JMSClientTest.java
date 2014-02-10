@@ -694,6 +694,40 @@ public class JMSClientTest extends AmqpTestSupport {
         assertTrue("No exception listener event fired.", called.await(15, TimeUnit.SECONDS));
     }
 
+    @Test
+    public void testSessionTransactedCommit() throws JMSException, InterruptedException {
+
+        Connection connection = createConnection();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(name.toString());
+
+        connection.start();
+
+        // transacted producer
+        MessageProducer pr = session.createProducer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message m = session.createTextMessage("TestMessage" + i);
+            pr.send(m);
+        }
+
+        // No commit in place, so no message should be dispatched.
+        MessageConsumer consumer = session.createConsumer(queue);
+        TextMessage m = (TextMessage) consumer.receive(5000);
+
+        assertNull(m);
+
+        session.commit();
+
+        // Messages should be available now.
+        for (int i = 0; i < 10; i++) {
+            Message msg = consumer.receive(5000);
+            assertNotNull(msg);
+        }
+
+        session.close();
+        connection.close();
+    }
+
     private Connection createConnection() throws JMSException {
         return createConnection(name.toString(), false);
     }
