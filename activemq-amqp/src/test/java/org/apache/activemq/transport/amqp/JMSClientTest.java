@@ -694,7 +694,7 @@ public class JMSClientTest extends AmqpTestSupport {
         assertTrue("No exception listener event fired.", called.await(15, TimeUnit.SECONDS));
     }
 
-    @Test
+    @Test(timeout=40000)
     public void testSessionTransactedCommit() throws JMSException, InterruptedException {
 
         Connection connection = createConnection();
