@@ -166,7 +166,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             try {
                 InboundContextSupport.register(this);
                 if ( session.isRunning() ) {
-                session.run();
+                    session.run();
                 } else {
                     log.debug("JMS Session is no longer running (maybe due to loss of connection?), marking ServerSesison as stale");
                     stale = true;

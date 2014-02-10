@@ -183,6 +183,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         assertTrue("Should have received the third message", enumeration.hasMoreElements());
         assertEquals(outbound[2], (Message)enumeration.nextElement());
 
+        LOG.info("Check for more...");
         // There should be no more.
         boolean tooMany = false;
         while (enumeration.hasMoreElements()) {
@@ -190,8 +191,10 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
             tooMany = true;
         }
         assertFalse(tooMany);
+        LOG.info("close browser...");
         browser.close();
 
+        LOG.info("reopen and consume...");
         // Re-open the consumer.
         consumer = resourceProvider.createConsumer(session, destination);
         // Receive the second.
