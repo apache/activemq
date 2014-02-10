@@ -48,6 +48,7 @@ public class AMQ5035Test {
     public void setUp() throws Exception {
         brokerService = BrokerFactory.createBroker(xbean + confBase + "/activemq.xml");
         connectionUri = brokerService.getTransportConnectorByScheme("tcp").getPublishableConnectString();
+        brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.start();
         brokerService.waitUntilStarted();
     }
