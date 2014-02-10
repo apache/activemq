@@ -262,7 +262,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
 
     public void close() {
         closing.set(true);
-        int activeCount = closeIdleSessions();
+        int activeCount = closeSessions();
         // we may have to wait erroneously 250ms if an
         // active session is removed during our wait and we
         // are not notified
@@ -278,14 +278,26 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
                 Thread.currentThread().interrupt();
                 return;
             }
-            activeCount = closeIdleSessions();
+            activeCount = closeSessions();
         }
     }
 
 
-    protected int closeIdleSessions() {
+    protected int closeSessions() {
         sessionLock.lock();
         try {
+            for (ServerSessionImpl ss : activeSessions) {
+                try {
+                    ActiveMQSession session = (ActiveMQSession) ss.getSession();
+                    if (!session.isClosed()) {
+                        session.close();
+                    }
+                } catch (JMSException ignored) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Failed to close active running server session {}, reason:{}", ss, ignored.toString(), ignored);
+                    }
+                }
+            }
             for (ServerSessionImpl ss : idleSessions) {
                 ss.close();
             }
