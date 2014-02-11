@@ -47,6 +47,8 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -55,6 +57,13 @@ import org.objectweb.jtests.jms.framework.TestConfig;
 public class JMSClientTest extends AmqpTestSupport {
 
     @Rule public TestName name = new TestName();
+
+    @Override
+    @Before
+    public void setUp() throws Exception {
+        LOG.debug("Starting test {}", name.getMethodName());
+        super.setUp();
+    }
 
     @SuppressWarnings("rawtypes")
     @Test
@@ -86,6 +95,7 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    @Ignore("AMQ-5041")
     @Test
     public void testTransactedConsumer() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -117,6 +127,7 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    @Ignore("AMQ-5041")
     @Test
     public void testRollbackRececeivedMessage() throws Exception {
 
@@ -161,6 +172,7 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    @Ignore("AMQ-5041")
     @Test
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
@@ -330,6 +342,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
+    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testConsumerReceiveNoWaitThrowsWhenBrokerStops() throws Exception {
 
@@ -362,6 +375,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
+    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testConsumerReceiveTimedThrowsWhenBrokerStops() throws Exception {
 
@@ -422,6 +436,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
+    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testBrokerRestartWontHangConnectionClose() throws Exception {
 
@@ -446,6 +461,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
+    @Ignore("AMQ-5041")
     @Test(timeout=120000)
     public void testProduceAndConsumeLargeNumbersOfMessages() throws JMSException {
 
@@ -660,6 +676,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }));
     }
 
+    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testExecptionListenerCalledOnBrokerStop() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -695,6 +712,7 @@ public class JMSClientTest extends AmqpTestSupport {
         assertTrue("No exception listener event fired.", called.await(15, TimeUnit.SECONDS));
     }
 
+    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testSessionTransactedCommit() throws JMSException, InterruptedException {
         ActiveMQAdmin.enableJMSFrameTracing();
