@@ -95,7 +95,6 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
-    @Ignore("AMQ-5041")
     @Test
     public void testTransactedConsumer() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -127,7 +126,6 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
-    @Ignore("AMQ-5041")
     @Test
     public void testRollbackRececeivedMessage() throws Exception {
 
@@ -172,7 +170,6 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
-    @Ignore("AMQ-5041")
     @Test
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
@@ -342,7 +339,6 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
-    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testConsumerReceiveNoWaitThrowsWhenBrokerStops() throws Exception {
 
@@ -375,7 +371,6 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
-    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testConsumerReceiveTimedThrowsWhenBrokerStops() throws Exception {
 
@@ -436,7 +431,6 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
-    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testBrokerRestartWontHangConnectionClose() throws Exception {
 
@@ -461,7 +455,6 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
-    @Ignore("AMQ-5041")
     @Test(timeout=120000)
     public void testProduceAndConsumeLargeNumbersOfMessages() throws JMSException {
 
@@ -712,7 +705,6 @@ public class JMSClientTest extends AmqpTestSupport {
         assertTrue("No exception listener event fired.", called.await(15, TimeUnit.SECONDS));
     }
 
-    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testSessionTransactedCommit() throws JMSException, InterruptedException {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -762,7 +754,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
     private Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
 
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", nioPort, "admin", "password");
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
 
         factory.setSyncPublish(syncPublish);
         factory.setTopicPrefix("topic://");
