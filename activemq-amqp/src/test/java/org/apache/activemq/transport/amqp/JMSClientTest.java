@@ -48,7 +48,6 @@ import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -669,14 +668,12 @@ public class JMSClientTest extends AmqpTestSupport {
         }));
     }
 
-    @Ignore("AMQ-5041")
     @Test(timeout=30000)
     public void testExecptionListenerCalledOnBrokerStop() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         Connection connection = createConnection();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue(name.toString());
+        connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         connection.start();
 
         final CountDownLatch called = new CountDownLatch(1);
@@ -752,9 +749,18 @@ public class JMSClientTest extends AmqpTestSupport {
         return createConnection(clientId, false);
     }
 
+    /**
+     * Can be overridden in subclasses to test against a different transport suchs as NIO.
+     *
+     * @return the port to connect to on the Broker.
+     */
+    protected int getBrokerPort() {
+        return port;
+    }
+
     private Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
 
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", getBrokerPort(), "admin", "password");
 
         factory.setSyncPublish(syncPublish);
         factory.setTopicPrefix("topic://");
