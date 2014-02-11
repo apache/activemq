@@ -133,6 +133,15 @@ public class DestinationMapNode implements DestinationNode {
         }
     }
 
+    public void set(String[] paths, int idx, Object value) {
+        if (idx >= paths.length) {
+            values.clear();
+            values.add(value);
+        } else {
+            getChildOrCreate(paths[idx]).add(paths, idx + 1, value);
+        }
+    }
+
     public void remove(String[] paths, int idx, Object value) {
         if (idx >= paths.length) {
             values.remove(value);

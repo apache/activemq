@@ -95,6 +95,7 @@ public class MQTTProtocolConverter {
     }
 
     void sendToActiveMQ(Command command, ResponseHandler handler) {
+        System.out.println(mqttTransport.getInactivityMonitor()+" ==> "+command);
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
@@ -308,15 +309,14 @@ public class MQTTProtocolConverter {
         //check retained messages
         if (topics != null){
             for (Topic topic:topics){
-                Buffer buffer = retainedMessages.getMessage(topic.name().toString());
-                if (buffer != null){
-                    PUBLISH msg = new PUBLISH();
-                    msg.payload(buffer);
-                    msg.topicName(topic.name());
-                    try {
-                        getMQTTTransport().sendToMQTT(msg.encode());
-                    } catch (IOException e) {
-                        LOG.warn("Couldn't send retained message " + msg, e);
+                ActiveMQTopic destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
+                for (PUBLISH msg : retainedMessages.getMessages(destination)) {
+                    if( msg.payload().length > 0 ) {
+                        try {
+                            getMQTTTransport().sendToMQTT(msg.encode());
+                        } catch (IOException e) {
+                            LOG.warn("Couldn't send retained message " + msg, e);
+                        }
                     }
                 }
             }
@@ -333,7 +333,7 @@ public class MQTTProtocolConverter {
             consumerInfo.setDestination(destination);
             consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
             consumerInfo.setDispatchAsync(true);
-            if (!connect.cleanSession() && (connect.clientId() != null)) {
+            if ( connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
                 consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
             }
             MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
@@ -418,10 +418,10 @@ public class MQTTProtocolConverter {
 
     void onMQTTPublish(PUBLISH command) throws IOException, JMSException {
         checkConnected();
-        if (command.retain()){
-            retainedMessages.addMessage(command.topicName().toString(),command.payload());
-        }
         ActiveMQMessage message = convertMessage(command);
+        if (command.retain()){
+            retainedMessages.addMessage((ActiveMQTopic) message.getDestination(), command);
+        }
         message.setProducerId(producerId);
         message.onSend();
         sendToActiveMQ(message, createResponseHandler(command));
@@ -484,7 +484,7 @@ public class MQTTProtocolConverter {
         synchronized (activeMQTopicMap) {
             topic = activeMQTopicMap.get(command.topicName());
             if (topic == null) {
-                String topicName = command.topicName().toString().replaceAll("/", ".");
+                String topicName = convertMQTTToActiveMQ(command.topicName().toString());
                 topic = new ActiveMQTopic(topicName);
                 activeMQTopicMap.put(command.topicName(), topic);
             }
@@ -563,17 +563,21 @@ public class MQTTProtocolConverter {
         return mqttTransport;
     }
 
+    boolean willSent = false;
     public void onTransportError() {
         if (connect != null) {
-            if (connected.get() && connect.willTopic() != null && connect.willMessage() != null) {
+            if (connected.get() && connect.willTopic() != null && connect.willMessage() != null && !willSent) {
+                willSent = true;
                 try {
                     PUBLISH publish = new PUBLISH();
                     publish.topicName(connect.willTopic());
                     publish.qos(connect.willQos());
+                    publish.messageId((short) messageIdGenerator.getNextSequenceId());
                     publish.payload(connect.willMessage());
                     ActiveMQMessage message = convertMessage(publish);
                     message.setProducerId(producerId);
                     message.onSend();
+
                     sendToActiveMQ(message, null);
                 } catch (Exception e) {
                     LOG.warn("Failed to publish Will Message " + connect.willMessage());
@@ -703,10 +707,35 @@ public class MQTTProtocolConverter {
     }
 
     private String convertMQTTToActiveMQ(String name) {
-        String result = name.replace('#', '>');
-        result = result.replace('+', '*');
-        result = result.replace('/', '.');
-        return result;
+        char[] chars = name.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            switch(chars[i]) {
+
+                case '#':
+                    chars[i] = '>';
+                    break;
+                case '>':
+                    chars[i] = '#';
+                    break;
+
+                case '+':
+                    chars[i] = '*';
+                    break;
+                case '*':
+                    chars[i] = '+';
+                    break;
+
+                case '/':
+                    chars[i] = '.';
+                    break;
+                case '.':
+                    chars[i] = '/';
+                    break;
+
+            }
+        }
+        String rc = new String(chars);
+        return rc;
     }
 
     public long getDefaultKeepAlive() {
