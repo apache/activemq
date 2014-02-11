@@ -65,7 +65,7 @@ public class JMSClientTest extends AmqpTestSupport {
     }
 
     @SuppressWarnings("rawtypes")
-    @Test
+    @Test(timeout=30000)
     public void testProducerConsume() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
@@ -125,7 +125,7 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testRollbackRececeivedMessage() throws Exception {
 
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -169,7 +169,7 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -209,7 +209,7 @@ public class JMSClientTest extends AmqpTestSupport {
     }
 
     @SuppressWarnings("rawtypes")
-    @Test
+    @Test(timeout=30000)
     public void testSelectors() throws Exception{
         ActiveMQAdmin.enableJMSFrameTracing();
 
