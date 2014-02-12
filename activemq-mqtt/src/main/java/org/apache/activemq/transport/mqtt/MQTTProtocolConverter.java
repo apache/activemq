@@ -30,7 +30,6 @@ import javax.jms.Message;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.*;
 import org.apache.activemq.store.PersistenceAdapterSupport;
-import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -51,7 +50,7 @@ public class MQTTProtocolConverter {
 
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
-    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 1.5;
+    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 0.5;
     private static final int DEFAULT_CACHE_SIZE = 5000;
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
@@ -609,24 +608,24 @@ public class MQTTProtocolConverter {
         }
 
         try {
-
-            long keepAliveMSWithGracePeriod = (long) (keepAliveMS * MQTT_KEEP_ALIVE_GRACE_PERIOD);
-
             // if we have a default keep-alive value, and the client is trying to turn off keep-alive,
+
             // we'll observe the server-side configured default value (note, no grace period)
-            if (keepAliveMSWithGracePeriod == 0 && defaultKeepAlive > 0) {
-                keepAliveMSWithGracePeriod = defaultKeepAlive;
+            if (keepAliveMS == 0 && defaultKeepAlive > 0) {
+                keepAliveMS = defaultKeepAlive;
             }
 
+            long readGracePeriod = (long) (keepAliveMS * MQTT_KEEP_ALIVE_GRACE_PERIOD);
+
             monitor.setProtocolConverter(this);
-            monitor.setReadCheckTime(keepAliveMSWithGracePeriod);
-            monitor.setInitialDelayTime(keepAliveMS);
+            monitor.setReadKeepAliveTime(keepAliveMS);
+            monitor.setReadGraceTime(readGracePeriod);
             monitor.startMonitorThread();
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("MQTT Client " + getClientId() +
-                        " established heart beat of  " + keepAliveMSWithGracePeriod +
-                        " ms (" + keepAliveMS + "ms + " + (keepAliveMSWithGracePeriod - keepAliveMS) +
+                        " established heart beat of  " + keepAliveMS +
+                        " ms (" + keepAliveMS + "ms + " + readGracePeriod +
                         "ms grace period)");
             }
         } catch (Exception ex) {

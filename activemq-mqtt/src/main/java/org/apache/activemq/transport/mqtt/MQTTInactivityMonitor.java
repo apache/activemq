@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
 import org.apache.activemq.transport.AbstractInactivityMonitor;
 import org.apache.activemq.transport.InactivityIOException;
@@ -50,46 +49,53 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     private final AtomicBoolean monitorStarted = new AtomicBoolean(false);
     private final AtomicBoolean failed = new AtomicBoolean(false);
-    private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
     private final AtomicInteger lastReceiveCounter = new AtomicInteger(0);
 
     private final ReentrantLock sendLock = new ReentrantLock();
     private SchedulerTimerTask readCheckerTask;
 
-    private long readCheckTime = DEFAULT_CHECK_TIME_MILLS;
-    private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
+    private long readGraceTime = DEFAULT_CHECK_TIME_MILLS;
+    private long readKeepAliveTime = DEFAULT_CHECK_TIME_MILLS;
     private boolean keepAliveResponseRequired;
     private MQTTProtocolConverter protocolConverter;
 
     private final Runnable readChecker = new Runnable() {
-        long lastRunTime;
+        long lastReceiveTime = System.currentTimeMillis();
 
         public void run() {
+
             long now = System.currentTimeMillis();
-            long elapsed = (now - lastRunTime);
+            int currentCounter = next.getReceiveCounter();
+            int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
 
-            if (lastRunTime != 0 && LOG.isDebugEnabled()) {
-                LOG.debug("" + elapsed + " ms elapsed since last read check.");
-            }
-
-            // Perhaps the timer executed a read check late.. and then executes
-            // the next read check on time which causes the time elapsed between
-            // read checks to be small..
-
-            // If less than 90% of the read check Time elapsed then abort this readcheck.
-            if (!allowReadCheck(elapsed)) { // FUNKY qdox bug does not allow me to inline this expression.
-                LOG.debug("Aborting read check.. Not enough time elapsed since last read check.");
+            // for the PINGREQ/RESP frames, the currentCounter will be different from previousCounter, and that
+            // should be sufficient to indicate the connection is still alive. If there were random data, or something
+            // outside the scope of the spec, the wire format unrmarshalling would fail, so we don't need to handle
+            // PINGREQ/RESP explicitly here
+            if (inReceive.get() || currentCounter != previousCounter) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Command received since last read check.");
+                }
+                lastReceiveTime = now;
                 return;
             }
 
-            lastRunTime = now;
-            readCheck();
+            if( (now-lastReceiveTime) >= readKeepAliveTime+readGraceTime && monitorStarted.get() && !ASYNC_TASKS.isTerminating()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("No message received since last read check for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
+                }
+                ASYNC_TASKS.execute(new Runnable() {
+                    public void run() {
+                        onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime+readGraceTime) + ") long: " + next.getRemoteAddress()));
+                    }
+                });
+            }
         }
     };
 
     private boolean allowReadCheck(long elapsed) {
-        return elapsed > (readCheckTime * 9 / 10);
+        return elapsed > (readGraceTime * 9 / 10);
     }
 
     public MQTTInactivityMonitor(Transport next, WireFormat wireFormat) {
@@ -106,39 +112,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
         next.stop();
     }
 
-    final void readCheck() {
-        int currentCounter = next.getReceiveCounter();
-        int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
-
-        // for the PINGREQ/RESP frames, the currentCounter will be different from previousCounter, and that
-        // should be sufficient to indicate the connection is still alive. If there were random data, or something
-        // outside the scope of the spec, the wire format unrmarshalling would fail, so we don't need to handle
-        // PINGREQ/RESP explicitly here
-        if (inReceive.get() || currentCounter != previousCounter) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("A receive is in progress");
-            }
-            return;
-        }
-        if (!commandReceived.get() && monitorStarted.get() && !ASYNC_TASKS.isTerminating()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
-            }
-            ASYNC_TASKS.execute(new Runnable() {
-                public void run() {
-                    onException(new InactivityIOException("Channel was inactive for too (>" + readCheckTime + ") long: " + next.getRemoteAddress()));
-                }
-            });
-        } else {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Message received since last read check, resetting flag: ");
-            }
-        }
-        commandReceived.set(false);
-    }
-
     public void onCommand(Object command) {
-        commandReceived.set(true);
         inReceive.set(true);
         try {
             transportListener.onCommand(command);
@@ -177,20 +151,20 @@ public class MQTTInactivityMonitor extends TransportFilter {
         }
     }
 
-    public long getReadCheckTime() {
-        return readCheckTime;
+    public long getReadGraceTime() {
+        return readGraceTime;
     }
 
-    public void setReadCheckTime(long readCheckTime) {
-        this.readCheckTime = readCheckTime;
+    public void setReadGraceTime(long readGraceTime) {
+        this.readGraceTime = readGraceTime;
     }
 
-    public long getInitialDelayTime() {
-        return initialDelayTime;
+    public long getReadKeepAliveTime() {
+        return readKeepAliveTime;
     }
 
-    public void setInitialDelayTime(long initialDelayTime) {
-        this.initialDelayTime = initialDelayTime;
+    public void setReadKeepAliveTime(long readKeepAliveTime) {
+        this.readKeepAliveTime = readKeepAliveTime;
     }
 
     public boolean isKeepAliveResponseRequired() {
@@ -224,11 +198,11 @@ public class MQTTInactivityMonitor extends TransportFilter {
             return;
         }
 
-        if (readCheckTime > 0) {
+        if (readKeepAliveTime > 0) {
             readCheckerTask = new SchedulerTimerTask(readChecker);
         }
 
-        if (readCheckTime > 0) {
+        if (readKeepAliveTime > 0) {
             monitorStarted.set(true);
             synchronized (AbstractInactivityMonitor.class) {
                 if (CHECKER_COUNTER == 0) {
@@ -236,8 +210,8 @@ public class MQTTInactivityMonitor extends TransportFilter {
                     READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck", true);
                 }
                 CHECKER_COUNTER++;
-                if (readCheckTime > 0) {
-                    READ_CHECK_TIMER.schedule(readCheckerTask, initialDelayTime, readCheckTime);
+                if (readKeepAliveTime > 0) {
+                    READ_CHECK_TIMER.schedule(readCheckerTask, readKeepAliveTime, readGraceTime);
                 }
             }
         }
