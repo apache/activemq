@@ -257,7 +257,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (canReconnect()) {
                     reconnectOk = true;
                 }
-                LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed, reason:  " + e
+                LOG.warn("Transport (" + transport + ") failed, reason:  " + e
                         + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect");
 
                 initialized = false;
