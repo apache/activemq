@@ -94,6 +94,23 @@ public class MQTTProtocolConverter {
     }
 
     void sendToActiveMQ(Command command, ResponseHandler handler) {
+
+        // Lets intercept message send requests..
+        if( command instanceof ActiveMQMessage) {
+            ActiveMQMessage msg = (ActiveMQMessage) command;
+            if( msg.getDestination().getPhysicalName().startsWith("$") ) {
+                // We don't allow users to send to $ prefixed topics to avoid failing MQTT 3.1.1 spec requirements
+                if( handler!=null ) {
+                    try {
+                        handler.onResponse(this, new Response());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return;
+            }
+        }
+
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
