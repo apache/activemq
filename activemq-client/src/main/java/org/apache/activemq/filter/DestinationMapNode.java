@@ -138,7 +138,7 @@ public class DestinationMapNode implements DestinationNode {
             values.clear();
             values.add(value);
         } else {
-            getChildOrCreate(paths[idx]).add(paths, idx + 1, value);
+            getChildOrCreate(paths[idx]).set(paths, idx + 1, value);
         }
     }
 

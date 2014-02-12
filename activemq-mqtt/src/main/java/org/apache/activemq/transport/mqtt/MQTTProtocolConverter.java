@@ -95,7 +95,6 @@ public class MQTTProtocolConverter {
     }
 
     void sendToActiveMQ(Command command, ResponseHandler handler) {
-        System.out.println(mqttTransport.getInactivityMonitor()+" ==> "+command);
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
@@ -256,10 +255,18 @@ public class MQTTProtocolConverter {
     public void deleteDurableSubs(List<SubscriptionInfo> subs) {
         try {
             for (SubscriptionInfo sub : subs) {
-                TopicMessageStore store = brokerService.getPersistenceAdapter().createTopicMessageStore((ActiveMQTopic) sub.getDestination());
-                store.deleteSubscription(connectionInfo.getClientId(), sub.getSubscriptionName());
+                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                rsi.setConnectionId(connectionId);
+                rsi.setSubscriptionName(sub.getSubcriptionName());
+                rsi.setClientId(sub.getClientId());
+                sendToActiveMQ(rsi, new ResponseHandler() {
+                    @Override
+                    public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                        // ignore failures..
+                    }
+                });
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             LOG.warn("Could not delete the MQTT durable subs.", e);
         }
     }
@@ -477,7 +484,7 @@ public class MQTTProtocolConverter {
         msg.setMessageId(id);
         msg.setTimestamp(System.currentTimeMillis());
         msg.setPriority((byte) Message.DEFAULT_PRIORITY);
-        msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE);
+        msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE && !command.retain());
         msg.setIntProperty(QOS_PROPERTY_NAME, command.qos().ordinal());
 
         ActiveMQTopic topic;
