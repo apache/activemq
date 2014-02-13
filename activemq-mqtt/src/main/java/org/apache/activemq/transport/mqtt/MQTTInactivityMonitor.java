@@ -63,6 +63,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
     private final Runnable readChecker = new Runnable() {
         long lastReceiveTime = System.currentTimeMillis();
 
+        @Override
         public void run() {
 
             long now = System.currentTimeMillis();
@@ -86,6 +87,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
                     LOG.debug("No message received since last read check for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
                 }
                 ASYNC_TASKS.execute(new Runnable() {
+                    @Override
                     public void run() {
                         onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime+readGraceTime) + ") long: " + next.getRemoteAddress()));
                     }
@@ -102,16 +104,19 @@ public class MQTTInactivityMonitor extends TransportFilter {
         super(next);
     }
 
+    @Override
     public void start() throws Exception {
         next.start();
         startMonitorThread();
     }
 
+    @Override
     public void stop() throws Exception {
         stopMonitorThread();
         next.stop();
     }
 
+    @Override
     public void onCommand(Object command) {
         inReceive.set(true);
         try {
@@ -121,6 +126,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
         }
     }
 
+    @Override
     public void oneway(Object o) throws IOException {
         // To prevent the inactivity monitor from sending a message while we
         // are performing a send we take the lock.
@@ -140,13 +146,13 @@ public class MQTTInactivityMonitor extends TransportFilter {
         next.oneway(command);
     }
 
+    @Override
     public void onException(IOException error) {
         if (failed.compareAndSet(false, true)) {
             stopMonitorThread();
             if (protocolConverter != null) {
                 protocolConverter.onTransportError();
             }
-            protocolConverter.onTransportError();
             transportListener.onException(error);
         }
     }
@@ -236,7 +242,8 @@ public class MQTTInactivityMonitor extends TransportFilter {
         }
     }
 
-    private ThreadFactory factory = new ThreadFactory() {
+    private final ThreadFactory factory = new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable runnable) {
             Thread thread = new Thread(runnable, "MQTTInactivityMonitor Async Task: " + runnable);
             thread.setDaemon(true);
