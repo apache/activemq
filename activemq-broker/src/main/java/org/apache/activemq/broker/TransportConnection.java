@@ -1578,4 +1578,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
         return result;
     }
+
+    public WireFormatInfo getRemoteWireFormatInfo() {
+        return wireFormatInfo;
+    }
 }
