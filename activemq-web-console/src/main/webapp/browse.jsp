@@ -16,32 +16,39 @@
 --%>
 <html>
 <head>
+<c:set var="pageTitle" value="Browse ${requestContext.queueBrowser.JMSDestination}"/>
+
+<%@include file="decorators/head.jsp" %>
 <title>Browse <form:short text="${requestContext.queueBrowser.JMSDestination}"/></title>
 
 <script type="text/javascript" src="js/jmsQueueBrowser.js"></script>
+
+<style type="text/css">
+
+// This will prevent a bug that exist in firefox for pagination
+.pagination {
+	margin: 0px !important;
+}
+
+</style>
 <!-- BOOTSTRAP CSS LIBRARY -->
-<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap-theme.min.css">
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 <!-- TODO: REMOVE @import url('/admin/styles/sorttable.css'); -->
 <!-- GOOGLE FONTS -->
-<link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
-<style type="text/css">
-    body {
-        font-family: 'Open Sans Condensed', sans-serif;
-    }
-</style>
+ 
 
+<%@include file="decorators/header.jsp" %>
 
 
 </head>
 <body>
 
+<input type="hidden" name="secret" id="secret" value='${sessionScope["secret"]}' />
+
 <!-- Start Of Panel -->
 <div class="panel" style="width:800px;">
 
 <blockquote class="bs-callout"><h3>JMS Messages in Queue: <form:tooltip text="${requestContext.queueBrowser.JMSDestination}"/>
-<small>1-100 of 10,000 messages</small></h3></blockquote>
+<small> 1 - 100 of 10,000 messages</small></h3></blockquote>
 <div id="pageIndicator"></div>
 
 
@@ -58,10 +65,12 @@
 </table>
 <!-- PAGINATION -->
 
-<div class="pagination" style="margin:auto 500px;">
+<div class="pagination" style="width:100%;">
                     <div class="pages" id="page" style="padding-bottom: 90px;">
                         <ul class="pagination" >
-                            <li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title=""><i class="glyphicon glyphicon-chevron-left"></i></a></li>
+                            <li>
+                            	<a href="#" onclick="prev()" id="prev" class="prev off" data-original-title="">Prev</a>
+                            </li>
                             <li>
                                 <a class="active" onclick="fetchResults(1)" href="#1" data-original-title="">1</a>
                             </li>
@@ -93,7 +102,7 @@
                                 <a onclick="fetchResults(10)" href="#10" data-original-title="">10</a>
                             </li>
                             <li>
-                                <a href="#" onclick="next()" id="next" class="next" data-original-title=""><i class="glyphicon glyphicon-chevron-right"></i></a>
+                                <a href="#" onclick="next()" id="next" class="next" data-original-title="">Next</a>
                             </li>
                         </ul>
 
@@ -110,6 +119,9 @@
 <script type="text/javascript">
     (function(_){
 
+	_.sec='${sessionScope["secret"]}';
+
+    	
         if( !!! QueryStringHelper.toJSON().page){
              location.replace(location.origin + location.pathname +"?JMSDestination="+QueryStringHelper.toJSON().JMSDestination+"&page=" + 1 );
         }
@@ -124,9 +136,24 @@
                        var e = Number(QueryStringHelper.toJSON().page);
                        var last = e * 100;
                        var start = last - 100;
-                       var total=data.value.TotalMessageCount;
-                       _.totalPages=data.value.TotalMessageCount;
+                      
+                       var total = data.value.TotalMessageCount;
+                       _.totalPages = data.value.TotalMessageCount;
 
+   						// Checking if we have < 100 messags
+   						 if( total == 0 ){
+                            throw "Error: No messages in the queue";
+                     	} else if(total < 100){
+							start =0;
+							last = total;
+   	   					} else if ( start >= total &&  last > total ){
+                            throw "Error: No messages on this page ";
+                     	} else if ( start < total && last > total ) {
+                            start = ( last - total ) + start ;
+                     	}
+	   					
+
+                       
                        if ( PaginQueue.isHead() ) {
                               PaginQueue.moveCurLine(1);
                               PaginQueue.setupNav();
@@ -135,18 +162,13 @@
                               PaginQueue.setupNav();
                        }
 
-
-                         //Exception cases:
-                         if( total == 0 ){
-                                throw "Error: No messages in the queue";
-                         } else if ( start >= total &&  last > total ){
-                                throw "Error: No messages on this page ";
-                         } else if ( start < total && last > total ) {
-                                start = ( last - total ) + start ;
-                         }
-
-                       $(".bs-callout small").html(start+" of "+last +" messages of "+ total);
-
+						
+                      if(total===1){
+                    	  $(".bs-callout small").html("1 of 1 messages of 1");
+                      } else {
+                    	  $(".bs-callout small").html(start+" of "+last +" messages of "+ total);
+                      }
+                     
                        var z = new JMSQueueBrowser(QueryStringHelper.toJSON().JMSDestination, Number(QueryStringHelper.toJSON().page), data.value.TotalMessageCount, function (data) {
                            z.empty();
                            $(".progress").hide();
@@ -177,6 +199,8 @@
 
     })(this);
     </script>
+<%@include file="decorators/footer.jsp" %>
+
 </body>
 </html>
-	
+

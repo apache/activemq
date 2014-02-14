@@ -16,9 +16,14 @@
 --%>
 <html>
 <head>
-<title>Send Messages</title>
+<c:set var="pageTitle" value="Send Messages"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
 
 <h2>Send a JMS Message</h2>
 
@@ -44,9 +49,9 @@
 	    <label for="queue">Queue or Topic</label>
 	</td>
 	<td>
-	    <select name="JMSDestinationType">
-	      <option name="JMSDestinationType" value="queue" label="Queue"/>
-	      <option name="JMSDestinationType" value="topic" label="Topic"/>
+	    <select class="form-control" name="JMSDestinationType">
+	      <option name="JMSDestinationType" value="queue" label="Queue">Queue</option>
+	      <option name="JMSDestinationType" value="topic" label="Topic">Topic</option>
 	   </select>
 	</td>
 </tr>
@@ -168,6 +173,7 @@
 </table>
 
 </form>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

@@ -15,10 +15,13 @@
     limitations under the License.
 --%>
 <html>
-<head>
-<title>Network Bridges</title>
+<c:set var="pageTitle" value="Network Bridges"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <div style="margin-top: 5em">
 <h2>Network Bridges</h2>
@@ -46,6 +49,7 @@
 </tbody>
 </table>
 </div>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

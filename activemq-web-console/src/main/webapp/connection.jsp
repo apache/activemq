@@ -17,9 +17,14 @@
 <html>
 <head>
 <c:set var="row" value="${requestContext.connectionQuery.connection}"/>
-<title>Connection <c:out value="${requestContext.connectionQuery.connectionID}" /></title>
+<c:set var="pageTitle" value="Connection ${requestContext.connectionQuery.connectionID}"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
 
 
 <c:choose>
@@ -135,6 +140,7 @@ No connection could be found for ID <c:out value="${requestContext.connectionQue
 
 
 
+<%@include file="decorators/footer.jsp" %>
 
 
 </body>

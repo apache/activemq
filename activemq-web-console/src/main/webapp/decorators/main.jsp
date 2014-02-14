@@ -21,20 +21,18 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
-    <!-- BOOTSTRAP CSS LIBRARY -->
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap-theme.min.css">
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+  
+    <link rel="stylesheet" href="styles/bootstrap.min.css" />
+    <link rel="stylesheet" href="styles/bootstrap-theme.min.css" />
+    
+      <!-- BOOTSTRAP CSS LIBRARY -->
+   		<script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    	<script type="text/javascript" src="js/bootbox.min.js"></script>
+    
+    
     <!-- If anyone uses sorttable in any other page you can put it back by adding: @import url('/admin/styles/sorttable.css'); -->
-    <!-- GOOGLE FONTS -->
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
-    <style type="text/css">
-        body {
-            font-family: 'Open Sans Condensed', sans-serif;
-        }
-    </style>
-    <style type="text/css" media="screen">
+     <style type="text/css" media="screen">
 
         @import url('${pageContext.request.contextPath}/styles/type-settings.css');
         @import url('${pageContext.request.contextPath}/styles/site.css');

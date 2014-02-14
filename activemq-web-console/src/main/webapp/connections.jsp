@@ -16,11 +16,17 @@
 --%>
 <html>
 <head>
-<title>Connections</title>
+<c:set var="pageTitle" value="Connections"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
 
+<%@include file="decorators/header.jsp" %>
 <h1 class="page-header">Connections</h1>
+
+
+
 
 <c:forEach items="${requestContext.brokerQuery.connectors}" var="connectorName">
 <h3>Connector ${connectorName}</h3>
@@ -79,6 +85,7 @@
 </tbody>
 </table>
 </div>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

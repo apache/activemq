@@ -78,6 +78,10 @@
               <name>webconsole.type</name>
               <value>embedded</value>
             </systemProperty>
+            <systemProperty>
+                <name>activemq.data</name>
+                <value>${project.build.directory}/activemq-data</value>
+            </systemProperty>
 
             <!--
                Use the following configuration to connect to a remote broker using JMX
@@ -185,6 +189,28 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
+      <exclusions>
+          <exclusion>
+              <groupId>${project.groupId}</groupId>
+              <artifactId>activemq-all</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.eclipse.jetty</groupId>
+              <artifactId>jetty-websocket</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.eclipse.jetty</groupId>
+              <artifactId>jetty-continuation</artifactId>
+          </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>activemq-stomp</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>activemq-spring</artifactId>
     </dependency>
 
     <!-- XMPP support -->
@@ -207,11 +233,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-all</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
     </dependency>
@@ -226,6 +247,7 @@
       <groupId>org.eclipse.jdt</groupId>
       <artifactId>core</artifactId>
       <version>3.1.1</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -240,12 +262,6 @@
       <artifactId>log4j</artifactId>
     </dependency>
 
-    <!-- SiteMesh for layout -->
-    <dependency>
-      <groupId>opensymphony</groupId>
-      <artifactId>sitemesh</artifactId>
-    </dependency>
-
     <!-- JSTL support -->
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -254,16 +270,6 @@
     <dependency>
       <groupId>taglibs</groupId>
       <artifactId>standard</artifactId>
-    </dependency>
-
-    <!-- XStream marshalling -->
-    <dependency>
-      <groupId>xpp3</groupId>
-      <artifactId>xpp3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
     </dependency>
 
     <!-- used for testing -->

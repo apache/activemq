@@ -16,9 +16,12 @@
 --%>
 <html>
 <head>
-<title>Queues</title>
+<c:set var="pageTitle" value="Queues"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+<%@include file="decorators/header.jsp" %>
 
 <div style="width:60%;" class="form-group" role="form">
 <form action="createDestination.action" method="post" class="form-horizontal">
@@ -52,7 +55,7 @@
 
 <tr>
 <td><a href="<c:url value="browse.jsp">
-                        <c:param name="JMSDestination" value="${row.name}" /></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
+            <c:param name="JMSDestination" value="${row.name}" /></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
 <td>${row.queueSize}</td>
 <td>${row.consumerCount}</td>
 <td>${row.enqueueCount}</td>
@@ -83,6 +86,7 @@
 </tbody>
 </table>
 
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

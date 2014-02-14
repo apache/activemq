@@ -65,6 +65,25 @@
         Number(QueryStringHelper.toJSON().page);
     };
 
+  	_.clearModal= function (){
+	    	bootbox.hideAll();
+	    	location.reload();
+    		
+    	}
+    	
+    
+    _.deleteMessage=function(msg_id){
+    	
+    	$.ajax({
+    	    url: location.origin + location.pathname+"/deleteMessage.action?JMSDestination="+QueryStringHelper.toJSON().JMSDestination +"&messageId="+msg_id+"&secret="+sec,
+    	    type: 'GET',
+    	    success: function(result) {
+    	    alert("Deleted: "+msg_id);
+    	    	location.reload();
+    	    }
+    	});
+  
+    };
 
     // Have to set the page number for global to work on the UI logic.
     _.colum = Number(QueryStringHelper.toJSON().page) || 1;
@@ -114,8 +133,9 @@
                 for (var i = 3; i < this.req.responseXML.firstChild.childElementCount; i++) {
                     mqitems+="<tr>" + "<td>" + "<a href='" + d.firstChild.children[i].children[1].attributes[1].textContent + "'>" + d.firstChild.children[i].children[0].textContent +
                     "</a></td>" + "<td>" + d.firstChild.children[i].children[3].textContent + "</td>" + "<td>" + d.firstChild.children[i].children[4].textContent + "</td>" + "<td>" +
-                    d.firstChild.children[i].children[5].textContent + "</td>" + "<td><a href='" + "http://localhost:8161/admin/deleteMessage.action?JMSDestination=TEST&messageId=" +
-                    d.firstChild.children[3].children[0].textContent + "'>" + "DELETE</a></td>" + "</tr>";
+                    d.firstChild.children[i].children[5].textContent + "</td>" + 
+                  "<td><a href='" + "http://localhost:8161/admin/deleteMessage.action?JMSDestination=TEST&messageId=" +
+                   d.firstChild.children[3].children[0].textContent + "&secret=" + _.sec + "'>" + "DELETE</a></td>" + "</tr>";
                 }
                 return mqitems;
             },
@@ -375,7 +395,7 @@ _.PaginQueue = {
 
 
              $("#page ul").empty();
-             $("#page ul").append('<li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title=""><i class="glyphicon glyphicon-chevron-left"></i></a></li>');
+             $("#page ul").append('<li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title="">Prev</a></li>');
              console.log("setupNav start: " + start );
              console.log("setupNav end: " + end );
 
@@ -383,7 +403,7 @@ _.PaginQueue = {
                     this.getPageLink(i);
                 }
                     this.moveCurLine( this.getPos(this.getPageNum()));
-            $("#page ul").append('<li><a href="#" onclick="next()" id="next" class="next off" data-original-title=""><i class="glyphicon glyphicon-chevron-right"></i></a></li>');
+            $("#page ul").append('<li><a href="#" onclick="next()" id="next" class="next off" data-original-title="">Next</a></li>');
 
 
 
@@ -420,13 +440,13 @@ _.PaginQueue = {
 
             $("#page ul").empty();
 
-            $("#page ul").append('<li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title=""><i class="glyphicon glyphicon-chevron-left"></i></a></li>');
+            $("#page ul").append('<li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title="">Prev</a></li>');
 
             for (var i = start; i <= end; i++) {
                 this.getPageLink(i);
             }
 
-            $("#page ul").append('<li><a href="#" onclick="next()" id="next" class="next off" data-original-title=""><i class="glyphicon glyphicon-chevron-right"></i></a></li>');
+            $("#page ul").append('<li><a href="#" onclick="next()" id="next" class="next off" data-original-title="">Next</a></li>');
 
             // Set current page:
             this.moveCurLine($("#page a").length - 2);
@@ -468,13 +488,13 @@ _.PaginQueue = {
 
 
 
-            $("#page ul").append('<li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title=""><i class="glyphicon glyphicon-chevron-left"></i></a></li>');
+            $("#page ul").append('<li><a href="#" onclick="prev()" id="prev" class="prev off" data-original-title="">Prev</a></li>');
 
             for (var i = start; i < end + 1; i++) {
                 this.getPageLink(i);
             }
 
-            $("#page ul").append('<li><a href="#" onclick="next()" id="next" class="next off" data-original-title=""><i class="glyphicon glyphicon-chevron-right"></i></a></li>');
+            $("#page ul").append('<li><a href="#" onclick="next()" id="next" class="next off" data-original-title="">Next</a></li>');
 
 
             this.moveCurLine( 1 );

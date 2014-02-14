@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -159,16 +160,13 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     void pumpProtonToSocket() {
         try {
-            int size = 1024 * 64;
-            byte data[] = new byte[size];
             boolean done = false;
             while (!done) {
-                int count = protonTransport.output(data, 0, size);
-                if (count > 0) {
-                    final Buffer buffer;
-                    buffer = new Buffer(data, 0, count);
-                    // System.out.println("writing: " + buffer.toString().substring(5).replaceAll("(..)", "$1 "));
-                    amqpTransport.sendToAmqp(buffer);
+                ByteBuffer toWrite = protonTransport.getOutputBuffer();
+                if (toWrite != null && toWrite.hasRemaining()) {
+//                  // System.out.println("writing: " + buffer.toString().substring(5).replaceAll("(..)", "$1 "));
+                    amqpTransport.sendToAmqp(toWrite);
+                    protonTransport.outputConsumed();
                 } else {
                     done = true;
                 }
@@ -248,10 +246,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
                             amqpTransport.getWireFormat().magicRead = false;
                             sasl = null;
+                            LOG.debug("SASL [PLAIN] Handshake complete.");
                         } else if ("ANONYMOUS".equals(sasl.getRemoteMechanisms()[0])) {
                             sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
                             amqpTransport.getWireFormat().magicRead = false;
                             sasl = null;
+                            LOG.debug("SASL [ANONYMOUS] Handshake complete.");
                         }
                     }
                 }

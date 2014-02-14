@@ -17,10 +17,13 @@
 <html>
 <head>
 <c:set var="row" value="${requestContext.messageQuery.message}"/>
-<title>Message <c:out value="${requestContext.messageQuery.id}"/></title>
+<c:set var="pageTitle" value="Message ${requestContext.messageQuery.id}"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
 
+<%@include file="decorators/header.jsp" %>
 
 <c:choose>
 <c:when test="${empty row}">
@@ -130,10 +133,10 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="2"><a href="deleteMessage.action?JMSDestination=<c:out value="${row.JMSDestination}" />&messageId=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a></td>
+                        <td colspan="2"><a href="deleteMessage.action?JMSDestination=<c:out value="${requestContext.messageQuery.JMSDestination}" />&messageId=${row.JMSMessageID}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a></td>
                     </tr>
                     <tr class="odd">
-                    <td><a href="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=<c:out value="${row.JMSDestination}" />&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>')">Copy</a></td>
+                    <td><a href="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=<c:out value="${requestContext.messageQuery.JMSDestination}" />&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>')">Copy</a></td>
                         <td rowspan="2">
                             <select id="queue">
                                 <option value=""> -- Please select --</option>
@@ -147,7 +150,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
                     </tr>
                     <tr class="odd">
-                        <td><a href="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=<c:out value="${row.JMSDestination}" />&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>')">Move</a></td>
+                        <td><a href="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=<c:out value="${requestContext.messageQuery.JMSDestination}" />&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=<c:out value='${sessionScope["secret"]}'/>')">Move</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -178,6 +181,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
 
 
+<%@include file="decorators/footer.jsp" %>
 
 
 </body>

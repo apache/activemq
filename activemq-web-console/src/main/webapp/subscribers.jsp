@@ -16,9 +16,13 @@
 --%>
 <html>
 <head>
-<title>Durable Topic Subscribers</title>
+<c:set var="pageTitle" value="Durable Topic Subscribers"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <form action="createSubscriber.action" method="post">
     <input type="hidden" name="JMSDestinationType" value="topic"/>
@@ -158,6 +162,7 @@
 </tbody>
 </table>
 
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

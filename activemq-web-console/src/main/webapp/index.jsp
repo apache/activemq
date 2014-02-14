@@ -16,11 +16,15 @@
 --%>
 <html>
 <head>
-<title>ActiveMQ Console</title>
+<c:set var="pageTitle" value="ActiveMQ Console"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
 <div style="margin-right:30px;">
 <div class="well well-sm body-content panel">
+<%@include file="decorators/header.jsp" %>
+
 <h2 class="panel-heading"> Welcome! </h2>
 
 <div  class="panel-body">
@@ -31,6 +35,7 @@
         You can find more information about Apache ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
     </p>
 </div>
+
 
 <h2 class="panel-heading">Broker</h2>
 
@@ -67,6 +72,8 @@
 </table>
 </div>
 </div>
+
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

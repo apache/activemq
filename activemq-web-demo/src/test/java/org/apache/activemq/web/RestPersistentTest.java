@@ -22,6 +22,9 @@ import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Ignore;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class RestPersistentTest extends JettyTestSupport {
 
@@ -31,10 +34,13 @@ public class RestPersistentTest extends JettyTestSupport {
         return true;
     }
 
+    @Test(timeout = 60 * 1000)
     public void testPostAndGetWithQueue() throws Exception {
         postAndGet("queue");
     }
 
+    @Test(timeout = 60 * 1000)
+    @Ignore("Needs a JIRA")
     public void testPostAndGetWithTopic() throws Exception {
         // TODO: problems with topics
         // postAndGet("topic");

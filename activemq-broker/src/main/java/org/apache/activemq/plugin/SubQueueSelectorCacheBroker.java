@@ -16,14 +16,6 @@
  */
 package org.apache.activemq.plugin;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -31,6 +23,17 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A plugin which allows the caching of the selector from a subscription queue.
@@ -51,7 +54,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
      * The subscription's selector cache. We cache compiled expressions keyed
      * by the target destination.
      */
-    private ConcurrentHashMap<String, String> subSelectorCache = new ConcurrentHashMap<String, String>();
+    private ConcurrentHashMap<String, Set<String>> subSelectorCache = new ConcurrentHashMap<String, Set<String>>();
 
     private final File persistFile;
 
@@ -85,7 +88,8 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.debug("Caching consumer selector [{}] on a {}", info.getSelector(), info.getDestination().getQualifiedName());
+        String destinationName = info.getDestination().getQualifiedName();
+        LOG.debug("Caching consumer selector [{}] on a {}", info.getSelector(), destinationName);
         String selector = info.getSelector();
 
         // As ConcurrentHashMap doesn't support null values, use always true expression
@@ -93,7 +97,12 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
             selector = "TRUE";
         }
 
-        subSelectorCache.put(info.getDestination().getQualifiedName(), selector);
+        Set<String> selectors = subSelectorCache.get(destinationName);
+        if (selectors == null) {
+            selectors = Collections.synchronizedSet(new HashSet<String>());
+        }
+        selectors.add(selector);
+        subSelectorCache.put(destinationName, selectors);
 
         return super.addConsumer(context, info);
     }
@@ -105,7 +114,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
                 try {
                     ObjectInputStream in = new ObjectInputStream(fis);
                     try {
-                        subSelectorCache = (ConcurrentHashMap<String, String>) in.readObject();
+                        subSelectorCache = (ConcurrentHashMap<String, Set<String>>) in.readObject();
                     } catch (ClassNotFoundException ex) {
                         LOG.error("Invalid selector cache data found. Please remove file.", ex);
                     } finally {
@@ -148,7 +157,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     /**
      * @return The JMS selector for the specified {@code destination}
      */
-    public String getSelector(final String destination) {
+    public Set<String> getSelector(final String destination) {
         return subSelectorCache.get(destination);
     }
 
