@@ -128,10 +128,15 @@ public class DestinationFacade {
         return new ModelAndView("redirect:" + (isQueue() ? "queues.jsp" : "topics.jsp"));
     }
 
-    protected ModelAndView redirectToDestinationView() {        
+    protected ModelAndView redirectToDestinationView() {
         return new ModelAndView("redirect:browse.jsp?JMSDestination=" + jmsDestination);
     }
 
+    protected ModelAndView redirectToDestinationViewToURI(String uri) {
+        return new ModelAndView("redirect:"+uri);
+    }
+
+    
     protected String getPhysicalDestinationName() {
         return createDestination().getPhysicalName();
     }

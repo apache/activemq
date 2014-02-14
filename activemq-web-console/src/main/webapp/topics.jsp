@@ -29,16 +29,16 @@
     <input type="hidden" name="JMSDestinationType" value="topic"/>
     <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
-    <label name="destination">Topic Name</label>
-    <input type="text" name="JMSDestination" value=""/>
+    <label name="destination" class="control-label">Topic Name</label>
+    <input type="text" class="form-control" name="JMSDestination" value=""/>
 
-    <input type="submit" value="Create"/>
+    <input type="submit" value="Create" class="btn" />
 </form>
 </div>
 
 <h2>Topics</h2>
 
-<table id="topics" class="sortable autostripe">
+<table id="topics" class="table table-striped">
 <thead>
 <tr>
 <th>Name</th>

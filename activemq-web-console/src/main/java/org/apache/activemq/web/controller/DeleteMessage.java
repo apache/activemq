@@ -46,9 +46,9 @@ public class DeleteMessage extends DestinationFacade implements Controller {
                 queueView.removeMessage(messageId);
             } else {
             	log.warn("No queue named: " + getPhysicalDestinationName());
-            }
+             }
         }
-        return redirectToDestinationView();
+         return redirectToDestinationViewToURI(request.getHeader("referer"));
     }
 
     public String getMessageId() {

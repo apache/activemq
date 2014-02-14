@@ -23,15 +23,15 @@
 <body>
 
 <%@include file="decorators/header.jsp" %>
+<h1 class="page-header">Connections</h1>
 
 
 
-<h2>Connections</h2>
 
 <c:forEach items="${requestContext.brokerQuery.connectors}" var="connectorName">
 <h3>Connector <c:out value="${connectorName}" /></h3>
 
-<table id="connections" class="sortable autostripe">
+<table id="connections" class="table table-striped">
 <thead>
 <tr>
 	<th>Name</th>
@@ -58,7 +58,7 @@
 <div style="margin-top: 5em">
 <h2>Network Connectors</h2>
 
-<table id="connections" class="sortable autostripe">
+<table id="connections" class="table table-striped">
 <thead>
 <tr>
 	<th>Name</th>
