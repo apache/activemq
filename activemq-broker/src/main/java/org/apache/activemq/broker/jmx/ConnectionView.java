@@ -166,4 +166,14 @@ public class ConnectionView implements ConnectionViewMBean {
             throw IOExceptionSupport.create(e);
         }
     }
+
+    @Override
+    public int getActiveTransactionCount() {
+        return connection.getActiveTransactionCount();
+    }
+
+    @Override
+    public Long getOldestActiveTransactionDuration() {
+        return connection.getOldestActiveTransactionDuration();
+    }
 }

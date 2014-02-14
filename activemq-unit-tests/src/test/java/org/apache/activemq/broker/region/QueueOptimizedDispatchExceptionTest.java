@@ -197,6 +197,16 @@ public class QueueOptimizedDispatchExceptionTest {
             @Override
             public void dispatchAsync(Command command) {
             }
+
+            @Override
+            public int getActiveTransactionCount() {
+                return 0;
+            }
+
+            @Override
+            public Long getOldestActiveTransactionDuration() {
+                return null;
+            }
         });
 
         final DestinationStatistics destinationStatistics = new DestinationStatistics();
