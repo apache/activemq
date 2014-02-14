@@ -30,7 +30,6 @@ import javax.jms.Message;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.*;
 import org.apache.activemq.store.PersistenceAdapterSupport;
-import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -51,7 +50,7 @@ public class MQTTProtocolConverter {
 
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
-    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 1.5;
+    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 0.5;
     private static final int DEFAULT_CACHE_SIZE = 5000;
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
@@ -95,6 +94,23 @@ public class MQTTProtocolConverter {
     }
 
     void sendToActiveMQ(Command command, ResponseHandler handler) {
+
+        // Lets intercept message send requests..
+        if( command instanceof ActiveMQMessage) {
+            ActiveMQMessage msg = (ActiveMQMessage) command;
+            if( msg.getDestination().getPhysicalName().startsWith("$") ) {
+                // We don't allow users to send to $ prefixed topics to avoid failing MQTT 3.1.1 spec requirements
+                if( handler!=null ) {
+                    try {
+                        handler.onResponse(this, new Response());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return;
+            }
+        }
+
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
@@ -255,10 +271,18 @@ public class MQTTProtocolConverter {
     public void deleteDurableSubs(List<SubscriptionInfo> subs) {
         try {
             for (SubscriptionInfo sub : subs) {
-                TopicMessageStore store = brokerService.getPersistenceAdapter().createTopicMessageStore((ActiveMQTopic) sub.getDestination());
-                store.deleteSubscription(connectionInfo.getClientId(), sub.getSubscriptionName());
+                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                rsi.setConnectionId(connectionId);
+                rsi.setSubscriptionName(sub.getSubcriptionName());
+                rsi.setClientId(sub.getClientId());
+                sendToActiveMQ(rsi, new ResponseHandler() {
+                    @Override
+                    public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                        // ignore failures..
+                    }
+                });
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             LOG.warn("Could not delete the MQTT durable subs.", e);
         }
     }
@@ -308,15 +332,14 @@ public class MQTTProtocolConverter {
         //check retained messages
         if (topics != null){
             for (Topic topic:topics){
-                Buffer buffer = retainedMessages.getMessage(topic.name().toString());
-                if (buffer != null){
-                    PUBLISH msg = new PUBLISH();
-                    msg.payload(buffer);
-                    msg.topicName(topic.name());
-                    try {
-                        getMQTTTransport().sendToMQTT(msg.encode());
-                    } catch (IOException e) {
-                        LOG.warn("Couldn't send retained message " + msg, e);
+                ActiveMQTopic destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
+                for (PUBLISH msg : retainedMessages.getMessages(destination)) {
+                    if( msg.payload().length > 0 ) {
+                        try {
+                            getMQTTTransport().sendToMQTT(msg.encode());
+                        } catch (IOException e) {
+                            LOG.warn("Couldn't send retained message " + msg, e);
+                        }
                     }
                 }
             }
@@ -333,7 +356,7 @@ public class MQTTProtocolConverter {
             consumerInfo.setDestination(destination);
             consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
             consumerInfo.setDispatchAsync(true);
-            if (!connect.cleanSession() && (connect.clientId() != null)) {
+            if ( connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
                 consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
             }
             MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
@@ -418,10 +441,10 @@ public class MQTTProtocolConverter {
 
     void onMQTTPublish(PUBLISH command) throws IOException, JMSException {
         checkConnected();
-        if (command.retain()){
-            retainedMessages.addMessage(command.topicName().toString(),command.payload());
-        }
         ActiveMQMessage message = convertMessage(command);
+        if (command.retain()){
+            retainedMessages.addMessage((ActiveMQTopic) message.getDestination(), command);
+        }
         message.setProducerId(producerId);
         message.onSend();
         sendToActiveMQ(message, createResponseHandler(command));
@@ -477,14 +500,14 @@ public class MQTTProtocolConverter {
         msg.setMessageId(id);
         msg.setTimestamp(System.currentTimeMillis());
         msg.setPriority((byte) Message.DEFAULT_PRIORITY);
-        msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE);
+        msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE && !command.retain());
         msg.setIntProperty(QOS_PROPERTY_NAME, command.qos().ordinal());
 
         ActiveMQTopic topic;
         synchronized (activeMQTopicMap) {
             topic = activeMQTopicMap.get(command.topicName());
             if (topic == null) {
-                String topicName = command.topicName().toString().replaceAll("/", ".");
+                String topicName = convertMQTTToActiveMQ(command.topicName().toString());
                 topic = new ActiveMQTopic(topicName);
                 activeMQTopicMap.put(command.topicName(), topic);
             }
@@ -563,17 +586,21 @@ public class MQTTProtocolConverter {
         return mqttTransport;
     }
 
+    boolean willSent = false;
     public void onTransportError() {
         if (connect != null) {
-            if (connected.get() && connect.willTopic() != null && connect.willMessage() != null) {
+            if (connected.get() && connect.willTopic() != null && connect.willMessage() != null && !willSent) {
+                willSent = true;
                 try {
                     PUBLISH publish = new PUBLISH();
                     publish.topicName(connect.willTopic());
                     publish.qos(connect.willQos());
+                    publish.messageId((short) messageIdGenerator.getNextSequenceId());
                     publish.payload(connect.willMessage());
                     ActiveMQMessage message = convertMessage(publish);
                     message.setProducerId(producerId);
                     message.onSend();
+
                     sendToActiveMQ(message, null);
                 } catch (Exception e) {
                     LOG.warn("Failed to publish Will Message " + connect.willMessage());
@@ -598,24 +625,24 @@ public class MQTTProtocolConverter {
         }
 
         try {
-
-            long keepAliveMSWithGracePeriod = (long) (keepAliveMS * MQTT_KEEP_ALIVE_GRACE_PERIOD);
-
             // if we have a default keep-alive value, and the client is trying to turn off keep-alive,
+
             // we'll observe the server-side configured default value (note, no grace period)
-            if (keepAliveMSWithGracePeriod == 0 && defaultKeepAlive > 0) {
-                keepAliveMSWithGracePeriod = defaultKeepAlive;
+            if (keepAliveMS == 0 && defaultKeepAlive > 0) {
+                keepAliveMS = defaultKeepAlive;
             }
 
+            long readGracePeriod = (long) (keepAliveMS * MQTT_KEEP_ALIVE_GRACE_PERIOD);
+
             monitor.setProtocolConverter(this);
-            monitor.setReadCheckTime(keepAliveMSWithGracePeriod);
-            monitor.setInitialDelayTime(keepAliveMS);
+            monitor.setReadKeepAliveTime(keepAliveMS);
+            monitor.setReadGraceTime(readGracePeriod);
             monitor.startMonitorThread();
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("MQTT Client " + getClientId() +
-                        " established heart beat of  " + keepAliveMSWithGracePeriod +
-                        " ms (" + keepAliveMS + "ms + " + (keepAliveMSWithGracePeriod - keepAliveMS) +
+                        " established heart beat of  " + keepAliveMS +
+                        " ms (" + keepAliveMS + "ms + " + readGracePeriod +
                         "ms grace period)");
             }
         } catch (Exception ex) {
@@ -703,10 +730,35 @@ public class MQTTProtocolConverter {
     }
 
     private String convertMQTTToActiveMQ(String name) {
-        String result = name.replace('#', '>');
-        result = result.replace('+', '*');
-        result = result.replace('/', '.');
-        return result;
+        char[] chars = name.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            switch(chars[i]) {
+
+                case '#':
+                    chars[i] = '>';
+                    break;
+                case '>':
+                    chars[i] = '#';
+                    break;
+
+                case '+':
+                    chars[i] = '*';
+                    break;
+                case '*':
+                    chars[i] = '+';
+                    break;
+
+                case '/':
+                    chars[i] = '.';
+                    break;
+                case '.':
+                    chars[i] = '/';
+                    break;
+
+            }
+        }
+        String rc = new String(chars);
+        return rc;
     }
 
     public long getDefaultKeepAlive() {

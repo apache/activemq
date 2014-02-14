@@ -135,6 +135,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-kahadb-store</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.eclipse.paho</groupId>
       <artifactId>mqtt-client</artifactId>
       <scope>test</scope>

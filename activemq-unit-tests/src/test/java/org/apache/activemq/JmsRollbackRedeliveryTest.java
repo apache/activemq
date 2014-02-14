@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
-public class JmsRollbackRedeliveryTest /*extends AutoFailTestSupport*/ {
+public class JmsRollbackRedeliveryTest {
     @Rule
     public TestName testName = new TestName();
 
@@ -55,26 +55,22 @@ public class JmsRollbackRedeliveryTest /*extends AutoFailTestSupport*/ {
 
     @Before
     public void setUp() throws Exception {
-        //setAutoFail(true);
-        //super.setUp();
-
-        LOG.info(">>>> Starting " + testName.getMethodName());
+        LOG.debug("Starting " + testName.getMethodName());
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.start();
         broker.waitUntilStarted();
-
-
     }
 
     @After
     public void tearDown() throws Exception {
-        //super.tearDown();
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
         }
+        LOG.debug("Finishing " + testName.getMethodName());
+        Thread.sleep(100);
     }
     
     @Test
@@ -99,7 +95,7 @@ public class JmsRollbackRedeliveryTest /*extends AutoFailTestSupport*/ {
     }
     
     public void doTestRedelivery(String brokerUrl, boolean interleaveProducer) throws Exception {
-        LOG.info(">>>> entering doTestRedelivery interleaveProducer is " + interleaveProducer);
+        LOG.debug("entering doTestRedelivery interleaveProducer is " + interleaveProducer);
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
         
         Connection connection = connectionFactory.createConnection();

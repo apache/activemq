@@ -107,7 +107,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         consumerConnection.start();
         Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = consumerSession.createConsumer(destination);
-        sendMessage(1000);
+        sendMessage(1500);
         Message message = consumer.receive(1000);
         assertNotNull("got message", message);
 

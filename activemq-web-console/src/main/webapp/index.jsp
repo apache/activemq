@@ -17,7 +17,6 @@
 <html>
 <head>
 <c:set var="pageTitle" value="ActiveMQ Console"/>
-
 <%@include file="decorators/head.jsp" %>
 </head>
 <body>
@@ -37,37 +36,38 @@
 </div>
 
 
+
 <h2 class="panel-heading">Broker</h2>
 
 <div class="panel-body">
 <table class="table table-stripped">
     <tr>
         <td>Name</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerName}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerName}" /></b></td>
     </tr>
     <tr>
         <td>Version</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerVersion}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerVersion}" /></b></td>
     </tr>
     <tr>
         <td>ID</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerId}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerId}" /></b></td>
     </tr>
     <tr>
         <td>Uptime</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.uptime}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.uptime}" /></b></td>
     </tr>
     <tr>
         <td>Store percent used</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.storePercentUsage}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.storePercentUsage}" /></b></td>
     </tr>
     <tr>
         <td>Memory percent used</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.memoryPercentUsage}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.memoryPercentUsage}" /></b></td>
     </tr>
     <tr>
         <td>Temp percent used</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}" /></b></td>
     </tr>
 </table>
 </div>
@@ -77,4 +77,3 @@
 
 </body>
 </html>
-	

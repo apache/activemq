@@ -34,6 +34,7 @@ public class TransactionState {
     private boolean prepared;
     private int preparedResult;
     private final Map<ProducerId, ProducerState> producers = new ConcurrentHashMap<ProducerId, ProducerState>();
+    private final long createdAt = System.currentTimeMillis();
 
     public TransactionState(TransactionId id) {
         this.id = id;
@@ -92,4 +93,7 @@ public class TransactionState {
         return producers;
     }
 
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

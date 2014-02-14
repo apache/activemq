@@ -101,11 +101,11 @@
 <td><form:tooltip text="${row.connectionId}" length="10"/></td>
 <td><form:tooltip text="${row.destinationName}" length="10"/></td>
 <td><c:out value="${row.selector}"/></td>
-<td>${row.pendingQueueSize}</td>
-<td>${row.dispatchedQueueSize}</td>
-<td>${row.dispatchedCounter}</td>
-<td>${row.enqueueCounter}</td>
-<td>${row.dequeueCounter}</td>
+<td><c:out value="${row.pendingQueueSize}" /></td>
+<td><c:out value="${row.dispatchedQueueSize}" /></td>
+<td><c:out value="${row.dispatchedCounter}" /></td>
+<td><c:out value="${row.enqueueCounter}" /></td>
+<td><c:out value="${row.dequeueCounter}" /></td>
 <td>
     <a href="<c:url value="deleteSubscriber.action">
                     <c:param name="clientId" value="${row.clientId}"/>
@@ -145,11 +145,11 @@
 <td><form:tooltip text="${row.connectionId}" length="10"/></td>
 <td><form:tooltip text="${row.destinationName}" length="10"/></td>
 <td><c:out value="${row.selector}"/></td>
-<td>${row.pendingQueueSize}</td>
-<td>${row.dispatchedQueueSize}</td>
-<td>${row.dispatchedCounter}</td>
-<td>${row.enqueueCounter}</td>
-<td>${row.dequeueCounter}</td>
+<td><c:out value="${row.pendingQueueSize}"/></td>
+<td><c:out value="${row.dispatchedQueueSize}"/></td>
+<td><c:out value="${row.dispatchedCounter}"/></td>
+<td><c:out value="${row.enqueueCounter}"/></td>
+<td><c:out value="${row.dequeueCounter}"/></td>
 <td>
     <a href="<c:url value="deleteSubscriber.action">
                     <c:param name="clientId" value="${row.clientId}"/>

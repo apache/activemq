@@ -18,36 +18,51 @@ package org.apache.activemq.transport.mqtt;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.LRUCache;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.filter.DestinationMapNode;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.fusesource.hawtbuf.Buffer;
+import org.fusesource.hawtbuf.UTF8Buffer;
+import org.fusesource.mqtt.codec.PUBLISH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class MQTTRetainedMessages extends ServiceSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MQTTRetainedMessages.class);
     private static final Object LOCK = new Object();
-    private LRUCache<String,Buffer> cache = new LRUCache<String, Buffer>(10000);
+
+    DestinationMapNode retainedMessages = new DestinationMapNode(null);
 
     private MQTTRetainedMessages(){
     }
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
-       cache.clear();
+        synchronized (this) {
+            retainedMessages = new DestinationMapNode(null);
+        }
     }
 
     @Override
     protected void doStart() throws Exception {
     }
 
-   public void addMessage(String destination,Buffer payload){
-       cache.put(destination,payload);
+   public void addMessage(ActiveMQTopic dest, PUBLISH publish){
+       synchronized (this) {
+           retainedMessages.set(dest.getDestinationPaths(), 0, publish);
+       }
    }
 
-   public Buffer getMessage(String destination){
-       return cache.get(destination);
+   public Set<PUBLISH> getMessages(ActiveMQTopic topic){
+       Set answer = new HashSet();
+       synchronized (this) {
+           retainedMessages.appendMatchingValues(answer, topic.getDestinationPaths(), 0);
+       }
+       return (Set<PUBLISH>)answer;
    }
 
     public static MQTTRetainedMessages getMQTTRetainedMessages(BrokerService broker){

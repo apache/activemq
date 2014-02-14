@@ -1127,10 +1127,14 @@
           <version>${maven-surefire-plugin-version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
-              <forkCount>1</forkCount>
-              <reuseForks>true</reuseForks>
+            <forkCount>1</forkCount>
+            <reuseForks>true</reuseForks>
             <argLine>-enableassertions</argLine>
             <failIfNoTests>false</failIfNoTests>
+            <systemPropertyVariables>
+                <java.awt.headless>true</java.awt.headless>
+            </systemPropertyVariables>
+            <argLine>-Xmx512m</argLine>
           </configuration>
         </plugin>
         <plugin>

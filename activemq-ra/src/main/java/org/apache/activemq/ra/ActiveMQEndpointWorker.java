@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
-import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -117,7 +116,7 @@ public class ActiveMQEndpointWorker {
                                     if (connecting.compareAndSet(false, true)) {
                                         synchronized (connectWork) {
                                             disconnect();
-                                            serverSessionPool.closeIdleSessions();
+                                            serverSessionPool.closeSessions();
                                             connect();
                                         }
                                     } else {
@@ -326,6 +325,11 @@ public class ActiveMQEndpointWorker {
 
     protected void unregisterThreadSession(Session session) {
         THREAD_LOCAL.set(null);
+    }
+
+    // for testing
+    public void setConnection(ActiveMQConnection activeMQConnection) {
+        this.connection = activeMQConnection;
     }
 
     protected ActiveMQConnection getConnection() {
