@@ -19,6 +19,10 @@ package org.apache.activemq.broker.jmx;
 import javax.management.ObjectName;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.TransportConnectionState;
+import org.apache.activemq.state.TransactionState;
+
+import java.util.Collection;
 
 public interface ConnectionViewMBean extends Service {
     /**
@@ -99,4 +103,19 @@ public interface ConnectionViewMBean extends Service {
     @MBeanInfo("The ObjectNames of all Producers created by this Connection")
     ObjectName[] getProducers();
 
+    /**
+     * Returns the number of active transactions established on this Connection.
+     *
+     * @return the number of active transactions established on this Connection..
+     */
+    @MBeanInfo("The number of active transactions established on this Connection.")
+    public int getActiveTransactionCount();
+
+    /**
+     * Returns the number of active transactions established on this Connection.
+     *
+     * @return the number of active transactions established on this Connection..
+     */
+    @MBeanInfo("The age in ms of the oldest active transaction established on this Connection.")
+    public Long getOldestActiveTransactionDuration();
 }

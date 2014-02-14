@@ -20,12 +20,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -374,6 +369,33 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             broker.beginTransaction(context, info.getTransactionId());
         }
         return null;
+    }
+
+    public int getActiveTransactionCount() {
+        int rc = 0;
+        for (TransportConnectionState cs : connectionStateRegister.listConnectionStates()) {
+            Collection<TransactionState> transactions = cs.getTransactionStates();
+            for (TransactionState transaction : transactions) {
+                rc++;
+            }
+        }
+        return rc;
+    }
+
+    public Long getOldestActiveTransactionDuration() {
+        TransactionState oldestTX = null;
+        for (TransportConnectionState cs : connectionStateRegister.listConnectionStates()) {
+            Collection<TransactionState> transactions = cs.getTransactionStates();
+            for (TransactionState transaction : transactions) {
+                if( oldestTX ==null || oldestTX.getCreatedAt() < transaction.getCreatedAt() ) {
+                    oldestTX = transaction;
+                }
+            }
+        }
+        if( oldestTX == null ) {
+            return null;
+        }
+        return System.currentTimeMillis() - oldestTX.getCreatedAt();
     }
 
     @Override
