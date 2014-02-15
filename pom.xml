@@ -222,6 +222,7 @@
   </distributionManagement>
 
   <modules>
+    <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
@@ -238,7 +239,6 @@
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
     <module>activemq-karaf</module>
-    <module>activemq-openwire-generator</module>
     <module>activemq-jms-pool</module>
     <module>activemq-pool</module>
     <module>activemq-ra</module>
@@ -453,7 +453,6 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activeio-core</artifactId>
         <version>${activeio-version}</version>
-         <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -594,7 +593,6 @@
         <groupId>org.apache.hadoop.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- zeroconf transport -->
@@ -602,7 +600,6 @@
         <groupId>javax.jmdns</groupId>
         <artifactId>jmdns</artifactId>
         <version>${jmdns-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- For jsvc support -->
@@ -634,7 +631,6 @@
         <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
         <version>${xbean-version}</version>
-        <optional>true</optional>
         <exclusions>
           <exclusion>
             <groupId>qdox</groupId>
@@ -677,44 +673,37 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-aop</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-beans</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-jms</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-tx</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <!--
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
         <exclusions>
           <exclusion>
             <groupId>javax.mail</groupId>
@@ -782,13 +771,11 @@
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
         <version>${org-apache-derby-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.apache.derby</groupId>
         <artifactId>derbynet</artifactId>
         <version>${org-apache-derby-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- Optional Axion support -->
@@ -796,21 +783,18 @@
         <groupId>axion</groupId>
         <artifactId>axion</artifactId>
         <version>${axion-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>commons-primitives</groupId>
         <artifactId>commons-primitives</artifactId>
         <version>${commons-primitives-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>regexp</groupId>
         <artifactId>regexp</artifactId>
         <version>${regexp-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- Optional HSQL DB Support -->
@@ -819,7 +803,6 @@
         <groupId>hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
         <version>${hsqldb-version}</version>
-        <optional>true</optional>
         </dependency>
       -->
 
@@ -827,7 +810,6 @@
         <groupId>commons-dbcp</groupId>
         <artifactId>commons-dbcp</artifactId>
         <version>${commons-dbcp-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
@@ -842,7 +824,6 @@
         <groupId>howl</groupId>
         <artifactId>howl-logger</artifactId>
         <version>${howl-version}</version>
-        <optional>true</optional>
         </dependency>
       -->
 
@@ -851,14 +832,12 @@
         <groupId>activemq</groupId>
         <artifactId>smack</artifactId>
         <version>1.5.0</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>activemq</groupId>
         <artifactId>smackx</artifactId>
         <version>1.5.0</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- =============================== -->
@@ -1009,7 +988,6 @@
         <groupId>org.fusesource.mqtt-client</groupId>
         <artifactId>mqtt-client</artifactId>
         <version>${mqtt-client-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
@@ -1066,13 +1044,11 @@
         <groupId>org.apache.velocity</groupId>
         <artifactId>velocity</artifactId>
         <version>${velocity-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.josql</artifactId>
         <version>${josql-version}</version>
-        <optional>true</optional>
       </dependency>
 
     </dependencies>

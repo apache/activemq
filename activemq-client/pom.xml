@@ -85,14 +85,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- =============================== -->
-    <!-- Plugin Dependencies -->
-    <!-- =============================== -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
-    </dependency>
   </dependencies>
 
   <reporting>
@@ -247,14 +239,6 @@
     <!-- Execute with: mvn -P openwire-generate antrun:run -->
     <profile>
       <id>openwire-generate</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-openwire-generator</artifactId>
-          <version>${project.version}</version>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
       <build>
         <plugins>
           <plugin>
@@ -277,13 +261,11 @@
               </tasks>
             </configuration>
             <dependencies>
-              <!-- not needed on osx; dependency>
-                <groupId>com.sun</groupId>
-                <artifactId>tools</artifactId>
-                <version>1.6.0</version>
-                <scope>system</scope>
-                <systemPath>${java.home}/../lib/tools.jar</systemPath>
-              </dependency -->
+                <dependency>
+                    <groupId>org.apache.activemq</groupId>
+                    <artifactId>activemq-openwire-generator</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
             </dependencies>
           </plugin>
         </plugins>
