@@ -172,7 +172,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
                     </tr>
                     <tr class="odd">
-                        <td><a href="<c:url value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']})"/>"
+                        <td><a href="<c:url value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')"
                             >Move</a></td>
                     </tr>
                 </tbody>
