@@ -115,7 +115,6 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                             <td class="label"><c:out value="${prop.key}"/></td>
                             <td><c:out value="${prop.value}"/></td>
                         </tr>
-                        <tr>
                     </form:forEachMapEntry>
                 </tbody>
             </table>
@@ -133,8 +132,31 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="2"><a href="<c:url value="deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope['secret']}" />">Delete</a></td>
+                        <td colspan="2"><a href="<c:url value='deleteMessage.action?JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&secret=${sessionScope["secret"]}' />" onclick="return confirm('Are you sure you want to delete the message?')" >Delete</a></td>
                     </tr>
+                    <c:set var="queueName" value="${requestContext.messageQuery.JMSDestination}"/>
+                    <c:set var="queueNameSubStr" value="${fn:substring(queueName, 0, 4)}" />
+                    <c:if test="${queueNameSubStr eq 'DLQ.' || queueNameSubStr eq 'DLT.'}">
+                        <c:if test="${queueNameSubStr eq 'DLQ.'}">
+                            <c:set var="moveToQueue" value="${fn:replace(queueName, 'DLQ.', '')}" />
+                        </c:if>
+                        <c:if test="${queueNameSubStr eq 'DLT.'}">
+                            <c:set var="moveToQueue" value="${fn:replace(queueName, 'DLT.', '')}" />
+                        </c:if>
+                        <tr>
+                            <td colspan="2">
+                                <a href="<c:url value="moveMessage.action">
+                                             <c:param name="destination" value="${moveToQueue}" />
+                                             <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
+                                             <c:param name="messageId" value="${row.JMSMessageID}" />
+                                             <c:param name="JMSDestinationType" value="queue" />
+                                             <c:param name="secret" value='${sessionScope["secret"]}' />
+                                         </c:url>"
+                                         onclick="return confirm('Are you sure you want to retry this message on queue://<c:out value="${moveToQueue}"/>?')"
+                                         title="Move to <c:out value="$moveToQueue" /> to attempt reprocessing">Retry</a>
+                            </td>
+                        </tr>
+                    </c:if>
                     <tr class="odd">
                     <td><a href="<c:url value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
                         <td rowspan="2">
@@ -150,7 +172,8 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 
                     </tr>
                     <tr class="odd">
-                        <td><a href="<c:url value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Move</a></td>
+                        <td><a href="<c:url value="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']})"/>"
+                            >Move</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -179,6 +202,41 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 </c:otherwise>
 </c:choose>
 
+<script type="text/javascript">
+function sortSelect(selElem) {
+        var tmpAry = new Array();
+        for (var i=0;i<selElem.options.length;i++) {
+            tmpAry[i] = new Array();
+            tmpAry[i][0] = selElem.options[i].text;
+            tmpAry[i][1] = selElem.options[i].value;
+        }
+        tmpAry.sort();
+        while (selElem.options.length > 0) {
+            selElem.options[0] = null;
+        }
+        for (var i=0;i<tmpAry.length;i++) {
+            var op = new Option(tmpAry[i][0], tmpAry[i][1]);
+            selElem.options[i] = op;
+        }
+        return;
+}
+
+function selectOptionByText (selElem, selText) {
+    var iter = 0;
+    while ( iter < selElem.options.length ) {
+        if ( selElem.options[iter].text === selText ) {
+            selElem.selectedIndex = iter;
+            break;
+        }
+        iter++;
+    }
+}
+
+window.onload=function() {
+	sortSelect( document.getElementById('queue') );
+	selectOptionByText( document.getElementById('queue'), "-- Please select --" );
+}
+</script>
 
 
 <%@include file="decorators/footer.jsp" %>
