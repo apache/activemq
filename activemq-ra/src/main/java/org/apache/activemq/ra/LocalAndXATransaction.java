@@ -127,7 +127,10 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
     }
 
     public Xid[] recover(int arg0) throws XAException {
-        return transactionContext.recover(arg0);
+        Xid[] answer = null;
+        answer = transactionContext.recover(arg0);
+        LOG.trace("{} recover({}) = {}", new Object[]{this, arg0, answer});
+        return answer;
     }
 
     public void rollback(Xid arg0) throws XAException {

@@ -30,6 +30,7 @@ import javax.jms.Session;
 import javax.resource.spi.UnavailableException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQQueueSession;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicSession;
@@ -60,7 +61,12 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
         MessageActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
-        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.getConnection().createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
+        final ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
+        if (connection == null) {
+            // redispatch of pending prefetched messages after disconnect can have a null connection
+            return null;
+        }
+        final ActiveMQSession session = (ActiveMQSession)connection.createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
         MessageEndpoint endpoint;
         try {
             int batchSize = 0;

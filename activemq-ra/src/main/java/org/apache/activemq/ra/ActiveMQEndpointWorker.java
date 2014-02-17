@@ -294,17 +294,17 @@ public class ActiveMQEndpointWorker {
 
     private void connect() {
         synchronized ( connectWork ) {
-        if (!running) {
-            return;
-        }
+            if (!running) {
+                return;
+            }
 
-        try {
-            workManager.scheduleWork(connectWork, WorkManager.INDEFINITE, null, null);
-        } catch (WorkException e) {
-            running = false;
-            LOG.error("Work Manager did not accept work: ", e);
+            try {
+                workManager.scheduleWork(connectWork, WorkManager.INDEFINITE, null, null);
+            } catch (WorkException e) {
+                running = false;
+                LOG.error("Work Manager did not accept work: ", e);
+            }
         }
-    }
     }
 
     /**
