@@ -381,7 +381,8 @@ public class MQTTProtocolConverter {
         return topic.qos();
     }
 
-    void onUnSubscribe(UNSUBSCRIBE command) {
+    void onUnSubscribe(UNSUBSCRIBE command) throws MQTTProtocolException {
+        checkConnected();
         UTF8Buffer[] topics = command.topics();
         if (topics != null) {
             for (UTF8Buffer topic : topics) {
