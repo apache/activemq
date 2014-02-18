@@ -52,7 +52,6 @@ public class AMQ4920Test extends AmqpTestSupport {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        this.autoFailTestSupport.setAutoFail(false);
     }
 
     @Test(timeout = 5 * 60 * 1000)

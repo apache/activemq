@@ -33,7 +33,6 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
-import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -51,7 +50,6 @@ public class AmqpTestSupport {
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
     protected int numberOfMessages;
-    AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
     protected int port;
     protected int sslPort;
     protected int nioPort;
@@ -69,7 +67,6 @@ public class AmqpTestSupport {
 
     @Before
     public void setUp() throws Exception {
-        autoFailTestSupport.startAutoFailThread();
         exceptions.clear();
         startBroker();
         this.numberOfMessages = 2000;
@@ -143,7 +140,6 @@ public class AmqpTestSupport {
     @After
     public void tearDown() throws Exception {
         stopBroker();
-        autoFailTestSupport.stopAutoFailThread();
     }
 
     public void sendMessages(Connection connection, Destination destination, int count) throws Exception {
