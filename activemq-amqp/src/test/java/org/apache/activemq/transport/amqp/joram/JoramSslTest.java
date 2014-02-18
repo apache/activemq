@@ -42,6 +42,7 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
+import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ import org.slf4j.LoggerFactory;
     MessageHeaderTest.class,
     QueueBrowserTest.class,
     MessageTypeTest.class,
-    //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
+    UnifiedSessionTest.class,    // https://issues.apache.org/jira/browse/AMQ-4375
     TemporaryTopicTest.class,
     //,TopicConnectionTest.class    // https://issues.apache.org/jira/browse/AMQ-4654
     SelectorSyntaxTest.class,
