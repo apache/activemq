@@ -1,4 +1,4 @@
-/**
+/**                           >>>>>> pumping
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -47,21 +47,34 @@ import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.objectweb.jtests.jms.framework.TestConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JMSClientTest extends AmqpTestSupport {
-
+    protected static final Logger LOG = LoggerFactory.getLogger(JMSClientTest.class);
     @Rule public TestName name = new TestName();
+    java.util.logging.Logger frameLoggger = java.util.logging.Logger.getLogger("FRM");
+
 
     @Override
     @Before
     public void setUp() throws Exception {
-        LOG.debug("Starting test {}", name.getMethodName());
+        LOG.debug("in setUp of {}", name.getMethodName());
         super.setUp();
+    }
+
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        LOG.debug("in tearDown of {}", name.getMethodName());
+        super.tearDown();
+        Thread.sleep(500);
     }
 
     @SuppressWarnings("rawtypes")
@@ -169,7 +182,7 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -760,7 +773,9 @@ public class JMSClientTest extends AmqpTestSupport {
 
     private Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
 
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", getBrokerPort(), "admin", "password");
+        int brokerPort = getBrokerPort();
+        LOG.debug("Creating connection on port {}", brokerPort);
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", brokerPort, "admin", "password");
 
         factory.setSyncPublish(syncPublish);
         factory.setTopicPrefix("topic://");

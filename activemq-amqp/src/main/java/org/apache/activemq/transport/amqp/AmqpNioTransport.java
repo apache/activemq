@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -29,7 +30,6 @@ import java.nio.channels.SocketChannel;
 
 import javax.net.SocketFactory;
 
-import org.apache.activemq.transport.nio.NIOInputStream;
 import org.apache.activemq.transport.nio.NIOOutputStream;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
@@ -38,11 +38,15 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the {@link org.apache.activemq.transport.Transport} interface for using AMQP over NIO
  */
 public class AmqpNioTransport extends TcpTransport {
+    private DataInputStream amqpHeaderValue = new DataInputStream(new ByteArrayInputStream(new byte[]{'A', 'M', 'Q', 'P'}));
+    private final Integer AMQP_HEADER_VALUE = amqpHeaderValue.readInt();
 
     private SocketChannel channel;
     private SelectorSelection selection;
@@ -120,10 +124,28 @@ public class AmqpNioTransport extends TcpTransport {
                     }
                 }
 
-                doConsume(AmqpSupport.toBuffer(inputBuffer));
+                while(inputBuffer.position() < inputBuffer.limit()) {
+                    inputBuffer.mark();
+                    int commandSize = inputBuffer.getInt();
+                    inputBuffer.reset();
+
+                    // handles buffers starting with 'A','M','Q','P' rather than size
+                    if (commandSize == AMQP_HEADER_VALUE) {
+                        doConsume(AmqpSupport.toBuffer(inputBuffer));
+                        break;
+                    }
+
+                    byte[] bytes = new byte[commandSize];
+                    ByteBuffer commandBuffer = ByteBuffer.allocate(commandSize);
+                    inputBuffer.get(bytes, 0, commandSize);
+                    commandBuffer.put(bytes);
+                    commandBuffer.flip();
+                    doConsume(AmqpSupport.toBuffer(commandBuffer));
+                    commandBuffer.clear();
+                }
+
                 // clear the buffer
                 inputBuffer.clear();
-
             }
         } catch (IOException e) {
             onException(e);

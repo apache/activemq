@@ -18,117 +18,19 @@ package org.apache.activemq.transport.amqp;
 
 import javax.jms.JMSException;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 
 /**
  * Test the JMS client when connected to the NIO transport.
  */
 public class JMSClientNioTest extends JMSClientTest {
-
-    @Override
-    @Test
-    public void testProducerConsume() throws Exception {
-    }
-
-    @Override
-    @Test
-    public void testTransactedConsumer() throws Exception {
-    }
-
-    @Override
-    @Test
-    public void testRollbackRececeivedMessage() throws Exception {
-    }
-
-    @Override
-    @Test
-    public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
-    }
-
-    @Override
-    @Test
-    public void testSelectors() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testProducerThrowsWhenBrokerStops() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testProducerCreateThrowsWhenBrokerStops() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testConsumerCreateThrowsWhenBrokerStops() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testConsumerReceiveNoWaitThrowsWhenBrokerStops() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testConsumerReceiveTimedThrowsWhenBrokerStops() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testConsumerReceiveReturnsBrokerStops() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testBrokerRestartWontHangConnectionClose() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=120000)
-    public void testProduceAndConsumeLargeNumbersOfMessages() throws JMSException {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testSyncSends() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testDurableConsumerAsync() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testDurableConsumerSync() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testTopicConsumerAsync() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=45000)
-    public void testTopicConsumerSync() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=60000)
-    public void testConnectionsAreClosed() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testExecptionListenerCalledOnBrokerStop() throws Exception {
-    }
-
-    @Override
-    @Test(timeout=30000)
-    public void testSessionTransactedCommit() throws JMSException, InterruptedException {
-    }
+    protected static final Logger LOG = LoggerFactory.getLogger(JMSClientNioTest.class);
 
     @Override
     protected int getBrokerPort() {
