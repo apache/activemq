@@ -24,34 +24,49 @@ import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.transport.amqp.DefaultTrustManager;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
+import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
+import org.objectweb.jtests.jms.conform.message.MessageDefaultTest;
+import org.objectweb.jtests.jms.conform.message.MessageTypeTest;
 import org.objectweb.jtests.jms.conform.message.headers.MessageHeaderTest;
+import org.objectweb.jtests.jms.conform.message.properties.JMSXPropertyTest;
+import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyConversionTest;
+import org.objectweb.jtests.jms.conform.message.properties.MessagePropertyTest;
+import org.objectweb.jtests.jms.conform.queue.QueueBrowserTest;
+import org.objectweb.jtests.jms.conform.queue.TemporaryQueueTest;
+import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
+import org.objectweb.jtests.jms.conform.selector.SelectorTest;
+import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
+import org.objectweb.jtests.jms.conform.session.SessionTest;
+import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     //    TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
-    MessageHeaderTest.class
-    //QueueBrowserTest.class,
-    //MessageTypeTest.class,
+    MessageHeaderTest.class,
+    QueueBrowserTest.class,
+    MessageTypeTest.class,
     //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
-    //TemporaryTopicTest.class,
+    TemporaryTopicTest.class,
     //,TopicConnectionTest.class    // https://issues.apache.org/jira/browse/AMQ-4654
-    //SelectorSyntaxTest.class,
-    //QueueSessionTest.class,
-    //SelectorTest.class,
-    //TemporaryQueueTest.class,
-    //ConnectionTest.class,
-    //SessionTest.class,
-    //JMSXPropertyTest.class,
-    //MessageBodyTest.class,
-    //MessageDefaultTest.class,
-    //MessagePropertyConversionTest.class,
-    //MessagePropertyTest.class
+    SelectorSyntaxTest.class,
+    QueueSessionTest.class,
+    SelectorTest.class,
+    TemporaryQueueTest.class,
+    ConnectionTest.class,
+    SessionTest.class,
+    JMSXPropertyTest.class,
+    MessageBodyTest.class,
+    MessageDefaultTest.class,
+    MessagePropertyConversionTest.class,
+    MessagePropertyTest.class
 })
 
 public class JoramJmsNioPlusSslTest {
