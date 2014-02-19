@@ -23,10 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.*;
 import org.apache.activemq.store.PersistenceAdapterSupport;
@@ -338,23 +338,29 @@ public class MQTTProtocolConverter {
             } catch (IOException e) {
                 LOG.warn("Couldn't send SUBACK for " + command, e);
             }
-        } else {
-            LOG.warn("No topics defined for Subscription " + command);
-        }
-        //check retained messages
-        if (topics != null){
-            for (Topic topic:topics){
+            // check retained messages
+            for (int i = 0; i < topics.length; i++) {
+                final Topic topic = topics[i];
                 ActiveMQTopic destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
                 for (PUBLISH msg : retainedMessages.getMessages(destination)) {
                     if( msg.payload().length > 0 ) {
                         try {
-                            getMQTTTransport().sendToMQTT(msg.encode());
+                            PUBLISH retainedCopy = new PUBLISH();
+                            retainedCopy.topicName(msg.topicName());
+                            retainedCopy.retain(msg.retain());
+                            retainedCopy.messageId(msg.messageId());
+                            retainedCopy.payload(msg.payload());
+                            // set QoS of retained message to maximum of subscription QoS
+                            retainedCopy.qos(msg.qos().ordinal() > qos[i] ? QoS.values()[qos[i]] : msg.qos());
+                            getMQTTTransport().sendToMQTT(retainedCopy.encode());
                         } catch (IOException e) {
                             LOG.warn("Couldn't send retained message " + msg, e);
                         }
                     }
                 }
             }
+        } else {
+            LOG.warn("No topics defined for Subscription " + command);
         }
 
     }

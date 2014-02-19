@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -28,6 +28,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import static org.junit.Assert.assertArrayEquals;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnector;
@@ -41,10 +43,10 @@ import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
+import org.fusesource.mqtt.codec.PUBLISH;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.junit.Assert.assertArrayEquals;
 
 public class MQTTTest extends AbstractMQTTTest {
 
@@ -324,6 +326,56 @@ public class MQTTTest extends AbstractMQTTTest {
         publisher.disconnect();
     }
 
+    @Test(timeout = 60 * 1000)
+    public void testMQTTRetainQoS() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        String[] topics = { "AT_MOST_ONCE", "AT_LEAST_ONCE", "EXACTLY_ONCE" };
+        for (int i = 0; i < topics.length; i++) {
+            final String topic = topics[i];
+
+            MQTT mqtt = createMQTTConnection();
+            mqtt.setClientId("foo");
+            mqtt.setKeepAlive((short)2);
+
+            final int[] actualQoS = {-1};
+            mqtt.setTracer(new Tracer() {
+                @Override
+                public void onReceive(MQTTFrame frame) {
+                    // validate the QoS
+                    if (frame.messageType() == PUBLISH.TYPE) {
+                        PUBLISH publish = new PUBLISH();
+                        try {
+                            publish.decode(frame);
+                        } catch (ProtocolException e) {
+                            fail ("Failed decoding " + e.getMessage());
+                        }
+                        actualQoS[0] = publish.qos().ordinal();
+                    }
+                }
+            });
+
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.publish(topic, topic.getBytes(), QoS.EXACTLY_ONCE, true);
+            connection.subscribe(new Topic[]{ new Topic(topic, QoS.valueOf(topic)) });
+
+            final Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull(msg);
+            assertEquals(topic, new String(msg.getPayload()));
+            int waitCount = 0;
+            while (actualQoS[0] == -1 && waitCount < 10) {
+                Thread.sleep(1000);
+                waitCount++;
+            }
+            assertEquals(i, actualQoS[0]);
+
+            connection.unsubscribe(new String[]{topic});
+            connection.disconnect();
+        }
+
+    }
 
     @Test(timeout=60 * 1000)
     public void testSendMQTTReceiveJMS() throws Exception {
