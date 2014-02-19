@@ -366,24 +366,33 @@ public class MQTTProtocolConverter {
     }
 
     QoS onSubscribe(Topic topic) throws MQTTProtocolException {
-        if( !mqttSubscriptionByTopic.containsKey(topic.name()) ) {
-            ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
 
-            ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
-            ConsumerInfo consumerInfo = new ConsumerInfo(id);
-            consumerInfo.setDestination(destination);
-            consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
-            consumerInfo.setDispatchAsync(true);
-            if ( connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
-                consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
+        if( mqttSubscriptionByTopic.containsKey(topic.name())) {
+            if (topic.qos() != mqttSubscriptionByTopic.get(topic.name()).qos()) {
+                // remove old subscription as the QoS has changed
+                onUnSubscribe(topic.name());
+            } else {
+                // duplicate SUBSCRIBE packet, nothing to do
+                return topic.qos();
             }
-            MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
-
-            subscriptionsByConsumerId.put(id, mqttSubscription);
-            mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
-
-            sendToActiveMQ(consumerInfo, null);
         }
+
+        ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
+
+        ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
+        ConsumerInfo consumerInfo = new ConsumerInfo(id);
+        consumerInfo.setDestination(destination);
+        consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
+        consumerInfo.setDispatchAsync(true);
+        if ( connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
+            consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
+        }
+        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
+
+        subscriptionsByConsumerId.put(id, mqttSubscription);
+        mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
+
+        sendToActiveMQ(consumerInfo, null);
         return topic.qos();
     }
 

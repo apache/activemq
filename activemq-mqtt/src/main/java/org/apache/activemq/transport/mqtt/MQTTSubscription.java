@@ -67,4 +67,8 @@ class MQTTSubscription {
     public ConsumerInfo getConsumerInfo() {
         return consumerInfo;
     }
+
+    public QoS qos() {
+        return qos;
+    }
 }
