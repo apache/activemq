@@ -25,8 +25,18 @@ import org.apache.activemq.wireformat.WireFormatFactory;
  */
 public class XStreamWireFormatFactory implements WireFormatFactory {
 
+    String host;
+
     public WireFormat createWireFormat() {
         return new XStreamWireFormat();
     }
 
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
 }
