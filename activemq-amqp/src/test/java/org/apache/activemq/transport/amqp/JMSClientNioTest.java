@@ -29,6 +29,7 @@ import java.io.DataInputStream;
 /**
  * Test the JMS client when connected to the NIO transport.
  */
+@Ignore
 public class JMSClientNioTest extends JMSClientTest {
     protected static final Logger LOG = LoggerFactory.getLogger(JMSClientNioTest.class);
 

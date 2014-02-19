@@ -30,6 +30,7 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
+import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
 import org.objectweb.jtests.jms.conform.message.MessageDefaultTest;
 import org.objectweb.jtests.jms.conform.message.MessageTypeTest;
@@ -47,6 +48,7 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Ignore
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     //    TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
@@ -55,7 +57,7 @@ import org.slf4j.LoggerFactory;
     MessageTypeTest.class,
     //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
     TemporaryTopicTest.class,
-    //,TopicConnectionTest.class    // https://issues.apache.org/jira/browse/AMQ-4654
+    TopicConnectionTest.class,    // https://issues.apache.org/jira/browse/AMQ-4654
     SelectorSyntaxTest.class,
     QueueSessionTest.class,
     SelectorTest.class,
