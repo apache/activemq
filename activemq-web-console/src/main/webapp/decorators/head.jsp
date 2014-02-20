@@ -19,17 +19,10 @@
 
     <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : ${pageTitle}</title>
 
-		<!-- JQUERY + BOOTSTRAP  -->
-    	
-    <link rel="stylesheet" href="styles/bootstrap.min.css" />
-    <link rel="stylesheet" href="styles/bootstrap-theme.min.css" />
-
+    	<link rel="stylesheet" href="styles/bootstrap.min.css" />
    		<script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
-    	<script type="text/javascript" src="js/bootbox.js"></script>
-
-
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <style type="text/css" media="screen">
         @import url('${pageContext.request.contextPath}/styles/sorttable.css');
         @import url('${pageContext.request.contextPath}/styles/type-settings.css');

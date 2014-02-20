@@ -23,12 +23,8 @@
     <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
   
     <link rel="stylesheet" href="styles/bootstrap.min.css" />
-    <link rel="stylesheet" href="styles/bootstrap-theme.min.css" />
-    
-      <!-- BOOTSTRAP CSS LIBRARY -->
    		<script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/bootstrap.min.js"></script>
-    	<script type="text/javascript" src="js/bootbox.min.js"></script>
     
     
     <!-- If anyone uses sorttable in any other page you can put it back by adding: @import url('/admin/styles/sorttable.css'); -->
