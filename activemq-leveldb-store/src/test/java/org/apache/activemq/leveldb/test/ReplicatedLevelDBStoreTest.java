@@ -44,7 +44,7 @@ import static org.junit.Assert.*;
 public class ReplicatedLevelDBStoreTest {
     protected static final Logger LOG = LoggerFactory.getLogger(ReplicatedLevelDBStoreTest.class);
 
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*10)
     public void testMinReplicaEnforced() throws Exception {
 
         File masterDir = new File("target/activemq-data/leveldb-node1");
@@ -118,7 +118,7 @@ public class ReplicatedLevelDBStoreTest {
         return f;
     }
 
-    @Test(timeout = 1000*60*20)
+    @Test(timeout = 1000*60*10)
     public void testReplication() throws Exception {
 
         LinkedList<File> directories = new LinkedList<File>();
@@ -189,7 +189,7 @@ public class ReplicatedLevelDBStoreTest {
         }
     }
 
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*10)
     public void testSlowSlave() throws Exception {
 
         LinkedList<File> directories = new LinkedList<File>();

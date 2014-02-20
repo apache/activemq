@@ -39,7 +39,7 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(ElectingLevelDBStoreTest.class);
 
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*10)
     public void testElection() throws Exception {
 
         ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
@@ -131,7 +131,7 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
     }
 
-    @Test(timeout = 1000 * 60 * 60)
+    @Test(timeout = 1000 * 60 * 10)
     public void testZooKeeperServerFailure() throws Exception {
 
         final ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
