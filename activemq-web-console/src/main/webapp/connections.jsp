@@ -62,7 +62,8 @@
 <thead>
 <tr>
 	<th>Name</th>
-	<th>Network TTL</th>
+	<th>Message TTL</th>
+	<th>Consumer TTL</th>
 	<th>Dynamic Only</th>
 	<th>Conduit Subscriptions</th>
 	<th>Bridge Temps</th>
@@ -74,7 +75,8 @@
 <c:forEach items="${requestContext.brokerQuery.networkConnectors}" var="nc">
 <tr>
 	<td><c:out value="${nc.name}" /></td>
-	<td><c:out value="${nc.networkTTL}" /></td>
+	<td><c:out value="${nc.messageTTL}" /></td>
+	<td><c:out value="${nc.consumerTTL}" /></td>
 	<td><c:out value="${nc.dynamicOnly}" /></td>
 	<td><c:out value="${nc.conduitSubscriptions}" /></td>
 	<td><c:out value="${nc.bridgeTempDestinations}" /></td>
