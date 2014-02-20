@@ -23,18 +23,7 @@
 
 <script type="text/javascript" src="js/jmsQueueBrowser.js"></script>
 
-<style type="text/css">
 
-// This will prevent a bug that exist in firefox for pagination
-.pagination {
-	margin: 0px !important;
-}
-
-</style>
-<!-- BOOTSTRAP CSS LIBRARY -->
-<!-- TODO: REMOVE @import url('/admin/styles/sorttable.css'); -->
-<!-- GOOGLE FONTS -->
- 
 
 <%@include file="decorators/header.jsp" %>
 
@@ -48,7 +37,7 @@
 <div class="panel" style="width:800px;">
 
 <blockquote class="bs-callout"><h3>JMS Messages in Queue: <form:tooltip text="${requestContext.queueBrowser.JMSDestination}"/>
-<small> 1 - 100 of 10,000 messages</small></h3></blockquote>
+<small></small></h3></blockquote>
 <div id="pageIndicator"></div>
 
 
@@ -57,7 +46,7 @@
 
 <table id="messages" class="table table-striped" styles="width:20%;">
     <div class="progress" style="width: 400px;">
-    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width:80%">
+    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width:0%">
         <span class="sr-only">80% Complete</span>
     </div>
 </div>
@@ -131,7 +120,14 @@
            try{
                    if (!!QueryStringHelper.toJSON().page && !!QueryStringHelper.toJSON().JMSDestination){
                        $(".progress").show();
-                       $(".progress-bar").css({"width":"50%"});
+                       $(".progress-bar").animate({
+                    	    width: '90%'
+                       }, {
+                           duration: 5000,
+                           easing: 'linear',
+                           complete:function(){ $(this).css("width","0%");
+                          }
+                       });
 
                        var e = Number(QueryStringHelper.toJSON().page);
                        var last = e * 100;
@@ -151,8 +147,6 @@
                      	} else if ( start < total && last > total ) {
                             start = ( last - total ) + start ;
                      	}
-	   					
-
                        
                        if ( PaginQueue.isHead() ) {
                               PaginQueue.moveCurLine(1);
@@ -161,7 +155,6 @@
                               PaginQueue.moveCurLine( PaginQueue.getPos( PaginQueue.getPageNum()) );
                               PaginQueue.setupNav();
                        }
-
 						
                       if(total===1){
                     	  $(".bs-callout small").html("1 of 1 messages of 1");
@@ -185,8 +178,7 @@
                     $(".bs-callout small").html("");
                     showError("<h1>"+err+"</h1>");
                 }
-               console.log(data.value.TotalMessageCount);
-           });
+            });
 
         // ... clean up code
         if( PaginQueue.isLast() ) {
