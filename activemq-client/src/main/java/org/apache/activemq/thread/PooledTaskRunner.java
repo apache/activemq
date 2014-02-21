@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 class PooledTaskRunner implements TaskRunner {
 
@@ -41,6 +41,7 @@ class PooledTaskRunner implements TaskRunner {
         this.maxIterationsPerRun = maxIterationsPerRun;
         this.task = task;
         runable = new Runnable() {
+            @Override
             public void run() {
                 runningThread = Thread.currentThread();
                 try {
@@ -56,6 +57,7 @@ class PooledTaskRunner implements TaskRunner {
     /**
      * We Expect MANY wakeup calls on the same TaskRunner.
      */
+    @Override
     public void wakeup() throws InterruptedException {
         synchronized (runable) {
 
@@ -88,8 +90,9 @@ class PooledTaskRunner implements TaskRunner {
      *
      * @throws InterruptedException
      */
+    @Override
     public void shutdown(long timeout) throws InterruptedException {
-        LOG.trace("Shutdown timeout: {} task: {}", task);
+        LOG.trace("Shutdown timeout: {} task: {}", timeout, task);
         synchronized (runable) {
             shutdown = true;
             // the check on the thread is done
@@ -104,6 +107,7 @@ class PooledTaskRunner implements TaskRunner {
         }
     }
 
+    @Override
     public void shutdown() throws InterruptedException {
         shutdown(0);
     }
@@ -132,7 +136,7 @@ class PooledTaskRunner implements TaskRunner {
                 }
             }
         } finally {
-            synchronized( runable ) {
+            synchronized (runable) {
                 iterating = false;
                 runable.notifyAll();
                 if (shutdown) {
