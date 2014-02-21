@@ -27,19 +27,27 @@
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core">
+  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core" persistent="false">
 
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+          <policyEntry queue=">" producerFlowControl="true" memoryLimit="20mb" optimizedDispatch="true">
+          </policyEntry>
+        </policyEntries>
+      </policyMap>
+    </destinationPolicy>
 
     <networkConnectors>
       <networkConnector uri="static://(tcp://localhost:61616)">
-      	<dynamicallyIncludedDestinations>
-      		<queue physicalName="include.test.foo"/>
-      		<topic physicalName="include.test.bar"/>
-      	</dynamicallyIncludedDestinations>
-      	<excludedDestinations>
-      		<queue physicalName="exclude.test.foo"/>
-      		<topic physicalName="exclude.test.bar"/>
-      	</excludedDestinations>
+        <dynamicallyIncludedDestinations>
+          <queue physicalName="include.test.foo"/>
+          <topic physicalName="include.test.bar"/>
+        </dynamicallyIncludedDestinations>
+        <excludedDestinations>
+          <queue physicalName="exclude.test.foo"/>
+          <topic physicalName="exclude.test.bar"/>
+        </excludedDestinations>
       </networkConnector>
     </networkConnectors>
 
