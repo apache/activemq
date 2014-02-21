@@ -224,6 +224,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected boolean deleteAllMessages;
     protected File directory = DEFAULT_DIRECTORY;
+    protected File indexDirectory = null;
     protected Thread checkpointThread;
     protected boolean enableJournalDiskSyncs=true;
     protected boolean archiveDataLogs;
@@ -2385,8 +2386,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // Initialization related implementation methods.
     // /////////////////////////////////////////////////////////////////
 
-    private PageFile createPageFile() {
-        PageFile index = new PageFile(directory, "db");
+    private PageFile createPageFile() throws IOException {
+        if( indexDirectory == null ) {
+            indexDirectory = directory;
+        }
+        IOHelper.mkdirs(indexDirectory);
+        PageFile index = new PageFile(indexDirectory, "db");
         index.setEnableWriteThread(isEnableIndexWriteAsync());
         index.setWriteBatchSize(getIndexWriteBatchSize());
         index.setPageCacheSize(indexCacheSize);
@@ -2503,7 +2508,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return this.metadata.producerSequenceIdTracker.getAuditDepth();
     }
 
-    public PageFile getPageFile() {
+    public PageFile getPageFile() throws IOException {
         if (pageFile == null) {
             pageFile = createPageFile();
         }
@@ -3056,5 +3061,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 throw ioe;
             }
         }
+    }
+
+    public File getIndexDirectory() {
+        return indexDirectory;
+    }
+
+    public void setIndexDirectory(File indexDirectory) {
+        this.indexDirectory = indexDirectory;
     }
 }
