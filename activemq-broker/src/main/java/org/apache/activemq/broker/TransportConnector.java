@@ -216,8 +216,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                         @Override
                         public void run() {
                             try {
-                                Connection connection = createConnection(transport);
-                                connection.start();
+                                if (!brokerService.isStopping()) {
+                                    Connection connection = createConnection(transport);
+                                    connection.start();
+                                } else {
+                                    throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
+                                }
                             } catch (Exception e) {
                                 String remoteHost = transport.getRemoteAddress();
                                 ServiceSupport.dispose(transport);

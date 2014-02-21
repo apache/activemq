@@ -141,9 +141,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         throw new RuntimeException("Protocol violation - Command corrupted: " + o.toString());
                     }
                     Command command = (Command) o;
-                    Response response = service(command);
-                    if (response != null && !brokerService.isStopping() ) {
-                        dispatchSync(response);
+                    if (!brokerService.isStopping()) {
+                        Response response = service(command);
+                        if (response != null && !brokerService.isStopping()) {
+                            dispatchSync(response);
+                        }
+                    } else {
+                        throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
                     }
                 } finally {
                     serviceLock.readLock().unlock();
