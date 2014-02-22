@@ -25,6 +25,7 @@
     http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
     http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd">
 
+  <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
 
   <broker brokerName="web-console" useJmx="true" xmlns="http://activemq.apache.org/schema/core">
 

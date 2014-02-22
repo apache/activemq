@@ -23,7 +23,6 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * Interface required for objects that will be registered as functions for use in selectors.  Handles parse-
  * time and evaluation-time operations.
  */
-
 public interface FilterFunction {
     /**
      * Check whether the function, as it is used, is valid.  Checking arguments here will return errors

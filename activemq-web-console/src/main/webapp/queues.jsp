@@ -21,25 +21,24 @@
 <%@include file="decorators/head.jsp" %>
 </head>
 <body>
-
 <%@include file="decorators/header.jsp" %>
 
-<div>
-<form action="createDestination.action" method="post">
+<div style="width:60%;" class="form-group" role="form">
+<form action="createDestination.action" method="post" class="form-horizontal">
     <input type="hidden" name="JMSDestinationType" value="queue"/>
     <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
 
-    <label name="destination">Queue Name</label>
-    <input type="text" name="JMSDestination" value=""/>
+    <label name="destination" class="control-label" style="font-size:15px; padding:20px 0px;">Queue Name: </label>
+    <input type="text" class="form-control"  name="JMSDestination" value=""/>
 
-    <input type="submit" value="Create"/>
+    <input type="submit" class="btn" value="Create" style="margin:20px 0px;"/>
 </form>
 </div>
 
 
 <h2>Queues</h2>
 
-<table id="queues" class="sortable autostripe">
+<table id="queues" class="table table-striped">
 <thead>
 <tr>
 <th>Name</th>
@@ -56,18 +55,25 @@
 
 <tr>
 <td><a href="<c:url value="browse.jsp">
+
                         <c:param name="JMSDestination" value="${row.name}" /></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
-<td>${row.queueSize}</td>
-<td>${row.consumerCount}</td>
-<td>${row.enqueueCount}</td>
-<td>${row.dequeueCount}</td>
+<td><c:out value="${row.queueSize}" /></td>
+<td><c:out value="${row.consumerCount}" /></td>
+<td><c:out value="${row.enqueueCount}" /></td>
+<td><c:out value="${row.dequeueCount}" /></td>
 <td>
     <a href="<c:url value="browse.jsp">
                    <c:param name="JMSDestination" value="${row.name}" /></c:url>">Browse</a>
 	<a href="<c:url value="queueConsumers.jsp">
 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
-    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
-    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
+    <a href="<c:url value="queueBrowse/${row.name}">
+                    <c:param name="view" value="rss" />
+                    <c:param name="feedType" value="atom_1.0" />
+                     </c:url>" title="Atom 1.0"><img src="<c:url value="images/feed_atom.png" />" /></a>
+    <a href="<c:url value="queueBrowse/${row.name}">
+                    <c:param name="view" value="rss" />
+                    <c:param name="feedType" value="rss_2.0" />
+                    </c:url>" title="RSS 2.0"><img src="<c:url value="images/feed_rss.png" />" /></a>
 </td>
 <td>
     <a href="<c:url value="send.jsp">

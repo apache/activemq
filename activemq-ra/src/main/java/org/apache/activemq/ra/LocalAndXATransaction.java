@@ -24,11 +24,14 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.apache.activemq.TransactionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Used to provide a LocalTransaction and XAResource to a JMS session.
  */
 public class LocalAndXATransaction implements XAResource, LocalTransaction {
+    private static final Logger LOG = LoggerFactory.getLogger(LocalAndXATransaction.class);
 
     private final TransactionContext transactionContext;
     private boolean inManagedTx;
@@ -86,6 +89,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
     }
 
     public void end(Xid arg0, int arg1) throws XAException {
+        LOG.debug("{} end {} with {}", new Object[]{this, arg0, arg1});
         try {
             transactionContext.end(arg0, arg1);
         } finally {
@@ -106,14 +110,16 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
     }
 
     public boolean isSameRM(XAResource xaresource) throws XAException {
-        if (xaresource == null) {
-            return false;
+        boolean isSame = false;
+        if (xaresource != null) {
+            // Do we have to unwrap?
+            if (xaresource instanceof LocalAndXATransaction) {
+                xaresource = ((LocalAndXATransaction)xaresource).transactionContext;
+            }
+            isSame = transactionContext.isSameRM(xaresource);
         }
-        // Do we have to unwrap?
-        if (xaresource instanceof LocalAndXATransaction) {
-            xaresource = ((LocalAndXATransaction)xaresource).transactionContext;
-        }
-        return transactionContext.isSameRM(xaresource);
+        LOG.trace("{} isSameRM({}) = {}", new Object[]{this, xaresource, isSame});
+        return isSame;
     }
 
     public int prepare(Xid arg0) throws XAException {
@@ -133,6 +139,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
     }
 
     public void start(Xid arg0, int arg1) throws XAException {
+        LOG.trace("{} start {} with {}", new Object[]{this, arg0, arg1});
         transactionContext.start(arg0, arg1);
         try {
             setInManagedTx(true);

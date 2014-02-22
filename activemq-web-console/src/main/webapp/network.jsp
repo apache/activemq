@@ -26,7 +26,7 @@
 <div style="margin-top: 5em">
 <h2>Network Bridges</h2>
 
-<table id="bridges" class="sortable autostripe">
+<table id="bridges" class="table table-striped">
 <thead>
 <tr>
     <th>Remote Broker</th>
@@ -39,11 +39,11 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.networkBridges}" var="nb">
 <tr>
-	<td>${nb.remoteBrokerName}</td>
-	<td>${nb.remoteAddress}</td>
-	<td>${nb.createdByDuplex}</td>
-	<td>${nb.enqueueCounter}</td>
-	<td>${nb.dequeueCounter}</td>
+	<td><c:out value="${nb.remoteBrokerName}" /></td>
+	<td><c:out value="${nb.remoteAddress}" /></td>
+	<td><c:out value="${nb.createdByDuplex}" /></td>
+	<td><c:out value="${nb.enqueueCounter}" /></td>
+	<td><c:out value="${nb.dequeueCounter}" /></td>
 </tr>
 </c:forEach>
 </tbody>

@@ -75,7 +75,7 @@ public class AMQ4914Test extends AmqpTestSupport {
         doTestSendLargeMessage(65536 * 4);
     }
 
-    @Test(timeout = 2 * 60 * 1000)
+    @Test(timeout = 5 * 60 * 1000)
     public void testSendHugeMessage() throws JMSException {
         doTestSendLargeMessage(1024 * 1024 * 10);
     }

@@ -243,7 +243,7 @@ public class FailoverTransport implements CompositeTransport {
     public final void handleTransportFailure(IOException e) throws InterruptedException {
         synchronized (reconnectMutex) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " handleTransportFailure: " + e);
+                LOG.trace(this + " handleTransportFailure: " + e, e);
             }
 
             Transport transport = connectedTransport.getAndSet(null);
@@ -257,7 +257,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (canReconnect()) {
                     reconnectOk = true;
                 }
-                LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed, reason:  " + e
+                LOG.warn("Transport (" + transport + ") failed, reason:  " + e
                         + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect");
 
                 initialized = false;

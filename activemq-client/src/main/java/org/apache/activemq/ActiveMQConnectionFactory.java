@@ -179,6 +179,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private TaskRunnerFactory sessionTaskRunner;
     private RejectedExecutionHandler rejectedTaskHandler = null;
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
+    private boolean rmIdFromConnectionId = false;
 
     // /////////////////////////////////////////////
     //
@@ -221,7 +222,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         }
     }
 
-    /**
+    /*boolean*
      * @param brokerURL
      * @return
      * @throws URISyntaxException
@@ -401,6 +402,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setSessionTaskRunner(getSessionTaskRunner());
         connection.setRejectedTaskHandler(getRejectedTaskHandler());
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
+        connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -821,6 +823,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
+        props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
     }
 
     public boolean isUseCompression() {
@@ -1205,4 +1208,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
         this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
     }
+
+
+    public boolean isRmIdFromConnectionId() {
+        return rmIdFromConnectionId;
+    }
+
+    /**
+     * uses the connection id as the resource identity for XAResource.isSameRM
+     * ensuring join will only occur on a single connection
+     */
+    public void setRmIdFromConnectionId(boolean rmIdFromConnectionId) {
+        this.rmIdFromConnectionId = rmIdFromConnectionId;
+    }
+
 }

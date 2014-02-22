@@ -112,6 +112,9 @@ public abstract class TransportFactory {
     public Transport doConnect(URI location) throws Exception {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            if( !options.containsKey("wireFormat.host") ) {
+                options.put("wireFormat.host", location.getHost());
+            }
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
             Transport rc = configure(transport, wf, options);
