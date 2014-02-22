@@ -34,6 +34,6 @@
         <script type='text/javascript' src='${pageContext.request.contextPath}/js/css.js'></script>
         <script type='text/javascript' src='${pageContext.request.contextPath}/js/standardista-table-sorting.js'></script>
         <script type='text/javascript' src='${pageContext.request.contextPath}/js/prettify.js'></script>
-        <script>addEvent(window, 'load', prettyPrint)</script>
+        <script>addEvent(window, 'load', function(){ prettyPrint(); })</script>
     </c:if>
 

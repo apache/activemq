@@ -116,8 +116,22 @@
         }
 
        $(".progress").hide();
-           var jmx = new JMXJSON(null,null,function(data){
+           var destName = QueryStringHelper.toJSON().JMSDestination;
+           var appendix = "destinationType=Queue,destinationName=" + destName + "/QueueSize";
+           var brokerName="${requestContext.brokerQuery.brokerAdmin.brokerName}"
+           var jmx = new JMXJSON(null,brokerName,appendix,function(data){
            try{
+                    if ( data.error_type ) {
+                        var err = "<pre>JMX ERROR: " +  JSON.stringify(data, undefined, 2) + "</pre>";
+			err = err.replace(/\\n/g, "\n");
+			err = err.replace(/\\t/g, "    ");
+                        throw err;
+                    }
+
+                    var TotalMessageCount = data.value;
+                    if ( TotalMessageCount < 0 )
+                        TotalMessageCount = 0;
+
                    if (!!QueryStringHelper.toJSON().page && !!QueryStringHelper.toJSON().JMSDestination){
                        $(".progress").show();
                        $(".progress-bar").animate({
@@ -133,8 +147,8 @@
                        var last = e * 100;
                        var start = last - 100;
                       
-                       var total = data.value.TotalMessageCount;
-                       _.totalPages = data.value.TotalMessageCount;
+                       var total = TotalMessageCount;
+                       _.totalPages = TotalMessageCount;
 
    						// Checking if we have < 100 messags
    						 if( total == 0 ){
@@ -162,7 +176,7 @@
                     	  $(".bs-callout small").html(start+" of "+last +" messages of "+ total);
                       }
                      
-                       var z = new JMSQueueBrowser(QueryStringHelper.toJSON().JMSDestination, Number(QueryStringHelper.toJSON().page), data.value.TotalMessageCount, function (data) {
+                       var z = new JMSQueueBrowser(QueryStringHelper.toJSON().JMSDestination, Number(QueryStringHelper.toJSON().page), TotalMessageCount, function (data) {
                            z.empty();
                            $(".progress").hide();
                            return data;
