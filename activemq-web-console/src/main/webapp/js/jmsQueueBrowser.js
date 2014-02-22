@@ -91,8 +91,30 @@
             getMQList: function () {
                 var d = this.req.responseXML;
                 var mqitems = "";
+                var destName = "";
+                var msgId = "";
+                var delLink = "";
+                var msgLink = "";
+                var updateDate = "";
+                var publishDate = "";
+                var summary = "";
+
                 for (var i = 3; i < this.req.responseXML.firstChild.childElementCount; i++) {
-                    mqitems += "<tr>" + "<td>" + "<a href='" + d.firstChild.children[i].children[1].attributes[1].textContent + "'>" + d.firstChild.children[i].children[0].textContent + "</a></td>" + "<td>" + d.firstChild.children[i].children[3].textContent + "</td>" + "<td>" + d.firstChild.children[i].children[4].textContent + "</td>" + "<td>" + d.firstChild.children[i].children[5].textContent + "</td>" + "<td><a href='" + "http://localhost:8161/admin/deleteMessage.action?JMSDestination=" + QueryStringHelper.toJSON().JMSDestination + "&messageId=" + d.firstChild.children[3].children[0].textContent + "&secret=" + _.sec + "'>" + "DELETE</a></td>" + "</tr>";
+                    msgId = d.firstChild.children[i].children[0].textContent;
+                    destName = QueryStringHelper.toJSON().JMSDestination;
+                    updateDate = d.firstChild.children[i].children[3].textContent;
+                    publishDate = d.firstChild.children[i].children[4].textContent;
+                    summary = d.firstChild.children[i].children[5].textContent;
+
+                    msgLink = "<a href='message.jsp?id=" + encodeURIComponent(msgId) + "&JMSDestination=" + encodeURIComponent(destName) + "'>" + htmlEncode(msgId) + "</a>";
+                    delLink = "<a href='deleteMessage.action?messageId=" + encodeURIComponent(msgId) + "&JMSDestination=" + encodeURIComponent(destName) + "&secret=" + encodeURIComponent(_.sec) + "'>DELETE</a>";
+
+                    mqitems += "<tr>" +
+                               "<td>" + msgLink + "</td>" +
+                               "<td>" + htmlEncode(updateDate) + "</td>" +
+                               "<td>" + htmlEncode(publishDate) + "</td>" +
+                               "<td>" + htmlEncode(summary) + "</td>" +
+                               "<td>" + delLink + "</td>" + "</tr>";
                 }
                 return mqitems;
             }
@@ -128,15 +150,21 @@
         }
     };
 
+    _.htmlEncode = function (value) {
+      return $('<div/>').text(value).html();
+    }
 
-    _.JMXJSON = function (brokertype, brokername, callback) {
+    _.JMXJSON = function (brokertype, brokername, appendix, callback) {
         this.bType = brokertype || 'Broker';
         this.bName = brokername || 'localhost';
+        this.appendix = appendix || '';
         this.calli = callback ||
         function (data) {
              _.totalPages = data.value.TotalMessageCount;
         }
         this.url = "/api/jolokia/read/org.apache.activemq:type=" + this.bType + ",brokerName=" + this.bName;
+        if ( this.appendix )
+            this.url += "," + appendix;
         return {
             req: $.getJSON(this.url).done(callback),
             getBrokerType: this.bType,
