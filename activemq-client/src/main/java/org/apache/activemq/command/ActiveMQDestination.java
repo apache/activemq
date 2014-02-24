@@ -283,14 +283,17 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
 
         List<String> l = new ArrayList<String>();
-        StringTokenizer iter = new StringTokenizer(physicalName, PATH_SEPERATOR);
-        while (iter.hasMoreTokens()) {
-            String name = iter.nextToken().trim();
-            if (name.length() == 0) {
-                continue;
+        StringBuilder level = new StringBuilder();
+        final char separator = PATH_SEPERATOR.charAt(0);
+        for (char c : physicalName.toCharArray()) {
+            if (c == separator) {
+                l.add(level.toString());
+                level.delete(0, level.length());
+            } else {
+                level.append(c);
             }
-            l.add(name);
         }
+        l.add(level.toString());
 
         destinationPaths = new String[l.size()];
         l.toArray(destinationPaths);

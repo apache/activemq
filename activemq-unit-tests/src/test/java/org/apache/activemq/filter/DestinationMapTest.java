@@ -23,11 +23,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import junit.framework.TestCase;
 
 public class DestinationMapTest extends TestCase {
     protected DestinationMap map = new DestinationMap();
@@ -229,6 +228,25 @@ public class DestinationMapTest extends TestCase {
 
         assertEquals("Root child count", 0, map.getTopicRootChildCount());
         assertMapValue("TEST.D1", null);
+    }
+
+    public void testMQTTMappedWildcards() throws Exception {
+        put("TopicA", v1);
+        put(".TopicA", v2);
+        put("TopicA.", v3);
+        put(".", v4);
+        put("..TopicA", v5);
+        put("..", v6);
+
+        // test wildcard patterns "#", "+", "+/#", "/+", "+/", "+/+", "+/+/", "+/+/+"
+        assertMapValue(">", v1, v2, v3, v4, v5, v6);
+        assertMapValue("*", v1);
+        assertMapValue("*.>", v1, v2, v3, v4, v5, v6);
+        assertMapValue(".*", v2, v4);
+        assertMapValue("*.", v3, v4);
+        assertMapValue("*.*", v2, v3, v4);
+        assertMapValue("*.*.", v6);
+        assertMapValue("*.*.*", v5, v6);
     }
 
     public void testStoreAndLookupAllWildcards() throws Exception {

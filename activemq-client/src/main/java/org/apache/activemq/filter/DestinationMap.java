@@ -84,7 +84,6 @@ public class DestinationMap {
             return;
         }
         String[] paths = key.getDestinationPaths();
-        paths = DestinationFilter.rationalizePaths(paths);
         getRootNode(key).add(paths, 0, value);
     }
 

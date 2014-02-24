@@ -36,7 +36,13 @@ public class PrefixDestinationFilter extends DestinationFilter {
      * @param prefixes
      */
     public PrefixDestinationFilter(String[] prefixes, byte destinationType) {
-        this.prefixes = prefixes;
+        // collapse duplicate '>' at the end of the path
+        int lastIndex = prefixes.length - 1;
+        while (lastIndex >= 0 && ANY_DESCENDENT.equals(prefixes[lastIndex])) {
+            lastIndex--;
+        }
+        this.prefixes = new String[lastIndex + 2];
+        System.arraycopy(prefixes, 0, this.prefixes, 0, this.prefixes.length);
         this.destinationType = destinationType;
     }
 
@@ -59,11 +65,11 @@ public class PrefixDestinationFilter extends DestinationFilter {
             //want to look for the case where A matches A.>
             boolean match = true;
             for (int i = 0; (i < path.length && match); i++){
-                   match &= matches(prefixes[i],path[i]);
+                   match = matches(prefixes[i], path[i]);
             }
             //paths get compacted - e.g. A.*.> will be compacted to A.> and by definition - the last element on
             //the prefix will be >
-            if (match && prefixes.length == (path.length + 1)){
+            if (match && prefixes.length == (path.length + 1)) {
                 return true;
             }
         }

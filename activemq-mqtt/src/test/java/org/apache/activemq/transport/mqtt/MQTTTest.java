@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -326,6 +326,99 @@ public class MQTTTest extends AbstractMQTTTest {
         publisher.disconnect();
     }
 
+    @Test(timeout=30000)
+    public void testValidZeroLengthClientId() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("");
+        mqtt.setCleanSession(true);
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testMQTTPathPatterns() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("");
+        mqtt.setCleanSession(true);
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        final String RETAINED = "RETAINED";
+        String[] topics = {"TopicA", "/TopicA", "/", "TopicA/", "//"};
+        for (String topic : topics) {
+            // test retained message
+            connection.publish(topic, (RETAINED + topic).getBytes(), QoS.AT_LEAST_ONCE, true);
+
+            connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_LEAST_ONCE)});
+            Message msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+            assertNotNull(msg);
+            assertEquals(RETAINED + topic, new String(msg.getPayload()));
+            msg.ack();
+
+            // test non-retained message
+            connection.publish(topic, topic.getBytes(), QoS.AT_LEAST_ONCE, false);
+            msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+            assertNotNull(msg);
+            assertEquals(topic, new String(msg.getPayload()));
+            msg.ack();
+
+            connection.unsubscribe(new String[] {topic});
+        }
+        connection.disconnect();
+
+        // test wildcard patterns with above topics
+        String[] wildcards = {"#", "+", "+/#", "/+", "+/", "+/+", "+/+/", "+/+/+"};
+        for (String wildcard : wildcards) {
+            final Pattern pattern = Pattern.compile(wildcard.replaceAll("/?#", "(/?.*)*").replaceAll("\\+", "[^/]*"));
+
+            connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.subscribe(new Topic[]{new Topic(wildcard, QoS.AT_LEAST_ONCE)});
+
+            // test retained messages
+            Message msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+            do {
+                assertNotNull("RETAINED null " + wildcard, msg);
+                assertTrue("RETAINED prefix " + wildcard, new String(msg.getPayload()).startsWith(RETAINED));
+                assertTrue("RETAINED matching " + wildcard + " " + msg.getTopic(),
+                    pattern.matcher(msg.getTopic()).matches());
+                msg.ack();
+                msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+            } while (msg != null);
+
+            // connection is borked after timeout in connection.receive()
+            connection.disconnect();
+            connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.subscribe(new Topic[]{new Topic(wildcard, QoS.AT_LEAST_ONCE)});
+
+            // test non-retained message
+            for (String topic : topics) {
+                connection.publish(topic, topic.getBytes(), QoS.AT_LEAST_ONCE, false);
+            }
+            msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+            do {
+                assertNotNull("Non-retained Null " + wildcard, msg);
+                assertTrue("Non-retained matching " + wildcard + " " + msg.getTopic(),
+                    pattern.matcher(msg.getTopic()).matches());
+                msg.ack();
+                msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+            } while (msg != null);
+
+            connection.unsubscribe(new String[] { wildcard });
+            connection.disconnect();
+        }
+    }
+
     @Test(timeout = 60 * 1000)
     public void testMQTTRetainQoS() throws Exception {
         addMQTTConnector();
@@ -345,13 +438,7 @@ public class MQTTTest extends AbstractMQTTTest {
                 public void onReceive(MQTTFrame frame) {
                     // validate the QoS
                     if (frame.messageType() == PUBLISH.TYPE) {
-                        PUBLISH publish = new PUBLISH();
-                        try {
-                            publish.decode(frame);
-                        } catch (ProtocolException e) {
-                            fail ("Failed decoding " + e.getMessage());
-                        }
-                        actualQoS[0] = publish.qos().ordinal();
+                        actualQoS[0] = frame.qos().ordinal();
                     }
                 }
             });
@@ -370,6 +457,7 @@ public class MQTTTest extends AbstractMQTTTest {
                 waitCount++;
             }
             assertEquals(i, actualQoS[0]);
+            msg.ack();
 
             connection.unsubscribe(new String[]{topic});
             connection.disconnect();
@@ -392,13 +480,7 @@ public class MQTTTest extends AbstractMQTTTest {
             public void onReceive(MQTTFrame frame) {
                 // validate the QoS
                 if (frame.messageType() == PUBLISH.TYPE) {
-                    PUBLISH publish = new PUBLISH();
-                    try {
-                        publish.decode(frame);
-                    } catch (ProtocolException e) {
-                        fail("Failed decoding " + e.getMessage());
-                    }
-                    actualQoS[0] = publish.qos().ordinal();
+                    actualQoS[0] = frame.qos().ordinal();
                 }
             }
         });
@@ -416,6 +498,7 @@ public class MQTTTest extends AbstractMQTTTest {
             final Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             assertNotNull(msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
             int waitCount = 0;
             while (actualQoS[0] == -1 && waitCount < 10) {
                 Thread.sleep(1000);
