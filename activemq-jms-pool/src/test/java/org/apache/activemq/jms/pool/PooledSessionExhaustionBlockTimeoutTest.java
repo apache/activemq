@@ -16,29 +16,18 @@
  */
 package org.apache.activemq.jms.pool;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.log4j.Logger;
 
+import javax.jms.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
-public class PooledSessionExhaustionTest extends TestCase {
+public class PooledSessionExhaustionBlockTimeoutTest extends TestCase {
     private static final String QUEUE = "FOO";
     private static final int NUM_MESSAGES = 500;
 
@@ -50,6 +39,7 @@ public class PooledSessionExhaustionTest extends TestCase {
     private String connectionUri;
     private int numReceived = 0;
     private final List<Exception> exceptionList = new ArrayList<Exception>();
+
 
     @Override
     protected void setUp() throws Exception {
@@ -63,7 +53,8 @@ public class PooledSessionExhaustionTest extends TestCase {
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
-        pooledFactory.setBlockIfSessionPoolIsFull(false);
+        pooledFactory.setBlockIfSessionPoolIsFull(true);
+        pooledFactory.setBlockIfSessionPoolIsFullTimeout(500);
         pooledFactory.setMaximumActiveSessionPerConnection(1);
     }
 
@@ -77,8 +68,10 @@ public class PooledSessionExhaustionTest extends TestCase {
     class TestRunner implements Runnable {
 
         CyclicBarrier barrier;
-        TestRunner(CyclicBarrier barrier) {
+        CountDownLatch latch;
+        TestRunner(CyclicBarrier barrier, CountDownLatch latch) {
             this.barrier = barrier;
+            this.latch = latch;
         }
 
         @Override
@@ -86,6 +79,7 @@ public class PooledSessionExhaustionTest extends TestCase {
             try {
                 barrier.await();
                 sendMessages(pooledFactory);
+                this.latch.countDown();
             } catch (Exception e) {
                 exceptionList.add(e);
                 throw new RuntimeException(e);
@@ -111,6 +105,8 @@ public class PooledSessionExhaustionTest extends TestCase {
     }
 
     public void testCanExhaustSessions() throws Exception {
+        final int totalMessagesExpected =  NUM_MESSAGES * 2;
+        final CountDownLatch latch = new CountDownLatch(2);
         Thread thread = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -121,7 +117,7 @@ public class PooledSessionExhaustionTest extends TestCase {
                     Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     Destination destination = session.createQueue(QUEUE);
                     MessageConsumer consumer = session.createConsumer(destination);
-                    for (int i = 0; i < NUM_MESSAGES; ++i) {
+                    for (int i = 0; i < totalMessagesExpected; ++i) {
                         Message msg = consumer.receive(5000);
                         if (msg == null) {
                             return;
@@ -148,14 +144,13 @@ public class PooledSessionExhaustionTest extends TestCase {
             }
         });
 
-        threads.execute(new TestRunner(barrier));
-        threads.execute(new TestRunner(barrier));
+        threads.execute(new TestRunner(barrier, latch));
+        threads.execute(new TestRunner(barrier, latch));
 
+        latch.await(2, TimeUnit.SECONDS);
         thread.join();
 
-        // we should expect that one of the threads will die because it cannot acquire a session,
-        // will throw an exception
-        assertEquals(NUM_MESSAGES, numReceived);
-        assertEquals(exceptionList.size(), 1);
+        assertEquals(totalMessagesExpected, numReceived);
+
     }
 }

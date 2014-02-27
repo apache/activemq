@@ -296,6 +296,34 @@ public class ConnectionPool {
         return this.sessionPool.getWhenExhaustedAction() == GenericObjectPool.WHEN_EXHAUSTED_BLOCK;
     }
 
+    /**
+     * Returns the timeout to use for blocking creating new sessions
+     *
+     * @return true if the pooled Connection createSession method will block when the limit is hit.
+     * @see #setBlockIfSessionPoolIsFull(boolean)
+     */
+    public long getBlockIfSessionPoolIsFullTimeout() {
+        return this.sessionPool.getMaxWait();
+    }
+
+    /**
+     * Controls the behavior of the internal session pool. By default the call to
+     * Connection.getSession() will block if the session pool is full.  This setting
+     * will affect how long it blocks and throws an exception after the timeout.
+     *
+     * The size of the session pool is controlled by the @see #maximumActive
+     * property.
+     *
+     * Whether or not the call to create session blocks is controlled by the @see #blockIfSessionPoolIsFull
+     * property
+     *
+     * @param blockIfSessionPoolIsFullTimeout - if blockIfSessionPoolIsFullTimeout is true,
+     *                                        then use this setting to configure how long to block before retry
+     */
+    public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
+        this.sessionPool.setMaxWait(blockIfSessionPoolIsFullTimeout);
+    }
+
     @Override
     public String toString() {
         return "ConnectionPool[" + connection + "]";
