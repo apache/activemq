@@ -39,7 +39,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
 <table class="layout">
     <tr>
         <td class="layout"  valign="top">
-            <table id="header" class="sortable autostripe">
+            <table id="header" class="table table-stripped">
                 <thead>
                     <tr>
                         <th colspan="2">
@@ -49,51 +49,51 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="label" title="Unique Message ID for this message">Message ID</td>
+                        <td>Message ID</td>
                         <td><c:out value="${row.JMSMessageID}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Destination</td>
+                        <td>Destination</td>
                         <td><form:tooltip text="${row.JMSDestination}" length="50"/></td>
                     </tr>
                     <tr>
-                        <td class="label" title="The ID used to correlate messages together in a conversation">Correlation ID</td>
+                        <td>Correlation ID</td>
                         <td><c:out value="${row.JMSCorrelationID}"/></td>
                     </tr>
                     <tr>
-                        <td class="label" title="Message Group Identifier">Group</td>
+                        <td>Group</td>
                         <td><c:out value="${row.groupID}"/></td>
                     </tr>
                     <tr>
-                        <td class="label" title="Message Group Sequence Number">Sequence</td>
+                        <td>Sequence</td>
                         <td><c:out value="${row.groupSequence}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Expiration</td>
+                        <td>Expiration</td>
                         <td><c:out value="${row.JMSExpiration}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Persistence</td>
+                        <td>Persistence</td>
                         <td><jms:persistent message="${row}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Priority</td>
+                        <td>Priority</td>
                         <td><c:out value="${row.JMSPriority}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Redelivered</td>
+                        <td>Redelivered</td>
                         <td><c:out value="${row.JMSRedelivered}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Reply To</td>
+                        <td>Reply To</td>
                         <td><c:out value="${row.JMSReplyTo}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Timestamp</td>
+                        <td>Timestamp</td>
                         <td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
                     </tr>
                     <tr>
-                        <td class="label">Type</td>
+                        <td>Type</td>
                         <td><c:out value="${row.JMSType}"/></td>
                     </tr>
                 </tbody>
@@ -101,7 +101,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
         </td>
 
         <td  class="layout" valign="top">
-            <table id="properties" class="sortable autostripe">
+            <table id="properties" class="table table-stripped">
                 <thead>
                     <tr>
                         <th colspan="2">
@@ -112,7 +112,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 <tbody>
                    <form:forEachMapEntry items="${requestContext.messageQuery.propertiesMap}" var="prop">
                         <tr>
-                            <td class="label"><c:out value="${prop.key}"/></td>
+                            <td><c:out value="${prop.key}"/></td>
                             <td><c:out value="${prop.value}"/></td>
                         </tr>
                     </form:forEachMapEntry>
@@ -125,7 +125,7 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
             <table id="body" width="100%">
                 <thead>
                     <tr>
-                        <th colspan="2">
+                        <th colspan="2" class="table table-stripped">
                             Message Actions
                         </th>
                     </tr>
@@ -160,11 +160,14 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                     <tr class="odd">
                     <td><a href="<c:url value="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${requestContext.messageQuery.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue&secret=${sessionScope['secret']}"/>')">Copy</a></td>
                         <td rowspan="2">
-                            <select id="queue">
-                                <option value=""> -- Please select --</option>
+                          
+                            <select class="form-control" id="queue">
+                                <option value="" selected> -- Please select --</option>
                                 <c:forEach items="${requestContext.brokerQuery.queues}" var="queues">
                                     <c:if test="${queues.name != requestContext.messageQuery.JMSDestination}">
-                                    <option value="<c:out value="${queues.name}" />"><form:short text="${queues.name}" length="80"/></option>
+                                  	  <option value='<c:out value="${queues.name}" />'>
+                                   		 <form:short text="${queues.name}" length="80"/></option>
+                                    </option>
                                     </c:if>
                                 </c:forEach>
                             </select>
@@ -180,8 +183,8 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
         </td>
     </tr>
     <tr>
-        <td class="layout" colspan="2">
-            <table id="body" width="100%">
+        <td colspan="2">
+            <table id="body" width="100%" class="table table-stripped">
                 <thead>
                     <tr>
                         <th>
@@ -191,7 +194,13 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                 </thead>
                 <tbody>
                     <tr>
-                        <td><div class="message"><pre class="prettyprint"><c:out value="${requestContext.messageQuery.body}"/></pre></div></td>
+                        <td>
+                          <div>
+                        	<textarea  rows="30" cols="80" class="form-control">
+                           <c:out value="${requestContext.messageQuery.body}"/>
+                        </textarea>
+                        
+                        </div></td>
                     </tr>
                 </tbody>
             </table>
