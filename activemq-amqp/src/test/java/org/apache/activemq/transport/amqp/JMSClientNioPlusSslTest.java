@@ -16,25 +16,18 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import javax.jms.JMSException;
-
-import org.junit.Ignore;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-
 /**
- * Test the JMS client when connected to the NIO transport.
+ * Test the JMS client when connected to the NIO+SSL transport.
  */
-public class JMSClientNioTest extends JMSClientTest {
-    protected static final Logger LOG = LoggerFactory.getLogger(JMSClientNioTest.class);
+public class JMSClientNioPlusSslTest extends JMSClientSslTest {
+    protected static final Logger LOG = LoggerFactory.getLogger(JMSClientNioPlusSslTest.class);
 
     @Override
     protected int getBrokerPort() {
-        LOG.debug("JMSClientNioTest.getBrokerPort returning nioPort {}", nioPort);
-        return nioPort;
+        LOG.debug("JMSClientNioPlusSslTest.getBrokerPort returning nioPlusSslPort {}", nioPlusSslPort);
+        return nioPlusSslPort;
     }
 }

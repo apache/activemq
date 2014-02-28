@@ -57,7 +57,6 @@ import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Ignore
 public class JMSClientTest extends AmqpTestSupport {
     protected static final Logger LOG = LoggerFactory.getLogger(JMSClientTest.class);
     @Rule public TestName name = new TestName();
@@ -353,7 +352,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=90000)
     public void testConsumerReceiveNoWaitThrowsWhenBrokerStops() throws Exception {
 
         Connection connection = createConnection();
@@ -377,7 +376,7 @@ public class JMSClientTest extends AmqpTestSupport {
         try {
             for (int i = 0; i < 10; ++i) {
                 consumer.receiveNoWait();
-                TimeUnit.SECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(1000 + (i * 100));
             }
             fail("Should have thrown an IllegalStateException");
         } catch (Exception ex) {
@@ -385,7 +384,7 @@ public class JMSClientTest extends AmqpTestSupport {
         }
     }
 
-    @Test(timeout=30000)
+    @Test(timeout=60000)
     public void testConsumerReceiveTimedThrowsWhenBrokerStops() throws Exception {
 
         Connection connection = createConnection();
@@ -408,7 +407,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
         try {
             for (int i = 0; i < 10; ++i) {
-                consumer.receive(1000);
+                consumer.receive(1000 + (i * 100));
             }
             fail("Should have thrown an IllegalStateException");
         } catch (Exception ex) {
@@ -753,15 +752,15 @@ public class JMSClientTest extends AmqpTestSupport {
     }
 
     private Connection createConnection() throws JMSException {
-        return createConnection(name.toString(), false);
+        return createConnection(name.toString(), false, false);
     }
 
     private Connection createConnection(boolean syncPublish) throws JMSException {
-        return createConnection(name.toString(), syncPublish);
+        return createConnection(name.toString(), syncPublish, false);
     }
 
     private Connection createConnection(String clientId) throws JMSException {
-        return createConnection(clientId, false);
+        return createConnection(clientId, false, false);
     }
 
     /**
@@ -773,11 +772,11 @@ public class JMSClientTest extends AmqpTestSupport {
         return port;
     }
 
-    private Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
+    protected Connection createConnection(String clientId, boolean syncPublish, boolean useSsl) throws JMSException {
 
         int brokerPort = getBrokerPort();
         LOG.debug("Creating connection on port {}", brokerPort);
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", brokerPort, "admin", "password");
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", brokerPort, "admin", "password", null, useSsl);
 
         factory.setSyncPublish(syncPublish);
         factory.setTopicPrefix("topic://");

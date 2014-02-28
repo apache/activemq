@@ -48,7 +48,6 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Ignore
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     //    TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
