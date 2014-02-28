@@ -82,7 +82,7 @@
             },
             empty: function () {
                 $("#messages").empty();
-                $("#messages").append("<tr>" + "<th>Message Id</th>" + "<th>Updated Date</th>" + "<th>Published Date</th>" + "<th>Summary</th>" + "<th>Delete</th>" + "</tr>" + this.getMQList());
+                $("#messages").append("<tr>" + "<th>Message Id</th>" + "<th>Updated Date</th>" + "<th>Published Date</th>" + "<th>Summary</th>" + "<th>Operations</th>" + "</tr>" + this.getMQList());
             },
             totalItems: function () {
                 return this.req.responseXML.firstChild.childElementCount;
@@ -94,10 +94,14 @@
                 var destName = "";
                 var msgId = "";
                 var delLink = "";
+                var destType = "";
                 var msgLink = "";
+                var moveLink = "";
+                var moveTargetDest = "";
                 var updateDate = "";
                 var publishDate = "";
                 var summary = "";
+                var queueNameSub = "";
 
                 for (var i = 3; i < this.req.responseXML.firstChild.childElementCount; i++) {
                     msgId = d.firstChild.children[i].children[0].textContent;
@@ -109,12 +113,40 @@
                     msgLink = "<a href='message.jsp?id=" + encodeURIComponent(msgId) + "&JMSDestination=" + encodeURIComponent(destName) + "'>" + htmlEncode(msgId) + "</a>";
                     delLink = "<a href='deleteMessage.action?messageId=" + encodeURIComponent(msgId) + "&JMSDestination=" + encodeURIComponent(destName) + "&secret=" + encodeURIComponent(_.sec) + "'>DELETE</a>";
 
+                    queueNameSub = destName.substr(0, 4);
+                    if ( ( queueNameSub == "DLT." ) || ( queueNameSub == "DLQ." ) ) {
+                        if ( queueNameSub == "DLT." )
+                            destType = "topic";
+                        else
+                            destType = "queue";
+
+                        moveTargetDest = destName.substr(4);
+                        moveLink = "<a href='moveMessage.action?destination=" +
+                                   encodeURIComponent(moveTargetDest) +
+                                   "&JMSDestination=" +
+                                   encodeURIComponent(destName) +
+                                   "&messageId=" +
+                                   encodeURIComponent(msgId) +
+                                   "&JMSDestinationType=" +
+                                   destType +
+                                   "&secret=" +
+                                   encodeURIComponent(_.sec) +
+                                   "' onclick=\"return confirm('Are you sure you want to retry this message on queue://" +
+                                   htmlEncode(moveTargetDest) + "?')\"" +
+                                   " title=\"Move to " + htmlEncode(moveTargetDest) + " to attempt reprocessing\"" +
+                                   ">RETRY</a>"
+                                   ;
+                    }
+                    else {
+                        moveLink = "";
+                    }
+
                     mqitems += "<tr>" +
                                "<td>" + msgLink + "</td>" +
                                "<td>" + htmlEncode(updateDate) + "</td>" +
                                "<td>" + htmlEncode(publishDate) + "</td>" +
                                "<td>" + htmlEncode(summary) + "</td>" +
-                               "<td>" + delLink + "</td>" + "</tr>";
+                               "<td>" + delLink + " " + moveLink + "</td>" + "</tr>";
                 }
                 return mqitems;
             }
