@@ -109,7 +109,6 @@
     <scala-bundle-version>2.9.1_3</scala-bundle-version>
     <shiro-version>1.2.2</shiro-version>
     <scalatest-version>1.8</scalatest-version>
-    <shiro-version>1.2.2</shiro-version>
     <slf4j-version>1.7.5</slf4j-version>
     <snappy-version>1.1.0.1</snappy-version>
     <spring-version>3.2.5.RELEASE</spring-version>
@@ -676,20 +675,6 @@
         <version>${openjpa-version}</version>
       </dependency>
       
-      <!-- Optional Shiro Support -->
-      <dependency>
-        <groupId>org.apache.shiro</groupId>
-        <artifactId>shiro-core</artifactId>
-        <version>${shiro-version}</version>
-        <optional>true</optional>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.shiro</groupId>
-        <artifactId>shiro-spring</artifactId>
-        <version>${shiro-version}</version>
-        <optional>true</optional>
-      </dependency>
-
       <!-- Optional Shiro Support -->
       <dependency>
         <groupId>org.apache.shiro</groupId>
