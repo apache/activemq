@@ -25,10 +25,13 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import junit.framework.Test;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.jmx.PersistenceAdapterViewMBean;
 import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.*;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +80,14 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         DataArrayResponse dar = (DataArrayResponse)response;
         assertEquals(4, dar.getData().length);
 
+        // view prepared in kahadb view
+        if (broker.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
+            PersistenceAdapterViewMBean kahadbView = getProxyToPersistenceAdapter(broker.getPersistenceAdapter().toString());
+            String txFromView = kahadbView.getTransactions();
+            LOG.info("Tx view fromm PA:" + txFromView);
+            assertTrue("xid with our dud format in transaction string " + txFromView, txFromView.contains("XID:[55,"));
+        }
+
         // restart the broker.
         restartBroker();
 
@@ -123,6 +134,12 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             fail("Excepted not found");
         } catch (InstanceNotFoundException expectedNotfound) {
         }
+    }
+
+    private PersistenceAdapterViewMBean getProxyToPersistenceAdapter(String name) throws MalformedObjectNameException, JMSException {
+       return (PersistenceAdapterViewMBean)broker.getManagementContext().newProxyInstance(
+               BrokerMBeanSupport.createPersistenceAdapterName(broker.getBrokerObjectName().toString(), name),
+               PersistenceAdapterViewMBean.class, true);
     }
 
     private RecoveredXATransactionViewMBean getProxyToPreparedTransactionViewMBean(TransactionId xid) throws MalformedObjectNameException, JMSException {
@@ -216,7 +233,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Commit the prepared transactions.
         for (int i = 0; i < dar.getData().length; i++) {
-            connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId)dar.getData()[i]));
+            connection.request(createCommitTransaction2Phase(connectionInfo, (TransactionId) dar.getData()[i]));
         }
 
         // We should get the committed transactions.
@@ -304,7 +321,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Commit the prepared transactions.
         for (int i = 0; i < dar.getData().length; i++) {
-            connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId) dar.getData()[i]));
+            connection.request(createCommitTransaction2Phase(connectionInfo, (TransactionId) dar.getData()[i]));
         }
 
         // We should get the committed transactions.
@@ -1057,7 +1074,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             }
             MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
-            connection.send(ack);
+            connection.request(ack);
         }
 
         // Don't commit
