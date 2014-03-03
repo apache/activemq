@@ -235,7 +235,7 @@ public class ActiveMQEndpointWorker {
                 c.close();
             }
         } catch (JMSException e) {
-            //
+            LOG.trace("failed to close c {}", c, e);
         }
     }
 
@@ -249,7 +249,7 @@ public class ActiveMQEndpointWorker {
                 cc.close();
             }
         } catch (JMSException e) {
-            //
+            LOG.trace("failed to close cc {}", cc, e);
         }
     }
 

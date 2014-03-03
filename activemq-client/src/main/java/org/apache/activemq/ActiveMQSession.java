@@ -649,7 +649,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
+    final AtomicInteger clearRequestsCounter = new AtomicInteger(0);
     void clearMessagesInProgress(AtomicInteger transportInterruptionProcessingComplete) {
+        clearRequestsCounter.incrementAndGet();
         executor.clearMessagesInProgress();
         // we are called from inside the transport reconnection logic which involves us
         // clearing all the connections' consumers dispatch and delivered lists. So rather
@@ -860,9 +862,25 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
             ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
-            if (message.isExpired() || connection.isDuplicate(ActiveMQSession.this, message)) {
-                // TODO: Ack it without delivery to client
-                continue;
+
+            MessageAck earlyAck = null;
+            if (message.isExpired()) {
+                earlyAck = new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1);
+            } else if (connection.isDuplicate(ActiveMQSession.this, message)) {
+                LOG.debug("{} got duplicate: {}", this, message.getMessageId());
+                earlyAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
+                earlyAck.setFirstMessageId(md.getMessage().getMessageId());
+                earlyAck.setPoisonCause(new Throwable("Duplicate delivery to " + this));
+            }
+            if (earlyAck != null) {
+                try {
+                    asyncSendPacket(earlyAck);
+                } catch (Throwable t) {
+                    LOG.error("error dispatching ack: {} ", earlyAck, t);
+                    connection.onClientInternalException(t);
+                } finally {
+                    continue;
+                }
             }
 
             if (isClientAcknowledge()||isIndividualAcknowledge()) {
@@ -886,16 +904,36 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 if (ack.getTransactionId() != null) {
                     getTransactionContext().addSynchronization(new Synchronization() {
 
-                        @Override
+                        final int clearRequestCount = (clearRequestsCounter.get() == Integer.MAX_VALUE ? clearRequestsCounter.incrementAndGet() : clearRequestsCounter.get());
                         public void beforeEnd() throws Exception {
-                            asyncSendPacket(ack);
+                            // validate our consumer so we don't push stale acks that get ignored
+                            if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
+                                LOG.debug("forcing rollback - {} consumer no longer active on {}", ack, connection);
+                                throw new TransactionRolledBackException("consumer " + ack.getConsumerId() + " no longer active on " + connection);
+                            }
+                            LOG.trace("beforeEnd ack {}", ack);
+                            sendAck(ack);
                         }
 
                         @Override
                         public void afterRollback() throws Exception {
+                            LOG.trace("rollback {}", ack, new Throwable("here"));
                             md.getMessage().onMessageRolledBack();
                             // ensure we don't filter this as a duplicate
                             connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
+
+                            // don't redeliver if we have been interrupted b/c the broker will redeliver on reconnect
+                            if (clearRequestsCounter.get() > clearRequestCount) {
+                                LOG.debug("No redelivery of {} on rollback of {} due to failover of {}", md, ack.getTransactionId(), connection.getTransport());
+                                return;
+                            }
+
+                            // validate our consumer so we don't push stale acks that get ignored or redeliver what will be redispatched
+                            if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
+                                LOG.debug("No local redelivery of {} on rollback of {} because consumer is no longer active on {}", md, ack.getTransactionId(), connection.getTransport());
+                                return;
+                            }
+
                             RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
                             int redeliveryCounter = md.getMessage().getRedeliveryCounter();
                             if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
@@ -932,6 +970,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     });
                 }
 
+                LOG.trace("{} onMessage({})", this, message.getMessageId());
                 messageListener.onMessage(message);
 
             } catch (Throwable e) {

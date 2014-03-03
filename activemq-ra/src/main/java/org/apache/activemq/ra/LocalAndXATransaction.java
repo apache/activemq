@@ -33,10 +33,14 @@ import org.slf4j.LoggerFactory;
 public class LocalAndXATransaction implements XAResource, LocalTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(LocalAndXATransaction.class);
 
-    private final TransactionContext transactionContext;
+    private TransactionContext transactionContext;
     private boolean inManagedTx;
 
     public LocalAndXATransaction(TransactionContext transactionContext) {
+        this.transactionContext = transactionContext;
+    }
+
+    public void setTransactionContext(TransactionContext transactionContext) {
         this.transactionContext = transactionContext;
     }
 

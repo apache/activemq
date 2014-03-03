@@ -201,13 +201,15 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             return;
         }
 
-        cleanup();
-
         try {
-            physicalConnection.close();
-            destroyed = true;
-        } catch (JMSException e) {
-            LOG.info("Error occurred during close of a JMS connection.", e);
+            cleanup();
+        } finally {
+            try {
+                physicalConnection.close();
+                destroyed = true;
+            } catch (JMSException e) {
+                LOG.trace("Error occurred during close of a JMS connection.", e);
+            }
         }
     }
 
@@ -233,10 +235,10 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             physicalConnection.cleanup();
         } catch (JMSException e) {
             throw new ResourceException("Could cleanup the ActiveMQ connection: " + e, e);
+        } finally {
+            // defer transaction cleanup till after close so that close is aware of the current tx
+            localAndXATransaction.cleanup();
         }
-        // defer transaction cleanup till after close so that close is aware of the current tx
-        localAndXATransaction.cleanup();
-
     }
 
     /**

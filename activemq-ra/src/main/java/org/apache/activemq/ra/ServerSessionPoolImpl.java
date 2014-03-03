@@ -227,11 +227,24 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         try {
             ActiveMQSession session = (ActiveMQSession)ss.getSession();
             List l = session.getUnconsumedMessages();
-            for (Iterator i = l.iterator(); i.hasNext();) {
-                dispatchToSession((MessageDispatch)i.next());
+            if (!l.isEmpty()) {
+                ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
+                if (connection != null) {
+                    for (Iterator i = l.iterator(); i.hasNext();) {
+                        MessageDispatch md = (MessageDispatch)i.next();
+                        if (connection.hasDispatcher(md.getConsumerId())) {
+                            dispatchToSession(md);
+                            LOG.trace("on remove of {} redispatch of {}", session, md);
+                        } else {
+                            LOG.trace("on remove not redispatching {}, dispatcher no longer present on {}", md, session.getConnection());
+                        }
+                    }
+                } else {
+                    LOG.trace("on remove of {} not redispatching while disconnected", session);
+                }
             }
         } catch (Throwable t) {
-            LOG.error("Error redispatching unconsumed messages from stale session", t);
+            LOG.error("Error redispatching unconsumed messages from stale server session {}", ss, t);
         }
         ss.close();
         synchronized (closing) {

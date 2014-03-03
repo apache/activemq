@@ -503,6 +503,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(ack.getConsumerId());
         if (consumerExchange != null) {
             broker.acknowledge(consumerExchange, ack);
+        } else if (ack.isInTransaction()) {
+            LOG.warn("no matching consumer, ignoring ack {}", consumerExchange, ack);
         }
         return null;
     }

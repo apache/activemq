@@ -1849,6 +1849,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         dispatchers.remove(consumerId);
     }
 
+    public boolean hasDispatcher(ConsumerId consumerId) {
+        return dispatchers.containsKey(consumerId);
+    }
+
     /**
      * @param o - the command to consume
      */
@@ -1878,6 +1882,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 md.setMessage(msg);
                             }
                             dispatcher.dispatch(md);
+                        } else {
+                            LOG.debug("{} no dispatcher for {} in {}", this, md, dispatchers);
                         }
                         return null;
                     }

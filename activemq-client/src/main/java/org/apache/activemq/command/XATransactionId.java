@@ -102,17 +102,50 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
         if (transactionKey == null) {
             StringBuffer s = new StringBuffer();
             s.append("XID:[" + formatId + ",globalId=");
-            for (int i = 0; i < globalTransactionId.length; i++) {
-                s.append(Integer.toHexString(globalTransactionId[i]));
-            }
+            s.append(stringForm(formatId, globalTransactionId));
             s.append(",branchId=");
-            for (int i = 0; i < branchQualifier.length; i++) {
-                s.append(Integer.toHexString(branchQualifier[i]));
-            }
+            s.append(stringForm(formatId, branchQualifier));
             s.append("]");
             transactionKey = s.toString();
         }
         return transactionKey;
+    }
+
+    private String stringForm(int format, byte[] uid) {
+        StringBuffer s = new StringBuffer();
+        switch (format) {
+            case 131077:  // arjuna
+                stringFormArj(s, uid);
+                break;
+            default: // aries
+                stringFormDefault(s, uid);
+        }
+        return s.toString();
+    }
+
+    private void stringFormDefault(StringBuffer s, byte[] uid) {
+        for (int i = 0; i < uid.length; i++) {
+            s.append(Integer.toHexString(uid[i]));
+        }
+    }
+
+    private void stringFormArj(StringBuffer s, byte[] uid) {
+        try {
+            DataByteArrayInputStream byteArrayInputStream = new DataByteArrayInputStream(uid);
+            s.append(Long.toString(byteArrayInputStream.readLong(), 16));
+            s.append(':');
+            s.append(Long.toString(byteArrayInputStream.readLong(), 16));
+            s.append(':');
+
+            s.append(Integer.toString(byteArrayInputStream.readInt(), 16));
+            s.append(':');
+            s.append(Integer.toString(byteArrayInputStream.readInt(), 16));
+            s.append(':');
+            s.append(Integer.toString(byteArrayInputStream.readInt(), 16));
+
+        } catch (Exception ignored) {
+            stringFormDefault(s, uid);
+        }
     }
 
     public String toString() {

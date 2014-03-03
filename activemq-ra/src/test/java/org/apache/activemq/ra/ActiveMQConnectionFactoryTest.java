@@ -117,5 +117,11 @@ public class ActiveMQConnectionFactoryTest extends TestCase {
         assertEquals("one resource", 1, resources.length);
 
         assertEquals("no pending transactions", 0, resources[0].recover(100).length);
+
+        // validate equality
+        XAResource[] resource2 = ra.getXAResources(null);
+        assertEquals("one resource", 1, resource2.length);
+        assertTrue("isSameRM true", resources[0].isSameRM(resource2[0]));
+        assertFalse("no tthe same instance", resources[0].equals(resource2[0]));
     }
 }

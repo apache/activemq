@@ -98,7 +98,9 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
                 throw (JMSException)e.getCause();
             }
             LOG.debug("Connection could not be created:", e);
-            throw new JMSException(e.getMessage());
+            JMSException jmsException = new JMSException(e.getMessage());
+            jmsException.setLinkedException(e);
+            throw jmsException;
         }
     }
 
