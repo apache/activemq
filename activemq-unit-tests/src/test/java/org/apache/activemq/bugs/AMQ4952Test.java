@@ -327,7 +327,7 @@ public class AMQ4952Test {
 
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
         EmbeddedDataSource remoteDataSource = new EmbeddedDataSource();
-        remoteDataSource.setDatabaseName("derbyDBRemoteBroker");
+        remoteDataSource.setDatabaseName("target/derbyDBRemoteBroker");
         remoteDataSource.setCreateDatabase("create");
         jdbc.setDataSource(remoteDataSource);
         broker.setPersistenceAdapter(jdbc);
@@ -400,7 +400,7 @@ public class AMQ4952Test {
         // Persistence adapter
         JDBCPersistenceAdapter localJDBCPersistentAdapter = new JDBCPersistenceAdapter();
         EmbeddedDataSource localDataSource = new EmbeddedDataSource();
-        localDataSource.setDatabaseName("derbyDBLocalBroker");
+        localDataSource.setDatabaseName("target/derbyDBLocalBroker");
         localDataSource.setCreateDatabase("create");
         localJDBCPersistentAdapter.setDataSource(localDataSource);
         broker.setPersistenceAdapter(localJDBCPersistentAdapter);
