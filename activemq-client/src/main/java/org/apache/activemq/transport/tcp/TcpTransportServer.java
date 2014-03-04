@@ -405,10 +405,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
-        super.doStop(stopper);
         if (serverSocket != null) {
             serverSocket.close();
         }
+        super.doStop(stopper);
     }
 
     @Override
