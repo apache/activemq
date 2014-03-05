@@ -73,13 +73,13 @@ public class AjaxTest extends JettyTestSupport {
         assertEquals( "Expected number of <response> elements is not correct.", expected, occurrences );
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreSentToQueueWhileClientIsPolling() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreSentToQueueWhileClientIsPolling ***" );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         // client 1 subscribes to a queue
         LOG.debug( "SENDING LISTEN" );
@@ -132,17 +132,18 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "<response id='handler' destination='queue://test' >msg1</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >msg2</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >msg3</response>", fullResponse );
-
         assertResponseCount( 3, fullResponse );
-    }
 
-    @Test(timeout = 60 * 1000)
+        httpClient.stop();
+}
+
+    @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreSentToTopicWhileClientIsPolling() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreSentToTopicWhileClientIsPolling ***" );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         // client 1 subscribes to a queue
         LOG.debug( "SENDING LISTEN" );
@@ -197,9 +198,11 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "<response id='handler' destination='topic://test' >msg2</response>", fullResponse );
         assertContains( "<response id='handler' destination='topic://test' >msg3</response>", fullResponse );
         assertResponseCount( 3, fullResponse );
+
+        httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreQueuedBeforeClientSubscribes() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreQueuedBeforeClientSubscribes ***" );
         // send messages to queue://test
@@ -208,8 +211,8 @@ public class AjaxTest extends JettyTestSupport {
         producer.send( session.createTextMessage("test three") );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         // client 1 subscribes to queue
         LOG.debug( "SENDING LISTEN" );
@@ -238,15 +241,17 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "<response id='handler' destination='queue://test' >test two</response>", response );
         assertContains( "<response id='handler' destination='queue://test' >test three</response>", response );
         assertResponseCount( 3, response );
+
+        httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testStompMessagesAreReceivedByAjaxClient() throws Exception {
         LOG.debug( "*** testStompMessagesAreRecievedByAjaxClient ***" );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         // client 1 subscribes to a queue
         LOG.debug( "SENDING LISTEN" );
@@ -307,15 +312,17 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "<response id='handler' destination='queue://test' >message4</response>", fullResponse );
         assertContains( "<response id='handler' destination='queue://test' >message5</response>", fullResponse );
         assertResponseCount( 5, fullResponse );
+
+        httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testAjaxMessagesAreReceivedByStompClient() throws Exception {
         LOG.debug( "*** testAjaxMessagesAreReceivedByStompClient ***" );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
@@ -349,9 +356,11 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "msg2", allMessageBodies );
         assertContains( "msg3", allMessageBodies );
         assertContains( "msg4", allMessageBodies );
+
+        httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testAjaxClientMayUseSelectors() throws Exception {
         LOG.debug( "*** testAjaxClientMayUseSelectors ***" );
 
@@ -364,10 +373,10 @@ public class AjaxTest extends JettyTestSupport {
         producer.send( msg );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
-        // client ubscribes to queue
+        // client subscribes to queue
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
@@ -392,12 +401,12 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( poll.getResponseContent() );
 
         String expected = "<response id='handler' destination='queue://test' >test two</response>";
-
         assertContains( expected, poll.getResponseContent() );
 
+        httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testMultipleAjaxClientsMayExistInTheSameSession() throws Exception {
         LOG.debug( "*** testMultipleAjaxClientsMayExistInTheSameSession ***" );
 
@@ -410,8 +419,8 @@ public class AjaxTest extends JettyTestSupport {
         producerB.send( session.createTextMessage("B2") );
 
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         // clientA subscribes to /queue/testA
         LOG.debug( "SENDING LISTEN" );
@@ -470,17 +479,18 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "clientB response : " + poll.getResponseContent() );
         expected1 =  "<response id='handlerB' destination='queue://testB' >B1</response>";
         expected2 = "<response id='handlerB' destination='queue://testB' >B2</response>";
-
         assertContains( expected1, poll.getResponseContent() );
         assertContains( expected2, poll.getResponseContent() );
+
+        httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesForMultipleTopics() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesForMultipleTopics ***" );
         HttpClient httpClient = new HttpClient();
-        httpClient.start();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
 
         LOG.debug( "SENDING LISTEN FOR /topic/topicA" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
@@ -545,5 +555,7 @@ public class AjaxTest extends JettyTestSupport {
         assertContains( "<response id='handlerA' destination='topic://topicA' >A2</response>", fullResponse );
         assertContains( "<response id='handlerB' destination='topic://topicB' >B2</response>", fullResponse );
         assertResponseCount( 4, fullResponse );
+
+        httpClient.stop();
      }
 }
