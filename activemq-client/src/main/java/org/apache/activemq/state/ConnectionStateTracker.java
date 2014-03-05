@@ -301,7 +301,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
             }
             if (LOG.isDebugEnabled()) {
-                LOG.debug("restore consumer: " + infoToSend.getConsumerId());
+                LOG.debug("consumer: " + infoToSend.getConsumerId());
             }
             transport.oneway(infoToSend);
         }

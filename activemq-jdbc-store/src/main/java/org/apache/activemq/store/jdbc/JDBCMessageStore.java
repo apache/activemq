@@ -18,6 +18,9 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
@@ -65,7 +68,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final JDBCPersistenceAdapter persistenceAdapter;
     protected AtomicLong lastRecoveredSequenceId = new AtomicLong(-1);
     protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
-
+    final Set<Long> recoveredAdditions = new LinkedHashSet<Long>();
     protected ActiveMQMessageAudit audit;
     
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
@@ -136,6 +139,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
     }
 
     protected void onAdd(MessageId messageId, long sequenceId, byte priority) {
+        if (lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
+            recoveredAdditions.add(sequenceId);
+        }
     }
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
@@ -275,6 +281,18 @@ public class JDBCMessageStore extends AbstractMessageStore {
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
+            if (!recoveredAdditions.isEmpty()) {
+                for (Iterator<Long> iterator = recoveredAdditions.iterator(); iterator.hasNext(); )  {
+                    Long sequenceId = iterator.next();
+                    iterator.remove();
+                    maxReturned--;
+                    if (sequenceId <= lastRecoveredSequenceId.get()) {
+                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(adapter.doGetMessageById(c, sequenceId)));
+                        LOG.trace("recovered add {} {}", this, msg.getMessageId());
+                        listener.recoverMessage(msg);
+                    }
+                }
+            }
             adapter.doRecoverNextMessages(c, destination, lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 

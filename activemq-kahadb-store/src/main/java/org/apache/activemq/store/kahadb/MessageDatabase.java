@@ -2302,6 +2302,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("rawtypes")
     protected final LinkedHashMap<TransactionId, List<Operation>> preparedTransactions = new LinkedHashMap<TransactionId, List<Operation>>();
     protected final Set<String> ackedAndPrepared = new HashSet<String>();
+    protected final Set<String> rolledBackAcks = new HashSet<String>();
 
     // messages that have prepared (pending) acks cannot be re-dispatched unless the outcome is rollback,
     // till then they are skipped by the store.
@@ -2317,12 +2318,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    public void forgetRecoveredAcks(ArrayList<MessageAck> acks) throws IOException {
+    public void forgetRecoveredAcks(ArrayList<MessageAck> acks, boolean rollback) throws IOException {
         if (acks != null) {
             this.indexLock.writeLock().lock();
             try {
                 for (MessageAck ack : acks) {
-                    ackedAndPrepared.remove(ack.getLastMessageId().toProducerKey());
+                    final String id = ack.getLastMessageId().toProducerKey();
+                    ackedAndPrepared.remove(id);
+                    if (rollback) {
+                        rolledBackAcks.add(id);
+                    }
                 }
             } finally {
                 this.indexLock.writeLock().unlock();
@@ -2943,6 +2948,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         public byte lastGetPriority() {
             return lastGetPriority;
+        }
+
+        public boolean alreadyDispatched(Long sequence) {
+            return (cursor.highPriorityCursorPosition > 0 && cursor.highPriorityCursorPosition >= sequence) ||
+                    (cursor.defaultCursorPosition > 0 && cursor.defaultCursorPosition >= sequence) ||
+                    (cursor.lowPriorityCursorPosition > 0 && cursor.lowPriorityCursorPosition >= sequence);
         }
 
         class MessageOrderIterator implements Iterator<Entry<Long, MessageKeys>>{

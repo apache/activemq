@@ -562,6 +562,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
+                        recoverRolledBackAcks(sd, tx, Integer.MAX_VALUE, listener);
                         sd.orderIndex.resetCursorPosition();
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); listener.hasSpace() && iterator
                                 .hasNext(); ) {
@@ -589,7 +590,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Entry<Long, MessageKeys> entry = null;
-                        int counter = 0;
+                        int counter = recoverRolledBackAcks(sd, tx, maxReturned, listener);
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext(); ) {
                             entry = iterator.next();
                             if (ackedAndPrepared.contains(entry.getValue().messageId)) {
@@ -609,6 +610,31 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 indexLock.writeLock().unlock();
             }
         }
+
+        protected int recoverRolledBackAcks(StoredDestination sd, Transaction tx, int maxReturned, MessageRecoveryListener listener) throws Exception {
+            int counter = 0;
+            String id;
+            for (Iterator<String> iterator = rolledBackAcks.iterator(); iterator.hasNext(); ) {
+                id = iterator.next();
+                iterator.remove();
+                Long sequence = sd.messageIdIndex.get(tx, id);
+                if (sequence != null) {
+                    if (sd.orderIndex.alreadyDispatched(sequence)) {
+                        listener.recoverMessage(loadMessage(sd.orderIndex.get(tx, sequence).location));
+                        counter++;
+                        if (counter >= maxReturned) {
+                            break;
+                        }
+                    } else {
+                        LOG.info("rolledback ack message {} with seq {} will be picked up in future batch {}", id, sequence, sd.orderIndex.cursor);
+                    }
+                } else {
+                    LOG.warn("Failed to locate rolled back ack message {} in {}", id, sd);
+                }
+            }
+            return counter;
+        }
+
 
         @Override
         public void resetBatching() {
@@ -875,6 +901,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         LastAck cursorPos = getLastAck(tx, sd, subscriptionKey);
                         sd.orderIndex.setBatch(tx, cursorPos);
+                        recoverRolledBackAcks(sd, tx, Integer.MAX_VALUE, listener);
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<Long, MessageKeys> entry = iterator.next();
@@ -918,7 +945,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
 
                         Entry<Long, MessageKeys> entry = null;
-                        int counter = 0;
+                        int counter = recoverRolledBackAcks(sd, tx, maxReturned, listener);
                         for (Iterator<Entry<Long, MessageKeys>> iterator = sd.orderIndex.iterator(tx, moc); iterator
                                 .hasNext();) {
                             entry = iterator.next();

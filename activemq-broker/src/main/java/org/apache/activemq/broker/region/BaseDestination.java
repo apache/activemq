@@ -794,23 +794,6 @@ public abstract class BaseDestination implements Destination {
 
     public void duplicateFromStore(Message message, Subscription durableSub) {
         ConnectionContext connectionContext = createConnectionContext();
-
-        TransactionId transactionId = message.getTransactionId();
-        if (transactionId != null && transactionId.isXATransaction()) {
-            try {
-                List<TransactionId> preparedTx = Arrays.asList(broker.getRoot().getPreparedTransactions(connectionContext));
-                getLog().trace("processing duplicate in {}, prepared {} ", transactionId, preparedTx);
-                if (!preparedTx.contains(transactionId)) {
-                    // duplicates from past transactions expected after org.apache.activemq.broker.region.Destination#clearPendingMessages
-                    // till they are acked
-                    getLog().debug("duplicate message from store {}, from historical transaction {}, ignoring", message.getMessageId(), transactionId);
-                    return;
-                }
-            } catch (Exception ignored) {
-                getLog().debug("failed to determine state of transaction {} on duplicate message {}", transactionId, message.getMessageId(), ignored);
-            }
-        }
-
         getLog().warn("duplicate message from store {}, redirecting for dlq processing", message.getMessageId());
         Throwable cause = new Throwable("duplicate from store for " + destination);
         message.setRegionDestination(this);

@@ -69,6 +69,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         this.storeHasMessages=this.size > 0;
     }
 
+    @Override
+    public void rebase() {
+        resetSize();
+    }
+
     public final synchronized void stop() throws Exception {
         resetBatch();
         super.stop();
@@ -289,7 +294,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         return !batchList.isEmpty();
     }
 
-    
+
     public final synchronized int size() {
         if (size < 0) {
             this.size = getStoreSize();
@@ -307,7 +312,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected abstract void doFillBatch() throws Exception;
     
     protected abstract void resetBatch();
-    
+
     protected abstract int getStoreSize();
     
     protected abstract boolean isStoreEmpty();

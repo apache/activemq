@@ -309,4 +309,11 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
         return cacheEnabled;
     }
+
+    @Override
+    public void rebase() {
+        persistent.rebase();
+        reset();
+    }
+
 }
