@@ -199,9 +199,6 @@
           <systemPropertyVariables>
             <derby.stream.error.file>target/derby.log</derby.stream.error.file>
           </systemPropertyVariables>
-          <excludes>
-            <exclude>**/JmsJdbcXALoadTest.java</exclude><!-- used only for manual xa performance testing -->
-          </excludes>
         </configuration>
       </plugin>
     </plugins>
