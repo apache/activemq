@@ -92,8 +92,12 @@ public class RestTest extends JettyTestSupport {
     }
 
     // test for https://issues.apache.org/activemq/browse/AMQ-2827
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testCorrelation() throws Exception {
+        HttpClient httpClient = new HttpClient();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
+
         for (int i = 0; i < 200; i++) {
             String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
 
@@ -102,13 +106,9 @@ public class RestTest extends JettyTestSupport {
             message.setJMSCorrelationID(correlId);
 
             LOG.info("Sending: " + correlId);
-
             producer.send(message);
 
-            HttpClient httpClient = new HttpClient();
-            httpClient.start();
             ContentExchange contentExchange = new ContentExchange();
-            httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
             contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue&clientId=test");
             httpClient.send(contentExchange);
             contentExchange.waitForDone();
@@ -116,9 +116,10 @@ public class RestTest extends JettyTestSupport {
             assertEquals(200, contentExchange.getResponseStatus());
             assertEquals(correlId, contentExchange.getResponseContent());
         }
+    	httpClient.stop();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testDisconnect() throws Exception {
 
         producer.send(session.createTextMessage("test"));
@@ -144,7 +145,7 @@ public class RestTest extends JettyTestSupport {
         assertEquals("Consumers not closed", 0 , subs.size());
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testPost() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -165,7 +166,7 @@ public class RestTest extends JettyTestSupport {
     }
 
     // test for https://issues.apache.org/activemq/browse/AMQ-3857
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testProperties() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -190,7 +191,7 @@ public class RestTest extends JettyTestSupport {
     }
 
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 15 * 1000)
     public void testAuth() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
