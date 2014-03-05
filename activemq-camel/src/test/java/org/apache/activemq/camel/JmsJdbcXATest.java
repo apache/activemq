@@ -45,7 +45,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  *  shows broker 'once only delivery' and recovery with XA
  */
-@Ignore("Test hangs")
 public class JmsJdbcXATest extends CamelSpringTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsJdbcXATest.class);
     BrokerService broker = null;
