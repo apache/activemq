@@ -127,6 +127,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.openejb</groupId>
+      <artifactId>openejb-core</artifactId>
+      <version>3.1</version>
+      <optional>true</optional>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.objectweb.howl</groupId>
       <artifactId>howl</artifactId>
       <version>1.0.1-1</version>
