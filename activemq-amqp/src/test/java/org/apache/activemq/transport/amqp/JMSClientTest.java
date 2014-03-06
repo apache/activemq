@@ -49,7 +49,6 @@ import org.apache.activemq.util.Wait;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -104,6 +103,40 @@ public class JMSClientTest extends AmqpTestSupport {
             Message msg = consumer.receive(TestConfig.TIMEOUT);
             assertNotNull(msg);
             assertTrue(msg instanceof TextMessage);
+        }
+        connection.close();
+    }
+
+    @Test(timeout=30000)
+    public void testAnonymousProducerConsume() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        Connection connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue1 = session.createQueue(name.toString() + "1");
+            Queue queue2 = session.createQueue(name.toString() + "2");
+            MessageProducer p = session.createProducer(null);
+
+            TextMessage message = session.createTextMessage();
+            message.setText("hello");
+            p.send(queue1, message);
+            p.send(queue2, message);
+
+            {
+                MessageConsumer consumer = session.createConsumer(queue1);
+                Message msg = consumer.receive(TestConfig.TIMEOUT);
+                assertNotNull(msg);
+                assertTrue(msg instanceof TextMessage);
+                consumer.close();
+            }
+            {
+                MessageConsumer consumer = session.createConsumer(queue2);
+                Message msg = consumer.receive(TestConfig.TIMEOUT);
+                assertNotNull(msg);
+                assertTrue(msg instanceof TextMessage);
+                consumer.close();
+            }
         }
         connection.close();
     }
