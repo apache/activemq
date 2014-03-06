@@ -43,6 +43,27 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+
+    public void testGetNext() throws Exception {
+
+        RedeliveryPolicy policy = new RedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(0);
+        policy.setRedeliveryDelay(500);
+        policy.setBackOffMultiplier((short) 2);
+        policy.setUseExponentialBackOff(true);
+
+        long delay = policy.getNextRedeliveryDelay(0);
+        assertEquals(500, delay);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(500*2, delay);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(500*4, delay);
+
+        policy.setUseExponentialBackOff(false);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(500, delay);
+    }
+
     /**
      * @throws Exception
      */
@@ -185,7 +206,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());
         session.rollback();
 
-        m = (TextMessage)consumer.receive(1000);
+        m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
         session.rollback();
@@ -245,27 +266,27 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals("1st", m.getText());
         session.rollback();
 
-        m = (TextMessage)consumer.receive(1000);
+        m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
         session.rollback();
 
-        m = (TextMessage)consumer.receive(1000);
+        m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
         session.rollback();
 
-        m = (TextMessage)consumer.receive(1000);
+        m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
         session.rollback();
 
-        m = (TextMessage)consumer.receive(1000);
+        m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("1st", m.getText());
         session.commit();
 
-        m = (TextMessage)consumer.receive(1000);
+        m = (TextMessage)consumer.receive(2000);
         assertNotNull(m);
         assertEquals("2nd", m.getText());
         session.commit();

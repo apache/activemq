@@ -98,18 +98,14 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     }
 
     public long getNextRedeliveryDelay(long previousDelay) {
-        long nextDelay;
+        long nextDelay = redeliveryDelay;
 
-        if (previousDelay == 0) {
-            nextDelay = redeliveryDelay;
-        } else if (useExponentialBackOff && backOffMultiplier > 1) {
+        if (previousDelay > 0 && useExponentialBackOff && backOffMultiplier > 1) {
             nextDelay = (long) (previousDelay * backOffMultiplier);
             if(maximumRedeliveryDelay != -1 && nextDelay > maximumRedeliveryDelay) {
                 // in case the user made max redelivery delay less than redelivery delay for some reason.
                 nextDelay = Math.max(maximumRedeliveryDelay, redeliveryDelay);
             }
-        } else {
-            nextDelay = previousDelay;
         }
 
         if (useCollisionAvoidance) {
