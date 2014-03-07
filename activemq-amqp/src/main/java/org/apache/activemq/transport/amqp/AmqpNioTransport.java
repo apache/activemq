@@ -38,14 +38,12 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the {@link org.apache.activemq.transport.Transport} interface for using AMQP over NIO
  */
 public class AmqpNioTransport extends TcpTransport {
-    private DataInputStream amqpHeaderValue = new DataInputStream(new ByteArrayInputStream(new byte[]{'A', 'M', 'Q', 'P'}));
+    private final DataInputStream amqpHeaderValue = new DataInputStream(new ByteArrayInputStream(new byte[]{'A', 'M', 'Q', 'P'}));
     private final Integer AMQP_HEADER_VALUE = amqpHeaderValue.readInt();
 
     private SocketChannel channel;
@@ -61,17 +59,20 @@ public class AmqpNioTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
         channel.configureBlocking(false);
         // listen for events telling us when the socket is readable.
         selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+            @Override
             public void onSelect(SelectorSelection selection) {
                 if (!isStopped()) {
                     serviceRead();
                 }
             }
 
+            @Override
             public void onError(SelectorSelection selection, Throwable error) {
                 if (error instanceof IOException) {
                     onException((IOException) error);
@@ -154,12 +155,14 @@ public class AmqpNioTransport extends TcpTransport {
         }
     }
 
+    @Override
     protected void doStart() throws Exception {
         connect();
         selection.setInterestOps(SelectionKey.OP_READ);
         selection.enable();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         try {
             if (selection != null) {

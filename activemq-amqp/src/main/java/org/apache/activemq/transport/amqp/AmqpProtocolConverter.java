@@ -1151,7 +1151,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             sender.setSource(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
-                            String name = exception.getClass().getName();
                             sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                         }
                         sender.open();

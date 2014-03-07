@@ -82,7 +82,7 @@ public class AmqpTestSupport {
         Future<Boolean> future = executor.submit(new SetUpTask());
         try {
             LOG.debug("SetUpTask started.");
-            Boolean result =  future.get(60, TimeUnit.SECONDS);
+            future.get(60, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             throw new Exception("startBroker timed out");
         }
@@ -164,7 +164,7 @@ public class AmqpTestSupport {
         Future<Boolean> future = executor.submit(new TearDownTask());
         try {
             LOG.debug("tearDown started.");
-            Boolean result =  future.get(60, TimeUnit.SECONDS);
+            future.get(60, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             throw new Exception("startBroker timed out");
         }
@@ -247,6 +247,7 @@ public class AmqpTestSupport {
     }
 
     public class SetUpTask implements Callable<Boolean> {
+        @SuppressWarnings("unused")
         private String testName;
 
         @Override
@@ -259,6 +260,7 @@ public class AmqpTestSupport {
     }
 
     public class TearDownTask implements Callable<Boolean> {
+        @SuppressWarnings("unused")
         private String testName;
 
         @Override
@@ -269,5 +271,4 @@ public class AmqpTestSupport {
             return Boolean.TRUE;
         }
     }
-
 }

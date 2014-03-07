@@ -16,15 +16,8 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import javax.jms.JMSException;
-
-import org.junit.Ignore;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 
 /**
  * Test the JMS client when connected to the NIO transport.

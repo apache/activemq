@@ -27,6 +27,7 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -80,11 +81,11 @@ public class ActiveMQJMSVendor extends JMSVendor {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public Destination createDestination(String name) {
         return super.createDestination(name, Destination.class);
     }
 
+    @Override
     public <T extends Destination> T createDestination(String name, Class<T> kind) {
         if( kind == Queue.class ) {
             return kind.cast(new ActiveMQQueue(name));
