@@ -537,7 +537,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     @Override
     public Response processPrepareTransaction(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -555,7 +555,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     @Override
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -573,7 +573,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     @Override
     public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -591,7 +591,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     @Override
     public Response processRollbackTransaction(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -609,7 +609,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     @Override
     public Response processEndTransaction(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
