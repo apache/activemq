@@ -100,7 +100,7 @@ public interface BrokerViewMBean extends Service {
     long getTotalMessageCount();
 
     @MBeanInfo("Average message size on this broker")
-    double getAverageMessageSize();
+    long getAverageMessageSize();
 
     @MBeanInfo("Max message size on this broker")
     public long getMaxMessageSize();

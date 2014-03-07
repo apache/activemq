@@ -163,8 +163,9 @@ public class BrokerView implements BrokerViewMBean {
      * @return the average size of a message (bytes)
      */
     @Override
-    public double getAverageMessageSize() {
-        return safeGetBroker().getDestinationStatistics().getMessageSize().getAverageSize();
+    public long getAverageMessageSize() {
+        // we are okay with the size without decimals so cast to long
+        return (long) safeGetBroker().getDestinationStatistics().getMessageSize().getAverageSize();
     }
 
     /**
