@@ -30,15 +30,6 @@
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
 
-  <!-- Maven repository hosting Jolokia -->
-  <repositories>
-    <repository>
-    <id>labs-consol-release</id>
-        <name>ConSol* Labs Repository (Releases)</name>
-        <url>http://labs.consol.de/maven/repository</url>
-    </repository>
-  </repositories>
-
   <dependencies>
 
     <!-- activemq -->
@@ -416,7 +407,7 @@
     <dependency>
       <groupId>com.googlecode.json-simple</groupId>
       <artifactId>json-simple</artifactId>
-      <version>1.1.1</version>
+      <version>${json-simple-version}</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.insight</groupId>
