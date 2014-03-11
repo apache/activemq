@@ -784,6 +784,42 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    private String createLargeString(int sizeInBytes) {
+        byte[] base = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < sizeInBytes; i++) {
+            builder.append(base[i % base.length]);
+        }
+
+        LOG.debug("Created string with size : " + builder.toString().getBytes().length + " bytes");
+        return builder.toString();
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testSendLargeMessage() throws JMSException, InterruptedException {
+        Connection connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        String queueName = name.toString();
+        Queue queue = session.createQueue(queueName);
+
+        MessageProducer producer=session.createProducer(queue);
+        int messageSize = 1024 * 1024;
+        String messageText = createLargeString(messageSize);
+        Message m=session.createTextMessage(messageText);
+        LOG.debug("Sending message of {} bytes on queue {}", messageSize, queueName);
+        producer.send(m);
+
+        MessageConsumer  consumer=session.createConsumer(queue);
+
+        Message message = consumer.receive();
+        assertNotNull(message);
+        assertTrue(message instanceof TextMessage);
+        TextMessage textMessage = (TextMessage) message;
+        LOG.debug(">>>> Received message of length {}", textMessage.getText().length());
+        assertEquals(messageSize, textMessage.getText().length());
+        assertEquals(messageText, textMessage.getText());
+    }
+
     private Connection createConnection() throws JMSException {
         return createConnection(name.toString(), false, false);
     }

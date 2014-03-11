@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.joram;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
@@ -41,6 +42,7 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 /**
  * Run the JoramJmsTests using amqp+nio
  */
+@Ignore("AMQ-5094")
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     // TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154

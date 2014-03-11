@@ -16,8 +16,17 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
+import org.apache.activemq.transport.nio.NIOOutputStream;
+import org.apache.activemq.transport.nio.SelectorManager;
+import org.apache.activemq.transport.nio.SelectorSelection;
+import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.SocketFactory;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -28,26 +37,14 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-import javax.net.SocketFactory;
-
-import org.apache.activemq.transport.nio.NIOOutputStream;
-import org.apache.activemq.transport.nio.SelectorManager;
-import org.apache.activemq.transport.nio.SelectorSelection;
-import org.apache.activemq.transport.tcp.TcpTransport;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.wireformat.WireFormat;
-import org.fusesource.hawtbuf.Buffer;
-
 /**
  * An implementation of the {@link org.apache.activemq.transport.Transport} interface for using AMQP over NIO
  */
 public class AmqpNioTransport extends TcpTransport {
-    private final DataInputStream amqpHeaderValue = new DataInputStream(new ByteArrayInputStream(new byte[]{'A', 'M', 'Q', 'P'}));
-    private final Integer AMQP_HEADER_VALUE = amqpHeaderValue.readInt();
-
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpNioTransport.class);
     private SocketChannel channel;
     private SelectorSelection selection;
+    private AmqpNioTransportHelper amqpNioTransportHelper = new AmqpNioTransportHelper(this);
 
     private ByteBuffer inputBuffer;
 
@@ -110,40 +107,7 @@ public class AmqpNioTransport extends TcpTransport {
                 receiveCounter += readSize;
 
                 inputBuffer.flip();
-
-                if( !magicRead ) {
-                    if( inputBuffer.remaining()>= 8 ) {
-                        magicRead = true;
-                        Buffer magic = new Buffer(8);
-                        for (int i = 0; i < 8; i++) {
-                            magic.data[i] = inputBuffer.get();
-                        }
-                        doConsume(new AmqpHeader(magic));
-                    } else {
-                        inputBuffer.flip();
-                        continue;
-                    }
-                }
-
-                while(inputBuffer.position() < inputBuffer.limit()) {
-                    inputBuffer.mark();
-                    int commandSize = inputBuffer.getInt();
-                    inputBuffer.reset();
-
-                    // handles buffers starting with 'A','M','Q','P' rather than size
-                    if (commandSize == AMQP_HEADER_VALUE) {
-                        doConsume(AmqpSupport.toBuffer(inputBuffer));
-                        break;
-                    }
-
-                    byte[] bytes = new byte[commandSize];
-                    ByteBuffer commandBuffer = ByteBuffer.allocate(commandSize);
-                    inputBuffer.get(bytes, 0, commandSize);
-                    commandBuffer.put(bytes);
-                    commandBuffer.flip();
-                    doConsume(AmqpSupport.toBuffer(commandBuffer));
-                    commandBuffer.clear();
-                }
+                amqpNioTransportHelper.processCommand(inputBuffer);
 
                 // clear the buffer
                 inputBuffer.clear();
