@@ -158,6 +158,7 @@ public class AmqpNioTransportHelper {
         } else {
             transportSupport.doConsume(AmqpSupport.toBuffer(currentBuffer));
         }
+        currentBuffer = null;
 
         if (plain.hasRemaining()) {
             if (plain.remaining() < 4) {
@@ -167,8 +168,8 @@ public class AmqpNioTransportHelper {
             }
         } else {
             nextFrameSize = -1;
-            currentBuffer = null;
         }
+
         return nextFrameSize;
     }
 

@@ -42,7 +42,6 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 /**
  * Run the JoramJmsTests using amqp+nio
  */
-@Ignore("AMQ-5094")
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     // TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
