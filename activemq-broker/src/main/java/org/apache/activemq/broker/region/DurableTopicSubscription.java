@@ -29,6 +29,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -160,7 +161,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
 
             synchronized (pendingLock) {
-                if (!((StoreDurableSubscriberCursor) pending).isStarted() || !keepDurableSubsActive) {
+                if (!((AbstractPendingMessageCursor) pending).isStarted() || !keepDurableSubsActive) {
                     pending.setSystemUsage(memoryManager);
                     pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
                     pending.setMaxAuditDepth(getMaxAuditDepth());
