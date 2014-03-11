@@ -40,7 +40,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     final ActiveMQQueue destination = new ActiveMQQueue("Redelivery");
     final String data = "hi";
     final long redeliveryDelayMillis = 2000;
-    final long initialRedeliveryDelayMillis = 4000;
+    long initialRedeliveryDelayMillis = 4000;
     int maxBrokerRedeliveries = 2;
 
     public void testScheduledRedelivery() throws Exception {
@@ -48,6 +48,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     }
 
     public void testInfiniteRedelivery() throws Exception {
+        initialRedeliveryDelayMillis = redeliveryDelayMillis;
         maxBrokerRedeliveries = RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES;
         doTestScheduledRedelivery(RedeliveryPolicy.DEFAULT_MAXIMUM_REDELIVERIES + 1, false);
     }
