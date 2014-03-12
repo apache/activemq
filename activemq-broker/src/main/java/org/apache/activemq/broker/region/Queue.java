@@ -1230,15 +1230,17 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     }
 
     private boolean shouldPageInMoreForBrowse(int max) {
+        int alreadyPagedIn = 0;
         pagedInMessagesLock.readLock().lock();
         try {
-            int alreadyPagedIn = pagedInMessages.size();
-            return  alreadyPagedIn < max
-                    && alreadyPagedIn < getDestinationStatistics().getMessages().getCount()
-                    && !memoryUsage.isFull(110);
+            alreadyPagedIn = pagedInMessages.size();
         } finally {
             pagedInMessagesLock.readLock().unlock();
         }
+        LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, destinationStatistics.getMessages().getCount(), memoryUsage.getPercentUsage()});
+        return (alreadyPagedIn < max)
+                && (alreadyPagedIn < destinationStatistics.getMessages().getCount())
+                && messages.hasSpace();
     }
 
     private void addAll(Collection<? extends MessageReference> refs, List<Message> l, int max,
