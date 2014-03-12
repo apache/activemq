@@ -19,6 +19,7 @@ package org.apache.activemq.bugs;
 
 import java.io.File;
 import java.lang.IllegalStateException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -518,12 +519,17 @@ public class AMQ2149Test {
             threads.add(thread);
         }
         
-        final long expiry = System.currentTimeMillis() + 1000 * 60 * 30;
+        final long expiry = System.currentTimeMillis() + 1000 * 60 * 4;
         while(!threads.isEmpty() && exceptions.isEmpty() && System.currentTimeMillis() < expiry) {
             Thread sendThread = threads.firstElement();
-            sendThread.join(1000*10);
+            sendThread.join(1000*20);
             if (!sendThread.isAlive()) {
                 threads.remove(sendThread);
+            } else {
+                Throwable throwable = new Throwable("blocked send thread");
+                throwable.setStackTrace(sendThread.getStackTrace());
+                LOG.error("Send thread blocked", throwable);
+                throwable.printStackTrace();
             }
         }
         LOG.info("senders done..." + threads);
@@ -535,10 +541,6 @@ public class AMQ2149Test {
                 receivers.remove(receiver);
             }
         }
-        assertTrue("No timeout waiting for senders/receivers to complete", System.currentTimeMillis() < expiry);
-        if (!exceptions.isEmpty()) {
-            exceptions.get(0).printStackTrace();
-        }
 
         for (Connection connection : connections) {
             try {
@@ -546,6 +548,11 @@ public class AMQ2149Test {
             } catch (Exception ignored) {}
         }
         connections.clear();
+
+        assertTrue("No timeout waiting for senders/receivers to complete", System.currentTimeMillis() < expiry);
+        if (!exceptions.isEmpty()) {
+            exceptions.get(0).printStackTrace();
+        }
 
         LOG.info("Dangling threads: " + threads);
         for (Thread dangling : threads) {
