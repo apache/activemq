@@ -743,7 +743,11 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             receiver.setTarget(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
-                            receiver.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            if (exception instanceof SecurityException) {
+                                receiver.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                            } else {
+                                receiver.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            }
                             receiver.close();
                         } else {
                             receiver.open();
@@ -1151,7 +1155,11 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             sender.setSource(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
-                            sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            if (exception instanceof SecurityException) {
+                                sender.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                            } else {
+                                sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            }
                         }
                         sender.open();
                         pumpProtonToSocket();
@@ -1203,11 +1211,13 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     if (response.isException()) {
                         sender.setSource(null);
                         Throwable exception = ((ExceptionResponse) response).getException();
-                        Symbol condition = AmqpError.INTERNAL_ERROR;
-                        if (exception instanceof InvalidSelectorException) {
-                            condition = AmqpError.INVALID_FIELD;
+                        if (exception instanceof SecurityException) {
+                            sender.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                        } else if (exception instanceof InvalidSelectorException) {
+                            sender.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage()));
+                        } else {
+                            sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                         }
-                        sender.setCondition(new ErrorCondition(condition, exception.getMessage()));
                         subscriptionsByConsumerId.remove(id);
                         sender.close();
                     } else {
