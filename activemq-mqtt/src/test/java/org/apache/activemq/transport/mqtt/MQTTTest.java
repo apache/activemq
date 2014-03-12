@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -30,12 +31,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotEquals;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.Wait;
+import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
@@ -512,6 +515,195 @@ public class MQTTTest extends AbstractMQTTTest {
 
     }
 
+    @Test(timeout = 60 * 1000)
+    public void testUniqueMessageIds() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo");
+        mqtt.setKeepAlive((short)2);
+        mqtt.setCleanSession(true);
+
+        final List<PUBLISH> publishList = new ArrayList<PUBLISH>();
+        mqtt.setTracer(new Tracer() {
+            @Override
+            public void onReceive(MQTTFrame frame) {
+                LOG.info("Client received:\n" + frame);
+                if (frame.messageType() == PUBLISH.TYPE) {
+                    PUBLISH publish = new PUBLISH();
+                    try {
+                        // copy the buffers before we decode
+                        Buffer[] buffers = frame.buffers();
+                        Buffer[] copy = new Buffer[buffers.length];
+                        for (int i = 0; i < buffers.length; i++) {
+                            copy[i] = buffers[i].deepCopy();
+                        }
+                        publish.decode(frame);
+                        // reset frame buffers to deep copy
+                        frame.buffers(copy);
+                    } catch (ProtocolException e) {
+                        fail("Error decoding publish " + e.getMessage());
+                    }
+                    publishList.add(publish);
+                }
+            }
+
+            @Override
+            public void onSend(MQTTFrame frame) {
+                LOG.info("Client sent:\n" + frame);
+            }
+        });
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        // create overlapping subscriptions with different QoSs
+        QoS[] qoss = { QoS.AT_MOST_ONCE, QoS.AT_LEAST_ONCE, QoS.EXACTLY_ONCE };
+        final String TOPIC = "TopicA/";
+
+        // publish retained message
+        connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, true);
+
+        String[] subs = {TOPIC, "TopicA/#", "TopicA/+"};
+        for (int i = 0; i < qoss.length; i++) {
+            connection.subscribe(new Topic[]{ new Topic(subs[i], qoss[i]) });
+        }
+
+        // publish non-retained message
+        connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
+        int received = 0;
+
+        Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        do {
+            assertNotNull(msg);
+            assertEquals(TOPIC, new String(msg.getPayload()));
+            msg.ack();
+            int waitCount = 0;
+            while (publishList.size() <= received && waitCount < 10) {
+                Thread.sleep(1000);
+                waitCount++;
+            }
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        } while (msg != null && received++ < subs.length * 2);
+        assertEquals("Unexpected number of messages", subs.length * 2, received + 1);
+
+        // make sure we received distinct ids for QoS != AT_MOST_ONCE, and 0 for AT_MOST_ONCE
+        for (int i = 0; i < publishList.size(); i++) {
+            for (int j = i + 1; j < publishList.size(); j++) {
+                final PUBLISH publish1 = publishList.get(i);
+                final PUBLISH publish2 = publishList.get(j);
+                boolean qos0 = false;
+                if (publish1.qos() == QoS.AT_MOST_ONCE) {
+                    qos0 = true;
+                    assertEquals(0, publish1.messageId());
+                }
+                if (publish2.qos() == QoS.AT_MOST_ONCE) {
+                    qos0 = true;
+                    assertEquals(0, publish2.messageId());
+                }
+                if (!qos0) {
+                    assertNotEquals(publish1.messageId(), publish2.messageId());
+                }
+            }
+        }
+
+        connection.unsubscribe(subs);
+        connection.disconnect();
+    }
+
+    @Test(timeout = 600 * 1000)
+    public void testResendMessageId() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo");
+        mqtt.setKeepAlive((short)2);
+        mqtt.setCleanSession(true);
+
+        final List<PUBLISH> publishList = new ArrayList<PUBLISH>();
+        mqtt.setTracer(new Tracer() {
+            @Override
+            public void onReceive(MQTTFrame frame) {
+                LOG.info("Client received:\n" + frame);
+                if (frame.messageType() == PUBLISH.TYPE) {
+                    PUBLISH publish = new PUBLISH();
+                    try {
+                        // copy the buffers before we decode
+                        Buffer[] buffers = frame.buffers();
+                        Buffer[] copy = new Buffer[buffers.length];
+                        for (int i = 0; i < buffers.length; i++) {
+                            copy[i] = buffers[i].deepCopy();
+                        }
+                        publish.decode(frame);
+                        // reset frame buffers to deep copy
+                        frame.buffers(copy);
+                    } catch (ProtocolException e) {
+                        fail("Error decoding publish " + e.getMessage());
+                    }
+                    publishList.add(publish);
+                }
+            }
+
+            @Override
+            public void onSend(MQTTFrame frame) {
+                LOG.info("Client sent:\n" + frame);
+            }
+        });
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        // create overlapping subscriptions with different QoSs
+        final String TOPIC = "TopicA/";
+        final String[] subs = { TOPIC, "+/"};
+        connection.subscribe(new Topic[]{new Topic(subs[0], QoS.AT_LEAST_ONCE), new Topic(subs[1], QoS.EXACTLY_ONCE)});
+
+        // publish non-retained message
+        connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
+
+        Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(TOPIC, new String(msg.getPayload()));
+        msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(TOPIC, new String(msg.getPayload()));
+
+        // drop subs without acknowledging messages, then subscribe and receive again
+        connection.unsubscribe(subs);
+        connection.subscribe(new Topic[]{new Topic(subs[0], QoS.AT_LEAST_ONCE), new Topic(subs[1], QoS.EXACTLY_ONCE)});
+        // wait for all acks to be processed
+        Thread.sleep(1000);
+
+        msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(TOPIC, new String(msg.getPayload()));
+        msg.ack();
+        msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(TOPIC, new String(msg.getPayload()));
+        msg.ack();
+
+        // make sure we received duplicate message ids
+        for (int i = 0; i < publishList.size(); i++) {
+            boolean found = false;
+            for (int j = 0; j < publishList.size(); j++) {
+                if (i != j) {
+                    if (publishList.get(i).messageId() == publishList.get(j).messageId()) {
+                        // one of them is a duplicate
+                        assertTrue(publishList.get(i).dup() || publishList.get(j).dup());
+                        found = true;
+                    }
+                }
+            }
+            assertTrue("Dup Not found " + publishList.get(i), found);
+        }
+
+        connection.unsubscribe(subs);
+        connection.disconnect();
+    }
+
     @Test(timeout=60 * 1000)
     public void testSendMQTTReceiveJMS() throws Exception {
         addMQTTConnector();
@@ -691,7 +883,7 @@ public class MQTTTest extends AbstractMQTTTest {
             payload = message.getPayload();
             String messageContent = new String(payload);
             LOG.info("Received message from topic: " + message.getTopic() +
-                    " Message content: " + messageContent);
+                " Message content: " + messageContent);
             message.ack();
         }
 
