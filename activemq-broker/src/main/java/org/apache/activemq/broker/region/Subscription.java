@@ -21,7 +21,6 @@ import java.util.List;
 
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -30,7 +29,6 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.activemq.management.CountStatisticImpl;
 
 /**
  *
@@ -48,7 +46,6 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Used when client acknowledge receipt of dispatched message.
-     * @param node
      * @throws IOException
      * @throws Exception
      */
@@ -70,7 +67,7 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Is the subscription interested in messages in the destination?
-     * @param context
+     * @param destination
      * @return
      */
     boolean matches(ActiveMQDestination destination);
@@ -93,7 +90,6 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * The ConsumerInfo object that created the subscription.
-     * @param destination
      */
     ConsumerInfo getConsumerInfo();
 
@@ -200,7 +196,7 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * Informs the Broker if the subscription needs to intervention to recover it's state
      * e.g. DurableTopicSubscriber may do
-     * @see org.apache.activemq.region.cursors.PendingMessageCursor
+     * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
     boolean isRecoveryRequired();
@@ -235,6 +231,10 @@ public interface Subscription extends SubscriptionRecovery {
      */
     long getTimeOfLastMessageAck();
 
-    CountStatisticImpl getConsumedCount();
+    long  getConsumedCount();
+
+    void incrementConsumedCount();
+
+    void resetConsumedCount();
 
 }

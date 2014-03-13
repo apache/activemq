@@ -20,11 +20,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -36,7 +36,6 @@ import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NoLocalExpression;
-import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.selector.SelectorParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +53,7 @@ public abstract class AbstractSubscription implements Subscription {
     private int cursorMemoryHighWaterMark = 70;
     private boolean slowConsumer;
     private long lastAckTime;
-    private CountStatisticImpl consumedCount = new CountStatisticImpl("consumed","The number of messages consumed");
+    private AtomicLong consumedCount = new AtomicLong();
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -90,7 +89,7 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         this.lastAckTime = System.currentTimeMillis();
-        this.consumedCount.increment();
+        this.consumedCount.incrementAndGet();
     }
 
     @Override
@@ -280,7 +279,15 @@ public abstract class AbstractSubscription implements Subscription {
         this.lastAckTime = value;
     }
 
-    public CountStatisticImpl getConsumedCount(){
-        return consumedCount;
+    public long getConsumedCount(){
+        return consumedCount.get();
+    }
+
+    public void incrementConsumedCount(){
+        consumedCount.incrementAndGet();
+    }
+
+    public void resetConsumedCount(){
+        consumedCount.set(0);
     }
 }

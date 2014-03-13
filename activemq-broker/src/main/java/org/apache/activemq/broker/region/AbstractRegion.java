@@ -392,8 +392,9 @@ public abstract class AbstractRegion implements Region {
         }
 
         producerExchange.getRegionDestination().send(producerExchange, messageSend);
+
         if (producerExchange.getProducerState() != null && producerExchange.getProducerState().getInfo() != null){
-            producerExchange.getProducerState().getInfo().getSentCount().increment();
+            producerExchange.getProducerState().getInfo().incrementSentCount();
         }
     }
 

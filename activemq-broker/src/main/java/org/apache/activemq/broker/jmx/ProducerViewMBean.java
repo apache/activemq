@@ -102,7 +102,7 @@ public interface ProducerViewMBean {
     @MBeanInfo("Resets statistics.")
     void resetStatistics();
 
-    @MBeanInfo("Messages consumed")
+    @MBeanInfo("Messages dispatched by Producer")
     long getSentCount();
 
 }

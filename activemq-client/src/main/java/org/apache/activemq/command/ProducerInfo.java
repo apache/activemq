@@ -16,7 +16,8 @@
  */
 package org.apache.activemq.command;
 
-import org.apache.activemq.management.CountStatisticImpl;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.state.CommandVisitor;
 
 /**
@@ -33,7 +34,7 @@ public class ProducerInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean dispatchAsync;
     protected int windowSize;
-    protected CountStatisticImpl sentCount = new CountStatisticImpl("sentCount","number of messages sent to a broker");
+    protected AtomicLong sentCount = new AtomicLong();
 
     public ProducerInfo() {
     }
@@ -137,8 +138,16 @@ public class ProducerInfo extends BaseCommand {
         this.windowSize = windowSize;
     }
 
-    public CountStatisticImpl getSentCount(){
-        return sentCount;
+    public long getSentCount(){
+        return sentCount.get();
+    }
+
+    public void incrementSentCount(){
+        sentCount.incrementAndGet();
+    }
+
+    public void resetSentCount(){
+        sentCount.set(0);
     }
 
 }
