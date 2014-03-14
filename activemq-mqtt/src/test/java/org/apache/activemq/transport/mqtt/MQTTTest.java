@@ -34,8 +34,15 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotEquals;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.security.AuthorizationPlugin;
+import org.apache.activemq.security.DefaultAuthorizationMap;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
+import org.apache.activemq.security.SimpleAuthorizationMap;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.Wait;
 import org.fusesource.hawtbuf.Buffer;
@@ -516,6 +523,55 @@ public class MQTTTest extends AbstractMQTTTest {
     }
 
     @Test(timeout = 60 * 1000)
+    public void testFailedSubscription() throws Exception {
+        addMQTTConnector();
+
+        final SimpleAuthenticationPlugin authenticationPlugin = new SimpleAuthenticationPlugin();
+        authenticationPlugin.setAnonymousAccessAllowed(true);
+
+        final String ANONYMOUS = "anonymous";
+        authenticationPlugin.setAnonymousGroup(ANONYMOUS);
+        final DefaultAuthorizationMap map = new DefaultAuthorizationMap();
+        // only one authorized destination, anonymous for anonymous group!
+        map.put(new ActiveMQTopic(ANONYMOUS), new GroupPrincipal(ANONYMOUS));
+        final AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin(new SimpleAuthorizationMap(map, map, map));
+
+        brokerService.setPlugins(new BrokerPlugin[] {authorizationPlugin, authenticationPlugin});
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("foo");
+        mqtt.setKeepAlive((short) 2);
+
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        final String NAMED = "named";
+        byte[] qos = connection.subscribe(new Topic[] {
+            new Topic(NAMED, QoS.AT_MOST_ONCE), new Topic(ANONYMOUS, QoS.EXACTLY_ONCE)});
+        assertEquals((byte)0x80, qos[0]);
+        assertEquals((byte)QoS.EXACTLY_ONCE.ordinal(), qos[1]);
+
+        // validate the subscription by sending a retained message
+        connection.publish(ANONYMOUS, ANONYMOUS.getBytes(), QoS.AT_MOST_ONCE, true);
+        Message msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(ANONYMOUS, new String(msg.getPayload()));
+        msg.ack();
+
+        connection.unsubscribe(new String[]{ANONYMOUS});
+        qos = connection.subscribe(new Topic[]{new Topic(ANONYMOUS, QoS.AT_LEAST_ONCE)});
+        assertEquals((byte)QoS.AT_LEAST_ONCE.ordinal(), qos[0]);
+
+        msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(ANONYMOUS, new String(msg.getPayload()));
+        msg.ack();
+
+        connection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
     public void testUniqueMessageIds() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -612,7 +668,7 @@ public class MQTTTest extends AbstractMQTTTest {
         connection.disconnect();
     }
 
-    @Test(timeout = 600 * 1000)
+    @Test(timeout = 60 * 1000)
     public void testResendMessageId() throws Exception {
         addMQTTConnector();
         brokerService.start();

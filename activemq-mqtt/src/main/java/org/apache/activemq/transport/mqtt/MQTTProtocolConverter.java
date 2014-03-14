@@ -52,6 +52,7 @@ public class MQTTProtocolConverter {
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
     private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 0.5;
     private static final int DEFAULT_CACHE_SIZE = 5000;
+    private static final byte SUBSCRIBE_ERROR = (byte) 0x80;
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
@@ -332,7 +333,7 @@ public class MQTTProtocolConverter {
         if (topics != null) {
             byte[] qos = new byte[topics.length];
             for (int i = 0; i < topics.length; i++) {
-                qos[i] = (byte) onSubscribe(topics[i]).ordinal();
+                qos[i] = onSubscribe(topics[i]);
             }
             SUBACK ack = new SUBACK();
             ack.messageId(command.messageId());
@@ -344,6 +345,10 @@ public class MQTTProtocolConverter {
             }
             // check retained messages
             for (int i = 0; i < topics.length; i++) {
+                if (qos[i] == SUBSCRIBE_ERROR) {
+                    // skip this topic if subscribe failed
+                    continue;
+                }
                 final Topic topic = topics[i];
                 ActiveMQTopic destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
                 for (PUBLISH msg : retainedMessages.getMessages(destination)) {
@@ -374,7 +379,7 @@ public class MQTTProtocolConverter {
 
     }
 
-    QoS onSubscribe(Topic topic) throws MQTTProtocolException {
+    byte onSubscribe(final Topic topic) throws MQTTProtocolException {
 
         if( mqttSubscriptionByTopic.containsKey(topic.name())) {
             if (topic.qos() != mqttSubscriptionByTopic.get(topic.name()).qos()) {
@@ -382,7 +387,7 @@ public class MQTTProtocolConverter {
                 onUnSubscribe(topic.name());
             } else {
                 // duplicate SUBSCRIBE packet, nothing to do
-                return topic.qos();
+                return (byte) topic.qos().ordinal();
             }
         }
 
@@ -398,11 +403,27 @@ public class MQTTProtocolConverter {
         }
         MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
 
-        subscriptionsByConsumerId.put(id, mqttSubscription);
-        mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
+        final byte[] qos = {-1};
+        sendToActiveMQ(consumerInfo, new ResponseHandler() {
+            @Override
+            public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                // validate subscription request
+                if (response.isException()) {
+                    final Throwable throwable = ((ExceptionResponse) response).getException();
+                    LOG.debug("Error subscribing to " + topic.name(), throwable);
+                    qos[0] = SUBSCRIBE_ERROR;
+                } else {
+                    qos[0] = (byte) topic.qos().ordinal();
+                }
+            }
+        });
 
-        sendToActiveMQ(consumerInfo, null);
-        return topic.qos();
+        if (qos[0] != SUBSCRIBE_ERROR) {
+            subscriptionsByConsumerId.put(id, mqttSubscription);
+            mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
+        }
+
+        return qos[0];
     }
 
     void onUnSubscribe(UNSUBSCRIBE command) throws MQTTProtocolException {
