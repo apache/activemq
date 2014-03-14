@@ -28,6 +28,7 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.Session;
 import javax.jms.TopicConnectionFactory;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
@@ -87,6 +88,9 @@ public class ManagedConnectionFactoryTest extends TestCase {
         // Make sure that the returned connection is of the expected type.
         assertTrue(connection != null);
         assertTrue(connection instanceof ManagedConnectionProxy);
+
+        Session session = connection.createSession(true, 0);
+        assertFalse("transacted attribute is ignored, only transacted with xa or local tx", session.getTransacted());
 
         connection.close();
 

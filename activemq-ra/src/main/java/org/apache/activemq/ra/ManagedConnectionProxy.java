@@ -112,10 +112,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @throws JMSException on error
      */
     private ManagedSessionProxy createSessionProxy(boolean transacted, int acknowledgeMode) throws JMSException {
-        if (!transacted && acknowledgeMode == Session.SESSION_TRANSACTED) {
-            acknowledgeMode = Session.AUTO_ACKNOWLEDGE;
-        }
-        ActiveMQSession session = (ActiveMQSession) getConnection().createSession(transacted, acknowledgeMode);
+        ActiveMQSession session = (ActiveMQSession) getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
         ManagedTransactionContext txContext = new ManagedTransactionContext(managedConnection.getTransactionContext());
         session.setTransactionContext(txContext);
         ManagedSessionProxy p = new ManagedSessionProxy(session, this);
