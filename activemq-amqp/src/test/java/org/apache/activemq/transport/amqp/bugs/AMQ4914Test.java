@@ -32,6 +32,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.transport.amqp.AmqpTestSupport;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -75,6 +76,7 @@ public class AMQ4914Test extends AmqpTestSupport {
         doTestSendLargeMessage(65536 * 4);
     }
 
+    @Ignore("AMQ-5102")
     @Test(timeout = 5 * 60 * 1000)
     public void testSendHugeMessage() throws JMSException {
         doTestSendLargeMessage(1024 * 1024 * 10);
