@@ -73,6 +73,28 @@ public interface BrokerFacade {
 			throws Exception;
 
 	/**
+	 * All active producers to a queue.
+	 * 
+	 * @param queueName
+	 *            the name of the queue, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<ProducerViewMBean> getQueueProducers(String queueName)
+			throws Exception;
+
+	/**
+	 * All active producers to a topic.
+	 * 
+	 * @param queueName
+	 *            the name of the topic, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	Collection<ProducerViewMBean> getTopicProducers(String queueName)
+			throws Exception;
+
+	/**
 	 * Active durable subscribers to topics of the broker.
 	 * 
 	 * @return not <code>null</code>

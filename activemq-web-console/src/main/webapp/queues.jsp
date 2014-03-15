@@ -66,6 +66,8 @@
                    <c:param name="JMSDestination" value="${row.name}" /></c:url>">Browse</a>
 	<a href="<c:url value="queueConsumers.jsp">
 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
+	<a href="<c:url value="queueProducers.jsp">
+	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>
     <a href="<c:url value="queueBrowse/${row.name}">
                     <c:param name="view" value="rss" />
                     <c:param name="feedType" value="atom_1.0" />

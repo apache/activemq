@@ -39,6 +39,7 @@ import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.ProducerViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.springframework.util.StringUtils;
 
@@ -214,6 +215,28 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
                 + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Consumer,*");
         Set<ObjectName> queryResult = queryNames(query, null);
         return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<ProducerViewMBean> getQueueProducers(String queueName) throws Exception {
+        String brokerName = getBrokerName();
+        queueName = StringUtils.replace(queueName, "\"", "_");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",destinationType=Queue,destinationName=" + queueName + ",endpoint=Producer,*");
+        Set<ObjectName> queryResult = queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<ProducerViewMBean> getTopicProducers(String topicName) throws Exception {
+        String brokerName = getBrokerName();
+        topicName = StringUtils.replace(topicName, "\"", "_");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",destinationType=Topic,destinationName=" + topicName + ",endpoint=Producer,*");
+        Set<ObjectName> queryResult = queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), ProducerViewMBean.class);
     }
 
     @Override
