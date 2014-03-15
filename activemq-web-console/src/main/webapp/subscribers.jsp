@@ -96,7 +96,11 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.durableTopicSubscribers}" var="row">
 <tr>
-<td><form:tooltip text="${row.clientId}" length="10"/></td>
+<td>
+<a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>">
+<form:tooltip text="${row.clientId}" length="10"/>
+</a>
+</td>
 <td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
 <td><form:tooltip text="${row.connectionId}" length="10"/></td>
 <td><form:tooltip text="${row.destinationName}" length="10"/></td>
@@ -140,7 +144,11 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.inactiveDurableTopicSubscribers}" var="row">
 <tr>
-<td><form:tooltip text="${row.clientId}" length="10"/></td>
+<td>
+<a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>">
+<form:tooltip text="${row.clientId}" length="10"/>
+</a>
+</td>
 <td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
 <td><form:tooltip text="${row.connectionId}" length="10"/></td>
 <td><form:tooltip text="${row.destinationName}" length="10"/></td>
@@ -161,6 +169,52 @@
 
 </tbody>
 </table>
+
+
+<h2>Active Non-Durable Topic Subscribers</h2>
+
+
+<table id="topics" class="sortable autostripe">
+<thead>
+<tr>
+<th>Client ID</th>
+<th>Subscription Name</th>
+<th>Connection ID</th>
+<th>Destination</th>
+<th>Selector</th>
+<th>Pending Queue Size</th>
+<th>Dispatched Queue Size</th>
+<th>Dispatched Counter</th>
+<th>Enqueue Counter</th>
+<th>Dequeue Counter</th>
+<th>Operations</th>
+</tr>
+</thead>
+<tbody>
+<c:forEach items="${requestContext.brokerQuery.nonDurableTopicSubscribers}" var="row">
+<tr>
+<td>
+<a href="<c:url value="connection.jsp?connectionID=${row.clientId}"/>">
+<form:tooltip text="${row.clientId}" length="10"/>
+</a>
+</td>
+<td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
+<td><form:tooltip text="${row.connectionId}" length="10"/></td>
+<td><form:tooltip text="${row.destinationName}" length="10"/></td>
+<td><c:out value="${row.selector}"/></td>
+<td><c:out value="${row.pendingQueueSize}" /></td>
+<td><c:out value="${row.dispatchedQueueSize}" /></td>
+<td><c:out value="${row.dispatchedCounter}" /></td>
+<td><c:out value="${row.enqueueCounter}" /></td>
+<td><c:out value="${row.dequeueCounter}" /></td>
+<td>
+</td>
+</tr>
+</c:forEach>
+
+</tbody>
+</table>
+
 
 <%@include file="decorators/footer.jsp" %>
 

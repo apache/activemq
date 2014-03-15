@@ -95,6 +95,28 @@ public interface BrokerFacade {
 			throws Exception;
 
 	/**
+	 * All active non-durable subscribers to a topic.
+	 * 
+	 * @param queueName
+	 *            the name of the topic, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	public Collection<SubscriptionViewMBean> getTopicSubscribers(String topicName)
+			throws Exception;
+
+	/**
+	 * All active non-durable subscribers to a topic.
+	 * 
+	 * @param queueName
+	 *            the name of the topic, not <code>null</code>
+	 * @return not <code>null</code>
+	 * @throws Exception
+	 */
+	public Collection<SubscriptionViewMBean> getNonDurableTopicSubscribers()
+			throws Exception;
+
+	/**
 	 * Active durable subscribers to topics of the broker.
 	 * 
 	 * @return not <code>null</code>

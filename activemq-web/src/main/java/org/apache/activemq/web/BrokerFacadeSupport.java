@@ -69,8 +69,28 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (broker == null) {
             return Collections.EMPTY_LIST;
         }
-        ObjectName[] queues = broker.getTopics();
-        return getManagedObjects(queues, TopicViewMBean.class);
+        ObjectName[] topics = broker.getTopics();
+        return getManagedObjects(topics, TopicViewMBean.class);
+    }
+
+    @Override
+    public Collection<SubscriptionViewMBean> getTopicSubscribers(String topicName) throws Exception {
+        String brokerName = getBrokerName();
+        topicName = StringUtils.replace(topicName, "\"", "_");
+        ObjectName query = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + brokerName
+                + ",destinationType=Topic,destinationName=" + topicName + ",endpoint=Consumer,*");
+        Set<ObjectName> queryResult = queryNames(query, null);
+        return getManagedObjects(queryResult.toArray(new ObjectName[queryResult.size()]), SubscriptionViewMBean.class);
+    }
+
+    @Override
+    public Collection<SubscriptionViewMBean> getNonDurableTopicSubscribers() throws Exception {
+        BrokerViewMBean broker = getBrokerAdmin();
+        if (broker == null) {
+            return Collections.EMPTY_LIST;
+        }
+        ObjectName[] subscribers = broker.getTopicSubscribers();
+        return getManagedObjects(subscribers, SubscriptionViewMBean.class);
     }
 
     @Override
@@ -79,8 +99,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (broker == null) {
             return Collections.EMPTY_LIST;
         }
-        ObjectName[] queues = broker.getDurableTopicSubscribers();
-        return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
+        ObjectName[] subscribers = broker.getDurableTopicSubscribers();
+        return getManagedObjects(subscribers, DurableSubscriptionViewMBean.class);
     }
 
     @Override
@@ -89,8 +109,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         if (broker == null) {
             return Collections.EMPTY_LIST;
         }
-        ObjectName[] queues = broker.getInactiveDurableTopicSubscribers();
-        return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
+        ObjectName[] subscribers = broker.getInactiveDurableTopicSubscribers();
+        return getManagedObjects(subscribers, DurableSubscriptionViewMBean.class);
     }
 
     @Override

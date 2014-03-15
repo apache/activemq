@@ -61,6 +61,8 @@
     <a href="<c:url value="send.jsp">
                         <c:param name="JMSDestination" value="${row.name}" />
                         <c:param name="JMSDestinationType" value="topic"/></c:url>">Send To</a>
+    <a href="<c:url value="topicSubscribers.jsp">
+                        <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Subscribers</a><br/>
     <a href="<c:url value="topicProducers.jsp">
                         <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>
     <a href="<c:url value="deleteDestination.action">

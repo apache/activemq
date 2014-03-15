@@ -23,5 +23,6 @@
   <bean id="queueConsumerQuery" class="org.apache.activemq.web.QueueConsumerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
   <bean id="queueProducerQuery" class="org.apache.activemq.web.QueueProducerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
   <bean id="topicProducerQuery" class="org.apache.activemq.web.TopicProducerQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
+  <bean id="topicSubscriberQuery" class="org.apache.activemq.web.TopicSubscriberQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
   <bean id="connectionQuery" class="org.apache.activemq.web.ConnectionQuery" autowire="constructor" destroy-method="destroy" scope="request"/>
 </beans>
