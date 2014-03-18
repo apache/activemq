@@ -7,6 +7,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.SimpleAuthenticationPlugin;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class AMQ4889Test {
 
         transportConnector = brokerService.addConnector(LOCAL_URI);
         proxyConnector = new ProxyConnector();
-        proxyConnector.setName("proxy");    // TODO rename
+        proxyConnector.setName("proxy");
         proxyConnector.setBind(new URI(PROXY_URI));
         proxyConnector.setRemote(new URI(LOCAL_URI));
         brokerService.addProxyConnector(proxyConnector);
@@ -91,7 +92,7 @@ public class AMQ4889Test {
             try {
                 if (i % 2 == 0) {
                     LOG.debug("Iteration {} adding bad connection", i);
-                    Connection connection = connectionFactory.createConnection(USER, WRONG_PASSWORD);  // TODO change to debug
+                    Connection connection = connectionFactory.createConnection(USER, WRONG_PASSWORD);
                     Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     fail("createSession should fail");
                 } else {
@@ -104,8 +105,14 @@ public class AMQ4889Test {
             } catch (JMSSecurityException e) {
             }
             LOG.debug("Iteration {} Connections? {}", i, proxyConnector.getConnectionCount());
-            Thread.sleep(50);   // Need to wait for remove to finish
-            assertEquals(expectedConnectionCount, proxyConnector.getConnectionCount());
         }
+        final Integer val = expectedConnectionCount;
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return val.equals(proxyConnector.getConnectionCount());
+            }
+        }, 20);
+        assertEquals(val, proxyConnector.getConnectionCount());
     }
 }
