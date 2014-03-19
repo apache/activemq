@@ -688,6 +688,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             Rejected rejected = new Rejected();
                             rejected.setError(createErrorCondition("failed", er.getException().getMessage()));
                             delivery.disposition(rejected);
+                        } else {
+                            delivery.disposition(Accepted.getInstance());
                         }
                         LOG.debug("TX: {} settling {}", operation, action);
                         delivery.settle();
