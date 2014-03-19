@@ -34,13 +34,15 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Transport implementation that uses direct method invocations.
  */
 public class VMTransport implements Transport, Task {
+    protected static final Logger LOG = LoggerFactory.getLogger(VMTransport.class);
 
-    private static final Object DISCONNECT = new Object();
     private static final AtomicLong NEXT_ID = new AtomicLong(0);
 
     // Transport Configuration
@@ -131,12 +133,8 @@ public class VMTransport implements Transport, Task {
     }
 
     public void doDispatch(VMTransport transport, TransportListener transportListener, Object command) {
-        if (command == DISCONNECT) {
-            transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
-        } else {
-            transport.receiveCounter++;
-            transportListener.onCommand(command);
-        }
+        transport.receiveCounter++;
+        transportListener.onCommand(command);
     }
 
     public void start() throws Exception {
@@ -241,11 +239,7 @@ public class VMTransport implements Transport, Task {
 
         Object command = mq.poll();
         if (command != null && !disposed.get()) {
-            if( command == DISCONNECT ) {
-                tl.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
-            } else {
-                tl.onCommand(command);
-            }
+            tl.onCommand(command);
             return !mq.isEmpty() && !disposed.get();
         } else {
             if(disposed.get()) {
