@@ -865,7 +865,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             MessageAck earlyAck = null;
             if (message.isExpired()) {
-                earlyAck = new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1);
+                earlyAck = new MessageAck(md, MessageAck.EXPIRED_ACK_TYPE, 1);
             } else if (connection.isDuplicate(ActiveMQSession.this, message)) {
                 LOG.debug("{} got duplicate: {}", this, message.getMessageId());
                 earlyAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);

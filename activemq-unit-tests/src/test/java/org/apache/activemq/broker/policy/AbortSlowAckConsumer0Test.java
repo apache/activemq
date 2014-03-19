@@ -144,7 +144,6 @@ public class AbortSlowAckConsumer0Test extends AbortSlowConsumer0Test {
 
     @Test
     public void testIdleConsumerCanBeAborted() throws Exception {
-        AbortSlowAckConsumerStrategy strategy = createSlowConsumerStrategy();
         strategy.setIgnoreIdleConsumers(false);
         strategy.setMaxTimeSinceLastAck(2000); // Make it shorter
 

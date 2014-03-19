@@ -898,7 +898,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             return;
         }
         if (messageExpired) {
-            acknowledge(md, MessageAck.DELIVERED_ACK_TYPE);
+            acknowledge(md, MessageAck.EXPIRED_ACK_TYPE);
             stats.getExpiredMessageCount().increment();
         } else {
             stats.onMessage();

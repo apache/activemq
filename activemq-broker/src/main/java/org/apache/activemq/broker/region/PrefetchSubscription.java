@@ -297,7 +297,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         break;
                     }
                 }
-            }else if (ack.isDeliveredAck()) {
+            }else if (ack.isDeliveredAck() || ack.isExpiredAck()) {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
                 int index = 0;
