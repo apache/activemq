@@ -60,6 +60,12 @@ public class MQTTSSLTest extends MQTTTest {
         super.testReceiveMessageSentWhileOffline();
     }
 
+    @Ignore("See AMQ-4712")
+    @Override
+    @Test
+    public void testResendMessageId() throws Exception {
+        super.testResendMessageId();
+    }
 
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
@@ -70,6 +76,15 @@ public class MQTTSSLTest extends MQTTTest {
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
         mqtt.setSslContext(ctx);
+        return mqtt;
+    }
+
+    protected MQTT createMQTTConnection(String clientId, boolean clean) throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        if (clientId != null) {
+            mqtt.setClientId(clientId);
+        }
+        mqtt.setCleanSession(clean);
         return mqtt;
     }
 

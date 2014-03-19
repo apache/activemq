@@ -398,7 +398,8 @@ public class MQTTProtocolConverter {
         consumerInfo.setDestination(destination);
         consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
         consumerInfo.setDispatchAsync(true);
-        if ( connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
+        // create durable subscriptions only when cleansession is false
+        if ( !connect.cleanSession() && connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
             consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
         }
         MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
@@ -410,7 +411,7 @@ public class MQTTProtocolConverter {
                 // validate subscription request
                 if (response.isException()) {
                     final Throwable throwable = ((ExceptionResponse) response).getException();
-                    LOG.debug("Error subscribing to " + topic.name(), throwable);
+                    LOG.warn("Error subscribing to " + topic.name(), throwable);
                     qos[0] = SUBSCRIBE_ERROR;
                 } else {
                     qos[0] = (byte) topic.qos().ordinal();
@@ -654,22 +655,26 @@ public class MQTTProtocolConverter {
     boolean willSent = false;
     public void onTransportError() {
         if (connect != null) {
-            if (connected.get() && connect.willTopic() != null && connect.willMessage() != null && !willSent) {
-                willSent = true;
-                try {
-                    PUBLISH publish = new PUBLISH();
-                    publish.topicName(connect.willTopic());
-                    publish.qos(connect.willQos());
-                    publish.messageId(getNextSequenceId());
-                    publish.payload(connect.willMessage());
-                    ActiveMQMessage message = convertMessage(publish);
-                    message.setProducerId(producerId);
-                    message.onSend();
+            if (connected.get()) {
+                if (connect.willTopic() != null && connect.willMessage() != null && !willSent) {
+                    willSent = true;
+                    try {
+                        PUBLISH publish = new PUBLISH();
+                        publish.topicName(connect.willTopic());
+                        publish.qos(connect.willQos());
+                        publish.messageId(getNextSequenceId());
+                        publish.payload(connect.willMessage());
+                        ActiveMQMessage message = convertMessage(publish);
+                        message.setProducerId(producerId);
+                        message.onSend();
 
-                    sendToActiveMQ(message, null);
-                } catch (Exception e) {
-                    LOG.warn("Failed to publish Will Message " + connect.willMessage());
+                        sendToActiveMQ(message, null);
+                    } catch (Exception e) {
+                        LOG.warn("Failed to publish Will Message " + connect.willMessage());
+                    }
                 }
+                // remove connection info
+                sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
             }
         }
     }
@@ -721,11 +726,11 @@ public class MQTTProtocolConverter {
             LOG.debug("Exception detail", exception);
         }
 
-        try {
-            getMQTTTransport().stop();
-        } catch (Throwable e) {
-            LOG.error("Failed to stop MQTTT Transport ", e);
+        if (connected.get() && connectionInfo != null) {
+            connected.set(false);
+            sendToActiveMQ(connectionInfo.createRemoveCommand(), null);
         }
+        stopTransport();
     }
 
     void checkConnected() throws MQTTProtocolException {
