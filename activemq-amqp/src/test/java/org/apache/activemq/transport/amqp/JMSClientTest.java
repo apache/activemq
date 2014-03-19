@@ -784,6 +784,34 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    @Test(timeout=30000)
+    public void testSessionTransactedRollback() throws JMSException, InterruptedException {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        Connection connection = createConnection();
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(name.toString());
+
+        connection.start();
+
+        // transacted producer
+        MessageProducer pr = session.createProducer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message m = session.createTextMessage("TestMessage" + i);
+            pr.send(m);
+        }
+
+        session.rollback();
+
+        // No commit in place, so no message should be dispatched.
+        MessageConsumer consumer = session.createConsumer(queue);
+        TextMessage m = (TextMessage) consumer.receive(5000);
+        assertNull(m);
+
+        session.close();
+        connection.close();
+    }
+
     private String createLargeString(int sizeInBytes) {
         byte[] base = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
         StringBuilder builder = new StringBuilder();
