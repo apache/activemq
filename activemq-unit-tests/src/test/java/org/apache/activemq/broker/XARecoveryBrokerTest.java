@@ -220,7 +220,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             TransactionId transactionId = (TransactionId) dar.getData()[i];
             LOG.info("commit: " + transactionId);
             connection.request(createCommitTransaction2Phase(connectionInfo, transactionId));
-
+        }
         // We should get the committed transactions.
         final int countToReceive = expectedMessageCount(4, destination);
         for (int i = 0; i < countToReceive ; i++) {

@@ -752,6 +752,10 @@ public class JMSClientTest extends AmqpTestSupport {
         connection.close();
     }
 
+    protected int getBrokerPort() {
+        return port;
+    }
+
     private Connection createConnection() throws JMSException {
         return createConnection(name.toString(), false);
     }

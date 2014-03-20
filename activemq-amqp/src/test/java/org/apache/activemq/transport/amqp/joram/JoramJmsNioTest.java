@@ -44,7 +44,7 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     // TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
-    MessageHeaderTest.class
+    MessageHeaderTest.class,
     // QueueBrowserTest.class,  // https://issues.apache.org/jira/browse/AMQ-4641
     MessageTypeTest.class,
     UnifiedSessionTest.class,  // https://issues.apache.org/jira/browse/AMQ-4375
