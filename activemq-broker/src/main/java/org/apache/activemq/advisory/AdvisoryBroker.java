@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
@@ -277,7 +278,21 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
-        DurableTopicSubscription sub = ((TopicRegion)((RegionBroker)next).getTopicRegion()).getDurableSubscription(key);
+
+        RegionBroker regionBroker = null;
+        if (next instanceof RegionBroker) {
+            regionBroker = (RegionBroker) next;
+        } else {
+            BrokerService service = next.getBrokerService();
+            regionBroker = (RegionBroker) service.getRegionBroker();
+        }
+
+        if (regionBroker == null) {
+            LOG.warn("Cannot locate a RegionBroker instance to pass along the removeSubscription call");
+            throw new IllegalStateException("No RegionBroker found.");
+        }
+
+        DurableTopicSubscription sub = ((TopicRegion) regionBroker.getTopicRegion()).getDurableSubscription(key);
 
         super.removeSubscription(context, info);
 
