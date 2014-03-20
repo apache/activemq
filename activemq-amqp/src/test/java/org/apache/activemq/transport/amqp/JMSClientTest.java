@@ -662,6 +662,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
     @Test(timeout=30000)
     public void testExecptionListenerCalledOnBrokerStop() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
 
         Connection connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -694,8 +695,9 @@ public class JMSClientTest extends AmqpTestSupport {
         assertTrue("No exception listener event fired.", called.await(15, TimeUnit.SECONDS));
     }
 
-    @Test
+    @Test(timeout=30000)
     public void testSessionTransactedCommit() throws JMSException, InterruptedException {
+        ActiveMQAdmin.enableJMSFrameTracing();
 
         Connection connection = createConnection();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
@@ -742,7 +744,7 @@ public class JMSClientTest extends AmqpTestSupport {
 
     private Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
 
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
+        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", nioPort, "admin", "password");
 
         factory.setSyncPublish(syncPublish);
         factory.setTopicPrefix("topic://");
