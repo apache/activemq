@@ -17,13 +17,10 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
-import java.net.ProtocolException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
@@ -51,6 +48,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     private final AtomicBoolean stopped = new AtomicBoolean();
 
     private boolean trace;
+    private final Object sendLock = new Object();
 
     public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
@@ -80,7 +78,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
             }
             protocolConverter.onMQTTCommand(frame);
         } catch (IOException e) {
-            handleException(e);
+            onException(e);
         } catch (JMSException e) {
             onException(IOExceptionSupport.create(e));
         }
@@ -102,7 +100,10 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
             }
             Transport n = next;
             if (n != null) {
-                n.oneway(command);
+                // sync access to underlying transport buffer
+                synchronized (sendLock) {
+                    n.oneway(command);
+                }
             }
         }
     }
@@ -174,9 +175,10 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         return this.wireFormat;
     }
 
-    public void handleException(IOException e) {
+    @Override
+    public void onException(IOException error) {
         protocolConverter.onTransportError();
-        super.onException(e);
+        super.onException(error);
     }
 
     public long getDefaultKeepAlive() {

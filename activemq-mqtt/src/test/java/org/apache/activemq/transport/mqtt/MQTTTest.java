@@ -46,7 +46,6 @@ import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.security.SimpleAuthorizationMap;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.Wait;
-import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
@@ -590,15 +589,7 @@ public class MQTTTest extends AbstractMQTTTest {
                 if (frame.messageType() == PUBLISH.TYPE) {
                     PUBLISH publish = new PUBLISH();
                     try {
-                        // copy the buffers before we decode
-                        Buffer[] buffers = frame.buffers();
-                        Buffer[] copy = new Buffer[buffers.length];
-                        for (int i = 0; i < buffers.length; i++) {
-                            copy[i] = buffers[i].deepCopy();
-                        }
                         publish.decode(frame);
-                        // reset frame buffers to deep copy
-                        frame.buffers(copy);
                     } catch (ProtocolException e) {
                         fail("Error decoding publish " + e.getMessage());
                     }
@@ -684,15 +675,7 @@ public class MQTTTest extends AbstractMQTTTest {
                 if (frame.messageType() == PUBLISH.TYPE) {
                     PUBLISH publish = new PUBLISH();
                     try {
-                        // copy the buffers before we decode
-                        Buffer[] buffers = frame.buffers();
-                        Buffer[] copy = new Buffer[buffers.length];
-                        for (int i = 0; i < buffers.length; i++) {
-                            copy[i] = buffers[i].deepCopy();
-                        }
                         publish.decode(frame);
-                        // reset frame buffers to deep copy
-                        frame.buffers(copy);
                     } catch (ProtocolException e) {
                         fail("Error decoding publish " + e.getMessage());
                     }
@@ -717,25 +700,28 @@ public class MQTTTest extends AbstractMQTTTest {
         // publish non-retained message
         connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
 
-        Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        Message msg = connection.receive(1000, TimeUnit.MILLISECONDS);
         assertNotNull(msg);
         assertEquals(TOPIC, new String(msg.getPayload()));
-        msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        msg = connection.receive(1000, TimeUnit.MILLISECONDS);
         assertNotNull(msg);
         assertEquals(TOPIC, new String(msg.getPayload()));
 
         // drop subs without acknowledging messages, then subscribe and receive again
         connection.unsubscribe(subs);
+        Thread.sleep(1000);
         connection.subscribe(new Topic[]{new Topic(subs[0], QoS.AT_LEAST_ONCE), new Topic(subs[1], QoS.EXACTLY_ONCE)});
+        Thread.sleep(1000);
 
         msg = connection.receive(5000, TimeUnit.MILLISECONDS);
         assertNotNull(msg);
         assertEquals(TOPIC, new String(msg.getPayload()));
+        final Message msg2 = connection.receive(5000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg2);
+        assertEquals(TOPIC, new String(msg2.getPayload()));
+        // ack messages after receiving all of them
         msg.ack();
-        msg = connection.receive(5000, TimeUnit.MILLISECONDS);
-        assertNotNull(msg);
-        assertEquals(TOPIC, new String(msg.getPayload()));
-        msg.ack();
+        msg2.ack();
 
         // make sure we received duplicate message ids
         List<Integer> dups = new ArrayList<Integer>();

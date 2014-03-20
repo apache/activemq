@@ -121,7 +121,7 @@ public class MQTTProtocolConverter {
             command.setResponseRequired(true);
             resposeHandlers.put(command.getCommandId(), handler);
         }
-        mqttTransport.sendToActiveMQ(command);
+        getMQTTTransport().sendToActiveMQ(command);
     }
 
     void sendToMQTT(MQTTFrame frame) {
@@ -140,7 +140,7 @@ public class MQTTProtocolConverter {
         switch (frame.messageType()) {
             case PINGREQ.TYPE: {
                 LOG.debug("Received a ping from client: " + getClientId());
-                mqttTransport.sendToMQTT(PING_RESP_FRAME);
+                sendToMQTT(PING_RESP_FRAME);
                 LOG.debug("Sent Ping Response to " + getClientId());
                 break;
             }
