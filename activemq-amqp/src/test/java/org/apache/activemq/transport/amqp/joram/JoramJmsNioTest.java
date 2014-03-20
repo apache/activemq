@@ -35,6 +35,7 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
+import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 
 /**
@@ -45,21 +46,21 @@ import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
     // TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
     MessageHeaderTest.class
     // QueueBrowserTest.class,  // https://issues.apache.org/jira/browse/AMQ-4641
-    //MessageTypeTest.class,
-    // UnifiedSessionTest.class,  // https://issues.apache.org/jira/browse/AMQ-4375
-    //TemporaryTopicTest.class,
-    //TopicConnectionTest.class,
-    //SelectorSyntaxTest.class,
-    //QueueSessionTest.class,
-    //SelectorTest.class,
-    //TemporaryQueueTest.class,
-    //ConnectionTest.class,
-    //SessionTest.class,
-    //JMSXPropertyTest.class,
-    //MessageBodyTest.class,
-    //MessageDefaultTest.class,
-    //MessagePropertyConversionTest.class,
-    //MessagePropertyTest.class
+    MessageTypeTest.class,
+    UnifiedSessionTest.class,  // https://issues.apache.org/jira/browse/AMQ-4375
+    TemporaryTopicTest.class,
+    TopicConnectionTest.class,
+    SelectorSyntaxTest.class,
+    QueueSessionTest.class,
+    SelectorTest.class,
+    TemporaryQueueTest.class,
+    ConnectionTest.class,
+    SessionTest.class,
+    JMSXPropertyTest.class,
+    MessageBodyTest.class,
+    MessageDefaultTest.class,
+    MessagePropertyConversionTest.class,
+    MessagePropertyTest.class
 })
 public class JoramJmsNioTest {
     @Rule
