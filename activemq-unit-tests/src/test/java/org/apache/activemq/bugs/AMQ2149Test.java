@@ -522,14 +522,11 @@ public class AMQ2149Test {
         final long expiry = System.currentTimeMillis() + 1000 * 60 * 4;
         while(!threads.isEmpty() && exceptions.isEmpty() && System.currentTimeMillis() < expiry) {
             Thread sendThread = threads.firstElement();
-            sendThread.join(1000*20);
+            sendThread.join(1000*30);
             if (!sendThread.isAlive()) {
                 threads.remove(sendThread);
             } else {
-                Throwable throwable = new Throwable("blocked send thread");
-                throwable.setStackTrace(sendThread.getStackTrace());
-                LOG.error("Send thread blocked", throwable);
-                throwable.printStackTrace();
+                AutoFailTestSupport.dumpAllThreads("Send blocked");
             }
         }
         LOG.info("senders done..." + threads);

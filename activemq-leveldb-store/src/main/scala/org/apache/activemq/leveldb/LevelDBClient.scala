@@ -979,11 +979,18 @@ class LevelDBClient(store: LevelDBStore) {
     ingorefailure(might_fail(throw new IOException("non-clean close")))
   }
 
-  def stop():Unit = this.synchronized {
-    if( writeExecutor!=null ) {
-      writeExecutor.shutdown
-      writeExecutor.awaitTermination(60, TimeUnit.SECONDS)
-      writeExecutor = null
+  def stop():Unit = {
+    var executorToShutdown:ExecutorService = null
+    this synchronized {
+      if (writeExecutor != null) {
+        executorToShutdown = writeExecutor
+        writeExecutor = null
+      }
+    }
+
+    if (executorToShutdown != null) {
+      executorToShutdown.shutdown
+      executorToShutdown.awaitTermination(60, TimeUnit.SECONDS)
 
       // this blocks until all io completes..
       snapshotRwLock.writeLock().lock()
