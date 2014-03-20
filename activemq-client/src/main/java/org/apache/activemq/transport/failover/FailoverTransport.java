@@ -257,8 +257,8 @@ public class FailoverTransport implements CompositeTransport {
                 if (canReconnect()) {
                     reconnectOk = true;
                 }
-                LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed, reason:  " + e
-                        + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect");
+                LOG.warn("Transport (" + transport + ") failed, reason:  "
+                        + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect", e);
 
                 initialized = false;
                 failedConnectTransportURI = connectedTransportURI;
@@ -635,11 +635,16 @@ public class FailoverTransport implements CompositeTransport {
                             break;
                         }
 
+                        Tracked tracked = null;
+                        try {
+                            tracked = stateTracker.track(command);
+                        } catch (IOException ioe) {
+                            LOG.debug("Cannot track the command " + command, ioe);
+                        }
                         // If it was a request and it was not being tracked by
                         // the state tracker,
                         // then hold it in the requestMap so that we can replay
                         // it later.
-                        Tracked tracked = stateTracker.track(command);
                         synchronized (requestMap) {
                             if (tracked != null && tracked.isWaitingForResponse()) {
                                 requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
