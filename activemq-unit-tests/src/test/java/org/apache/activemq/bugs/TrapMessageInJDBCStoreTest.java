@@ -292,7 +292,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
             super.executeBatch();
 
             if (throwSQLException){
-                throw new SQLException("TEST SQL EXCEPTION from executeBatch");
+                throw new SQLException("TEST SQL EXCEPTION from executeBatch after super. execution");
             }
 
 

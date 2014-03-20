@@ -335,4 +335,7 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     public synchronized void setCacheEnabled(boolean val) {
         cacheEnabled = val;
     }
+
+    public void rebase() {
+    }
 }

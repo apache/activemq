@@ -225,7 +225,7 @@ public class FailoverTransactionTest extends TestSupport {
         setDefaultPersistenceAdapter(broker);
         broker.start();
 
-        assertTrue("tx committed trough failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
+        assertTrue("tx committed through failover", commitDoneLatch.await(30, TimeUnit.SECONDS));
 
         // new transaction
         Message msg = consumer.receive(20000);

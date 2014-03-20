@@ -28,6 +28,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.ProxyMessageStore;
 import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
@@ -48,6 +49,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
 
     private HashMap<ActiveMQDestination, MessageStore> topicStores = new HashMap<ActiveMQDestination, MessageStore>();
+    private HashMap<ActiveMQDestination, MessageStore> queueStores = new HashMap<ActiveMQDestination, MessageStore>();
 
     public JdbcMemoryTransactionStore(JDBCPersistenceAdapter jdbcPersistenceAdapter) {
         super(jdbcPersistenceAdapter);
@@ -110,6 +112,11 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                             message.getPriority());
 
                 }
+
+                @Override
+                public void setMessageStore(MessageStore messageStore) {
+                    throw new RuntimeException("MessageStore already known");
+                }
             });
         }
         tx.messages = updateFromPreparedStateCommands;
@@ -166,6 +173,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
         message.getMessageId().setEntryLocator(id);
         Tx tx = getPreparedTx(message.getTransactionId());
         tx.add(new AddMessageCommand() {
+            MessageStore messageStore;
             @Override
             public Message getMessage() {
                 return message;
@@ -173,12 +181,18 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
             @Override
             public MessageStore getMessageStore() {
-                return null;
+                return messageStore;
             }
 
             @Override
             public void run(ConnectionContext context) throws IOException {
                 ((JDBCPersistenceAdapter)persistenceAdapter).commitAdd(null, message.getMessageId());
+                ((JDBCMessageStore)messageStore).onAdd(message.getMessageId(), ((Long)message.getMessageId().getEntryLocator()).longValue(), message.getPriority());
+            }
+
+            @Override
+            public void setMessageStore(MessageStore messageStore) {
+                this.messageStore = messageStore;
             }
 
         });
@@ -290,6 +304,11 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
     }
 
     @Override
+    protected void onProxyQueueStore(ProxyMessageStore proxyQueueMessageStore) {
+        queueStores.put(proxyQueueMessageStore.getDestination(), proxyQueueMessageStore.getDelegate());
+    }
+
+    @Override
     protected void onRecovered(Tx tx) {
         for (RemoveMessageCommand removeMessageCommand: tx.acks) {
             if (removeMessageCommand instanceof LastAckCommand) {
@@ -303,6 +322,10 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                 // so we make up for it when we recover the ack
                 ((JDBCPersistenceAdapter)persistenceAdapter).getBrokerService().getRegionBroker().getDestinationMap().get(removeMessageCommand.getMessageAck().getDestination()).getDestinationStatistics().getMessages().increment();
             }
+        }
+        for (AddMessageCommand addMessageCommand : tx.messages) {
+            ActiveMQDestination destination = addMessageCommand.getMessage().getDestination();
+            addMessageCommand.setMessageStore(destination.isQueue() ? queueStores.get(destination) : topicStores.get(destination));
         }
     }
 

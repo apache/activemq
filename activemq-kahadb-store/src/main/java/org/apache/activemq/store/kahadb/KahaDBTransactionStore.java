@@ -295,7 +295,7 @@ public class KahaDBTransactionStore implements TransactionStore {
             } else {
                 KahaTransactionInfo info = getTransactionInfo(txid);
                 theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
-                forgetRecoveredAcks(txid);
+                forgetRecoveredAcks(txid, false);
             }
         }else {
            LOG.error("Null transaction passed on commit");
@@ -310,16 +310,16 @@ public class KahaDBTransactionStore implements TransactionStore {
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
             theStore.store(new KahaRollbackCommand().setTransactionInfo(info), false, null, null);
-            forgetRecoveredAcks(txid);
+            forgetRecoveredAcks(txid, true);
         } else {
             inflightTransactions.remove(txid);
         }
     }
 
-    protected void forgetRecoveredAcks(TransactionId txid) throws IOException {
+    protected void forgetRecoveredAcks(TransactionId txid, boolean isRollback) throws IOException {
         if (txid.isXATransaction()) {
             XATransactionId xaTid = ((XATransactionId) txid);
-            theStore.forgetRecoveredAcks(xaTid.getPreparedAcks());
+            theStore.forgetRecoveredAcks(xaTid.getPreparedAcks(), isRollback);
         }
     }
 

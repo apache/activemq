@@ -1321,11 +1321,13 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     public void clearPendingMessages() {
         messagesLock.writeLock().lock();
         try {
-            if (store != null) {
-                store.resetBatching();
+            if (resetNeeded) {
+                messages.gc();
+                messages.reset();
+                resetNeeded = false;
+            } else {
+                messages.rebase();
             }
-            messages.gc();
-            messages.reset();
             asyncWakeup();
         } finally {
             messagesLock.writeLock().unlock();
