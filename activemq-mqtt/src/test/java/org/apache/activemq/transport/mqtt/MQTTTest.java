@@ -20,6 +20,9 @@ import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -662,10 +665,11 @@ public class MQTTTest extends AbstractMQTTTest {
 
     @Test(timeout = 60 * 1000)
     public void testResendMessageId() throws Exception {
-        addMQTTConnector();
+        addMQTTConnector("trace=true");
         brokerService.start();
 
         final MQTT mqtt = createMQTTConnection("resend", false);
+        mqtt.setKeepAlive((short) 5);
 
         final List<PUBLISH> publishList = new ArrayList<PUBLISH>();
         mqtt.setTracer(new Tracer() {

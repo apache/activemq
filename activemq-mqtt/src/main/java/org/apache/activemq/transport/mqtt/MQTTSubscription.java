@@ -57,7 +57,7 @@ class MQTTSubscription {
             case AT_LEAST_ONCE:
             case EXACTLY_ONCE:
                 // set packet id, and optionally dup flag
-                protocolConverter.setPacketId(this, message, publish);
+                protocolConverter.getPacketIdGenerator().setPacketId(protocolConverter.getClientId(), this, message, publish);
             case AT_MOST_ONCE:
         }
         return publish;

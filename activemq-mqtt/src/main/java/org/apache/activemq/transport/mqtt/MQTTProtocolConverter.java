@@ -51,13 +51,12 @@ public class MQTTProtocolConverter {
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
     private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 0.5;
-    private static final int DEFAULT_CACHE_SIZE = 5000;
+    static final int DEFAULT_CACHE_SIZE = 5000;
     private static final byte SUBSCRIBE_ERROR = (byte) 0x80;
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
     private final ProducerId producerId = new ProducerId(sessionId, 1);
-    private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator publisherIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
 
@@ -68,8 +67,6 @@ public class MQTTProtocolConverter {
     private final Map<Destination, UTF8Buffer> mqttTopicMap = new LRUCache<Destination, UTF8Buffer>(DEFAULT_CACHE_SIZE);
     private final Map<Short, MessageAck> consumerAcks = new LRUCache<Short, MessageAck>(DEFAULT_CACHE_SIZE);
     private final Map<Short, PUBREC> publisherRecs = new LRUCache<Short, PUBREC>(DEFAULT_CACHE_SIZE);
-    private final Map<String, Short> activemqToPacketIds = new LRUCache<String, Short>(DEFAULT_CACHE_SIZE);
-    private final Map<Short, String> packetIdsToActivemq = new LRUCache<Short, String>(DEFAULT_CACHE_SIZE);
 
     private final MQTTTransport mqttTransport;
     private final BrokerService brokerService;
@@ -84,11 +81,13 @@ public class MQTTProtocolConverter {
     private int activeMQSubscriptionPrefetch=1;
     private final String QOS_PROPERTY_NAME = "QoSPropertyName";
     private final MQTTRetainedMessages retainedMessages;
+    private final MQTTPacketIdGenerator packetIdGenerator;
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
         this.brokerService = brokerService;
         this.retainedMessages = MQTTRetainedMessages.getMQTTRetainedMessages(brokerService);
+        this.packetIdGenerator = MQTTPacketIdGenerator.getMQTTPacketIdGenerator(brokerService);
         this.defaultKeepAlive = 0;
     }
 
@@ -276,8 +275,10 @@ public class MQTTProtocolConverter {
 
                         List<SubscriptionInfo> subs = PersistenceAdapterSupport.listSubscriptions(brokerService.getPersistenceAdapter(), connectionInfo.getClientId());
                         if( connect.cleanSession() ) {
+                            packetIdGenerator.stopClientSession(getClientId());
                             deleteDurableSubs(subs);
                         } else {
+                            packetIdGenerator.startClientSession(getClientId());
                             restoreDurableSubs(subs);
                         }
                     }
@@ -363,7 +364,7 @@ public class MQTTProtocolConverter {
                             switch (retainedCopy.qos()) {
                                 case AT_LEAST_ONCE:
                                 case EXACTLY_ONCE:
-                                    retainedCopy.messageId(getNextSequenceId());
+                                    retainedCopy.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
                                 case AT_MOST_ONCE:
                             }
                             getMQTTTransport().sendToMQTT(retainedCopy.encode());
@@ -517,7 +518,7 @@ public class MQTTProtocolConverter {
 
     void onMQTTPubAck(PUBACK command) {
         short messageId = command.messageId();
-        ackPacketId(messageId);
+        packetIdGenerator.ackPacketId(getClientId(), messageId);
         MessageAck ack;
         synchronized (consumerAcks) {
             ack = consumerAcks.remove(messageId);
@@ -549,7 +550,7 @@ public class MQTTProtocolConverter {
 
     void onMQTTPubComp(PUBCOMP command) {
         short messageId = command.messageId();
-        ackPacketId(messageId);
+        packetIdGenerator.ackPacketId(getClientId(), messageId);
         MessageAck ack;
         synchronized (consumerAcks) {
             ack = consumerAcks.remove(messageId);
@@ -662,7 +663,7 @@ public class MQTTProtocolConverter {
                         PUBLISH publish = new PUBLISH();
                         publish.topicName(connect.willTopic());
                         publish.qos(connect.willQos());
-                        publish.messageId(getNextSequenceId());
+                        publish.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
                         publish.payload(connect.willMessage());
                         ActiveMQMessage message = convertMessage(publish);
                         message.setProducerId(producerId);
@@ -739,7 +740,7 @@ public class MQTTProtocolConverter {
         }
     }
 
-    private String getClientId() {
+    String getClientId() {
         if (clientId == null) {
             if (connect != null && connect.clientId() != null) {
                 clientId = connect.clientId().toString();
@@ -858,38 +859,7 @@ public class MQTTProtocolConverter {
         this.activeMQSubscriptionPrefetch = activeMQSubscriptionPrefetch;
     }
 
-    short setPacketId(MQTTSubscription subscription, ActiveMQMessage message, PUBLISH publish) {
-        // subscription key
-        final StringBuilder subscriptionKey = new StringBuilder();
-        subscriptionKey.append(subscription.getConsumerInfo().getDestination().getPhysicalName())
-            .append(':').append(message.getJMSMessageID());
-        final String keyStr = subscriptionKey.toString();
-        Short packetId;
-        synchronized (activemqToPacketIds) {
-            packetId = activemqToPacketIds.get(keyStr);
-            if (packetId == null) {
-                packetId = getNextSequenceId();
-                activemqToPacketIds.put(keyStr, packetId);
-                packetIdsToActivemq.put(packetId, keyStr);
-            } else {
-                // mark publish as duplicate!
-                publish.dup(true);
-            }
-        }
-        publish.messageId(packetId);
-        return packetId;
-    }
-
-    void ackPacketId(short packetId) {
-        synchronized (activemqToPacketIds) {
-            final String subscriptionKey = packetIdsToActivemq.remove(packetId);
-            if (subscriptionKey != null) {
-                activemqToPacketIds.remove(subscriptionKey);
-            }
-        }
-    }
-
-    short getNextSequenceId() {
-        return (short) messageIdGenerator.getNextSequenceId();
+    public MQTTPacketIdGenerator getPacketIdGenerator() {
+        return packetIdGenerator;
     }
 }
