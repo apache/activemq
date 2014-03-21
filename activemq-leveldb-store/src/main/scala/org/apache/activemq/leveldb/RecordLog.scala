@@ -76,8 +76,6 @@ case class RecordLog(directory: File, logSuffix:String) {
   var logSize = 1024 * 1024 * 100L
   var current_appender:LogAppender = _
   var verify_checksums = false
-  var sync = false
-
   val log_infos = new TreeMap[Long, LogInfo]()
 
   object log_mutex
@@ -130,20 +128,16 @@ case class RecordLog(directory: File, logSuffix:String) {
       channel.position(logSize-1)
       channel.write(new Buffer(1).toByteBuffer)
       channel.force(true)
-      if( sync ) {
-        channel.position(0)
-      }
+      channel.position(0)
     }
 
     val write_buffer = new DataByteArrayOutputStream(BUFFER_SIZE+LOG_HEADER_SIZE)
 
     def force = {
       flush
-      if(sync) {
-        max_log_flush_latency {
-          // only need to update the file metadata if the file size changes..
-          channel.force(append_offset > logSize)
-        }
+      max_log_flush_latency {
+        // only need to update the file metadata if the file size changes..
+        channel.force(append_offset > logSize)
       }
     }
 

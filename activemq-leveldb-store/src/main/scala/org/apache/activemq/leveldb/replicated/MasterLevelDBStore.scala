@@ -345,6 +345,7 @@ class MasterLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
           val value = new LogWrite
           value.file = position;
           value.offset = offset;
+          value.sync = (syncToMask & SYNC_TO_REMOTE_DISK)!=0
           value.length = fileTransferFrame.length
           value.date = date
           encoded = JsonCodec.encode(value)
