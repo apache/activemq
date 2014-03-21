@@ -16,25 +16,13 @@
  */
 package org.apache.activemq.broker.policy;
 
-import org.apache.activemq.JmsMultipleClientsTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.AbortSlowConsumerStrategyViewMBean;
-import org.apache.activemq.broker.jmx.DestinationViewMBean;
-import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.util.MessageIdList;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.lang.reflect.UndeclaredThrowableException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
-import javax.jms.ExceptionListener;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
@@ -42,19 +30,42 @@ import javax.management.InstanceNotFoundException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQMessageConsumer;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.jmx.AbortSlowConsumerStrategyViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.util.SocketProxy;
+import org.apache.activemq.util.Wait;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import static org.junit.Assert.*;
 
 
-@RunWith(BlockJUnit4ClassRunner.class)
+@RunWith(value = Parameterized.class)
 public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer0Test.class);
+
+    @Parameterized.Parameters(name = "isTopic({0})")
+    public static Collection<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
+    }
+
+    public AbortSlowConsumer0Test(Boolean isTopic) {
+        this.topic = isTopic;
+    }
 
     @Test
     public void testRegularConsumerIsNotAborted() throws Exception {
@@ -70,7 +81,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
     @Test
     public void testSlowConsumerIsAbortedViaJmx() throws Exception {
         underTest.setMaxSlowDuration(60*1000); // so jmx does the abort
-        startConsumers(destination);
+        startConsumers(withPrefetch(2, destination));
         Entry<MessageConsumer, MessageIdList> consumertoAbort = consumers.entrySet().iterator().next();
         consumertoAbort.getValue().setProcessingDelay(8 * 1000);
         for (Connection c : connections) {
@@ -123,6 +134,12 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
         }
     }
 
+    private Destination withPrefetch(int i, Destination destination) {
+        String destWithPrefetch =
+                ((ActiveMQDestination) destination).getPhysicalName() + "?consumer.prefetchSize=" + i;
+        return topic ? new ActiveMQTopic(destWithPrefetch) : new ActiveMQQueue(destWithPrefetch);
+    }
+
     @Test
     public void testOnlyOneSlowConsumerIsAborted() throws Exception {
         consumerCount = 10;
@@ -145,7 +162,7 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
     @Test
     public void testAbortAlreadyClosingConsumers() throws Exception {
         consumerCount = 1;
-        startConsumers(destination);
+        startConsumers(withPrefetch(2, destination));
         for (MessageIdList list : consumers.values()) {
             list.setProcessingDelay(6 * 1000);
         }
@@ -164,7 +181,59 @@ public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
 
     @Test
     public void testAbortConsumerOnDeadConnection() throws Exception {
-        // socket proxy on pause, close could hang??
+        TransportConnector transportConnector = broker.addConnector("tcp://0.0.0.0:0");
+        transportConnector.setBrokerService(broker);
+        transportConnector.setTaskRunnerFactory(broker.getTaskRunnerFactory());
+        transportConnector.start();
+        SocketProxy socketProxy = new SocketProxy(transportConnector.getPublishableConnectURI());
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(socketProxy.getUrl());
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(4);
+        connectionFactory.setPrefetchPolicy(prefetchPolicy);
+        Connection c = connectionFactory.createConnection();
+        connections.add(c);
+        c.start();
+        Session session = c.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        final ActiveMQMessageConsumer messageconsumer = (ActiveMQMessageConsumer) session.createConsumer(destination);
+        startProducers(destination, 10);
+
+        messageconsumer.receive(4000).acknowledge();
+        assertNotNull(messageconsumer.receive(4000));
+        assertNotNull(messageconsumer.receive(4000));
+        assertNotNull(messageconsumer.receive(4000));
+
+        // close control command won't get through
+        socketProxy.pause();
+
+        ActiveMQDestination amqDest = (ActiveMQDestination)destination;
+        ObjectName destinationViewMBean = new ObjectName("org.apache.activemq:destinationType=" +
+                (amqDest.isTopic() ? "Topic" : "Queue") +",destinationName="
+                + amqDest.getPhysicalName() + ",type=Broker,brokerName=localhost");
+
+        final DestinationViewMBean destView = (DestinationViewMBean) broker.getManagementContext().newProxyInstance(destinationViewMBean, DestinationViewMBean.class, true);
+
+        assertTrue("Consumer gone from broker view", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("DestView {} comsumerCount {}", destView, destView.getConsumerCount());
+                return 0 == destView.getConsumerCount();
+            }
+        }));
+
+        socketProxy.goOn();
+
+        assertTrue("consumer was closed", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                boolean closed = false;
+                try {
+                    messageconsumer.receive(400);
+                } catch (javax.jms.IllegalStateException expected) {
+                    closed = expected.toString().contains("closed");
+                }
+                return closed;
+            }
+        }));
     }
 
     @Override

@@ -16,42 +16,27 @@
  */
 package org.apache.activemq.broker.policy;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map.Entry;
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
 import org.apache.activemq.util.MessageIdList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map.Entry;
 
 @RunWith(value = Parameterized.class)
 public class AbortSlowConsumer2Test extends AbortSlowConsumerBase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer2Test.class);
-
-    @Parameterized.Parameters(name = "{0}")
+    @Parameterized.Parameters(name = "isTopic({0})")
     public static Collection<Object[]> getTestParameters() {
-
-        List<Object[]> testParameters = new ArrayList<Object[]>();
-        Boolean[] booleanValues = {Boolean.TRUE, Boolean.FALSE};
-        for (Boolean topic : booleanValues) {
-            Boolean[] value = {topic};
-            testParameters.add(value);
-        }
-
-        return testParameters;
+        return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
     }
 
     public AbortSlowConsumer2Test(Boolean isTopic) {
         this.topic = isTopic;
     }
-
 
     @Test(timeout = 60 * 1000)
     public void testLittleSlowConsumerIsNotAborted() throws Exception {

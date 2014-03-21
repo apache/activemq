@@ -30,6 +30,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerControl;
+import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transport.InactivityIOException;
 import org.slf4j.Logger;
@@ -161,19 +163,44 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
                              connection.getConnectionId(), subscriptions.size());
                 }
             } else {
-                // just abort each consumer by telling it to stop
+                // just abort each consumer
                 for (Subscription subscription : subscriptions) {
+                    final Subscription subToClose = subscription;
                     LOG.info("aborting slow consumer: {} for destination:{}",
                              subscription.getConsumerInfo().getConsumerId(),
                              subscription.getActiveMQDestination());
 
+                    // tell the remote consumer to close
                     try {
                         ConsumerControl stopConsumer = new ConsumerControl();
                         stopConsumer.setConsumerId(subscription.getConsumerInfo().getConsumerId());
                         stopConsumer.setClose(true);
                         connection.dispatchAsync(stopConsumer);
                     } catch (Exception e) {
-                        LOG.info("exception on aborting slow consumer: {}", subscription.getConsumerInfo().getConsumerId());
+                        LOG.info("exception on aborting slow consumer: {}", subscription.getConsumerInfo().getConsumerId(), e);
+                    }
+
+                    // force a local remove in case remote is unresponsive
+                    try {
+                        scheduler.executeAfterDelay(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    RemoveInfo removeCommand = subToClose.getConsumerInfo().createRemoveCommand();
+                                    if (connection instanceof CommandVisitor) {
+                                        // avoid service exception handling and logging
+                                        removeCommand.visit((CommandVisitor) connection);
+                                    } else {
+                                        connection.service(removeCommand);
+                                    }
+                                } catch (IllegalStateException ignoredAsRemoteHasDoneTheJob) {
+                                } catch (Exception e) {
+                                    LOG.info("exception on local remove of slow consumer: {}", subToClose.getConsumerInfo().getConsumerId(), e);
+                                }
+                            }}, 1000l);
+
+                    } catch (Exception e) {
+                        LOG.info("exception on local remove of slow consumer: {}", subscription.getConsumerInfo().getConsumerId(), e);
                     }
                 }
             }

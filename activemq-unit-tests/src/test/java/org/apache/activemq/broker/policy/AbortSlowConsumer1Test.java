@@ -26,9 +26,8 @@ import org.slf4j.LoggerFactory;
 import javax.jms.Connection;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -39,20 +38,13 @@ public class AbortSlowConsumer1Test extends AbortSlowConsumerBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer1Test.class);
 
-    @Parameterized.Parameters(name = "{0}-{1}")
+    @Parameterized.Parameters(name = "abortConnection({0})-isTopic({1})")
     public static Collection<Object[]> getTestParameters() {
-
-        List<Object[]> testParameters = new ArrayList<Object[]>();
-        Boolean[] booleanValues = {Boolean.TRUE, Boolean.TRUE};
-        for (Boolean abortConnection : booleanValues) {
-            for (Boolean topic : booleanValues) {
-                Boolean[] pair = {abortConnection, topic};
-                LOG.info(">>>>> in getTestparameters, adding {}, {}", abortConnection, topic);
-                testParameters.add(pair);
-            }
-        }
-
-        return testParameters;
+        return Arrays.asList(new Object[][]{
+                {Boolean.TRUE, Boolean.TRUE},
+                {Boolean.TRUE, Boolean.FALSE},
+                {Boolean.FALSE, Boolean.TRUE},
+                {Boolean.FALSE, Boolean.FALSE}});
     }
 
     public AbortSlowConsumer1Test(Boolean abortConnection, Boolean topic) {

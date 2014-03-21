@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
@@ -23,17 +24,10 @@ import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.junit.runner.RunWith;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.ConnectionFactory;
 
 @RunWith(value = Parameterized.class)
 public class AbortSlowAckConsumer1Test extends AbortSlowConsumer1Test {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowAckConsumer1Test.class);
 
     protected long maxTimeSinceLastAck = 5 * 1000;
 
