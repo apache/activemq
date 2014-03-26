@@ -128,6 +128,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+        queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
     }
 
     public void update(Queue queue) {
@@ -142,6 +143,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+        queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
     }
 
     public void configure(Broker broker,Topic topic) {
@@ -197,7 +199,6 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
         destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
-        destination.setPersistJMSRedelivered(isPersistJMSRedelivered());
     }
 
     public void baseConfiguration(Broker broker, BaseDestination destination) {
