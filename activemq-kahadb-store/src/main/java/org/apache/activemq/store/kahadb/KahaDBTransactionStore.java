@@ -283,7 +283,7 @@ public class KahaDBTransactionStore implements TransactionStore {
                     }
                     if (doneSomething) {
                         KahaTransactionInfo info = getTransactionInfo(txid);
-                        theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, null, null);
+                        theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), null, null);
                     }
                 }else {
                     //The Tx will be null for failed over clients - lets run their post commits
@@ -294,7 +294,7 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             } else {
                 KahaTransactionInfo info = getTransactionInfo(txid);
-                theStore.store(new KahaCommitCommand().setTransactionInfo(info), true, preCommit, postCommit);
+                theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), preCommit, postCommit);
                 forgetRecoveredAcks(txid, false);
             }
         }else {
@@ -309,7 +309,7 @@ public class KahaDBTransactionStore implements TransactionStore {
     public void rollback(TransactionId txid) throws IOException {
         if (txid.isXATransaction() || theStore.isConcurrentStoreAndDispatchTransactions() == false) {
             KahaTransactionInfo info = getTransactionInfo(txid);
-            theStore.store(new KahaRollbackCommand().setTransactionInfo(info), false, null, null);
+            theStore.store(new KahaRollbackCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), null, null);
             forgetRecoveredAcks(txid, true);
         } else {
             inflightTransactions.remove(txid);
