@@ -177,10 +177,12 @@ public class TransactionContext {
             }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Commit failed: ", e);
-            
-            this.rollback(); 
-            
-            throw IOExceptionSupport.create(e);
+            try {
+                doRollback();
+            } catch (Exception ignored) {}
+            IOException ioe = IOExceptionSupport.create(e);
+            persistenceAdapter.getBrokerService().handleIOException(ioe);
+            throw ioe;
         } finally {
             inTx = false;
             close();
@@ -192,20 +194,7 @@ public class TransactionContext {
             throw new IOException("Not started.");
         }
         try {
-            if (addMessageStatement != null) {
-                addMessageStatement.close();
-                addMessageStatement = null;
-            }
-            if (removedMessageStatement != null) {
-                removedMessageStatement.close();
-                removedMessageStatement = null;
-            }
-            if (updateLastAckStatement != null) {
-                updateLastAckStatement.close();
-                updateLastAckStatement = null;
-            }
-            connection.rollback();
-
+            doRollback();
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
@@ -213,6 +202,22 @@ public class TransactionContext {
             inTx = false;
             close();
         }
+    }
+
+    private void doRollback() throws SQLException {
+        if (addMessageStatement != null) {
+            addMessageStatement.close();
+            addMessageStatement = null;
+        }
+        if (removedMessageStatement != null) {
+            removedMessageStatement.close();
+            removedMessageStatement = null;
+        }
+        if (updateLastAckStatement != null) {
+            updateLastAckStatement.close();
+            updateLastAckStatement = null;
+        }
+        connection.rollback();
     }
 
     public PreparedStatement getAddMessageStatement() {
