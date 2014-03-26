@@ -555,18 +555,6 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setArchiveCorruptedIndex(archiveCorruptedIndex);
     }
 
-    /**
-     * When true, persist the redelivery status such that the message redelivery flag can survive a broker failure
-     * used with org.apache.activemq.ActiveMQConnectionFactory#setTransactedIndividualAck(boolean)  true
-     */
-    public void setRewriteOnRedelivery(boolean rewriteOnRedelivery) {
-        letter.setRewriteOnRedelivery(rewriteOnRedelivery);
-    }
-
-    public boolean isRewriteOnRedelivery() {
-        return letter.isRewriteOnRedelivery();
-    }
-
     public float getIndexLFUEvictionFactor() {
         return letter.getIndexLFUEvictionFactor();
     }

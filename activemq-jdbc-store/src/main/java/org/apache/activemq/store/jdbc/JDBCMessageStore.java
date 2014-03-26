@@ -138,6 +138,19 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
+    public void updateMessage(Message message) throws IOException {
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            adapter.doUpdateMessage(c, destination, message.getMessageId(), ByteSequenceData.toByteArray(wireFormat.marshal(message)));
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to update message: " + message.getMessageId() + " in container: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
     protected void onAdd(MessageId messageId, long sequenceId, byte priority) {
         if (lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
             recoveredAdditions.add(sequenceId);
@@ -353,5 +366,5 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
-    }   
+    }
 }

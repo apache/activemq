@@ -204,4 +204,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public boolean isPrioritizedMessages() {
         return delegate.isPrioritizedMessages();
     }
+
+    public void updateMessage(Message message) throws IOException {
+        delegate.updateMessage(message);
+    }
 }

@@ -59,6 +59,7 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
      */
     protected void restartBroker() throws Exception {
         broker.stop();
+        broker.waitUntilStopped();
         broker = createRestartedBroker();
         broker.start();
     }

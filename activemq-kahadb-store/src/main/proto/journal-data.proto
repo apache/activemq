@@ -31,6 +31,7 @@ enum KahaEntryType {
   KAHA_SUBSCRIPTION_COMMAND = 7;
   KAHA_PRODUCER_AUDIT_COMMAND = 8;
   KAHA_ACK_MESSAGE_FILE_MAP_COMMAND = 9;
+  KAHA_UPDATE_MESSAGE_COMMAND = 10;
 }
 
 message KahaTraceCommand {
@@ -56,6 +57,13 @@ message KahaAddMessageCommand {
   required bytes message = 4;
   optional int32 priority =5 [default = 4];
   optional bool prioritySupported = 6;
+}
+
+message KahaUpdateMessageCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaUpdateMessageCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+  required KahaAddMessageCommand message = 1;
 }
 
 message KahaRemoveMessageCommand {

@@ -60,10 +60,12 @@ import org.apache.activemq.store.*;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
+import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaLocation;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
+import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.usage.MemoryUsage;
@@ -277,46 +279,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     }
 
     @Override
-    void incrementRedeliveryAndReWrite(final String key, final KahaDestination destination) throws IOException {
-        Location location;
-        this.indexLock.writeLock().lock();
-        try {
-              location = findMessageLocation(key, destination);
-        } finally {
-            this.indexLock.writeLock().unlock();
-        }
-
-        if (location != null) {
-            KahaAddMessageCommand addMessage = (KahaAddMessageCommand) load(location);
-            Message message = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
-
-            message.incrementRedeliveryCounter();
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("rewriting: " + key + " with deliveryCount: " + message.getRedeliveryCounter());
-            }
-            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
-            addMessage.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-
-            final Location rewriteLocation = journal.write(toByteSequence(addMessage), true);
-
-            this.indexLock.writeLock().lock();
-            try {
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                    @Override
-                    public void execute(Transaction tx) throws IOException {
-                        StoredDestination sd = getStoredDestination(destination, tx);
-                        Long sequence = sd.messageIdIndex.get(tx, key);
-                        MessageKeys keys = sd.orderIndex.get(tx, sequence);
-                        sd.orderIndex.put(tx, sd.orderIndex.lastGetPriority(), sequence, new MessageKeys(keys.messageId, rewriteLocation));
-                    }
-                });
-            } finally {
-                this.indexLock.writeLock().unlock();
-            }
-        }
-    }
-
-    @Override
     void rollbackStatsOnDuplicate(KahaDestination commandDestination) {
         if (brokerService != null) {
             RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
@@ -463,6 +425,22 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
             store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), null, null);
 
+        }
+
+        public void updateMessage(Message message) throws IOException {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("updating: " + message.getMessageId() + " with deliveryCount: " + message.getRedeliveryCounter());
+            }
+            KahaUpdateMessageCommand updateMessageCommand = new KahaUpdateMessageCommand();
+            KahaAddMessageCommand command = new KahaAddMessageCommand();
+            command.setDestination(dest);
+            command.setMessageId(message.getMessageId().toProducerKey());
+            command.setPriority(message.getPriority());
+            command.setPrioritySupported(prioritizedMessages);
+            org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
+            command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
+            updateMessageCommand.setMessage(command);
+            store(updateMessageCommand, isEnableJournalDiskSyncs(), null, null);
         }
 
         @Override
@@ -1126,7 +1104,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
      * @throws IOException
      */
     Message loadMessage(Location location) throws IOException {
-        KahaAddMessageCommand addMessage = (KahaAddMessageCommand) load(location);
+        JournalCommand<?> command = load(location);
+        KahaAddMessageCommand addMessage = null;
+        switch (command.type()) {
+            case KAHA_UPDATE_MESSAGE_COMMAND:
+                addMessage = ((KahaUpdateMessageCommand)command).getMessage();
+                break;
+            default:
+                addMessage = (KahaAddMessageCommand) command;
+        }
         Message msg = (Message) wireFormat.unmarshal(new DataInputStream(addMessage.getMessage().newInput()));
         return msg;
     }

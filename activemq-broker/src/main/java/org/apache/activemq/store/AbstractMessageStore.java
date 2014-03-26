@@ -117,6 +117,10 @@ abstract public class AbstractMessageStore implements MessageStore {
         removeMessage(context, ack);
     }
 
+    public void updateMessage(Message message) throws IOException {
+        throw new IOException("update is not supported by: " + this);
+    }
+
     static class CallableImplementation implements Callable<Object> {
         public Object call() throws Exception {
             return null;

@@ -69,6 +69,7 @@ import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
+import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.index.BTreeIndex;
 import org.apache.activemq.store.kahadb.disk.index.BTreeVisitor;
 import org.apache.activemq.store.kahadb.disk.index.ListIndex;
@@ -1113,6 +1114,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             public void visit(KahaTraceCommand command) {
                 processLocation(location);
             }
+
+            @Override
+            public void visit(KahaUpdateMessageCommand command) throws IOException {
+                process(command, location);
+            }
         });
     }
 
@@ -1127,12 +1133,27 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     @Override
                     public void execute(Transaction tx) throws IOException {
-                        upadateIndex(tx, command, location);
+                        updateIndex(tx, command, location);
                     }
                 });
             } finally {
                 this.indexLock.writeLock().unlock();
             }
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected void process(final KahaUpdateMessageCommand command, final Location location) throws IOException {
+        this.indexLock.writeLock().lock();
+        try {
+            pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                @Override
+                public void execute(Transaction tx) throws IOException {
+                    updateIndex(tx, command, location);
+                }
+            });
+        } finally {
+            this.indexLock.writeLock().unlock();
         }
     }
 
@@ -1253,26 +1274,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 updates = preparedTransactions.remove(key);
             }
         }
-        if (isRewriteOnRedelivery()) {
-            persistRedeliveryCount(updates);
-        }
     }
-
-    @SuppressWarnings("rawtypes")
-    private void persistRedeliveryCount(List<Operation> updates)  throws IOException {
-        if (updates != null) {
-            for (Operation operation : updates) {
-                operation.getCommand().visit(new Visitor() {
-                    @Override
-                    public void visit(KahaRemoveMessageCommand command) throws IOException {
-                        incrementRedeliveryAndReWrite(command.getMessageId(), command.getDestination());
-                    }
-                });
-            }
-        }
-    }
-
-   abstract void incrementRedeliveryAndReWrite(String key, KahaDestination destination) throws IOException;
 
     // /////////////////////////////////////////////////////////////////
     // These methods do the actual index updates.
@@ -1281,7 +1283,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected final ReentrantReadWriteLock indexLock = new ReentrantReadWriteLock();
     private final HashSet<Integer> journalFilesBeingReplicated = new HashSet<Integer>();
 
-    void upadateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
+    void updateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
 
         // Skip adding the message to the index if this is a topic and there are
@@ -1317,6 +1319,25 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
         // record this id in any event, initial send or recovery
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
+        metadata.lastUpdate = location;
+    }
+
+    void updateIndex(Transaction tx, KahaUpdateMessageCommand updateMessageCommand, Location location) throws IOException {
+        KahaAddMessageCommand command = updateMessageCommand.getMessage();
+        StoredDestination sd = getStoredDestination(command.getDestination(), tx);
+
+        Long id = sd.messageIdIndex.get(tx, command.getMessageId());
+        if (id != null) {
+            sd.orderIndex.put(
+                    tx,
+                    command.getPrioritySupported() ? command.getPriority() : javax.jms.Message.DEFAULT_PRIORITY,
+                    id,
+                    new MessageKeys(command.getMessageId(), location)
+            );
+            sd.locationIndex.put(tx, location, id);
+        } else {
+            LOG.warn("Non existent message update attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
+        }
         metadata.lastUpdate = location;
     }
 
@@ -2382,7 +2403,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         @Override
         public void execute(Transaction tx) throws IOException {
-            upadateIndex(tx, command, location);
+            updateIndex(tx, command, location);
         }
 
     }
@@ -2610,14 +2631,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     public void setDirectoryArchive(File directoryArchive) {
         this.directoryArchive = directoryArchive;
-    }
-
-    public boolean isRewriteOnRedelivery() {
-        return rewriteOnRedelivery;
-    }
-
-    public void setRewriteOnRedelivery(boolean rewriteOnRedelivery) {
-        this.rewriteOnRedelivery = rewriteOnRedelivery;
     }
 
     public boolean isArchiveCorruptedIndex() {

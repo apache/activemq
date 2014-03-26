@@ -103,6 +103,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * percentage of in-flight messages above which optimize message store is disabled
      */
     private int optimizeMessageStoreInFlightLimit = 10;
+    private boolean persistJMSRedelivered = false;
 
 
     public void configure(Broker broker,Queue queue) {
@@ -196,6 +197,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
         destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
+        destination.setPersistJMSRedelivered(isPersistJMSRedelivered());
     }
 
     public void baseConfiguration(Broker broker, BaseDestination destination) {
@@ -920,4 +922,11 @@ public class PolicyEntry extends DestinationMapEntry {
         this.optimizeMessageStoreInFlightLimit = optimizeMessageStoreInFlightLimit;
     }
 
+    public void setPersistJMSRedelivered(boolean val) {
+        this.persistJMSRedelivered = val;
+    }
+
+    public boolean isPersistJMSRedelivered() {
+        return persistJMSRedelivered;
+    }
 }

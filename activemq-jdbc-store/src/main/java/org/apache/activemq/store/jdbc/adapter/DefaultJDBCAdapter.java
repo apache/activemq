@@ -252,6 +252,24 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
+    public void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException {
+        PreparedStatement s = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getUpdateMessageStatement());
+            setBinaryData(s, 1, data);
+            s.setString(2, id.getProducerId().toString());
+            s.setLong(3, id.getProducerSequenceId());
+            s.setString(4, destination.getQualifiedName());
+            if (s.executeUpdate() != 1) {
+                throw new IOException("Could not update message: " + id + " in " + destination);
+            }
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(s);
+        }
+    }
 
 
     public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,

@@ -16,12 +16,11 @@
  */
 package org.apache.activemq.transport.failover;
 
-import java.io.IOException;
 import junit.framework.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.PersistenceAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 
 public class FailoverRedeliveryTransactionTest extends FailoverTransactionTest {
 
@@ -38,20 +37,12 @@ public class FailoverRedeliveryTransactionTest extends FailoverTransactionTest {
     @Override
     public BrokerService createBroker(boolean deleteAllMessagesOnStartup, String bindAddress) throws Exception {
         BrokerService brokerService = super.createBroker(deleteAllMessagesOnStartup, bindAddress);
-        configurePersistenceAdapter(brokerService);
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setPersistJMSRedelivered(true);
+        policyMap.setDefaultEntry(defaultEntry);
+        brokerService.setDestinationPolicy(policyMap);
         return brokerService;
-    }
-
-    private void configurePersistenceAdapter(BrokerService brokerService) throws IOException {
-         KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter();
-         kahaDBPersistenceAdapter.setRewriteOnRedelivery(true);
-    }
-
-    @Override
-    public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
-        PersistenceAdapter persistenceAdapter = super.setDefaultPersistenceAdapter(broker);
-        configurePersistenceAdapter(broker);
-        return persistenceAdapter;
     }
 
     // no point rerunning these

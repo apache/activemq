@@ -169,7 +169,7 @@ public class Statements {
 
     public String getUpdateMessageStatement() {
         if (updateMessageStatement == null) {
-            updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE ID=?";
+            updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE MSGID_PROD=? AND MSGID_SEQ=? AND CONTAINER=?";
         }
         return updateMessageStatement;
     }

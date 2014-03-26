@@ -596,6 +596,17 @@ public class RegionBroker extends EmptyBroker {
                 long totalTime = endTime - message.getBrokerInTime();
                 ((Destination) message.getRegionDestination()).getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
+            if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered() && message.isPersistent()) {
+                final int originalValue = message.getRedeliveryCounter();
+                message.incrementRedeliveryCounter();
+                try {
+                    ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
+                } catch (IOException error) {
+                    LOG.error("Failed to persist JMSRedeliveryFlag on {} in {}", message.getMessageId(), message.getDestination(), error);
+                } finally {
+                    message.setRedeliveryCounter(originalValue);
+                }
+            }
         }
     }
 

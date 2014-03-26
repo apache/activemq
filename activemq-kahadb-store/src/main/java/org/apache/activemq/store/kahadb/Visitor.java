@@ -28,6 +28,7 @@ import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
+import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 
 public class Visitor {
 
@@ -59,5 +60,8 @@ public class Visitor {
     }
 
     public void visit(KahaAckMessageFileMapCommand kahaProducerAuditCommand) throws IOException {
+    }
+
+    public void visit(KahaUpdateMessageCommand kahaUpdateMessageCommand) throws IOException {
     }
 }

@@ -106,6 +106,7 @@ public abstract class BaseDestination implements Destination {
      * percentage of in-flight messages above which optimize message store is disabled
      */
     private int optimizeMessageStoreInFlightLimit = 10;
+    private boolean persistJMSRedelivered;
 
     /**
      * @param brokerService
@@ -807,4 +808,11 @@ public abstract class BaseDestination implements Destination {
         }
     }
 
+    public void setPersistJMSRedelivered(boolean persistJMSRedelivered) {
+        this.persistJMSRedelivered = persistJMSRedelivered;
+    }
+
+    public boolean isPersistJMSRedelivered() {
+        return persistJMSRedelivered;
+    }
 }

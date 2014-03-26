@@ -394,7 +394,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           if( prepared ) {
             store.preparedAcks.remove(ack.getLastMessageId)
           }
-          uow.incrementRedelivery(store.key, ack.getLastMessageId)
         }
       }
     }
@@ -699,6 +698,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     override def addMessage(context: ConnectionContext, message: Message, delay: Boolean): Unit = {
       check_running
       waitOn(asyncAddQueueMessage(context, message, delay))
+    }
+
+    override def updateMessage(message: Message): Unit = {
+      check_running
+      // the only current usage of update is to increment the redelivery counter
+      withUow {uow => uow.incrementRedelivery(key, message.getMessageId)}
     }
 
     def doRemove(uow: DelayableUOW, id: MessageId): CountDownFuture[AnyRef] = {

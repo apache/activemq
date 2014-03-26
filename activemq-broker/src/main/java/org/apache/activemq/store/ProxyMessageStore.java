@@ -155,4 +155,9 @@ public class ProxyMessageStore implements MessageStore {
     public boolean isPrioritizedMessages() {
         return delegate.isPrioritizedMessages();
     }
+
+    @Override
+    public void updateMessage(Message message) throws IOException {
+        delegate.updateMessage(message);
+    }
 }

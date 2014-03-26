@@ -50,7 +50,7 @@ public class MemoryLimitTest extends TestSupport {
     @Parameterized.Parameter
     public TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
 
-    @Parameterized.Parameters(name="{0}")
+    @Parameterized.Parameters(name="store={0}")
     public static Iterable<Object[]> getTestParameters() {
         return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB}, {PersistenceAdapterChoice.LevelDB}, {PersistenceAdapterChoice.JDBC}});
     }

@@ -152,5 +152,11 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public void setBatch(MessageId messageId) {
         lastBatchId = messageId;
     }
+
+    public void updateMessage(Message message) {
+        synchronized (messageTable) {
+            messageTable.put(message.getMessageId(), message);
+        }
+    }
     
 }
