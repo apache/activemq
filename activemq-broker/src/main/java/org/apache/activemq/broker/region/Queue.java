@@ -558,6 +558,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                 }
 
                 for (MessageReference ref : unAckedMessages) {
+                    // AMQ-5107: don't resend if the broker is shutting down
+                    if ( this.brokerService.isStopping() ) {
+                        break;
+                    }
                     QueueMessageReference qmr = (QueueMessageReference) ref;
                     if (qmr.getLockOwner() == sub) {
                         qmr.unlock();
@@ -583,7 +587,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     ((QueueBrowserSubscription)sub).decrementQueueRef();
                     browserDispatches.remove(sub);
                 }
-                if (!redeliveredWaitingDispatch.isEmpty()) {
+                // AMQ-5107: don't resend if the broker is shutting down
+                if (!redeliveredWaitingDispatch.isEmpty() && (! this.brokerService.isStopping())) {
                     doDispatch(new OrderedPendingList());
                 }
             } finally {
