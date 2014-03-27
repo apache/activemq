@@ -690,7 +690,7 @@ public class JMSClientTest extends AmqpTestSupport {
     public void testConnectionsAreClosed() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
-        final ConnectorViewMBean connector = getProxyToConnectionView("amqp");
+        final ConnectorViewMBean connector = getProxyToConnectionView(getTargetConnectorName());
         LOG.info("Current number of Connections is: {}", connector.connectionCount());
 
         ArrayList<Connection> connections = new ArrayList<Connection>();
@@ -713,6 +713,10 @@ public class JMSClientTest extends AmqpTestSupport {
                 return connector.connectionCount() == 0;
             }
         }));
+    }
+
+    protected String getTargetConnectorName() {
+        return "amqp";
     }
 
     @Test(timeout=30000)

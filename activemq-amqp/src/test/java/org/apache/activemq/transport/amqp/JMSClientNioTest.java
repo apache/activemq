@@ -30,4 +30,19 @@ public class JMSClientNioTest extends JMSClientTest {
         LOG.debug("JMSClientNioTest.getBrokerPort returning nioPort {}", nioPort);
         return nioPort;
     }
+
+    @Override
+    protected boolean isUseTcpConnector() {
+        return false;
+    }
+
+    @Override
+    protected boolean isUseNioConnector() {
+        return true;
+    }
+
+    @Override
+    protected String getTargetConnectorName() {
+        return "amqp+nio";
+    }
 }

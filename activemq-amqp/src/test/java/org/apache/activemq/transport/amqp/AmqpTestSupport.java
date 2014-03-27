@@ -117,18 +117,44 @@ public class AmqpTestSupport {
     }
 
     protected void addAMQPConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("amqp+ssl://0.0.0.0:" + sslPort);
-        sslPort = connector.getConnectUri().getPort();
-        LOG.debug("Using amqp+ssl port " + sslPort);
-        connector = brokerService.addConnector("amqp://0.0.0.0:" + port);
-        port = connector.getConnectUri().getPort();
-        LOG.debug("Using amqp port " + port);
-        connector = brokerService.addConnector("amqp+nio://0.0.0.0:" + nioPort);
-        nioPort = connector.getConnectUri().getPort();
-        LOG.debug("Using amqp+nio port " + nioPort);
-        connector = brokerService.addConnector("amqp+nio+ssl://0.0.0.0:" + nioPlusSslPort);
-        nioPlusSslPort = connector.getConnectUri().getPort();
-        LOG.debug("Using amqp+nio+ssl port " + nioPlusSslPort);
+        TransportConnector connector = null;
+
+        if (isUseTcpConnector()) {
+            connector = brokerService.addConnector("amqp://0.0.0.0:" + port);
+            port = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp port " + port);
+        }
+        if (isUseSslConnector()) {
+            connector = brokerService.addConnector("amqp+ssl://0.0.0.0:" + sslPort);
+            sslPort = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp+ssl port " + sslPort);
+        }
+        if (isUseNioConnector()) {
+            connector = brokerService.addConnector("amqp+nio://0.0.0.0:" + nioPort);
+            nioPort = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp+nio port " + nioPort);
+        }
+        if (isUseNioPlusSslConnector()) {
+            connector = brokerService.addConnector("amqp+nio+ssl://0.0.0.0:" + nioPlusSslPort);
+            nioPlusSslPort = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp+nio+ssl port " + nioPlusSslPort);
+        }
+    }
+
+    protected boolean isUseTcpConnector() {
+        return true;
+    }
+
+    protected boolean isUseSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseNioConnector() {
+        return false;
+    }
+
+    protected boolean isUseNioPlusSslConnector() {
+        return false;
     }
 
     public void startBroker() throws Exception {

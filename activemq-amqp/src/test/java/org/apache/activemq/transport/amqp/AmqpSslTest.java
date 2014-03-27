@@ -41,15 +41,6 @@ public class AmqpSslTest extends AmqpTestSupport {
         brokerService.addConnector("amqp+ssl://localhost:8883");
     }
 
-//    protected AMQP createAMQPConnection() throws Exception {
-//        AMQP amqp = new AMQP();
-//        amqp.setHost("ssl://localhost:8883");
-//        SSLContext ctx = SSLContext.getInstance("TLS");
-//        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
-//        amqp.setSslContext(ctx);
-//        return amqp;
-//    }
-
     static class DefaultTrustManager implements X509TrustManager {
 
         @Override
@@ -65,5 +56,4 @@ public class AmqpSslTest extends AmqpTestSupport {
             return new X509Certificate[0];
         }
     }
-
 }

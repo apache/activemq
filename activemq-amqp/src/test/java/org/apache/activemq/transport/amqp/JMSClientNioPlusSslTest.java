@@ -30,4 +30,19 @@ public class JMSClientNioPlusSslTest extends JMSClientSslTest {
         LOG.debug("JMSClientNioPlusSslTest.getBrokerPort returning nioPlusSslPort {}", nioPlusSslPort);
         return nioPlusSslPort;
     }
+
+    @Override
+    protected boolean isUseTcpConnector() {
+        return false;
+    }
+
+    @Override
+    protected boolean isUseNioPlusSslConnector() {
+        return true;
+    }
+
+    @Override
+    protected String getTargetConnectorName() {
+        return "amqp+nio+ssl";
+    }
 }

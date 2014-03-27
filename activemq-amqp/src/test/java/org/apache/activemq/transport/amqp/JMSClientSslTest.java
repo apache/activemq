@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.security.SecureRandom;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import java.security.SecureRandom;
+
+import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test the JMS client when connected to the SSL transport.
@@ -50,5 +51,20 @@ public class JMSClientSslTest extends JMSClientTest {
     protected int getBrokerPort() {
         LOG.debug("JMSClientSslTest.getBrokerPort returning sslPort {}", sslPort);
         return sslPort;
+    }
+
+    @Override
+    protected boolean isUseTcpConnector() {
+        return false;
+    }
+
+    @Override
+    protected boolean isUseSslConnector() {
+        return true;
+    }
+
+    @Override
+    protected String getTargetConnectorName() {
+        return "amqp+ssl";
     }
 }
