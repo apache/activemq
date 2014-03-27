@@ -30,6 +30,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
@@ -52,13 +53,12 @@ public class AMQ4563Test extends AmqpTestSupport {
     public void testMessagesAreAckedAMQProducer() throws Exception {
         int messagesSent = 3;
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
         assertTrue(brokerService.isPersistent());
 
         Connection connection = createAMQConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createQueue("txqueue");
-        MessageProducer p = session.createProducer(destination);
+        Queue queue = session.createQueue("txqueue");
+        MessageProducer p = session.createProducer(queue);
         TextMessage message = null;
         for (int i=0; i < messagesSent; i++) {
             message = session.createTextMessage();
@@ -69,26 +69,26 @@ public class AMQ4563Test extends AmqpTestSupport {
         }
 
         // After the first restart we should get all messages sent above
+        QueueImpl qpidQueue = new QueueImpl("queue://txqueue");
         restartBroker(connection, session);
-        int messagesReceived = readAllMessages(queue);
+        int messagesReceived = readAllMessages(qpidQueue);
         assertEquals(messagesSent, messagesReceived);
 
         // This time there should be no messages on this queue
         restartBroker(connection, session);
-        messagesReceived = readAllMessages(queue);
+        messagesReceived = readAllMessages(qpidQueue);
         assertEquals(0, messagesReceived);
     }
 
     @Test(timeout = 60000)
     public void testSelectingOnAMQPMessageID() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
         assertTrue(brokerService.isPersistent());
 
         Connection connection = createAMQPConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = session.createQueue("txqueue");
-        MessageProducer p = session.createProducer(destination);
+        Queue queue = session.createQueue("txqueue");
+        MessageProducer p = session.createProducer(queue);
         TextMessage message = session.createTextMessage();
         String messageText = "Hello sent at " + new java.util.Date().toString();
         message.setText(messageText);
@@ -129,11 +129,11 @@ public class AMQ4563Test extends AmqpTestSupport {
     public void testMessagesAreAckedAMQPProducer() throws Exception {
         int messagesSent = 3;
         ActiveMQAdmin.enableJMSFrameTracing();
-        QueueImpl queue = new QueueImpl("queue://txqueue");
         assertTrue(brokerService.isPersistent());
 
         Connection connection = createAMQPConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue("txqueue");
         MessageProducer p = session.createProducer(queue);
         TextMessage message = null;
         for (int i=0; i < messagesSent; i++) {
@@ -155,11 +155,11 @@ public class AMQ4563Test extends AmqpTestSupport {
         assertEquals(0, messagesReceived);
     }
 
-    private int readAllMessages(QueueImpl queue) throws JMSException {
+    private int readAllMessages(Queue queue) throws JMSException {
         return readAllMessages(queue, null);
     }
 
-    private int readAllMessages(QueueImpl queue, String selector) throws JMSException {
+    private int readAllMessages(Queue queue, String selector) throws JMSException {
         Connection connection = createAMQPConnection();
         try {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -231,6 +231,7 @@ public class AMQ4563Test extends AmqpTestSupport {
     /**
      * Copied from AmqpTestSupport, modified to use persistence
      */
+    @Override
     public void createBroker(boolean deleteAllMessages) throws Exception {
         KahaDBStore kaha = new KahaDBStore();
         kaha.setDirectory(new File(KAHADB_DIRECTORY));
