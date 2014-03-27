@@ -27,7 +27,8 @@ public class DecryptCommand extends EncryptCommand {
             "Description: Decrypts given text.",
             "", 
             "Encrypt Options:",
-            "    --password <password>      Password to be used by the encryptor.",
+            "    --password <password>      Password to be used by the encryptor.  Defaults to",
+            "                               the value in the ACTIVEMQ_ENCRYPTION_PASSWORD env variable.",
             "    --input <input>            Text to be encrypted.",
             "    --version                  Display the version information.",
             "    -h,-?,--help               Display the stop broker help information.",
@@ -46,6 +47,9 @@ public class DecryptCommand extends EncryptCommand {
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
+        if( password == null ) {
+            password = System.getenv("ACTIVEMQ_ENCRYPTION_PASSWORD");
+        }
         if (password == null || input == null) {
             context.printException(new IllegalArgumentException("input and password parameters are mandatory"));
             return;

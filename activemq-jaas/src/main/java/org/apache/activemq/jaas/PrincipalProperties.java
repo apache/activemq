@@ -64,4 +64,8 @@ class PrincipalProperties {
             in.close();
         }
     }
+
+    Properties getPrincipals() {
+        return principals;
+    }
 }
