@@ -1104,7 +1104,6 @@
           <version>${maven-jar-plugin-version}</version>
           <configuration>
             <archive>
-              <index>true</index>
               <compress>true</compress>
             </archive>
           </configuration>
