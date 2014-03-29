@@ -39,10 +39,10 @@
     <servlet>
         <servlet-name>jolokia-agent</servlet-name>
         <servlet-class>org.jolokia.http.AgentServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
+        <load-on-startup>1</load-on-startup>     
         <init-param>
           <param-name>discoveryEnabled</param-name>
-          <param-value>true</param-value>
+          <param-value>false</param-value>
         </init-param>
         <init-param>
           <param-name>agentDescription</param-name>
