@@ -98,7 +98,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private final ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore>();
 
     private SystemUsage usageManager;
-    private final long checkpointInterval = 1000 * 60 * 5;
+    private long checkpointInterval = 1000 * 60 * 5;
     private long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
     private int maxCheckpointWorkers = 10;
@@ -708,6 +708,14 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         this.maxCheckpointWorkers = maxCheckpointWorkers;
     }
 
+    public long getCheckpointInterval() {
+        return checkpointInterval;
+    }
+
+    public void setCheckpointInterval(long checkpointInterval) {
+        this.checkpointInterval = checkpointInterval;
+    }
+
     public boolean isUseExternalMessageReferences() {
         return false;
     }
@@ -733,7 +741,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     @Override
     public String toString() {
-        return "JournalPersistenceAdapator(" + longTermPersistence + ")";
+        return "JournalPersistenceAdapter(" + longTermPersistence + ")";
     }
 
     public void setDirectory(File dir) {
