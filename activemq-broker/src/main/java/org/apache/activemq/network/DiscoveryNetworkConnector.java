@@ -153,7 +153,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                LOG.warn("Could not start network bridge between: {} and: {} due to: {}", new Object[]{ localURI, uri, e });
+                LOG.warn("Could not start network bridge between: {} and: {} due to: {}", new Object[]{ localURI, uri, e.getMessage() });
                 LOG.debug("Start failure exception: ", e);
                 try {
                     // Will remove bridge and active event.
