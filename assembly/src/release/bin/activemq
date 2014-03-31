@@ -621,16 +621,14 @@ invoke_stop(){
 # - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
 invoke_task(){
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
     # call task in java binary
     if ( checkRunning );then
       if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
       elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
       else
-         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
       fi
       invokeJar

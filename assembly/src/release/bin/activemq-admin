@@ -156,8 +156,10 @@ if [ ""$1 = "start" ] ; then
         SUNJMX="-Dcom.sun.management.jmxremote"
     fi
 
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX $SSL_OPTS -Djava.io.tmpdir="${ACTIVEMQ_TMP}""
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX -Djava.io.tmpdir="${ACTIVEMQ_TMP}""
 fi
+
+ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SSL_OPTS"
 
 # Uncomment to enable YourKit profiling
 #ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
