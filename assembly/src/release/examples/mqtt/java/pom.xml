@@ -27,13 +27,6 @@
   <name>example</name>
   <description>ActiveMQ MQTT Java Examples</description>
 
-  <repositories>
-    <repository>
-      <id>Fusesource Snapshots</id>
-      <url>http://repo.fusesource.com/nexus/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
-  
   <dependencies>
     
     <dependency>
