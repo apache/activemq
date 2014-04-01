@@ -85,6 +85,10 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                             broker = BrokerFactory.createBroker(new URI(brokerXmlConfig));
                         }
                         broker.start();
+                        // Default the ServerUrl to the local broker if not specified in the ra.xml
+                        if (getServerUrl() == null) {
+                            setServerUrl("vm://" + broker.getBrokerName() + "?create=false");
+                        }
                     } catch (Throwable e) {
                         log.warn("Could not start up embeded ActiveMQ Broker '"+brokerXmlConfig+"': "+e.getMessage());
                         log.debug("Reason for: "+e.getMessage(), e);
