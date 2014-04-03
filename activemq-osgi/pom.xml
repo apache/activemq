@@ -281,7 +281,8 @@
             <Embed-Dependency>
               *;
               groupId=org.apache.activemq;inline=META-INF/services/*,
-              <!-- 
+              groupId=org.apache.qpid;inline=META-INF/services/*,
+              <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
               groupId=org.xerial.snappy;inline=org/xerial/snappy/*
               -->
@@ -301,7 +302,7 @@
               org/xerial/snappy/native/Linux/i386/libsnappyjava.so;osname=linux;processor=x86,
               org/xerial/snappy/native/Linux/arm/libsnappyjava.so;osname=linux;processor=arm,
               *
-            </Bundle-NativeCode> 
+            </Bundle-NativeCode>
             -->
          </instructions>
         </configuration>
