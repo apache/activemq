@@ -281,7 +281,7 @@
             <Embed-Dependency>
               *;
               groupId=org.apache.activemq;inline=META-INF/services/*,
-              groupId=org.apache.qpid;inline=META-INF/services/*,
+              groupId=org.apache.qpid;inline=META-INF/services/*
               <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
               groupId=org.xerial.snappy;inline=org/xerial/snappy/*
