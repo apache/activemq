@@ -75,6 +75,7 @@ public class VMTransport implements Transport, Task {
         this.peer = peer;
     }
 
+    @Override
     public void oneway(Object command) throws IOException {
 
         if (disposed.get()) {
@@ -137,6 +138,7 @@ public class VMTransport implements Transport, Task {
         transportListener.onCommand(command);
     }
 
+    @Override
     public void start() throws Exception {
 
         if (transportListener == null) {
@@ -165,6 +167,7 @@ public class VMTransport implements Transport, Task {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         // Only need to do this once, all future oneway calls will now
         // fail as will any asnyc jobs in the task runner.
@@ -187,7 +190,7 @@ public class VMTransport implements Transport, Task {
                     tr.shutdown(TimeUnit.SECONDS.toMillis(1));
                 } catch(Exception e) {
                 }
-                taskRunner = null;
+                tr = null;
             }
 
             // let the peer know that we are disconnecting after attempting
@@ -226,6 +229,7 @@ public class VMTransport implements Transport, Task {
     /**
      * @see org.apache.activemq.thread.Task#iterate()
      */
+    @Override
     public boolean iterate() {
 
         final TransportListener tl = transportListener;
@@ -249,6 +253,7 @@ public class VMTransport implements Transport, Task {
         }
     }
 
+    @Override
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
     }
@@ -300,22 +305,27 @@ public class VMTransport implements Transport, Task {
         return result;
     }
 
+    @Override
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
+    @Override
     public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
+    @Override
     public Object request(Object command, int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
+    @Override
     public TransportListener getTransportListener() {
         return transportListener;
     }
 
+    @Override
     public <T> T narrow(Class<T> target) {
         if (target.isAssignableFrom(getClass())) {
             return target.cast(this);
@@ -344,6 +354,7 @@ public class VMTransport implements Transport, Task {
         return location + "#" + id;
     }
 
+    @Override
     public String getRemoteAddress() {
         if (peer != null) {
             return peer.toString();
@@ -379,34 +390,42 @@ public class VMTransport implements Transport, Task {
         this.asyncQueueDepth = asyncQueueDepth;
     }
 
+    @Override
     public boolean isFaultTolerant() {
         return false;
     }
 
+    @Override
     public boolean isDisposed() {
         return disposed.get();
     }
 
+    @Override
     public boolean isConnected() {
         return !disposed.get();
     }
 
+    @Override
     public void reconnect(URI uri) throws IOException {
         throw new IOException("Transport reconnect is not supported");
     }
 
+    @Override
     public boolean isReconnectSupported() {
         return false;
     }
 
+    @Override
     public boolean isUpdateURIsSupported() {
         return false;
     }
 
+    @Override
     public void updateURIs(boolean reblance,URI[] uris) throws IOException {
         throw new IOException("URI update feature not supported");
     }
 
+    @Override
     public int getReceiveCounter() {
         return receiveCounter;
     }
