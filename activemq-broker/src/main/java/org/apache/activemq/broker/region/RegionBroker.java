@@ -742,10 +742,11 @@ public class RegionBroker extends EmptyBroker {
                             // it is only populated if the message is routed to
                             // another destination like the DLQ
                             ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
-                            if (context.getBroker() == null) {
-                                context.setBroker(getRoot());
+                            ConnectionContext adminContext = context;
+                            if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
+                                adminContext = BrokerSupport.getConnectionContext(this);
                             }
-                            BrokerSupport.resendNoCopy(context, message, deadLetterDestination);
+                            BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
                             return true;
                         }
                     } else {

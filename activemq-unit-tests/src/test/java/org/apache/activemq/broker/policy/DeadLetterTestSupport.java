@@ -111,7 +111,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         }
     }
 
-    protected void makeDlqConsumer() throws JMSException {
+    protected void makeDlqConsumer() throws Exception {
         dlqDestination = createDlqDestination();
 
         LOG.info("Consuming from dead letter on: " + dlqDestination);

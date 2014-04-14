@@ -52,10 +52,10 @@ import javax.management.openmbean.CompositeData;
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleSecurityBrokerSystemTest.class);
 
-    static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
-    static final GroupPrincipal USERS = new GroupPrincipal("users");
-    static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
-    static Principal WILDCARD;
+    public static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
+    public static final GroupPrincipal USERS = new GroupPrincipal("users");
+    public static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
+    public static Principal WILDCARD;
     static {
         try {
          WILDCARD = (Principal) DefaultAuthorizationMap.createGroupPrincipal("*", GroupPrincipal.class.getName());
@@ -144,7 +144,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         return new SimpleAuthorizationMap(writeAccess, readAccess, adminAccess);
     }
 
-    static class SimpleAuthenticationFactory implements BrokerPlugin {
+    public static class SimpleAuthenticationFactory implements BrokerPlugin {
         public Broker installPlugin(Broker broker) {
 
             HashMap<String, String> u = new HashMap<String, String>();
