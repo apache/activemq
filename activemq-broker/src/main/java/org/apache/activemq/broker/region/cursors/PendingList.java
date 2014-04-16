@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.MessageId;
 
 public interface PendingList extends Iterable<MessageReference> {
 
@@ -108,4 +109,6 @@ public interface PendingList extends Iterable<MessageReference> {
      *      The PendingList that is to be added to this collection.
      */
     public void addAll(PendingList pendingList);
+
+    public MessageReference get(MessageId messageId);
 }
