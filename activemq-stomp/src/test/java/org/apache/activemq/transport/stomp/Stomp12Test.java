@@ -424,4 +424,38 @@ public class Stomp12Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
+    @Test
+    public void testQueueBrowerNotInAutoAckMode() throws Exception {
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.2\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(connectFrame);
+
+        String f = stompConnection.receiveFrame();
+        LOG.debug("Broker sent: " + f);
+        assertTrue(f.startsWith("CONNECTED"));
+
+        String subscribe = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                           "ack:client\n" + "id:12345\n" + "browser:true\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(subscribe);
+
+        // We should now get a browse done message
+        StompFrame browseDone = stompConnection.receive();
+        LOG.debug("Browse Done: " + browseDone.toString());
+        assertEquals(Stomp.Responses.MESSAGE, browseDone.getAction());
+        assertEquals("12345", browseDone.getHeaders().get(Stomp.Headers.Message.SUBSCRIPTION));
+        assertEquals("end", browseDone.getHeaders().get(Stomp.Headers.Message.BROWSER));
+        assertTrue(browseDone.getHeaders().get(Stomp.Headers.Message.DESTINATION) != null);
+
+        String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                       "id:12345\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(unsub);
+
+        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
 }

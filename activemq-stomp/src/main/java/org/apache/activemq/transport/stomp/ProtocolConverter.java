@@ -863,7 +863,7 @@ public class ProtocolConverter {
             StompSubscription sub = subscriptionsByConsumerId.get(md.getConsumerId());
             if (sub != null) {
                 String ackId = null;
-                if (version.equals(Stomp.V1_2) && sub.getAckMode() != Stomp.Headers.Subscribe.AckModeValues.AUTO) {
+                if (version.equals(Stomp.V1_2) && sub.getAckMode() != Stomp.Headers.Subscribe.AckModeValues.AUTO && md.getMessage() != null) {
                     AckEntry pendingAck = new AckEntry(md.getMessage().getMessageId().toString(), sub);
                     ackId = this.ACK_ID_GENERATOR.generateId();
                     this.pedingAcks.put(ackId, pendingAck);
