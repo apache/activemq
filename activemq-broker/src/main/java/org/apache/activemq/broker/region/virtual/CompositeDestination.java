@@ -33,9 +33,10 @@ public abstract class CompositeDestination implements VirtualDestination {
     private Collection forwardTo;
     private boolean forwardOnly = true;
     private boolean copyMessage = true;
+    private boolean concurrentSend = false;
 
     public Destination intercept(Destination destination) {
-        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage());
+        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage(), isConcurrentSend());
     }
     
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) {
@@ -90,6 +91,17 @@ public abstract class CompositeDestination implements VirtualDestination {
      */
     public void setCopyMessage(boolean copyMessage) {
         this.copyMessage = copyMessage;
+    }
+
+    /**
+     * when true, sends are done in parallel with the broker executor
+     */
+    public void setConcurrentSend(boolean concurrentSend) {
+        this.concurrentSend = concurrentSend;
+    }
+
+    public boolean isConcurrentSend() {
+        return this.concurrentSend;
     }
 
 }
