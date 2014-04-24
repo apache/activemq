@@ -1627,14 +1627,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         started.set(false);
     }
 
-    @Override
-    public void finalize() throws Throwable{
-        Scheduler s = this.scheduler;
-        if (s != null){
-            s.stop();
-        }
-    }
-
     /**
      * Changes the associated username/password that is associated with this
      * connection. If the connection has been used, you must called cleanup()
