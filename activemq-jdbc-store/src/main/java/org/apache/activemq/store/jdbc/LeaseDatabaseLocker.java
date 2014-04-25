@@ -83,6 +83,13 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
             } catch (Exception e) {
                 LOG.debug(getLeaseHolderId() + " lease acquire failure: "+ e, e);
+                if (isStopping()) {
+                    throw new Exception(
+                            "Cannot start broker as being asked to shut down. "
+                                    + "Interrupted attempt to acquire lock: "
+                                    + e, e);
+                }
+                lockable.getBrokerService().handleIOException(IOExceptionSupport.create(e));
             } finally {
                 close(statement);
                 close(connection);
