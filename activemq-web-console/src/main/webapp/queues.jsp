@@ -24,18 +24,38 @@
 
 <%@include file="decorators/header.jsp" %>
 
+<style type="text/css">
+    #error {
+        color:red;
+        visibility:hidden;
+    }
+</style>
+
+<script>
+    (function( _ ){
+        _.checkQueueName = function() {
+            if(document.getElementById("JMSDestination").value != "") {
+                document.getElementById("createDestination").submit();
+            } else { 
+                document.getElementById("error").style.visibility = "visible";
+            }
+        };
+    })(this);
+</script>
+
 <div>
-<form action="createDestination.action" method="post">
-    <input type="hidden" name="JMSDestinationType" value="queue"/>
-    <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>"/>
-
-    <label name="destination">Queue Name</label>
-    <input type="text" name="JMSDestination" value=""/>
-
-    <input type="submit" value="Create"/>
-</form>
+    <form action="createDestination.action" id="createDestination" method="post">
+        <input type="hidden" name="JMSDestinationType" id="JMSDestinationType" value="queue" />
+        <input type="hidden" name="secret" value="<c:out value='${sessionScope["secret"]}'/>" />
+        <label name="destination">Queue Name: </label>
+        <input type="text" name="JMSDestination" id="JMSDestination" value="" />
+        <input type="button" value="Create" onclick="checkQueueName();" />
+        <br />
+        <div id="error">
+            Queue name must be atleast one character.
+        </div>
+    </form>
 </div>
-
 
 <h2>Queues</h2>
 
