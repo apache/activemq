@@ -407,6 +407,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (serverSocket != null) {
             serverSocket.close();
+            serverSocket = null;
         }
         super.doStop(stopper);
     }

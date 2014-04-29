@@ -142,6 +142,9 @@
           <includes>
             <include>**/*Test.*</include>
           </includes>
+          <excludes>
+            <exclude>**/StompNIOSSLLoadTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
