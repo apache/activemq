@@ -498,6 +498,11 @@ public class Topic extends BaseDestination implements Task {
                         message.decrementReferenceCount();
                     }
                 }
+
+                @Override
+                public void afterRollback() throws Exception {
+                    message.decrementReferenceCount();
+                }
             });
 
         } else {
