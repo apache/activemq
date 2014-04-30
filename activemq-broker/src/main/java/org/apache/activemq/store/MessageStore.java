@@ -17,7 +17,6 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
@@ -62,7 +61,7 @@ public interface MessageStore extends Service {
      * @throws IOException
      * @throws IOException
      */
-    Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException;
+    ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException;
 
     /**
      * Adds a message to the message store
@@ -74,18 +73,18 @@ public interface MessageStore extends Service {
      * @throws IOException
      * @throws IOException
      */
-    Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+    ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
 
     /**
      * Adds a message to the message store
      *
      * @param context context
      * @param message
-     * @return a Future to track when this is complete
+     * @return a ListenableFuture to track when this is complete
      * @throws IOException
      * @throws IOException
      */
-    Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException;
+    ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException;
 
     /**
      * Adds a message to the message store
@@ -93,11 +92,11 @@ public interface MessageStore extends Service {
      * @param context context
      * @param message
      *  @param canOptimizeHint - give a hint to the store that the message may be consumed before it hits the disk
-     * @return a Future to track when this is complete
+     * @return a ListenableFuture to track when this is complete
      * @throws IOException
      * @throws IOException
      */
-    Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
+    ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException;
 
     /**
      * Looks up a message using either the String messageID or the

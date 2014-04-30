@@ -17,9 +17,6 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -29,7 +26,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.MemoryUsage;
 
 abstract public class AbstractMessageStore implements MessageStore {
-    public static final FutureTask<Object> FUTURE;
+    public static final ListenableFuture<Object> FUTURE;
     protected final ActiveMQDestination destination;
     protected boolean prioritizedMessages;
 
@@ -89,27 +86,27 @@ abstract public class AbstractMessageStore implements MessageStore {
     }
 
     @Override
-    public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message) throws IOException {
+    public ListenableFuture<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
         return FUTURE;
     }
 
     @Override
-    public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException {
+    public ListenableFuture<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message, final boolean canOptimizeHint) throws IOException {
         addMessage(context, message, canOptimizeHint);
         return FUTURE;
     }
 
     @Override
-    public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message,final boolean canOptimizeHint) throws IOException {
+    public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message, final boolean canOptimizeHint) throws IOException {
         addMessage(context, message, canOptimizeHint);
         return FUTURE;
     }
 
     @Override
-    public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message) throws IOException {
+    public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message) throws IOException {
         addMessage(context, message);
-        return FUTURE;
+        return new InlineListenableFuture();
     }
 
     @Override
@@ -121,14 +118,7 @@ abstract public class AbstractMessageStore implements MessageStore {
         throw new IOException("update is not supported by: " + this);
     }
 
-    static class CallableImplementation implements Callable<Object> {
-        public Object call() throws Exception {
-            return null;
-        }
-    }
-
     static {
-       FUTURE = new FutureTask<Object>(new CallableImplementation());
-       FUTURE.run();
+       FUTURE = new InlineListenableFuture();
     }
 }

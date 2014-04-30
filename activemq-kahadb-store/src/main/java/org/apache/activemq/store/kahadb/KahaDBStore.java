@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -60,7 +59,6 @@ import org.apache.activemq.store.*;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
-import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaLocation;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
@@ -370,7 +368,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         @Override
-        public Future<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message)
+        public ListenableFuture<Object> asyncAddQueueMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchQueues()) {
                 StoreQueueTask result = new StoreQueueTask(this, context, message);
@@ -712,7 +710,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         @Override
-        public Future<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message)
+        public ListenableFuture<Object> asyncAddTopicMessage(final ConnectionContext context, final Message message)
                 throws IOException {
             if (isConcurrentStoreAndDispatchTopics()) {
                 StoreTopicTask result = new StoreTopicTask(this, context, message, subscriptionCount.get());
@@ -1238,7 +1236,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             this.future = new InnerFutureTask(this);
         }
 
-        public Future<Object> getFuture() {
+        public ListenableFuture<Object> getFuture() {
             return this.future;
         }
 
@@ -1295,8 +1293,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             return this.message;
         }
 
-        private class InnerFutureTask extends FutureTask<Object> {
+        private class InnerFutureTask extends FutureTask<Object> implements ListenableFuture<Object>  {
 
+            private Runnable listener;
             public InnerFutureTask(Runnable runnable) {
                 super(runnable, null);
 
@@ -1308,6 +1307,29 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
             public void complete() {
                 super.set(null);
+            }
+
+            @Override
+            public void done() {
+                fireListener();
+            }
+
+            @Override
+            public void addListener(Runnable listener) {
+                this.listener = listener;
+                if (isDone()) {
+                    fireListener();
+                }
+            }
+
+            private void fireListener() {
+                if (listener != null) {
+                    try {
+                        listener.run();
+                    } catch (Exception ignored) {
+                        LOG.warn("Unexpected exception from future {} listener callback {}", this, listener, ignored);
+                    }
+                }
             }
         }
     }

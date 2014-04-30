@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -71,12 +70,12 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddQueueMessage(transactionStore, context, getDelegate(), message);
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddQueueMessage(transactionStore, context, getDelegate(), message);
             }
 
@@ -105,12 +104,12 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddTopicMessage(transactionStore, context, getDelegate(), message);
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddTopicMessage(transactionStore, context, getDelegate(), message);
             }
 
@@ -384,7 +383,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         destination.addMessage(context, message);
     }
 
-    Future<Object> asyncAddQueueMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
+    ListenableFuture<Object> asyncAddQueueMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
         if (message.getTransactionId() != null) {
             getTx(message.getTransactionId()).trackStore(transactionStore);
@@ -395,7 +394,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
-    Future<Object> asyncAddTopicMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
+    ListenableFuture<Object> asyncAddTopicMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 
         if (message.getTransactionId() != null) {

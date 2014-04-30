@@ -20,12 +20,18 @@ package org.apache.activemq.broker.virtual;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -33,6 +39,7 @@ import org.apache.activemq.broker.region.virtual.CompositeTopic;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -43,12 +50,71 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+
 public class VirtualDestPerfTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(VirtualDestPerfTest.class);
+    public int messageSize = 5*1024;
+    public int messageCount = 10000;
     ActiveMQTopic target = new ActiveMQTopic("target");
     BrokerService brokerService;
     ActiveMQConnectionFactory connectionFactory;
+
+    @Test
+    @Ignore("comparison test - 'new' no wait on future with async send broker side is always on")
+    public void testAsyncSendBurstToFillCache() throws Exception {
+        startBroker(4, true, true);
+        connectionFactory.setUseAsyncSend(true);
+
+        // a burst of messages to fill the cache
+        messageCount = 22000;
+        messageSize = 10*1024;
+
+        LinkedHashMap<Integer, Long> results = new LinkedHashMap<Integer, Long>();
+
+        final ActiveMQQueue queue = new ActiveMQQueue("targetQ");
+        for (Integer numThreads : new Integer[]{1, 2}) {
+            ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+            final AtomicLong numMessagesToSend = new AtomicLong(messageCount);
+            purge();
+            long startTime = System.currentTimeMillis();
+            for (int i=0;i<numThreads;i++) {
+                executor.execute(new Runnable(){
+                    @Override
+                    public void run() {
+                        try {
+                            produceMessages(numMessagesToSend, queue);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+            executor.shutdown();
+            executor.awaitTermination(5, TimeUnit.MINUTES);
+            long endTime = System.currentTimeMillis();
+            long seconds = (endTime - startTime) / 1000;
+            LOG.info("For numThreads {} duration {}", numThreads.intValue(), seconds);
+            results.put(numThreads, seconds);
+            LOG.info("Broker got {} messages", brokerService.getAdminView().getTotalEnqueueCount());
+        }
+
+        brokerService.stop();
+        brokerService.waitUntilStopped();
+        LOG.info("Results: {}", results);
+    }
+
+    private void purge() throws Exception {
+        ObjectName[] queues = brokerService.getAdminView().getQueues();
+        if (queues.length == 1) {
+            QueueViewMBean queueViewMBean = (QueueViewMBean)
+                brokerService.getManagementContext().newProxyInstance(queues[0], QueueViewMBean.class, false);
+            queueViewMBean.purge();
+        }
+    }
 
     @Test
     @Ignore("comparison test - takes too long and really needs a peek at the graph")
@@ -58,10 +124,10 @@ public class VirtualDestPerfTest {
 
         for (int i=2;i<11;i++) {
             for (Boolean concurrent : new Boolean[]{true, false}) {
-                startBroker(i, concurrent);
+                startBroker(i, concurrent, false);
 
                 long startTime = System.currentTimeMillis();
-                produceMessages();
+                produceMessages(new AtomicLong(messageCount), target);
                 long endTime = System.currentTimeMillis();
                 long seconds = (endTime - startTime) / 1000;
                 LOG.info("For routes {} duration {}", i, seconds);
@@ -89,20 +155,20 @@ public class VirtualDestPerfTest {
         return set.toString().replace(",","%0D%0A").replace("[","").replace("]","").replace(" ", "");
     }
 
-
-    protected void produceMessages() throws Exception {
+    protected void produceMessages(AtomicLong messageCount, ActiveMQDestination destination) throws Exception {
+        final ByteSequence payLoad = new ByteSequence(new byte[messageSize]);
         Connection connection = connectionFactory.createConnection();
-        MessageProducer messageProducer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createProducer(target);
+        MessageProducer messageProducer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createProducer(destination);
         messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
-        message.setContent(new ByteSequence(new byte[5*1024]));
-        for (int i=0; i<10000; i++) {
+        message.setContent(payLoad);
+        while (messageCount.decrementAndGet() >= 0) {
             messageProducer.send(message);
         }
         connection.close();
     }
 
-    private void startBroker(int fanoutCount, boolean concurrentSend) throws Exception {
+    private void startBroker(int fanoutCount, boolean concurrentSend, boolean concurrentStoreAndDispatchQueues) throws Exception {
         brokerService = new BrokerService();
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseVirtualTopics(true);
@@ -111,6 +177,8 @@ public class VirtualDestPerfTest {
         PolicyMap destPolicyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
         defaultEntry.setExpireMessagesPeriod(0);
+        defaultEntry.setOptimizedDispatch(true);
+        defaultEntry.setCursorMemoryHighWaterMark(110);
         destPolicyMap.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(destPolicyMap);
 
@@ -129,13 +197,13 @@ public class VirtualDestPerfTest {
         brokerService.start();
 
         connectionFactory = new ActiveMQConnectionFactory(brokerService.getTransportConnectors().get(0).getPublishableConnectString());
-        connectionFactory.setUseAsyncSend(false);
+        connectionFactory.setWatchTopicAdvisories(false);
         if (brokerService.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
 
             //with parallel sends and no consumers, concurrentStoreAnd dispatch, which uses a single thread by default
             // will stop/impeed write batching. The num threads will need tweaking when consumers are in the mix but may introduce
             // order issues
-            ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(false);
+            ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatchQueues);
         }
     }
 }

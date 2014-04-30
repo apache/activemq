@@ -81,6 +81,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.state.ProducerState;
+import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.Task;
@@ -637,8 +638,8 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             if (isProducerFlowControl() && context.isProducerFlowControl()) {
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG.info("Usage Manager Memory Limit ({}) reached on {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
-                                    memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName());
+                    LOG.info("Usage Manager Memory Limit ({}) reached on {}, size {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                                    memoryUsage.getLimit(), getActiveMQDestination().getQualifiedName(), destinationStatistics.getMessages().getCount());
                 }
 
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
@@ -895,7 +896,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException,
             Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
-        Future<Object> result = null;
+        ListenableFuture<Object> result = null;
         boolean needsOrderingWithTransactions = context.isInTransaction();
 
         producerExchange.incrementSend();
@@ -907,6 +908,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
                     message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                     if (messages.isCacheEnabled()) {
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
+                        result.addListener(new PendingMarshalUsageTracker(message));
                     } else {
                         store.addMessage(context, message);
                     }
@@ -942,7 +944,7 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         if (!needsOrderingWithTransactions) {
             messageSent(context, message);
         }
-        if (result != null && !result.isCancelled()) {
+        if (result != null && message.isResponseRequired() && !result.isCancelled()) {
             try {
                 result.get();
             } catch (CancellationException e) {

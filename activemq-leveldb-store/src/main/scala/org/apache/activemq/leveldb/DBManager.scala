@@ -22,7 +22,7 @@ import org.fusesource.hawtdispatch.BaseRetained
 import java.util.concurrent._
 import atomic._
 import org.fusesource.hawtbuf.Buffer
-import org.apache.activemq.store.MessageRecoveryListener
+import org.apache.activemq.store.{ListenableFuture, MessageRecoveryListener}
 import java.lang.ref.WeakReference
 import scala.Option._
 import org.fusesource.hawtbuf.Buffer._
@@ -97,12 +97,13 @@ object UowCompleted extends UowState {
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
+class CountDownFuture[T <: AnyRef]() extends ListenableFuture[T] {
 
   private val latch:CountDownLatch=new CountDownLatch(1)
   @volatile
   var value:T = _
   var error:Throwable = _
+  var listener:Runnable = _
 
   def cancel(mayInterruptIfRunning: Boolean) = false
   def isCancelled = false
@@ -115,10 +116,12 @@ class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
   def set(v:T) = {
     value = v
     latch.countDown()
+    fireListener
   }
   def failed(v:Throwable) = {
     error = v
     latch.countDown()
+    fireListener
   }
 
   def get() = {
@@ -141,6 +144,25 @@ class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
   }
 
   def isDone = latch.await(0, TimeUnit.SECONDS);
+
+  def fireListener = {
+    if (listener != null) {
+      try {
+        listener.run()
+      } catch {
+        case e : Throwable => {
+          LevelDBStore.warn(e, "unexpected exception on future listener " +listener)
+        }
+      }
+    }
+  }
+
+  def addListener(l: Runnable) = {
+    listener = l
+    if (isDone) {
+      fireListener
+    }
+  }
 }
 
 object UowManagerConstants {

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.concurrent.TimeUnit;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.ThreadTracker;
@@ -154,11 +155,6 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
 
         assertTotalMessagesReceived(messageCount * producerCount * consumerCount);
         assertDestinationMemoryUsageGoesToZero();
-    }
-    
-    private void assertDestinationMemoryUsageGoesToZero() throws Exception {
-        assertEquals("destination memory is back to 0", 0, 
-                TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
     }
 
 }

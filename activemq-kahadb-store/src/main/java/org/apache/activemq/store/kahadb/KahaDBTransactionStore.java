@@ -33,9 +33,9 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ProxyMessageStore;
 import org.apache.activemq.store.ProxyTopicMessageStore;
@@ -166,12 +166,12 @@ public class KahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 return KahaDBTransactionStore.this.asyncAddQueueMessage(context, getDelegate(), message);
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 return KahaDBTransactionStore.this.asyncAddQueueMessage(context, getDelegate(), message);
             }
 
@@ -200,12 +200,12 @@ public class KahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 return KahaDBTransactionStore.this.asyncAddTopicMessage(context, getDelegate(), message);
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 return KahaDBTransactionStore.this.asyncAddTopicMessage(context, getDelegate(), message);
             }
 
@@ -389,7 +389,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         }
     }
 
-    Future<Object> asyncAddQueueMessage(ConnectionContext context, final MessageStore destination, final Message message)
+    ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 
         if (message.getTransactionId() != null) {
@@ -416,7 +416,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         }
     }
 
-    Future<Object> asyncAddTopicMessage(ConnectionContext context, final MessageStore destination, final Message message)
+    ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 
         if (message.getTransactionId() != null) {

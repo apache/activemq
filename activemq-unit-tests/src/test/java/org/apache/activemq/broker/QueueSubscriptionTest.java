@@ -56,6 +56,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 60 * 1000)
@@ -69,6 +70,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 60 * 1000)
@@ -82,6 +84,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 2 * 60 * 1000)
@@ -95,6 +98,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 60 * 1000)
@@ -108,6 +112,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 60 * 1000)
@@ -121,6 +126,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 60 * 1000)
@@ -134,6 +140,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     @Test(timeout = 2 * 60 * 1000)
@@ -147,6 +154,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+        assertDestinationMemoryUsageGoesToZero();
     }
 
     protected void configurePrefetchOfOne() {

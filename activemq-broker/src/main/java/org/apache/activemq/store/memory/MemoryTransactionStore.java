@@ -22,7 +22,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.InlineListenableFuture;
+import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ProxyMessageStore;
@@ -38,7 +39,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
@@ -149,15 +149,15 @@ public class MemoryTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canoptimize) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canoptimize) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
@@ -190,15 +190,15 @@ public class MemoryTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override

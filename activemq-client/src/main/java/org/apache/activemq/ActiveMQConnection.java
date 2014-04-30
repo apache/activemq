@@ -94,6 +94,7 @@ import org.apache.activemq.state.CommandVisitorAdapter;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.RequestTimedOutIOException;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
@@ -696,7 +697,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         // know that the connection is being shutdown.
                         RemoveInfo removeCommand = info.createRemoveCommand();
                         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-                        doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
+                        try {
+                            doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
+                        } catch (JMSException e) {
+                            if (e.getCause() instanceof RequestTimedOutIOException) {
+                                // expected
+                            } else {
+                                throw e;
+                            }
+                        }
                         doAsyncSendPacket(new ShutdownInfo());
                     }
 

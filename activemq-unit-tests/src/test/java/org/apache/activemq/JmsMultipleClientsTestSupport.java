@@ -312,6 +312,12 @@ public class JmsMultipleClientsTestSupport {
         return currentTestName;
     }
 
+    public void assertDestinationMemoryUsageGoesToZero() throws Exception {
+        assertEquals("destination memory is back to 0", 0,
+                TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
+    }
+
+
 
     /*
      * This is copied from AutoFailTestSupport.  We may want to move it to someplace where more
