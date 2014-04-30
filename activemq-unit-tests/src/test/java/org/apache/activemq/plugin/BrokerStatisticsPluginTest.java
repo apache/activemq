@@ -112,7 +112,33 @@ public class BrokerStatisticsPluginTest extends TestCase{
 
         msg.setJMSReplyTo(replyTo);
         producer.send(query,msg);
-        MapMessage reply = (MapMessage) consumer.receive();
+        MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
+        assertNotNull(reply);
+        assertTrue(reply.getMapNames().hasMoreElements());
+        assertTrue(reply.getJMSTimestamp() > 0);
+        assertEquals(Message.DEFAULT_PRIORITY, reply.getJMSPriority());
+        /*
+        for (Enumeration e = reply.getMapNames();e.hasMoreElements();) {
+            String name = e.nextElement().toString();
+            System.err.println(name+"="+reply.getObject(name));
+        }
+        */
+    }
+
+    public void testDestinationStatsWithDot() throws Exception{
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue replyTo = session.createTemporaryQueue();
+        MessageConsumer consumer = session.createConsumer(replyTo);
+        Queue testQueue = session.createQueue("Test.Queue");
+        MessageProducer producer = session.createProducer(null);
+        Queue query = session.createQueue(StatisticsBroker.STATS_DESTINATION_PREFIX + "." + testQueue.getQueueName());
+        Message msg = session.createMessage();
+
+        producer.send(testQueue,msg);
+
+        msg.setJMSReplyTo(replyTo);
+        producer.send(query,msg);
+        MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
         assertTrue(reply.getJMSTimestamp() > 0);
@@ -140,7 +166,7 @@ public class BrokerStatisticsPluginTest extends TestCase{
 
         msg.setJMSReplyTo(replyTo);
         producer.send(query,msg);
-        MapMessage reply = (MapMessage) consumer.receive();
+        MapMessage reply = (MapMessage) consumer.receive(10 * 1000);
         assertNotNull(reply);
         assertTrue(reply.getMapNames().hasMoreElements());
         assertTrue(reply.getJMSTimestamp() > 0);

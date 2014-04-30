@@ -97,6 +97,9 @@ public class StatisticsBroker extends BrokerFilter {
             RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             if (destStats) {
                 String destinationName = physicalName.substring(STATS_DESTINATION_PREFIX.length(), physicalName.length());
+                if (destinationName.startsWith(".")) {
+                    destinationName = destinationName.substring(1);
+                }
                 String destinationQuery = destinationName.replace(STATS_DENOTE_END_LIST,"");
                 boolean endListMessage = !destinationName.equals(destinationQuery);
                 ActiveMQDestination queryDestination = ActiveMQDestination.createDestination(destinationQuery,msgDest.getDestinationType());
