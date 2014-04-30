@@ -26,13 +26,12 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.transport.amqp.AmqpTestSupport;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -40,17 +39,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AMQ4914Test extends AmqpTestSupport {
+
     @Rule
     public TestName testName = new TestName();
 
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ4914Test.class);
-    private final static String QUEUE_NAME="queue://ENTMQ476TestQueue";
 
-    /**
-     *
-     * @param sizeInBytes
-     * @return
-     */
     private String createLargeString(int sizeInBytes) {
         byte[] base = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
         StringBuilder builder = new StringBuilder();
@@ -76,7 +70,6 @@ public class AMQ4914Test extends AmqpTestSupport {
         doTestSendLargeMessage(65536 * 4);
     }
 
-    @Ignore("AMQ-5102")
     @Test(timeout = 5 * 60 * 1000)
     public void testSendHugeMessage() throws JMSException {
         doTestSendLargeMessage(1024 * 1024 * 10);
@@ -91,7 +84,7 @@ public class AMQ4914Test extends AmqpTestSupport {
 
         long startTime = System.currentTimeMillis();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueImpl queue = new QueueImpl(QUEUE_NAME);
+        Queue queue = session.createQueue(testName.getMethodName());
         MessageProducer producer = session.createProducer(queue);
         TextMessage message = session.createTextMessage();
         message.setText(payload);

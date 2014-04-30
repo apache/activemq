@@ -70,7 +70,7 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-partition</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.fusesource.hawtdispatch</groupId>
       <artifactId>hawtdispatch-transport</artifactId>
@@ -91,7 +91,7 @@
       <artifactId>zookeeper</artifactId>
       <version>${zookeeper-version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
@@ -101,9 +101,9 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
       <version>${org.osgi.core-version}</version>
-    </dependency>    
-    
-    
+    </dependency>
+
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-kahadb-store</artifactId>
@@ -426,7 +426,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>proton-j-impl</artifactId>
+      <artifactId>proton-j</artifactId>
       <version>${qpid-proton-version}</version>
     </dependency>
   </dependencies>

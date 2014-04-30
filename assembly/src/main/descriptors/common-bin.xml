@@ -28,7 +28,7 @@
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>
-        <include>webapps/*.ico</include>        
+        <include>webapps/*.ico</include>
       </includes>
     </fileSet>
 
@@ -142,7 +142,7 @@
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
         <include>org.fusesource.insight:insight-log-core</include>
-        <!-- TODO: we use a patched insight-log4j AR from assembly/src/release/lib until a new release is out 
+        <!-- TODO: we use a patched insight-log4j AR from assembly/src/release/lib until a new release is out
         <include>org.fusesource.insight:insight-log4j</include>
         -->
       </includes>
@@ -205,9 +205,8 @@
         <include>org.jasypt:jasypt-spring3</include>
         <include>javax.jmdns:jmdns</include>
         <include>org.apache.qpid:proton</include>
-        <include>org.apache.qpid:proton-api</include>
         <include>org.apache.qpid:proton-jms</include>
-        <include>org.apache.qpid:proton-j-impl</include>
+        <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
 
