@@ -18,11 +18,10 @@ package org.apache.activemq;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
-import org.junit.Test;
-
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.Test;
 
 public class AuthorizationTest extends RuntimeConfigTestSupport {
 
@@ -45,6 +44,7 @@ public class AuthorizationTest extends RuntimeConfigTestSupport {
         assertAllowed("user", "USERS.A");
         assertAllowed("guest", "GUESTS.A");
         assertDenied("user", "GUESTS.A");
+        assertDenied("user", ">");
 
         assertAllowedTemp("guest");
     }

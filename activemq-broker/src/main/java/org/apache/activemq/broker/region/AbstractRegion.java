@@ -165,8 +165,12 @@ public abstract class AbstractRegion implements Region {
         for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
             Subscription sub = iter.next();
             if (sub.matches(dest.getActiveMQDestination())) {
-                dest.addSubscription(context, sub);
-                rc.add(sub);
+                try {
+                    dest.addSubscription(context, sub);
+                    rc.add(sub);
+                } catch (Exception e) {
+                    LOG.error("Subscription error for " + sub + ": " + e.getMessage(), e);
+                }
             }
         }
         return rc;
@@ -290,8 +294,6 @@ public abstract class AbstractRegion implements Region {
 
             Subscription sub = createSubscription(context, info);
 
-            subscriptions.put(info.getConsumerId(), sub);
-
             // At this point we're done directly manipulating subscriptions,
             // but we need to retain the synchronized block here. Consider
             // otherwise what would happen if at this point a second
@@ -311,13 +313,25 @@ public abstract class AbstractRegion implements Region {
                 destinationsLock.readLock().unlock();
             }
 
+            List<Destination> removeList = new ArrayList<Destination>();
             for (Destination dest : addList) {
-                dest.addSubscription(context, sub);
+                try {
+                    dest.addSubscription(context, sub);
+                    removeList.add(dest);
+                } finally {
+                    // remove subscriptions added earlier
+                    for (Destination remove : removeList) {
+                        remove.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
+                    }
+                }
             }
+            removeList.clear();
 
             if (info.isBrowser()) {
                 ((QueueBrowserSubscription) sub).destinationsAdded();
             }
+
+            subscriptions.put(info.getConsumerId(), sub);
 
             return sub;
         }

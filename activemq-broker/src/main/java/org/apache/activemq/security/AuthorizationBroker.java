@@ -16,12 +16,17 @@
  */
 package org.apache.activemq.security;
 
+import java.util.Arrays;
 import java.util.Set;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationInterceptor;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -44,13 +49,25 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public AuthorizationBroker(Broker next, AuthorizationMap authorizationMap) {
         super(next);
         this.authorizationMap = authorizationMap;
+
+        // add DestinationInterceptor
+        final RegionBroker regionBroker = (RegionBroker) next.getAdaptor(RegionBroker.class);
+        final CompositeDestinationInterceptor compositeInterceptor = (CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor();
+        DestinationInterceptor[] interceptors = compositeInterceptor.getInterceptors();
+        interceptors = Arrays.copyOf(interceptors, interceptors.length + 1);
+        interceptors[interceptors.length - 1] = new AuthorizationDestinationInterceptor(this);
+        compositeInterceptor.setInterceptors(interceptors);
+    }
+
+    public AuthorizationMap getAuthorizationMap() {
+        return authorizationMap;
     }
 
     public void setAuthorizationMap(AuthorizationMap map) {
         authorizationMap = map;
     }
 
-    protected SecurityContext checkSecurityContext(ConnectionContext context) throws SecurityException {
+    public SecurityContext checkSecurityContext(ConnectionContext context) throws SecurityException {
         final SecurityContext securityContext = context.getSecurityContext();
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");

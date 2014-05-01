@@ -14,51 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region;
+package org.apache.activemq.security;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * Represents a Composite Pattern of a {@link DestinationInterceptor}
- * 
- * 
+ * Adds AuthorizationDestinationFilter on intercept()
  */
-public class CompositeDestinationInterceptor implements DestinationInterceptor {
+public class AuthorizationDestinationInterceptor implements DestinationInterceptor {
 
-    private volatile DestinationInterceptor[] interceptors;
+    private final AuthorizationBroker broker;
 
-    public CompositeDestinationInterceptor(final DestinationInterceptor[] interceptors) {
-        this.interceptors = interceptors;
+    public AuthorizationDestinationInterceptor(AuthorizationBroker broker) {
+        this.broker = broker;
     }
 
+    @Override
     public Destination intercept(Destination destination) {
-        for (int i = 0; i < interceptors.length; i++) {
-            destination = interceptors[i].intercept(destination);
-        }
-        return destination;
+        return new AuthorizationDestinationFilter(destination, broker);
     }
 
-   
+    @Override
     public void remove(Destination destination) {
-        for (int i = 0; i < interceptors.length; i++) {
-            interceptors[i].remove(destination);
-        } 
+        // do nothing
     }
 
+    @Override
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        for (int i = 0; i < interceptors.length; i++) {
-            interceptors[i].create(broker, context, destination);
-        }
-    }
-
-    public void setInterceptors(final DestinationInterceptor[] interceptors) {
-        this.interceptors = interceptors;
-    }
-
-    public DestinationInterceptor[] getInterceptors() {
-        return interceptors;
+        // do nothing
     }
 
 }
