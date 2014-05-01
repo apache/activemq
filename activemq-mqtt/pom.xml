@@ -235,9 +235,12 @@
             </property>
             -->
            </systemProperties>
-           <includes>
+           <!-- includes>
              <include>**/*Test.*</include>
-           </includes>
+           </includes -->
+           <excludes>
+             <exclude>**/PahoMQTNioTTest.java</exclude>
+           </excludes>
         </configuration>
       </plugin>
       <plugin>
