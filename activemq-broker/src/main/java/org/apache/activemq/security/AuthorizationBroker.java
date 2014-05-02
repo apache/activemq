@@ -67,7 +67,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         authorizationMap = map;
     }
 
-    public SecurityContext checkSecurityContext(ConnectionContext context) throws SecurityException {
+    protected SecurityContext checkSecurityContext(ConnectionContext context) throws SecurityException {
         final SecurityContext securityContext = context.getSecurityContext();
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");

@@ -282,6 +282,11 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             }
 
             @Override
+            public boolean isWildcard() {
+                return false;
+            }
+
+            @Override
             public List<MessageReference> remove(ConnectionContext context,
                     Destination destination) throws Exception {
                 return null;

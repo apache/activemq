@@ -46,6 +46,12 @@ public class CompositeDestinationFilter extends DestinationFilter {
     }
 
     public boolean isWildcard() {
-        return true;
+        for (DestinationFilter filter : filters) {
+            if (filter.isWildcard()) {
+                return true;
+            }
+        }
+        return false;
     }
+
 }

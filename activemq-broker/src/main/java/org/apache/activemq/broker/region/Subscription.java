@@ -57,6 +57,12 @@ public interface Subscription extends SubscriptionRecovery {
     Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception;
 
     /**
+     * Returns true if this subscription is a Wildcard subscription.
+     * @return true if wildcard subscription.
+     */
+    boolean isWildcard();
+
+    /**
      * Is the subscription interested in the message?
      * @param node
      * @param context

@@ -21,10 +21,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -106,6 +106,11 @@ public abstract class AbstractSubscription implements Subscription {
             LOG.info("Selector failed to evaluate: {}", e.getMessage(), e);
             return false;
         }
+    }
+
+    @Override
+    public boolean isWildcard() {
+        return destinationFilter.isWildcard();
     }
 
     @Override

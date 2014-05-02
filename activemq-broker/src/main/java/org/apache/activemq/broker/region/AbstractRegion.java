@@ -168,8 +168,13 @@ public abstract class AbstractRegion implements Region {
                 try {
                     dest.addSubscription(context, sub);
                     rc.add(sub);
-                } catch (Exception e) {
-                    LOG.error("Subscription error for " + sub + ": " + e.getMessage(), e);
+                } catch (SecurityException e) {
+                    if (sub.isWildcard()) {
+                        LOG.debug("Subscription denied for " + sub + " to destination " +
+                            dest.getActiveMQDestination() +  ": " + e.getMessage());
+                    } else {
+                        throw e;
+                    }
                 }
             }
         }
@@ -318,10 +323,20 @@ public abstract class AbstractRegion implements Region {
                 try {
                     dest.addSubscription(context, sub);
                     removeList.add(dest);
-                } finally {
-                    // remove subscriptions added earlier
-                    for (Destination remove : removeList) {
-                        remove.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
+                } catch (SecurityException e){
+                    if (sub.isWildcard()) {
+                        LOG.debug("Subscription denied for " + sub + " to destination " +
+                            dest.getActiveMQDestination() + ": " + e.getMessage());
+                    } else {
+                        // remove partial subscriptions
+                        for (Destination remove : removeList) {
+                            try {
+                                remove.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
+                            } catch (Exception ex) {
+                                LOG.error("Error unsubscribing " + sub + " from " + remove + ": " + ex.getMessage(), ex);
+                            }
+                        }
+                        throw e;
                     }
                 }
             }

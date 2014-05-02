@@ -42,7 +42,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
-import junit.framework.TestCase;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -61,6 +61,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import junit.framework.TestCase;
 
 public class SubscriptionAddRemoveQueueTest extends TestCase {
 
@@ -320,6 +321,11 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
         public Response pullMessage(ConnectionContext context, MessagePull pull)
                 throws Exception {
             return null;
+        }
+
+        @Override
+        public boolean isWildcard() {
+            return false;
         }
 
         public List<MessageReference> remove(ConnectionContext context,

@@ -72,4 +72,5 @@ public abstract class DestinationFilter implements BooleanExpression {
         return new SimpleDestinationFilter(destination);
     }
 
+    public abstract boolean isWildcard();
 }
