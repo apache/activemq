@@ -95,13 +95,10 @@ public class SecureDLQTest extends DeadLetterTestSupport {
 
     @Override
     public void tearDown() throws Exception {
+        if (dlqConnection != null) {
+            dlqConnection.close();
+        }
         super.tearDown();
-        if (dlqSession != null) {
-            dlqSession.close();
-        }
-        if (dlqConsumer != null) {
-            dlqConsumer.close();
-        }
     }
 
     @Override
