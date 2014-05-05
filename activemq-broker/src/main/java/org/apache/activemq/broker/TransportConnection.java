@@ -20,7 +20,13 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -29,8 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import javax.transaction.xa.XAResource;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -135,38 +141,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if( this.transport instanceof BrokerServiceAware ) {
             ((BrokerServiceAware)this.transport).setBrokerService(brokerService);
         }
-        this.transport.setTransportListener(new DefaultTransportListener() {
-            @Override
-            public void onCommand(Object o) {
-                serviceLock.readLock().lock();
-                try {
-                    if (!(o instanceof Command)) {
-                        throw new RuntimeException("Protocol violation - Command corrupted: " + o.toString());
-                    }
-                    Command command = (Command) o;
-                    if (!brokerService.isStopping()) {
-                        Response response = service(command);
-                        if (response != null && !brokerService.isStopping()) {
-                            dispatchSync(response);
-                        }
-                    } else {
-                        throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
-                    }
-                } finally {
-                    serviceLock.readLock().unlock();
-                }
-            }
-
-            @Override
-            public void onException(IOException exception) {
-                serviceLock.readLock().lock();
-                try {
-                    serviceTransportException(exception);
-                } finally {
-                    serviceLock.readLock().unlock();
-                }
-            }
-        });
+        this.transport.setTransportListener(new TransportConnectionListener(brokerService));
         connected = true;
     }
 
@@ -1558,7 +1533,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return connectionStateRegister.lookupConnectionState(id);
     }
 
-    // public only for testing
     public synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
         return connectionStateRegister.lookupConnectionState(connectionId);
     }
@@ -1609,5 +1583,48 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     public WireFormatInfo getRemoteWireFormatInfo() {
         return wireFormatInfo;
+    }
+
+    public class TransportConnectionListener extends DefaultTransportListener {
+        private final BrokerService brokerService;
+
+        public TransportConnectionListener(BrokerService brokerService) {
+            this.brokerService = brokerService;
+        }
+
+        public TransportConnection getTransportConnection() {
+            return TransportConnection.this;
+        }
+
+        @Override
+        public void onCommand(Object o) {
+            serviceLock.readLock().lock();
+            try {
+                if (!(o instanceof Command)) {
+                    throw new RuntimeException("Protocol violation - Command corrupted: " + o.toString());
+                }
+                Command command = (Command) o;
+                if (!brokerService.isStopping()) {
+                    Response response = service(command);
+                    if (response != null && !brokerService.isStopping()) {
+                        dispatchSync(response);
+                    }
+                } else {
+                    throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
+                }
+            } finally {
+                serviceLock.readLock().unlock();
+            }
+        }
+
+        @Override
+        public void onException(IOException exception) {
+            serviceLock.readLock().lock();
+            try {
+                serviceTransportException(exception);
+            } finally {
+                serviceLock.readLock().unlock();
+            }
+        }
     }
 }

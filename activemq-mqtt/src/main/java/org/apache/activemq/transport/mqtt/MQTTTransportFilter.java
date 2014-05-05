@@ -50,7 +50,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     private boolean trace;
     private final Object sendLock = new Object();
 
-    public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
+    public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) throws Exception {
         super(next);
         this.protocolConverter = new MQTTProtocolConverter(this, brokerService);
 
