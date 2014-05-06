@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMapNode;
@@ -41,8 +42,14 @@ public class MQTTRetainedMessages extends ServiceSupport {
 
     DestinationMapNode retainedMessages = new DestinationMapNode(null);
 
-    private MQTTRetainedMessages(BrokerService brokerService) throws Exception {
-        AuthorizationBroker authorizationBroker = (AuthorizationBroker) brokerService.getBroker().getAdaptor(AuthorizationBroker.class);
+    private MQTTRetainedMessages(BrokerService brokerService) {
+        Broker broker;
+        try {
+            broker = brokerService.getBroker();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error getting Broker from BrokerService: " + e.getMessage(), e);
+        }
+        AuthorizationBroker authorizationBroker = (AuthorizationBroker) broker.getAdaptor(AuthorizationBroker.class);
         if (authorizationBroker != null) {
             authorizationMap = authorizationBroker.getAuthorizationMap();
         } else {
@@ -101,7 +108,7 @@ public class MQTTRetainedMessages extends ServiceSupport {
        return answer;
    }
 
-    public static MQTTRetainedMessages getMQTTRetainedMessages(BrokerService broker) throws Exception {
+    public static MQTTRetainedMessages getMQTTRetainedMessages(BrokerService broker) {
         MQTTRetainedMessages result = null;
         if (broker != null){
             synchronized (LOCK) {

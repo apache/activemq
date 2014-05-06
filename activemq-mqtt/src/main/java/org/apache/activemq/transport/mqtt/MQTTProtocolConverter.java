@@ -90,7 +90,7 @@ public class MQTTProtocolConverter {
     private final MQTTPacketIdGenerator packetIdGenerator;
     private SecurityContext securityContext;
 
-    public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) throws Exception {
+    public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
         this.brokerService = brokerService;
         this.retainedMessages = MQTTRetainedMessages.getMQTTRetainedMessages(brokerService);
