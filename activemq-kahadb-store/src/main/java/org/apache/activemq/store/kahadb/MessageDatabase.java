@@ -204,7 +204,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     class MetadataMarshaller extends VariableMarshaller<Metadata> {
         @Override
         public Metadata readPayload(DataInput dataIn) throws IOException {
-            Metadata rc = new Metadata();
+            Metadata rc = createMetadata();
             rc.read(dataIn);
             return rc;
         }
@@ -392,7 +392,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 } else {
                     pageFile.delete();
                 }
-                metadata = new Metadata();
+                metadata = createMetadata();
                 pageFile = null;
                 loadPageFile();
             }
@@ -430,7 +430,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     checkpointUpdate(true);
                 }
                 pageFile.unload();
-                metadata = new Metadata();
+                metadata = createMetadata();
             } finally {
                 checkpointLock.writeLock().unlock();
             }
@@ -687,7 +687,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             KahaProducerAuditCommand audit = (KahaProducerAuditCommand) load(metadata.producerSequenceIdTrackerLocation);
             try {
                 ObjectInputStream objectIn = new ObjectInputStream(audit.getAudit().newInput());
+                int maxNumProducers = getMaxFailoverProducersToTrack();
+                int maxAuditDepth = getFailoverProducersAuditDepth();
                 metadata.producerSequenceIdTracker = (ActiveMQMessageAuditNoSync) objectIn.readObject();
+                metadata.producerSequenceIdTracker.setAuditDepth(maxAuditDepth);
+                metadata.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(maxNumProducers);
                 return journal.getNextLocation(metadata.producerSequenceIdTrackerLocation);
             } catch (Exception e) {
                 LOG.warn("Cannot recover message audit", e);
@@ -2456,6 +2460,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             manager.setDirectoryArchive(getDirectoryArchive());
         }
         return manager;
+    }
+
+    private Metadata createMetadata() {
+        Metadata md = new Metadata();
+        md.producerSequenceIdTracker.setAuditDepth(getFailoverProducersAuditDepth());
+        md.producerSequenceIdTracker.setMaximumNumberOfProducersToTrack(getMaxFailoverProducersToTrack());
+        return md;
     }
 
     public int getJournalMaxWriteBatchSize() {
