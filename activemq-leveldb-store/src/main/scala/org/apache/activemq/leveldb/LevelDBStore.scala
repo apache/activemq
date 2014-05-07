@@ -25,7 +25,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicLong
-import reflect.BeanProperty
+import beans.BeanProperty
 import org.apache.activemq.store._
 import java.util._
 import collection.mutable.ListBuffer

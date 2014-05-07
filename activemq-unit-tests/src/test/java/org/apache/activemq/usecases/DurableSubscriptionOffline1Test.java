@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.actors.threadpool.Arrays;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -56,7 +55,7 @@ public class DurableSubscriptionOffline1Test extends DurableSubscriptionOfflineT
 
         List<Object[]> testParameters = new ArrayList<Object[]>();
         Boolean[] booleanValues = {Boolean.FALSE, Boolean.TRUE};
-        List<Boolean> booleans = Arrays.asList(booleanValues);
+        List<Boolean> booleans = java.util.Arrays.asList(booleanValues);
         for (Boolean booleanValue : booleans) {
             for (PersistenceAdapterChoice persistenceAdapterChoice : persistenceAdapterChoices) {
                 Object[] currentChoice = {persistenceAdapterChoice, booleanValue};

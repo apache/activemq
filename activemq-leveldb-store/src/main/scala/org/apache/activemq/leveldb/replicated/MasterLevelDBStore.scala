@@ -27,7 +27,7 @@ import java.util.concurrent._
 import java.io.{IOException, File}
 import java.net.{SocketAddress, InetSocketAddress, URI}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong}
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import org.fusesource.hawtbuf.{Buffer, AsciiBuffer}
 
 class PositionSync(val position:Long, count:Int) extends CountDownLatch(count)

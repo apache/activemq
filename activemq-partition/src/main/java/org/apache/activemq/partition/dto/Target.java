@@ -17,7 +17,6 @@
 package org.apache.activemq.partition.dto;
 
 import org.codehaus.jackson.annotate.JsonProperty;
-import scala.actors.threadpool.Arrays;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -37,7 +36,7 @@ public class Target {
     }
 
     public Target(String ...ids) {
-        this.ids.addAll(Arrays.asList(ids));
+        this.ids.addAll(java.util.Arrays.asList(ids));
     }
 
     @Override

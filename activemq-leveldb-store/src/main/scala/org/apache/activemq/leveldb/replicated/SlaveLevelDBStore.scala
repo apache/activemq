@@ -28,7 +28,7 @@ import org.apache.activemq.leveldb.util._
 
 import FileSupport._
 import java.io.{IOException, RandomAccessFile, File}
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 object SlaveLevelDBStore extends Log

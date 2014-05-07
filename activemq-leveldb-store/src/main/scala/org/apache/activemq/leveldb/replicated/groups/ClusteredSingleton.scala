@@ -24,7 +24,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import collection.JavaConversions._
 import java.util.LinkedHashMap
 import java.lang.{IllegalStateException, String}
-import reflect.BeanProperty
+import beans.BeanProperty
 import org.codehaus.jackson.annotate.JsonProperty
 import org.apache.zookeeper.KeeperException.NoNodeException
 

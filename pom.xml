@@ -64,7 +64,7 @@
     <geronimo-version>1.0</geronimo-version>
     <hadoop-version>1.0.0</hadoop-version>
     <hawtbuf-version>1.10</hawtbuf-version>
-    <hawtdispatch-version>1.20</hawtdispatch-version>
+    <hawtdispatch-version>1.21-SNAPSHOT</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.2.5</httpclient-version>
@@ -107,10 +107,10 @@
     <saxon-version>9.5.1-2</saxon-version>
     <saxon-bundle-version>9.5.1-1_1</saxon-bundle-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
-    <scala-version>2.9.1</scala-version>
+    <scala-version>2.11.0</scala-version>
     <scala-bundle-version>2.9.1_3</scala-bundle-version>
     <shiro-version>1.2.2</shiro-version>
-    <scalatest-version>1.8</scalatest-version>
+    <scalatest-version>2.1.5</scalatest-version>
     <slf4j-version>1.7.5</slf4j-version>
     <snappy-version>1.1.0.1</snappy-version>
     <spring-version>3.2.8.RELEASE</spring-version>

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.replicated
 
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import java.util.UUID
 import org.apache.activemq.leveldb.LevelDBStore
 import org.apache.activemq.leveldb.util.FileSupport._

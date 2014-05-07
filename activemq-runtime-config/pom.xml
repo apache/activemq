@@ -100,6 +100,27 @@
   <build>
     <plugins>
       <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>properties-maven-plugin</artifactId>
+          <version>1.0-alpha-2</version>
+          <executions>
+              <execution>
+                  <phase>initialize</phase>
+                  <goals>
+                      <goal>set-system-properties</goal>
+                  </goals>
+                  <configuration>
+                      <properties>
+                          <property>
+                              <name>javax.xml.accessExternalSchema</name>
+                              <value>file</value>
+                          </property>
+                      </properties>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>${maven-dependency-plugin-version}</version>

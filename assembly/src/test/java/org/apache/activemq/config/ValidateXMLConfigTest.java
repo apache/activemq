@@ -33,7 +33,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-import scala.actors.threadpool.Arrays;
 
 
 public class ValidateXMLConfigTest {
@@ -51,7 +50,7 @@ public class ValidateXMLConfigTest {
         // resource:copy-resource brings all config files into target/conf
         File sampleConfDir = new File("target/conf");
 
-        final HashSet<String> skipped = new HashSet<String>(Arrays.asList(new String[]{
+        final HashSet<String> skipped = new HashSet<String>(java.util.Arrays.asList(new String[]{
             "resin-web.xml", "web.xml"
         }));
 

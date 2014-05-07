@@ -20,7 +20,7 @@ package org.apache.activemq.leveldb.dfs
 import org.apache.hadoop.conf.Configuration
 import org.apache.activemq.util.ServiceStopper
 import org.apache.hadoop.fs.FileSystem
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import java.net.InetAddress
 import org.apache.activemq.leveldb.LevelDBStore
 

@@ -17,7 +17,7 @@
 package org.apache.activemq.leveldb.replicated
 
 import org.linkedin.util.clock.Timespan
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import org.apache.activemq.util.ServiceStopper
 import org.apache.activemq.leveldb.{LevelDBClient, RecordLog, LevelDBStore}
 import java.net.{NetworkInterface, InetAddress}
