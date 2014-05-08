@@ -64,7 +64,7 @@
     <geronimo-version>1.0</geronimo-version>
     <hadoop-version>1.0.0</hadoop-version>
     <hawtbuf-version>1.10</hawtbuf-version>
-    <hawtdispatch-version>1.21-SNAPSHOT</hawtdispatch-version>
+    <hawtdispatch-version>1.21</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.2.5</httpclient-version>
