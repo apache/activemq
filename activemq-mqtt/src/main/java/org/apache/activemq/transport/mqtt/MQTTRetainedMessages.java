@@ -16,28 +16,45 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMapNode;
+import org.apache.activemq.security.AuthorizationBroker;
+import org.apache.activemq.security.AuthorizationMap;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.codec.PUBLISH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class MQTTRetainedMessages extends ServiceSupport {
+
     private static final Logger LOG = LoggerFactory.getLogger(MQTTRetainedMessages.class);
     private static final Object LOCK = new Object();
 
+    private final AuthorizationMap authorizationMap;
+
     DestinationMapNode retainedMessages = new DestinationMapNode(null);
 
-    private MQTTRetainedMessages(){
+    private MQTTRetainedMessages(BrokerService brokerService) {
+        Broker broker;
+        try {
+            broker = brokerService.getBroker();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error getting Broker from BrokerService: " + e.getMessage(), e);
+        }
+        AuthorizationBroker authorizationBroker = (AuthorizationBroker) broker.getAdaptor(AuthorizationBroker.class);
+        if (authorizationBroker != null) {
+            authorizationMap = authorizationBroker.getAuthorizationMap();
+        } else {
+            authorizationMap = null;
+        }
     }
 
     @Override
@@ -57,29 +74,55 @@ public class MQTTRetainedMessages extends ServiceSupport {
        }
    }
 
-   public Set<PUBLISH> getMessages(ActiveMQTopic topic){
-       Set answer = new HashSet();
+   public Set<PUBLISH> getMessages(ActiveMQTopic topic, SecurityContext context) {
+       final Set<PUBLISH> answer = new HashSet<PUBLISH>();
        synchronized (this) {
-           retainedMessages.appendMatchingValues(answer, topic.getDestinationPaths(), 0);
+           // get matching RetainedMessages that match topic path
+           final Set nodes = new HashSet();
+           retainedMessages.appendMatchingValues(nodes, topic.getDestinationPaths(), 0);
+
+           // if AuthorizationBroker is in use, authorize messages for topic using SecurityContext
+           if (authorizationMap != null) {
+               if (context == null) {
+                   throw new SecurityException("User is not authenticated.");
+               }
+
+               for (Object node : nodes) {
+                   final PUBLISH publish = (PUBLISH) node;
+
+                   final ActiveMQTopic publishTopic = new ActiveMQTopic(publish.topicName().toString());
+                   final Set<?> allowedACLs = authorizationMap.getReadACLs(publishTopic);
+                   if (!context.isBrokerContext() && allowedACLs != null && !context.isInOneOf(allowedACLs)) {
+                       // not authorized, skip this message
+                       continue;
+                   }
+                   answer.add(publish);
+               }
+           } else {
+               // no authorization, return all matched messages
+               answer.addAll(nodes);
+               nodes.clear();
+           }
        }
-       return (Set<PUBLISH>)answer;
+
+       return answer;
    }
 
-    public static MQTTRetainedMessages getMQTTRetainedMessages(BrokerService broker){
+    public static MQTTRetainedMessages getMQTTRetainedMessages(BrokerService broker) {
         MQTTRetainedMessages result = null;
         if (broker != null){
-            synchronized (LOCK){
-               Service[] services = broker.getServices();
-               if (services != null){
-                   for (Service service:services){
-                       if (service instanceof MQTTRetainedMessages){
-                           return (MQTTRetainedMessages) service;
-                       }
-                   }
-               }
-               result = new MQTTRetainedMessages();
+            synchronized (LOCK) {
+                Service[] services = broker.getServices();
+                if (services != null) {
+                    for (Service service : services) {
+                        if (service instanceof MQTTRetainedMessages) {
+                            return (MQTTRetainedMessages) service;
+                        }
+                    }
+                }
+                result = new MQTTRetainedMessages(broker);
                 broker.addService(result);
-                if (broker != null && broker.isStarted()){
+                if (broker != null && broker.isStarted()) {
                     try {
                         result.start();
                     } catch (Exception e) {
@@ -89,7 +132,7 @@ public class MQTTRetainedMessages extends ServiceSupport {
             }
         }
 
-
         return result;
     }
+
 }

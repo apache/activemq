@@ -28,8 +28,15 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.command.*;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.store.PersistenceAdapterSupport;
+import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -82,6 +89,7 @@ public class MQTTProtocolConverter {
     private final String QOS_PROPERTY_NAME = "QoSPropertyName";
     private final MQTTRetainedMessages retainedMessages;
     private final MQTTPacketIdGenerator packetIdGenerator;
+    private SecurityContext securityContext;
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
@@ -350,9 +358,14 @@ public class MQTTProtocolConverter {
                     // skip this topic if subscribe failed
                     continue;
                 }
+
+                if (securityContext == null) {
+                    securityContext = getSecurityContext();
+                }
+
                 final Topic topic = topics[i];
                 ActiveMQTopic destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
-                for (PUBLISH msg : retainedMessages.getMessages(destination)) {
+                for (PUBLISH msg : retainedMessages.getMessages(destination, securityContext)) {
                     if( msg.payload().length > 0 ) {
                         try {
                             PUBLISH retainedCopy = new PUBLISH();
@@ -378,6 +391,39 @@ public class MQTTProtocolConverter {
             LOG.warn("No topics defined for Subscription " + command);
         }
 
+    }
+
+    private SecurityContext getSecurityContext() {
+        final MQTTTransport transport = getMQTTTransport();
+        TransportListener listener = null;
+        if (transport instanceof TransportFilter) {
+            listener = ((TransportFilter) transport).getTransportListener();
+        } else if (transport instanceof TransportSupport) {
+            listener = ((TransportSupport) transport).getTransportListener();
+        }
+        if (listener == null) {
+            LOG.warn("Ignoring security context for unknown transport type " + transport.getClass());
+            return null;
+        }
+        TransportConnection connection = null;
+        do {
+            if (listener instanceof TransportConnection.TransportConnectionListener) {
+                connection = ((TransportConnection.TransportConnectionListener) listener).getTransportConnection();
+                break;
+            } else if (listener instanceof TransportFilter) {
+                listener = ((TransportFilter)listener).getTransportListener();
+            } else {
+                listener = null;
+            }
+        } while (listener != null);
+
+        if (connection != null) {
+            final TransportConnectionState connectionState = connection.lookupConnectionState(connectionId);
+            final ConnectionContext context = connectionState.getContext();
+            return context != null ? context.getSecurityContext() : null;
+        }
+
+        return null;
     }
 
     byte onSubscribe(final Topic topic) throws MQTTProtocolException {
