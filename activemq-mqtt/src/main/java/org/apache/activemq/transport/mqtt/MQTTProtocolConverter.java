@@ -28,6 +28,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.*;
 import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -80,13 +81,11 @@ public class MQTTProtocolConverter {
     private long defaultKeepAlive;
     private int activeMQSubscriptionPrefetch=1;
     private final String QOS_PROPERTY_NAME = "QoSPropertyName";
-    private final MQTTRetainedMessages retainedMessages;
     private final MQTTPacketIdGenerator packetIdGenerator;
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
         this.brokerService = brokerService;
-        this.retainedMessages = MQTTRetainedMessages.getMQTTRetainedMessages(brokerService);
         this.packetIdGenerator = MQTTPacketIdGenerator.getMQTTPacketIdGenerator(brokerService);
         this.defaultKeepAlive = 0;
     }
@@ -344,36 +343,6 @@ public class MQTTProtocolConverter {
             } catch (IOException e) {
                 LOG.warn("Couldn't send SUBACK for " + command, e);
             }
-            // check retained messages
-            for (int i = 0; i < topics.length; i++) {
-                if (qos[i] == SUBSCRIBE_ERROR) {
-                    // skip this topic if subscribe failed
-                    continue;
-                }
-                final Topic topic = topics[i];
-                ActiveMQTopic destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
-                for (PUBLISH msg : retainedMessages.getMessages(destination)) {
-                    if( msg.payload().length > 0 ) {
-                        try {
-                            PUBLISH retainedCopy = new PUBLISH();
-                            retainedCopy.topicName(msg.topicName());
-                            retainedCopy.retain(msg.retain());
-                            retainedCopy.payload(msg.payload());
-                            // set QoS of retained message to maximum of subscription QoS
-                            retainedCopy.qos(msg.qos().ordinal() > qos[i] ? QoS.values()[qos[i]] : msg.qos());
-                            switch (retainedCopy.qos()) {
-                                case AT_LEAST_ONCE:
-                                case EXACTLY_ONCE:
-                                    retainedCopy.messageId(packetIdGenerator.getNextSequenceId(getClientId()));
-                                case AT_MOST_ONCE:
-                            }
-                            getMQTTTransport().sendToMQTT(retainedCopy.encode());
-                        } catch (IOException e) {
-                            LOG.warn("Couldn't send retained message " + msg, e);
-                        }
-                    }
-                }
-            }
         } else {
             LOG.warn("No topics defined for Subscription " + command);
         }
@@ -382,28 +351,33 @@ public class MQTTProtocolConverter {
 
     byte onSubscribe(final Topic topic) throws MQTTProtocolException {
 
-        if( mqttSubscriptionByTopic.containsKey(topic.name())) {
-            if (topic.qos() != mqttSubscriptionByTopic.get(topic.name()).qos()) {
+        final UTF8Buffer topicName = topic.name();
+        final QoS topicQoS = topic.qos();
+        if( mqttSubscriptionByTopic.containsKey(topicName)) {
+            if (topicQoS != mqttSubscriptionByTopic.get(topicName).qos()) {
                 // remove old subscription as the QoS has changed
-                onUnSubscribe(topic.name());
+                onUnSubscribe(topicName);
             } else {
-                // duplicate SUBSCRIBE packet, nothing to do
-                return (byte) topic.qos().ordinal();
+                // duplicate SUBSCRIBE packet
+                // TODO find all matching topics and resend retained messages
+                return (byte) topicQoS.ordinal();
             }
+            onUnSubscribe(topicName);
         }
 
-        ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topic.name().toString()));
+        ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topicName.toString()));
 
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
         consumerInfo.setDestination(destination);
         consumerInfo.setPrefetchSize(getActiveMQSubscriptionPrefetch());
+        consumerInfo.setRetroactive(true);
         consumerInfo.setDispatchAsync(true);
         // create durable subscriptions only when cleansession is false
-        if ( !connect.cleanSession() && connect.clientId() != null && topic.qos().ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
-            consumerInfo.setSubscriptionName(topic.qos()+":"+topic.name().toString());
+        if ( !connect.cleanSession() && connect.clientId() != null && topicQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal() ) {
+            consumerInfo.setSubscriptionName(topicQoS + ":" + topicName.toString());
         }
-        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topic.qos(), consumerInfo);
+        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topicQoS, consumerInfo);
 
         final byte[] qos = {-1};
         sendToActiveMQ(consumerInfo, new ResponseHandler() {
@@ -412,17 +386,17 @@ public class MQTTProtocolConverter {
                 // validate subscription request
                 if (response.isException()) {
                     final Throwable throwable = ((ExceptionResponse) response).getException();
-                    LOG.warn("Error subscribing to " + topic.name(), throwable);
+                    LOG.warn("Error subscribing to " + topicName, throwable);
                     qos[0] = SUBSCRIBE_ERROR;
                 } else {
-                    qos[0] = (byte) topic.qos().ordinal();
+                    qos[0] = (byte) topicQoS.ordinal();
                 }
             }
         });
 
         if (qos[0] != SUBSCRIBE_ERROR) {
             subscriptionsByConsumerId.put(id, mqttSubscription);
-            mqttSubscriptionByTopic.put(topic.name(), mqttSubscription);
+            mqttSubscriptionByTopic.put(topicName, mqttSubscription);
         }
 
         return qos[0];
@@ -508,9 +482,6 @@ public class MQTTProtocolConverter {
     void onMQTTPublish(PUBLISH command) throws IOException, JMSException {
         checkConnected();
         ActiveMQMessage message = convertMessage(command);
-        if (command.retain()){
-            retainedMessages.addMessage((ActiveMQTopic) message.getDestination(), command);
-        }
         message.setProducerId(producerId);
         message.onSend();
         sendToActiveMQ(message, createResponseHandler(command));
@@ -570,6 +541,9 @@ public class MQTTProtocolConverter {
         msg.setPriority((byte) Message.DEFAULT_PRIORITY);
         msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE && !command.retain());
         msg.setIntProperty(QOS_PROPERTY_NAME, command.qos().ordinal());
+        if (command.retain()) {
+            msg.setBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAIN_PROPERTY, true);
+        }
 
         ActiveMQTopic topic;
         synchronized (activeMQTopicMap) {
@@ -597,6 +571,9 @@ public class MQTTProtocolConverter {
             qoS = message.isPersistent() ? QoS.AT_MOST_ONCE : QoS.AT_LEAST_ONCE;
         }
         result.qos(qoS);
+        if (message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY)) {
+            result.retain(true);
+        }
 
         UTF8Buffer topicName;
         synchronized (mqttTopicMap) {
