@@ -36,6 +36,7 @@ import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -393,7 +394,17 @@ public class MQTTProtocolConverter {
     }
 
     private SecurityContext getSecurityContext() {
-        TransportListener listener = ((TransportFilter) getMQTTTransport()).getTransportListener();
+        final MQTTTransport transport = getMQTTTransport();
+        TransportListener listener = null;
+        if (transport instanceof TransportFilter) {
+            listener = ((TransportFilter) transport).getTransportListener();
+        } else if (transport instanceof TransportSupport) {
+            listener = ((TransportSupport) transport).getTransportListener();
+        }
+        if (listener == null) {
+            LOG.warn("Ignoring security context for unknown transport type " + transport.getClass());
+            return null;
+        }
         TransportConnection connection = null;
         do {
             if (listener instanceof TransportConnection.TransportConnectionListener) {
