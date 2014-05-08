@@ -409,8 +409,8 @@ public class MQTTProtocolConverter {
         do {
             if (listener instanceof TransportConnection.TransportConnectionListener) {
                 connection = ((TransportConnection.TransportConnectionListener) listener).getTransportConnection();
-            }
-            if (listener instanceof TransportFilter) {
+                break;
+            } else if (listener instanceof TransportFilter) {
                 listener = ((TransportFilter)listener).getTransportListener();
             } else {
                 listener = null;
