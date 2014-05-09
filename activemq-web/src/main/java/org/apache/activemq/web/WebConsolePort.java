@@ -21,9 +21,11 @@ package org.apache.activemq.web;
  */
 public class WebConsolePort {
 
+    public static final String DEFAULT_HOST = "0.0.0.0";
     public static final int DEFAULT_PORT = 8161;
 
     private int port = DEFAULT_PORT;
+	private String host = DEFAULT_HOST;
 
     public int getPort() {
         return port;
@@ -33,9 +35,19 @@ public class WebConsolePort {
         this.port = port;
     }
 
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
     public void start() {
         // you may set a JVM system property for the jetty.port
         String port = System.getProperty("jetty.port", "" + this.port);
         System.setProperty("jetty.port", port);
+        String host = System.getProperty("jetty.host", "" + this.host);
+        System.setProperty("jetty.host", host);
     }
 }

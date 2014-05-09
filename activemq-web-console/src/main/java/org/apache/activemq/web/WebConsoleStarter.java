@@ -49,8 +49,9 @@ public class WebConsoleStarter implements ServletContextListener {
         if ("embedded".equals(webconsoleType)) {
             // show the url for the web consoles / main page so people can spot it
             String port = System.getProperty("jetty.port");
-            if (port != null) {
-                LOG.info("ActiveMQ WebConsole available at http://localhost:{}/", port);
+            String host = System.getProperty("jetty.host");
+            if (host != null && port != null) {
+                LOG.info("ActiveMQ WebConsole available at http://{}:{}/", host, port);
             }
         }
 
