@@ -99,6 +99,7 @@
 
     <bean id="jettyPort" class="org.apache.activemq.web.WebConsolePort" init-method="start">
              <!-- the default port number for the web console -->
+        <property name="host" value="0.0.0.0"/>
         <property name="port" value="8161"/>
     </bean>
 
@@ -109,6 +110,7 @@
             <list>
                 <bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
                      <!-- see the jettyPort bean -->
+                    <property name="host" value="#{systemProperties['jetty.host']}" />
                     <property name="port" value="#{systemProperties['jetty.port']}" />
                 </bean>
                 <!--
