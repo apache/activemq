@@ -37,8 +37,8 @@ import org.apache.activemq.filter.DestinationFilter;
  */
 public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
-    public static final String RETAIN_PROPERTY = "ActiveMQRetain";
-    public static final String RETAINED_PROPERTY = "ActiveMQRetained";
+    public static final String RETAIN_PROPERTY = "ActiveMQ.Retain";
+    public static final String RETAINED_PROPERTY = "ActiveMQ.Retained";
     private volatile MessageReference retainedMessage;
     private SubscriptionRecoveryPolicy wrapped;
 
