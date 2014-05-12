@@ -305,7 +305,7 @@ public class Topic extends BaseDestination implements Task {
         sub.remove(context, this, dispatched);
     }
 
-    protected void recoverRetroactiveMessages(ConnectionContext context, Subscription subscription) throws Exception {
+    public void recoverRetroactiveMessages(ConnectionContext context, Subscription subscription) throws Exception {
         if (subscription.getConsumerInfo().isRetroactive()) {
             subscriptionRecoveryPolicy.recover(context, this, subscription);
         }

@@ -44,6 +44,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMapEntry;
@@ -414,12 +415,6 @@ public class MQTTTest extends AbstractMQTTTest {
                 msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             } while (msg != null);
 
-            // connection is borked after timeout in connection.receive()
-            connection.disconnect();
-            connection = mqtt.blockingConnection();
-            connection.connect();
-            connection.subscribe(new Topic[] { new Topic(wildcard, QoS.AT_LEAST_ONCE) });
-
             // test non-retained message
             for (String topic : topics) {
                 connection.publish(topic, topic.getBytes(), QoS.AT_LEAST_ONCE, false);
@@ -523,11 +518,67 @@ public class MQTTTest extends AbstractMQTTTest {
                 waitCount++;
             }
             assertEquals(qos.ordinal(), actualQoS[0]);
+            actualQoS[0] = -1;
         }
 
         connection.unsubscribe(new String[] { "TopicA" });
         connection.disconnect();
 
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testRetainedMessage() throws Exception {
+        addMQTTConnector();
+        brokerService.start();
+
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setKeepAlive((short) 2);
+        mqtt.setCleanSession(true);
+
+        final String RETAIN = "RETAIN";
+        final String TOPICA = "TopicA";
+
+        final String[] clientIds = { null, "foo" };
+        for (String clientId : clientIds) {
+
+            mqtt.setClientId(clientId);
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+
+            // set retained message and check
+            connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No retained message for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+
+            // test duplicate subscription
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No retained message on duplicate subscription for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            connection.unsubscribe(new String[]{"TopicA"});
+
+            // clear retained message and check that we don't receive it
+            connection.publish(TOPICA, "".getBytes(), QoS.AT_MOST_ONCE, true);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNull("Retained message not cleared for " + clientId, msg);
+            connection.unsubscribe(new String[]{"TopicA"});
+
+            // set retained message again and check
+            connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No reset retained message for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            connection.unsubscribe(new String[]{"TopicA"});
+
+            connection.disconnect();
+        }
     }
 
     @Test(timeout = 60 * 1000)
@@ -966,18 +1017,31 @@ public class MQTTTest extends AbstractMQTTTest {
         initializeConnection(provider);
         final String DESTINATION_NAME = "foo.*";
 
+        // send retained message
+        final String RETAINED = "RETAINED";
+        provider.publish("foo/bah", RETAINED.getBytes(), AT_LEAST_ONCE, true);
+
         ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory(openwireTransport.getConnectUri()).createConnection();
+        // MUST set to true to receive retained messages
+        activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         javax.jms.Topic jmsTopic = s.createTopic(DESTINATION_NAME);
         MessageConsumer consumer = s.createConsumer(jmsTopic);
 
+        // check whether we received retained message on JMS subscribe
+        ActiveMQMessage message = (ActiveMQMessage) consumer.receive(5000);
+        assertNotNull("Should get retained message", message);
+        ByteSequence bs = message.getContent();
+        assertEquals(RETAINED, new String(bs.data, bs.offset, bs.length));
+        assertTrue(message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY));
+
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "Test Message: " + i;
             provider.publish("foo/bah", payload.getBytes(), AT_LEAST_ONCE);
-            ActiveMQMessage message = (ActiveMQMessage) consumer.receive(5000);
+            message = (ActiveMQMessage) consumer.receive(5000);
             assertNotNull("Should get a message", message);
-            ByteSequence bs = message.getContent();
+            bs = message.getContent();
             assertEquals(payload, new String(bs.data, bs.offset, bs.length));
         }
 
@@ -994,17 +1058,31 @@ public class MQTTTest extends AbstractMQTTTest {
         initializeConnection(provider);
 
         ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory(openwireTransport.getConnectUri()).createConnection();
+        activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         javax.jms.Topic jmsTopic = s.createTopic("foo.far");
         MessageProducer producer = s.createProducer(jmsTopic);
 
+        // send retained message from JMS
+        final String RETAINED = "RETAINED";
+        TextMessage sendMessage = s.createTextMessage(RETAINED);
+        // mark the message to be retained
+        sendMessage.setBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAIN_PROPERTY, true);
+        // MQTT QoS can be set using MQTTProtocolConverter.QOS_PROPERTY_NAME property
+        sendMessage.setIntProperty(MQTTProtocolConverter.QOS_PROPERTY_NAME, 0);
+        producer.send(sendMessage);
+
         provider.subscribe("foo/+", AT_MOST_ONCE);
+        byte[] message = provider.receive(10000);
+        assertNotNull("Should get retained message", message);
+        assertEquals(RETAINED, new String(message));
+
         for (int i = 0; i < numberOfMessages; i++) {
             String payload = "This is Test Message: " + i;
-            TextMessage sendMessage = s.createTextMessage(payload);
+            sendMessage = s.createTextMessage(payload);
             producer.send(sendMessage);
-            byte[] message = provider.receive(5000);
+            message = provider.receive(5000);
             assertNotNull("Should get a message", message);
 
             assertEquals(payload, new String(message));

@@ -215,6 +215,10 @@ public class RegionBroker extends EmptyBroker {
         return brokerService != null ? brokerService.getDestinationPolicy() : null;
     }
 
+    public ConnectionContext getConnectionContext(String clientId) {
+        return clientIdSet.get(clientId);
+    }
+
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         String clientId = info.getClientId();
