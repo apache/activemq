@@ -1371,8 +1371,6 @@ public class MQTTTest extends AbstractMQTTTest {
         }
 
         // these should not be received
-        connectionSub = mqttSub.blockingConnection();
-        connectionSub.connect();
         assertNull(connectionSub.receive(5, TimeUnit.SECONDS));
 
         connectionSub.disconnect();
