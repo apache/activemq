@@ -56,6 +56,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
             if (message.getContent().getLength() > 0) {
                 // non zero length message content
                 retainedMessage = message.copy();
+                retainedMessage.getMessage().removeProperty(RETAIN_PROPERTY);
                 retainedMessage.getMessage().setProperty(RETAINED_PROPERTY, true);
             } else {
                 // clear retained message
