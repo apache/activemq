@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.policy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.activemq.broker.Broker;
@@ -83,14 +84,23 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
     }
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
-        List<Message> result = new ArrayList<Message>();
+        final List<Message> result = new ArrayList<Message>();
         if (retainedMessage != null) {
             DestinationFilter filter = DestinationFilter.parseFilter(destination);
             if (filter.matches(retainedMessage.getMessage().getDestination())) {
                 result.add(retainedMessage.getMessage());
             }
         }
-        return result.toArray(new Message[result.size()]);
+        Message[] messages = result.toArray(new Message[result.size()]);
+        if (wrapped != null) {
+            final Message[] wrappedMessages = wrapped.browse(destination);
+            if (wrappedMessages != null && wrappedMessages.length > 0) {
+                final int origLen = messages.length;
+                messages = Arrays.copyOf(messages, origLen + wrappedMessages.length);
+                System.arraycopy(wrappedMessages, 0, messages, origLen, wrappedMessages.length);
+            }
+        }
+        return messages;
     }
 
     public SubscriptionRecoveryPolicy copy() {
