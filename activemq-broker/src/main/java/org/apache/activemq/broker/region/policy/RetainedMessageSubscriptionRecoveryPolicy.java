@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
@@ -74,7 +75,14 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
             sub.addRecoveredMessage(context, retainedMessage);
         }
         if (wrapped != null) {
-            wrapped.recover(context, topic, sub);
+            // retain default ActiveMQ behaviour of recovering messages only for empty durable subscriptions
+            boolean recover = true;
+            if (sub instanceof DurableTopicSubscription && !((DurableTopicSubscription)sub).isEmpty(topic)) {
+                recover = false;
+            }
+            if (recover) {
+                wrapped.recover(context, topic, sub);
+            }
         }
     }
 

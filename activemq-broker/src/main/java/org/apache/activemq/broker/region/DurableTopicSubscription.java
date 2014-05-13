@@ -137,6 +137,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         dispatchPending();
     }
 
+    // used by RetaineMessageSubscriptionRecoveryPolicy
+    public boolean isEmpty(Topic topic) {
+        return pending.isEmpty(topic);
+    }
+
     public void activate(SystemUsage memoryManager, ConnectionContext context, ConsumerInfo info, RegionBroker regionBroker) throws Exception {
         if (!active.get()) {
             this.context = context;
