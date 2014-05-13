@@ -120,9 +120,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (active.get() || keepDurableSubsActive) {
             Topic topic = (Topic) destination;
             topic.activate(context, this);
-            if (pending.isEmpty(topic)) {
-                topic.recoverRetroactiveMessages(context, this);
-            }
+            // always use the recovery policy
+            topic.recoverRetroactiveMessages(context, this);
             this.enqueueCounter += pending.size();
         } else if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore) destination.getMessageStore();
@@ -167,13 +166,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     pending.setMaxAuditDepth(getMaxAuditDepth());
                     pending.setMaxProducersToAudit(getMaxProducersToAudit());
                     pending.start();
-                    // If nothing was in the persistent store, then try to use the
-                    // recovery policy.
-                    if (pending.isEmpty()) {
-                        for (Destination destination : durableDestinations.values()) {
-                            Topic topic = (Topic) destination;
-                            topic.recoverRetroactiveMessages(context, this);
-                        }
+                    // always use the recovery policy.
+                    for (Destination destination : durableDestinations.values()) {
+                        Topic topic = (Topic) destination;
+                        topic.recoverRetroactiveMessages(context, this);
                     }
                 }
             }
