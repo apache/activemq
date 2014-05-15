@@ -64,6 +64,7 @@ public class AmqpTestSupport {
     protected int sslPort;
     protected int nioPort;
     protected int nioPlusSslPort;
+    protected int openwirePort;
 
     public static void main(String[] args) throws Exception {
         final AmqpTestSupport s = new AmqpTestSupport();
@@ -123,6 +124,12 @@ public class AmqpTestSupport {
     protected void addAMQPConnector() throws Exception {
         TransportConnector connector = null;
 
+        if (isUseOpenWireConnector()) {
+            connector = brokerService.addConnector(
+                "tcp://0.0.0.0:" + openwirePort);
+            openwirePort = connector.getConnectUri().getPort();
+            LOG.debug("Using openwire port " + openwirePort);
+        }
         if (isUseTcpConnector()) {
             connector = brokerService.addConnector(
                 "amqp://0.0.0.0:" + port + "?transport.transformer=" + getAmqpTransformer());
@@ -147,6 +154,10 @@ public class AmqpTestSupport {
             nioPlusSslPort = connector.getConnectUri().getPort();
             LOG.debug("Using amqp+nio+ssl port " + nioPlusSslPort);
         }
+    }
+
+    protected boolean isUseOpenWireConnector() {
+        return false;
     }
 
     protected boolean isUseTcpConnector() {
