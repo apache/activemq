@@ -511,6 +511,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         ByteArrayOutputStream current = new ByteArrayOutputStream();
 
+        private final byte[] recvBuffer = new byte[1024 * 8];
+
         @Override
         public void onDelivery(Delivery delivery) throws Exception {
             Receiver receiver = ((Receiver) delivery.getLink());
@@ -524,9 +526,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             }
 
             int count;
-            byte data[] = new byte[1024 * 4];
-            while ((count = receiver.recv(data, 0, data.length)) > 0) {
-                current.write(data, 0, count);
+            while ((count = receiver.recv(recvBuffer, 0, recvBuffer.length)) > 0) {
+                current.write(recvBuffer, 0, count);
             }
 
             // Expecting more deliveries..
