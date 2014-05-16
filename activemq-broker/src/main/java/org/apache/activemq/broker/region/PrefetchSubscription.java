@@ -633,7 +633,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         dispatched.removeAll(references);
     }
 
-    protected void dispatchPending() throws IOException {
+    // made public so it can be used in MQTTProtocolConverter
+    public void dispatchPending() throws IOException {
        synchronized(pendingLock) {
             try {
                 int numberToDispatch = countBeforeFull();
