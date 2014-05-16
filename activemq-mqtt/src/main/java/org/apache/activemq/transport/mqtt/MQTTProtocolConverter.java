@@ -17,6 +17,8 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +32,7 @@ import javax.jms.Message;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
@@ -71,6 +74,8 @@ public class MQTTProtocolConverter {
     private final ConcurrentHashMap<UTF8Buffer, MQTTSubscription> mqttSubscriptionByTopic = new ConcurrentHashMap<UTF8Buffer, MQTTSubscription>();
     private final Map<UTF8Buffer, ActiveMQTopic> activeMQTopicMap = new LRUCache<UTF8Buffer, ActiveMQTopic>(DEFAULT_CACHE_SIZE);
     private final Map<Destination, UTF8Buffer> mqttTopicMap = new LRUCache<Destination, UTF8Buffer>(DEFAULT_CACHE_SIZE);
+    private final Set<String> restoredSubs = Collections.synchronizedSet(new HashSet<String>());
+
     private final Map<Short, MessageAck> consumerAcks = new LRUCache<Short, MessageAck>(DEFAULT_CACHE_SIZE);
     private final Map<Short, PUBREC> publisherRecs = new LRUCache<Short, PUBREC>(DEFAULT_CACHE_SIZE);
 
@@ -317,6 +322,8 @@ public class MQTTProtocolConverter {
                 String[] split = name.split(":", 2);
                 QoS qoS = QoS.valueOf(split[0]);
                 onSubscribe(new Topic(split[1], qoS));
+                // mark this durable subscription as restored by Broker
+                restoredSubs.add(split[1]);
             }
         } catch (IOException e) {
             LOG.warn("Could not restore the MQTT durable subs.", e);
@@ -416,6 +423,12 @@ public class MQTTProtocolConverter {
 
     private void resendRetainedMessages(UTF8Buffer topicName, ActiveMQDestination destination,
                                         MQTTSubscription mqttSubscription) throws MQTTProtocolException {
+        // check whether the Topic has been recovered in restoreDurableSubs
+        // mark subscription available for recovery for duplicate subscription
+        if (restoredSubs.remove(destination.getPhysicalName())) {
+            return;
+        }
+
         // get TopicRegion
         RegionBroker regionBroker;
         try {
@@ -441,6 +454,11 @@ public class MQTTProtocolConverter {
                 if (subscription.getConsumerInfo().getConsumerId().equals(consumerId)) {
                     try {
                         ((org.apache.activemq.broker.region.Topic)dest).recoverRetroactiveMessages(connectionContext, subscription);
+                        if (subscription instanceof PrefetchSubscription) {
+                            // request dispatch for prefetch subs
+                            PrefetchSubscription prefetchSubscription = (PrefetchSubscription) subscription;
+                            prefetchSubscription.dispatchPending();
+                        }
                     } catch (Exception e) {
                         throw new MQTTProtocolException("Error recovering retained messages for " +
                             dest.getName() + ": " + e.getMessage(), false, e);
@@ -479,6 +497,9 @@ public class MQTTProtocolConverter {
 
             // check if the durable sub also needs to be removed
             if (subs.getConsumerInfo().getSubscriptionName() != null) {
+                // also remove it from restored durable subscriptions set
+                restoredSubs.remove(convertMQTTToActiveMQ(topicName.toString()));
+
                 RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
                 rsi.setConnectionId(connectionId);
                 rsi.setSubscriptionName(subs.getConsumerInfo().getSubscriptionName());

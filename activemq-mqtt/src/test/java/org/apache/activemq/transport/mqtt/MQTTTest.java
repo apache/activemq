@@ -526,55 +526,71 @@ public class MQTTTest extends AbstractMQTTTest {
 
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 120 * 1000)
     public void testRetainedMessage() throws Exception {
         addMQTTConnector();
         brokerService.start();
 
         MQTT mqtt = createMQTTConnection();
         mqtt.setKeepAlive((short) 2);
-        mqtt.setCleanSession(true);
 
         final String RETAIN = "RETAIN";
         final String TOPICA = "TopicA";
 
-        final String[] clientIds = { null, "foo" };
+        final String[] clientIds = { null, "foo", "durable" };
         for (String clientId : clientIds) {
 
             mqtt.setClientId(clientId);
-            final BlockingConnection connection = mqtt.blockingConnection();
+            mqtt.setCleanSession(!"durable".equals(clientId));
+
+            BlockingConnection connection = mqtt.blockingConnection();
             connection.connect();
 
             // set retained message and check
             connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
-            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
             Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             assertNotNull("No retained message for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
+            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
 
             // test duplicate subscription
-            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
-            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            msg = connection.receive(15000, TimeUnit.MILLISECONDS);
             assertNotNull("No retained message on duplicate subscription for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
+            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
             connection.unsubscribe(new String[]{"TopicA"});
 
             // clear retained message and check that we don't receive it
             connection.publish(TOPICA, "".getBytes(), QoS.AT_MOST_ONCE, true);
-            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
             msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             assertNull("Retained message not cleared for " + clientId, msg);
             connection.unsubscribe(new String[]{"TopicA"});
 
             // set retained message again and check
             connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
-            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_MOST_ONCE)});
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
             msg = connection.receive(5000, TimeUnit.MILLISECONDS);
             assertNotNull("No reset retained message for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
+            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
+
+            // re-connect and check
+            connection.disconnect();
+            connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No reset retained message for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
+
             connection.unsubscribe(new String[]{"TopicA"});
 
             connection.disconnect();
