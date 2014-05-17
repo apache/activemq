@@ -692,7 +692,7 @@ public class MQTTTest extends MQTTTestSupport {
         connection.connect();
         final String TOPIC = "TopicA/";
         final String[] topics = new String[] { TOPIC, "TopicA/+" };
-        connection.subscribe(new Topic[] { new Topic(topics[0], QoS.AT_LEAST_ONCE), new Topic(topics[1], QoS.EXACTLY_ONCE) });
+        connection.subscribe(new Topic[]{new Topic(topics[0], QoS.AT_LEAST_ONCE), new Topic(topics[1], QoS.EXACTLY_ONCE)});
 
         // publish non-retained message
         connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
@@ -761,7 +761,7 @@ public class MQTTTest extends MQTTTestSupport {
         BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
         final String TOPIC = "TopicA/";
-        connection.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
+        connection.subscribe(new Topic[]{new Topic(TOPIC, QoS.EXACTLY_ONCE)});
 
         // publish non-retained messages
         final int TOTAL_MESSAGES = 10;
@@ -1123,6 +1123,10 @@ public class MQTTTest extends MQTTTestSupport {
         assertEquals(RETAINED, new String(bs.data, bs.offset, bs.length));
         assertTrue(message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY));
         assertNull("Should not get second retained message from " + FORWARD_TOPIC, topicConsumer.receive(5000));
+
+        // create second queue consumer and verify that it doesn't trigger message recovery
+        final MessageConsumer queueConsumer2 = s.createConsumer(jmsQueue);
+        assertNull("Second consumer MUST not receive retained message from " + FORWARD_QUEUE, queueConsumer2.receive(5000));
 
         activeMQConnection.close();
         provider.disconnect();
