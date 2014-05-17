@@ -406,4 +406,15 @@ public class DestinationFilter implements Destination {
     public Destination getNext() {
         return next;
     }
+
+    public <T> T getAdaptor(Class <? extends T> clazz) {
+        if (clazz.isInstance(this)) {
+            return clazz.cast(this);
+        } else if (next != null && clazz.isInstance(next)) {
+            return clazz.cast(next);
+        } else if (next instanceof DestinationFilter) {
+            return ((DestinationFilter)next).getAdaptor(clazz);
+        }
+        return null;
+    }
 }

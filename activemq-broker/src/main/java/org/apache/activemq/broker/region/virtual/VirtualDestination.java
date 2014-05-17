@@ -36,4 +36,15 @@ public interface VirtualDestination extends DestinationInterceptor {
      * Creates a virtual destination from the physical destination
      */
     Destination intercept(Destination destination);
+
+    /**
+     * Returns mapped destination(s)
+     */
+    ActiveMQDestination getMappedDestinations();
+
+    /**
+     * Creates a mapped destination
+     */
+    Destination interceptMappedDestination(Destination destination);
+
 }

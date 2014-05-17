@@ -42,10 +42,13 @@ import org.apache.activemq.filter.DestinationMap;
 public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     private DestinationMap destinationMap = new DestinationMap();
+    private DestinationMap mappedDestinationMap = new DestinationMap();
+
     private VirtualDestination[] virtualDestinations;
 
     public Destination intercept(Destination destination) {
-        Set matchingDestinations = destinationMap.get(destination.getActiveMQDestination());
+        final ActiveMQDestination activeMQDestination = destination.getActiveMQDestination();
+        Set matchingDestinations = destinationMap.get(activeMQDestination);
         List<Destination> destinations = new ArrayList<Destination>();
         for (Iterator iter = matchingDestinations.iterator(); iter.hasNext();) {
             VirtualDestination virtualDestination = (VirtualDestination)iter.next();
@@ -60,9 +63,18 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
                 return createCompositeDestination(destination, destinations);
             }
         }
+        // check if the destination instead matches any mapped destinations
+        Set mappedDestinations = mappedDestinationMap.get(activeMQDestination);
+        assert mappedDestinations.size() < 2;
+        if (!mappedDestinations.isEmpty()) {
+            // create a mapped destination interceptor
+            VirtualDestination virtualDestination = (VirtualDestination) mappedDestinations.toArray(
+                new VirtualDestination[mappedDestinations.size()])[0];
+            return virtualDestination.interceptMappedDestination(destination);
+        }
+
         return destination;
     }
-    
 
     public synchronized void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
         for (VirtualDestination virt: virtualDestinations) {
@@ -79,10 +91,12 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     public void setVirtualDestinations(VirtualDestination[] virtualDestinations) {
         destinationMap = new DestinationMap();
+        mappedDestinationMap = new DestinationMap();
         this.virtualDestinations = virtualDestinations;
         for (int i = 0; i < virtualDestinations.length; i++) {
             VirtualDestination virtualDestination = virtualDestinations[i];
             destinationMap.put(virtualDestination.getVirtualDestination(), virtualDestination);
+            mappedDestinationMap.put(virtualDestination.getMappedDestinations(), virtualDestination);
         }
     }
 

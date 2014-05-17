@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 
@@ -31,4 +32,14 @@ public class CompositeTopic extends CompositeDestination {
     public ActiveMQDestination getVirtualDestination() {
         return new ActiveMQTopic(getName());
     }
+
+    @Override
+    public Destination interceptMappedDestination(Destination destination) {
+        if (!isForwardOnly() && destination.getActiveMQDestination().isQueue()) {
+            // recover retroactive messages in mapped Queue
+            return new MappedQueueFilter(getVirtualDestination(), destination);
+        }
+        return destination;
+    }
+
 }

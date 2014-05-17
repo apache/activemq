@@ -32,4 +32,11 @@ public class CompositeQueue extends CompositeDestination {
     public ActiveMQDestination getVirtualDestination() {
         return new ActiveMQQueue(getName());
     }
+
+    @Override
+    public Destination interceptMappedDestination(Destination destination) {
+        // nothing to do for mapped destinations
+        return destination;
+    }
+
 }

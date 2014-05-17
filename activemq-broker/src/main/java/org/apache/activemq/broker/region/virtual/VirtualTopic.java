@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -51,7 +54,42 @@ public class VirtualTopic implements VirtualDestination {
         return selectorAware ? new SelectorAwareVirtualTopicInterceptor(destination, getPrefix(), getPostfix(), isLocal()) :
             new VirtualTopicInterceptor(destination, getPrefix(), getPostfix(), isLocal());
     }
-    
+
+    @Override
+    public ActiveMQDestination getMappedDestinations() {
+        return new ActiveMQQueue(prefix + name + postfix);
+    }
+
+    @Override
+    public Destination interceptMappedDestination(Destination destination) {
+        // do a reverse map from destination to get actual virtual destination
+        final String physicalName = destination.getActiveMQDestination().getPhysicalName();
+        final Pattern pattern = Pattern.compile(getRegex(prefix) + "(.*)" + getRegex(postfix));
+        final Matcher matcher = pattern.matcher(physicalName);
+        if (matcher.matches()) {
+            final String virtualName = matcher.group(1);
+            return new MappedQueueFilter(new ActiveMQTopic(virtualName), destination);
+        }
+        return destination;
+    }
+
+    private String getRegex(String part) {
+        StringBuilder builder = new StringBuilder();
+        for (char c : part.toCharArray()) {
+            switch (c) {
+                case '.':
+                    builder.append("\\.");
+                    break;
+                case '*':
+                    builder.append("[^\\.]*");
+                    break;
+                default:
+                    builder.append(c);
+            }
+        }
+        return builder.toString();
+    }
+
 
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
         if (destination.isQueue() && destination.isPattern() && broker.getDestinations(destination).isEmpty()) {

@@ -119,6 +119,10 @@ public class MQTTTestSupport {
     }
 
     public void startBroker() throws Exception {
+        startBroker(true);
+    }
+
+    public void startBroker(boolean start) throws Exception {
 
         createBroker();
 
@@ -160,8 +164,10 @@ public class MQTTTestSupport {
             brokerService.setPlugins(plugins.toArray(array));
         }
 
-        brokerService.start();
-        brokerService.waitUntilStarted();
+        if (start) {
+            brokerService.start();
+            brokerService.waitUntilStarted();
+        }
     }
 
     protected void applyMemoryLimitPolicy() throws Exception {
