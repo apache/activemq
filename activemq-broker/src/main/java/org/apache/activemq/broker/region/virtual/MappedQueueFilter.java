@@ -29,13 +29,16 @@ public class MappedQueueFilter extends DestinationFilter {
     }
 
     @Override
-    public synchronized void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+    public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
         // recover messages for first consumer only
-        boolean noSubs = getConsumers().isEmpty();
+        boolean noSubs, empty;
+        synchronized (this) {
+            noSubs = getConsumers().isEmpty();
+            super.addSubscription(context, sub);
+            empty = getConsumers().isEmpty();
+        }
 
-        super.addSubscription(context, sub);
-
-        if (noSubs && !getConsumers().isEmpty()) {
+        if (noSubs && !empty) {
             // new subscription added, recover retroactive messages
             final RegionBroker regionBroker = (RegionBroker) context.getBroker().getAdaptor(RegionBroker.class);
             final Set<Destination> virtualDests = regionBroker.getDestinations(virtualDestination);
