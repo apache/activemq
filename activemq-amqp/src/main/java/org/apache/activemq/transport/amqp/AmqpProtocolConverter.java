@@ -170,6 +170,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             while (!done) {
                 ByteBuffer toWrite = protonTransport.getOutputBuffer();
                 if (toWrite != null && toWrite.hasRemaining()) {
+                    LOG.trace("Sending {} bytes out", toWrite.limit());
                     amqpTransport.sendToAmqp(toWrite);
                     protonTransport.outputConsumed();
                 } else {
@@ -463,6 +464,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         AmqpSessionContext sessionContext = new AmqpSessionContext(connectionId, nextSessionId++);
         session.setContext(sessionContext);
         sendToActiveMQ(new SessionInfo(sessionContext.sessionId), null);
+        session.setIncomingCapacity(AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE * prefetch);
         session.open();
     }
 
@@ -608,10 +610,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 }
 
                 message.onSend();
-                sendToActiveMQ(message, new ResponseHandler() {
-                    @Override
-                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
-                        if (!delivery.remotelySettled()) {
+                if (!delivery.remotelySettled()) {
+                    sendToActiveMQ(message, new ResponseHandler() {
+                        @Override
+                        public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                             if (response.isException()) {
                                 ExceptionResponse er = (ExceptionResponse) response;
                                 Rejected rejected = new Rejected();
@@ -620,14 +622,29 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                                 condition.setDescription(er.getException().getMessage());
                                 rejected.setError(condition);
                                 delivery.disposition(rejected);
+                            } else {
+                                if (receiver.getCredit() <= (prefetch * .2)) {
+                                    LOG.trace("Sending more credit ({}) to producer: {}",
+                                              prefetch - receiver.getCredit(), producerId);
+                                    receiver.flow(prefetch - receiver.getCredit());
+                                }
+
+                                delivery.disposition(Accepted.getInstance());
+                                delivery.settle();
                             }
+
+                            pumpProtonToSocket();
                         }
-                        receiver.flow(1);
-                        delivery.disposition(Accepted.getInstance());
-                        delivery.settle();
+                    });
+                } else {
+                    if (receiver.getCredit() <= (prefetch * .2)) {
+                        LOG.trace("Sending more credit ({}) to producer: {}",
+                                  prefetch - receiver.getCredit(), producerId);
+                        receiver.flow(prefetch - receiver.getCredit());
                         pumpProtonToSocket();
                     }
-                });
+                    sendToActiveMQ(message, null);
+                }
             }
         }
 
