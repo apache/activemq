@@ -464,7 +464,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         AmqpSessionContext sessionContext = new AmqpSessionContext(connectionId, nextSessionId++);
         session.setContext(sessionContext);
         sendToActiveMQ(new SessionInfo(sessionContext.sessionId), null);
-        session.setIncomingCapacity(AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE * prefetch);
+        session.setIncomingCapacity(Integer.MAX_VALUE);
         session.open();
     }
 
