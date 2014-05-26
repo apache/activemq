@@ -39,7 +39,7 @@
 
           <authorizationPlugin>
               <map>
-                <cachedLDAPAuthorizationMap legacyGroupMapping="false" connectionURL="ldap://localhost:${ldapPort}"/>
+                <cachedLDAPAuthorizationMap legacyGroupMapping="false" connectionURL="ldap://localhost:${ldapPort}" groupClass="org.apache.activemq.jaas.GroupPrincipal"/>
               </map>
           </authorizationPlugin>
       </plugins>
