@@ -42,6 +42,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     protected int maxAllowableDiffFromDBTime = 0;
     protected long diffFromCurrentTime = Long.MAX_VALUE;
     protected String leaseHolderId;
+    protected boolean handleStartException;
 
     public void doStart() throws Exception {
 
@@ -89,7 +90,9 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                                     + "Interrupted attempt to acquire lock: "
                                     + e, e);
                 }
-                lockable.getBrokerService().handleIOException(IOExceptionSupport.create(e));
+                if (handleStartException) {
+                    lockable.getBrokerService().handleIOException(IOExceptionSupport.create(e));
+                }
             } finally {
                 close(statement);
                 close(connection);
@@ -229,6 +232,14 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
     public void setMaxAllowableDiffFromDBTime(int maxAllowableDiffFromDBTime) {
         this.maxAllowableDiffFromDBTime = maxAllowableDiffFromDBTime;
+    }
+
+    public boolean isHandleStartException() {
+        return handleStartException;
+    }
+
+    public void setHandleStartException(boolean handleStartException) {
+        this.handleStartException = handleStartException;
     }
 
     @Override

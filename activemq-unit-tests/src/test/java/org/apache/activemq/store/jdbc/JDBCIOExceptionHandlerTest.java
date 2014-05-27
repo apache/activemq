@@ -72,6 +72,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
         jdbc.setLockKeepAlivePeriod(1000l);
         if (leaseLocker) {
             LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+            leaseDatabaseLocker.setHandleStartException(true);
             leaseDatabaseLocker.setLockAcquireSleepInterval(2000l);
             jdbc.setLocker(leaseDatabaseLocker);
         }
@@ -130,6 +131,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
 
                     if (lease) {
                         LeaseDatabaseLocker leaseDatabaseLocker = new LeaseDatabaseLocker();
+                        leaseDatabaseLocker.setHandleStartException(true);
                         leaseDatabaseLocker.setLockAcquireSleepInterval(2000l);
                         jdbc.setLocker(leaseDatabaseLocker);
                     }
