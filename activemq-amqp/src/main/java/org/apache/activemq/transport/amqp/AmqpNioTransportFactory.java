@@ -16,6 +16,17 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.IOException;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
+
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -27,16 +38,6 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
-import javax.net.ServerSocketFactory;
-import javax.net.SocketFactory;
-import java.io.IOException;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * A <a href="http://amqp.org/">AMQP</a> over NIO transport factory
  */
@@ -44,18 +45,22 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
 
     private BrokerContext brokerContext = null;
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "amqp";
     }
 
+    @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new TcpTransportServer(this, location, serverSocketFactory) {
+            @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 return new AmqpNioTransport(format, socket);
             }
         };
     }
 
+    @Override
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new AmqpNioTransport(wf, socketFactory, location, localLocation);
     }
@@ -70,14 +75,10 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
             transport = ((MutexTransport)transport).getNext();
         }
 
-//        MutexTransport mutex = transport.narrow(MutexTransport.class);
-//        if (mutex != null) {
-//            mutex.setSyncOnCommand(true);
-//        }
-
         return transport;
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new AmqpTransportFilter(transport, format, brokerContext);
@@ -85,16 +86,10 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
         return super.compositeConfigure(transport, format, options);
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
     }
-
-//    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
-//        AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
-//        AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
-//        filter.setInactivityMonitor(monitor);
-//        return monitor;
-//    }
 
     @Override
     protected boolean isUseInactivityMonitor(Transport transport) {

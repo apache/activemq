@@ -18,7 +18,6 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.IOException;
 
-
 public class AmqpProtocolException extends IOException {
 
     private static final long serialVersionUID = -2869735532997332242L;

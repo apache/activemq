@@ -35,11 +35,12 @@ import org.apache.activemq.wireformat.WireFormat;
 
 public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
 
-    SSLContext context;
+    protected SSLContext context;
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new TcpTransportServer(this, location, serverSocketFactory) {
+            @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 AmqpNioSslTransport transport = new AmqpNioSslTransport(format, socket);
                 if (context != null) {
@@ -71,5 +72,4 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
         }
         return super.doBind(location);
     }
-
 }

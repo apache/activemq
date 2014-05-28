@@ -16,24 +16,25 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.transport.TransportSupport;
-import org.fusesource.hawtbuf.Buffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.activemq.transport.TransportSupport;
+import org.fusesource.hawtbuf.Buffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class AmqpNioTransportHelper {
-    private final DataInputStream amqpHeaderValue = new DataInputStream(new ByteArrayInputStream(new byte[]{'A', 'M', 'Q', 'P'}));
+
+    private final DataInputStream amqpHeaderValue = new DataInputStream(new ByteArrayInputStream(new byte[] { 'A', 'M', 'Q', 'P' }));
     private final Integer AMQP_HEADER_VALUE;
     private static final Logger LOG = LoggerFactory.getLogger(AmqpNioTransportHelper.class);
     protected int nextFrameSize = -1;
     protected ByteBuffer currentBuffer;
     private boolean magicConsumed = false;
-    private TransportSupport transportSupport;
+    private final TransportSupport transportSupport;
 
     public AmqpNioTransportHelper(TransportSupport transportSupport) throws IOException {
         AMQP_HEADER_VALUE = amqpHeaderValue.readInt();
@@ -41,10 +42,11 @@ public class AmqpNioTransportHelper {
     }
 
     protected void processCommand(ByteBuffer plain) throws Exception {
-        // Are we waiting for the next Command or building on the current one?  The frame size is in the first 4 bytes.
+        // Are we waiting for the next Command or building on the current one?
+        // The frame size is in the first 4 bytes.
         if (nextFrameSize == -1) {
-            // We can get small packets that don't give us enough for the frame size
-            // so allocate enough for the initial size value and
+            // We can get small packets that don't give us enough for the frame
+            // size so allocate enough for the initial size value and
             if (plain.remaining() < 4) {
                 if (currentBuffer == null) {
                     currentBuffer = ByteBuffer.allocate(4);
@@ -63,10 +65,11 @@ public class AmqpNioTransportHelper {
                     nextFrameSize = currentBuffer.getInt();
                 }
             } else {
-                // Either we are completing a previous read of the next frame size or its
-                // fully contained in plain already.
+                // Either we are completing a previous read of the next frame
+                // size or its fully contained in plain already.
                 if (currentBuffer != null) {
-                    // Finish the frame size integer read and get from the current buffer.
+                    // Finish the frame size integer read and get from the
+                    // current buffer.
                     while (currentBuffer.hasRemaining()) {
                         currentBuffer.put(plain.get());
                     }
@@ -79,8 +82,8 @@ public class AmqpNioTransportHelper {
             }
         }
 
-        // There are three possibilities when we get here.  We could have a partial frame,
-        // a full frame, or more than 1 frame
+        // There are three possibilities when we get here. We could have a
+        // partial frame, a full frame, or more than 1 frame
         while (true) {
             // handle headers, which start with 'A','M','Q','P' rather than size
             if (nextFrameSize == AMQP_HEADER_VALUE) {
@@ -91,8 +94,10 @@ public class AmqpNioTransportHelper {
             }
             validateFrameSize(nextFrameSize);
 
-            // now we have the data, let's reallocate and try to fill it,  (currentBuffer.putInt() is called      TODO update
-            // because we need to put back the 4 bytes we read to determine the size)
+            // now we have the data, let's reallocate and try to fill it,
+            // (currentBuffer.putInt() is called TODO update
+            // because we need to put back the 4 bytes we read to determine the
+            // size)
             if (currentBuffer == null || (currentBuffer.limit() == 4)) {
                 currentBuffer = ByteBuffer.allocate(nextFrameSize);
                 currentBuffer.putInt(nextFrameSize);
@@ -106,8 +111,9 @@ public class AmqpNioTransportHelper {
                 currentBuffer.put(fill);
             }
 
-            // Either we have enough data for a new command or we have to wait for some more.  If hasRemaining is true,
-            // we have not filled the buffer yet, i.e. we haven't received the full frame.
+            // Either we have enough data for a new command or we have to wait for some more.
+            // If hasRemaining is true, we have not filled the buffer yet, i.e. we haven't
+            // received the full frame.
             if (currentBuffer.hasRemaining()) {
                 return;
             } else {
@@ -137,8 +143,7 @@ public class AmqpNioTransportHelper {
 
     private void validateFrameSize(int frameSize) throws IOException {
         if (nextFrameSize > AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE) {
-            throw new IOException("Frame size of " + nextFrameSize +
-                    "larger than max allowed " + AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE);
+            throw new IOException("Frame size of " + nextFrameSize + "larger than max allowed " + AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE);
         }
     }
 
@@ -152,7 +157,7 @@ public class AmqpNioTransportHelper {
             currentBuffer.put(plain.get());
         }
         currentBuffer.flip();
-        if (!magicConsumed) {   // The first case we see is special and has to be handled differently
+        if (!magicConsumed) { // The first case we see is special and has to be handled differently
             transportSupport.doConsume(new AmqpHeader(new Buffer(currentBuffer)));
             magicConsumed = true;
         } else {
@@ -172,5 +177,4 @@ public class AmqpNioTransportHelper {
 
         return nextFrameSize;
     }
-
 }

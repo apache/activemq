@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.command.Command;
-
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+
+import org.apache.activemq.command.Command;
 
 /**
  * Basic interface that mediates between protocol converter and transport
@@ -36,8 +36,6 @@ public interface AmqpTransport {
 
     public void onException(IOException error);
 
-//    public AmqpInactivityMonitor getInactivityMonitor();
-
     public AmqpWireFormat getWireFormat();
 
     public void stop() throws Exception;
@@ -49,6 +47,7 @@ public interface AmqpTransport {
     public boolean isTrace();
 
     public IAmqpProtocolConverter getProtocolConverter();
+
     public void setProtocolConverter(IAmqpProtocolConverter protocolConverter);
 
 }

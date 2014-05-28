@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.command.Command;
-
 import java.io.IOException;
 import java.util.ArrayList;
+
+import org.apache.activemq.command.Command;
 
 /**
  * Used to assign the best implementation of a AmqpProtocolConverter to the
@@ -31,12 +31,13 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     interface Discriminator {
         boolean matches(AmqpHeader header);
+
         IAmqpProtocolConverter create(AmqpTransport transport);
     }
 
     static final private ArrayList<Discriminator> DISCRIMINATORS = new ArrayList<Discriminator>();
     static {
-        DISCRIMINATORS.add(new Discriminator(){
+        DISCRIMINATORS.add(new Discriminator() {
 
             @Override
             public IAmqpProtocolConverter create(AmqpTransport transport) {
@@ -45,11 +46,12 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
             @Override
             public boolean matches(AmqpHeader header) {
-                switch( header.getProtocolId() ) {
+                switch (header.getProtocolId()) {
                     case 0:
                     case 3:
-                        if( header.getMajor() == 1 && header.getMinor()==0 && header.getRevision()==0 )
+                        if (header.getMajor() == 1 && header.getMinor() == 0 && header.getRevision() == 0) {
                             return true;
+                        }
                 }
                 return false;
             }
@@ -70,12 +72,12 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
             Discriminator match = null;
             for (Discriminator discriminator : DISCRIMINATORS) {
-                if( discriminator.matches(header) ) {
+                if (discriminator.matches(header)) {
                     match = discriminator;
                 }
             }
             // Lets use first in the list if none are a good match.
-            if( match == null ) {
+            if (match == null) {
                 match = DISCRIMINATORS.get(0);
             }
             IAmqpProtocolConverter next = match.create(transport);
