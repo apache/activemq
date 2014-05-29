@@ -53,6 +53,7 @@ import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
@@ -577,6 +578,13 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if (!closed) {
                 EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
                 final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
+
+                // TODO - we need to cast TempTopic to TempQueue as we internally are using temp queues for all dynamic destinations
+                // we need to figure out how to support both queues and topics
+                if (message.getJMSReplyTo() != null && message.getJMSReplyTo() instanceof ActiveMQTempTopic) {
+                    ActiveMQTempTopic tempTopic = (ActiveMQTempTopic)message.getJMSReplyTo();
+                    message.setJMSReplyTo(new ActiveMQTempQueue(tempTopic.getPhysicalName()));
+                }
                 current = null;
 
                 if (destination != null) {

@@ -39,12 +39,14 @@ import javax.jms.Topic;
 
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Ignore("Until https://issues.apache.org/jira/browse/PROTON-588 and https://issues.apache.org/jira/browse/QPID-5792 are fixed")
 public class JmsClientRequestResponseTest extends AmqpTestSupport implements MessageListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsClientRequestResponseTest.class);
