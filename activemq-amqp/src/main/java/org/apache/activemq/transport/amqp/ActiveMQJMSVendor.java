@@ -88,16 +88,16 @@ public class ActiveMQJMSVendor extends JMSVendor {
     @Override
     public <T extends Destination> T createDestination(String name, Class<T> kind) {
         String destinationName = name.substring(name.lastIndexOf("://") + 3);
-        if( kind == Queue.class ) {
+        if (kind == Queue.class) {
             return kind.cast(new ActiveMQQueue(destinationName));
         }
-        if( kind == Topic.class ) {
+        if (kind == Topic.class) {
             return kind.cast(new ActiveMQTopic(destinationName));
         }
-        if( kind == TemporaryQueue.class ) {
+        if (kind == TemporaryQueue.class) {
             return kind.cast(new ActiveMQTempQueue(destinationName));
         }
-        if( kind == TemporaryTopic.class ) {
+        if (kind == TemporaryTopic.class) {
             return kind.cast(new ActiveMQTempTopic(destinationName));
         }
         return kind.cast(ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE));
