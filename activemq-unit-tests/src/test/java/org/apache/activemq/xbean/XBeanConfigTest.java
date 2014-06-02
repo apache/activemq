@@ -25,12 +25,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.broker.region.policy.DispatchPolicy;
-import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
-import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
-import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
-import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
-import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.*;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
@@ -59,6 +54,8 @@ public class XBeanConfigTest extends TestCase {
         assertTrue("dispatchPolicy should be RoundRobinDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof RoundRobinDispatchPolicy);
 
         SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
+        subscriptionRecoveryPolicy = ((RetainedMessageSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy).getWrapped();
+
         assertTrue("subscriptionRecoveryPolicy should be LastImageSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
                    subscriptionRecoveryPolicy instanceof LastImageSubscriptionRecoveryPolicy);
 
@@ -71,6 +68,7 @@ public class XBeanConfigTest extends TestCase {
         assertTrue("dispatchPolicy should be StrictOrderDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof StrictOrderDispatchPolicy);
 
         subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
+        subscriptionRecoveryPolicy = ((RetainedMessageSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy).getWrapped();
         assertTrue("subscriptionRecoveryPolicy should be TimedSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
                    subscriptionRecoveryPolicy instanceof TimedSubscriptionRecoveryPolicy);
         TimedSubscriptionRecoveryPolicy timedSubscriptionPolicy = (TimedSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy;

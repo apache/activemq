@@ -129,4 +129,7 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
         this.wrapped = wrapped;
     }
 
+    public SubscriptionRecoveryPolicy getWrapped() {
+        return wrapped;
+    }
 }
