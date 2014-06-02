@@ -87,9 +87,15 @@ public class RetainedMessageSubscriptionRecoveryPolicy implements SubscriptionRe
     }
 
     public void start() throws Exception {
+        if (wrapped != null) {
+            wrapped.start();
+        }
     }
 
     public void stop() throws Exception {
+        if (wrapped != null) {
+            wrapped.stop();
+        }
     }
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
