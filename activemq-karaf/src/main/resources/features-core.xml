@@ -59,9 +59,6 @@
       <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison-version}</bundle>
       <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson-version}</bundle>
       <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson-version}</bundle>
-      <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.scala-library/${scala-bundle-version}</bundle>
-<!-- Scala 2.9 is not OSGi bundle. But 2.10 is
       <bundle dependency="true">mvn:org.scala-lang/scala-library/${scala-version}</bundle>
--->
     </feature>
   </features>

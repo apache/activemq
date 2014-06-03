@@ -108,7 +108,6 @@
     <saxon-bundle-version>9.5.1-1_1</saxon-bundle-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
     <scala-version>2.11.0</scala-version>
-    <scala-bundle-version>2.9.1_3</scala-bundle-version>
     <shiro-version>1.2.2</shiro-version>
     <scalatest-version>2.1.5</scalatest-version>
     <slf4j-version>1.7.5</slf4j-version>
