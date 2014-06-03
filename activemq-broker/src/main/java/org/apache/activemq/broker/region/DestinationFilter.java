@@ -402,4 +402,8 @@ public class DestinationFilter implements Destination {
             topic.deleteSubscription(context, key);
         }
     }
+
+    public Destination getNext() {
+        return next;
+    }
 }

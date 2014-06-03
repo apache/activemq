@@ -52,12 +52,7 @@ import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.*;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.CompositeQueue;
@@ -439,12 +434,16 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     private void applyRetrospectively(PolicyEntry updatedEntry) {
         RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
         for (Destination destination : regionBroker.getDestinations(updatedEntry.getDestination())) {
-            if (destination.getActiveMQDestination().isQueue()) {
-                updatedEntry.update((Queue) destination);
-            } else if (destination.getActiveMQDestination().isTopic()) {
-                updatedEntry.update((Topic) destination);
+            Destination target = destination;
+            if (destination instanceof DestinationFilter) {
+                target = ((DestinationFilter)destination).getNext();
             }
-            LOG.debug("applied update to:" + destination);
+            if (target.getActiveMQDestination().isQueue()) {
+                updatedEntry.update((Queue) target);
+            } else if (target.getActiveMQDestination().isTopic()) {
+                updatedEntry.update((Topic) target);
+            }
+            LOG.debug("applied update to:" + target);
         }
     }
 
