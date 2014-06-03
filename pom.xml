@@ -1367,7 +1367,9 @@
             <!-- web, web-console, web-demo files -->
             <exclude>**/webapp/mqtt/mqttws31.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
-            <exclude>**/webapp/js/jquery-*.js</exclude>
+            <exclude>**/jquery-*.js</exclude>
+            <exclude>**/bootstrap.min.css</exclude>
+            <exclude>**/bootstrap.min.responsive.css</exclude>
             <exclude>**/webapp/js/prototype.js</exclude>
             <exclude>**/web/behaviour.js</exclude>
             <exclude>**/webapp/js/common.js</exclude>
@@ -1389,6 +1391,15 @@
             <exclude>**/*.iws</exclude>
             <exclude>**/.idea/**/*</exclude>
             <exclude>.git/**/*</exclude>
+            <exclude>**/LevelDB/**/*</exclude>
+            <exclude>**/dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.sln</exclude>
+            <exclude>**/*.userprefs</exclude>
+            <exclude>**/*.csproj</exclude>
+            <exclude>**/mqttws31.js</exclude>
+            <exclude>**/stomp.js</exclude>
+            <exclude>**/__init__.py</exclude>
+            <exclude>**/webapp/decorators/footer.jsp</exclude>
           </excludes>
         </configuration>
       </plugin>
