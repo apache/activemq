@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.
+  See the NOTICE file distributed with this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may
+  not use this file except in compliance with the License. You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+  CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing
+  permissions and limitations under the License. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -96,13 +89,11 @@
               <goal>shade</goal>
             </goals>
             <configuration>
-
               <artifactSet>
                 <includes>
                   <include>${project.groupId}:activemq-client</include>
                   <include>${project.groupId}:activemq-openwire-legacy</include>
                   <include>${project.groupId}:activemq-camel</include>
-
                   <include>${project.groupId}:activemq-jaas</include>
                   <include>${project.groupId}:activemq-broker</include>
                   <include>${project.groupId}:activemq-console</include>
@@ -110,16 +101,13 @@
                   <include>${project.groupId}:activemq-spring</include>
                   <include>${project.groupId}:activemq-pool</include>
                   <include>${project.groupId}:activemq-jms-pool</include>
-
                   <include>${project.groupId}:activemq-amqp</include>
                   <include>${project.groupId}:activemq-http</include>
                   <include>${project.groupId}:activemq-mqtt</include>
                   <include>${project.groupId}:activemq-stomp</include>
-
                   <include>${project.groupId}:activemq-kahadb-store</include>
                   <include>${project.groupId}:activemq-leveldb-store</include>
                   <include>${project.groupId}:activemq-jdbc-store</include>
-
                   <include>org.apache.activemq.protobuf:activemq-protobuf</include>
                   <include>org.fusesource.hawtbuf:hawtbuf</include>
                   <include>org.jasypt:jasypt</include>
@@ -134,20 +122,25 @@
               </artifactSet>
 
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-                    <projectName>Apache ActiveMQ</projectName>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                    <resource>.java</resource>
+                </transformer>
+
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                  <projectName>Apache ActiveMQ</projectName>
                 </transformer>
 
                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                    <resource>META-INF/spring.handlers</resource>
+                  <resource>META-INF/spring.handlers</resource>
                 </transformer>
 
                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                    <resource>META-INF/services/com.sun.tools.xjc.Plugin</resource>
+                  <resource>META-INF/services/com.sun.tools.xjc.Plugin</resource>
                 </transformer>
 
                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                    <resource>META-INF/spring.schemas</resource>
+                  <resource>META-INF/spring.schemas</resource>
                 </transformer>
               </transformers>
             </configuration>
@@ -158,256 +151,249 @@
     </plugins>
   </build>
 
-    <profiles>
-        <profile>
-            <id>deploy</id>
-            <build>
-            <defaultGoal>deploy</defaultGoal>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>${maven-source-plugin-version}</version>
-                    <configuration>
-                        <attach>false</attach>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-          </build>
-        </profile>
-        <profile>
-          <id>apache-release</id>
+  <profiles>
+    <profile>
+      <id>deploy</id>
+      <build>
+        <defaultGoal>deploy</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${maven-source-plugin-version}</version>
+            <configuration>
+              <attach>false</attach>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>apache-release</id>
 
-          <dependencies>
+      <dependencies>
 
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-client</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-openwire-legacy</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-camel</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-jaas</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-broker</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-console</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-shiro</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-spring</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-pool</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-jms-pool</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-amqp</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-http</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-mqtt</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-stomp</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-kahadb-store</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-jdbc-store</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>${project.groupId}</groupId>
-              <artifactId>activemq-leveldb-store</artifactId>
-              <version>${project.version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.activemq.protobuf</groupId>
-              <artifactId>activemq-protobuf</artifactId>
-              <version>${activemq-protobuf-version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.fusesource.hawtbuf</groupId>
-              <artifactId>hawtbuf</artifactId>
-              <version>${hawtbuf-version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.jasypt</groupId>
-              <artifactId>jasypt</artifactId>
-              <version>${jasypt-version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.geronimo.specs</groupId>
-              <artifactId>geronimo-jms_1.1_spec</artifactId>
-              <version>1.1.1</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <!-- <dependency>
-              <groupId>org.apache.geronimo.specs</groupId>
-              <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
-              <version>1.0.1</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency> -->
-            <dependency>
-              <groupId>org.apache.geronimo.specs</groupId>
-              <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
-              <version>1.0.1</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.apache.geronimo.specs</groupId>
-              <artifactId>geronimo-annotation_1.0_spec</artifactId>
-              <version>1.1.1</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-api</artifactId>
-              <version>${slf4j-version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>org.slf4j</groupId>
-              <artifactId>slf4j-log4j12</artifactId>
-              <version>${slf4j-version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-            <dependency>
-              <groupId>log4j</groupId>
-              <artifactId>log4j</artifactId>
-              <version>${log4j-version}</version>
-              <classifier>sources</classifier>
-              <optional>true</optional>
-            </dependency>
-          </dependencies>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-client</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-openwire-legacy</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-camel</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-jaas</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-broker</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-console</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-shiro</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-spring</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-pool</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-jms-pool</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-amqp</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-http</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-mqtt</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-stomp</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-kahadb-store</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-jdbc-store</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>activemq-leveldb-store</artifactId>
+          <version>${project.version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.activemq.protobuf</groupId>
+          <artifactId>activemq-protobuf</artifactId>
+          <version>${activemq-protobuf-version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.fusesource.hawtbuf</groupId>
+          <artifactId>hawtbuf</artifactId>
+          <version>${hawtbuf-version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.jasypt</groupId>
+          <artifactId>jasypt</artifactId>
+          <version>${jasypt-version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-jms_1.1_spec</artifactId>
+          <version>1.1.1</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
+          <version>1.0.1</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-annotation_1.0_spec</artifactId>
+          <version>1.1.1</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+          <version>${slf4j-version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+          <version>${slf4j-version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+          <version>${log4j-version}</version>
+          <classifier>sources</classifier>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
 
-          <build>
-            <plugins>
-              <plugin>
-                <artifactId>maven-source-plugin</artifactId>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-source-plugin</artifactId>
+            <configuration>
+              <skipSource>true</skipSource>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>uber-sources-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
                 <configuration>
-                  <skipSource>true</skipSource>
+                  <descriptors>
+                    <descriptor>${basedir}/src/main/descriptors/uber-sources.xml</descriptor>
+                  </descriptors>
+                  <appendAssemblyId>true</appendAssemblyId>
                 </configuration>
-              </plugin>
-              <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                  <execution>
-                    <id>uber-sources-jar</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                    <configuration>
-                      <descriptors>
-                        <descriptor>${basedir}/src/main/descriptors/uber-sources.xml</descriptor>
-                      </descriptors>
-                      <appendAssemblyId>true</appendAssemblyId>
-                    </configuration>
-                  </execution>
-                </executions>
-              </plugin>
-            </plugins>
-          </build>
-        </profile>
-    </profiles>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
