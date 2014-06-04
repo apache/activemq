@@ -349,7 +349,13 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQTopic topic = AdvisorySupport.getMessageConsumedAdvisoryTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
-                fireAdvisory(context, topic, payload);
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
+                ActiveMQDestination destination = payload.getDestination();
+                if (destination != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, payload.getMessageId().toString());
+                }
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("consumed", e);
@@ -364,7 +370,13 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQTopic topic = AdvisorySupport.getMessageDeliveredAdvisoryTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
-                fireAdvisory(context, topic, payload);
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
+                ActiveMQDestination destination = payload.getDestination();
+                if (destination != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, payload.getMessageId().toString());
+                }
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("delivered", e);
@@ -383,7 +395,12 @@ public class AdvisoryBroker extends BrokerFilter {
                 if (sub instanceof TopicSubscription) {
                     advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT, ((TopicSubscription) sub).discarded());
                 }
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, sub.getConsumerInfo().getConsumerId().toString());
+                ActiveMQDestination destination = payload.getDestination();
+                if (destination != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, payload.getMessageId().toString());
+                }
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {

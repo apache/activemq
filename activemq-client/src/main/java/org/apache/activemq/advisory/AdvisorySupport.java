@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -61,6 +62,7 @@ public final class AdvisorySupport {
     public static final String MSG_PROPERTY_CONSUMER_ID = "consumerId";
     public static final String MSG_PROPERTY_PRODUCER_ID = "producerId";
     public static final String MSG_PROPERTY_MESSAGE_ID = "orignalMessageId";
+    public static final String MSG_PROPERTY_DESTINATION = "orignalDestination";
     public static final String MSG_PROPERTY_CONSUMER_COUNT = "consumerCount";
     public static final String MSG_PROPERTY_DISCARDED_COUNT = "discardedCount";
 

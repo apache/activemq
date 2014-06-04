@@ -158,7 +158,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
             producer.send(m);
         }
 
-        Message msg = advisoryConsumer.receive(2000);
+        Message msg = advisoryConsumer.receive(5000);
         assertNotNull(msg);
     }
 
