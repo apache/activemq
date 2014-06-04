@@ -1116,6 +1116,8 @@
             <allowTimestampedSnapshots>false</allowTimestampedSnapshots>
             <preparationGoals>clean install</preparationGoals>
             <goals>deploy</goals>
+            <remoteTagging>false</remoteTagging>
+            <suppressCommitBeforeTag>false</suppressCommitBeforeTag>
           </configuration>
         </plugin>
         <plugin>
