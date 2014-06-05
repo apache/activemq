@@ -118,6 +118,14 @@ public class BrokerMBeanSupport {
         return new ObjectName(objectNameStr);
     }
 
+    public static ObjectName createLog4JConfigViewName(String brokerObjectName) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+
+        objectNameStr += "," + "Service=Log4JConfiguration";
+
+        return new ObjectName(objectNameStr);
+    }
+
     public static ObjectName createPersistenceAdapterName(String brokerObjectName, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
 

@@ -68,6 +68,7 @@ import org.apache.activemq.broker.jmx.HealthViewMBean;
 import org.apache.activemq.broker.jmx.JmsConnectorView;
 import org.apache.activemq.broker.jmx.JobSchedulerView;
 import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
+import org.apache.activemq.broker.jmx.Log4JConfigView;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
@@ -688,6 +689,12 @@ public class BrokerService implements Service {
 
         if (ioExceptionHandler == null) {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
+        }
+
+        if (isUseJmx() && Log4JConfigView.isLog4JAvailable()) {
+            ObjectName objectName = BrokerMBeanSupport.createLog4JConfigViewName(getBrokerObjectName().toString());
+            Log4JConfigView log4jConfigView = new Log4JConfigView();
+            AnnotatedMBean.registerMBean(getManagementContext(), log4jConfigView, objectName);
         }
 
         startAllConnectors();
