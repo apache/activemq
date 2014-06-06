@@ -19,6 +19,7 @@ package org.apache.activemq.config;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,19 +56,26 @@ public class BrokerXmlConfigStartTest {
     private String shortName;
 
     @Parameterized.Parameters(name = "{1}")
-    public static Collection<String[]> getTestParameters() {
+    public static Collection<String[]> getTestParameters() throws IOException {
         List<String[]> configUrls = new ArrayList<String[]>();
         configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml", "activemq.xml"});
 
+        String osName=System.getProperty("os.name");
+        LOG.info("os.name {} ", osName);
         File sampleConfDir = new File("target/conf");
+        String sampleConfDirPath = sampleConfDir.getAbsolutePath();
+        if (osName.toLowerCase().contains("windows")) {
+            sampleConfDirPath = sampleConfDirPath.substring(2); // Chop off drive letter and :
+            sampleConfDirPath = sampleConfDirPath.replace("\\", "/");
+        }
+
         for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
                 return pathname.isFile() &&
                         pathname.getName().startsWith("activemq-") &&
                         pathname.getName().endsWith("xml");
             }})) {
-
-            configUrls.add(new String[]{"xbean:" + sampleConfDir.getAbsolutePath() + "/" + xmlFile.getName(), xmlFile.getName()});
+            configUrls.add(new String[]{"xbean:" + sampleConfDirPath + "/" + xmlFile.getName(), xmlFile.getName()});
         }
 
         return configUrls;
