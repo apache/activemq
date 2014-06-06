@@ -36,7 +36,7 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
 
     public ActiveMQDestination destination;
 
-    public void initCombosForTestDesintaionMarshaling() {
+    public void initCombosForTestDestinationMarshaling() {
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
                                                           new ActiveMQTopic("TEST"),
                                                           new ActiveMQTempQueue("TEST:1"),
@@ -49,18 +49,18 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
                                                           new ActiveMQTempTopic("TEST:1?option=value")});
     }
 
-    public void testDesintaionMarshaling() throws IOException {
+    public void testDestinationMarshaling() throws IOException {
         assertBeanMarshalls(destination);
     }
 
-    public void initCombosForTestDesintaionOptions() {
+    public void initCombosForTestDestinationOptions() {
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST?k1=v1&k2=v2"),
                                                           new ActiveMQTopic("TEST?k1=v1&k2=v2"),
                                                           new ActiveMQTempQueue("TEST:1?k1=v1&k2=v2"),
                                                           new ActiveMQTempTopic("TEST:1?k1=v1&k2=v2")});
     }
 
-    public void testDesintaionOptions() throws IOException {
+    public void testDestinationOptions() throws IOException {
         Map options = destination.getOptions();
         assertNotNull(options);
         assertEquals("v1", options.get("k1"));
@@ -125,4 +125,21 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+    public void testEmptyQueueName() {
+        try {
+            new ActiveMQQueue("");
+            fail("Should have thrown IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+
+        }
+    }
+
+    public void testEmptyTopicName() {
+        try {
+            new ActiveMQTopic("");
+            fail("Should have thrown IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+
+        }
+    }
 }

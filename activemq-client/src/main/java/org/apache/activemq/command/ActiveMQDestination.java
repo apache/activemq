@@ -42,7 +42,6 @@ import org.apache.activemq.util.URISupport;
 
 /**
  * @openwire:marshaller
- *
  */
 public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable<Object> {
 
@@ -85,7 +84,6 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         setCompositeDestinations(composites);
     }
 
-
     // static helper methods for working with destinations
     // -------------------------------------------------------------------------
     public static ActiveMQDestination createDestination(String name, byte defaultType) {
@@ -100,16 +98,16 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
 
         switch (defaultType) {
-        case QUEUE_TYPE:
-            return new ActiveMQQueue(name);
-        case TOPIC_TYPE:
-            return new ActiveMQTopic(name);
-        case TEMP_QUEUE_TYPE:
-            return new ActiveMQTempQueue(name);
-        case TEMP_TOPIC_TYPE:
-            return new ActiveMQTempTopic(name);
-        default:
-            throw new IllegalArgumentException("Invalid default destination type: " + defaultType);
+            case QUEUE_TYPE:
+                return new ActiveMQQueue(name);
+            case TOPIC_TYPE:
+                return new ActiveMQTopic(name);
+            case TEMP_QUEUE_TYPE:
+                return new ActiveMQTempQueue(name);
+            case TEMP_TOPIC_TYPE:
+                return new ActiveMQTempTopic(name);
+            default:
+                throw new IllegalArgumentException("Invalid default destination type: " + defaultType);
         }
     }
 
@@ -118,7 +116,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             return null;
         }
         if (dest instanceof ActiveMQDestination) {
-            return (ActiveMQDestination)dest;
+            return (ActiveMQDestination) dest;
         }
 
         if (dest instanceof Queue && dest instanceof Topic) {
@@ -133,16 +131,16 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             }
         }
         if (dest instanceof TemporaryQueue) {
-            return new ActiveMQTempQueue(((TemporaryQueue)dest).getQueueName());
+            return new ActiveMQTempQueue(((TemporaryQueue) dest).getQueueName());
         }
         if (dest instanceof TemporaryTopic) {
-            return new ActiveMQTempTopic(((TemporaryTopic)dest).getTopicName());
+            return new ActiveMQTempTopic(((TemporaryTopic) dest).getTopicName());
         }
         if (dest instanceof Queue) {
-            return new ActiveMQQueue(((Queue)dest).getQueueName());
+            return new ActiveMQQueue(((Queue) dest).getQueueName());
         }
         if (dest instanceof Topic) {
-            return new ActiveMQTopic(((Topic)dest).getTopicName());
+            return new ActiveMQTopic(((Topic) dest).getTopicName());
         }
         throw new JMSException("Could not transform the destination into a ActiveMQ destination: " + dest);
     }
@@ -167,7 +165,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     @Override
     public int compareTo(Object that) {
         if (that instanceof ActiveMQDestination) {
-            return compare(this, (ActiveMQDestination)that);
+            return compare(this, (ActiveMQDestination) that);
         }
         if (that == null) {
             return 1;
@@ -222,11 +220,16 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public void setPhysicalName(String physicalName) {
         physicalName = physicalName.trim();
-        final int len = physicalName.length();
+        final int length = physicalName.length();
+
+        if (physicalName.isEmpty()) {
+            throw new IllegalArgumentException("Invalid destination name: a non-empty name is required");
+        }
+
         // options offset
         int p = -1;
         boolean composite = false;
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < length; i++) {
             char c = physicalName.charAt(i);
             if (c == '?') {
                 p = i;
@@ -314,6 +317,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         return false;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -322,10 +326,11 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             return false;
         }
 
-        ActiveMQDestination d = (ActiveMQDestination)o;
+        ActiveMQDestination d = (ActiveMQDestination) o;
         return physicalName.equals(d.physicalName);
     }
 
+    @Override
     public int hashCode() {
         if (hashValue == 0) {
             hashValue = physicalName.hashCode();
@@ -333,33 +338,36 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         return hashValue;
     }
 
+    @Override
     public String toString() {
         return getQualifiedName();
     }
 
+    @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeUTF(this.getPhysicalName());
         out.writeObject(options);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.setPhysicalName(in.readUTF());
-        this.options = (Map<String, String>)in.readObject();
+        this.options = (Map<String, String>) in.readObject();
     }
 
     public String getDestinationTypeAsString() {
         switch (getDestinationType()) {
-        case QUEUE_TYPE:
-            return "Queue";
-        case TOPIC_TYPE:
-            return "Topic";
-        case TEMP_QUEUE_TYPE:
-            return "TempQueue";
-        case TEMP_TOPIC_TYPE:
-            return "TempTopic";
-        default:
-            throw new IllegalArgumentException("Invalid destination type: " + getDestinationType());
+            case QUEUE_TYPE:
+                return "Queue";
+            case TOPIC_TYPE:
+                return "Topic";
+            case TEMP_QUEUE_TYPE:
+                return "TempQueue";
+            case TEMP_TOPIC_TYPE:
+                return "TempTopic";
+            default:
+                throw new IllegalArgumentException("Invalid destination type: " + getDestinationType());
         }
     }
 
@@ -367,10 +375,12 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         return options;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return false;
     }
 
+    @Override
     public void buildFromProperties(Properties properties) {
         if (properties == null) {
             properties = new Properties();
@@ -379,6 +389,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         IntrospectionSupport.setProperties(this, properties);
     }
 
+    @Override
     public void populateProperties(Properties props) {
         props.setProperty("physicalName", getPhysicalName());
     }
