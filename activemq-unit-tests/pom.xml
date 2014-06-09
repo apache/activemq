@@ -29,10 +29,6 @@
   <name>ActiveMQ :: Unit Tests</name>
   <description>The ActiveMQ Message Broker and Client Unit Tests</description>
 
-  <properties>
-    <surefire.argLine>-Xmx512M -Djava.awt.headless=true</surefire.argLine>
-  </properties>
-
   <dependencies>
 
     <!-- =============================== -->
@@ -441,7 +437,7 @@
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <argLine>${surefire.argLine}</argLine>
+          <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
           <runOrder>alphabetical</runOrder>
           <excludes>
             <!-- temporarily exclude failing tests so that CI works; fix asap and reenable -->
@@ -451,23 +447,10 @@
             <exclude>**/RoundRobinDispatchPolicyTest.java</exclude>
             <exclude>**/SimpleDispatchPolicyTest.java</exclude>
           </excludes>
-          <systemProperties>
-            <property>
-              <name>org.apache.activemq.default.directory.prefix</name>
-              <value>target/</value>
-            </property>
-            <!-- Uncomment the following if you want to configure custom logging (using src/test/resources/log4j.properties)
-                 while running mvn:test
-                 Note: if you want to see log messages on the console window remove
-                       "redirectTestOutputToFile" from the parent pom
-            -->
-            <!--
-            <property>
-              <name>log4j.configuration</name>
-              <value>file:target/test-classes/log4j.properties</value>
-            </property>
-            -->
-          </systemProperties>
+          <systemPropertyVariables>
+            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+            <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+          </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>
           </includes>
