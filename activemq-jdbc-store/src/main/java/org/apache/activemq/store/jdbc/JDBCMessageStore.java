@@ -131,11 +131,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
         } finally {
             c.close();
         }
-        if (context != null && context.getXid() != null) {
-            message.getMessageId().setEntryLocator(sequenceId);
-        } else {
-            onAdd(messageId, sequenceId, message.getPriority());
-        }
+        message.getMessageId().setEntryLocator(sequenceId);
+        onAdd(messageId, sequenceId, message.getPriority());
     }
 
     @Override

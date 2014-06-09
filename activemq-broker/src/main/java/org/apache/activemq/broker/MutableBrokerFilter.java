@@ -83,6 +83,11 @@ public class MutableBrokerFilter implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return getNext().getDestinationMap(destination);
+    }
+
+    @Override
     public Set getDestinations(ActiveMQDestination destination) {
         return getNext().getDestinations(destination);
     }
