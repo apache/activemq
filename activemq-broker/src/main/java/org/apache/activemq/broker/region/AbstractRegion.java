@@ -249,12 +249,7 @@ public abstract class AbstractRegion implements Region {
     }
 
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
-        destinationsLock.readLock().lock();
-        try{
-            return destinations;
-        } finally {
-            destinationsLock.readLock().unlock();
-        }
+        return destinations;
     }
 
     @SuppressWarnings("unchecked")

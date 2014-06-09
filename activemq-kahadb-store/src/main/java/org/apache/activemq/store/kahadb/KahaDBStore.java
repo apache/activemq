@@ -281,8 +281,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         if (brokerService != null) {
             RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             if (regionBroker != null) {
-                Set<Destination> destinationSet = regionBroker.getDestinations(convert(commandDestination));
-                for (Destination destination : destinationSet) {
+                ActiveMQDestination activeMQDestination = convert(commandDestination);
+                Destination destination = regionBroker.getDestinationMap(activeMQDestination).get(activeMQDestination);
+                if (destination != null) {
                     destination.getDestinationStatistics().getMessages().decrement();
                     destination.getDestinationStatistics().getEnqueues().decrement();
                 }

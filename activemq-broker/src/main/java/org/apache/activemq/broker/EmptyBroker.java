@@ -78,6 +78,11 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return Collections.EMPTY_MAP;
+    }
+
+    @Override
     public Set getDestinations(ActiveMQDestination destination) {
         return Collections.EMPTY_SET;
     }

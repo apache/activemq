@@ -73,6 +73,11 @@ public class BrokerFilter implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return next.getDestinationMap(destination);
+    }
+
+    @Override
     public Set <Destination>getDestinations(ActiveMQDestination destination) {
         return next.getDestinations(destination);
     }

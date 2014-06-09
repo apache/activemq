@@ -76,7 +76,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     }
 
     protected boolean checkDestinationAdmin(SecurityContext securityContext, ActiveMQDestination destination) {
-        Destination existing = this.getDestinationMap().get(destination);
+        Destination existing = this.getDestinationMap(destination).get(destination);
         if (existing != null) {
             return true;
         }

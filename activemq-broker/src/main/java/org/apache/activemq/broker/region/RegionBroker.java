@@ -135,6 +135,15 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        try {
+            return getRegion(destination).getDestinationMap();
+        } catch (JMSException jmse) {
+            return Collections.emptyMap();
+        }
+    }
+
+    @Override
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
         try {
             return getRegion(destination).getDestinations(destination);

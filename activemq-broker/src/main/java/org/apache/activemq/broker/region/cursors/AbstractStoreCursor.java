@@ -100,8 +100,15 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             recovered = true;
             storeHasMessages = true;
         } else {
-            LOG.warn("{} - cursor got duplicate: {}, {}", new Object[]{ this, message.getMessageId(), message.getPriority() });
-            duplicate(message);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(this + " - cursor got duplicate: " + message.getMessageId() + "," + message.getPriority() + ", cached=" + cached, new Throwable("duplicate message detected"));
+            } else {
+                LOG.warn("{} - cursor got duplicate {}", regionDestination.getActiveMQDestination(), message.getMessageId());
+            }
+            if (!cached ||  message.getMessageId().getEntryLocator() != null) {
+                // came from the store or was added to the jdbc store
+                duplicate(message);
+            }
         }
         return recovered;
     }
@@ -195,8 +202,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                     lastCachedId = node.getMessageId();
                     lastTx = node.getMessage().getTransactionId();
                 } else {
-                    LOG.debug(this + " duplicate add {}", node.getMessage(), new Throwable("duplicated detected"));
                     dealWithDuplicates();
+                    return;
                 }
             }
         } else {
