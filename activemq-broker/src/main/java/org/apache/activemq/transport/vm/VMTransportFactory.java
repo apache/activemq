@@ -42,18 +42,20 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class VMTransportFactory extends TransportFactory {
-    
+
     public static final ConcurrentHashMap<String, BrokerService> BROKERS = new ConcurrentHashMap<String, BrokerService>();
     public static final ConcurrentHashMap<String, TransportConnector> CONNECTORS = new ConcurrentHashMap<String, TransportConnector>();
     public static final ConcurrentHashMap<String, VMTransportServer> SERVERS = new ConcurrentHashMap<String, VMTransportServer>();
     private static final Logger LOG = LoggerFactory.getLogger(VMTransportFactory.class);
-    
+
     BrokerFactoryHandler brokerFactoryHandler;
 
+    @Override
     public Transport doConnect(URI location) throws Exception {
         return VMTransportServer.configure(doCompositeConnect(location));
     }
 
+    @Override
     public Transport doCompositeConnect(URI location) throws Exception {
         URI brokerURI;
         String host;
@@ -64,7 +66,7 @@ public class VMTransportFactory extends TransportFactory {
         if (data.getComponents().length == 1 && "broker".equals(data.getComponents()[0].getScheme())) {
             brokerURI = data.getComponents()[0];
             CompositeData brokerData = URISupport.parseComposite(brokerURI);
-            host = (String)brokerData.getParameters().get("brokerName");
+            host = brokerData.getParameters().get("brokerName");
             if (host == null) {
                 host = "localhost";
             }
@@ -79,7 +81,7 @@ public class VMTransportFactory extends TransportFactory {
             try {
                 host = extractHost(location);
                 options = URISupport.parseParameters(location);
-                String config = (String)options.remove("brokerConfig");
+                String config = options.remove("brokerConfig");
                 if (config != null) {
                     brokerURI = new URI(config);
                 } else {
@@ -170,32 +172,50 @@ public class VMTransportFactory extends TransportFactory {
        return host;
     }
 
-/**
+   /**
+    * Attempt to find a Broker instance.
+    *
     * @param registry
+    *        the registry in which to search for the BrokerService instance.
     * @param brokerName
-    * @param waitForStart - time in milliseconds to wait for a broker to appear
-    * @return
+    *        the name of the Broker that should be located.
+    * @param waitForStart
+    *        time in milliseconds to wait for a broker to appear and be started.
+    *
+    * @return a BrokerService instance if one is found, or null.
     */
     private BrokerService lookupBroker(final BrokerRegistry registry, final String brokerName, int waitForStart) {
         BrokerService broker = null;
         synchronized(registry.getRegistryMutext()) {
             broker = registry.lookup(brokerName);
-            if (broker == null && waitForStart > 0) {
+            if (broker == null || waitForStart > 0) {
                 final long expiry = System.currentTimeMillis() + waitForStart;
                 while ((broker == null || !broker.isStarted()) && expiry > System.currentTimeMillis()) {
                     long timeout = Math.max(0, expiry - System.currentTimeMillis());
                     try {
-                        LOG.debug("waiting for broker named: " + brokerName + " to start");
+                        LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
                         registry.getRegistryMutext().wait(timeout);
                     } catch (InterruptedException ignored) {
                     }
                     broker = registry.lookup(brokerName);
+                    if (broker != null && !broker.isStarted()) {
+                        LOG.debug("waiting for broker named: " + brokerName + " to start");
+                        timeout = Math.max(0, expiry - System.currentTimeMillis());
+                        // Wait for however long we have left for broker to be started, if
+                        // it doesn't get started we need to clear broker so it doesn't get
+                        // returned.  A null return should throw an exception.
+                        if (!broker.waitUntilStarted(timeout)) {
+                            broker = null;
+                            break;
+                        }
+                    }
                 }
             }
         }
         return broker;
     }
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         return bind(location, false);
     }

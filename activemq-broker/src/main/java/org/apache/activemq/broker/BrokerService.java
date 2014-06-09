@@ -921,8 +921,21 @@ public class BrokerService implements Service {
      * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
     public boolean waitUntilStarted() {
+        return waitUntilStarted(Long.MAX_VALUE);
+    }
+
+    /**
+     * A helper method to block the caller thread until the broker has fully started
+     *
+     * @param timeout
+     *        the amount of time to wait before giving up and returning false.
+     *
+     * @return boolean true if wait succeeded false if broker was not started or was stopped
+     */
+    public boolean waitUntilStarted(long timeout) {
         boolean waitSucceeded = isStarted();
-        while (!isStarted() && !stopped.get() && !waitSucceeded) {
+        long expiration = Math.max(0, timeout + System.currentTimeMillis());
+        while (!isStarted() && !stopped.get() && !waitSucceeded && expiration > System.currentTimeMillis()) {
             try {
                 if (startException != null) {
                     return waitSucceeded;
