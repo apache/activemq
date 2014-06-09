@@ -85,7 +85,7 @@ public class VMTransportFactory extends TransportFactory {
                 if (config != null) {
                     brokerURI = new URI(config);
                 } else {
-                    Map brokerOptions = IntrospectionSupport.extractProperties(options, "broker.");
+                    Map<String, Object> brokerOptions = IntrospectionSupport.extractProperties(options, "broker.");
                     brokerURI = new URI("broker://()/" + host + "?"
                                         + URISupport.createQueryString(brokerOptions));
                 }
@@ -192,12 +192,13 @@ public class VMTransportFactory extends TransportFactory {
                 final long expiry = System.currentTimeMillis() + waitForStart;
                 while ((broker == null || !broker.isStarted()) && expiry > System.currentTimeMillis()) {
                     long timeout = Math.max(0, expiry - System.currentTimeMillis());
-                    try {
-                        LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
-                        registry.getRegistryMutext().wait(timeout);
-                    } catch (InterruptedException ignored) {
+                    if (broker == null) {
+                        try {
+                            LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
+                            registry.getRegistryMutext().wait(timeout);
+                        } catch (InterruptedException ignored) {
+                        }
                     }
-                    broker = registry.lookup(brokerName);
                     if (broker != null && !broker.isStarted()) {
                         LOG.debug("waiting for broker named: " + brokerName + " to start");
                         timeout = Math.max(0, expiry - System.currentTimeMillis());
