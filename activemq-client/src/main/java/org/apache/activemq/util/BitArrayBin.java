@@ -21,21 +21,21 @@ import java.util.LinkedList;
 
 /**
  * Holder for many bitArrays - used for message audit
- * 
- * 
+ *
+ *
  */
 public class BitArrayBin implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private LinkedList<BitArray> list;
+    private final LinkedList<BitArray> list;
     private int maxNumberOfArrays;
-    private int firstIndex = -1;
+    private long firstIndex = -1;
     private long lastInOrderBit=-1;
 
     /**
      * Create a BitArrayBin to a certain window size (number of messages to
      * keep)
-     * 
+     *
      * @param windowSize
      */
     public BitArrayBin(int windowSize) {
@@ -49,7 +49,7 @@ public class BitArrayBin implements Serializable {
 
     /**
      * Set a bit
-     * 
+     *
      * @param index
      * @param value
      * @return true if set
@@ -65,7 +65,7 @@ public class BitArrayBin implements Serializable {
         }
         return answer;
     }
-    
+
     /**
      * Test if in order
      * @param index
@@ -85,7 +85,7 @@ public class BitArrayBin implements Serializable {
 
     /**
      * Get the boolean value at the index
-     * 
+     *
      * @param index
      * @return true/false
      */
@@ -107,7 +107,7 @@ public class BitArrayBin implements Serializable {
 
     /**
      * Get the BitArray for the index
-     * 
+     *
      * @param index
      * @return BitArray
      */
@@ -123,7 +123,7 @@ public class BitArrayBin implements Serializable {
                     list.add(new BitArray());
                     overShoot--;
                 }
-                
+
                 bin = maxNumberOfArrays - 1;
             }
             answer = list.get(bin);
@@ -137,7 +137,7 @@ public class BitArrayBin implements Serializable {
 
     /**
      * Get the index of the bin from the total index
-     * 
+     *
      * @param index
      * @return the index of the bin
      */
@@ -153,7 +153,7 @@ public class BitArrayBin implements Serializable {
 
     /**
      * Get the offset into a bin from the total index
-     * 
+     *
      * @param index
      * @return the relative offset into a bin
      */
@@ -167,9 +167,9 @@ public class BitArrayBin implements Serializable {
 
     public long getLastSetIndex() {
         long result = -1;
-        
+
         if (firstIndex >=0) {
-            result = firstIndex;   
+            result = firstIndex;
             BitArray last = null;
             for (int lastBitArrayIndex = maxNumberOfArrays -1; lastBitArrayIndex >= 0; lastBitArrayIndex--) {
                 last = list.get(lastBitArrayIndex);
