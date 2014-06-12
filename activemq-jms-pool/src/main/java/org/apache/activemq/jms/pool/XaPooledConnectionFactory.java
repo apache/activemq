@@ -18,14 +18,13 @@ package org.apache.activemq.jms.pool;
 
 import java.io.Serializable;
 import java.util.Hashtable;
+
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
-import javax.jms.XAConnectionFactory;
 import javax.naming.Binding;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -38,13 +37,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A pooled connection factory that automatically enlists
- * sessions in the current active XA transaction if any.
+ * A pooled connection factory that automatically enlists sessions in the
+ * current active XA transaction if any.
  */
-public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory,
-        Serializable, QueueConnectionFactory, TopicConnectionFactory {
+public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory, Serializable, QueueConnectionFactory, TopicConnectionFactory {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(XaPooledConnectionFactory.class);
+    private static final long serialVersionUID = -6545688026350913005L;
+
     private TransactionManager transactionManager;
     private boolean tmFromJndi = false;
     private String tmJndiName = "java:/TransactionManager";
@@ -87,10 +87,10 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
             name = name.substring(0, name.lastIndexOf('/')) + "/conf" + name.substring(name.lastIndexOf('/'));
             try {
                 InitialContext ctx = new InitialContext();
-                NamingEnumeration bindings = ctx.listBindings(name);
+                NamingEnumeration<Binding> bindings = ctx.listBindings(name);
 
                 while (bindings.hasMore()) {
-                    Binding bd = (Binding)bindings.next();
+                    Binding bd = bindings.next();
                     IntrospectionSupport.setProperty(this, bd.getName(), bd.getObject());
                 }
 
@@ -116,6 +116,7 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
 
     /**
      * Allow transaction manager resolution from JNDI (ee deployment)
+     *
      * @param tmFromJndi
      */
     public void setTmFromJndi(boolean tmFromJndi) {
@@ -141,5 +142,4 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
         return (TopicConnection) createConnection(userName, password);
     }
-
 }

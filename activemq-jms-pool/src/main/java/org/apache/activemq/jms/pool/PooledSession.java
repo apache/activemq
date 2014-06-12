@@ -19,6 +19,7 @@ package org.apache.activemq.jms.pool;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -54,10 +55,11 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledSession.class);
 
     private final SessionKey key;
-    private final KeyedObjectPool<SessionKey, PooledSession> sessionPool;
+    private final KeyedObjectPool<SessionKey, Session> sessionPool;
     private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
     private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
     private final CopyOnWriteArrayList<PooledSessionEventListener> sessionEventListeners = new CopyOnWriteArrayList<PooledSessionEventListener>();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     private MessageProducer producer;
     private TopicPublisher publisher;
@@ -69,7 +71,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     private boolean isXa;
     private boolean useAnonymousProducers = true;
 
-    public PooledSession(SessionKey key, Session session, KeyedObjectPool<SessionKey, PooledSession> sessionPool, boolean transactional, boolean anonymous) {
+    public PooledSession(SessionKey key, Session session, KeyedObjectPool<SessionKey, Session> sessionPool, boolean transactional, boolean anonymous) {
         this.key = key;
         this.session = session;
         this.sessionPool = sessionPool;
@@ -94,7 +96,11 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public void close() throws JMSException {
-        if (!ignoreClose) {
+        if (ignoreClose) {
+            return;
+        }
+
+        if (closed.compareAndSet(false, true)) {
             boolean invalidate = false;
             try {
                 // lets reset the session
@@ -140,22 +146,23 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                     } catch (JMSException e1) {
                         LOG.trace("Ignoring exception on close as discarding session: " + e1, e1);
                     }
-                    session = null;
                 }
                 try {
-                    sessionPool.invalidateObject(key, this);
+                    sessionPool.invalidateObject(key, session);
                 } catch (Exception e) {
                     LOG.trace("Ignoring exception on invalidateObject as discarding session: " + e, e);
                 }
             } else {
                 try {
-                    sessionPool.returnObject(key, this);
+                    sessionPool.returnObject(key, session);
                 } catch (Exception e) {
                     javax.jms.IllegalStateException illegalStateException = new javax.jms.IllegalStateException(e.toString());
                     illegalStateException.initCause(e);
                     throw illegalStateException;
                 }
             }
+
+            session = null;
         }
     }
 
