@@ -19,8 +19,6 @@ package org.apache.activemq.jms.pool;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
 import javax.jms.XAConnection;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
@@ -65,22 +63,6 @@ public class XaConnectionPool extends ConnectionPool {
             }
             PooledSession session = (PooledSession) super.createSession(transacted, ackMode);
             if (isXa) {
-                session.addSessionEventListener(new PooledSessionEventListener() {
-
-                    @Override
-                    public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
-                    }
-
-                    @Override
-                    public void onTemporaryTopicCreate(TemporaryTopic tempTopic) {
-                    }
-
-                    @Override
-                    public void onSessionClosed(PooledSession session) {
-                        session.setIgnoreClose(true);
-                        session.setIsXa(false);
-                    }
-                });
                 session.setIgnoreClose(true);
                 session.setIsXa(true);
                 transactionManager.getTransaction().registerSynchronization(new Synchronization(session));
