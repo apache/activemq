@@ -161,7 +161,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
      * <p/>
      * Updates to this value do not affect Connections that were previously created and placed
      * into the pool.  In order to allocate new Connections based off this new ConnectionFactory
-     * it is first necessary to {@link clear} the pooled Connections.
+     * it is first necessary to {@link #clear} the pooled Connections.
      *
      * @param toUse
      *      The factory to use to create pooled Connections.
@@ -290,7 +290,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
     /**
      * Clears all connections from the pool.  Each connection that is currently in the pool is
      * closed and removed from the pool.  A new connection will be created on the next call to
-     * {@link createConnection}.  Care should be taken when using this method as Connections that
+     * {@link #createConnection}.  Care should be taken when using this method as Connections that
      * are in use be client's will be closed.
      */
     public void clear() {
@@ -352,7 +352,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
 
     /**
      * Returns the maximum number to pooled Connections that this factory will allow before it
-     * begins to return connections from the pool on calls to ({@link createConnection}.
+     * begins to return connections from the pool on calls to ({@link #createConnection}.
      *
      * @return the maxConnections that will be created for this pool.
      */
@@ -362,7 +362,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
 
     /**
      * Sets the maximum number of pooled Connections (defaults to one).  Each call to
-     * {@link createConnection} will result in a new Connection being create up to the max
+     * {@link #createConnection} will result in a new Connection being create up to the max
      * connections value.
      *
      * @param maxConnections the maxConnections to set
