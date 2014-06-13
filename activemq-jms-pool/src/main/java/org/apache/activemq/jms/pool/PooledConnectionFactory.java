@@ -22,6 +22,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.jms.XAConnectionFactory;
 
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
@@ -58,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * configure the idle eviction thread to run.
  *
  */
-public class PooledConnectionFactory implements ConnectionFactory {
+public class PooledConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
 
     protected final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -181,6 +185,26 @@ public class PooledConnectionFactory implements ConnectionFactory {
         } else {
             this.connectionFactory = toUse;
         }
+    }
+
+    @Override
+    public QueueConnection createQueueConnection() throws JMSException {
+        return (QueueConnection) createConnection();
+    }
+
+    @Override
+    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
+        return (QueueConnection) createConnection(userName, password);
+    }
+
+    @Override
+    public TopicConnection createTopicConnection() throws JMSException {
+        return (TopicConnection) createConnection();
+    }
+
+    @Override
+    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
+        return (TopicConnection) createConnection(userName, password);
     }
 
     @Override

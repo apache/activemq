@@ -20,11 +20,6 @@ import java.io.Serializable;
 import java.util.Hashtable;
 
 import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
 import javax.naming.Binding;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -40,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * A pooled connection factory that automatically enlists sessions in the
  * current active XA transaction if any.
  */
-public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory, Serializable, QueueConnectionFactory, TopicConnectionFactory {
+public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory, Serializable {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(XaPooledConnectionFactory.class);
     private static final long serialVersionUID = -6545688026350913005L;
@@ -121,25 +116,5 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
      */
     public void setTmFromJndi(boolean tmFromJndi) {
         this.tmFromJndi = tmFromJndi;
-    }
-
-    @Override
-    public QueueConnection createQueueConnection() throws JMSException {
-        return (QueueConnection) createConnection();
-    }
-
-    @Override
-    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
-        return (QueueConnection) createConnection(userName, password);
-    }
-
-    @Override
-    public TopicConnection createTopicConnection() throws JMSException {
-        return (TopicConnection) createConnection();
-    }
-
-    @Override
-    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
-        return (TopicConnection) createConnection(userName, password);
     }
 }

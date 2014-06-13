@@ -32,7 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.Session;
+import javax.jms.TopicConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -54,6 +56,13 @@ import org.junit.Test;
 public class PooledConnectionFactoryTest {
 
     public final static Logger LOG = Logger.getLogger(PooledConnectionFactoryTest.class);
+
+    @Test
+    public void testInstanceOf() throws  Exception {
+        PooledConnectionFactory pcf = new PooledConnectionFactory();
+        assertTrue(pcf instanceof QueueConnectionFactory);
+        assertTrue(pcf instanceof TopicConnectionFactory);
+    }
 
     @Test
     public void testClearAllConnections() throws Exception {
