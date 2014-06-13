@@ -40,7 +40,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.util.Wait;
 import org.apache.log4j.Logger;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -197,7 +196,6 @@ public class PooledConnectionFactoryTest {
         doTestConcurrentCreateGetsUniqueConnection(false);
     }
 
-    @Ignore("something up - don't know why the start call to createConnection does not cause close - but that does not fix it either!")
     @Test
     public void testConcurrentCreateGetsUniqueConnectionCreateOnStart() throws Exception {
         doTestConcurrentCreateGetsUniqueConnection(true);
