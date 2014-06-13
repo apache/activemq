@@ -26,7 +26,6 @@ import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
-import javax.jms.XAConnectionFactory;
 
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
@@ -68,7 +67,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     protected final AtomicBoolean stopped = new AtomicBoolean(false);
     private GenericKeyedObjectPool<ConnectionKey, ConnectionPool> connectionsPool;
 
-    private ConnectionFactory connectionFactory;
+    protected Object connectionFactory;
 
     private int maximumActiveSessionPerConnection = 500;
     private int idleTimeout = 30 * 1000;
@@ -156,7 +155,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     /**
      * @return the currently configured ConnectionFactory used to create the pooled Connections.
      */
-    public ConnectionFactory getConnectionFactory() {
+    public Object getConnectionFactory() {
         return connectionFactory;
     }
 
@@ -170,20 +169,11 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @param toUse
      *      The factory to use to create pooled Connections.
      */
-    public void setConnectionFactory(final ConnectionFactory toUse) {
-        if (toUse instanceof XAConnectionFactory) {
-            connectionFactory = new ConnectionFactory() {
-                @Override
-                public Connection createConnection() throws JMSException {
-                    return ((XAConnectionFactory)toUse).createXAConnection();
-                }
-                @Override
-                public Connection createConnection(String userName, String password) throws JMSException {
-                    return ((XAConnectionFactory)toUse).createXAConnection(userName, password);
-                }
-            };
-        } else {
+    public void setConnectionFactory(final Object toUse) {
+        if (toUse instanceof ConnectionFactory) {
             this.connectionFactory = toUse;
+        } else {
+            throw new IllegalArgumentException("connectionFactory should implement javax.jmx.ConnectionFactory");
         }
     }
 
@@ -278,10 +268,14 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     }
 
     protected Connection createConnection(ConnectionKey key) throws JMSException {
-        if (key.getUserName() == null && key.getPassword() == null) {
-            return connectionFactory.createConnection();
+        if (connectionFactory instanceof ConnectionFactory) {
+            if (key.getUserName() == null && key.getPassword() == null) {
+                return ((ConnectionFactory) connectionFactory).createConnection();
+            } else {
+                return ((ConnectionFactory) connectionFactory).createConnection(key.getUserName(), key.getPassword());
+            }
         } else {
-            return connectionFactory.createConnection(key.getUserName(), key.getPassword());
+            throw new IllegalStateException("connectionFactory should implement javax.jms.ConnectionFactory");
         }
     }
 

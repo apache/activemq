@@ -20,6 +20,8 @@ import java.io.Serializable;
 import java.util.Hashtable;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.XAConnectionFactory;
 import javax.naming.Binding;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -59,6 +61,28 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
 
     public void setTransactionManager(TransactionManager transactionManager) {
         this.transactionManager = transactionManager;
+    }
+
+    @Override
+    public void setConnectionFactory(Object toUse) {
+        if (toUse instanceof XAConnectionFactory) {
+            connectionFactory = toUse;
+        } else {
+            throw new IllegalArgumentException("connectionFactory should implement javax.xml.XAConnectionFactory");
+        }
+    }
+
+    @Override
+    protected Connection createConnection(ConnectionKey key) throws JMSException {
+        if (connectionFactory instanceof XAConnectionFactory) {
+            if (key.getUserName() == null && key.getPassword() == null) {
+                return ((XAConnectionFactory) connectionFactory).createXAConnection();
+            } else {
+                return ((XAConnectionFactory) connectionFactory).createXAConnection(key.getUserName(), key.getPassword());
+            }
+        } else {
+            throw new IllegalStateException("connectionFactory should implement javax.jms.XAConnectionFactory");
+        }
     }
 
     @Override
