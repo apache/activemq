@@ -28,6 +28,7 @@
   <artifactId>activemq-jms-pool</artifactId>
   <name>ActiveMQ :: Generic JMS Pool</name>
   <description>Generic JMS Pooled ConnectionFactory</description>
+  <packaging>bundle</packaging>
 
   <properties>
     <activemq.osgi.import.pkg>
