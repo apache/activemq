@@ -71,7 +71,7 @@
     <httpcore-version>4.2.4</httpcore-version>
     <insight-version>7.2.0.redhat-024</insight-version>
     <jackson-version>1.9.12</jackson-version>
-    <jasypt-version>1.9.1</jasypt-version>
+    <jasypt-version>1.9.2</jasypt-version>
     <jaxb-bundle-version>2.2.1.1_2</jaxb-bundle-version>
     <jdom-version>1.0</jdom-version>
     <jetty-version>7.6.9.v20130131</jetty-version>
@@ -112,7 +112,7 @@
     <scalatest-version>2.1.5</scalatest-version>
     <slf4j-version>1.7.5</slf4j-version>
     <snappy-version>1.1.0.1</snappy-version>
-    <spring-version>3.2.8.RELEASE</spring-version>
+    <spring-version>3.2.9.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <velocity-version>1.7</velocity-version>
