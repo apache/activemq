@@ -602,7 +602,7 @@ public class FailoverTransport implements CompositeTransport {
                                 LOG.trace("Waiting for transport to reconnect..: " + command);
                             }
                             long end = System.currentTimeMillis();
-                            if (timeout > 0 && (end - start > timeout)) {
+                            if (command.isMessage() && timeout > 0 && (end - start > timeout)) {
                                 timedout = true;
                                 if (LOG.isInfoEnabled()) {
                                     LOG.info("Failover timed out after " + (end - start) + "ms");
