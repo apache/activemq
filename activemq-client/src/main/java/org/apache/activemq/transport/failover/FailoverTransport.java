@@ -128,6 +128,7 @@ public class FailoverTransport implements CompositeTransport {
     private final ArrayList<URI> priorityList = new ArrayList<URI>();
     private boolean priorityBackupAvailable = false;
     private String nestedExtraQueryOptions;
+    private boolean shuttingDown = false;
 
     public FailoverTransport() throws InterruptedIOException {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -242,6 +243,12 @@ public class FailoverTransport implements CompositeTransport {
 
     public final void handleTransportFailure(IOException e) throws InterruptedException {
         synchronized (reconnectMutex) {
+            if (shuttingDown) {
+                // shutdown info sent and remote socket closed and we see that before a local close
+                // let the close do the work
+                return;
+            }
+
             if (LOG.isTraceEnabled()) {
                 LOG.trace(this + " handleTransportFailure: " + e, e);
             }
@@ -257,7 +264,7 @@ public class FailoverTransport implements CompositeTransport {
                 if (canReconnect()) {
                     reconnectOk = true;
                 }
-                LOG.warn("Transport (" + transport + ") failed, reason:  "
+                LOG.warn("Transport (" + transport + ") failed"
                         + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect", e);
 
                 initialized = false;
@@ -657,6 +664,9 @@ public class FailoverTransport implements CompositeTransport {
                         try {
                             transport.oneway(command);
                             stateTracker.trackBack(command);
+                            if (command.isShutdownInfo()) {
+                                shuttingDown = true;
+                            }
                         } catch (IOException e) {
 
                             // If the command was not tracked.. we will retry in
