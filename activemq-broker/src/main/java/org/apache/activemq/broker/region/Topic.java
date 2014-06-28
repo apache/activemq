@@ -560,7 +560,7 @@ public class Topic extends BaseDestination implements Task {
         }
 
         if (getExpireMessagesPeriod() > 0) {
-            scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
         }
     }
 

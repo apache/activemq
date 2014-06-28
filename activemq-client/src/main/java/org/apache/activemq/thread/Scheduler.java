@@ -27,28 +27,16 @@ import org.apache.activemq.util.ServiceSupport;
  *
  */
 public final class Scheduler extends ServiceSupport {
+
     private final String name;
     private Timer timer;
     private final HashMap<Runnable, TimerTask> timerTasks = new HashMap<Runnable, TimerTask>();
 
-    public Scheduler (String name) {
+    public Scheduler(String name) {
         this.name = name;
     }
 
-    public void executePeriodically(final Runnable task, long period) {
-        TimerTask timerTask = new SchedulerTimerTask(task);
-        timer.schedule(timerTask, period, period);
-        timerTasks.put(task, timerTask);
-    }
-
-    /*
-     * execute on rough schedule based on termination of last execution. There is no
-     * compensation (two runs in quick succession) for delays
-     *
-     * @deprecated use {@link #executePeriodically}
-     */
-    @Deprecated
-    public synchronized void schedualPeriodically(final Runnable task, long period) {
+    public synchronized void executePeriodically(final Runnable task, long period) {
         TimerTask timerTask = new SchedulerTimerTask(task);
         timer.schedule(timerTask, period, period);
         timerTasks.put(task, timerTask);
@@ -78,9 +66,9 @@ public final class Scheduler extends ServiceSupport {
 
     @Override
     protected synchronized void doStop(ServiceStopper stopper) throws Exception {
-       if (this.timer != null) {
-           this.timer.cancel();
-       }
+        if (this.timer != null) {
+            this.timer.cancel();
+        }
     }
 
     public String getName() {
