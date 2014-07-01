@@ -59,7 +59,7 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     }
 
-    static final private ArrayList<Command> pendingCommands = new ArrayList<Command>();
+    final private ArrayList<Command> pendingCommands = new ArrayList<Command>();
 
     public AMQPProtocolDiscriminator(AmqpTransport transport) {
         this.transport = transport;
