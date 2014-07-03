@@ -138,6 +138,7 @@ public class BrokerService implements Service {
     public static final String BROKER_VERSION;
     public static final String DEFAULT_BROKER_NAME = "localhost";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
+    public static final long DEFAULT_START_TIMEOUT = 600000L;
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
 
@@ -157,7 +158,7 @@ public class BrokerService implements Service {
     private boolean shutdownOnMasterFailure;
     private boolean shutdownOnSlaveFailure;
     private boolean waitForSlave;
-    private long waitForSlaveTimeout = 600000L;
+    private long waitForSlaveTimeout = DEFAULT_START_TIMEOUT;
     private boolean passiveSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
@@ -249,7 +250,6 @@ public class BrokerService implements Service {
     private boolean restartRequested = false;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
-    private String configurationUrl;
 
     static {
 
@@ -921,7 +921,7 @@ public class BrokerService implements Service {
      * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
     public boolean waitUntilStarted() {
-        return waitUntilStarted(Long.MAX_VALUE);
+        return waitUntilStarted(DEFAULT_START_TIMEOUT);
     }
 
     /**
