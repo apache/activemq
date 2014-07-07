@@ -267,7 +267,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
         if (isCreateConnectionOnStartup()) {
             try {
                 // warm the pool by creating a connection during startup
-                createConnection();
+                createConnection().close();
             } catch (JMSException e) {
                 LOG.warn("Create pooled connection during start failed. This exception will be ignored.", e);
             }
