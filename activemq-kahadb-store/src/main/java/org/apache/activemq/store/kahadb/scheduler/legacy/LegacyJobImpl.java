@@ -14,75 +14,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.kahadb.scheduler;
+package org.apache.activemq.store.kahadb.scheduler.legacy;
 
-import org.apache.activemq.broker.scheduler.Job;
-import org.apache.activemq.broker.scheduler.JobSupport;
+import org.apache.activemq.protobuf.Buffer;
 import org.apache.activemq.util.ByteSequence;
 
-public class JobImpl implements Job {
+/**
+ * Legacy version Job and Job payload wrapper.  Allows for easy replay of stored
+ * legacy jobs into a new JobSchedulerStoreImpl intsance.
+ */
+final class LegacyJobImpl {
 
-    private final JobLocation jobLocation;
-    private final byte[] payload;
+    private final LegacyJobLocation jobLocation;
+    private final Buffer payload;
 
-    protected JobImpl(JobLocation location, ByteSequence bs) {
+    protected LegacyJobImpl(LegacyJobLocation location, ByteSequence payload) {
         this.jobLocation = location;
-        this.payload = new byte[bs.getLength()];
-        System.arraycopy(bs.getData(), bs.getOffset(), this.payload, 0, bs.getLength());
+        this.payload = new Buffer(payload.data, payload.offset, payload.length);
     }
 
-    @Override
     public String getJobId() {
         return this.jobLocation.getJobId();
     }
 
-    @Override
-    public byte[] getPayload() {
-        return this.payload;
+    public Buffer getPayload() {
+       return this.payload;
     }
 
-    @Override
     public long getPeriod() {
-        return this.jobLocation.getPeriod();
+       return this.jobLocation.getPeriod();
     }
 
-    @Override
     public int getRepeat() {
-        return this.jobLocation.getRepeat();
+       return this.jobLocation.getRepeat();
     }
 
-    @Override
-    public long getStart() {
-        return this.jobLocation.getStartTime();
-    }
-
-    @Override
     public long getDelay() {
         return this.jobLocation.getDelay();
     }
 
-    @Override
     public String getCronEntry() {
         return this.jobLocation.getCronEntry();
     }
 
-    @Override
-    public String getNextExecutionTime() {
-        return JobSupport.getDateTime(this.jobLocation.getNextTime());
+    public long getNextExecutionTime() {
+        return this.jobLocation.getNextTime();
     }
 
-    @Override
-    public String getStartTime() {
-        return JobSupport.getDateTime(getStart());
-    }
-
-    @Override
-    public int getExecutionCount() {
-        return this.jobLocation.getRescheduledCount();
+    public long getStartTime() {
+        return this.jobLocation.getStartTime();
     }
 
     @Override
     public String toString() {
-        return "Job: " + getJobId();
+        return this.jobLocation.toString();
     }
 }

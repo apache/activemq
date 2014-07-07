@@ -32,6 +32,11 @@ enum KahaEntryType {
   KAHA_PRODUCER_AUDIT_COMMAND = 8;
   KAHA_ACK_MESSAGE_FILE_MAP_COMMAND = 9;
   KAHA_UPDATE_MESSAGE_COMMAND = 10;
+  KAHA_ADD_SCHEDULED_JOB_COMMAND = 11;
+  KAHA_RESCHEDULE_JOB_COMMAND = 12;
+  KAHA_REMOVE_SCHEDULED_JOB_COMMAND = 13;
+  KAHA_REMOVE_SCHEDULED_JOBS_COMMAND = 14;
+  KAHA_DESTROY_SCHEDULER_COMMAND = 15;
 }
 
 message KahaTraceCommand {
@@ -177,6 +182,62 @@ message KahaXATransactionId {
 message KahaLocation {
   required int32 log_id = 1;
   required int32 offset = 2;
+}
+
+message KahaAddScheduledJobCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaAddScheduledJobCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required string scheduler=1;
+  required string job_id=2;
+  required int64 start_time=3;
+  required string cron_entry=4;
+  required int64 delay=5;
+  required int64 period=6;
+  required int32 repeat=7;
+  required bytes payload=8;
+  required int64 next_execution_time=9;
+}
+
+message KahaRescheduleJobCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRescheduleJobCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required string scheduler=1;
+  required string job_id=2;
+  required int64 execution_time=3;
+  required int64 next_execution_time=4;
+  required int32 rescheduled_count=5;
+}
+
+message KahaRemoveScheduledJobCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRemoveScheduledJobCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required string scheduler=1;
+  required string job_id=2;
+  required int64 next_execution_time=3;
+}
+
+message KahaRemoveScheduledJobsCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRemoveScheduledJobsCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required string scheduler=1;
+  required int64 start_time=2;
+  required int64 end_time=3;
+}
+
+message KahaDestroySchedulerCommand {
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaDestroySchedulerCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required string scheduler=1;
 }
 
 // TODO things to ponder

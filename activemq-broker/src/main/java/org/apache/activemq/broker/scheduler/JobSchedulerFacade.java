@@ -21,6 +21,12 @@ import java.util.List;
 
 import org.apache.activemq.util.ByteSequence;
 
+/**
+ * A wrapper for instances of the JobScheduler interface that ensures that methods
+ * provides safe and sane return values and can deal with null values being passed
+ * in etc.  Provides a measure of safety when using unknown implementations of the
+ * JobSchedulerStore which might not always do the right thing.
+ */
 public class JobSchedulerFacade implements JobScheduler {
 
     private final SchedulerBroker broker;

@@ -31,16 +31,24 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.store.*;
+import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.ListenableFuture;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.ProxyMessageStore;
+import org.apache.activemq.store.ProxyTopicMessageStore;
+import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionRecoveryListener;
+import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,6 +194,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return inflightTransactions.remove(txid);
     }
 
+    @Override
     public void prepare(TransactionId txid) throws IOException {
         Tx tx = getTx(txid);
         for (TransactionStore store : tx.getStores()) {
@@ -193,6 +202,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
+    @Override
     public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit, Runnable postCommit)
             throws IOException {
 
@@ -247,6 +257,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return location;
     }
 
+    @Override
     public void rollback(TransactionId txid) throws IOException {
         Tx tx = removeTx(txid);
         if (tx != null) {
@@ -256,6 +267,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
+    @Override
     public void start() throws Exception {
         journal = new Journal() {
             @Override
@@ -289,6 +301,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return new File(multiKahaDBPersistenceAdapter.getDirectory(), "txStore");
     }
 
+    @Override
     public void stop() throws Exception {
         journal.close();
         journal = null;
@@ -334,6 +347,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
 
+    @Override
     public synchronized void recover(final TransactionRecoveryListener listener) throws IOException {
 
         for (final PersistenceAdapter adapter : multiKahaDBPersistenceAdapter.adapters) {

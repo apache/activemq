@@ -22,12 +22,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -51,31 +52,35 @@ import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
+import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
 import org.apache.activemq.store.kahadb.data.KahaLocation;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
-import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
+import org.apache.activemq.store.kahadb.disk.journal.Location;
+import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
-import org.apache.activemq.store.kahadb.disk.journal.Location;
-import org.apache.activemq.store.kahadb.disk.page.Transaction;
 
 public class TempKahaDBStore extends TempMessageDatabase implements PersistenceAdapter, BrokerServiceAware {
 
     private final WireFormat wireFormat = new OpenWireFormat();
     private BrokerService brokerService;
 
+    @Override
     public void setBrokerName(String brokerName) {
     }
+    @Override
     public void setUsageManager(SystemUsage usageManager) {
     }
 
+    @Override
     public TransactionStore createTransactionStore() throws IOException {
         return new TransactionStore(){
-            
+
+            @Override
             public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit,Runnable postCommit) throws IOException {
                 if (preCommit != null) {
                     preCommit.run();
@@ -85,18 +90,21 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                     postCommit.run();
                 }
             }
+            @Override
             public void prepare(TransactionId txid) throws IOException {
-            	processPrepare(txid);
+                processPrepare(txid);
             }
+            @Override
             public void rollback(TransactionId txid) throws IOException {
-            	processRollback(txid);
+                processRollback(txid);
             }
+            @Override
             public void recover(TransactionRecoveryListener listener) throws IOException {
                 for (Map.Entry<TransactionId, ArrayList<Operation>> entry : preparedTransactions.entrySet()) {
                     XATransactionId xid = (XATransactionId)entry.getKey();
                     ArrayList<Message> messageList = new ArrayList<Message>();
                     ArrayList<MessageAck> ackList = new ArrayList<MessageAck>();
-                    
+
                     for (Operation op : entry.getValue()) {
                         if( op.getClass() == AddOpperation.class ) {
                             AddOpperation addOp = (AddOpperation)op;
@@ -108,7 +116,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                             ackList.add(ack);
                         }
                     }
-                    
+
                     Message[] addedMessages = new Message[messageList.size()];
                     MessageAck[] acks = new MessageAck[ackList.size()];
                     messageList.toArray(addedMessages);
@@ -116,8 +124,10 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                     listener.recover(xid, addedMessages, acks);
                 }
             }
+            @Override
             public void start() throws Exception {
             }
+            @Override
             public void stop() throws Exception {
             }
         };
@@ -136,13 +146,15 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             return destination;
         }
 
+        @Override
         public void addMessage(ConnectionContext context, Message message) throws IOException {
             KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
             command.setMessageId(message.getMessageId().toProducerKey());
             processAdd(command, message.getTransactionId(), wireFormat.marshal(message));
         }
-        
+
+        @Override
         public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
             command.setDestination(dest);
@@ -150,20 +162,23 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             processRemove(command, ack.getTransactionId());
         }
 
+        @Override
         public void removeAllMessages(ConnectionContext context) throws IOException {
             KahaRemoveDestinationCommand command = new KahaRemoveDestinationCommand();
             command.setDestination(dest);
             process(command);
         }
 
+        @Override
         public Message getMessage(MessageId identity) throws IOException {
             final String key = identity.toProducerKey();
-            
+
             // Hopefully one day the page file supports concurrent read operations... but for now we must
             // externally synchronize...
             ByteSequence data;
             synchronized(indexMutex) {
                 data = pageFile.tx().execute(new Transaction.CallableClosure<ByteSequence, IOException>(){
+                    @Override
                     public ByteSequence execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long sequence = sd.messageIdIndex.get(tx, key);
@@ -177,14 +192,16 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             if( data == null ) {
                 return null;
             }
-            
+
             Message msg = (Message)wireFormat.unmarshal( data );
-			return msg;
+            return msg;
         }
-        
+
+        @Override
         public int getMessageCount() throws IOException {
             synchronized(indexMutex) {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>(){
+                    @Override
                     public Integer execute(Transaction tx) throws IOException {
                         // Iterate through all index entries to get a count of messages in the destination.
                         StoredDestination sd = getStoredDestination(dest, tx);
@@ -199,9 +216,11 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             }
         }
 
+        @Override
         public void recover(final MessageRecoveryListener listener) throws Exception {
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<Exception>(){
+                    @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx); iterator.hasNext();) {
@@ -214,10 +233,12 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
 
         long cursorPos=0;
-        
+
+        @Override
         public void recoverNextMessages(final int maxReturned, final MessageRecoveryListener listener) throws Exception {
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<Exception>(){
+                    @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Entry<Long, MessageRecord> entry=null;
@@ -238,20 +259,22 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             }
         }
 
+        @Override
         public void resetBatching() {
             cursorPos=0;
         }
 
-        
+
         @Override
         public void setBatch(MessageId identity) throws IOException {
             final String key = identity.toProducerKey();
-            
+
             // Hopefully one day the page file supports concurrent read operations... but for now we must
             // externally synchronize...
             Long location;
             synchronized(indexMutex) {
                 location = pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>(){
+                    @Override
                     public Long execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         return sd.messageIdIndex.get(tx, key);
@@ -261,7 +284,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             if( location!=null ) {
                 cursorPos=location+1;
             }
-            
+
         }
 
         @Override
@@ -273,14 +296,15 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         @Override
         public void stop() throws Exception {
         }
-        
+
     }
-        
+
     class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore {
         public KahaDBTopicMessageStore(ActiveMQTopic destination) {
             super(destination);
         }
-        
+
+        @Override
         public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
                                 MessageId messageId, MessageAck ack) throws IOException {
             KahaRemoveMessageCommand command = new KahaRemoveMessageCommand();
@@ -294,6 +318,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             processRemove(command, null);
         }
 
+        @Override
         public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
             String subscriptionKey = subscriptionKey(subscriptionInfo.getClientId(), subscriptionInfo.getSubscriptionName());
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
@@ -305,6 +330,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             process(command);
         }
 
+        @Override
         public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
             command.setDestination(dest);
@@ -312,11 +338,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             process(command);
         }
 
+        @Override
         public SubscriptionInfo[] getAllSubscriptions() throws IOException {
-            
+
             final ArrayList<SubscriptionInfo> subscriptions = new ArrayList<SubscriptionInfo>();
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<IOException>(){
+                    @Override
                     public void execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         for (Iterator<Entry<String, KahaSubscriptionCommand>> iterator = sd.subscriptions.iterator(tx); iterator.hasNext();) {
@@ -328,16 +356,18 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                     }
                 });
             }
-            
+
             SubscriptionInfo[]rc=new SubscriptionInfo[subscriptions.size()];
             subscriptions.toArray(rc);
             return rc;
         }
 
+        @Override
         public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             synchronized(indexMutex) {
                 return pageFile.tx().execute(new Transaction.CallableClosure<SubscriptionInfo, IOException>(){
+                    @Override
                     public SubscriptionInfo execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         KahaSubscriptionCommand command = sd.subscriptions.get(tx, subscriptionKey);
@@ -349,11 +379,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                 });
             }
         }
-       
+
+        @Override
         public int getMessageCount(String clientId, String subscriptionName) throws IOException {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             synchronized(indexMutex) {
                 return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>(){
+                    @Override
                     public Integer execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
@@ -362,7 +394,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                             return 0;
                         }
                         cursorPos += 1;
-                        
+
                         int counter = 0;
                         for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator.hasNext();) {
                             iterator.next();
@@ -371,18 +403,20 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                         return counter;
                     }
                 });
-            }        
+            }
         }
 
+        @Override
         public void recoverSubscription(String clientId, String subscriptionName, final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<Exception>(){
+                    @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
                         cursorPos += 1;
-                        
+
                         for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator.hasNext();) {
                             Entry<Long, MessageRecord> entry = iterator.next();
                             listener.recoverMessage( (Message) wireFormat.unmarshal(entry.getValue().data ) );
@@ -392,10 +426,12 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             }
         }
 
+        @Override
         public void recoverNextMessages(String clientId, String subscriptionName, final int maxReturned, final MessageRecoveryListener listener) throws Exception {
             final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<Exception>(){
+                    @Override
                     public void execute(Transaction tx) throws Exception {
                         StoredDestination sd = getStoredDestination(dest, tx);
                         Long cursorPos = sd.subscriptionCursors.get(subscriptionKey);
@@ -403,7 +439,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
                             cursorPos = sd.subscriptionAcks.get(tx, subscriptionKey);
                             cursorPos += 1;
                         }
-                        
+
                         Entry<Long, MessageRecord> entry=null;
                         int counter = 0;
                         for (Iterator<Entry<Long, MessageRecord>> iterator = sd.orderIndex.iterator(tx, cursorPos); iterator.hasNext();) {
@@ -422,11 +458,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             }
         }
 
+        @Override
         public void resetBatching(String clientId, String subscriptionName) {
             try {
                 final String subscriptionKey = subscriptionKey(clientId, subscriptionName);
                 synchronized(indexMutex) {
                     pageFile.tx().execute(new Transaction.Closure<IOException>(){
+                        @Override
                         public void execute(Transaction tx) throws IOException {
                             StoredDestination sd = getStoredDestination(dest, tx);
                             sd.subscriptionCursors.remove(subscriptionKey);
@@ -442,11 +480,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
     String subscriptionKey(String clientId, String subscriptionName){
         return clientId+":"+subscriptionName;
     }
-    
+
+    @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         return new KahaDBMessageStore(destination);
     }
 
+    @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
         return new KahaDBTopicMessageStore(destination);
     }
@@ -457,6 +497,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
      *
      * @param destination Destination to forget
      */
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
     }
 
@@ -466,18 +507,22 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
      *
      * @param destination Destination to forget
      */
+    @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
     }
 
+    @Override
     public void deleteAllMessages() throws IOException {
     }
-    
-    
+
+
+    @Override
     public Set<ActiveMQDestination> getDestinations() {
         try {
             final HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
             synchronized(indexMutex) {
                 pageFile.tx().execute(new Transaction.Closure<IOException>(){
+                    @Override
                     public void execute(Transaction tx) throws IOException {
                         for (Iterator<Entry<String, StoredDestination>> iterator = destinations.iterator(tx); iterator.hasNext();) {
                             Entry<String, StoredDestination> entry = iterator.next();
@@ -491,11 +536,13 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             throw new RuntimeException(e);
         }
     }
-    
+
+    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         return 0;
     }
-    
+
+    @Override
     public long size() {
         if ( !started.get() ) {
             return 0;
@@ -507,32 +554,36 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context) throws IOException {
         throw new IOException("Not yet implemented.");
     }
+    @Override
     public void commitTransaction(ConnectionContext context) throws IOException {
         throw new IOException("Not yet implemented.");
     }
+    @Override
     public void rollbackTransaction(ConnectionContext context) throws IOException {
         throw new IOException("Not yet implemented.");
     }
-    
+
+    @Override
     public void checkpoint(boolean sync) throws IOException {
-    }    
+    }
 
     ///////////////////////////////////////////////////////////////////
     // Internal conversion methods.
     ///////////////////////////////////////////////////////////////////
-    
 
-    
+
+
     KahaLocation convert(Location location) {
         KahaLocation rc = new KahaLocation();
         rc.setLogId(location.getDataFileId());
         rc.setOffset(location.getOffset());
         return rc;
     }
-    
+
     KahaDestination convert(ActiveMQDestination dest) {
         KahaDestination rc = new KahaDestination();
         rc.setName(dest.getPhysicalName());
@@ -561,7 +612,7 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
         }
         int type = Integer.parseInt(dest.substring(0, p));
         String name = dest.substring(p+1);
-        
+
         switch( KahaDestination.DestinationType.valueOf(type) ) {
         case QUEUE:
             return new ActiveMQQueue(name);
@@ -571,11 +622,12 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             return new ActiveMQTempQueue(name);
         case TEMP_TOPIC:
             return new ActiveMQTempTopic(name);
-        default:    
+        default:
             throw new IllegalArgumentException("Not in the valid destination format");
         }
     }
-    
+
+    @Override
     public long getLastProducerSequenceId(ProducerId id) {
         return -1;
     }
@@ -591,5 +643,9 @@ public class TempKahaDBStore extends TempMessageDatabase implements PersistenceA
             wireFormat.setVersion(brokerService.getStoreOpenWireVersion());
         }
         super.load();
+    }
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        throw new UnsupportedOperationException();
     }
 }

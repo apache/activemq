@@ -46,20 +46,25 @@ public interface JobScheduler {
     void stopDispatching() throws Exception;
 
     /**
-     * Add a Job listener
+     * Add a Job listener which will receive events related to scheduled jobs.
      *
-     * @param l
+     * @param listener
+     *      The job listener to add.
+     *
      * @throws Exception
      */
-    void addListener(JobListener l) throws Exception;
+    void addListener(JobListener listener) throws Exception;
 
     /**
-     * remove a JobListener
+     * remove a JobListener that was previously registered.  If the given listener is not in
+     * the registry this method has no effect.
      *
-     * @param l
+     * @param listener
+     *      The listener that should be removed from the listener registry.
+     *
      * @throws Exception
      */
-    void removeListener(JobListener l) throws Exception;
+    void removeListener(JobListener listener) throws Exception;
 
     /**
      * Add a job to be scheduled
@@ -70,7 +75,8 @@ public interface JobScheduler {
      *            the message to be sent when the job is scheduled
      * @param delay
      *            the time in milliseconds before the job will be run
-     * @throws Exception
+     *
+     * @throws Exception if an error occurs while scheduling the Job.
      */
     void schedule(String jobId, ByteSequence payload, long delay) throws Exception;
 
@@ -82,8 +88,9 @@ public interface JobScheduler {
      * @param payload
      *            the message to be sent when the job is scheduled
      * @param cronEntry
-     *            - cron entry
-     * @throws Exception
+     *            The cron entry to use to schedule this job.
+     *
+     * @throws Exception if an error occurs while scheduling the Job.
      */
     void schedule(String jobId, ByteSequence payload, String cronEntry) throws Exception;
 
@@ -95,7 +102,7 @@ public interface JobScheduler {
      * @param payload
      *            the message to be sent when the job is scheduled
      * @param cronEntry
-     *            - cron entry
+     *            cron entry
      * @param delay
      *            time in ms to wait before scheduling
      * @param period
@@ -110,6 +117,8 @@ public interface JobScheduler {
      * remove all jobs scheduled to run at this time
      *
      * @param time
+     *      The UTC time to use to remove a batch of scheduled Jobs.
+     *
      * @throws Exception
      */
     void remove(long time) throws Exception;
@@ -118,7 +127,9 @@ public interface JobScheduler {
      * remove a job with the matching jobId
      *
      * @param jobId
-     * @throws Exception
+     *      The unique Job Id to search for and remove from the scheduled set of jobs.
+     *
+     * @throws Exception if an error occurs while removing the Job.
      */
     void remove(String jobId) throws Exception;
 

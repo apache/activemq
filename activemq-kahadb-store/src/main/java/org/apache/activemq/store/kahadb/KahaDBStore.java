@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -55,7 +56,14 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
-import org.apache.activemq.store.*;
+import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.ListenableFuture;
+import org.apache.activemq.store.MessageRecoveryListener;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionIdTransformer;
+import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
 import org.apache.activemq.store.kahadb.data.KahaDestination;
 import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
@@ -66,6 +74,7 @@ import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
@@ -172,6 +181,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     public int getMaxAsyncJobs() {
         return this.maxAsyncJobs;
     }
+
     /**
      * @param maxAsyncJobs
      *            the maxAsyncJobs to set
@@ -426,6 +436,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         }
 
+        @Override
         public void updateMessage(Message message) throws IOException {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("updating: " + message.getMessageId() + " with deliveryCount: " + message.getRedeliveryCounter());
@@ -472,7 +483,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             indexLock.writeLock().lock();
             try {
                 location = findMessageLocation(key, dest);
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
             if (location == null) {
@@ -492,19 +503,17 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         @Override
                         public Integer execute(Transaction tx) throws IOException {
                             // Iterate through all index entries to get a count
-                            // of
-                            // messages in the destination.
+                            // of messages in the destination.
                             StoredDestination sd = getStoredDestination(dest, tx);
                             int rc = 0;
-                            for (Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx); iterator
-                                    .hasNext();) {
+                            for (Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx); iterator.hasNext();) {
                                 iterator.next();
                                 rc++;
                             }
                             return rc;
                         }
                     });
-                }finally {
+                } finally {
                     indexLock.writeLock().unlock();
                 }
             } finally {
@@ -525,7 +534,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return sd.locationIndex.isEmpty(tx);
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
@@ -552,11 +561,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
-
 
         @Override
         public void recoverNextMessages(final int maxReturned, final MessageRecoveryListener listener) throws Exception {
@@ -583,7 +591,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         sd.orderIndex.stoppedIterating();
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
@@ -628,7 +636,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         });
                 } catch (Exception e) {
                     LOG.error("Failed to reset batching",e);
-                }finally {
+                } finally {
                     indexLock.writeLock().unlock();
                 }
             }
@@ -641,8 +649,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 lockAsyncJobQueue();
 
                 // Hopefully one day the page file supports concurrent read
-                // operations... but for now we must
-                // externally synchronize...
+                // operations... but for now we must externally synchronize...
 
                 indexLock.writeLock().lock();
                 try {
@@ -725,8 +732,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         @Override
         public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                                MessageId messageId, MessageAck ack)
-                throws IOException {
+                                MessageId messageId, MessageAck ack) throws IOException {
             String subscriptionKey = subscriptionKey(clientId, subscriptionName).toString();
             if (isConcurrentStoreAndDispatchTopics()) {
                 AsyncJobKey key = new AsyncJobKey(messageId, getDestination());
@@ -810,7 +816,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
 
@@ -836,7 +842,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                                 .getSubscriptionInfo().newInput()));
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
@@ -859,7 +865,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         return (int) getStoredMessageCount(tx, sd, subscriptionKey);
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
@@ -890,7 +896,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         sd.orderIndex.resetCursorPosition();
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
@@ -943,7 +949,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         }
                     }
                 });
-            }finally {
+            } finally {
                 indexLock.writeLock().unlock();
             }
         }
@@ -1358,7 +1364,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     LOG.warn("Failed to aquire lock", e);
                 }
             }
-
         }
 
         @Override
@@ -1422,7 +1427,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             if (runnable instanceof StoreTask) {
                ((StoreTask)runnable).releaseLocks();
             }
-
         }
+    }
+
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        return new JobSchedulerStoreImpl();
     }
 }

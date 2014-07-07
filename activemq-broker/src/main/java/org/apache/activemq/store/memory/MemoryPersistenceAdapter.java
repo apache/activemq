@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -39,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class MemoryPersistenceAdapter implements PersistenceAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryPersistenceAdapter.class);
@@ -49,6 +50,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     ConcurrentHashMap<ActiveMQDestination, MessageStore> queues = new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
     private boolean useExternalMessageReferences;
 
+    @Override
     public Set<ActiveMQDestination> getDestinations() {
         Set<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>(queues.size() + topics.size());
         for (Iterator<ActiveMQDestination> iter = queues.keySet().iterator(); iter.hasNext();) {
@@ -64,6 +66,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
         return new MemoryPersistenceAdapter();
     }
 
+    @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         MessageStore rc = queues.get(destination);
         if (rc == null) {
@@ -76,6 +79,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
         return rc;
     }
 
+    @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
         TopicMessageStore rc = topics.get(destination);
         if (rc == null) {
@@ -93,6 +97,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
      *
      * @param destination Destination to forget
      */
+    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         queues.remove(destination);
     }
@@ -102,10 +107,12 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
      *
      * @param destination Destination to forget
      */
+    @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
         topics.remove(destination);
     }
 
+    @Override
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
             transactionStore = new MemoryTransactionStore(this);
@@ -113,25 +120,32 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
         return transactionStore;
     }
 
+    @Override
     public void beginTransaction(ConnectionContext context) {
     }
 
+    @Override
     public void commitTransaction(ConnectionContext context) {
     }
 
+    @Override
     public void rollbackTransaction(ConnectionContext context) {
     }
 
+    @Override
     public void start() throws Exception {
     }
 
+    @Override
     public void stop() throws Exception {
     }
 
+    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         return 0;
     }
 
+    @Override
     public void deleteAllMessages() throws IOException {
         for (Iterator<TopicMessageStore> iter = topics.values().iterator(); iter.hasNext();) {
             MemoryMessageStore store = asMemoryMessageStore(iter.next());
@@ -177,38 +191,52 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
      * @param usageManager The UsageManager that is controlling the broker's
      *                memory usage.
      */
+    @Override
     public void setUsageManager(SystemUsage usageManager) {
     }
 
+    @Override
     public String toString() {
         return "MemoryPersistenceAdapter";
     }
 
+    @Override
     public void setBrokerName(String brokerName) {
     }
 
+    @Override
     public void setDirectory(File dir) {
     }
-    
+
+    @Override
     public File getDirectory(){
         return null;
     }
 
+    @Override
     public void checkpoint(boolean sync) throws IOException {
     }
-    
+
+    @Override
     public long size(){
         return 0;
     }
-    
+
     public void setCreateTransactionStore(boolean create) throws IOException {
         if (create) {
             createTransactionStore();
         }
     }
 
+    @Override
     public long getLastProducerSequenceId(ProducerId id) {
         // memory map does duplicate suppression
         return -1;
+    }
+
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        // We could eventuall implement an in memory scheduler.
+        throw new UnsupportedOperationException();
     }
 }
