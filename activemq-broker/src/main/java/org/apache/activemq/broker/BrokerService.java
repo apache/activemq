@@ -1861,6 +1861,23 @@ public class BrokerService implements Service {
 
             try {
                 PersistenceAdapter pa = getPersistenceAdapter();
+                if (pa != null) {
+                    this.jobSchedulerStore = pa.createJobSchedulerStore();
+                    jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
+                    configureService(jobSchedulerStore);
+                    jobSchedulerStore.start();
+                    return this.jobSchedulerStore;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (UnsupportedOperationException ex) {
+                // It's ok if the store doesn't implement a scheduler.
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                PersistenceAdapter pa = getPersistenceAdapter();
                 if (pa != null && pa instanceof JobSchedulerStore) {
                     this.jobSchedulerStore = (JobSchedulerStore) pa;
                     configureService(jobSchedulerStore);
@@ -1870,9 +1887,13 @@ public class BrokerService implements Service {
                 throw new RuntimeException(e);
             }
 
+            // Load the KahaDB store as a last resort, this only works if KahaDB is
+            // included at runtime, otherwise this will fail.  User should disable
+            // scheduler support if this fails.
             try {
-                String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
-                jobSchedulerStore = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
+                String clazz = "org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter";
+                PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).newInstance();
+                jobSchedulerStore = adaptor.createJobSchedulerStore();
                 jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                 configureService(jobSchedulerStore);
                 jobSchedulerStore.start();

@@ -18,13 +18,21 @@ package org.apache.activemq.broker.scheduler;
 
 import org.apache.activemq.util.ByteSequence;
 
+/**
+ * Job event listener interface. Provides event points for Job related events
+ * such as job ready events.
+ */
 public interface JobListener {
-    
+
     /**
-     * A Job that has been scheduled is now ready 
-     * @param id
+     * A Job that has been scheduled is now ready to be fired.  The Job is passed
+     * in its raw byte form and must be un-marshaled before being delivered.
+     *
+     * @param jobId
+     *        The unique Job Id of the Job that is ready to fire.
      * @param job
+     *        The job that is now ready, delivered in byte form.
      */
-    public void scheduledJob(String id,ByteSequence job);
+    public void scheduledJob(String id, ByteSequence job);
 
 }

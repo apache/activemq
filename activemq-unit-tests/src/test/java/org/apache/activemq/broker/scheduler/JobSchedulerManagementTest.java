@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.File;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,18 +33,17 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IdGenerator;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
+public class JobSchedulerManagementTest extends JobSchedulerTestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(JobSchedulerManagementTest.class);
 
+    @Test
     public void testRemoveAllScheduled() throws Exception {
         final int COUNT = 5;
         Connection connection = createConnection();
@@ -77,6 +80,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         assertEquals(latch.getCount(), COUNT);
     }
 
+    @Test
     public void testRemoveAllScheduledAtTime() throws Exception {
         final int COUNT = 3;
         Connection connection = createConnection();
@@ -122,8 +126,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         // Send the remove request
         MessageProducer producer = session.createProducer(management);
         Message request = session.createMessage();
-        request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-                                  ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
+        request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_START_TIME, Long.toString(start));
         request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION_END_TIME, Long.toString(end));
         producer.send(request);
@@ -143,6 +146,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         assertEquals(2, latch.getCount());
     }
 
+    @Test
     public void testBrowseAllScheduled() throws Exception {
         final int COUNT = 10;
         Connection connection = createConnection();
@@ -191,7 +195,8 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         Thread.sleep(2000);
         assertEquals(latch.getCount(), COUNT);
 
-        // now see if we got all the scheduled messages on the browse destination.
+        // now see if we got all the scheduled messages on the browse
+        // destination.
         latch.await(10, TimeUnit.SECONDS);
         assertEquals(browsedLatch.getCount(), 0);
 
@@ -200,6 +205,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         assertEquals(latch.getCount(), 0);
     }
 
+    @Test
     public void testBrowseWindowlScheduled() throws Exception {
         final int COUNT = 10;
         Connection connection = createConnection();
@@ -255,15 +261,18 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         Thread.sleep(2000);
         assertEquals(COUNT + 2, latch.getCount());
 
-        // now see if we got all the scheduled messages on the browse destination.
+        // now see if we got all the scheduled messages on the browse
+        // destination.
         latch.await(15, TimeUnit.SECONDS);
         assertEquals(0, browsedLatch.getCount());
 
-        // now see if we got all the scheduled messages on the browse destination.
+        // now see if we got all the scheduled messages on the browse
+        // destination.
         latch.await(20, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
     }
 
+    @Test
     public void testRemoveScheduled() throws Exception {
         final int COUNT = 10;
         Connection connection = createConnection();
@@ -297,8 +306,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         // Send the browse request
         Message request = session.createMessage();
-        request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-                                  ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE);
+        request.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_BROWSE);
         request.setJMSReplyTo(browseDest);
         producer.send(request);
 
@@ -307,14 +315,12 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
             Message message = browser.receive(2000);
             assertNotNull(message);
 
-            try{
+            try {
                 Message remove = session.createMessage();
-                remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-                        ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE);
-                remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID,
-                        message.getStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID));
+                remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVE);
+                remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID, message.getStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID));
                 producer.send(remove);
-            } catch(Exception e) {
+            } catch (Exception e) {
             }
         }
 
@@ -323,6 +329,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         assertEquals(COUNT, latch.getCount());
     }
 
+    @Test
     public void testRemoveNotScheduled() throws Exception {
         Connection connection = createConnection();
 
@@ -333,19 +340,19 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
 
         MessageProducer producer = session.createProducer(management);
 
-        try{
+        try {
 
             // Send the remove request
             Message remove = session.createMessage();
-            remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION,
-                    ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
+            remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULER_ACTION, ScheduledMessage.AMQ_SCHEDULER_ACTION_REMOVEALL);
             remove.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_ID, new IdGenerator().generateId());
             producer.send(remove);
-        } catch(Exception e) {
+        } catch (Exception e) {
             fail("Caught unexpected exception during remove of unscheduled message.");
         }
     }
 
+    @Test
     public void testBrowseWithSelector() throws Exception {
         Connection connection = createConnection();
 
@@ -362,7 +369,7 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         Destination browseDest = session.createTemporaryTopic();
 
         // Create the "Browser"
-        MessageConsumer browser = session.createConsumer(browseDest, ScheduledMessage.AMQ_SCHEDULED_DELAY + " = 45000" );
+        MessageConsumer browser = session.createConsumer(browseDest, ScheduledMessage.AMQ_SCHEDULED_DELAY + " = 45000");
 
         connection.start();
 
@@ -383,7 +390,6 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         assertNull(message);
     }
 
-
     protected void scheduleMessage(Connection connection, long delay) throws Exception {
         scheduleMessage(connection, delay, 1);
     }
@@ -394,38 +400,10 @@ public class JobSchedulerManagementTest extends EmbeddedBrokerTestSupport {
         TextMessage message = session.createTextMessage("test msg");
         message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
 
-        for(int i = 0; i < count; ++i ) {
+        for (int i = 0; i < count; ++i) {
             producer.send(message);
         }
 
         producer.close();
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        bindAddress = "vm://localhost";
-        super.setUp();
-    }
-
-    @Override
-    protected BrokerService createBroker() throws Exception {
-        return createBroker(true);
-    }
-
-    protected BrokerService createBroker(boolean delete) throws Exception {
-        File schedulerDirectory = new File("target/scheduler");
-        if (delete) {
-            IOHelper.mkdirs(schedulerDirectory);
-            IOHelper.deleteChildren(schedulerDirectory);
-        }
-        BrokerService answer = new BrokerService();
-        answer.setPersistent(true);
-        answer.setDeleteAllMessagesOnStartup(true);
-        answer.setDataDirectory("target");
-        answer.setSchedulerDirectoryFile(schedulerDirectory);
-        answer.setSchedulerSupport(true);
-        answer.setUseJmx(false);
-        answer.addConnector(bindAddress);
-        return answer;
     }
 }

@@ -31,6 +31,7 @@ import org.apache.activemq.broker.LockableServiceSupport;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.PersistenceAdapterView;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -39,7 +40,14 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.protobuf.Buffer;
-import org.apache.activemq.store.*;
+import org.apache.activemq.store.JournaledStore;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.SharedFileLocker;
+import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionIdTransformer;
+import org.apache.activemq.store.TransactionIdTransformerAware;
+import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
@@ -641,5 +649,10 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     @Override
     public void setTransactionIdTransformer(TransactionIdTransformer transactionIdTransformer) {
         getStore().setTransactionIdTransformer(transactionIdTransformer);
+    }
+
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        return this.letter.createJobSchedulerStore();
     }
 }
