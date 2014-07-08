@@ -136,9 +136,9 @@
     <felix-configadmin-version>1.4.0</felix-configadmin-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
-    <source-version>1.6</source-version>
-    <target-version>1.6</target-version>
-    <javase-javadoc-url>http://download.oracle.com/javase/6/docs/api/</javase-javadoc-url>
+    <source-version>1.7</source-version>
+    <target-version>1.7</target-version>
+    <javase-javadoc-url>http://docs.oracle.com/javase/7/docs/api/</javase-javadoc-url>
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
     <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
 
@@ -157,7 +157,6 @@
     <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
     <maven-shade-plugin-version>2.1</maven-shade-plugin-version>
-    <maven-jaxb2-plugin-version>0.8.3</maven-jaxb2-plugin-version>
     <findbugs-maven-plugin-version>2.5.2</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>2.6</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.5.2</cobertura-maven-plugin-version>
@@ -1246,19 +1245,6 @@
                   </pluginExecutionFilter>
                   <action>
                     <ignore />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.jvnet.jaxb2.maven2</groupId>
-                    <artifactId>maven-jaxb2-plugin</artifactId>
-                    <versionRange>[0.0.0,)</versionRange>
-                    <goals>
-                      <goal>generate</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
