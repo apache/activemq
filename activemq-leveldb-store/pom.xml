@@ -420,6 +420,7 @@
                   <configuration>
                       <sources>
                           <source>${basedir}/src/main/scala</source>
+                          <source>${basedir}/target/generated-sources/proto</source>
                       </sources>
                   </configuration>
               </execution>
@@ -459,7 +460,8 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <execute><runOnIncremental>true</runOnIncremental></execute>
+                    <!--<ignore/>-->
                   </action>
                 </pluginExecution>
               </pluginExecutions>
