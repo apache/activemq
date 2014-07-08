@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
@@ -144,32 +145,23 @@ public class MBeanBridgeDestination {
 
     private void purgeInactiveDestinationView(Map<ActiveMQDestination, NetworkDestinationView> map) {
         long time = System.currentTimeMillis() - networkBridgeConfiguration.getGcSweepTime();
-        Map<ActiveMQDestination, NetworkDestinationView> gc = null;
         for (Map.Entry<ActiveMQDestination, NetworkDestinationView> entry : map.entrySet()) {
             if (entry.getValue().getLastAccessTime() <= time) {
-                if (gc == null) {
-                    gc = new HashMap<ActiveMQDestination, NetworkDestinationView>();
-                }
-                gc.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        if (gc != null) {
-            for (Map.Entry<ActiveMQDestination, NetworkDestinationView> entry : gc.entrySet()) {
-                map.remove(entry.getKey());
-                ObjectName objectName = destinationObjectNameMap.get(entry.getKey());
-                if (objectName != null) {
-                    try {
-                        if (objectName != null) {
-                            brokerService.getManagementContext().unregisterMBean(objectName);
+                synchronized (destinationObjectNameMap) {
+                    map.remove(entry.getKey());
+                    ObjectName objectName = destinationObjectNameMap.remove(entry.getKey());
+                    if (objectName != null) {
+                        try {
+                            if (objectName != null) {
+                                brokerService.getManagementContext().unregisterMBean(objectName);
+                            }
+                        } catch (Throwable e) {
+                            LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);
                         }
-                    } catch (Throwable e) {
-                        LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);
                     }
+                    entry.getValue().close();
                 }
-                entry.getValue().close();
             }
         }
     }
-
 }
