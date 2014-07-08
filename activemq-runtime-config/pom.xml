@@ -100,99 +100,34 @@
   <build>
     <plugins>
       <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>properties-maven-plugin</artifactId>
-          <version>1.0-alpha-2</version>
-          <executions>
-              <execution>
-                  <phase>initialize</phase>
-                  <goals>
-                      <goal>set-system-properties</goal>
-                  </goals>
-                  <configuration>
-                      <properties>
-                          <property>
-                              <name>javax.xml.accessExternalSchema</name>
-                              <value>file</value>
-                          </property>
-                      </properties>
-                  </configuration>
-              </execution>
-          </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>${maven-dependency-plugin-version}</version>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-xjc-plugin</artifactId>
+        <version>3.0.1</version>
         <executions>
           <execution>
-            <id>unpack-xsd</id>
+            <id>compile-xsd</id>
             <phase>generate-sources</phase>
             <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.apache.activemq</groupId>
-                  <artifactId>activemq-spring</artifactId>
-                  <version>${project.version}</version>
-                  <type>jar</type>
-                  <overWrite>true</overWrite>
-                  <includes>activemq.xsd</includes>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>src/main/resources</outputDirectory>
-            </configuration>
-          </execution>
-          <execution>
-            <id>unpack-spring-xsd</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.springframework</groupId>
-                  <artifactId>spring-beans</artifactId>
-                  <version>${spring-version}</version>
-                  <type>jar</type>
-                  <overWrite>true</overWrite>
-                  <includes>org/springframework/beans/factory/xml/spring-beans-3.0.xsd</includes>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>src/main/resources</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.jvnet.jaxb2.maven2</groupId>
-        <artifactId>maven-jaxb2-plugin</artifactId>
-        <version>${maven-jaxb2-plugin-version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generate</goal>
+              <goal>xsdtojava</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <extension>true</extension>
-          <args>
-            <arg>-XtoString</arg>
-            <arg>-XhashCode</arg>
-            <arg>-Xequals</arg>
-            <arg>-Xequals-equalsStrategyClass=org.apache.activemq.plugin.jaxb2_commons.ElementAwareEqualsStrategy</arg>
-          </args>
-          <plugins>
-            <plugin>
-              <groupId>org.jvnet.jaxb2_commons</groupId>
-              <artifactId>jaxb2-basics</artifactId>
-              <version>${jaxb-basics-version}</version>
-            </plugin>
-          </plugins>
+          <extensions>
+              <extension>org.jvnet.jaxb2_commons:jaxb2-basics:${jaxb-basics-version}</extension>
+          </extensions>
+          <xsdOptions>
+              <xsdOption>
+                 <xsd>${basedir}/../activemq-spring/target/classes/activemq.xsd</xsd>
+                 <bindingFile>${basedir}/src/main/resources/binding.xjb</bindingFile>
+                 <extensionArgs>
+            		<extensionArgs>-XtoString</extensionArgs>
+            		<extensionArgs>-XhashCode</extensionArgs>
+            		<extensionArgs>-Xequals</extensionArgs>
+            		<extensionArgs>-Xequals-equalsStrategyClass=org.apache.activemq.plugin.jaxb2_commons.ElementAwareEqualsStrategy</extensionArgs>
+                 </extensionArgs>
+              </xsdOption>
+          </xsdOptions>
         </configuration>
       </plugin>
       <plugin>
@@ -216,7 +151,6 @@
           </includes>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
 
