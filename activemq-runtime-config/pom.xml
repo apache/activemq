@@ -100,27 +100,6 @@
   <build>
     <plugins>
       <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>properties-maven-plugin</artifactId>
-          <version>1.0-alpha-2</version>
-          <executions>
-              <execution>
-                  <phase>initialize</phase>
-                  <goals>
-                      <goal>set-system-properties</goal>
-                  </goals>
-                  <configuration>
-                      <properties>
-                          <property>
-                              <name>javax.xml.accessExternalSchema</name>
-                              <value>file</value>
-                          </property>
-                      </properties>
-                  </configuration>
-              </execution>
-          </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>${maven-dependency-plugin-version}</version>
@@ -168,31 +147,32 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.jvnet.jaxb2.maven2</groupId>
-        <artifactId>maven-jaxb2-plugin</artifactId>
-        <version>${maven-jaxb2-plugin-version}</version>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-xjc-plugin</artifactId>
+        <version>3.0.1</version>
         <executions>
           <execution>
             <goals>
-              <goal>generate</goal>
+              <goal>xsdtojava</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <extension>true</extension>
-          <args>
-            <arg>-XtoString</arg>
-            <arg>-XhashCode</arg>
-            <arg>-Xequals</arg>
-            <arg>-Xequals-equalsStrategyClass=org.apache.activemq.plugin.jaxb2_commons.ElementAwareEqualsStrategy</arg>
-          </args>
-          <plugins>
-            <plugin>
-              <groupId>org.jvnet.jaxb2_commons</groupId>
-              <artifactId>jaxb2-basics</artifactId>
-              <version>${jaxb-basics-version}</version>
-            </plugin>
-          </plugins>
+          <extensions>
+              <extension>org.jvnet.jaxb2_commons:jaxb2-basics:${jaxb-basics-version}</extension>
+          </extensions>
+          <xsdOptions>
+              <xsdOption>
+                 <xsd>${basedir}/src/main/resources/activemq.xsd</xsd>
+                 <bindingFile>${basedir}/src/main/resources/binding.xjb</bindingFile>
+                 <extensionArgs>
+            		<extensionArgs>-XtoString</extensionArgs>
+            		<extensionArgs>-XhashCode</extensionArgs>
+            		<extensionArgs>-Xequals</extensionArgs>
+            		<extensionArgs>-Xequals-equalsStrategyClass=org.apache.activemq.plugin.jaxb2_commons.ElementAwareEqualsStrategy</extensionArgs>
+                 </extensionArgs>
+              </xsdOption>
+          </xsdOptions>
         </configuration>
       </plugin>
       <plugin>
@@ -218,6 +198,39 @@
       </plugin>
 
     </plugins>
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>
+    									org.apache.maven.plugins
+    								</groupId>
+    								<artifactId>
+    									maven-dependency-plugin
+    								</artifactId>
+    								<versionRange>[2.8,)</versionRange>
+    								<goals>
+    									<goal>unpack</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
   </build>
 
 </project>
