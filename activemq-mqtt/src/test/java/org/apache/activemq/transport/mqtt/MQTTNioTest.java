@@ -30,19 +30,34 @@ import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.util.Wait;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(BlockJUnit4ClassRunner.class)
 public class MQTTNioTest extends MQTTTest {
+    protected static final Logger LOG = LoggerFactory.getLogger(MQTTNioTest.class);
+
+    @Rule
+    public TestName testname = new TestName();
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        LOG.debug("Starting {}", testname.getMethodName());
+    }
 
     @Override
     protected String getProtocolScheme() {
         return "mqtt+nio";
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testPingOnMQTTNIO() throws Exception {
         addMQTTConnector("maxInactivityDuration=-1");
         brokerService.start();
@@ -62,7 +77,7 @@ public class MQTTNioTest extends MQTTTest {
         connection.disconnect();
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testAnonymousUserConnect() throws Exception {
         addMQTTConnector();
         configureAuthentication(brokerService);

@@ -187,7 +187,7 @@ public class MQTTTest extends AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testSendAtLeastOnceReceiveExactlyOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -205,7 +205,7 @@ public class MQTTTest extends AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testSendAtLeastOnceReceiveAtMostOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -241,7 +241,7 @@ public class MQTTTest extends AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testSendAndReceiveAtLeastOnce() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -360,7 +360,7 @@ public class MQTTTest extends AbstractMQTTTest {
         connection.disconnect();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 *  60 * 1000)
     public void testMQTTPathPatterns() throws Exception {
         addMQTTConnector();
         brokerService.start();
@@ -1065,7 +1065,7 @@ public class MQTTTest extends AbstractMQTTTest {
         provider.disconnect();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testSendJMSReceiveMQTT() throws Exception {
         addMQTTConnector();
         TransportConnector openwireTransport = brokerService.addConnector("tcp://localhost:0");
