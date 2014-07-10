@@ -119,6 +119,8 @@ public class DiscoveryNetworkReconnectTest {
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
+                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration"))));
+            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection"))));
             allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.NetworkBridge"))));
@@ -154,6 +156,8 @@ public class DiscoveryNetworkReconnectTest {
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Health"))));
             allowing(managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
+            allowing(managementContext).unregisterMBean(with(equal(
+                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration"))));
             allowing(managementContext).unregisterMBean(with(equal(
                     new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection"))));
             allowing(managementContext).unregisterMBean(with(equal(

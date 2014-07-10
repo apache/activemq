@@ -113,7 +113,7 @@ public class BrokerMBeanSupport {
         String objectNameStr = brokerObjectName;
 
         objectNameStr += "," + "transactionType=RecoveredXaTransaction";
-        objectNameStr += "," + "Xid=" + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString());
+        objectNameStr += "," + "xid=" + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString());
 
         return new ObjectName(objectNameStr);
     }
@@ -121,7 +121,7 @@ public class BrokerMBeanSupport {
     public static ObjectName createLog4JConfigViewName(String brokerObjectName) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
 
-        objectNameStr += "," + "Service=Log4JConfiguration";
+        objectNameStr += "," + "service=Log4JConfiguration";
 
         return new ObjectName(objectNameStr);
     }
@@ -129,8 +129,8 @@ public class BrokerMBeanSupport {
     public static ObjectName createPersistenceAdapterName(String brokerObjectName, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
 
-        objectNameStr += "," + "Service=PersistenceAdapter";
-        objectNameStr += "," + "InstanceName=" + JMXSupport.encodeObjectNamePart(name);
+        objectNameStr += "," + "service=PersistenceAdapter";
+        objectNameStr += "," + "instanceName=" + JMXSupport.encodeObjectNamePart(name);
 
         return new ObjectName(objectNameStr);
     }
@@ -141,7 +141,7 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createAbortSlowConsumerStrategyName(String brokerObjectName, AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
-        objectNameStr += ",Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
+        objectNameStr += ",service=SlowConsumerStrategy,instanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
     }
@@ -213,7 +213,7 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createJmsConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
-        objectNameStr += ",connector=" + type + ",JmsConnectors="+ JMXSupport.encodeObjectNamePart(name);
+        objectNameStr += ",connector=" + type + ",jmsConnectors="+ JMXSupport.encodeObjectNamePart(name);
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
     }

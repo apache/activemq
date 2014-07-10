@@ -145,7 +145,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     private RecoveredXATransactionViewMBean getProxyToPreparedTransactionViewMBean(TransactionId xid) throws MalformedObjectNameException, JMSException {
 
-        ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,transactionType=RecoveredXaTransaction,Xid=" +
+        ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,transactionType=RecoveredXaTransaction,xid=" +
                 JMXSupport.encodeObjectNamePart(xid.toString()));
         RecoveredXATransactionViewMBean proxy = (RecoveredXATransactionViewMBean) broker.getManagementContext().newProxyInstance(objectName,
                 RecoveredXATransactionViewMBean.class, true);
