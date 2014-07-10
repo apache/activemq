@@ -207,7 +207,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <excludes combine.children="append">
-                                <exclude>**/Stomp*.*</exclude>
+                                <exclude>**/Stomp11*.*</exclude>
+                                <exclude>**/Stomp12*.*</exclude>
+                                <exclude>**/Stomp*LoadTest.*</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
