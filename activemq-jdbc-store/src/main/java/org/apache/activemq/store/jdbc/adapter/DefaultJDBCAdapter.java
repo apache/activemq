@@ -1077,7 +1077,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return result;
     }
 
-    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long nextSeq,
+    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long maxSeq, long lastRecoveredSeq,
             long priority, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -1090,10 +1090,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
-            s.setLong(2, nextSeq);
+            s.setLong(2, lastRecoveredSeq);
+            s.setLong(3, maxSeq);
             if (isPrioritizedMessages) {
-                s.setLong(3, priority);
                 s.setLong(4, priority);
+                s.setLong(5, priority);
             }
             rs = s.executeQuery();
             int count = 0;

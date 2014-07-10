@@ -744,9 +744,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public long getNextSequenceId() {
-        synchronized(sequenceGenerator) {
-            return sequenceGenerator.getNextSequenceId();
-        }
+        return sequenceGenerator.getNextSequenceId();
     }
 
     public int getMaxRows() {

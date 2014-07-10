@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -70,6 +72,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
     final Set<Long> recoveredAdditions = new LinkedHashSet<Long>();
     protected ActiveMQMessageAudit audit;
+    protected final List<Long> pendingAdditions = new LinkedList<Long>();
     
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
         super(destination);
@@ -108,9 +111,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             }
             return;
         }
-        
-        long sequenceId = persistenceAdapter.getNextSequenceId();
-        
+
         // Serialize the Message..
         byte data[];
         try {
@@ -122,7 +123,14 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
-        try {      
+        long sequenceId;
+        synchronized (pendingAdditions) {
+            sequenceId = persistenceAdapter.getNextSequenceId();
+            if (message.isInTransaction()) {
+                trackPendingSequence(c, sequenceId);
+            }
+        }
+        try {
             adapter.doAddMessage(c, sequenceId, messageId, destination, data, message.getExpiration(),
                     this.isPrioritizedMessages() ? message.getPriority() : 0, context != null ? context.getXid() : null);
         } catch (SQLException e) {
@@ -132,7 +140,28 @@ public class JDBCMessageStore extends AbstractMessageStore {
             c.close();
         }
         message.getMessageId().setEntryLocator(sequenceId);
-        onAdd(messageId, sequenceId, message.getPriority());
+        onAdd(message, sequenceId, message.getPriority());
+    }
+
+    // jdbc commit order is random with concurrent connections - limit scan to lowest pending
+    private void trackPendingSequence(final TransactionContext transactionContext, final long sequenceId) {
+        synchronized (pendingAdditions) { pendingAdditions.add(sequenceId); }
+        transactionContext.onCompletion(new Runnable() {
+            public void run() {
+                synchronized (pendingAdditions) { pendingAdditions.remove(sequenceId); }
+            }
+        });
+    }
+
+    private long minPendingSequeunceId() {
+        synchronized (pendingAdditions) {
+            if (!pendingAdditions.isEmpty()) {
+                return pendingAdditions.get(0);
+            } else {
+                // nothing pending, ensure scan is limited to current state
+                return persistenceAdapter.sequenceGenerator.getLastSequenceId() + 1;
+            }
+        }
     }
 
     @Override
@@ -148,8 +177,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
-    protected void onAdd(MessageId messageId, long sequenceId, byte priority) {
-        if (lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
+    protected void onAdd(Message message, long sequenceId, byte priority) {
+        if (message.getTransactionId() != null && message.getTransactionId().isXATransaction()
+                && lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
             recoveredAdditions.add(sequenceId);
         }
     }
@@ -232,7 +262,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
+                    Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                     msg.getMessageId().setBrokerSequenceId(sequenceId);
                     return listener.recoverMessage(msg);
                 }
@@ -303,7 +333,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
                     }
                 }
             }
-            adapter.doRecoverNextMessages(c, destination, lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
+            adapter.doRecoverNextMessages(c, destination, minPendingSequeunceId(), lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {

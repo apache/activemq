@@ -107,7 +107,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                     Message message = addMessageCommand.getMessage();
                     jdbcPersistenceAdapter.commitAdd(context, message.getMessageId());
                     ((JDBCMessageStore)addMessageCommand.getMessageStore()).onAdd(
-                            message.getMessageId(),
+                            message,
                             (Long)message.getMessageId().getEntryLocator(),
                             message.getPriority());
 
@@ -187,7 +187,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             @Override
             public void run(ConnectionContext context) throws IOException {
                 ((JDBCPersistenceAdapter)persistenceAdapter).commitAdd(null, message.getMessageId());
-                ((JDBCMessageStore)messageStore).onAdd(message.getMessageId(), ((Long)message.getMessageId().getEntryLocator()).longValue(), message.getPriority());
+                ((JDBCMessageStore)messageStore).onAdd(message, ((Long)message.getMessageId().getEntryLocator()).longValue(), message.getPriority());
             }
 
             @Override

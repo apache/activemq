@@ -21,6 +21,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -44,7 +46,8 @@ public class TransactionContext {
     private PreparedStatement updateLastAckStatement;
     // a cheap dirty level that we can live with    
     private int transactionIsolation = Connection.TRANSACTION_READ_UNCOMMITTED;
-    
+    private LinkedList<Runnable> completions = new LinkedList<Runnable>();
+
     public TransactionContext(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         this.persistenceAdapter = persistenceAdapter;
         this.dataSource = persistenceAdapter.getDataSource();
@@ -154,6 +157,9 @@ public class TransactionContext {
                 } finally {
                     connection = null;
                 }
+                for (Runnable completion: completions) {
+                    completion.run();
+                }
             }
         }
     }
@@ -248,4 +254,7 @@ public class TransactionContext {
         this.transactionIsolation = transactionIsolation;
     }
 
+    public void onCompletion(Runnable runnable) {
+        completions.add(runnable);
+    }
 }
