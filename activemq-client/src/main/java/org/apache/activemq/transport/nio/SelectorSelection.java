@@ -19,6 +19,7 @@ package org.apache.activemq.transport.nio;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,6 +37,19 @@ public final class SelectorSelection {
     private AtomicBoolean closed = new AtomicBoolean();
 
     public SelectorSelection(final SelectorWorker worker, final SocketChannel socketChannel, Listener listener) throws ClosedChannelException {
+        this.worker = worker;
+        this.listener = listener;
+        worker.addIoTask(new Runnable() {
+            public void run() {
+                try {
+                    SelectorSelection.this.key = socketChannel.register(worker.selector, 0, SelectorSelection.this);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+    public SelectorSelection(final SelectorWorker worker, final ServerSocketChannel socketChannel, Listener listener) throws ClosedChannelException {
         this.worker = worker;
         this.listener = listener;
         worker.addIoTask(new Runnable() {
