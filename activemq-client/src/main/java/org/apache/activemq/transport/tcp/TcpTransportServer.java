@@ -26,6 +26,9 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,6 +46,8 @@ import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
+import org.apache.activemq.transport.nio.SelectorManager;
+import org.apache.activemq.transport.nio.SelectorSelection;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -65,6 +70,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransportServer.class);
     protected ServerSocket serverSocket;
+    protected SelectorSelection selector;
     protected int backlog = 5000;
     protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
     protected final TcpTransportFactory transportFactory;
@@ -295,29 +301,74 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      */
     @Override
     public void run() {
-        while (!isStopped()) {
-            Socket socket = null;
+        final ServerSocketChannel chan = serverSocket.getChannel();
+        if (chan != null) {
             try {
-                socket = serverSocket.accept();
-                if (socket != null) {
-                    if (isStopped() || getAcceptListener() == null) {
-                        socket.close();
-                    } else {
-                        if (useQueueForAccept) {
-                            socketQueue.put(socket);
-                        } else {
-                            handleSocket(socket);
+                chan.configureBlocking(false);
+                selector = SelectorManager.getInstance().register(chan, new SelectorManager.Listener() {
+                    public void onSelect(SelectorSelection sel) {
+                        try {
+                            SocketChannel sc = chan.accept();
+                            if (sc != null) {
+                                if (isStopped() || getAcceptListener() == null) {
+                                    sc.close();
+                                } else {
+                                    if (useQueueForAccept) {
+                                        socketQueue.put(sc.socket());
+                                    } else {
+                                        handleSocket(sc.socket());
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            onError(sel, e);
                         }
                     }
-                }
-            } catch (SocketTimeoutException ste) {
-                // expect this to happen
-            } catch (Exception e) {
-                if (!isStopping()) {
-                    onAcceptError(e);
-                } else if (!isStopped()) {
-                    LOG.warn("run()", e);
-                    onAcceptError(e);
+                    public void onError(SelectorSelection sel, Throwable error) {
+                        Exception e = null;
+                        if (error instanceof Exception) {
+                            e = (Exception)error;
+                        } else {
+                            e = new Exception(error);
+                        }
+                        if (!isStopping()) {
+                            onAcceptError(e);
+                        } else if (!isStopped()) {
+                            LOG.warn("run()", e);
+                            onAcceptError(e);
+                        }
+                    }
+                });
+                selector.setInterestOps(SelectionKey.OP_ACCEPT);
+                selector.enable();
+            } catch (IOException ex) {
+                selector = null;
+            }
+        } else {
+            while (!isStopped()) {
+                Socket socket = null;
+                try {
+                    socket = serverSocket.accept();
+                    if (socket != null) {
+                        if (isStopped() || getAcceptListener() == null) {
+                            socket.close();
+                        } else {
+                            if (useQueueForAccept) {
+                                socketQueue.put(socket);
+                            } else {
+                                handleSocket(socket);
+                            }
+                        }
+                    }
+                } catch (SocketTimeoutException ste) {
+                    // expect this to happen
+                } catch (Exception e) {
+                    if (!isStopping()) {
+                        onAcceptError(e);
+                    } else if (!isStopped()) {
+                        LOG.warn("run()", e);
+                        onAcceptError(e);
+                    }
                 }
             }
         }
@@ -405,6 +456,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+        if (selector != null) {
+            selector.disable();
+            selector.close();
+            selector = null;
+        }
         if (serverSocket != null) {
             serverSocket.close();
             serverSocket = null;

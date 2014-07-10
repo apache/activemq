@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.nio;
 
 import java.io.IOException;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
@@ -72,6 +73,29 @@ public final class SelectorManager {
     }
 
     public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
+        throws IOException {
+
+        SelectorSelection selection = null;
+        while( selection == null ) {
+            if (freeWorkers.size() > 0) {
+                SelectorWorker worker = freeWorkers.getFirst();
+                if( worker.isReleased() ) {
+                    freeWorkers.remove(worker);
+                } else {
+                    worker.retain();
+                    selection = new SelectorSelection(worker, socketChannel, listener);
+                }
+            } else {
+                // Worker starts /w retain count of 1
+                SelectorWorker worker = new SelectorWorker(this);
+                freeWorkers.addFirst(worker);
+                selection = new SelectorSelection(worker, socketChannel, listener);
+            }
+        }
+
+        return selection;
+    }
+    public synchronized SelectorSelection register(ServerSocketChannel socketChannel, Listener listener)
         throws IOException {
 
         SelectorSelection selection = null;
