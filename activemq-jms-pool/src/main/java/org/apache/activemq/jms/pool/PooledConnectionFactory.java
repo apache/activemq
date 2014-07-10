@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.jms.pool;
 
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -538,5 +539,25 @@ public class PooledConnectionFactory implements ConnectionFactory {
      */
     public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
         this.blockIfSessionPoolIsFullTimeout = blockIfSessionPoolIsFullTimeout;
+    }
+
+    /**
+     * Called by any superclass that implements a JNDIReferencable or similar that needs to collect
+     * the properties of this class for storage etc.
+     *
+     * This method should be updated any time there is a new property added.
+     *
+     * @param props
+     *        a properties object that should be filled in with this objects property values.
+     */
+    protected void populateProperties(Properties props) {
+        props.setProperty("maximumActiveSessionPerConnection", Integer.toString(getMaximumActiveSessionPerConnection()));
+        props.setProperty("maxConnections", Integer.toString(getMaxConnections()));
+        props.setProperty("idleTimeout", Integer.toString(getIdleTimeout()));
+        props.setProperty("expiryTimeout", Long.toString(getExpiryTimeout()));
+        props.setProperty("timeBetweenExpirationCheckMillis", Long.toString(getTimeBetweenExpirationCheckMillis()));
+        props.setProperty("createConnectionOnStartup", Boolean.toString(isCreateConnectionOnStartup()));
+        props.setProperty("useAnonymousProducers", Boolean.toString(isUseAnonymousProducers()));
+        props.setProperty("blockIfSessionPoolIsFullTimeout", Long.toString(getBlockIfSessionPoolIsFullTimeout()));
     }
 }

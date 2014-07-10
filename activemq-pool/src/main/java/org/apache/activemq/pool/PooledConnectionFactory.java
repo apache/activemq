@@ -19,9 +19,11 @@ package org.apache.activemq.pool;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
+
 import javax.jms.Connection;
 import javax.naming.NamingException;
 import javax.naming.Reference;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
@@ -55,6 +57,7 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
         setConnectionFactory(new ActiveMQConnectionFactory(brokerURL));
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void buildFromProperties(Properties props) {
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
         activeMQConnectionFactory.buildFromProperties(props);
@@ -62,9 +65,10 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
         IntrospectionSupport.setProperties(this, new HashMap(props), POOL_PROPS_PREFIX);
     }
 
+    @Override
     protected void populateProperties(Properties props) {
         ((ActiveMQConnectionFactory)getConnectionFactory()).populateProperties(props);
-        IntrospectionSupport.getProperties(this, props, POOL_PROPS_PREFIX);
+        super.populateProperties(props);
     }
 
     @Override
@@ -78,7 +82,6 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
         populateProperties(properties);
         return properties;
     }
-
 
     @Override
     public Reference getReference() throws NamingException {
@@ -137,5 +140,4 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
             }
         };
     }
-
 }
