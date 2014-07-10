@@ -100,58 +100,13 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>${maven-dependency-plugin-version}</version>
-        <executions>
-          <execution>
-            <id>unpack-xsd</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.apache.activemq</groupId>
-                  <artifactId>activemq-spring</artifactId>
-                  <version>${project.version}</version>
-                  <type>jar</type>
-                  <overWrite>true</overWrite>
-                  <includes>activemq.xsd</includes>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>src/main/resources</outputDirectory>
-            </configuration>
-          </execution>
-          <execution>
-            <id>unpack-spring-xsd</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.springframework</groupId>
-                  <artifactId>spring-beans</artifactId>
-                  <version>${spring-version}</version>
-                  <type>jar</type>
-                  <overWrite>true</overWrite>
-                  <includes>org/springframework/beans/factory/xml/spring-beans-3.0.xsd</includes>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>src/main/resources</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf-xjc-plugin</artifactId>
         <version>3.0.1</version>
         <executions>
           <execution>
+            <id>compile-xsd</id>
+            <phase>generate-sources</phase>
             <goals>
               <goal>xsdtojava</goal>
             </goals>
@@ -163,7 +118,7 @@
           </extensions>
           <xsdOptions>
               <xsdOption>
-                 <xsd>${basedir}/src/main/resources/activemq.xsd</xsd>
+                 <xsd>${basedir}/../activemq-spring/target/classes/activemq.xsd</xsd>
                  <bindingFile>${basedir}/src/main/resources/binding.xjb</bindingFile>
                  <extensionArgs>
             		<extensionArgs>-XtoString</extensionArgs>
@@ -196,7 +151,6 @@
           </includes>
         </configuration>
       </plugin>
-
     </plugins>
     <pluginManagement>
     	<plugins>

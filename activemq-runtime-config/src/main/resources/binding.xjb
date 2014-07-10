@@ -19,7 +19,7 @@
     xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
     xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
- <jxb:bindings schemaLocation="activemq.xsd" node="/xs:schema">
+ <jxb:bindings schemaLocation="../../../../activemq-spring/target/classes/activemq.xsd" node="/xs:schema">
 
    <jxb:schemaBindings>
      <jxb:nameXmlTransform>
