@@ -19,13 +19,13 @@ package org.apache.activemq.transport.nio;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.transport.nio.SelectorManager.Listener;
 
 /**
- * @author chirino
+ *
  */
 public final class SelectorSelection {
 
@@ -33,15 +33,16 @@ public final class SelectorSelection {
     private final Listener listener;
     private int interest;
     private SelectionKey key;
-    private AtomicBoolean closed = new AtomicBoolean();
+    private final AtomicBoolean closed = new AtomicBoolean();
 
-    public SelectorSelection(final SelectorWorker worker, final SocketChannel socketChannel, Listener listener) throws ClosedChannelException {
+    public SelectorSelection(final SelectorWorker worker, final AbstractSelectableChannel selectable, Listener listener) throws ClosedChannelException {
         this.worker = worker;
         this.listener = listener;
         worker.addIoTask(new Runnable() {
+            @Override
             public void run() {
                 try {
-                    SelectorSelection.this.key = socketChannel.register(worker.selector, 0, SelectorSelection.this);
+                    SelectorSelection.this.key = selectable.register(worker.selector, 0, SelectorSelection.this);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -55,30 +56,32 @@ public final class SelectorSelection {
 
     public void enable() {
         worker.addIoTask(new Runnable() {
+            @Override
             public void run() {
                 try {
                     key.interestOps(interest);
                 } catch (CancelledKeyException e) {
                 }
             }
-        });        
+        });
     }
 
     public void disable() {
         worker.addIoTask(new Runnable() {
+            @Override
             public void run() {
                 try {
                     key.interestOps(0);
                 } catch (CancelledKeyException e) {
                 }
             }
-        });        
+        });
     }
 
     public void close() {
-        // guard against multiple closes.
-        if( closed.compareAndSet(false, true) ) {
+        if (closed.compareAndSet(false, true)) {
             worker.addIoTask(new Runnable() {
+                @Override
                 public void run() {
                     try {
                         key.cancel();
@@ -86,7 +89,7 @@ public final class SelectorSelection {
                     }
                     worker.release();
                 }
-            });        
+            });
         }
     }
 
@@ -97,5 +100,4 @@ public final class SelectorSelection {
     public void onError(Throwable e) {
         listener.onError(this, e);
     }
-
 }

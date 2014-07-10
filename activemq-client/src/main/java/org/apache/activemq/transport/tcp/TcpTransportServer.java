@@ -26,6 +26,9 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,6 +46,8 @@ import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
+import org.apache.activemq.transport.nio.SelectorManager;
+import org.apache.activemq.transport.nio.SelectorSelection;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -56,15 +61,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A TCP based implementation of {@link TransportServer}
- *
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- *
  */
-
 public class TcpTransportServer extends TransportServerThreadSupport implements ServiceListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransportServer.class);
     protected ServerSocket serverSocket;
+    protected SelectorSelection selector;
     protected int backlog = 5000;
     protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
     protected final TcpTransportFactory transportFactory;
@@ -73,7 +75,6 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept = true;
     protected boolean allowLinkStealing;
-
 
     /**
      * trace=true -> the Transport stack where this TcpTransport object will be, will have a TransportLogger layer
@@ -93,11 +94,13 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * set in Connection or TransportConnector URIs.
      */
     protected String logWriterName = TransportLoggerSupport.defaultLogWriterName;
+
     /**
      * Specifies if the TransportLogger will be manageable by JMX or not. Also, as long as there is at least 1
      * TransportLogger which is manageable, a TransportLoggerControl MBean will me created.
      */
     protected boolean dynamicManagement = false;
+
     /**
      * startLogging=true -> the TransportLogger object of the Transport stack will initially write messages to the log.
      * startLogging=false -> the TransportLogger object of the Transport stack will initially NOT write messages to the
@@ -108,6 +111,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
     protected final ServerSocketFactory serverSocketFactory;
     protected BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<Socket>();
     protected Thread socketHandlerThread;
+
     /**
      * The maximum number of sockets allowed for this server
      */
@@ -140,8 +144,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         } catch (URISyntaxException e) {
 
             // it could be that the host name contains invalid characters such
-            // as _ on unix platforms
-            // so lets try use the IP address instead
+            // as _ on unix platforms so lets try use the IP address instead
             try {
                 setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), addr.getHostAddress(), serverSocket.getLocalPort(), bind.getPath(),
                     bind.getQuery(), bind.getFragment()));
@@ -295,29 +298,76 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      */
     @Override
     public void run() {
-        while (!isStopped()) {
-            Socket socket = null;
+        final ServerSocketChannel chan = serverSocket.getChannel();
+        if (chan != null) {
             try {
-                socket = serverSocket.accept();
-                if (socket != null) {
-                    if (isStopped() || getAcceptListener() == null) {
-                        socket.close();
-                    } else {
-                        if (useQueueForAccept) {
-                            socketQueue.put(socket);
-                        } else {
-                            handleSocket(socket);
+                chan.configureBlocking(false);
+                selector = SelectorManager.getInstance().register(chan, new SelectorManager.Listener() {
+                    @Override
+                    public void onSelect(SelectorSelection sel) {
+                        try {
+                            SocketChannel sc = chan.accept();
+                            if (sc != null) {
+                                if (isStopped() || getAcceptListener() == null) {
+                                    sc.close();
+                                } else {
+                                    if (useQueueForAccept) {
+                                        socketQueue.put(sc.socket());
+                                    } else {
+                                        handleSocket(sc.socket());
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            onError(sel, e);
                         }
                     }
-                }
-            } catch (SocketTimeoutException ste) {
-                // expect this to happen
-            } catch (Exception e) {
-                if (!isStopping()) {
-                    onAcceptError(e);
-                } else if (!isStopped()) {
-                    LOG.warn("run()", e);
-                    onAcceptError(e);
+                    @Override
+                    public void onError(SelectorSelection sel, Throwable error) {
+                        Exception e = null;
+                        if (error instanceof Exception) {
+                            e = (Exception)error;
+                        } else {
+                            e = new Exception(error);
+                        }
+                        if (!isStopping()) {
+                            onAcceptError(e);
+                        } else if (!isStopped()) {
+                            LOG.warn("run()", e);
+                            onAcceptError(e);
+                        }
+                    }
+                });
+                selector.setInterestOps(SelectionKey.OP_ACCEPT);
+                selector.enable();
+            } catch (IOException ex) {
+                selector = null;
+            }
+        } else {
+            while (!isStopped()) {
+                Socket socket = null;
+                try {
+                    socket = serverSocket.accept();
+                    if (socket != null) {
+                        if (isStopped() || getAcceptListener() == null) {
+                            socket.close();
+                        } else {
+                            if (useQueueForAccept) {
+                                socketQueue.put(socket);
+                            } else {
+                                handleSocket(socket);
+                            }
+                        }
+                    }
+                } catch (SocketTimeoutException ste) {
+                    // expect this to happen
+                } catch (Exception e) {
+                    if (!isStopping()) {
+                        onAcceptError(e);
+                    } else if (!isStopped()) {
+                        LOG.warn("run()", e);
+                        onAcceptError(e);
+                    }
                 }
             }
         }
@@ -405,6 +455,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
+        if (selector != null) {
+            selector.disable();
+            selector.close();
+            selector = null;
+        }
         if (serverSocket != null) {
             serverSocket.close();
             serverSocket = null;
