@@ -275,11 +275,14 @@ public class JobSchedulerTest {
         IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         startStore(directory);
+    }
 
+    protected JobSchedulerStore createJobSchedulerStore() throws Exception {
+        return new JobSchedulerStoreImpl();
     }
 
     protected void startStore(File directory) throws Exception {
-        store = new JobSchedulerStoreImpl();
+        store = createJobSchedulerStore();
         store.setDirectory(directory);
         store.start();
         scheduler = store.getJobScheduler("test");

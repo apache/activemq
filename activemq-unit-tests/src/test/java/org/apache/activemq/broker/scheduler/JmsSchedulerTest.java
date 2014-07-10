@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.File;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -32,15 +34,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
+import org.junit.Test;
 
-public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
+public class JmsSchedulerTest extends JobSchedulerTestSupport {
 
+    @Test
     public void testCron() throws Exception {
         final int COUNT = 10;
         final AtomicInteger count = new AtomicInteger();
@@ -80,6 +81,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         assertEquals(COUNT, count.get());
     }
 
+    @Test
     public void testSchedule() throws Exception {
         final int COUNT = 1;
         Connection connection = createConnection();
@@ -112,6 +114,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         assertEquals(latch.getCount(), 0);
     }
 
+    @Test
     public void testTransactedSchedule() throws Exception {
         final int COUNT = 1;
         Connection connection = createConnection();
@@ -150,7 +153,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         assertEquals(latch.getCount(), 0);
     }
 
-
+    @Test
     public void testScheduleRepeated() throws Exception {
         final int NUMBER = 10;
         final AtomicInteger count = new AtomicInteger();
@@ -186,6 +189,7 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         assertEquals(NUMBER, count.get());
     }
 
+    @Test
     public void testScheduleRestart() throws Exception {
         // send a message
         Connection connection = createConnection();
@@ -222,11 +226,11 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         producer.close();
     }
 
+    @Test
     public void testJobSchedulerStoreUsage() throws Exception {
 
         // Shrink the store limit down so we get the producer to block
         broker.getSystemUsage().getJobSchedulerUsage().setLimit(10 * 1024);
-
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createConnection();
@@ -280,33 +284,5 @@ public class JmsSchedulerTest extends EmbeddedBrokerTestSupport {
         latch.await(20000l, TimeUnit.MILLISECONDS);
 
         assertEquals("Consumer did not receive all messages.", 0, latch.getCount());
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        bindAddress = "vm://localhost";
-        super.setUp();
-    }
-
-    @Override
-    protected BrokerService createBroker() throws Exception {
-        return createBroker(true);
-    }
-
-    protected BrokerService createBroker(boolean delete) throws Exception {
-        File schedulerDirectory = new File("target/scheduler");
-        if (delete) {
-            IOHelper.mkdirs(schedulerDirectory);
-            IOHelper.deleteChildren(schedulerDirectory);
-        }
-        BrokerService answer = new BrokerService();
-        answer.setPersistent(true);
-        answer.setDeleteAllMessagesOnStartup(true);
-        answer.setDataDirectory("target");
-        answer.setSchedulerDirectoryFile(schedulerDirectory);
-        answer.setSchedulerSupport(true);
-        answer.setUseJmx(false);
-        answer.addConnector(bindAddress);
-        return answer;
     }
 }

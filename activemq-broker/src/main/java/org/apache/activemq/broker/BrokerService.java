@@ -87,6 +87,7 @@ import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
+import org.apache.activemq.broker.scheduler.memory.InMemoryJobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.BrokerId;
@@ -1863,7 +1864,14 @@ public class BrokerService implements Service {
         if (jobSchedulerStore == null) {
 
             if (!isPersistent()) {
-                return null;
+                this.jobSchedulerStore = new InMemoryJobSchedulerStore();
+                configureService(jobSchedulerStore);
+                try {
+                    jobSchedulerStore.start();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return this.jobSchedulerStore;
             }
 
             try {
@@ -2799,7 +2807,7 @@ public class BrokerService implements Service {
      * @return the schedulerSupport
      */
     public boolean isSchedulerSupport() {
-        return this.schedulerSupport && (isPersistent() || jobSchedulerStore != null);
+        return this.schedulerSupport;
     }
 
     /**

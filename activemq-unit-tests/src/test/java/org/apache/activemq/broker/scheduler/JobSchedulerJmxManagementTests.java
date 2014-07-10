@@ -104,7 +104,7 @@ public class JobSchedulerJmxManagementTests extends JobSchedulerTestSupport {
         long toLate = System.currentTimeMillis() + 63 * 1000;
         String next = view.getNextScheduleTime();
         long nextTime = JobSupport.getDataTime(next);
-        LOG.info("Next Scheduled Time: {}", next);
+        LOG.info("Next Scheduled Time: {} should be after: {}", next, JobSupport.getDateTime(before));
         assertTrue(nextTime > before);
         assertTrue(nextTime < toLate);
     }

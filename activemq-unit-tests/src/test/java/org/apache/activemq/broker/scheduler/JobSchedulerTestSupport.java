@@ -82,6 +82,10 @@ public class JobSchedulerTestSupport {
         return false;
     }
 
+    protected boolean isPersistent() {
+        return true;
+    }
+
     protected JobSchedulerViewMBean getJobSchedulerMBean() throws Exception {
         ObjectName objectName = broker.getAdminView().getJMSJobScheduler();
         JobSchedulerViewMBean scheduler = null;
@@ -101,7 +105,7 @@ public class JobSchedulerTestSupport {
         }
 
         BrokerService answer = new BrokerService();
-        answer.setPersistent(true);
+        answer.setPersistent(isPersistent());
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setDataDirectory("target");
         answer.setSchedulerDirectoryFile(schedulerDirectory);
