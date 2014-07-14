@@ -184,12 +184,25 @@ public class VMTransportFactory extends TransportFactory {
                 final long expiry = System.currentTimeMillis() + waitForStart;
                 while ((broker == null || !broker.isStarted()) && expiry > System.currentTimeMillis()) {
                     long timeout = Math.max(0, expiry - System.currentTimeMillis());
-                    try {
-                        LOG.debug("waiting for broker named: " + brokerName + " to start");
-                        registry.getRegistryMutext().wait(timeout);
-                    } catch (InterruptedException ignored) {
+                    if (broker == null) {
+                        try {
+                            LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
+                            registry.getRegistryMutext().wait(timeout);
+                            broker = registry.lookup(brokerName);
+                        } catch (InterruptedException ignored) {
+                        }
                     }
-                    broker = registry.lookup(brokerName);
+                    if (broker != null && !broker.isStarted()) {
+                        LOG.debug("waiting for broker named: " + brokerName + " to start");
+                        timeout = Math.max(0, expiry - System.currentTimeMillis());
+                        // Wait for however long we have left for broker to be started, if
+                        // it doesn't get started we need to clear broker so it doesn't get
+                        // returned.  A null return should throw an exception.
+                        if (!broker.waitUntilStarted(timeout)) {
+                            broker = null;
+                            break;
+                        }
+                    }
                 }
             }
         }

@@ -52,7 +52,7 @@ public class VMTransportWaitForTest {
 
         // spawn a thread that will wait for an embedded broker to start via
         // vm://..
-        Thread t = new Thread() {
+        Thread t = new Thread("ClientConnectionThread") {
             @Override
             public void run() {
                 try {
@@ -74,7 +74,7 @@ public class VMTransportWaitForTest {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.start();
-        assertTrue("has got connection", gotConnection.await(400, TimeUnit.MILLISECONDS));
+        assertTrue("has got connection", gotConnection.await(5, TimeUnit.SECONDS));
         broker.stop();
     }
 }
