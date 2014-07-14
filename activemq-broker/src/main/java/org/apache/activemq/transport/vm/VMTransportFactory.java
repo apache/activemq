@@ -196,6 +196,7 @@ public class VMTransportFactory extends TransportFactory {
                         try {
                             LOG.debug("waiting for broker named: " + brokerName + " to enter registry");
                             registry.getRegistryMutext().wait(timeout);
+                            broker = registry.lookup(brokerName);
                         } catch (InterruptedException ignored) {
                         }
                     }
