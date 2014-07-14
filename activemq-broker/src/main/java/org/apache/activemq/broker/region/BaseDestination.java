@@ -782,10 +782,11 @@ public abstract class BaseDestination implements Destination {
             ack.copy(a);
             ack = a;
             // Convert to non-ranged.
-            ack.setFirstMessageId(node.getMessageId());
-            ack.setLastMessageId(node.getMessageId());
             ack.setMessageCount(1);
         }
+        // always use node messageId so we can access entry/data Location
+        ack.setFirstMessageId(node.getMessageId());
+        ack.setLastMessageId(node.getMessageId());
         return ack;
     }
 
