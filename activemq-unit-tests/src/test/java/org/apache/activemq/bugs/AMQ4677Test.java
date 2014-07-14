@@ -30,6 +30,8 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.LevelDBStoreViewMBean;
 import org.apache.activemq.util.Wait;
@@ -89,7 +91,7 @@ public class AMQ4677Test {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-        LevelDBStoreViewMBean levelDBView = getLevelDBStoreMBean();
+        final LevelDBStoreViewMBean levelDBView = getLevelDBStoreMBean();
         assertNotNull(levelDBView);
         levelDBView.compact();
 
@@ -133,19 +135,18 @@ public class AMQ4677Test {
             }
         });
 
-        done.await(10, TimeUnit.MINUTES);
+        done.await(15, TimeUnit.MINUTES);
         session.commit();
         LOG.info("Finished receiving all messages.");
 
-        LOG.info("Current number of logs {}", countLogFiles());
-
-        assertTrue("Should only have one log file left.", Wait.waitFor(new Wait.Condition() {
+        assertTrue("Should < 3 logfiles left.", Wait.waitFor(new Wait.Condition() {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return countLogFiles() == 1;
+                levelDBView.compact();
+                return countLogFiles() < 3;
             }
-        }, TimeUnit.MINUTES.toMillis(5)));
+        }, TimeUnit.MINUTES.toMillis(5), (int)TimeUnit.SECONDS.toMillis(30)));
 
         levelDBView.compact();
         LOG.info("Current number of logs {}", countLogFiles());
@@ -163,12 +164,13 @@ public class AMQ4677Test {
             }
         });
 
+        LOG.info("Current number of logs {}", logFiles.length);
         return logFiles.length;
     }
 
     protected LevelDBStoreViewMBean getLevelDBStoreMBean() throws Exception {
         ObjectName levelDbViewMBeanQuery = new ObjectName(
-            "org.apache.activemq:type=Broker,brokerName=LevelDBBroker,Service=PersistenceAdapter,InstanceName=LevelDB*");
+            "org.apache.activemq:type=Broker,brokerName=LevelDBBroker,service=PersistenceAdapter,instanceName=LevelDB*");
 
         Set<ObjectName> names = brokerService.getManagementContext().queryNames(null, levelDbViewMBeanQuery);
         if (names.isEmpty() || names.size() > 1) {
