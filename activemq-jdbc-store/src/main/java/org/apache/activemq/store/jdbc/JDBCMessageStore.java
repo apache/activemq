@@ -207,7 +207,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
 
-    	long seq = persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
+    	long seq = ack.getLastMessageId().getEntryLocator() != null ?
+                (Long) ack.getLastMessageId().getEntryLocator() :
+                persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -309,6 +311,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
+                        msg.getMessageId().setEntryLocator(sequenceId);
                         listener.recoverMessage(msg);
                         lastRecoveredSequenceId.set(sequenceId);
                         lastRecoveredPriority.set(msg.getPriority());
