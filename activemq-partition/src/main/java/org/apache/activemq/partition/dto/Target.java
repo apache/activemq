@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.partition.dto;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.IOException;
 import java.util.Collection;

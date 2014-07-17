@@ -69,8 +69,8 @@
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.2.5</httpclient-version>
     <httpcore-version>4.2.4</httpcore-version>
-    <insight-version>7.2.0.redhat-024</insight-version>
-    <jackson-version>1.9.12</jackson-version>
+    <insight-version>1.1.0.CR3</insight-version>
+    <jackson-version>2.4.1</jackson-version>
     <jasypt-version>1.9.2</jasypt-version>
     <jaxb-bundle-version>2.2.1.1_2</jaxb-bundle-version>
     <jdom-version>1.0</jdom-version>
@@ -645,6 +645,22 @@
           </exclusion>
         </exclusions>
 
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-version}</version>
       </dependency>
 
       <!-- Used to configure the activemq logs -->

@@ -16,12 +16,16 @@
  */
 package org.apache.activemq.partition.dto;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -33,14 +37,14 @@ public class Partitioning {
 
     static final public ObjectMapper MAPPER = new ObjectMapper();
     static {
-        MAPPER.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-        MAPPER.disable(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES);
+        MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     static final public ObjectMapper TO_STRING_MAPPER = new ObjectMapper();
     static {
-        TO_STRING_MAPPER.disable(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES);
-        TO_STRING_MAPPER.enable(SerializationConfig.Feature.INDENT_OUTPUT);
+        TO_STRING_MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        TO_STRING_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     /**

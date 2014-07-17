@@ -17,7 +17,7 @@
 package org.apache.activemq.leveldb.replicated
 
 import org.apache.activemq.leveldb.replicated.groups._
-import org.codehaus.jackson.annotate.JsonProperty
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.activemq.leveldb.util.{Log, JsonCodec}
 import java.io.IOException
 

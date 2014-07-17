@@ -20,12 +20,12 @@ package org.apache.activemq.leveldb.replicated.groups
 import collection.mutable.{ListBuffer, HashMap}
 
 import java.io._
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import collection.JavaConversions._
 import java.util.LinkedHashMap
 import java.lang.{IllegalStateException, String}
 import beans.BeanProperty
-import org.codehaus.jackson.annotate.JsonProperty
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.zookeeper.KeeperException.NoNodeException
 
 /**

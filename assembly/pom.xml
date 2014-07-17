@@ -410,12 +410,12 @@
       <version>${json-simple-version}</version>
     </dependency>
     <dependency>
-      <groupId>org.fusesource.insight</groupId>
+      <groupId>io.fabric8.insight</groupId>
       <artifactId>insight-log-core</artifactId>
       <version>${insight-version}</version>
     </dependency>
     <dependency>
-      <groupId>org.fusesource.insight</groupId>
+      <groupId>io.fabric8.insight</groupId>
       <artifactId>insight-log4j</artifactId>
       <version>${insight-version}</version>
     </dependency>
@@ -428,6 +428,18 @@
       <groupId>org.apache.qpid</groupId>
       <artifactId>proton-j</artifactId>
       <version>${qpid-proton-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
   </dependencies>
 

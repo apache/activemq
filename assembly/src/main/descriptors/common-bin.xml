@@ -138,13 +138,8 @@
         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
-        <include>org.ops4j.pax.url:pax-url-aether</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
-        <include>org.fusesource.insight:insight-log-core</include>
-        <!-- TODO: we use a patched insight-log4j AR from assembly/src/release/lib until a new release is out
-        <include>org.fusesource.insight:insight-log4j</include>
-        -->
       </includes>
     </dependencySet>
     <dependencySet>
@@ -220,14 +215,18 @@
         <include>org.fusesource.hawtjni:hawtjni-runtime</include>
         <include>org.xerial.snappy:*</include>
         <include>org.iq80.snappy:*</include>
-        <include>org.codehaus.jackson:*</include>
         <include>org.linkedin:org.linkedin.zookeeper-impl</include>
         <include>org.linkedin:org.linkedin.util-core</include>
         <include>org.apache.zookeeper:zookeeper</include>
+        <include>com.fasterxml.jackson.core:*</include>
 
         <!-- Apache Shiro dependencies: -->
         <include>org.apache.shiro:shiro-core</include>
         <include>org.apache.shiro:shiro-spring</include>
+
+        <!-- insight log -->
+        <include>io.fabric8.insight:insight-log-core</include>
+        <include>io.fabric8.insight:insight-log4j</include>
 
       </includes>
     </dependencySet>
