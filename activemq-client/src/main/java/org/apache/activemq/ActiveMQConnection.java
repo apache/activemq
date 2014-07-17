@@ -2215,7 +2215,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     @Override
     @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException {
-        return createInputStream(dest, messageSelector, noLocal,  -1);
+        return createInputStream(dest, messageSelector, noLocal, -1);
     }
 
     @Override
@@ -2569,6 +2569,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected ThreadPoolExecutor getExecutor() {
         return this.executor;
+    }
+
+    protected CopyOnWriteArrayList<ActiveMQSession> getSessions() {
+        return sessions;
     }
 
     /**

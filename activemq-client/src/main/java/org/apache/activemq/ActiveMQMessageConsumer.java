@@ -1413,36 +1413,24 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             }
                         }
                     } else {
-                        if (!session.isTransacted()) {
-                            LOG.warn("Duplicate non transacted dispatch to consumer: "  + getConsumerId() + ", poison acking: " + md);
-                            posionAck(md, "Duplicate non transacted delivery to " + getConsumerId());
-                        } else {
+                        // deal with duplicate delivery
+                        ConsumerId consumerWithPendingTransaction;
+                        if (redeliveryExpectedInCurrentTransaction(md, true)) {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug(getConsumerId() + " tracking transacted redelivery of duplicate: " + md.getMessage());
+                                LOG.debug("{} tracking transacted redelivery {}", getConsumerId(), md.getMessage());
                             }
-                            boolean needsPoisonAck = false;
-                            synchronized (deliveredMessages) {
-                                if (previouslyDeliveredMessages != null) {
-                                    previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
-                                } else {
-                                    // delivery while pending redelivery to another consumer on the same connection
-                                    // not waiting for redelivery will help here
-                                    needsPoisonAck = true;
-                                }
-                            }
-                            if (needsPoisonAck) {
-                                LOG.warn("acking duplicate delivery as poison, redelivery must be pending to another"
-                                        + " consumer on this connection, failoverRedeliveryWaitPeriod="
-                                        + failoverRedeliveryWaitPeriod + ". Message: " + md);
-                                posionAck(md, "Duplicate dispatch with transacted redeliver pending on another consumer, connection: "
-                                        + session.getConnection().getConnectionInfo().getConnectionId());
+                            if (transactedIndividualAck) {
+                                immediateIndividualTransactedAck(md);
                             } else {
-                                if (transactedIndividualAck) {
-                                    immediateIndividualTransactedAck(md);
-                                } else {
-                                    session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
-                                }
+                                session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
                             }
+                        } else if ((consumerWithPendingTransaction = redeliveryPendingInCompetingTransaction(md)) != null) {
+                            LOG.warn("{} delivering duplicate {}, pending transaction completion on {} will rollback", getConsumerId(), md.getMessage(), consumerWithPendingTransaction);
+                            session.getConnection().rollbackDuplicate(this, md.getMessage());
+                            dispatch(md);
+                        } else {
+                            LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md);
+                            posionAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
                         }
                     }
                 }
@@ -1454,6 +1442,33 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         } catch (Exception e) {
             session.connection.onClientInternalException(e);
         }
+    }
+
+    private boolean redeliveryExpectedInCurrentTransaction(MessageDispatch md, boolean markReceipt) {
+        if (session.isTransacted()) {
+            synchronized (deliveredMessages) {
+                if (previouslyDeliveredMessages != null) {
+                    if (previouslyDeliveredMessages.containsKey(md.getMessage().getMessageId())) {
+                        if (markReceipt) {
+                            previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private ConsumerId redeliveryPendingInCompetingTransaction(MessageDispatch md) {
+        for (ActiveMQSession activeMQSession: session.connection.getSessions()) {
+            for (ActiveMQMessageConsumer activeMQMessageConsumer : activeMQSession.consumers) {
+                if (activeMQMessageConsumer.redeliveryExpectedInCurrentTransaction(md, false)) {
+                    return activeMQMessageConsumer.getConsumerId();
+                }
+            }
+        }
+        return null;
     }
 
     // async (on next call) clear or track delivered as they may be flagged as duplicates if they arrive again
