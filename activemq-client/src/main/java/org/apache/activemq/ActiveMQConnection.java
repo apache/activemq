@@ -2556,8 +2556,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 if (result == null) {
                     checkClosed();
                     try {
-                        result = scheduler = new Scheduler("ActiveMQConnection["+info.getConnectionId().getValue()+"] Scheduler");
-                        scheduler.start();
+                        result = new Scheduler("ActiveMQConnection["+info.getConnectionId().getValue()+"] Scheduler");
+                        result.start();
+                        scheduler = result;
                     } catch(Exception e) {
                         throw JMSExceptionSupport.create(e);
                     }
