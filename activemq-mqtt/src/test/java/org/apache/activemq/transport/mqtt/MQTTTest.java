@@ -553,7 +553,7 @@ public class MQTTTest extends AbstractMQTTTest {
             assertNotNull("No retained message for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
-            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
 
             // test duplicate subscription
             connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
@@ -561,13 +561,13 @@ public class MQTTTest extends AbstractMQTTTest {
             assertNotNull("No retained message on duplicate subscription for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
-            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
             connection.unsubscribe(new String[]{"TopicA"});
 
             // clear retained message and check that we don't receive it
             connection.publish(TOPICA, "".getBytes(), QoS.AT_MOST_ONCE, true);
             connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
-            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            msg = connection.receive(500, TimeUnit.MILLISECONDS);
             assertNull("Retained message not cleared for " + clientId, msg);
             connection.unsubscribe(new String[]{"TopicA"});
 
@@ -578,7 +578,7 @@ public class MQTTTest extends AbstractMQTTTest {
             assertNotNull("No reset retained message for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
-            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
 
             // re-connect and check
             connection.disconnect();
@@ -589,7 +589,7 @@ public class MQTTTest extends AbstractMQTTTest {
             assertNotNull("No reset retained message for " + clientId, msg);
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
-            assertNull(connection.receive(5000, TimeUnit.MILLISECONDS));
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
 
             connection.unsubscribe(new String[]{"TopicA"});
 
