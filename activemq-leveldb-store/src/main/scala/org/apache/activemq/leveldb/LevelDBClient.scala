@@ -880,7 +880,7 @@ class LevelDBClient(store: LevelDBStore) {
         index.put(key, baos.toByteArray)
       }
       catch {
-        case e => throw e
+        case e : Throwable => throw e
       }
     }
     def storeList[T <: AnyRef](key:Array[Byte], list:Array[Long]) {
@@ -895,7 +895,7 @@ class LevelDBClient(store: LevelDBStore) {
         index.put(key, baos.toByteArray)
       }
       catch {
-        case e => throw e
+        case e : Throwable => throw e
       }
     }
     def storeObject(key:Array[Byte], o:Object) = {
@@ -1657,7 +1657,6 @@ class LevelDBClient(store: LevelDBStore) {
     }
 
     import collection.JavaConversions._
-    lastIndexSnapshotPos
 
     // drop the logs that are no longer referenced.
     for( (x,y) <- logRefs.toSeq ) {

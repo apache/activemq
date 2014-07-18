@@ -132,27 +132,27 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   }
 
   def stop_connections(cb:Task) = {
-    var then = ^{
+    var task = ^{
       unstash(directory)
       cb.run()
     }
     val wal_session_copy = wal_session
     if( wal_session_copy !=null ) {
       wal_session = null
-      val next = then
-      then = ^{
+      val next = task
+      task = ^{
         wal_session_copy.transport.stop(next)
       }
     }
     val transfer_session_copy = transfer_session
     if( transfer_session_copy !=null ) {
       transfer_session = null
-      val next = then
-      then = ^{
+      val next = task
+      task = ^{
         transfer_session_copy.transport.stop(next)
       }
     }
-    then.run();
+    task.run();
   }
 
 

@@ -27,6 +27,7 @@ import java.lang.{IllegalStateException, String}
 import beans.BeanProperty
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.zookeeper.KeeperException.NoNodeException
+import scala.reflect.ClassTag
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -162,7 +163,7 @@ class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends
   }
 
   def masters = this.synchronized {
-    _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassManifest[T] {
+    _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassTag[T] {
       def runtimeClass = stateClass
       override def erasure = stateClass
     })

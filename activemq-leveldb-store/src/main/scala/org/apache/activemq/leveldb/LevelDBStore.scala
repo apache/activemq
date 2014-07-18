@@ -314,7 +314,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     return 0
   }
 
-  def createTransactionStore = this
+  def createTransactionStore = new LevelDBTransactionStore(this)
 
   val transactions = new ConcurrentHashMap[TransactionId, Transaction]()
 
@@ -1019,6 +1019,20 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
+  }
+
+  class LevelDBTransactionStore(val store:LevelDBStore) extends TransactionStore {
+    def start() = {}
+
+    def stop() = {}
+
+    def prepare(txid: TransactionId) = store.prepare(txid)
+
+    def commit(txid: TransactionId, wasPrepared: Boolean, preCommit: Runnable, postCommit: Runnable) = store.commit(txid, wasPrepared, preCommit, postCommit)
+
+    def rollback(txid: TransactionId) = store.rollback(txid)
+
+    def recover(listener: TransactionRecoveryListener) = store.recover(listener)
   }
 
   ///////////////////////////////////////////////////////////////////////////
