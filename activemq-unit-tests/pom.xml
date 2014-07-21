@@ -600,8 +600,6 @@
                 <exclude>**/StoreQueueCursorJournalNoDuplicateTest.*</exclude>
                 <exclude>**/ThreeBrokerVirtualTopicNetworkAMQPATest.*</exclude>
                 <exclude>**/LevelDBXARecoveryBrokerTest.*</exclude>
-                <!-- https://issues.apache.org/jira/browse/AMQ-4000 -->
-                <exclude>**/DurableSubInBrokerNetworkTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
