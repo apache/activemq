@@ -33,7 +33,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.*;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.Connection;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.EmptyBroker;
+import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -864,7 +872,7 @@ public class RegionBroker extends EmptyBroker {
                     if (dest instanceof BaseDestination) {
                         log = ((BaseDestination) dest).getLog();
                     }
-                    log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimoutBeforeGC());
+                    log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC());
                     try {
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
                     } catch (Exception e) {
@@ -885,6 +893,7 @@ public class RegionBroker extends EmptyBroker {
         this.allowTempAutoCreationOnSend = allowTempAutoCreationOnSend;
     }
 
+    @Override
     public void reapplyInterceptor() {
         queueRegion.reapplyInterceptor();
         topicRegion.reapplyInterceptor();

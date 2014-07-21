@@ -95,7 +95,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean allConsumersExclusiveByDefault;
     private boolean gcInactiveDestinations;
     private boolean gcWithNetworkConsumers;
-    private long inactiveTimoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
+    private long inactiveTimeoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean reduceMemoryFootprint;
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
     private boolean doOptimzeMessageStorage = true;
@@ -187,7 +187,7 @@ public class PolicyEntry extends DestinationMapEntry {
 
         destination.setGcIfInactive(isGcInactiveDestinations());
         destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
-        destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
+        destination.setInactiveTimeoutBeforeGC(getInactiveTimeoutBeforeGC());
         destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
         destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
         destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
@@ -875,12 +875,44 @@ public class PolicyEntry extends DestinationMapEntry {
         this.gcInactiveDestinations = gcInactiveDestinations;
     }
 
+    /**
+     * @return the amount of time spent inactive before GC of the destination kicks in.
+     *
+     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     */
+    @Deprecated
     public long getInactiveTimoutBeforeGC() {
-        return this.inactiveTimoutBeforeGC;
+        return getInactiveTimeoutBeforeGC();
     }
 
+    /**
+     * Sets the amount of time a destination is inactive before it is marked for GC
+     *
+     * @param inactiveTimoutBeforeGC
+     *        time in milliseconds to configure as the inactive timeout.
+     *
+     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     */
+    @Deprecated
     public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
-        this.inactiveTimoutBeforeGC = inactiveTimoutBeforeGC;
+        setInactiveTimeoutBeforeGC(inactiveTimoutBeforeGC);
+    }
+
+    /**
+     * @return the amount of time spent inactive before GC of the destination kicks in.
+     */
+    public long getInactiveTimeoutBeforeGC() {
+        return this.inactiveTimeoutBeforeGC;
+    }
+
+    /**
+     * Sets the amount of time a destination is inactive before it is marked for GC
+     *
+     * @param inactiveTimoutBeforeGC
+     *        time in milliseconds to configure as the inactive timeout.
+     */
+    public void setInactiveTimeoutBeforeGC(long inactiveTimeoutBeforeGC) {
+        this.inactiveTimeoutBeforeGC = inactiveTimeoutBeforeGC;
     }
 
     public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {

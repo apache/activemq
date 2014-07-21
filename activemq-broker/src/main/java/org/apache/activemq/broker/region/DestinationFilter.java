@@ -88,8 +88,8 @@ public class DestinationFilter implements Destination {
     }
 
     @Override
-    public long getInactiveTimoutBeforeGC() {
-        return next.getInactiveTimoutBeforeGC();
+    public long getInactiveTimeoutBeforeGC() {
+        return next.getInactiveTimeoutBeforeGC();
     }
 
     @Override

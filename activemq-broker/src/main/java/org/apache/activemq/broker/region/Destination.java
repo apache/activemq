@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -54,7 +55,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
 
-    long getInactiveTimoutBeforeGC();
+    long getInactiveTimeoutBeforeGC();
 
     void markForGC(long timeStamp);
 
@@ -64,6 +65,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     ActiveMQDestination getActiveMQDestination();
 
+    @Override
     MemoryUsage getMemoryUsage();
 
     void setMemoryUsage(MemoryUsage memoryUsage);
@@ -133,6 +135,7 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     public void setUseCache(boolean useCache);
 
+    @Override
     public int getMinimumMessageSize();
 
     public void setMinimumMessageSize(int minimumMessageSize);
