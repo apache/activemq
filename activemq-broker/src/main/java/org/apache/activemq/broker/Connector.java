@@ -66,4 +66,10 @@ public interface Connector extends Service {
      * @return true/false if link stealing is enabled
      */
     boolean isAllowLinkStealing();
+    
+    /**
+     * @return The comma separated string of regex patterns to match 
+     * broker names for cluster client updates
+     */
+    String getUpdateClusterFilter();
 }

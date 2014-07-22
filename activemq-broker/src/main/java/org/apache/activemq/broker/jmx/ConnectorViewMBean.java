@@ -22,13 +22,13 @@ public interface ConnectorViewMBean extends Service {
 
     @MBeanInfo("Connection count")
     int connectionCount();
-    
+
     /**
      * Resets the statistics
      */
     @MBeanInfo("Resets the statistics")
     void resetStatistics();
-    
+
     /**
      * enable statistics gathering
      */
@@ -37,16 +37,51 @@ public interface ConnectorViewMBean extends Service {
 
     /**
      * disable statistics gathering
-     */  
+     */
     @MBeanInfo("Disables statistics gathering")
     void disableStatistics();
-    
+
     /**
      * Returns true if statistics is enabled
-     * 
+     *
      * @return true if statistics is enabled
-     */  
+     */
     @MBeanInfo("Statistics gathering enabled")
     boolean isStatisticsEnabled();
+
+    /**
+     * Returns true if link stealing is enabled on this Connector
+     *
+     * @returns true if link stealing is enabled.
+     */
+    @MBeanInfo("Link Stealing enabled")
+    boolean isAllowLinkStealingEnabled();
+
+    /**
+     * @return true if update client connections when brokers leave/join a cluster
+     */
+    @MBeanInfo("Update client URL's when brokers leave/join a custer enabled")
+    boolean isUpdateClusterClients();
+
+    /**
+     * @return true if clients should be re-balanced across the cluster
+     */
+    @MBeanInfo("Rebalance clients across the broker cluster enabled")
+    boolean isRebalanceClusterClients();
+
+    /**
+     * @return true if clients should be updated when
+     * a broker is removed from a broker
+     */
+    @MBeanInfo("Update clients when a broker is removed from a network enabled.")
+    boolean isUpdateClusterClientsOnRemove();
+
+    /**
+     * @return The comma separated string of regex patterns to match
+     * broker names for cluster client updates
+     */
+    @MBeanInfo("Comma separated list of regex patterns to match broker names for cluster client updates.")
+    String getUpdateClusterFilter();
+
 
 }

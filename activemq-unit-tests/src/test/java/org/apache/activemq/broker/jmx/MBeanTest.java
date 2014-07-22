@@ -1361,6 +1361,31 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         session.close();
     }
 
+    public void testConnectorView() throws Exception {
+        ConnectorViewMBean connector = getProxyToConnectionView("tcp");
+        assertNotNull(connector);
+
+        assertFalse(connector.isRebalanceClusterClients());
+        assertFalse(connector.isUpdateClusterClientsOnRemove());
+        assertFalse(connector.isUpdateClusterClients());
+        assertFalse(connector.isAllowLinkStealingEnabled());
+    }
+
+    protected ConnectorViewMBean getProxyToConnectionView(String connectionType) throws Exception {
+        ObjectName connectorQuery = new ObjectName(
+            "org.apache.activemq:type=Broker,brokerName=localhost,connector=clientConnectors,connectorName="+connectionType+"_//*");
+
+        Set<ObjectName> results = broker.getManagementContext().queryNames(connectorQuery, null);
+
+        if (results == null || results.isEmpty() || results.size() > 1) {
+            throw new Exception("Unable to find the exact Connector instance.");
+        }
+
+        ConnectorViewMBean proxy = (ConnectorViewMBean) broker.getManagementContext()
+                .newProxyInstance(results.iterator().next(), ConnectorViewMBean.class, true);
+        return proxy;
+    }
+
     public void testDynamicProducers() throws Exception {
         connection = connectionFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
