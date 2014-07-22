@@ -38,6 +38,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     private Boolean useInboundSession;
     private RedeliveryPolicy redeliveryPolicy;
     private ActiveMQPrefetchPolicy prefetchPolicy;
+    private Boolean useSessionArgs;
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
@@ -85,6 +86,9 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (useInboundSession != null) {
             rc ^= useInboundSession.hashCode();
         }
+        if (useSessionArgs != null) {
+            rc ^= useSessionArgs.hashCode();
+        }
         if (serverUrl != null) {
             rc ^= serverUrl.hashCode();
         }
@@ -106,6 +110,9 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
             return false;
         }
         if (notEqual(useInboundSession, i.useInboundSession)) {
+            return false;
+        }
+        if (notEqual(useSessionArgs, i.useSessionArgs)) {
             return false;
         }
         return true;
@@ -181,6 +188,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
                 .append(", serverUrl = '").append(serverUrl).append("' ")
                 .append(", clientid = '").append(clientid).append("' ")
                 .append(", userName = '").append(userName).append("' ")
+                .append(", useSessionArgs = '").append(useSessionArgs).append("' ")
                 .append(", useInboundSession = '").append(useInboundSession).append("'  }")
                 .toString();
     }
@@ -333,5 +341,17 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
             prefetchPolicy = new ActiveMQPrefetchPolicy();
         }
         return prefetchPolicy;
+    }
+
+    public boolean isUseSessionArgs() {
+        return useSessionArgs != null ? useSessionArgs.booleanValue() : false;
+    }
+
+    public Boolean getUseSessionArgs() {
+        return useSessionArgs;
+    }
+
+    public void setUseSessionArgs(Boolean useSessionArgs) {
+        this.useSessionArgs = useSessionArgs;
     }
 }

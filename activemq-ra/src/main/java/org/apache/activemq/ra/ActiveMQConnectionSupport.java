@@ -103,7 +103,10 @@ public class ActiveMQConnectionSupport {
      */
     protected void setInfo(ActiveMQConnectionRequestInfo connectionRequestInfo){
         info = connectionRequestInfo;
-    }    
+        if ( log.isDebugEnabled() ) {
+            log.debug(this + ", setting [info] to: " + info);
+        }
+    }
 
     protected boolean notEqual(Object o1, Object o2) {
         return (o1 == null ^ o2 == null) || (o1 != null && !o1.equals(o2));
@@ -145,7 +148,7 @@ public class ActiveMQConnectionSupport {
      */
     public void setClientid(String clientid) {
         if ( log.isDebugEnabled() ) {
-            log.debug("setting [clientid] to: " + clientid);
+            log.debug(this + ", setting [clientid] to: " + clientid);
         }
         info.setClientid(clientid);
     }
@@ -162,7 +165,7 @@ public class ActiveMQConnectionSupport {
      */
     public void setPassword(String password) {
         if ( log.isDebugEnabled() ) {
-            log.debug("setting [password] property");
+            log.debug(this + ", setting [password] property");
         }
         info.setPassword(password);
     }
@@ -179,7 +182,7 @@ public class ActiveMQConnectionSupport {
      */
     public void setServerUrl(String url) {
         if ( log.isDebugEnabled() ) {
-            log.debug("setting [serverUrl] to: " + url);
+            log.debug(this + ", setting [serverUrl] to: " + url);
         }
         info.setServerUrl(url);
     }
@@ -418,6 +421,30 @@ public class ActiveMQConnectionSupport {
             log.debug("setting [useInboundSession] to: " + useInboundSession);
         }
         info.setUseInboundSession(useInboundSession);
+    }
+
+    public boolean isUseSessionArgs() {
+        return info.isUseSessionArgs();
+    }
+
+    public Boolean getUseSessionArgs() {
+        return info.getUseSessionArgs();
+    }
+
+    /**
+     * if true, calls to managed connection factory.connection.createSession will
+     * respect the passed in args. When false (default) the args are ignored b/c
+     * the container will do transaction demarcation via xa or local transaction rar
+     * contracts.
+     * This option is useful when a managed connection is used in plain jms mode
+     * and a jms transacted session session is required.
+     * @param useSessionArgs
+     */
+    public void setUseSessionArgs(Boolean useSessionArgs) {
+        if ( log.isDebugEnabled() ) {
+            log.debug(this + ", setting [useSessionArgs] to: " + useSessionArgs);
+        }
+        info.setUseSessionArgs(useSessionArgs);
     }
 
 }

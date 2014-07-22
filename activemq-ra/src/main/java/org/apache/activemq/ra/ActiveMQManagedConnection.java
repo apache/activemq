@@ -181,7 +181,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      *      javax.resource.spi.ConnectionRequestInfo)
      */
     public Object getConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
-        ManagedConnectionProxy proxy = new ManagedConnectionProxy(this);
+        ManagedConnectionProxy proxy = new ManagedConnectionProxy(this, info);
         proxyConnections.add(proxy);
         return proxy;
     }

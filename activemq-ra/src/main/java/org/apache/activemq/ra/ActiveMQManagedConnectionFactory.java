@@ -55,7 +55,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
         else
         {
             if ( log.isDebugEnabled() ) {
-                log.debug("copying standard ResourceAdapter configuration properties");
+                log.debug(this + ", copying standard ResourceAdapter configuration properties");
             }
 
             ActiveMQConnectionRequestInfo baseInfo = ((MessageResourceAdapter) adapter).getInfo().copy();
@@ -70,6 +70,9 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
             }
             if (getUseInboundSession() == null) {
                 setUseInboundSession(baseInfo.getUseInboundSession());
+            }
+            if (getUseSessionArgs() == null) {
+                setUseSessionArgs(baseInfo.isUseSessionArgs());
             }
             if (getUserName() == null) {
                 setUserName(baseInfo.getUserName());
