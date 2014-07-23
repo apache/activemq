@@ -20,14 +20,20 @@ package org.apache.activemq.transport.mqtt;
 import java.io.File;
 import java.io.IOException;
 import java.security.ProtectionDomain;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -36,14 +42,6 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
-import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.security.AuthenticationUser;
-import org.apache.activemq.security.AuthorizationEntry;
-import org.apache.activemq.security.AuthorizationPlugin;
-import org.apache.activemq.security.DefaultAuthorizationMap;
-import org.apache.activemq.security.SimpleAuthenticationPlugin;
-import org.apache.activemq.security.TempDestinationAuthorizationEntry;
-import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.transport.mqtt.util.ResourceLoadingSslContext;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Tracer;
@@ -52,6 +50,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.junit.runners.Parameterized.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,13 +60,17 @@ public class MQTTTestSupport {
 
     protected BrokerService brokerService;
     protected int port;
-    protected int sslPort;
-    protected int nioPort;
-    protected int nioSslPort;
     protected String jmsUri = "vm://localhost";
     protected ActiveMQConnectionFactory cf;
     protected LinkedList<Throwable> exceptions = new LinkedList<Throwable>();
-    protected int numberOfMessages;
+    protected boolean persistent;
+    protected String protocolConfig;
+
+    @Parameter(0)
+    public String protocolScheme;
+
+    @Parameter(1)
+    public boolean useSSL;
 
     public static final int AT_MOST_ONCE = 0;
     public static final int AT_LEAST_ONCE = 1;
@@ -80,18 +83,14 @@ public class MQTTTestSupport {
         return new File(new File(protectionDomain.getCodeSource().getLocation().getPath()), "../..").getCanonicalFile();
     }
 
-    public static void main(String[] args) throws Exception {
-        final MQTTTestSupport s = new MQTTTestSupport();
+    public MQTTTestSupport() {
+        this.protocolScheme = "mqtt";
+        this.useSSL = false;
+    }
 
-        s.sslPort = 5675;
-        s.port = 5676;
-        s.nioPort = 5677;
-        s.nioSslPort = 5678;
-
-        s.startBroker();
-        while(true) {
-            Thread.sleep(100000);
-        }
+    public MQTTTestSupport(String connectorScheme, boolean useSsl) {
+        this.protocolScheme = connectorScheme;
+        this.useSSL = useSsl;
     }
 
     public String getName() {
@@ -100,8 +99,16 @@ public class MQTTTestSupport {
 
     @Before
     public void setUp() throws Exception {
+
+        String basedir = basedir().getPath();
+        System.setProperty("javax.net.ssl.trustStore", basedir + "/src/test/resources/client.keystore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", basedir + "/src/test/resources/server.keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+
         exceptions.clear();
-        numberOfMessages = 1000;
         startBroker();
     }
 
@@ -162,84 +169,16 @@ public class MQTTTestSupport {
         brokerService = new BrokerService();
         brokerService.setPersistent(isPersistent());
         brokerService.setAdvisorySupport(false);
-        brokerService.setSchedulerSupport(true);
+        brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
         brokerService.setPopulateJMSXUserID(true);
-        brokerService.setSchedulerSupport(true);
-
-        JobSchedulerStoreImpl jobStore = new JobSchedulerStoreImpl();
-        jobStore.setDirectory(new File("activemq-data"));
-
-        brokerService.setJobSchedulerStore(jobStore);
     }
 
     protected BrokerPlugin configureAuthentication() throws Exception {
-        List<AuthenticationUser> users = new ArrayList<AuthenticationUser>();
-        users.add(new AuthenticationUser("system", "manager", "users,admins"));
-        users.add(new AuthenticationUser("user", "password", "users"));
-        users.add(new AuthenticationUser("guest", "password", "guests"));
-        SimpleAuthenticationPlugin authenticationPlugin = new SimpleAuthenticationPlugin(users);
-
-        return authenticationPlugin;
+        return null;
     }
 
     protected BrokerPlugin configureAuthorization() throws Exception {
-
-        @SuppressWarnings("rawtypes")
-        List<DestinationMapEntry> authorizationEntries = new ArrayList<DestinationMapEntry>();
-
-        AuthorizationEntry entry = new AuthorizationEntry();
-        entry.setQueue(">");
-        entry.setRead("admins");
-        entry.setWrite("admins");
-        entry.setAdmin("admins");
-        authorizationEntries.add(entry);
-        entry = new AuthorizationEntry();
-        entry.setQueue("USERS.>");
-        entry.setRead("users");
-        entry.setWrite("users");
-        entry.setAdmin("users");
-        authorizationEntries.add(entry);
-        entry = new AuthorizationEntry();
-        entry.setQueue("GUEST.>");
-        entry.setRead("guests");
-        entry.setWrite("guests,users");
-        entry.setAdmin("guests,users");
-        authorizationEntries.add(entry);
-        entry = new AuthorizationEntry();
-        entry.setTopic(">");
-        entry.setRead("admins");
-        entry.setWrite("admins");
-        entry.setAdmin("admins");
-        authorizationEntries.add(entry);
-        entry = new AuthorizationEntry();
-        entry.setTopic("USERS.>");
-        entry.setRead("users");
-        entry.setWrite("users");
-        entry.setAdmin("users");
-        authorizationEntries.add(entry);
-        entry = new AuthorizationEntry();
-        entry.setTopic("GUEST.>");
-        entry.setRead("guests");
-        entry.setWrite("guests,users");
-        entry.setAdmin("guests,users");
-        authorizationEntries.add(entry);
-        entry = new AuthorizationEntry();
-        entry.setTopic("ActiveMQ.Advisory.>");
-        entry.setRead("guests,users");
-        entry.setWrite("guests,users");
-        entry.setAdmin("guests,users");
-        authorizationEntries.add(entry);
-
-        TempDestinationAuthorizationEntry tempEntry = new TempDestinationAuthorizationEntry();
-        tempEntry.setRead("admins");
-        tempEntry.setWrite("admins");
-        tempEntry.setAdmin("admins");
-
-        DefaultAuthorizationMap authorizationMap = new DefaultAuthorizationMap(authorizationEntries);
-        authorizationMap.setTempDestinationAuthorizationEntry(tempEntry);
-        AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin(authorizationMap);
-
-        return authorizationPlugin;
+        return null;
     }
 
     protected void applyBrokerPolicies() throws Exception {
@@ -255,8 +194,16 @@ public class MQTTTestSupport {
         // Overrides of this method can add additional configuration options or add multiple
         // MQTT transport connectors as needed, the port variable is always supposed to be
         // assigned the primary MQTT connector's port.
-        TransportConnector connector = brokerService.addConnector(getProtocolScheme() + "://0.0.0.0:" + port);
-        port = connector.getConnectUri().getPort();
+
+        StringBuilder connectorURI = new StringBuilder();
+        connectorURI.append(getProtocolScheme());
+        connectorURI.append("://0.0.0.0:").append(port);
+        if (protocolConfig != null && !protocolConfig.isEmpty()) {
+            connectorURI.append("?").append(protocolConfig);
+        }
+
+        port = brokerService.addConnector(connectorURI.toString()).getConnectUri().getPort();
+        LOG.info("Added connector {} to broker", getProtocolScheme());
     }
 
     public void stopBroker() throws Exception {
@@ -299,7 +246,7 @@ public class MQTTTestSupport {
 
     /**
      * Initialize an MQTTClientProvider instance.  By default this method uses the port that's
-     * assigned to be the TCP based port using the base version of addMQTTConnector.  A sbuclass
+     * assigned to be the TCP based port using the base version of addMQTTConnector.  A subclass
      * can either change the value of port or override this method to assign the correct port.
      *
      * @param provider
@@ -308,14 +255,41 @@ public class MQTTTestSupport {
      * @throws Exception if an error occurs during initialization.
      */
     protected void initializeConnection(MQTTClientProvider provider) throws Exception {
-        provider.connect("tcp://localhost:" + port);
+        if (!isUseSSL()) {
+            provider.connect("tcp://localhost:" + port);
+        } else {
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
+            provider.setSslContext(ctx);
+            provider.connect("ssl://localhost:" + port);
+        }
     }
 
-    protected String getProtocolScheme() {
-        return "mqtt";
+    public String getProtocolScheme() {
+        return protocolScheme;
     }
 
-    protected boolean isPersistent() {
+    public void setProtocolScheme(String scheme) {
+        this.protocolScheme = scheme;
+    }
+
+    public boolean isUseSSL() {
+        return this.useSSL;
+    }
+
+    public void setUseSSL(boolean useSSL) {
+        this.useSSL = useSSL;
+    }
+
+    public boolean isPersistent() {
+        return persistent;
+    }
+
+    public int getPort() {
+        return this.port;
+    }
+
+    public boolean isSchedulerSupportEnabled() {
         return false;
     }
 
@@ -355,6 +329,14 @@ public class MQTTTestSupport {
     }
 
     protected MQTT createMQTTConnection(String clientId, boolean clean) throws Exception {
+        if (isUseSSL()) {
+            return createMQTTSslConnection(clientId, clean);
+        } else {
+            return createMQTTTcpConnection(clientId, clean);
+        }
+    }
+
+    private MQTT createMQTTTcpConnection(String clientId, boolean clean) throws Exception {
         MQTT mqtt = new MQTT();
         mqtt.setConnectAttemptsMax(1);
         mqtt.setReconnectAttemptsMax(0);
@@ -364,6 +346,23 @@ public class MQTTTestSupport {
         }
         mqtt.setCleanSession(clean);
         mqtt.setHost("localhost", port);
+        return mqtt;
+    }
+
+    private MQTT createMQTTSslConnection(String clientId, boolean clean) throws Exception {
+        MQTT mqtt = new MQTT();
+        mqtt.setConnectAttemptsMax(1);
+        mqtt.setReconnectAttemptsMax(0);
+        mqtt.setTracer(createTracer());
+        mqtt.setHost("ssl://localhost:" + port);
+        if (clientId != null) {
+            mqtt.setClientId(clientId);
+        }
+        mqtt.setCleanSession(clean);
+
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
+        mqtt.setSslContext(ctx);
         return mqtt;
     }
 
@@ -384,5 +383,21 @@ public class MQTTTestSupport {
                 LOG.info(String.format(message, args));
             }
         };
+    }
+
+    static class DefaultTrustManager implements X509TrustManager {
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }
