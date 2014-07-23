@@ -16,23 +16,18 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.TransportConnector;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
 
 public class PahoMQTTTest extends AbstractMQTTTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PahoMQTTTest.class);
-
 
     @Test(timeout=300000)
     public void testSendAndReceiveMQTT() throws Exception {
@@ -55,6 +50,4 @@ public class PahoMQTTTest extends AbstractMQTTTest {
         client.disconnect();
         client.close();
     }
-
-
 }
