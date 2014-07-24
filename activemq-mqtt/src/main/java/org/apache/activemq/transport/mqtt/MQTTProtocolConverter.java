@@ -28,8 +28,10 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 import javax.jms.Destination;
+import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.security.auth.login.CredentialException;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -292,7 +294,11 @@ public class MQTTProtocolConverter {
                     Throwable exception = ((ExceptionResponse) response).getException();
                     //let the client know
                     CONNACK ack = new CONNACK();
-                    if (exception instanceof SecurityException) {
+                    if (exception instanceof InvalidClientIDException) {
+                        ack.code(CONNACK.Code.CONNECTION_REFUSED_IDENTIFIER_REJECTED);
+                    } else if (exception instanceof SecurityException) {
+                        ack.code(CONNACK.Code.CONNECTION_REFUSED_NOT_AUTHORIZED);
+                    } else if (exception instanceof CredentialException) {
                         ack.code(CONNACK.Code.CONNECTION_REFUSED_BAD_USERNAME_OR_PASSWORD);
                     } else {
                         ack.code(CONNACK.Code.CONNECTION_REFUSED_SERVER_UNAVAILABLE);

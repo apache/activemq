@@ -25,6 +25,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.JMSException;
@@ -136,12 +137,13 @@ public class MQTTTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
-        ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
-
         addMQTTConnector();
         addOpenWireConnector();
 
         cf = new ActiveMQConnectionFactory(jmsUri);
+
+        ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
+        createPlugins(plugins);
 
         BrokerPlugin authenticationPlugin = configureAuthentication();
         if (authenticationPlugin != null) {
@@ -171,6 +173,21 @@ public class MQTTTestSupport {
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
         brokerService.setPopulateJMSXUserID(true);
+    }
+
+    /**
+     * Allows a subclass to add additional broker plugins during the broker startup
+     * process.  This method should not add Authorization or Authentication plugins
+     * as those are handled by the configureAuthentication and configureAuthorization
+     * methods later.
+     *
+     * @param plugins
+     *        The List object to add Plugins for installation into the new Broker.
+     *
+     * @throws Exception if an error occurs during the plugin creation process.
+     */
+    protected void createPlugins(List<BrokerPlugin> plugins) throws Exception {
+        // NOOP
     }
 
     protected BrokerPlugin configureAuthentication() throws Exception {

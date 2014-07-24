@@ -25,9 +25,19 @@ import static org.junit.Assert.fail;
 import java.net.ProtocolException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.InvalidClientIDException;
+import javax.security.auth.login.CredentialException;
+
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ConnectionInfo;
 import org.fusesource.mqtt.client.BlockingConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
@@ -90,7 +100,7 @@ public class MQTTAuthTests extends MQTTAuthTestSupport {
                     try {
                         connAck.decode(frame);
                         LOG.info("{}", connAck);
-                        assertEquals(CONNACK.Code.CONNECTION_REFUSED_BAD_USERNAME_OR_PASSWORD, connAck.code());
+                        assertEquals(CONNACK.Code.CONNECTION_REFUSED_NOT_AUTHORIZED, connAck.code());
                     } catch (ProtocolException e) {
                         failed.set(true);
                         fail("Error decoding publish " + e.getMessage());
@@ -170,5 +180,111 @@ public class MQTTAuthTests extends MQTTAuthTestSupport {
         connectionSub.subscribe(new Topic[]{new Topic("#", QoS.AT_LEAST_ONCE)});
         Message msg = connectionSub.receive(1, TimeUnit.SECONDS);
         assertNull("Shouldn't receive the message", msg);
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testInvalidClientIdGetCorrectErrorCode() throws Exception {
+        MQTT mqttPub = createMQTTConnection("invalid", true);
+
+        final AtomicInteger errorCode = new AtomicInteger();
+
+        mqttPub.setTracer(new Tracer() {
+            @Override
+            public void onReceive(MQTTFrame frame) {
+                LOG.info("Client received: {}", frame);
+                if (frame.messageType() == CONNACK.TYPE) {
+                    CONNACK connAck = new CONNACK();
+                    try {
+                        connAck.decode(frame);
+                        LOG.info("{}", connAck);
+                        errorCode.set(connAck.code().ordinal());
+                        assertEquals(CONNACK.Code.CONNECTION_REFUSED_IDENTIFIER_REJECTED, connAck.code());
+                    } catch (ProtocolException e) {
+                        fail("Error decoding publish " + e.getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onSend(MQTTFrame frame) {
+                LOG.info("Client sent: {}", frame);
+            }
+        });
+
+        BlockingConnection connectionPub = mqttPub.blockingConnection();
+        try {
+            connectionPub.connect();
+            fail("Should not be able to connect.");
+        } catch (Exception e) {
+        }
+
+        assertEquals(CONNACK.Code.CONNECTION_REFUSED_IDENTIFIER_REJECTED.ordinal(), errorCode.get());
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testBadCredentialExceptionGetsCorrectErrorCode() throws Exception {
+        MQTT mqttPub = createMQTTConnection("bad-credential", true);
+        mqttPub.setUserName("admin");
+        mqttPub.setPassword("admin");
+
+        final AtomicInteger errorCode = new AtomicInteger();
+
+        mqttPub.setTracer(new Tracer() {
+            @Override
+            public void onReceive(MQTTFrame frame) {
+                LOG.info("Client received: {}", frame);
+                if (frame.messageType() == CONNACK.TYPE) {
+                    CONNACK connAck = new CONNACK();
+                    try {
+                        connAck.decode(frame);
+                        LOG.info("{}", connAck);
+                        errorCode.set(connAck.code().ordinal());
+                        assertEquals(CONNACK.Code.CONNECTION_REFUSED_BAD_USERNAME_OR_PASSWORD, connAck.code());
+                    } catch (ProtocolException e) {
+                        fail("Error decoding publish " + e.getMessage());
+                    }
+                }
+            }
+
+            @Override
+            public void onSend(MQTTFrame frame) {
+                LOG.info("Client sent: {}", frame);
+            }
+        });
+
+        BlockingConnection connectionPub = mqttPub.blockingConnection();
+        try {
+            connectionPub.connect();
+            fail("Should not be able to connect.");
+        } catch (Exception e) {
+        }
+
+        assertEquals(CONNACK.Code.CONNECTION_REFUSED_BAD_USERNAME_OR_PASSWORD.ordinal(), errorCode.get());
+    }
+
+    @Override
+    protected void createPlugins(List<BrokerPlugin> plugins) throws Exception {
+        BrokerPlugin failOnSpecificConditionsPlugin = new BrokerPlugin() {
+            @Override
+            public Broker installPlugin(Broker broker) throws Exception {
+                return new BrokerFilter(broker) {
+                    @Override
+                    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+                        String clientId = info.getClientId();
+                        if (clientId != null && !clientId.isEmpty()) {
+                            if (clientId.equalsIgnoreCase("invalid")) {
+                                LOG.info("Client ID was invalid");
+                                throw new InvalidClientIDException("Bad client Id");
+                            } else if (clientId.equalsIgnoreCase("bad-credential")) {
+                                LOG.info("User Name was invalid");
+                                throw new CredentialException("Unknwon User Name.");
+                            }
+                        }
+                    }
+                };
+            }
+        };
+
+        plugins.add(failOnSpecificConditionsPlugin);
     }
 }
