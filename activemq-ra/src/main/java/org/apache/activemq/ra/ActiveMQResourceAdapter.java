@@ -352,12 +352,9 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                             if (connection != null) {
                                 try {
                                     connection.close();
-                                } catch (JMSException ignored) {
-
-                                } finally {
-                                    setConnection(original);
-                                }
+                                } catch (JMSException ignored) {}
                             }
+                            setConnection(original);
                         }
                     }};
 

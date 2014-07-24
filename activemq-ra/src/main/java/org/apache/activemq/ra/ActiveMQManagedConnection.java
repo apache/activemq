@@ -399,4 +399,9 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         return transactionContext;
     }
 
+    @Override
+    public String toString() {
+        return "[" + super.toString() + "," + physicalConnection +"]";
+    }
+
 }

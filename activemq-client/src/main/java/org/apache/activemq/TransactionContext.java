@@ -653,7 +653,7 @@ public class TransactionContext implements XAResource {
             final FailoverTransport failoverTransport = this.connection.getTransport().narrow(FailoverTransport.class);
             if (failoverTransport != null && !failoverTransport.isConnected()) {
                 // otherwise call will block on reconnect forfeting any app level periodic check
-                XAException xaException = new XAException("Failover transport not connected: " + this.getConnection().getTransport());
+                XAException xaException = new XAException("Failover transport not connected: " + this.getConnection());
                 xaException.errorCode = XAException.XAER_RMERR;
                 throw xaException;
             }
@@ -829,6 +829,7 @@ public class TransactionContext implements XAResource {
     public String toString() {
         return "TransactionContext{" +
                 "transactionId=" + transactionId +
+                ",connection=" + connection +
                 '}';
     }
 }
