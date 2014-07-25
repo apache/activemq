@@ -169,6 +169,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("old dest has no memory usage", 0, queue.getMemoryPercentUsage());
         assertTrue("use cache", queueNew.isUseCache());
         assertTrue("cache enabled", queueNew.isCacheEnabled());
+        assertEquals("no forwards", 0, queueNew.getForwardCount());
     }
 
     public void testRemoveMessages() throws Exception {

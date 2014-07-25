@@ -1810,6 +1810,9 @@ public class Queue extends BaseDestination implements Task, UsageListener {
             } finally {
                 messagesLock.writeLock().unlock();
             }
+            if (sub != null && sub.getConsumerInfo().isNetworkSubscription()) {
+                getDestinationStatistics().getForwards().increment();
+            }
         }
 
     }

@@ -95,7 +95,7 @@ public class DstatCommand extends AbstractJmxCommand {
         // sort list so the names is A..Z
         Collections.sort(queueList, new ObjectInstanceComparator());
 
-        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
+        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Forward #", "Memory %"));
 
         // Iterate through the queue result
         for (Object view : queueList) {
@@ -115,6 +115,7 @@ public class DstatCommand extends AbstractJmxCommand {
                     queueView.getConsumerCount(),
                     queueView.getEnqueueCount(),
                     queueView.getDequeueCount(),
+                    queueView.getForwardCount(),
                     queueView.getMemoryPercentUsage()));
         }
     }
@@ -128,7 +129,7 @@ public class DstatCommand extends AbstractJmxCommand {
         final String header = "%-50s  %10s  %10s  %10s  %10s  %10s  %10s";
         final String tableRow = "%-50s  %10d  %10d  %10d  %10d  %10d  %10d";
 
-        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
+        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Forward #", "Memory %"));
 
         Collections.sort(queueList, new ObjectInstanceComparator());
 
@@ -150,6 +151,7 @@ public class DstatCommand extends AbstractJmxCommand {
                     queueView.getConsumerCount(),
                     queueView.getEnqueueCount(),
                     queueView.getDequeueCount(),
+                    queueView.getForwardCount(),
                     queueView.getMemoryPercentUsage()));
         }
     }
@@ -166,7 +168,7 @@ public class DstatCommand extends AbstractJmxCommand {
         // sort list so the names is A..Z
         Collections.sort(topicsList, new ObjectInstanceComparator());
 
-        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Memory %"));
+        context.print(String.format(Locale.US, header, "Name", "Queue Size", "Producer #", "Consumer #", "Enqueue #", "Dequeue #", "Forward #", "Memory %"));
 
         // Iterate through the topics result
         for (Object view : topicsList) {
@@ -186,6 +188,7 @@ public class DstatCommand extends AbstractJmxCommand {
                     topicView.getConsumerCount(),
                     topicView.getEnqueueCount(),
                     topicView.getDequeueCount(),
+                    topicView.getForwardCount(),
                     topicView.getMemoryPercentUsage()));
         }
     }
