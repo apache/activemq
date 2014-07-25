@@ -17,11 +17,12 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
-import org.apache.activemq.util.ByteSequence;
+
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 
 /**
  * An optimized writer to do batch appends to a data file. This object is thread
@@ -29,7 +30,7 @@ import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
  * does.
  * The thread calling enqueue does the file open and buffering of the data, which
  * reduces the round trip of the write thread.
- * 
+ *
  */
 class CallerBufferingDataFileAppender extends DataFileAppender {
 
@@ -48,6 +49,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
             append(write);
         }
 
+        @Override
         public void append(Journal.WriteCommand write) throws IOException {
             super.append(write);
             forceToDisk |= appendToBuffer(write, buff);
@@ -82,7 +84,7 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
     @Override
     protected void processQueue() {
         DataFile dataFile = null;
-        RandomAccessFile file = null;
+        RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
         try {
 
@@ -123,15 +125,15 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 final boolean forceToDisk = wb.forceToDisk;
 
                 ByteSequence sequence = buff.toByteSequence();
-                
-                // Now we can fill in the batch control record properly. 
+
+                // Now we can fill in the batch control record properly.
                 buff.reset();
                 buff.skip(5+Journal.BATCH_CONTROL_RECORD_MAGIC.length);
                 buff.writeInt(sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
                 if( journal.isChecksum() ) {
-	                Checksum checksum = new Adler32();
-	                checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
-	                buff.writeLong(checksum.getValue());
+                    Checksum checksum = new Adler32();
+                    checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
+                    buff.writeLong(checksum.getValue());
                 }
 
                 // Now do the 1 big write.
@@ -150,11 +152,11 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 file.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
                 ReplicationTarget replicationTarget = journal.getReplicationTarget();
                 if( replicationTarget!=null ) {
-                	replicationTarget.replicate(wb.writes.getHead().location, sequence, forceToDisk);
+                    replicationTarget.replicate(wb.writes.getHead().location, sequence, forceToDisk);
                 }
-                
+
                 if (forceToDisk) {
-                    file.getFD().sync();
+                    file.sync();
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();

@@ -87,6 +87,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected boolean readOnlyBody;
     protected transient boolean recievedByDFBridge;
     protected boolean droppable;
+    protected boolean jmsXGroupFirstForConsumer;
 
     private transient short referenceCount;
     private transient ActiveMQConnection connection;
@@ -156,6 +157,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         copy.brokerOutTime = brokerOutTime;
         copy.memoryUsage=this.memoryUsage;
         copy.brokerPath = brokerPath;
+        copy.jmsXGroupFirstForConsumer = jmsXGroupFirstForConsumer;
 
         // lets not copy the following fields
         // copy.targetConsumerId = targetConsumerId;
@@ -211,6 +213,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
                 properties = unmarsallProperties(marshalledProperties);
                 marshalledProperties = null;
             }
+        } else {
+            marshalledProperties = null;
         }
     }
 
@@ -779,6 +783,17 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     @Override
 	public boolean isDropped() {
         return false;
+    }
+
+    /**
+     * @openwire:property version=10
+     */
+    public boolean isJMSXGroupFirstForConsumer() {
+        return jmsXGroupFirstForConsumer;
+    }
+
+    public void setJMSXGroupFirstForConsumer(boolean val) {
+        jmsXGroupFirstForConsumer = val;
     }
 
     public void compress() throws IOException {

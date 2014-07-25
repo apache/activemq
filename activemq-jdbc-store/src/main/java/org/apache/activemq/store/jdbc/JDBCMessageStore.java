@@ -18,6 +18,11 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
@@ -65,8 +70,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final JDBCPersistenceAdapter persistenceAdapter;
     protected AtomicLong lastRecoveredSequenceId = new AtomicLong(-1);
     protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
-
+    final Set<Long> recoveredAdditions = new LinkedHashSet<Long>();
     protected ActiveMQMessageAudit audit;
+    protected final List<Long> pendingAdditions = new LinkedList<Long>();
     
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
         super(destination);
@@ -105,9 +111,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             }
             return;
         }
-        
-        long sequenceId = persistenceAdapter.getNextSequenceId();
-        
+
         // Serialize the Message..
         byte data[];
         try {
@@ -119,7 +123,14 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
         // Get a connection and insert the message into the DB.
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
-        try {      
+        long sequenceId;
+        synchronized (pendingAdditions) {
+            sequenceId = persistenceAdapter.getNextSequenceId();
+            if (message.isInTransaction()) {
+                trackPendingSequence(c, sequenceId);
+            }
+        }
+        try {
             adapter.doAddMessage(c, sequenceId, messageId, destination, data, message.getExpiration(),
                     this.isPrioritizedMessages() ? message.getPriority() : 0, context != null ? context.getXid() : null);
         } catch (SQLException e) {
@@ -128,14 +139,49 @@ public class JDBCMessageStore extends AbstractMessageStore {
         } finally {
             c.close();
         }
-        if (context != null && context.getXid() != null) {
-            message.getMessageId().setEntryLocator(sequenceId);
-        } else {
-            onAdd(messageId, sequenceId, message.getPriority());
+        message.getMessageId().setEntryLocator(sequenceId);
+        onAdd(message, sequenceId, message.getPriority());
+    }
+
+    // jdbc commit order is random with concurrent connections - limit scan to lowest pending
+    private void trackPendingSequence(final TransactionContext transactionContext, final long sequenceId) {
+        synchronized (pendingAdditions) { pendingAdditions.add(sequenceId); }
+        transactionContext.onCompletion(new Runnable() {
+            public void run() {
+                synchronized (pendingAdditions) { pendingAdditions.remove(sequenceId); }
+            }
+        });
+    }
+
+    private long minPendingSequeunceId() {
+        synchronized (pendingAdditions) {
+            if (!pendingAdditions.isEmpty()) {
+                return pendingAdditions.get(0);
+            } else {
+                // nothing pending, ensure scan is limited to current state
+                return persistenceAdapter.sequenceGenerator.getLastSequenceId() + 1;
+            }
         }
     }
 
-    protected void onAdd(MessageId messageId, long sequenceId, byte priority) {
+    @Override
+    public void updateMessage(Message message) throws IOException {
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            adapter.doUpdateMessage(c, destination, message.getMessageId(), ByteSequenceData.toByteArray(wireFormat.marshal(message)));
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to update message: " + message.getMessageId() + " in container: " + e, e);
+        } finally {
+            c.close();
+        }
+    }
+
+    protected void onAdd(Message message, long sequenceId, byte priority) {
+        if (message.getTransactionId() != null && message.getTransactionId().isXATransaction()
+                && lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
+            recoveredAdditions.add(sequenceId);
+        }
     }
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
@@ -191,7 +237,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
 
-    	long seq = persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
+    	long seq = ack.getLastMessageId().getEntryLocator() != null ?
+                (Long) ack.getLastMessageId().getEntryLocator() :
+                persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -216,7 +264,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
+                    Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                     msg.getMessageId().setBrokerSequenceId(sequenceId);
                     return listener.recoverMessage(msg);
                 }
@@ -275,12 +323,25 @@ public class JDBCMessageStore extends AbstractMessageStore {
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            adapter.doRecoverNextMessages(c, destination, lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
+            if (!recoveredAdditions.isEmpty()) {
+                for (Iterator<Long> iterator = recoveredAdditions.iterator(); iterator.hasNext(); )  {
+                    Long sequenceId = iterator.next();
+                    iterator.remove();
+                    maxReturned--;
+                    if (sequenceId <= lastRecoveredSequenceId.get()) {
+                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(adapter.doGetMessageById(c, sequenceId)));
+                        LOG.trace("recovered add {} {}", this, msg.getMessageId());
+                        listener.recoverMessage(msg);
+                    }
+                }
+            }
+            adapter.doRecoverNextMessages(c, destination, minPendingSequeunceId(), lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                         Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
+                        msg.getMessageId().setEntryLocator(sequenceId);
                         listener.recoverMessage(msg);
                         lastRecoveredSequenceId.set(sequenceId);
                         lastRecoveredPriority.set(msg.getPriority());
@@ -335,5 +396,5 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
-    }   
+    }
 }

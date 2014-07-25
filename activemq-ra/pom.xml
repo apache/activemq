@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.9-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-ra</artifactId>
@@ -131,7 +131,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>pertest</forkMode>
+          <!--forkMode>pertest</forkMode-->
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <includes>

@@ -27,6 +27,7 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -45,7 +46,7 @@ public class HealthView implements HealthViewMBean {
     public TabularData health() throws Exception {
         OpenTypeSupport.OpenTypeFactory factory = OpenTypeSupport.getFactory(HealthStatus.class);
         CompositeType ct = factory.getCompositeType();
-        TabularType tt = new TabularType("HealthStatus", "HealthStatus", ct, new String[]{"healthId", "level", "message", "resource"});
+        TabularType tt = new TabularType("HealthStatus", "HealthStatus", ct, new String[] { "healthId", "level", "message", "resource" });
         TabularDataSupport rc = new TabularDataSupport(tt);
 
         List<HealthStatus> list = healthList();
@@ -70,7 +71,6 @@ public class HealthView implements HealthViewMBean {
 
         /**
          * Check persistence store directory limits
-         *
          */
         BrokerService brokerService = broker.getBrokerService();
         if (brokerService != null && brokerService.getPersistenceAdapter() != null) {
@@ -84,7 +84,6 @@ public class HealthView implements HealthViewMBean {
                         dir = new File(dirPath);
                     }
 
-
                     while (dir != null && !dir.isDirectory()) {
                         dir = dir.getParentFile();
                     }
@@ -92,23 +91,21 @@ public class HealthView implements HealthViewMBean {
                     long storeLimit = usage.getStoreUsage().getLimit();
                     long dirFreeSpace = dir.getUsableSpace();
 
-                    if (storeSize != 0) {
+                    if (storeSize != 0 && storeLimit != 0) {
                         int val = (int) ((storeSize * 100) / storeLimit);
                         if (val > 90) {
-                            answer.add(new HealthStatus("org.apache.activemq.StoreLimit", "WARNING", "Message Store size is within " + val + "% of its limit", adapter.toString()));
+                            answer.add(new HealthStatus("org.apache.activemq.StoreLimit", "WARNING", "Message Store size is within " + val + "% of its limit",
+                                adapter.toString()));
                         }
                     }
 
-
                     if ((storeLimit - storeSize) > dirFreeSpace) {
-                        String message = "Store limit is " + storeLimit / (1024 * 1024) +
-                                " mb, whilst the data directory: " + dir.getAbsolutePath() +
-                                " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space";
+                        String message = "Store limit is " + storeLimit / (1024 * 1024) + " mb, whilst the data directory: " + dir.getAbsolutePath()
+                            + " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space";
                         answer.add(new HealthStatus("org.apache.activemq.FreeDiskSpaceLeft", "WARNING", message, adapter.toString()));
                     }
-
-
                 }
+
                 File tmpDir = brokerService.getTmpDataDirectory();
                 if (tmpDir != null) {
 
@@ -123,15 +120,14 @@ public class HealthView implements HealthViewMBean {
                         tmpDir = tmpDir.getParentFile();
                     }
 
-                    int val = (int) ((storeSize * 100) / storeLimit);
-                    if (val > 90) {
-                        answer.add(new HealthStatus("org.apache.activemq.TempStoreLimit", "WARNING", "TempMessage Store size is within " + val + "% of its limit", adapter.toString()));
+                    if (storeLimit != 0) {
+                        int val = (int) ((storeSize * 100) / storeLimit);
+                        if (val > 90) {
+                            answer.add(new HealthStatus("org.apache.activemq.TempStoreLimit", "WARNING", "TempMessage Store size is within " + val
+                                + "% of its limit", adapter.toString()));
+                        }
                     }
-
-
                 }
-
-
             }
         }
 
@@ -146,7 +142,6 @@ public class HealthView implements HealthViewMBean {
                         dir = new File(dirPath);
                     }
 
-
                     while (dir != null && !dir.isDirectory()) {
                         dir = dir.getParentFile();
                     }
@@ -154,34 +149,32 @@ public class HealthView implements HealthViewMBean {
                     long storeLimit = usage.getJobSchedulerUsage().getLimit();
                     long dirFreeSpace = dir.getUsableSpace();
 
-                    if (storeSize != 0) {
+                    if (storeSize != 0 && storeLimit != 0) {
                         int val = (int) ((storeSize * 100) / storeLimit);
                         if (val > 90) {
-                            answer.add(new HealthStatus("org.apache.activemq.JobSchedulerLimit", "WARNING", "JobSchedulerMessage Store size is within " + val + "% of its limit", scheduler.toString()));
+                            answer.add(new HealthStatus("org.apache.activemq.JobSchedulerLimit", "WARNING", "JobSchedulerMessage Store size is within " + val
+                                + "% of its limit", scheduler.toString()));
                         }
                     }
 
-
                     if ((storeLimit - storeSize) > dirFreeSpace) {
-                        String message = "JobSchedulerStore limit is " + storeLimit / (1024 * 1024) +
-                                " mb, whilst the data directory: " + dir.getAbsolutePath() +
-                                " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space";
+                        String message = "JobSchedulerStore limit is " + storeLimit / (1024 * 1024) + " mb, whilst the data directory: "
+                            + dir.getAbsolutePath() + " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space";
                         answer.add(new HealthStatus("org.apache.activemq.FreeDiskSpaceLeft", "WARNING", message, scheduler.toString()));
                     }
-
                 }
             }
         }
 
-    if (answer != null && !answer.isEmpty()){
-         this.currentState = "Getting Worried {";
-        for (HealthStatus hs: answer){
-            currentState += hs + " , ";
+        if (answer != null && !answer.isEmpty()) {
+            this.currentState = "Getting Worried {";
+            for (HealthStatus hs : answer) {
+                currentState += hs + " , ";
+            }
+            currentState += " }";
+        } else {
+            this.currentState = "Good";
         }
-        currentState += " }";
-    } else{
-        this.currentState="Good";
-    }
         return answer;
     }
 
@@ -192,5 +185,4 @@ public class HealthView implements HealthViewMBean {
     public String getCurrentStatus() {
         return this.currentState;
     }
-
 }

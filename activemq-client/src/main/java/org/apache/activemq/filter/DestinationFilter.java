@@ -20,14 +20,11 @@ package org.apache.activemq.filter;
 import java.io.IOException;
 
 import javax.jms.JMSException;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * Represents a filter which only operates on Destinations
- * 
- * 
  */
 public abstract class DestinationFilter implements BooleanExpression {
 
@@ -74,4 +71,6 @@ public abstract class DestinationFilter implements BooleanExpression {
         // if none of the paths contain a wildcard then use equality
         return new SimpleDestinationFilter(destination);
     }
+
+    public abstract boolean isWildcard();
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -59,13 +60,16 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         // shouldn't get called
         throw new RuntimeException("Not supported");
     }
+
+    public synchronized void addMessageFirst(MessageReference node) throws Exception {
+        batchList.addMessageFirst(node);
+        size++;
+    }
     
         
     @Override
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("recover: " + message.getMessageId() + ", priority: " + message.getPriority());
-        }
+        LOG.trace("{} recover: {}, priority: {}", this, message.getMessageId(), message.getPriority());
         boolean recovered = false;
         MessageEvaluationContext messageEvaluationContext = new NonCachedMessageEvaluationContext();
         messageEvaluationContext.setMessageReference(message);
@@ -83,7 +87,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         try {
             return store.getMessageCount(clientId, subscriberName);
         } catch (Exception e) {
-            LOG.error(this + " Failed to get the outstanding message count from the store", e);
+            LOG.error("{} Failed to get the outstanding message count from the store", this, e);
             throw new RuntimeException(e);
         }
     }
@@ -116,6 +120,11 @@ class TopicStorePrefetch extends AbstractStoreCursor {
 
     public final boolean isPaging() {
         return !isCacheEnabled() && !batchList.isEmpty();
+    }
+
+    @Override
+    public Subscription getSubscription() {
+        return subscription;
     }
 
     @Override

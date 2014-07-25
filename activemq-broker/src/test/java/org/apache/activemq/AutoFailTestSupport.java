@@ -80,7 +80,11 @@ public abstract class AutoFailTestSupport extends TestCase {
                     if (!isTestSuccess.get()) {
                         LOG.error("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
                         dumpAllThreads(getName());
-                        System.exit(EXIT_ERROR);
+                        if (System.getProperty("org.apache.activemq.AutoFailTestSupport.disableSystemExit") == null) {
+                            System.exit(EXIT_ERROR);
+                        } else {
+                            LOG.error("No system.exit as it kills surefire - forkedProcessTimeoutInSeconds (surefire.timeout) will kick in eventually see pom.xml surefire plugin config");
+                        }
                     }
                 }
             }

@@ -100,6 +100,13 @@ public class DurableSubDelayedUnsubscribeTest {
         // Ensure we sleep longer than the housekeeper's sweep delay otherwise we can
         // miss the fact that all durables that were abandoned do finally get cleaned up.
 
+        // Wait for all clients to stop
+        Wait.waitFor(new Wait.Condition() {
+            public boolean isSatisified() throws Exception {
+                return clientManager.getClientCount() == 0;
+            }
+        }, Client.lifetime + TimeUnit.SECONDS.toMillis(10));
+
         assertTrue("should have only one inactiveSubscriber subscribed but was: " + brokerService.getAdminView().getInactiveDurableTopicSubscribers().length,
             Wait.waitFor(new Wait.Condition() {
 
@@ -107,7 +114,7 @@ public class DurableSubDelayedUnsubscribeTest {
                 public boolean isSatisified() throws Exception {
                     return brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1;
                 }
-            }, TimeUnit.MINUTES.toMillis(houseKeeper.SWEEP_DELAY * 2)));
+            }, houseKeeper.SWEEP_DELAY * 2));
 
         assertTrue("should be no subscribers subscribed but was: " + brokerService.getAdminView().getDurableTopicSubscribers().length,
             Wait.waitFor(new Wait.Condition() {
@@ -360,6 +367,10 @@ public class DurableSubDelayedUnsubscribeTest {
             setDaemon(true);
         }
 
+        public int getClientCount() {
+            return clients.size();
+        }
+
         @Override
         public void run() {
             try {
@@ -438,7 +449,7 @@ public class DurableSubDelayedUnsubscribeTest {
         private final int id;
         private final String conClientId;
 
-        private final int lifetime = 60 * 1000;
+        public static final int lifetime = 60 * 1000;
         private final int online = 1 * 1000;
         private final int offline = 59 * 1000;
 

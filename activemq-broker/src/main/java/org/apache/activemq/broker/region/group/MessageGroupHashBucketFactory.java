@@ -29,9 +29,10 @@ package org.apache.activemq.broker.region.group;
 public class MessageGroupHashBucketFactory implements MessageGroupMapFactory {
 
     private int bucketCount = 1024;
+    private int cacheSize = 64;
 
     public MessageGroupMap createMessageGroupMap() {
-        return new MessageGroupHashBucket(bucketCount);
+        return new MessageGroupHashBucket(getBucketCount(), getCacheSize());
     }
 
     public int getBucketCount() {
@@ -47,6 +48,14 @@ public class MessageGroupHashBucketFactory implements MessageGroupMapFactory {
      */
     public void setBucketCount(int bucketCount) {
         this.bucketCount = bucketCount;
+    }
+
+    public int getCacheSize() {
+        return cacheSize;
+    }
+
+    public void setCacheSize(int cacheSize) {
+        this.cacheSize = cacheSize;
     }
 
 }

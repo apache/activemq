@@ -27,6 +27,7 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -41,13 +42,13 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.qpid.proton.jms.JMSVendor;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ActiveMQJMSVendor extends JMSVendor {
 
     final public static ActiveMQJMSVendor INSTANCE = new ActiveMQJMSVendor();
 
-    private ActiveMQJMSVendor() {}
+    private ActiveMQJMSVendor() {
+    }
 
     @Override
     public BytesMessage createBytesMessage() {
@@ -80,49 +81,50 @@ public class ActiveMQJMSVendor extends JMSVendor {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public Destination createDestination(String name) {
         return super.createDestination(name, Destination.class);
     }
 
+    @Override
     public <T extends Destination> T createDestination(String name, Class<T> kind) {
-        if( kind == Queue.class ) {
-            return kind.cast(new ActiveMQQueue(name));
+        String destinationName = name.substring(name.lastIndexOf("://") + 3);
+        if (kind == Queue.class) {
+            return kind.cast(new ActiveMQQueue(destinationName));
         }
-        if( kind == Topic.class ) {
-            return kind.cast(new ActiveMQTopic(name));
+        if (kind == Topic.class) {
+            return kind.cast(new ActiveMQTopic(destinationName));
         }
-        if( kind == TemporaryQueue.class ) {
-            return kind.cast(new ActiveMQTempQueue(name));
+        if (kind == TemporaryQueue.class) {
+            return kind.cast(new ActiveMQTempQueue(destinationName));
         }
-        if( kind == TemporaryTopic.class ) {
-            return kind.cast(new ActiveMQTempTopic(name));
+        if (kind == TemporaryTopic.class) {
+            return kind.cast(new ActiveMQTempTopic(destinationName));
         }
         return kind.cast(ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE));
     }
 
     @Override
     public void setJMSXUserID(Message msg, String value) {
-        ((ActiveMQMessage)msg).setUserID(value);
+        ((ActiveMQMessage) msg).setUserID(value);
     }
 
     @Override
     public void setJMSXGroupID(Message msg, String value) {
-        ((ActiveMQMessage)msg).setGroupID(value);
+        ((ActiveMQMessage) msg).setGroupID(value);
     }
 
     @Override
     public void setJMSXGroupSequence(Message msg, int value) {
-        ((ActiveMQMessage)msg).setGroupSequence(value);
+        ((ActiveMQMessage) msg).setGroupSequence(value);
     }
 
     @Override
     public void setJMSXDeliveryCount(Message msg, long value) {
-        ((ActiveMQMessage)msg).setRedeliveryCounter((int) value);
+        ((ActiveMQMessage) msg).setRedeliveryCounter((int) value);
     }
 
     @Override
     public String toAddress(Destination dest) {
-        return ((ActiveMQDestination)dest).getQualifiedName();
+        return ((ActiveMQDestination) dest).getQualifiedName();
     }
 }

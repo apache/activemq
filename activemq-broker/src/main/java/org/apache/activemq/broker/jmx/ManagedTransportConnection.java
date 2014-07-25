@@ -97,8 +97,8 @@ public class ManagedTransportConnection extends TransportConnection {
             try {
                 AnnotatedMBean.registerMBean(managementContext, mbean, name);
             } catch (Throwable e) {
-                LOG.warn("Failed to register MBean: " + name);
-                LOG.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to register MBean {}", name);
+                LOG.debug("Failure reason: ", e);
             }
         }
     }
@@ -108,8 +108,8 @@ public class ManagedTransportConnection extends TransportConnection {
             try {
                 managementContext.unregisterMBean(name);
             } catch (Throwable e) {
-                LOG.warn("Failed to unregister mbean: " + name);
-                LOG.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister MBean {}", name);
+                LOG.debug("Failure reason: ", e);
             }
         }
     }

@@ -43,6 +43,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     private final List<Destination> destinations = new LinkedList<Destination>();
     private long maxTimeSinceLastAck = 30*1000;
     private boolean ignoreIdleConsumers = true;
+    private boolean ignoreNetworkConsumers = true;
 
     public AbortSlowAckConsumerStrategy() {
         this.name = "AbortSlowAckConsumerStrategy@" + hashCode();
@@ -102,12 +103,19 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     private void updateSlowConsumersList(List<Subscription> subscribers) {
         for (Subscription subscriber : subscribers) {
+            if (isIgnoreNetworkSubscriptions() && subscriber.getConsumerInfo().isNetworkSubscription()) {
+                if (slowConsumers.remove(subscriber) != null) {
+                    LOG.info("network sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
+                }
+                continue;
+            }
 
             if (isIgnoreIdleConsumers() && subscriber.getDispatchedQueueSize() == 0) {
                 // Not considered Idle so ensure its cleared from the list
                 if (slowConsumers.remove(subscriber) != null) {
-                    LOG.info("sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
+                    LOG.info("idle sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
                 }
+                continue;
             }
 
             long lastAckTime = subscriber.getTimeOfLastMessageAck();
@@ -115,10 +123,10 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
             if (timeDelta > maxTimeSinceLastAck) {
                 if (!slowConsumers.containsKey(subscriber)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("sub: {} is now slow", subscriber.getConsumerInfo().getConsumerId());
-                    }
-                    slowConsumers.put(subscriber, new SlowConsumerEntry(subscriber.getContext()));
+                    LOG.debug("sub: {} is now slow", subscriber.getConsumerInfo().getConsumerId());
+                    SlowConsumerEntry entry = new SlowConsumerEntry(subscriber.getContext());
+                    entry.mark(); // mark consumer on first run
+                    slowConsumers.put(subscriber, entry);
                 } else if (getMaxSlowCount() > 0) {
                     slowConsumers.get(subscriber).slow();
                 }
@@ -133,14 +141,20 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     private void abortAllQualifiedSlowConsumers() {
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
-            if (entry.getKey().isSlowConsumer()) {
-                if (getMaxSlowDuration() > 0 &&
-                    (entry.getValue().markCount * getCheckPeriod() > getMaxSlowDuration()) ||
-                    getMaxSlowCount() > 0 && entry.getValue().slowCount > getMaxSlowCount()) {
+            if (getMaxSlowDuration() > 0 && (entry.getValue().markCount * getCheckPeriod() >= getMaxSlowDuration()) ||
+                getMaxSlowCount() > 0 && entry.getValue().slowCount >= getMaxSlowCount()) {
 
-                    toAbort.put(entry.getKey(), entry.getValue());
-                    slowConsumers.remove(entry.getKey());
-                }
+                LOG.trace("Transferring consumer{} to the abort list: {} slow duration = {}, slow count = {}",
+                        new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(),
+                        entry.getValue().markCount * getCheckPeriod(),
+                        entry.getValue().getSlowCount() });
+
+                toAbort.put(entry.getKey(), entry.getValue());
+                slowConsumers.remove(entry.getKey());
+            } else {
+
+                LOG.trace("Not yet time to abort consumer {}: slow duration = {}, slow count = {}", new Object[]{ entry.getKey().getConsumerInfo().getConsumerId(), entry.getValue().markCount * getCheckPeriod(), entry.getValue().slowCount });
+
             }
         }
 
@@ -198,4 +212,34 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
     public void setIgnoreIdleConsumers(boolean ignoreIdleConsumers) {
         this.ignoreIdleConsumers = ignoreIdleConsumers;
     }
+
+    /**
+     * Returns whether the strategy is configured to ignore subscriptions that are from a network
+     * connection.
+     *
+     * @return true if the strategy will ignore network connection subscriptions when looking
+     *         for slow consumers.
+     */
+    public boolean isIgnoreNetworkSubscriptions() {
+        return ignoreNetworkConsumers;
+    }
+
+    /**
+     * Sets whether the strategy is configured to ignore consumers that are part of a network
+     * connection to another broker.
+     *
+     * When configured to not ignore idle consumers this strategy acts not only on consumers
+     * that are actually slow but also on any consumer that has not received any messages for
+     * the maxTimeSinceLastAck.  This allows for a way to evict idle consumers while also
+     * aborting slow consumers however for a network subscription this can create a lot of
+     * unnecessary churn and if the abort connection option is also enabled this can result
+     * in the entire network connection being torn down and rebuilt for no reason.
+     *
+     * @param ignoreNetworkConsumers
+     *      Should this strategy ignore subscriptions made by a network connector.
+     */
+    public void setIgnoreNetworkConsumers(boolean ignoreNetworkConsumers) {
+        this.ignoreNetworkConsumers = ignoreNetworkConsumers;
+    }
+
 }

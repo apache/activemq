@@ -347,14 +347,10 @@ class DFSLevelDBClient(val store:DFSLevelDBStore) extends LevelDBClient(store) {
           dfs_os.sync()
         }
 
-        override def dispose() = {
-          try {
-            super.dispose()
-          } finally {
-            dfs_os.close()
-          }
+        override def on_close {
+          super.force
+          dfs_os.close()
         }
-
       }
     }
   }

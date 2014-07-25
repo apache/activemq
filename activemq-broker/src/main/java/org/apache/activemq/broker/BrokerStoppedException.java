@@ -19,8 +19,6 @@ package org.apache.activemq.broker;
 /**
  * This exception is thrown by the broker when you try to use it after it has
  * been stopped.
- * 
- * @author chirino
  */
 public class BrokerStoppedException extends IllegalStateException {
 

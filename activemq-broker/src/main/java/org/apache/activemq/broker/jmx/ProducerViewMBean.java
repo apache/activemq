@@ -96,6 +96,13 @@ public interface ProducerViewMBean {
     @MBeanInfo("percentage of sends Producer Blocked for Flow Control")
     int getPercentageBlocked();
 
-    @MBeanInfo("reset flow control stata")
+    @MBeanInfo("reset flow control state")
     void resetFlowControlStats();
+
+    @MBeanInfo("Resets statistics.")
+    void resetStatistics();
+
+    @MBeanInfo("Messages dispatched by Producer")
+    long getSentCount();
+
 }

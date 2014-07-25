@@ -33,6 +33,7 @@ http\://activemq.apache.org/schema/core/activemq-core-5.6.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.7.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.8.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.9.0.xsd=activemq.xsd
+http\://activemq.apache.org/schema/core/activemq-core-5.9.1.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.10.0.xsd=activemq.xsd
 
 http\://camel.apache.org/schema/osgi/camel-osgi.xsd=camel-osgi.xsd

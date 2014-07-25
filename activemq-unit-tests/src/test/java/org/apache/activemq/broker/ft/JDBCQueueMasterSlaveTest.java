@@ -30,6 +30,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
@@ -40,7 +41,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
 
     protected void setUp() throws Exception {
         // startup db
-        sharedDs = new SyncDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
+        sharedDs = new SyncCreateDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
         super.setUp();
     }
 
@@ -59,7 +60,11 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
         master.start();
     }
 
-    protected void configureBroker(BrokerService master) {
+    protected void configureBroker(BrokerService brokerService) {
+        DefaultIOExceptionHandler stopBrokerOnStoreException = new DefaultIOExceptionHandler();
+        // we want any store io exception to stop the broker
+        stopBrokerOnStoreException.setIgnoreSQLExceptions(false);
+        brokerService.setIoExceptionHandler(stopBrokerOnStoreException);
     }
 
     protected void createSlave() throws Exception {
@@ -104,61 +109,4 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
         return sharedDs;
     }
 
-    // prevent concurrent calls from attempting to create the db at the same time
-    // can result in "already exists in this jvm" errors
-    class SyncDataSource implements DataSource {
-        final EmbeddedDataSource delegate;
-        SyncDataSource(EmbeddedDataSource dataSource) {
-            this.delegate = dataSource;
-        }
-            @Override
-            public Connection getConnection() throws SQLException {
-                synchronized (this) {
-                    return delegate.getConnection();
-                }
-            }
-
-            @Override
-            public Connection getConnection(String username, String password) throws SQLException {
-                synchronized (this) {
-                    return delegate.getConnection();
-                }
-            }
-
-            @Override
-            public PrintWriter getLogWriter() throws SQLException {
-                return null;
-            }
-
-            @Override
-            public void setLogWriter(PrintWriter out) throws SQLException {
-            }
-
-            @Override
-            public void setLoginTimeout(int seconds) throws SQLException {
-            }
-
-            @Override
-            public int getLoginTimeout() throws SQLException {
-                return 0;
-            }
-
-            @Override
-            public <T> T unwrap(Class<T> iface) throws SQLException {
-                return null;
-            }
-
-            @Override
-            public boolean isWrapperFor(Class<?> iface) throws SQLException {
-                return false;
-            }
-
-            EmbeddedDataSource getDelegate() {
-                return delegate;
-            }
-
-            public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-                return null;
-            }
-        };
 }

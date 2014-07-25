@@ -25,10 +25,14 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import junit.framework.Test;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.jmx.PersistenceAdapterViewMBean;
 import org.apache.activemq.broker.jmx.RecoveredXATransactionViewMBean;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.*;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.JMXSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +80,14 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         assertNotNull(response);
         DataArrayResponse dar = (DataArrayResponse)response;
         assertEquals(4, dar.getData().length);
+
+        // view prepared in kahadb view
+        if (broker.getPersistenceAdapter() instanceof KahaDBPersistenceAdapter) {
+            PersistenceAdapterViewMBean kahadbView = getProxyToPersistenceAdapter(broker.getPersistenceAdapter().toString());
+            String txFromView = kahadbView.getTransactions();
+            LOG.info("Tx view fromm PA:" + txFromView);
+            assertTrue("xid with our dud format in transaction string " + txFromView, txFromView.contains("XID:[55,"));
+        }
 
         // restart the broker.
         restartBroker();
@@ -125,9 +137,15 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         }
     }
 
+    private PersistenceAdapterViewMBean getProxyToPersistenceAdapter(String name) throws MalformedObjectNameException, JMSException {
+       return (PersistenceAdapterViewMBean)broker.getManagementContext().newProxyInstance(
+               BrokerMBeanSupport.createPersistenceAdapterName(broker.getBrokerObjectName().toString(), name),
+               PersistenceAdapterViewMBean.class, true);
+    }
+
     private RecoveredXATransactionViewMBean getProxyToPreparedTransactionViewMBean(TransactionId xid) throws MalformedObjectNameException, JMSException {
 
-        ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,transactionType=RecoveredXaTransaction,Xid=" +
+        ObjectName objectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,transactionType=RecoveredXaTransaction,xid=" +
                 JMXSupport.encodeObjectNamePart(xid.toString()));
         RecoveredXATransactionViewMBean proxy = (RecoveredXATransactionViewMBean) broker.getManagementContext().newProxyInstance(objectName,
                 RecoveredXATransactionViewMBean.class, true);
@@ -216,17 +234,137 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Commit the prepared transactions.
         for (int i = 0; i < dar.getData().length; i++) {
-            connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId)dar.getData()[i]));
+            TransactionId transactionId = (TransactionId) dar.getData()[i];
+            LOG.info("commit: " + transactionId);
+            connection.request(createCommitTransaction2Phase(connectionInfo, transactionId));
         }
 
         // We should get the committed transactions.
         final int countToReceive = expectedMessageCount(4, destination);
         for (int i = 0; i < countToReceive ; i++) {
             Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
+            LOG.info("received: " + m);
             assertNotNull("Got non null message: " + i, m);
         }
 
         assertNoMessagesLeft(connection);
+        assertEmptyDLQ();
+    }
+
+    private void assertEmptyDLQ() throws Exception {
+        try {
+            DestinationViewMBean destinationView = getProxyToDestination(new ActiveMQQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
+            assertEquals("nothing on dlq", 0, destinationView.getQueueSize());
+            assertEquals("nothing added to dlq", 0, destinationView.getEnqueueCount());
+        } catch (java.lang.reflect.UndeclaredThrowableException maybeOk) {
+            if (maybeOk.getUndeclaredThrowable() instanceof javax.management.InstanceNotFoundException) {
+                // perfect no dlq
+            } else {
+                throw maybeOk;
+            }
+        }
+    }
+
+    public void testPreparedInterleavedTransactionRecoveredOnRestart() throws Exception {
+
+        ActiveMQDestination destination = createDestination();
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        // Prepare 4 message sends.
+        for (int i = 0; i < 4; i++) {
+            // Begin the transaction.
+            XATransactionId txid = createXATransaction(sessionInfo);
+            connection.send(createBeginTransaction(connectionInfo, txid));
+
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            message.setTransactionId(txid);
+            connection.send(message);
+
+            // Prepare
+            connection.send(createPrepareTransaction(connectionInfo, txid));
+        }
+
+        // Since prepared but not committed.. they should not get delivered.
+        assertNull(receiveMessage(connection));
+        assertNoMessagesLeft(connection);
+
+        // send non tx message
+        Message message = createMessage(producerInfo, destination);
+        message.setPersistent(true);
+        connection.request(message);
+
+        connection.request(closeConnectionInfo(connectionInfo));
+
+        // restart the broker.
+        restartBroker();
+
+        // Setup the consumer and try receive the message.
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        // consume non transacted message, but don't ack
+        int countToReceive = expectedMessageCount(1, destination);
+        for (int i=0; i< countToReceive; i++) {
+            Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
+            LOG.info("received: " + m);
+            assertNotNull("got non tx message after prepared", m);
+        }
+
+        // Since prepared but not committed.. they should not get delivered.
+        assertNull(receiveMessage(connection));
+        assertNoMessagesLeft(connection);
+
+        Response response = connection.request(new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER));
+        assertNotNull(response);
+        DataArrayResponse dar = (DataArrayResponse)response;
+        assertEquals(4, dar.getData().length);
+
+        // ensure we can close a connection with prepared transactions
+        connection.request(closeConnectionInfo(connectionInfo));
+
+        // open again  to deliver outcome
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+
+        // Commit the prepared transactions.
+        for (int i = 0; i < dar.getData().length; i++) {
+            TransactionId transactionId = (TransactionId) dar.getData()[i];
+            LOG.info("commit: " + transactionId);
+            connection.request(createCommitTransaction2Phase(connectionInfo, transactionId));
+        }
+
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        // We should get the committed transactions and the non tx message
+        countToReceive = expectedMessageCount(5, destination);
+        for (int i = 0; i < countToReceive ; i++) {
+            Message m = receiveMessage(connection, TimeUnit.SECONDS.toMillis(10));
+            LOG.info("received: " + m);
+            assertNotNull("Got non null message: " + i, m);
+        }
+
+        assertNoMessagesLeft(connection);
+        assertEmptyDLQ();
     }
 
     public void testTopicPreparedTransactionRecoveredOnRestart() throws Exception {
@@ -304,7 +442,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Commit the prepared transactions.
         for (int i = 0; i < dar.getData().length; i++) {
-            connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId) dar.getData()[i]));
+            connection.request(createCommitTransaction2Phase(connectionInfo, (TransactionId) dar.getData()[i]));
         }
 
         // We should get the committed transactions.
@@ -1057,7 +1195,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             }
             MessageAck ack = createAck(consumerInfo, message, 4, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
-            connection.send(ack);
+            connection.request(ack);
         }
 
         // Don't commit

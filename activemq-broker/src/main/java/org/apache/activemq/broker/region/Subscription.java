@@ -21,7 +21,6 @@ import java.util.List;
 
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -47,7 +46,6 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Used when client acknowledge receipt of dispatched message.
-     * @param node
      * @throws IOException
      * @throws Exception
      */
@@ -57,6 +55,12 @@ public interface Subscription extends SubscriptionRecovery {
      * Allows a consumer to pull a message on demand
      */
     Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception;
+
+    /**
+     * Returns true if this subscription is a Wildcard subscription.
+     * @return true if wildcard subscription.
+     */
+    boolean isWildcard();
 
     /**
      * Is the subscription interested in the message?
@@ -69,7 +73,7 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * Is the subscription interested in messages in the destination?
-     * @param context
+     * @param destination
      * @return
      */
     boolean matches(ActiveMQDestination destination);
@@ -92,7 +96,6 @@ public interface Subscription extends SubscriptionRecovery {
 
     /**
      * The ConsumerInfo object that created the subscription.
-     * @param destination
      */
     ConsumerInfo getConsumerInfo();
 
@@ -199,7 +202,7 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * Informs the Broker if the subscription needs to intervention to recover it's state
      * e.g. DurableTopicSubscriber may do
-     * @see org.apache.activemq.region.cursors.PendingMessageCursor
+     * @see org.apache.activemq.broker.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
     boolean isRecoveryRequired();
@@ -233,5 +236,11 @@ public interface Subscription extends SubscriptionRecovery {
      * @return time of last received Ack message or Subscription create time if no Acks.
      */
     long getTimeOfLastMessageAck();
+
+    long  getConsumedCount();
+
+    void incrementConsumedCount();
+
+    void resetConsumedCount();
 
 }

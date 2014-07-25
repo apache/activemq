@@ -16,18 +16,22 @@
 --%>
 <html>
 <head>
-<title>ActiveMQ Console</title>
+<c:set var="pageTitle" value="ActiveMQ Console"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <h2>Welcome!</h2>
 
 <p>
-Welcome to the ActiveMQ Console of <b>${requestContext.brokerQuery.brokerName}</b> (${requestContext.brokerQuery.brokerAdmin.brokerId})
+Welcome to the Apache ActiveMQ Console of <b><c:out value="${requestContext.brokerQuery.brokerName}" /></b> (<c:out value="${requestContext.brokerQuery.brokerAdmin.brokerId}" />)
 </p>
 
 <p>
-You can find more information about ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
+You can find more information about Apache ActiveMQ on the <a href="<c:url value="http://activemq.apache.org/" />">Apache ActiveMQ Site</a>
 </p>
 
 <h2>Broker</h2>
@@ -36,33 +40,34 @@ You can find more information about ActiveMQ on the <a href="http://activemq.apa
 <table>
     <tr>
         <td>Name</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerName}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerName}" /></b></td>
     </tr>
     <tr>
         <td>Version</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerVersion}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerVersion}" /></b></td>
     </tr>
     <tr>
         <td>ID</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerId}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerId}" /></b></td>
     </tr>
     <tr>
         <td>Uptime</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.uptime}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.uptime}" /></b></td>
     </tr>
     <tr>
         <td>Store percent used</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.storePercentUsage}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.storePercentUsage}" /></b></td>
     </tr>
     <tr>
         <td>Memory percent used</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.memoryPercentUsage}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.memoryPercentUsage}" /></b></td>
     </tr>
     <tr>
         <td>Temp percent used</td>
-        <td><b>${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}</b></td>
+        <td><b><c:out value="${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}" /></b></td>
     </tr>
 </table>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

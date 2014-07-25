@@ -42,14 +42,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
+import org.apache.activemq.store.kahadb.disk.util.Sequence;
+import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LFUCache;
 import org.apache.activemq.util.LRUCache;
-import org.apache.activemq.store.kahadb.disk.util.Sequence;
-import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,16 +81,16 @@ public class PageFile {
     private static final Logger LOG = LoggerFactory.getLogger(PageFile.class);
 
     // A PageFile will use a couple of files in this directory
-    private File directory;
+    private final File directory;
     // And the file names in that directory will be based on this name.
     private final String name;
 
     // File handle used for reading pages..
-    private RandomAccessFile readFile;
+    private RecoverableRandomAccessFile readFile;
     // File handle used for writing pages..
-    private RandomAccessFile writeFile;
+    private RecoverableRandomAccessFile writeFile;
     // File handle used for writing pages..
-    private RandomAccessFile recoveryFile;
+    private RecoverableRandomAccessFile recoveryFile;
 
     // The size of pages
     private int pageSize = DEFAULT_PAGE_SIZE;
@@ -102,7 +103,7 @@ public class PageFile {
     // The number of pages in the current recovery buffer
     private int recoveryPageCount;
 
-    private AtomicBoolean loaded = new AtomicBoolean();
+    private final AtomicBoolean loaded = new AtomicBoolean();
     // The number of pages we are aiming to write every time we
     // write to disk.
     int writeBatchSize = DEFAULT_WRITE_BATCH_SIZE;
@@ -123,23 +124,23 @@ public class PageFile {
     private boolean enabledWriteThread = false;
 
     // These are used if enableAsyncWrites==true
-    private AtomicBoolean stopWriter = new AtomicBoolean();
+    private final AtomicBoolean stopWriter = new AtomicBoolean();
     private Thread writerThread;
     private CountDownLatch checkpointLatch;
 
     // Keeps track of writes that are being written to disk.
-    private TreeMap<Long, PageWrite> writes = new TreeMap<Long, PageWrite>();
+    private final TreeMap<Long, PageWrite> writes = new TreeMap<Long, PageWrite>();
 
     // Keeps track of free pages.
     private final AtomicLong nextFreePageId = new AtomicLong();
     private SequenceSet freeList = new SequenceSet();
 
-    private AtomicLong nextTxid = new AtomicLong();
+    private final AtomicLong nextTxid = new AtomicLong();
 
     // Persistent settings stored in the page file.
     private MetaData metaData;
 
-    private ArrayList<File> tmpFilesForRemoval = new ArrayList<File>();
+    private final ArrayList<File> tmpFilesForRemoval = new ArrayList<File>();
 
     private boolean useLFRUEviction = false;
     private float LFUEvictionFactor = 0.2f;
@@ -377,8 +378,8 @@ public class PageFile {
 
             File file = getMainPageFile();
             IOHelper.mkdirs(file.getParentFile());
-            writeFile = new RandomAccessFile(file, "rw");
-            readFile = new RandomAccessFile(file, "r");
+            writeFile = new RecoverableRandomAccessFile(file, "rw");
+            readFile = new RecoverableRandomAccessFile(file, "r");
 
             if (readFile.length() > 0) {
                 // Load the page size setting cause that can't change once the file is created.
@@ -397,7 +398,7 @@ public class PageFile {
             }
 
             if (enableRecoveryFile) {
-                recoveryFile = new RandomAccessFile(getRecoveryFile(), "rw");
+                recoveryFile = new RecoverableRandomAccessFile(getRecoveryFile(), "rw");
             }
 
             if (metaData.isCleanShutdown()) {
@@ -526,6 +527,7 @@ public class PageFile {
     }
 
 
+    @Override
     public String toString() {
         return "Page File: " + getMainPageFile();
     }
@@ -615,10 +617,10 @@ public class PageFile {
         // So we don't loose it.. write it 2 times...
         writeFile.seek(0);
         writeFile.write(d);
-        writeFile.getFD().sync();
+        writeFile.sync();
         writeFile.seek(PAGE_FILE_HEADER_SIZE / 2);
         writeFile.write(d);
-        writeFile.getFD().sync();
+        writeFile.sync();
     }
 
     private void storeFreeList() throws IOException {
@@ -885,14 +887,17 @@ public class PageFile {
     private <T> void write(Page<T> page, byte[] data) throws IOException {
         final PageWrite write = new PageWrite(page, data);
         Entry<Long, PageWrite> entry = new Entry<Long, PageWrite>() {
+            @Override
             public Long getKey() {
                 return write.getPage().getPageId();
             }
 
+            @Override
             public PageWrite getValue() {
                 return write;
             }
 
+            @Override
             public PageWrite setValue(PageWrite value) {
                 return null;
             }
@@ -1086,9 +1091,9 @@ public class PageFile {
             if (enableDiskSyncs) {
                 // Sync to make sure recovery buffer writes land on disk..
                 if (enableRecoveryFile) {
-                    recoveryFile.getFD().sync();
+                    writeFile.sync();
                 }
-                writeFile.getFD().sync();
+                writeFile.sync();
             }
         } finally {
             synchronized (writes) {
@@ -1190,7 +1195,7 @@ public class PageFile {
         }
 
         // And sync it to disk
-        writeFile.getFD().sync();
+        writeFile.sync();
         return nextTxId;
     }
 

@@ -68,7 +68,6 @@ public class AMQ4368Test {
         broker.getDestinationPolicy().setDefaultEntry(policy);
 
         KahaDBPersistenceAdapter kahadb = new KahaDBPersistenceAdapter();
-        kahadb.setChecksumJournalFiles(true);
         kahadb.setCheckForCorruptJournalFiles(true);
         kahadb.setCleanupInterval(1000);
 

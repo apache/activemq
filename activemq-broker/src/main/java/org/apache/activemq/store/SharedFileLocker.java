@@ -75,6 +75,11 @@ public class SharedFileLocker extends AbstractLocker {
     }
 
     @Override
+    public boolean keepAlive() {
+        return lockFile != null && lockFile.keepAlive();
+    }
+
+    @Override
     public void doStop(ServiceStopper stopper) throws Exception {
         lockFile.unlock();
         lockFile=null;

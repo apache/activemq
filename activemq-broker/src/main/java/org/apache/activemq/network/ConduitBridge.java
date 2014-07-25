@@ -18,10 +18,8 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.SubscriptionInfo;
@@ -57,38 +55,24 @@ public class ConduitBridge extends DemandForwardingBridge {
         return doCreateDemandSubscription(info);
     }
 
-    protected boolean checkPaths(BrokerId[] first, BrokerId[] second) {
-        if (first == null || second == null) {
-            return true;
-        }
-        if (Arrays.equals(first, second)) {
-            return true;
-        }
-
-        if (first[0].equals(second[0]) && first[first.length - 1].equals(second[second.length - 1])) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
         // search through existing subscriptions and see if we have a match
+        if (info.isNetworkSubscription()) {
+            return false;
+        }
         boolean matched = false;
 
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             DestinationFilter filter = DestinationFilter.parseFilter(ds.getLocalInfo().getDestination());
-            if (filter.matches(info.getDestination())) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " " + info + " with ids" + info.getNetworkConsumerIds() + " matched (add interest) " + ds);
-                }
+            if (canConduit(ds) && filter.matches(info.getDestination())) {
+                LOG.debug("{} {} with ids {} matched (add interest) {}", new Object[]{
+                        configuration.getBrokerName(), info, info.getNetworkConsumerIds(), ds
+                });
                 // add the interest in the subscription
-                if (checkPaths(info.getBrokerPath(), ds.getRemoteInfo().getBrokerPath())) {
-                    if (!info.isDurable()) {
-                        ds.add(info.getConsumerId());
-                    } else {
-                       ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
-                    }
+                if (!info.isDurable()) {
+                    ds.add(info.getConsumerId());
+                } else {
+                    ds.getDurableRemoteSubs().add(new SubscriptionInfo(info.getClientId(), info.getSubscriptionName()));
                 }
                 matched = true;
                 // continue - we want interest to any existing DemandSubscriptions
@@ -97,15 +81,21 @@ public class ConduitBridge extends DemandForwardingBridge {
         return matched;
     }
 
+    // we want to conduit statically included consumers which are local networkSubs
+    // but we don't want to conduit remote network subs i.e. (proxy proxy) consumers
+    private boolean canConduit(DemandSubscription ds) {
+        return ds.isStaticallyIncluded() || !ds.getRemoteInfo().isNetworkSubscription();
+    }
+
     @Override
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
         List<DemandSubscription> tmpList = new ArrayList<DemandSubscription>();
 
         for (DemandSubscription ds : subscriptionMapByLocalId.values()) {
             if (ds.remove(id)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " on " + localBroker + " from " + remoteBrokerName + " removed interest for: " + id  + " from " + ds);
-                }
+                LOG.debug("{} on {} from {} removed interest for: {} from {}", new Object[]{
+                        configuration.getBrokerName(), localBroker, remoteBrokerName, id, ds
+                });
             }
             if (ds.isEmpty()) {
                 tmpList.add(ds);
@@ -114,9 +104,9 @@ public class ConduitBridge extends DemandForwardingBridge {
 
         for (DemandSubscription ds : tmpList) {
             removeSubscription(ds);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(configuration.getBrokerName() + " on " + localBroker + " from " + remoteBrokerName + " removed " + ds);
-            }
+            LOG.debug("{} on {} from {} removed {}", new Object[]{
+                    configuration.getBrokerName(), localBroker, remoteBrokerName, ds
+            });
         }
     }
 }

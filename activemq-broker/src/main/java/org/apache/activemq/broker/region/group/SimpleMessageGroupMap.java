@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.group;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,6 +56,26 @@ public class SimpleMessageGroupMap implements MessageGroupMap {
             }
         }
         return ownedGroups;
+    }
+
+
+    @Override
+    public void removeAll(){
+        map.clear();
+    }
+
+    @Override
+    public Map<String, String> getGroups() {
+        Map<String,String> result = new HashMap<String,String>();
+        for (Map.Entry<String,ConsumerId>entry:map.entrySet()){
+            result.put(entry.getKey(),entry.getValue().toString());
+        }
+        return result;
+    }
+
+    @Override
+    public String getType() {
+        return "simple";
     }
 
     public String toString() {

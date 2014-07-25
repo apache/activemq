@@ -66,7 +66,7 @@ public class DuplexNetworkMBeanTest {
                     networkedBroker.start();
                     assertEquals(1, countMbeans(networkedBroker, "networkBridge", 2000));
                     assertEquals(1, countMbeans(broker, "networkBridge", 2000));
-                    assertEquals(1, countMbeans(broker, "connectionName"));
+                    assertEquals(2, countMbeans(broker, "connectionName"));
                 } finally {
                     networkedBroker.stop();
                     networkedBroker.waitUntilStopped();
@@ -100,7 +100,7 @@ public class DuplexNetworkMBeanTest {
                 try {
                     broker.start();
                     assertEquals(1, countMbeans(networkedBroker, "networkBridge", 5000));
-                    assertEquals("restart number: " + i, 1, countMbeans(broker, "connectionName", 10000));
+                    assertEquals("restart number: " + i, 2, countMbeans(broker, "connectionName", 10000));
                 } finally {
                     broker.stop();
                     broker.waitUntilStopped();

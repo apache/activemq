@@ -21,9 +21,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ * A class to provide common Job Scheduler related methods.
  */
 public class JobSupport {
+
     public static String getDateTime(long value) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date date = new Date(value);
@@ -35,5 +36,4 @@ public class JobSupport {
          Date date = dfm.parse(value);
          return date.getTime();
      }
-
 }

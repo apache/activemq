@@ -21,6 +21,7 @@ org.apache.activemq.console.command.ListCommand
 org.apache.activemq.console.command.AmqBrowseCommand
 org.apache.activemq.console.command.QueryCommand
 org.apache.activemq.console.command.BstatCommand
+org.apache.activemq.console.command.DstatCommand
 org.apache.activemq.console.command.EncryptCommand
 org.apache.activemq.console.command.DecryptCommand
 org.apache.activemq.console.command.StoreExportCommand

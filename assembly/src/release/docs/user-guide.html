@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+   
+    http://www.apache.org/licenses/LICENSE-2.0
+   
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<html><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Getting Started</title>
+
+</head>
+<body>
+<h1>Getting Started<br>
+</h1>
+
+<p>
+Welcome to Apache ActiveMQ. This document gives you a quick overview of how to get started trying out Apache ActiveMQ.
+</p>
+
+<h2>Running the broker</h2>
+
+<p>
+From the binary distribution you can run the Apache ActiveMQ server via the bin/activemq command.
+If you're using Windows, just type
+</p>
+<pre>
+    cd bin
+    activemq.bat start
+</pre>
+<p>
+On Unix-like systems, type
+</p>
+<pre>
+    ./bin/activemq console
+</pre>
+<p>to start the broker in foreground.</p>
+<p>
+The Apache ActiveMQ broker should now have started
+</p>
+<p>
+Tip: If you run the bin/activemq command without any arguments it will output usage.
+</p>
+
+To stop the broker you can press ctrl + c to stop the process.
+
+<h2>Running the broker in the background</h2>
+
+<p>
+The broker can be started as a background process via the bin/activemq command
+on Unix-like systems, type
+</p>
+<pre>
+    ./bin/activemq start
+</pre>
+<p>to start the broker in background. The broker will write to its log in the data/activemq.log file.</p>
+
+<h2>Stopping the broker</h2>
+
+<p>
+The broker can be stopped via the bin/activemq command
+If you're using Windows, just type
+</p>
+<pre>
+    cd bin
+    activemq.bat stop
+</pre>
+<p>
+On Unix-like systems, type
+</p>
+<pre>
+    ./bin/activemq stop
+</pre>
+<p>to stop the broker.
+
+
+<h2>Access the web console</h2>
+
+In a web browser you can access the url <a href="http://0.0.0.0:8161/admin">http://0.0.0.0:8161/admin</a> to access the ActiveMQ web console.
+<br/>
+The broker may ask for credentials to login the web console the first time.
+The default username and password is admin/admin. You can configure this in the conf/jetty-real.properties file.
+
+<h2>Access the web demos</h2>
+
+You would need to start the broker with the demos included, which you do as follows:
+If you're using Windows, just type
+</p>
+<pre>
+    cd bin
+    activemq.bat console xbean:examples/conf/activemq-demo.xml
+</pre>
+<p>
+On Unix-like systems, type
+</p>
+<pre>
+    ./bin/activemq console xbean:examples/conf/activemq-demo.xml
+</pre>
+
+In a web browser you can access the url <a href="http://0.0.0.0:8161/demo">http://0.0.0.0:8161/demo</a> to access the ActiveMQ web demos.
+<br/>
+The broker may ask for credentials to login the web console the first time.
+The default username and password is admin/admin. You can configure this in the conf/jetty-real.properties file.
+
+
+<h2>Running the example programs</h2>
+
+<p>
+To run the demo producer/consumer tools, you need Java and Ant installed.
+</p>
+
+<h3>Installing Ant</h3>
+
+
+<p>
+The example programs depend on <a href="http://ant.apache.org/">Ant</a> being installed. There are more detailed
+instructions on the Ant website - but essentially you need to follow these steps.
+</p>
+<ul>
+<li>
+JAVA_HOME must point to your JDK installation, such that $JAVA_HOME/bin contains the java executable and $JAVA_HOME/lib contains some jar files.
+</li>
+<li>
+ANT_HOME must point to where you installed Apache Ant (http://ant.apache.org)
+</li>
+<li>
+then you need to add $JAVA_HOME/bin and $ANT_HOME/bin to your PATH variable.
+</li>
+</ul>
+
+<p>
+To test this is all working, try typing
+</p>
+
+<pre>
+    java -version
+    cd examples/openwire/swissarmy
+    ant -version
+</pre>
+
+<h3>Running the example producer and consumer</h3>
+
+<p>
+Once you've got Java and Ant installed correctly you should be able to run
+</p>
+
+<pre>
+    cd examples/openwire/swissarmy
+    ant consumer
+</pre>
+
+<p>
+and in another shell
+</p>
+
+<pre>
+    cd examples/openwire/swissarmy
+    ant producer
+</pre>
+
+<p>
+you can specify exact URLs to connect to via command like arguments. e.g.
+</p>
+
+<pre>
+    ant producer -Durl=tcp://somehost:port
+</pre>
+
+
+
+<h2>Further Readings</h2>
+
+You can find more details about Apache ActiveMQ at its website <a href="http://activemq.apache.org">http://activemq.apache.org</a>,
+as well the guide <a href="http://activemq.apache.org/version-5-getting-started.html">getting started</a> guide.
+
+</body>
+</html>
+
+

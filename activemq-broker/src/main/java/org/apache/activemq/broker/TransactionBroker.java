@@ -107,9 +107,7 @@ public class TransactionBroker extends BrokerFilter {
                         }
                         transaction.setState(Transaction.PREPARED_STATE);
                         registerMBean(transaction);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("recovered prepared transaction: " + transaction.getTransactionId());
-                        }
+                        LOG.debug("recovered prepared transaction: {}", transaction.getTransactionId());
                     } catch (Throwable e) {
                         throw new WrappedException(e);
                     }
@@ -177,9 +175,7 @@ public class TransactionBroker extends BrokerFilter {
         public void afterRollback() throws Exception {
             if (!messageSend) {
                 destination.clearPendingMessages();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("cleared pending from afterRollback : " + destination);
-                }
+                LOG.debug("cleared pending from afterRollback: {}", destination);
             }
         }
 
@@ -189,9 +185,7 @@ public class TransactionBroker extends BrokerFilter {
                 destination.clearPendingMessages();
                 destination.getDestinationStatistics().getEnqueues().add(opCount);
                 destination.getDestinationStatistics().getMessages().add(opCount);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("cleared pending from afterCommit : " + destination);
-                }
+                LOG.debug("cleared pending from afterCommit: {}", destination);
             } else {
                 destination.getDestinationStatistics().getDequeues().add(opCount);
                 destination.getDestinationStatistics().getMessages().subtract(opCount);
@@ -215,18 +209,14 @@ public class TransactionBroker extends BrokerFilter {
             for (Iterator<XATransaction> iter = xaTransactions.values().iterator(); iter.hasNext();) {
                 Transaction tx = iter.next();
                 if (tx.isPrepared()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("prepared transaction: " + tx.getTransactionId());
-                    }
+                    LOG.debug("prepared transaction: {}", tx.getTransactionId());
                     txs.add(tx.getTransactionId());
                 }
             }
         }
         XATransactionId rc[] = new XATransactionId[txs.size()];
         txs.toArray(rc);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("prepared transaction list size: " + rc.length);
-        }
+        LOG.debug("prepared transaction list size: {}", rc.length);
         return rc;
     }
 
@@ -322,9 +312,7 @@ public class TransactionBroker extends BrokerFilter {
             if (sync != null && transaction != null) {
                 transaction.removeSynchronization(sync);
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("IGNORING duplicate message " + message);
-            }
+            LOG.debug("IGNORING duplicate message {}", message);
         }
     }
 

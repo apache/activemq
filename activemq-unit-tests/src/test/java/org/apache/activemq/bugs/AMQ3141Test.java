@@ -56,7 +56,7 @@ public class AMQ3141Test {
     public void setup() throws Exception {
 
         broker = new BrokerService();
-        broker.setPersistent(false);
+        broker.setPersistent(true);
         broker.setSchedulerSupport(true);
         broker.setDataDirectory("target");
         broker.setUseJmx(false);
@@ -95,6 +95,7 @@ public class AMQ3141Test {
         MessageConsumer consumer = session.createConsumer(session.createQueue(QUEUE_NAME));
 
         consumer.setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message message) {
                 messageCountDown.countDown();
             }

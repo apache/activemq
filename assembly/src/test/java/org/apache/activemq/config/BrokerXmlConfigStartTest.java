@@ -19,12 +19,14 @@ package org.apache.activemq.config;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.jms.Connection;
 
@@ -51,29 +53,38 @@ public class BrokerXmlConfigStartTest {
     Properties secProps;
 
     private String configUrl;
+    private String shortName;
 
-    @Parameterized.Parameters
-    public static Collection<String[]> getTestParameters() {
+    @Parameterized.Parameters(name = "{1}")
+    public static Collection<String[]> getTestParameters() throws IOException {
         List<String[]> configUrls = new ArrayList<String[]>();
-        configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml"});
+        configUrls.add(new String[]{"xbean:src/release/conf/activemq.xml", "activemq.xml"});
 
+        String osName=System.getProperty("os.name");
+        LOG.info("os.name {} ", osName);
         File sampleConfDir = new File("target/conf");
+        String sampleConfDirPath = sampleConfDir.getAbsolutePath();
+        if (osName.toLowerCase().contains("windows")) {
+            sampleConfDirPath = sampleConfDirPath.substring(2); // Chop off drive letter and :
+            sampleConfDirPath = sampleConfDirPath.replace("\\", "/");
+        }
+
         for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
                 return pathname.isFile() &&
                         pathname.getName().startsWith("activemq-") &&
                         pathname.getName().endsWith("xml");
             }})) {
-
-            configUrls.add(new String[]{"xbean:" + sampleConfDir.getAbsolutePath() + "/" + xmlFile.getName()});
+            configUrls.add(new String[]{"xbean:" + sampleConfDirPath + "/" + xmlFile.getName(), xmlFile.getName()});
         }
 
         return configUrls;
     }
 
 
-    public BrokerXmlConfigStartTest(String config) {
+    public BrokerXmlConfigStartTest(String config, String configFileShortName) {
         this.configUrl = config;
+        this.shortName = configFileShortName;
     }
 
     @Test
@@ -82,6 +93,15 @@ public class BrokerXmlConfigStartTest {
         LOG.info("Broker config: " + configUrl);
         System.err.println("Broker config: " + configUrl);
         broker = BrokerFactory.createBroker(configUrl);
+        if ("activemq-leveldb-replicating.xml".equals(shortName)) {
+            try {
+                broker.start();
+            } catch (TimeoutException expectedWithNoZk) {
+                return;
+            }
+        } else {
+            broker.start();
+        }
         // alive, now try connect to connect
         try {
             for (TransportConnector transport : broker.getTransportConnectors()) {

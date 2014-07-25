@@ -51,8 +51,9 @@ public class AMQ2902Test extends TestCase {
                     return;
                 }
 
-                LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
                 gotExceptionInLog.set(Boolean.TRUE);
+                LOG.error("got event: " + event + ", ex:" + event.getThrowableInformation().getThrowable(), event.getThrowableInformation().getThrowable());
+                LOG.error("Event source: ", new Throwable("Here"));
             }
             if( !"Loaded the Bouncy Castle security provider.".equals(event.getMessage()) ) {
                 if (event.getMDC("activemq.broker") == null) {

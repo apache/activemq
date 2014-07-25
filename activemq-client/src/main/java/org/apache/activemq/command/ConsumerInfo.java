@@ -114,6 +114,7 @@ public class ConsumerInfo extends BaseCommand {
         return subscriptionName != null;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -343,6 +344,7 @@ public class ConsumerInfo extends BaseCommand {
         this.additionalPredicate = additionalPredicate;
     }
 
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processAddConsumer(this);
     }
@@ -432,6 +434,33 @@ public class ConsumerInfo extends BaseCommand {
             result.addAll(networkConsumerIds);
         }
         return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return (consumerId == null) ? 0 : consumerId.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        ConsumerInfo other = (ConsumerInfo) obj;
+
+        if (consumerId == null && other.consumerId != null) {
+            return false;
+        } else if (!consumerId.equals(other.consumerId)) {
+            return false;
+        }
+        return true;
     }
 
     /**

@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -119,9 +119,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (active.get() || keepDurableSubsActive) {
             Topic topic = (Topic) destination;
             topic.activate(context, this);
-            if (pending.isEmpty(topic)) {
-                topic.recoverRetroactiveMessages(context, this);
-            }
             this.enqueueCounter += pending.size();
         } else if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore) destination.getMessageStore();
@@ -136,14 +133,17 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         dispatchPending();
     }
 
+    // used by RetaineMessageSubscriptionRecoveryPolicy
+    public boolean isEmpty(Topic topic) {
+        return pending.isEmpty(topic);
+    }
+
     public void activate(SystemUsage memoryManager, ConnectionContext context, ConsumerInfo info, RegionBroker regionBroker) throws Exception {
         if (!active.get()) {
             this.context = context;
             this.info = info;
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Activating " + this);
-            }
+            LOG.debug("Activating {}", this);
             if (!keepDurableSubsActive) {
                 for (Destination destination : durableDestinations.values()) {
                     Topic topic = (Topic) destination;
@@ -162,16 +162,17 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
 
             synchronized (pendingLock) {
-                pending.setSystemUsage(memoryManager);
-                pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
-                pending.setMaxAuditDepth(getMaxAuditDepth());
-                pending.setMaxProducersToAudit(getMaxProducersToAudit());
-                pending.start();
-                // If nothing was in the persistent store, then try to use the
-                // recovery policy.
-                if (pending.isEmpty()) {
-                    for (Destination destination : durableDestinations.values()) {
-                        Topic topic = (Topic) destination;
+                if (!((AbstractPendingMessageCursor) pending).isStarted() || !keepDurableSubsActive) {
+                    pending.setSystemUsage(memoryManager);
+                    pending.setMemoryUsageHighWaterMark(getCursorMemoryHighWaterMark());
+                    pending.setMaxAuditDepth(getMaxAuditDepth());
+                    pending.setMaxProducersToAudit(getMaxProducersToAudit());
+                    pending.start();
+                }
+                // use recovery policy every time sub is activated for retroactive topics and consumers
+                for (Destination destination : durableDestinations.values()) {
+                    Topic topic = (Topic) destination;
+                    if (topic.isAlwaysRetroactive() || info.isRetroactive()) {
                         topic.recoverRetroactiveMessages(context, this);
                     }
                 }
@@ -184,9 +185,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     public void deactivate(boolean keepDurableSubsActive) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deactivating keepActive=" + keepDurableSubsActive + ", " + this);
-        }
+        LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
         active.set(false);
         offlineTimestamp.set(System.currentTimeMillis());
         this.usageManager.getMemoryUsage().removeUsageListener(this);
@@ -195,7 +194,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         List<MessageReference> savedDispateched = null;
 
         synchronized (pendingLock) {
-            pending.stop();
+            if (!keepDurableSubsActive) {
+                pending.stop();
+            }
 
             synchronized (dispatchLock) {
                 for (Destination destination : durableDestinations.values()) {
@@ -272,7 +273,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     @Override
-    protected void dispatchPending() throws IOException {
+    public void dispatchPending() throws IOException {
         if (isActive()) {
             super.dispatchPending();
         }

@@ -16,6 +16,15 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -28,6 +37,7 @@ import org.apache.activemq.util.Wait.Condition;
 public class DestinationGCTest extends EmbeddedBrokerTestSupport {
 
     ActiveMQQueue queue = new ActiveMQQueue("TEST");
+    ActiveMQQueue otherQueue = new ActiveMQQueue("TEST-OTHER");
 
     @Override
     protected BrokerService createBroker() throws Exception {
@@ -42,6 +52,34 @@ public class DestinationGCTest extends EmbeddedBrokerTestSupport {
         map.setDefaultEntry(entry);
         broker.setDestinationPolicy(map);
         return broker;
+    }
+
+    public void testDestinationGCWithActiveConsumers() throws Exception {
+        assertEquals(1, broker.getAdminView().getQueues().length);
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+        Connection connection = factory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createProducer(otherQueue).close();
+        MessageConsumer consumer = session.createConsumer(queue);
+        consumer.setMessageListener(new MessageListener() {
+
+            @Override
+            public void onMessage(Message message) {
+            }
+        });
+        connection.start();
+
+        TimeUnit.SECONDS.sleep(5);
+
+        assertTrue("After GC runs there should be one Queue.", Wait.waitFor(new Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getAdminView().getQueues().length == 1;
+            }
+        }));
+
+        connection.close();
     }
 
     public void testDestinationGc() throws Exception {

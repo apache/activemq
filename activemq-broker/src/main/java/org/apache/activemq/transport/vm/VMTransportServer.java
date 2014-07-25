@@ -39,6 +39,7 @@ public class VMTransportServer implements TransportServer {
 
     private final AtomicInteger connectionCount = new AtomicInteger(0);
     private final boolean disposeOnDisconnect;
+    private boolean allowLinkStealing;
 
     /**
      * @param location
@@ -141,5 +142,14 @@ public class VMTransportServer implements TransportServer {
     @Override
     public boolean isSslServer() {
         return false;
+    }
+
+    @Override
+    public boolean isAllowLinkStealing() {
+        return allowLinkStealing;
+    }
+
+    public void setAllowLinkStealing(boolean allowLinkStealing) {
+        this.allowLinkStealing = allowLinkStealing;
     }
 }

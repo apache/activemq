@@ -16,9 +16,13 @@
 --%>
 <html>
 <head>
-<title>Topics</title>
+<c:set var="pageTitle" value="Topics"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <div>
 <form action="createDestination.action" method="post">
@@ -50,13 +54,17 @@
 <td><a href="<c:url value="send.jsp">
                         <c:param name="JMSDestination" value="${row.name}" />
                         <c:param name="JMSDestinationType" value="topic"/></c:url>"><form:tooltip text="${row.name}" length="50"/></a></td>
-<td>${row.consumerCount}</td>
-<td>${row.enqueueCount}</td>
-<td>${row.dequeueCount}</td>
+<td><c:out value="${row.consumerCount}" /></td>
+<td><c:out value="${row.enqueueCount}" /></td>
+<td><c:out value="${row.dequeueCount}" /></td>
 <td>
     <a href="<c:url value="send.jsp">
                         <c:param name="JMSDestination" value="${row.name}" />
                         <c:param name="JMSDestinationType" value="topic"/></c:url>">Send To</a>
+    <a href="<c:url value="topicSubscribers.jsp">
+                        <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Subscribers</a><br/>
+    <a href="<c:url value="topicProducers.jsp">
+                        <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>
     <a href="<c:url value="deleteDestination.action">
                    <c:param name="JMSDestination" value="${row.name}" />
                    <c:param name="JMSDestinationType" value="topic"/>
@@ -67,6 +75,7 @@
 </tbody>
 </table>
 
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

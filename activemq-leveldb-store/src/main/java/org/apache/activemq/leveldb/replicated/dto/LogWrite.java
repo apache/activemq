@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.replicated.dto;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -43,4 +43,6 @@ public class LogWrite {
     @XmlAttribute(name="sync")
     public boolean sync=false;
 
+    @XmlAttribute(name="date")
+    public long date;
 }

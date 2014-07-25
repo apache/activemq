@@ -24,7 +24,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.jms.Topic;
 
 /**
  *
@@ -33,6 +32,7 @@ public class JMSIndividualAckTest extends TestSupport {
 
     private Connection connection;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         connection = createConnection();
@@ -41,6 +41,7 @@ public class JMSIndividualAckTest extends TestSupport {
     /**
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
@@ -154,25 +155,7 @@ public class JMSIndividualAckTest extends TestSupport {
         session.close();
     }
 
-    /**
-     * Tests that a durable consumer cannot be created for Individual Ack mode.
-     *
-     * @throws JMSException
-     */
-    public void testCreateDurableConsumerFails() throws JMSException {
-        connection.start();
-        Session session = connection.createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
-        Topic dest = session.createTopic(getName());
-
-        try {
-            session.createDurableSubscriber(dest, getName());
-            fail("Should not be able to create duable subscriber.");
-        } catch(Exception e) {
-        }
-    }
-
     protected String getQueueName() {
         return getClass().getName() + "." + getName();
     }
-
 }

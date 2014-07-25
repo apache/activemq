@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.ft;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -25,6 +28,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TransactionRolledBackException;
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +43,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
         verifyExpectedBroker(inflightMessageCount);
         if (++inflightMessageCount == failureCount) {
             LOG.info("STOPPING DB!@!!!!");
-            final EmbeddedDataSource ds = ((SyncDataSource)getExistingDataSource()).getDelegate();
+            final EmbeddedDataSource ds = ((SyncCreateDataSource)getExistingDataSource()).getDelegate();
             ds.setShutdownDatabase("shutdown");
             LOG.info("DB STOPPED!@!!!!");
             
@@ -56,7 +63,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
         if (inflightMessageCount == 0) {
             assertEquals("connected to master", master.getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
         } else if (inflightMessageCount == failureCount + 10) {
-            assertEquals("connected to slave", slave.get().getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
+            assertEquals("connected to slave, count:" + inflightMessageCount, slave.get().getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
         }
     }
 
@@ -67,23 +74,7 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
 
     protected void sendToProducer(MessageProducer producer,
             Destination producerDestination, Message message) throws JMSException {
-        {   
-            // do some retries as db failures filter back to the client until broker sees
-            // db lock failure and shuts down
-            boolean sent = false;
-            do {
-                try { 
-                    producer.send(producerDestination, message);
-                    sent = true;
-                } catch (JMSException e) {
-                    LOG.info("Exception on producer send for: " + message, e);
-                    try { 
-                        Thread.sleep(2000);
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-            } while(!sent);
-        }
+        producer.send(producerDestination, message);
     }
 
     @Override
@@ -100,25 +91,59 @@ public class DbRestartJDBCQueueMasterSlaveTest extends JDBCQueueMasterSlaveTest 
             LOG.info("Failed to commit message receipt: " + message, e);
             try {
                 receiveSession.rollback();
-            } catch (JMSException ignored) {}
+            } catch (JMSException ignored) {
+            }
 
-            if (e.getCause() instanceof TransactionRolledBackException) {
-                TransactionRolledBackException transactionRolledBackException = (TransactionRolledBackException)e.getCause();
+            if (e instanceof TransactionRolledBackException) {
+                TransactionRolledBackException transactionRolledBackException = (TransactionRolledBackException) e;
                 if (transactionRolledBackException.getMessage().indexOf("in doubt") != -1) {
-                    // failover chucked bc there is a missing reply to a commit. the ack may have got there and the reply
-                    // was lost or the ack may be lost.
-                    // so we may not get a resend.
+                    // failover chucked bc there is a missing reply to a commit.
+                    // failover is involved b/c the store exception is handled broker side and the client just
+                    // sees a disconnect (socket.close()).
+                    // If the client needs to be aware of the failure then it should not use IOExceptionHandler
+                    // so that the exception will propagate back
+
+                    // for this test case:
+                    // the commit may have got there and the reply is lost "or" the commit may be lost.
+                    // so we may or may not get a resend.
                     //
-                    // REVISIT: A JDBC store IO exception should not cause the connection to drop, so it needs to be wrapped
-                    // possibly by the IOExceptionHandler
-                    // The commit/close wrappers in jdbc TransactionContext need to delegate to the IOExceptionHandler
+                    // At the application level we need to determine if the message is there or not which is not trivial
+                    // for this test we assert received == sent
+                    // so we need to know whether the message will be replayed.
+                    // we can ask the store b/c we know it is jdbc - guess we could go through a destination
+                    // message store interface also or use jmx
+                    java.sql.Connection dbConnection = null;
+                    try {
+                        ActiveMQMessage mqMessage = (ActiveMQMessage) message;
+                        MessageId id = mqMessage.getMessageId();
+                        dbConnection = sharedDs.getConnection();
+                        PreparedStatement s = dbConnection.prepareStatement(((JDBCPersistenceAdapter) connectedToBroker().getPersistenceAdapter()).getStatements().getFindMessageStatement());
+                        s.setString(1, id.getProducerId().toString());
+                        s.setLong(2, id.getProducerSequenceId());
+                        ResultSet rs = s.executeQuery();
 
-                    // this would leave the application aware of the store failure, and possible aware of whether the commit
-                    // was a success, rather than going into failover-retries as it does now.
-
+                        if (!rs.next()) {
+                            // message is gone, so lets count it as consumed
+                            LOG.info("On TransactionRolledBackException we know that the ack/commit got there b/c message is gone so we count it: " + mqMessage);
+                            super.consumeMessage(message, messageList);
+                        } else {
+                            LOG.info("On TransactionRolledBackException we know that the ack/commit was lost so we expect a replay of: " + mqMessage);
+                        }
+                    } catch (Exception dbe) {
+                        dbe.printStackTrace();
+                    } finally {
+                        try {
+                            dbConnection.close();
+                        } catch (SQLException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
                 }
-
             }
         }
+    }
+
+    private BrokerService connectedToBroker() {
+        return ((ActiveMQConnection)receiveConnection).getBrokerInfo().getBrokerName().equals("master") ? master : slave.get();
     }
 }

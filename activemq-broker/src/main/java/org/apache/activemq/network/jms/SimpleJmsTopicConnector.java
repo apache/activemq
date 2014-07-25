@@ -376,9 +376,9 @@ public class SimpleJmsTopicConnector extends JmsConnector {
                     }
                     bridge.setJmsConnector(this);
                     bridge.start();
-                    LOG.info("Created replyTo bridge for " + replyToProducerTopic);
+                    LOG.info("Created replyTo bridge for {}", replyToProducerTopic);
                 } catch (Exception e) {
-                    LOG.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
+                    LOG.error("Failed to create replyTo bridge for topic: {}", replyToProducerTopic, e);
                     return null;
                 }
                 replyToBridges.put(replyToProducerTopic, bridge);
@@ -407,9 +407,9 @@ public class SimpleJmsTopicConnector extends JmsConnector {
                     }
                     bridge.setJmsConnector(this);
                     bridge.start();
-                    LOG.info("Created replyTo bridge for " + replyToProducerTopic);
+                    LOG.info("Created replyTo bridge for {}", replyToProducerTopic);
                 } catch (Exception e) {
-                    LOG.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
+                    LOG.error("Failed to create replyTo bridge for topic: {}", replyToProducerTopic, e);
                     return null;
                 }
                 replyToBridges.put(replyToProducerTopic, bridge);

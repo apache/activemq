@@ -180,7 +180,7 @@ public class QueueBrowsingTest {
 
     @Test
     public void testMemoryLimit() throws Exception {
-        broker.getSystemUsage().getMemoryUsage().setLimit(10 * 1024);
+        broker.getSystemUsage().getMemoryUsage().setLimit(16 * 1024);
 
         int messageToSend = 370;
 

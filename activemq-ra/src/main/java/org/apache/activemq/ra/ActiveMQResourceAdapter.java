@@ -19,18 +19,17 @@ package org.apache.activemq.ra;
 import java.net.URI;
 import java.util.HashMap;
 
-import javax.jms.Connection;
 import javax.jms.JMSException;
-import javax.jms.XAConnection;
-import javax.jms.XASession;
 import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
 import javax.resource.spi.ActivationSpec;
 import javax.resource.spi.BootstrapContext;
 import javax.resource.spi.ResourceAdapterInternalException;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 
+import javax.transaction.xa.Xid;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
@@ -38,6 +37,8 @@ import org.apache.activemq.TransactionContext;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ServiceSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
@@ -49,7 +50,7 @@ import org.apache.activemq.util.ServiceSupport;
  * 
  */
 public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implements MessageResourceAdapter {
-
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQResourceAdapter.class);
     private final HashMap<ActiveMQEndpointActivationKey, ActiveMQEndpointWorker> endpointWorkers = new HashMap<ActiveMQEndpointActivationKey, ActiveMQEndpointWorker>();
 
     private BootstrapContext bootstrapContext;
@@ -84,6 +85,10 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
                             broker = BrokerFactory.createBroker(new URI(brokerXmlConfig));
                         }
                         broker.start();
+                        // Default the ServerUrl to the local broker if not specified in the ra.xml
+                        if (getServerUrl() == null) {
+                            setServerUrl("vm://" + broker.getBrokerName() + "?create=false");
+                        }
                     } catch (Throwable e) {
                         log.warn("Could not start up embeded ActiveMQ Broker '"+brokerXmlConfig+"': "+e.getMessage());
                         log.debug("Reason for: "+e.getMessage(), e);
@@ -102,9 +107,6 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         }
     }
 
-    /**
-     * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection()
-     */
     public ActiveMQConnection makeConnection() throws JMSException {
         if( connectionFactory == null ) {
             return makeConnection(getInfo());
@@ -235,18 +237,128 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      */
     public XAResource[] getXAResources(ActivationSpec[] activationSpecs) throws ResourceException {
         try {
-            final ActiveMQConnection connection = makeConnection();
-            return new XAResource[]{new LocalAndXATransaction(new TransactionContext(connection)) {
-                public void finalize() throws Throwable {
-                    try {
-                        connection.close();
-                    } catch (Throwable ignore) {
-                    } finally {
-                        super.finalize();
-                    }
-                }
-            }};
-        } catch (JMSException e) {
+            return new XAResource[]{
+                    new TransactionContext() {
+
+                        @Override
+                        public boolean isSameRM(XAResource xaresource) throws XAException {
+                            ActiveMQConnection original = null;
+                            try {
+                                original = setConnection(newConnection());
+                                boolean result = super.isSameRM(xaresource);
+                                LOG.trace("{}.recover({})={}", getConnection(), xaresource, result);
+                                return result;
+
+                            } catch (JMSException e) {
+                                LOG.trace("isSameRM({}) failed", xaresource, e);
+                                XAException xaException = new XAException(e.getMessage());
+                                throw xaException;
+                            } finally {
+                                closeConnection(original);
+                            }
+                        }
+
+                        @Override
+                        protected String getResourceManagerId() throws JMSException {
+                            ActiveMQConnection original = null;
+                            try {
+                                original = setConnection(newConnection());
+                                return super.getResourceManagerId();
+                            } finally {
+                                closeConnection(original);
+                            }
+                        }
+
+                        @Override
+                        public void commit(Xid xid, boolean onePhase) throws XAException {
+                            ActiveMQConnection original = null;
+                            try {
+                                setConnection(newConnection());
+                                super.commit(xid, onePhase);
+                                LOG.trace("{}.commit({},{})", getConnection(), xid);
+
+                            } catch (JMSException e) {
+                                LOG.trace("{}.commit({},{}) failed", getConnection(), xid, onePhase, e);
+                                throwXAException(e);
+                            } finally {
+                                closeConnection(original);
+                            }
+                        }
+
+                        @Override
+                        public void rollback(Xid xid) throws XAException {
+                            ActiveMQConnection original = null;
+                            try {
+                                original = setConnection(newConnection());
+                                super.rollback(xid);
+                                LOG.trace("{}.rollback({})", getConnection(), xid);
+
+                            } catch (JMSException e) {
+                                LOG.trace("{}.rollback({}) failed", getConnection(), xid, e);
+                                throwXAException(e);
+                            } finally {
+                               closeConnection(original);
+                            }
+                        }
+
+                        @Override
+                        public Xid[] recover(int flags) throws XAException {
+                            Xid[] result = new Xid[]{};
+                            ActiveMQConnection original = null;
+                            try {
+                                original = setConnection(newConnection());
+                                result = super.recover(flags);
+                                LOG.trace("{}.recover({})={}", getConnection(), flags, result);
+
+                            } catch (JMSException e) {
+                                LOG.trace("{}.recover({}) failed", getConnection(), flags, e);
+                                throwXAException(e);
+                            } finally {
+                                closeConnection(original);
+                            }
+                            return result;
+                        }
+
+                        @Override
+                        public void forget(Xid xid) throws XAException {
+                            ActiveMQConnection original = null;
+                            try {
+                                original = setConnection(newConnection());
+                                super.forget(xid);
+                                LOG.trace("{}.forget({})", getConnection(), xid);
+
+                            } catch (JMSException e) {
+                                LOG.trace("{}.forget({}) failed", getConnection(), xid, e);
+                                throwXAException(e);
+                            } finally {
+                                closeConnection(original);
+                            }
+                        }
+
+                        private void throwXAException(JMSException e) throws XAException {
+                            XAException xaException = new XAException(e.getMessage());
+                            xaException.errorCode = XAException.XAER_RMFAIL;
+                            throw xaException;
+                        }
+
+                        private ActiveMQConnection newConnection() throws JMSException {
+                            ActiveMQConnection connection = makeConnection();
+                            connection.start();
+                            return connection;
+                        }
+
+                        private void closeConnection(ActiveMQConnection original) {
+                            ActiveMQConnection connection = getConnection();
+                            if (connection != null) {
+                                try {
+                                    connection.close();
+                                } catch (JMSException ignored) {}
+                            }
+                            setConnection(original);
+                        }
+                    }};
+
+        } catch (Exception e) {
             throw new ResourceException(e);
         }
     }

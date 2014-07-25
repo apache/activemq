@@ -16,7 +16,13 @@
  */
 package org.apache.activemq.karaf.itest;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -24,10 +30,28 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 
 public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
 
+    public static void copyFile(File from, File to) throws IOException {
+        FileChannel in = new FileInputStream(from).getChannel();
+        FileChannel out = new FileOutputStream(to).getChannel();
+        try {
+            long size = in.size();
+            long position = 0;
+            while (position < size) {
+                position += in.transferTo(position, 8192, out);
+            }
+        } finally {
+            try {
+                in.close();
+                out.force(true);
+                out.close();
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+    }
+
     protected String consumeMessage(String nameAndPayload) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
-        connection.start();
+        Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
         TextMessage message = (TextMessage) consumer.receive(10000);
@@ -37,11 +61,17 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
     }
 
     protected void produceMessage(String nameAndPayload) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
-        connection.start();
+        Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createProducer(session.createQueue(nameAndPayload)).send(session.createTextMessage(nameAndPayload));
         connection.close();
+    }
+
+    protected Connection getConnection() throws JMSException {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
+        Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
+        connection.start();
+
+        return connection;
     }
 }

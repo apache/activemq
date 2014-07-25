@@ -16,25 +16,17 @@
  */
 package org.apache.activemq.leveldb.test;
 
-import junit.framework.TestCase;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
-import org.apache.activemq.leveldb.util.FileSupport;
 import org.apache.activemq.store.MessageStore;
-import org.apache.zookeeper.server.NIOServerCnxnFactory;
-import org.apache.zookeeper.server.ZooKeeperServer;
-import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
@@ -43,39 +35,11 @@ import static org.junit.Assert.*;
 
 /**
  */
-public class ElectingLevelDBStoreTest {
+public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
+
     protected static final Logger LOG = LoggerFactory.getLogger(ElectingLevelDBStoreTest.class);
 
-    NIOServerCnxnFactory connector;
-
-    static File data_dir() {
-        return new File("target/activemq-data/leveldb-elections");
-    }
-
-
-    @Before
-    public void setUp() throws Exception {
-        FileSupport.toRichFile(data_dir()).recursiveDelete();
-
-        System.out.println("Starting ZooKeeper");
-        ZooKeeperServer zk_server = new ZooKeeperServer();
-        zk_server.setTickTime(500);
-        zk_server.setTxnLogFactory(new FileTxnSnapLog(new File(data_dir(), "zk-log"), new File(data_dir(), "zk-data")));
-        connector = new NIOServerCnxnFactory();
-        connector.configure(new InetSocketAddress(0), 100);
-        connector.startup(zk_server);
-        System.out.println("ZooKeeper Started");
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        if( connector!=null ) {
-          connector.shutdown();
-          connector = null;
-        }
-    }
-
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*10)
     public void testElection() throws Exception {
 
         ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
@@ -167,20 +131,46 @@ public class ElectingLevelDBStoreTest {
         }
     }
 
-    private CountDownFuture waitFor(int timeout, CountDownFuture... futures) throws InterruptedException {
-        long deadline =  System.currentTimeMillis()+timeout;
-        while( true ) {
-            for (CountDownFuture f:futures) {
-                if( f.await(1, TimeUnit.MILLISECONDS) ) {
-                    return f;
+    @Test(timeout = 1000 * 60 * 10)
+    public void testZooKeeperServerFailure() throws Exception {
+
+        final ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+        ArrayList<CountDownFuture> pending_starts = new ArrayList<CountDownFuture>();
+
+        for (String dir : new String[]{"leveldb-node1", "leveldb-node2", "leveldb-node3"}) {
+            ElectingLevelDBStore store = createStoreNode();
+            store.setDirectory(new File(data_dir(), dir));
+            stores.add(store);
+            pending_starts.add(asyncStart(store));
+        }
+
+        // At least one of the stores should have started.
+        CountDownFuture f = waitFor(30 * 1000, pending_starts.toArray(new CountDownFuture[pending_starts.size()]));
+        assertTrue(f != null);
+        pending_starts.remove(f);
+
+        // The other stores should not start..
+        LOG.info("Making sure the other stores don't start");
+        Thread.sleep(5000);
+        for (CountDownFuture start : pending_starts) {
+            assertFalse(start.completed());
+        }
+
+        // Stop ZooKeeper..
+        LOG.info("SHUTTING DOWN ZooKeeper!");
+        connector.shutdown();
+
+        // None of the store should be slaves...
+        within( 30, TimeUnit.SECONDS, new Task(){
+            public void run() throws Exception {
+                for (ElectingLevelDBStore store : stores) {
+                    assertFalse(store.isMaster());
                 }
             }
-            long remaining = deadline - System.currentTimeMillis();
-            if( remaining < 0 ) {
-                return null;
-            } else {
-                Thread.sleep(Math.min(remaining / 10, 100L));
-            }
+        });
+
+        for (ElectingLevelDBStore store : stores) {
+            store.stop();
         }
     }
 
@@ -224,6 +214,7 @@ public class ElectingLevelDBStoreTest {
         store.setZkAddress("localhost:" + connector.getLocalPort());
         store.setZkPath("/broker-stores");
         store.setBrokerName("foo");
+        store.setHostname("localhost");
         store.setBind("tcp://0.0.0.0:0");
         return store;
     }

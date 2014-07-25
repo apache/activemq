@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.9-SNAPSHOT</version>
+  <version>5.11-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -46,122 +46,128 @@
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.0.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.12-SNAPSHOT</camel-version>
+    <camel-version>2.13.2</camel-version>
     <camel-version-range>[2.12,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
     <commons-collections-version>3.2.1</commons-collections-version>
     <commons-daemon-version>1.0.15</commons-daemon-version>
     <commons-dbcp-version>1.4</commons-dbcp-version>
-    <commons-io-version>1.4</commons-io-version>
+    <commons-io-version>2.4</commons-io-version>
     <commons-lang-version>2.6</commons-lang-version>
     <commons-logging-version>1.1.3</commons-logging-version>
     <commons-pool-version>1.6</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <commons-net-version>3.3</commons-net-version>
     <directory-version>2.0.0-M6</directory-version>
-    <hawtio-version>1.2-M1</hawtio-version>
-
     <ftpserver-version>1.0.6</ftpserver-version>
     <geronimo-version>1.0</geronimo-version>
     <hadoop-version>1.0.0</hadoop-version>
-    <hawtbuf-version>1.9</hawtbuf-version>
-    <hawtdispatch-version>1.17</hawtdispatch-version>
+    <hawtbuf-version>1.11</hawtbuf-version>
+    <hawtdispatch-version>1.21</hawtdispatch-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.8.0.12</hsqldb-version>
     <httpclient-version>4.2.5</httpclient-version>
     <httpcore-version>4.2.4</httpcore-version>
-    <jackson-version>1.9.12</jackson-version>
-    <jasypt-version>1.9.0</jasypt-version>
+    <insight-version>1.1.0.CR3</insight-version>
+    <jackson-version>2.4.1</jackson-version>
+    <jasypt-version>1.9.2</jasypt-version>
+    <jaxb-bundle-version>2.2.1.1_2</jaxb-bundle-version>
     <jdom-version>1.0</jdom-version>
     <jetty-version>7.6.9.v20130131</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
     <jsp-version>2.1.v20100127</jsp-version>
     <jstl-version>1.1.2</jstl-version>
-    <jettison-version>1.3.4</jettison-version>
+    <jettison-version>1.3.5</jettison-version>
     <jmock-version>2.5.1</jmock-version>
+    <jolokia-version>1.2.2</jolokia-version>
     <josql-version>1.5_5</josql-version>
+    <!-- for json-simple use same version as jolokia uses -->
+    <json-simple-version>1.1.1</json-simple-version>
     <junit-version>4.11</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>2.3.2</karaf-version>
+    <karaf-version>2.3.3</karaf-version>
     <leveldb-api-version>0.6</leveldb-api-version>
     <leveldb-version>0.6</leveldb-version>
-    <leveldbjni-version>1.7</leveldbjni-version>
+    <leveldbjni-version>1.8</leveldbjni-version>
     <log4j-version>1.2.17</log4j-version>
-    <mqtt-client-version>1.5</mqtt-client-version>
+    <mqtt-client-version>1.10</mqtt-client-version>
     <openjpa-version>1.2.0</openjpa-version>
-    <opensymphony-version>2.4.2</opensymphony-version>
-    <org-apache-derby-version>10.9.1.0</org-apache-derby-version>
+    <org-apache-derby-version>10.10.1.1</org-apache-derby-version>
     <org.osgi.core-version>4.3.1</org.osgi.core-version>
     <p2psockets-version>1.1.2</p2psockets-version>
+    <paho-version>0.4.0</paho-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
-    <zookeeper-version>3.4.3</zookeeper-version>
-    <qpid-proton-version>0.3.0-fuse-4</qpid-proton-version>
-    <qpid-jms-version>0.22</qpid-jms-version>
+    <zookeeper-version>3.4.5</zookeeper-version>
+    <qpid-proton-version>0.7</qpid-proton-version>
+    <qpid-jms-version>0.26</qpid-jms-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.0</rome-version>
-    <saxon-version>9.4</saxon-version>
-    <saxon-bundle-version>9.4.0.1_2</saxon-bundle-version>
+    <saxon-version>9.5.1-2</saxon-version>
+    <saxon-bundle-version>9.5.1-1_1</saxon-bundle-version>
     <scala-plugin-version>3.1.0</scala-plugin-version>
-    <scala-version>2.9.1</scala-version>
-    <scala-bundle-version>2.9.1_3</scala-bundle-version>
-    <scalatest-version>1.8</scalatest-version>
-    <slf4j-version>1.6.6</slf4j-version>
-    <snappy-version>1.1.0-M3</snappy-version>
-    <spring-version>3.2.3.RELEASE</spring-version>
+    <scala-version>2.11.0</scala-version>
+    <shiro-version>1.2.2</shiro-version>
+    <scalatest-version>2.1.5</scalatest-version>
+    <slf4j-version>1.7.5</slf4j-version>
+    <snappy-version>1.1.0.1</snappy-version>
+    <spring-version>3.2.9.RELEASE</spring-version>
     <spring-osgi-version>1.2.1</spring-osgi-version>
-    <spring-oxm-version>1.5.10</spring-oxm-version>
     <stax2-api-version>3.0.2</stax2-api-version>
     <velocity-version>1.7</velocity-version>
-    <woodstox-core-asl-version>4.1.4</woodstox-core-asl-version>
+    <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
     <xalan-version>2.7.1</xalan-version>
     <xmlbeans-version>2.6.0</xmlbeans-version>
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
     <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
-    <xstream-version>1.4.4</xstream-version>
-    <xbean-version>3.14</xbean-version>
+    <xstream-version>1.4.7</xstream-version>
+    <xbean-version>3.16</xbean-version>
     <xerces-version>2.11.0</xerces-version>
-    <zookeeper-version>3.4.5</zookeeper-version>
+    <jaxb-basics-version>0.6.4</jaxb-basics-version>
+    <stompjms-version>1.19</stompjms-version>
 
     <pax-exam-version>2.6.0</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.6.1</pax-runner-version>
     <pax-tiny-bundle-version>1.3.1</pax-tiny-bundle-version>
+    <pax-url-version>1.5.2</pax-url-version>
     <felix-configadmin-version>1.4.0</felix-configadmin-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
-    <source-version>1.6</source-version>
-    <target-version>1.6</target-version>
-    <javase-javadoc-url>http://download.oracle.com/javase/6/docs/api/</javase-javadoc-url>
+    <source-version>1.7</source-version>
+    <target-version>1.7</target-version>
+    <javase-javadoc-url>http://docs.oracle.com/javase/7/docs/api/</javase-javadoc-url>
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
     <slf4j-javadoc-url>http://www.slf4j.org/apidocs/</slf4j-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>2.3.7</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>2.10</maven-surefire-plugin-version>
+    <maven-surefire-plugin-version>2.16</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>1.3</maven-antrun-plugin-version>
     <maven-assembly-plugin-version>2.4</maven-assembly-plugin-version>
     <maven-release-plugin-version>2.4.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.9</maven-eclipse-plugin-version>
-    <maven-war-plugin-version>2.3</maven-war-plugin-version>
+    <maven-war-plugin-version>2.4</maven-war-plugin-version>
     <maven-compiler-plugin-version>2.5.1</maven-compiler-plugin-version>
     <maven-jar-plugin-version>2.4</maven-jar-plugin-version>
     <maven-archiver-version>2.5</maven-archiver-version>
     <maven-source-plugin-version>2.2.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>2.9</maven-javadoc-plugin-version>
+    <maven-javadoc-plugin-version>2.9.1</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.4</maven-install-plugin-version>
-    <maven-shade-plugin-version>2.0</maven-shade-plugin-version>
-    <maven-jaxb2-plugin-version>0.7.2</maven-jaxb2-plugin-version>
+    <maven-shade-plugin-version>2.1</maven-shade-plugin-version>
     <findbugs-maven-plugin-version>2.5.2</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>2.6</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.5.2</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>2.4</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>1.8</build-helper-maven-plugin-version>
-    <apache-rat-plugin-version>0.8</apache-rat-plugin-version>
+    <apache-rat-plugin-version>0.9</apache-rat-plugin-version>
     <ianal-maven-plugin-version>1.0-alpha-1</ianal-maven-plugin-version>
     <depends-maven-plugin-version>1.2</depends-maven-plugin-version>
+    <maven-dependency-plugin-version>2.8</maven-dependency-plugin-version>
+    <maven-project-info-reports-plugin-version>2.7</maven-project-info-reports-plugin-version>
+    <maven-graph-plugin-version>1.30</maven-graph-plugin-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
@@ -175,10 +181,15 @@
   </properties>
 
   <prerequisites>
-    <maven>3.0.2</maven>
+    <maven>3.0.4</maven>
   </prerequisites>
 
   <url>http://activemq.apache.org</url>
+
+  <issueManagement>
+    <system>Jira</system>
+    <url>https://issues.apache.org/jira/browse/AMQ</url>
+  </issueManagement>
 
   <mailingLists>
     <mailingList>
@@ -212,19 +223,16 @@
   </distributionManagement>
 
   <modules>
-
+    <module>activemq-openwire-generator</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
-
     <module>activemq-stomp</module>
     <module>activemq-mqtt</module>
     <module>activemq-amqp</module>
-
     <module>activemq-kahadb-store</module>
     <module>activemq-jdbc-store</module>
     <module>activemq-leveldb-store</module>
-
     <module>activemq-unit-tests</module>
     <module>activemq-all</module>
     <module>activemq-camel</module>
@@ -232,14 +240,17 @@
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
     <module>activemq-karaf</module>
-    <module>activemq-openwire-generator</module>
+    <module>activemq-jms-pool</module>
     <module>activemq-pool</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
     <module>activemq-run</module>
+    <module>activemq-shiro</module>
     <module>activemq-spring</module>
+    <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
+    <module>activemq-partition</module>
     <module>activemq-osgi</module>
     <module>activemq-blueprint</module>
     <module>activemq-web-demo</module>
@@ -249,13 +260,13 @@
     <module>assembly</module>
     <module>activemq-log4j-appender</module>
     <module>activemq-http</module>
-
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
+    <connection>scm:git:http://git-wip-us.apache.org/repos/asf/activemq.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/activemq.git</developerConnection>
+    <url>https://fisheye6.atlassian.com/browse/~br=master/activemq-git</url>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencyManagement>
@@ -338,6 +349,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-partition</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-unit-tests</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>
@@ -351,8 +367,18 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.eclipse.paho</groupId>
+        <artifactId>mqtt-client</artifactId>
+        <version>${paho-version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jaas</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jms-pool</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -362,7 +388,17 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-shiro</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-spring</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-runtime-config</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -424,7 +460,6 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activeio-core</artifactId>
         <version>${activeio-version}</version>
-         <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -565,7 +600,6 @@
         <groupId>org.apache.hadoop.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
         <version>${zookeeper-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- zeroconf transport -->
@@ -573,7 +607,6 @@
         <groupId>javax.jmdns</groupId>
         <artifactId>jmdns</artifactId>
         <version>${jmdns-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- For jsvc support -->
@@ -605,7 +638,6 @@
         <groupId>org.apache.xbean</groupId>
         <artifactId>xbean-spring</artifactId>
         <version>${xbean-version}</version>
-        <optional>true</optional>
         <exclusions>
           <exclusion>
             <groupId>qdox</groupId>
@@ -613,6 +645,22 @@
           </exclusion>
         </exclusions>
 
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-version}</version>
       </dependency>
 
       <!-- Used to configure the activemq logs -->
@@ -643,49 +691,56 @@
         <version>${openjpa-version}</version>
       </dependency>
 
+      <!-- Optional Shiro Support -->
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-core</artifactId>
+        <version>${shiro-version}</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-spring</artifactId>
+        <version>${shiro-version}</version>
+        <optional>true</optional>
+      </dependency>
+
       <!-- Optional Spring Support -->
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-aop</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-beans</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-jms</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-tx</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
       </dependency>
       <!--
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring</artifactId>
         <version>${spring-version}</version>
-        <optional>true</optional>
         <exclusions>
           <exclusion>
             <groupId>javax.mail</groupId>
@@ -753,13 +808,11 @@
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
         <version>${org-apache-derby-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.apache.derby</groupId>
         <artifactId>derbynet</artifactId>
         <version>${org-apache-derby-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- Optional Axion support -->
@@ -767,21 +820,18 @@
         <groupId>axion</groupId>
         <artifactId>axion</artifactId>
         <version>${axion-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>commons-primitives</groupId>
         <artifactId>commons-primitives</artifactId>
         <version>${commons-primitives-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>regexp</groupId>
         <artifactId>regexp</artifactId>
         <version>${regexp-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- Optional HSQL DB Support -->
@@ -790,7 +840,6 @@
         <groupId>hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
         <version>${hsqldb-version}</version>
-        <optional>true</optional>
         </dependency>
       -->
 
@@ -798,7 +847,6 @@
         <groupId>commons-dbcp</groupId>
         <artifactId>commons-dbcp</artifactId>
         <version>${commons-dbcp-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
@@ -813,7 +861,6 @@
         <groupId>howl</groupId>
         <artifactId>howl-logger</artifactId>
         <version>${howl-version}</version>
-        <optional>true</optional>
         </dependency>
       -->
 
@@ -822,14 +869,12 @@
         <groupId>activemq</groupId>
         <artifactId>smack</artifactId>
         <version>1.5.0</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
         <groupId>activemq</groupId>
         <artifactId>smackx</artifactId>
         <version>1.5.0</version>
-        <optional>true</optional>
       </dependency>
 
       <!-- =============================== -->
@@ -980,7 +1025,6 @@
         <groupId>org.fusesource.mqtt-client</groupId>
         <artifactId>mqtt-client</artifactId>
         <version>${mqtt-client-version}</version>
-        <optional>true</optional>
       </dependency>
 
       <dependency>
@@ -1010,11 +1054,6 @@
         <version>${slf4j-version}</version>
       </dependency>
       <dependency>
-        <groupId>opensymphony</groupId>
-        <artifactId>sitemesh</artifactId>
-        <version>${opensymphony-version}</version>
-      </dependency>
-      <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>jstl</artifactId>
         <version>${jstl-version}</version>
@@ -1042,13 +1081,11 @@
         <groupId>org.apache.velocity</groupId>
         <artifactId>velocity</artifactId>
         <version>${velocity-version}</version>
-        <optional>true</optional>
       </dependency>
       <dependency>
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.josql</artifactId>
         <version>${josql-version}</version>
-        <optional>true</optional>
       </dependency>
 
     </dependencies>
@@ -1081,7 +1118,6 @@
           <version>${maven-jar-plugin-version}</version>
           <configuration>
             <archive>
-              <index>true</index>
               <compress>true</compress>
             </archive>
           </configuration>
@@ -1095,7 +1131,21 @@
             <allowTimestampedSnapshots>false</allowTimestampedSnapshots>
             <preparationGoals>clean install</preparationGoals>
             <goals>deploy</goals>
+            <remoteTagging>false</remoteTagging>
+            <suppressCommitBeforeTag>false</suppressCommitBeforeTag>
           </configuration>
+          <dependencies>
+            <dependency>
+             <groupId>org.apache.maven.scm</groupId>
+             <artifactId>maven-scm-api</artifactId>
+             <version>1.8.1</version>
+            </dependency>
+          <dependency>
+             <groupId>org.apache.maven.scm</groupId>
+             <artifactId>maven-scm-provider-gitexe</artifactId>
+             <version>1.8.1</version>
+           </dependency>
+         </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1103,9 +1153,14 @@
           <version>${maven-surefire-plugin-version}</version>
           <configuration>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
-            <forkMode>once</forkMode>
+            <forkCount>1</forkCount>
+            <reuseForks>true</reuseForks>
             <argLine>-enableassertions</argLine>
             <failIfNoTests>false</failIfNoTests>
+            <systemPropertyVariables>
+                <java.awt.headless>true</java.awt.headless>
+            </systemPropertyVariables>
+            <argLine>-Xmx512m</argLine>
           </configuration>
         </plugin>
         <plugin>
@@ -1206,19 +1261,6 @@
                   </pluginExecutionFilter>
                   <action>
                     <ignore />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.jvnet.jaxb2.maven2</groupId>
-                    <artifactId>maven-jaxb2-plugin</artifactId>
-                    <versionRange>[0.0.0,)</versionRange>
-                    <goals>
-                      <goal>generate</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -1333,12 +1375,17 @@
             <exclude>**/*.bin</exclude>
             <exclude>**/*.log</exclude>
             <exclude>**/*.txt</exclude>
+            <exclude>**/*.md</exclude>
             <exclude>**/kahadb/**/*.data</exclude>
             <!-- activemq-xmpp schemas -->
             <exclude>**/resources/*.xsd</exclude>
+            <exclude>**/src/test/resources/keystore</exclude>
             <!-- web, web-console, web-demo files -->
+            <exclude>**/webapp/mqtt/mqttws31.js</exclude>
             <exclude>**/webapp/js/dojo.js</exclude>
-            <exclude>**/webapp/js/jquery-*.js</exclude>
+            <exclude>**/jquery-*.js</exclude>
+            <exclude>**/bootstrap.min.css</exclude>
+            <exclude>**/bootstrap.min.responsive.css</exclude>
             <exclude>**/webapp/js/prototype.js</exclude>
             <exclude>**/web/behaviour.js</exclude>
             <exclude>**/webapp/js/common.js</exclude>
@@ -1360,8 +1407,50 @@
             <exclude>**/*.iws</exclude>
             <exclude>**/.idea/**/*</exclude>
             <exclude>.git/**/*</exclude>
+            <exclude>**/LevelDB/**/*</exclude>
+            <exclude>**/dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.sln</exclude>
+            <exclude>**/*.userprefs</exclude>
+            <exclude>**/*.csproj</exclude>
+            <exclude>**/mqttws31.js</exclude>
+            <exclude>**/stomp.js</exclude>
+            <exclude>**/__init__.py</exclude>
+            <exclude>**/webapp/decorators/footer.jsp</exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin-version}</version>
+        <configuration>
+          <links>
+            <link>${javase-javadoc-url}</link>
+            <link>${javaee-javadoc-url}</link>
+            <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
+            <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
+            <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
+            <link>http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
+            <link>${slf4j-javadoc-url}</link>
+            <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
+            <link>http://junit.sourceforge.net/javadoc/</link>
+            <link>http://logging.apache.org/log4j/docs/api/</link>
+          </links>
+          <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
+          <linksource>true</linksource>
+          <maxmemory>2048m</maxmemory>
+          <source>1.6</source>
+          <additionalJOption>-J-Xmx2048m</additionalJOption>
+        </configuration>
+        <executions>
+            <execution>
+                <id>aggregate</id>
+                <phase>site</phase>
+                <goals>
+                    <goal>aggregate</goal>
+                </goals>
+            </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -1395,42 +1484,6 @@
         <artifactId>taglist-maven-plugin</artifactId>
         <version>${taglist-maven-plugin-version}</version>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin-version}</version>
-        <configuration>
-          <links>
-            <link>${javase-javadoc-url}</link>
-            <link>${javaee-javadoc-url}</link>
-            <link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
-            <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-            <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
-            <link>http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/</link>
-            <link>${slf4j-javadoc-url}</link>
-            <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
-            <link>http://junit.sourceforge.net/javadoc/</link>
-            <link>http://logging.apache.org/log4j/docs/api/</link>
-          </links>
-          <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
-          <linksource>true</linksource>
-          <maxmemory>900m</maxmemory>
-          <source>1.6</source>
-          <additionalJOption>-J-Xmx256m</additionalJOption>
-        </configuration>
-      </plugin>
-      <!--<plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.2</version>
-        <configuration>
-          <formats>
-            <format>html</format>
-            <format>xml</format>
-          </formats>
-        </configuration>
-      </plugin>-->
-
     </plugins>
   </reporting>
 
@@ -1527,7 +1580,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-project-info-reports-plugin</artifactId>
-            <version>2.6</version>
+            <version>${maven-project-info-reports-plugin-version}</version>
             <configuration>
               <dependencyLocationsEnabled>
                 false
@@ -1548,7 +1601,7 @@
           <plugin>
             <groupId>org.fusesource.mvnplugins</groupId>
             <artifactId>maven-graph-plugin</artifactId>
-            <version>1.15</version>
+            <version>${maven-graph-plugin-version}</version>
           </plugin>
         </plugins>
       </build>
@@ -1556,19 +1609,21 @@
   </profiles>
 
   <repositories>
-    <!-- for the proton dependency -->
+    <!-- for the paho dependency -->
     <repository>
-      <id>com.fusesource.m2</id>
-      <url>http://repo.fusesource.com/nexus/content/groups/public/</url>
+      <id>eclipse.m2</id>
+      <url>https://repo.eclipse.org/content/groups/releases/</url>
       <releases><enabled>true</enabled></releases>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
+
+    <!-- for the patched proton build: http://is.gd/WjuHvH -->
     <repository>
-        <id>com.fusesource.m2.snapshot</id>
-        <url>http://repo.fusesource.com/nexus/content/repositories/snapshots/</url>
-        <releases><enabled>false</enabled></releases>
-        <snapshots><enabled>true</enabled></snapshots>
-      </repository>
+      <id>jboss.org-fs-releases</id>
+      <url>https://repository.jboss.org/nexus/content/repositories/fs-releases/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
 
   </repositories>
 

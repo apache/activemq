@@ -203,13 +203,13 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         Hashtable<String, String> env = new Hashtable<String, String>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         this.ldapURI = getUri();
-        LOG.debug("    URI [" + this.ldapURI + "]");
+        LOG.debug("    URI [{}]", this.ldapURI);
         env.put(Context.PROVIDER_URL, this.ldapURI.toString());
         if (anonymousAuthentication) {
             LOG.debug("    login credentials [anonymous]");
             env.put(Context.SECURITY_AUTHENTICATION, "none");
         } else {
-            LOG.debug("    login credentials [" + user + ":******]");
+            LOG.debug("    login credentials [{}:******]", user);
             env.put(Context.SECURITY_PRINCIPAL, user);
             env.put(Context.SECURITY_CREDENTIALS, password);
         }
@@ -221,7 +221,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
             } catch (CommunicationException err) {
                 if (failover) {
                     this.ldapURI = getUri();
-                    LOG.error("connection error [" + env.get(Context.PROVIDER_URL) + "], failover connection to [" + this.ldapURI.toString() + "]");
+                    LOG.error("connection error [{}], failover connection to [{}]", env.get(Context.PROVIDER_URL), this.ldapURI.toString());
                     env.put(Context.PROVIDER_URL, this.ldapURI.toString());
                     Thread.sleep(curReconnectDelay);
                     curReconnectDelay = Math.min(curReconnectDelay * 2, maxReconnectDelay);
@@ -233,9 +233,9 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
 
         // add connectors from search results
         LOG.info("searching for network connectors...");
-        LOG.debug("    base   [" + base + "]");
-        LOG.debug("    filter [" + searchFilter + "]");
-        LOG.debug("    scope  [" + searchControls.getSearchScope() + "]");
+        LOG.debug("    base   [{}]", base);
+        LOG.debug("    filter [{}]", searchFilter);
+        LOG.debug("    scope  [{}]", searchControls.getSearchScope());
         NamingEnumeration<SearchResult> results = context.search(base, searchFilter, searchControls);
         while (results.hasMore()) {
             addConnector(results.next());
@@ -278,14 +278,14 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     protected synchronized void addConnector(SearchResult result) throws Exception {
         String uuid = toUUID(result);
         if (uuidMap.containsKey(uuid)) {
-            LOG.warn("connector already regsitered for UUID [" + uuid + "]");
+            LOG.warn("connector already regsitered for UUID [{}]", uuid);
             return;
         }
 
         URI connectorURI = toURI(result);
         if (connectorMap.containsKey(connectorURI)) {
             int referenceCount = referenceMap.get(connectorURI) + 1;
-            LOG.warn("connector reference added for URI [" + connectorURI + "], UUID [" + uuid + "], total reference(s) [" + referenceCount + "]");
+            LOG.warn("connector reference added for URI [{}], UUID [{}], total reference(s) [{}]", new Object[]{ connectorURI, uuid, referenceCount });
             referenceMap.put(connectorURI, referenceCount);
             uuidMap.put(uuid, connectorURI);
             return;
@@ -320,7 +320,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         referenceMap.put(connectorURI, 1);
         uuidMap.put(uuid, connectorURI);
         connector.start();
-        LOG.info("connector added with URI [" + connectorURI + "]");
+        LOG.info("connector added with URI [{}]", connectorURI);
     }
 
     /**
@@ -332,20 +332,20 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     protected synchronized void removeConnector(SearchResult result) throws Exception {
         String uuid = toUUID(result);
         if (!uuidMap.containsKey(uuid)) {
-            LOG.warn("connector not regsitered for UUID [" + uuid + "]");
+            LOG.warn("connector not registered for UUID [{}]", uuid);
             return;
         }
 
         URI connectorURI = uuidMap.get(uuid);
         if (!connectorMap.containsKey(connectorURI)) {
-            LOG.warn("connector not regisitered for URI [" + connectorURI + "]");
+            LOG.warn("connector not registered for URI [{}]", connectorURI);
             return;
         }
 
         int referenceCount = referenceMap.get(connectorURI) - 1;
         referenceMap.put(connectorURI, referenceCount);
         uuidMap.remove(uuid);
-        LOG.debug("connector referenced removed for URI [" + connectorURI + "], UUID [" + uuid + "], remaining reference(s) [" + referenceCount + "]");
+        LOG.debug("connector referenced removed for URI [{}], UUID[{}], remaining reference(s) [{}]", new Object[]{ connectorURI, uuid, referenceCount });
 
         if (referenceCount > 0) {
             return;
@@ -353,7 +353,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
 
         NetworkConnector connector = connectorMap.remove(connectorURI);
         connector.stop();
-        LOG.info("connector removed with URI [" + connectorURI + "]");
+        LOG.info("connector removed with URI [{}]", connectorURI);
     }
 
     /**
@@ -368,7 +368,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         String port = (String) attributes.get("ipserviceport").get();
         String protocol = (String) attributes.get("ipserviceprotocol").get();
         URI connectorURI = new URI("static:(" + protocol + "://" + address + ":" + port + ")");
-        LOG.debug("retrieved URI from SearchResult [" + connectorURI + "]");
+        LOG.debug("retrieved URI from SearchResult [{}]", connectorURI);
         return connectorURI;
     }
 
@@ -380,7 +380,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
      */
     protected String toUUID(SearchResult result) {
         String uuid = result.getNameInNamespace();
-        LOG.debug("retrieved UUID from SearchResult [" + uuid + "]");
+        LOG.debug("retrieved UUID from SearchResult [{}]", uuid);
         return uuid;
     }
 
@@ -419,7 +419,7 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         String uuidNew = event.getNewBinding().getName();
         URI connectorURI = uuidMap.remove(uuidOld);
         uuidMap.put(uuidNew, connectorURI);
-        LOG.debug("connector reference renamed for URI [" + connectorURI + "], Old UUID [" + uuidOld + "], New UUID [" + uuidNew + "]");
+        LOG.debug("connector reference renamed for URI [{}], Old UUID [{}], New UUID [{}]", new Object[]{ connectorURI, uuidOld, uuidNew });
     }
 
     /**

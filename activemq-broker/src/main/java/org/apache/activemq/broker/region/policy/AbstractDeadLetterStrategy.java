@@ -47,9 +47,7 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
             result = true;
             if (enableAudit && messageAudit.isDuplicate(message)) {
                 result = false;
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Not adding duplicate to DLQ: " + message.getMessageId() + ", dest: " + message.getDestination());
-                }
+                LOG.debug("Not adding duplicate to DLQ: {}, dest: {}", message.getMessageId(), message.getDestination());
             }
             if (!message.isPersistent() && !processNonPersistent) {
                 result = false;

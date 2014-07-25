@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.security;
 
-import org.springframework.beans.factory.InitializingBean;
-
 import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.InitializingBean;
 
 /**
  * Represents an entry in a {@link DefaultAuthorizationMap} for assigning
@@ -46,10 +46,24 @@ public class XBeanAuthorizationEntry extends AuthorizationEntry implements Initi
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
+    @Override
     public void afterPropertiesSet() throws Exception {
 
         if (adminRoles != null) {
@@ -65,4 +79,8 @@ public class XBeanAuthorizationEntry extends AuthorizationEntry implements Initi
         }
     }
 
+    @Override
+    public String toString() {
+        return "XBeanAuthEntry:" + adminRoles + "," + writeRoles + "," + readRoles;
+    }
 }

@@ -124,6 +124,7 @@ public class ProtocolConverter {
     private String version = "1.0";
     private long hbReadInterval;
     private long hbWriteInterval;
+    private float hbGracePeriodMultiplier = 1.0f;
     private String defaultHeartBeat = Stomp.DEFAULT_HEART_BEAT;
 
     private static class AckEntry {
@@ -480,7 +481,7 @@ public class ProtocolConverter {
         }
 
         if (transactions.get(stompTx) != null) {
-            throw new ProtocolException("The transaction was allready started: " + stompTx);
+            throw new ProtocolException("The transaction was already started: " + stompTx);
         }
 
         LocalTransactionId activemqTx = new LocalTransactionId(connectionId, transactionIdGenerator.getNextSequenceId());
@@ -579,8 +580,8 @@ public class ProtocolConverter {
         String browser = headers.get(Stomp.Headers.Subscribe.BROWSER);
         if (browser != null && browser.equals(Stomp.TRUE)) {
 
-            if (!this.version.equals(Stomp.V1_1)) {
-                throw new ProtocolException("Queue Browser feature only valid for Stomp v1.1 clients!");
+            if (this.version.equals(Stomp.V1_0)) {
+                throw new ProtocolException("Queue Browser feature only valid for Stomp v1.1+ clients!");
             }
 
             consumerInfo.setBrowser(true);
@@ -730,7 +731,7 @@ public class ProtocolConverter {
     protected void onStompConnect(final StompFrame command) throws ProtocolException {
 
         if (connected.get()) {
-            throw new ProtocolException("Allready connected.");
+            throw new ProtocolException("Already connected.");
         }
 
         final Map<String, String> headers = command.getHeaders();
@@ -862,7 +863,7 @@ public class ProtocolConverter {
             StompSubscription sub = subscriptionsByConsumerId.get(md.getConsumerId());
             if (sub != null) {
                 String ackId = null;
-                if (version.equals(Stomp.V1_2) && sub.getAckMode() != Stomp.Headers.Subscribe.AckModeValues.AUTO) {
+                if (version.equals(Stomp.V1_2) && sub.getAckMode() != Stomp.Headers.Subscribe.AckModeValues.AUTO && md.getMessage() != null) {
                     AckEntry pendingAck = new AckEntry(md.getMessage().getMessageId().toString(), sub);
                     ackId = this.ACK_ID_GENERATOR.generateId();
                     this.pedingAcks.put(ackId, pendingAck);
@@ -928,6 +929,20 @@ public class ProtocolConverter {
         this.defaultHeartBeat = defaultHeartBeat;
     }
 
+    /**
+     * @return the hbGracePeriodMultiplier
+     */
+    public float getHbGracePeriodMultiplier() {
+        return hbGracePeriodMultiplier;
+    }
+
+    /**
+     * @param hbGracePeriodMultiplier the hbGracePeriodMultiplier to set
+     */
+    public void setHbGracePeriodMultiplier(float hbGracePeriodMultiplier) {
+        this.hbGracePeriodMultiplier = hbGracePeriodMultiplier;
+    }
+
     protected void configureInactivityMonitor(String heartBeatConfig) throws ProtocolException {
 
         String[] keepAliveOpts = heartBeatConfig.split(Stomp.COMMA);
@@ -937,7 +952,7 @@ public class ProtocolConverter {
         } else {
 
             try {
-                hbReadInterval = Long.parseLong(keepAliveOpts[0]);
+                hbReadInterval = (Long.parseLong(keepAliveOpts[0]));
                 hbWriteInterval = Long.parseLong(keepAliveOpts[1]);
             } catch(NumberFormatException e) {
                 throw new ProtocolException("Invalid heart-beat header:" + heartBeatConfig, true);
@@ -945,7 +960,7 @@ public class ProtocolConverter {
 
             try {
                 StompInactivityMonitor monitor = this.stompTransport.getInactivityMonitor();
-                monitor.setReadCheckTime(hbReadInterval);
+                monitor.setReadCheckTime((long) (hbReadInterval * hbGracePeriodMultiplier));
                 monitor.setInitialDelayTime(Math.min(hbReadInterval, hbWriteInterval));
                 monitor.setWriteCheckTime(hbWriteInterval);
                 monitor.startMonitoring();

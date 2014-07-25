@@ -22,22 +22,13 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.9-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>apache-activemq</artifactId>
   <packaging>pom</packaging>
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
-
-  <!-- Maven repository hosting Jolokia -->
-  <repositories>
-    <repository>
-    <id>labs-consol-release</id>
-        <name>ConSol* Labs Repository (Releases)</name>
-        <url>http://labs.consol.de/maven/repository</url>
-    </repository>
-  </repositories>
 
   <dependencies>
 
@@ -75,7 +66,11 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-leveldb-store</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-partition</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.fusesource.hawtdispatch</groupId>
       <artifactId>hawtdispatch-transport</artifactId>
@@ -96,7 +91,7 @@
       <artifactId>zookeeper</artifactId>
       <version>${zookeeper-version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
@@ -106,9 +101,9 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
       <version>${org.osgi.core-version}</version>
-    </dependency>    
-    
-    
+    </dependency>
+
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-kahadb-store</artifactId>
@@ -148,6 +143,10 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jms-pool</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
     </dependency>
     <dependency>
@@ -158,12 +157,19 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
     </dependency>
-    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-xmpp</artifactId>
+      <artifactId>activemq-runtime-config</artifactId>
     </dependency>
-    -->
+    <dependency>
+      <groupId>org.jvnet.jaxb2_commons</groupId>
+      <artifactId>jaxb2-basics-runtime</artifactId>
+      <version>${jaxb-basics-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-shiro</artifactId>
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
@@ -275,6 +281,14 @@
       <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-spring</artifactId>
+    </dependency>
+    <dependency>
        <groupId>org.apache.xbean</groupId>
        <artifactId>xbean-spring</artifactId>
        <optional>true</optional>
@@ -343,10 +357,6 @@
         <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
     <dependency>
-      <groupId>opensymphony</groupId>
-      <artifactId>sitemesh</artifactId>
-    </dependency>
-    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
     </dependency>
@@ -382,7 +392,7 @@
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
-      <version>2.6.2</version>
+      <version>2.11.0</version>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>
@@ -392,18 +402,44 @@
     <dependency>
       <groupId>org.jolokia</groupId>
       <artifactId>jolokia-core</artifactId>
-      <version>1.0.6</version>
+      <version>${jolokia-version}</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.json-simple</groupId>
       <artifactId>json-simple</artifactId>
-      <version>1.1</version>
+      <version>${json-simple-version}</version>
     </dependency>
     <dependency>
-      <groupId>io.hawt</groupId>
-      <artifactId>hawtio-web</artifactId>
-      <version>${hawtio-version}</version>
-      <type>war</type>
+      <groupId>io.fabric8.insight</groupId>
+      <artifactId>insight-log-core</artifactId>
+      <version>${insight-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8.insight</groupId>
+      <artifactId>insight-log4j</artifactId>
+      <version>${insight-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.url</groupId>
+      <artifactId>pax-url-aether</artifactId>
+      <version>${pax-url-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>proton-j</artifactId>
+      <version>${qpid-proton-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
   </dependencies>
 
@@ -412,6 +448,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven-dependency-plugin-version}</version>
         <executions>
           <execution>
             <id>unpack</id>
@@ -451,7 +488,8 @@
              <goal>test</goal>
             </goals>
             <configuration>
-             <forkMode>pertest</forkMode>
+             <forkCount>1</forkCount>
+             <reuseForks>false</reuseForks>
              <environmentVariables>
                  <ACTIVEMQ_ENCRYPTION_PASSWORD>activemq</ACTIVEMQ_ENCRYPTION_PASSWORD>
              </environmentVariables>
@@ -519,7 +557,7 @@
                   <directory>src/release/conf</directory>
                 </resource>
                 <resource>
-                  <directory>src/sample-conf</directory>
+                  <directory>src/release/examples/conf</directory>
                 </resource>
               </resources>
             </configuration>

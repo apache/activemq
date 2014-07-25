@@ -19,10 +19,12 @@ package org.apache.activemq.camel;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
+
 import javax.jms.Connection;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerPluginSupport;
@@ -31,7 +33,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.util.Wait;
-import org.apache.camel.test.junit4.CamelSpringTestSupport;
+import org.apache.camel.test.spring.CamelSpringTestSupport;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -43,7 +45,6 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  *  shows broker 'once only delivery' and recovery with XA
  */
-@Ignore("Test hangs")
 public class JmsJdbcXATest extends CamelSpringTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JmsJdbcXATest.class);
     BrokerService broker = null;
@@ -164,6 +165,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
         return brokerService;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected AbstractXmlApplicationContext createApplicationContext() {
 
@@ -184,6 +186,7 @@ public class JmsJdbcXATest extends CamelSpringTestSupport {
                             // so commit will hang as if reply is lost
                             context.setDontSendReponse(true);
                             Executors.newSingleThreadExecutor().execute(new Runnable() {
+                                @Override
                                 public void run() {
                                     LOG.info("Stopping broker post commit...");
                                     try {

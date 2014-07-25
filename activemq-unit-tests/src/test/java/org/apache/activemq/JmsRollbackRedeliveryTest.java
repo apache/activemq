@@ -31,10 +31,20 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.BrokerService;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
+import static org.junit.Assert.*;
+
+public class JmsRollbackRedeliveryTest {
+    @Rule
+    public TestName testName = new TestName();
+
     protected static final Logger LOG = LoggerFactory.getLogger(JmsRollbackRedeliveryTest.class);
     final int nbMessages = 10;
     final String destinationName = "Destination";
@@ -42,42 +52,50 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     boolean consumerClose = true;
     boolean rollback = true;
     BrokerService broker;
-    
+
+    @Before
     public void setUp() throws Exception {
-        setAutoFail(true);
-        super.setUp();
+        LOG.debug("Starting " + testName.getMethodName());
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.start();
+        broker.waitUntilStarted();
     }
 
+    @After
     public void tearDown() throws Exception {
-        super.tearDown();
         if (broker != null) {
             broker.stop();
+            broker.waitUntilStopped();
         }
+        LOG.debug("Finishing " + testName.getMethodName());
+        Thread.sleep(100);
     }
     
-
+    @Test
     public void testRedelivery() throws Exception {
         doTestRedelivery(brokerUrl, false);
     }
 
+    @Test
     public void testRedeliveryWithInterleavedProducer() throws Exception {
         doTestRedelivery(brokerUrl, true);
     }
 
+
+    @Test
     public void testRedeliveryWithPrefetch0() throws Exception {
         doTestRedelivery(brokerUrl + "?jms.prefetchPolicy.queuePrefetch=0", true);
     }
-    
+
+    @Test
     public void testRedeliveryWithPrefetch1() throws Exception {
         doTestRedelivery(brokerUrl + "?jms.prefetchPolicy.queuePrefetch=1", true);
     }
     
     public void doTestRedelivery(String brokerUrl, boolean interleaveProducer) throws Exception {
-
+        LOG.debug("entering doTestRedelivery interleaveProducer is " + interleaveProducer);
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
         
         Connection connection = connectionFactory.createConnection();
@@ -115,7 +133,8 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
             }
         }
     }
-       
+
+    @Test
     public void testRedeliveryOnSingleConsumer() throws Exception {
 
         ConnectionFactory connectionFactory = 
@@ -149,7 +168,9 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
             session.close();
         }
     }
-    
+
+
+    @Test
     public void testRedeliveryOnSingleSession() throws Exception {
 
         ConnectionFactory connectionFactory = 
@@ -185,6 +206,7 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     }
     
     // AMQ-1593
+    @Test
     public void testValidateRedeliveryCountOnRollback() throws Exception {
 
         final int numMessages = 1;
@@ -216,6 +238,7 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     }
     
     // AMQ-1593
+    @Test
     public void testValidateRedeliveryCountOnRollbackWithPrefetch0() throws Exception {
 
        final int numMessages = 1;
@@ -260,6 +283,7 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
         session.close();
     }
 
+    @Test
     public void testRedeliveryPropertyWithNoRollback() throws Exception {
         final int numMessages = 1;
         ConnectionFactory connectionFactory = 

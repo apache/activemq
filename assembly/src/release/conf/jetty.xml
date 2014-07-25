@@ -28,16 +28,18 @@
     <bean id="securityConstraint" class="org.eclipse.jetty.util.security.Constraint">
         <property name="name" value="BASIC" />
         <property name="roles" value="user,admin" />
+        <!-- set authenticate=false to disable login -->
         <property name="authenticate" value="true" />
     </bean>
     <bean id="adminSecurityConstraint" class="org.eclipse.jetty.util.security.Constraint">
         <property name="name" value="BASIC" />
         <property name="roles" value="admin" />
+         <!-- set authenticate=false to disable login -->
         <property name="authenticate" value="true" />
     </bean>
     <bean id="securityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="securityConstraint" />
-        <property name="pathSpec" value="/,*.jsp" />
+        <property name="pathSpec" value="/api/*,/admin/*,*.jsp" />
     </bean>
     <bean id="adminSecurityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="adminSecurityConstraint" />
@@ -58,11 +60,6 @@
             <bean id="sec" class="org.eclipse.jetty.server.handler.HandlerCollection">
                 <property name="handlers">
                     <list>
-                        <bean class="org.eclipse.jetty.webapp.WebAppContext">
-                            <property name="contextPath" value="/hawtio" />
-                            <property name="war" value="${activemq.home}/webapps/hawtio" />
-                            <property name="logUrlOnStart" value="true" />
-                        </bean>
                         <bean class="org.eclipse.jetty.webapp.WebAppContext">
                             <property name="contextPath" value="/admin" />
                             <property name="resourceBase" value="${activemq.home}/webapps/admin" />
@@ -97,27 +94,24 @@
         </property>
     </bean>
 
-    <bean id="rewrite" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
-      <property name="rules">
-          <set>
-              <bean class="org.eclipse.jetty.rewrite.handler.RedirectRegexRule">
-                  <property name="regex" value="/api/jolokia(.*)"/>
-                  <property name="replacement" value="/hawtio/jolokia$1"/>
-              </bean>
-          </set>
-      </property>
-    </bean>
-
     <bean id="contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection">
     </bean>
 
-    <bean id="Server" class="org.eclipse.jetty.server.Server" init-method="start"
+    <bean id="jettyPort" class="org.apache.activemq.web.WebConsolePort" init-method="start">
+             <!-- the default port number for the web console -->
+        <property name="host" value="0.0.0.0"/>
+        <property name="port" value="8161"/>
+    </bean>
+
+    <bean id="Server" depends-on="jettyPort" class="org.eclipse.jetty.server.Server" init-method="start"
         destroy-method="stop">
 
         <property name="connectors">
             <list>
                 <bean id="Connector" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                    <property name="port" value="8161" />
+                     <!-- see the jettyPort bean -->
+                    <property name="host" value="#{systemProperties['jetty.host']}" />
+                    <property name="port" value="#{systemProperties['jetty.port']}" />
                 </bean>
                 <!--
                     Enable this connector if you wish to use https with web console
@@ -136,7 +130,6 @@
             <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
                 <property name="handlers">
                     <list>
-                        <ref bean="rewrite"/>
                         <ref bean="contexts" />
                         <ref bean="securityHandler" />
                     </list>

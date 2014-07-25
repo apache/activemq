@@ -52,6 +52,7 @@ public class UdpTransportServer extends TransportServerSupport {
     private final Transport configuredTransport;
     private boolean usingWireFormatNegotiation;
     private final Map<DatagramEndpoint, Transport> transports = new HashMap<DatagramEndpoint, Transport>();
+    private boolean allowLinkStealing;
 
     public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport, ReplayStrategy replayStrategy) {
         super(connectURI);
@@ -188,5 +189,14 @@ public class UdpTransportServer extends TransportServerSupport {
     @Override
     public boolean isSslServer() {
         return false;
+    }
+
+    @Override
+    public boolean isAllowLinkStealing() {
+        return allowLinkStealing;
+    }
+
+    public void setAllowLinkStealing(boolean allowLinkStealing) {
+        this.allowLinkStealing = allowLinkStealing;
     }
 }

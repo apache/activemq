@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.9-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-client</artifactId>
@@ -85,14 +85,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- =============================== -->
-    <!-- Plugin Dependencies -->
-    <!-- =============================== -->
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
-    </dependency>
   </dependencies>
 
   <reporting>
@@ -200,7 +192,8 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>always</forkMode>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
           <systemProperties>
@@ -238,22 +231,64 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <executions>
+              <execution>
+                  <id>add-source</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                      <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                      <sources>
+                          <source>${basedir}/target/generated-sources/javacc</source>
+                      </sources>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
     </plugins>
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>org.codehaus.mojo</groupId>
+    								<artifactId>
+    									javacc-maven-plugin
+    								</artifactId>
+    								<versionRange>[2.6,)</versionRange>
+    								<goals>
+    									<goal>javacc</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+                                    <execute>
+                                      <runOnIncremental>true</runOnIncremental>
+                                    </execute>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
   </build>
 
   <profiles>
     <!-- Execute with: mvn -P openwire-generate antrun:run -->
     <profile>
       <id>openwire-generate</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-openwire-generator</artifactId>
-          <version>${project.version}</version>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
       <build>
         <plugins>
           <plugin>
@@ -276,13 +311,11 @@
               </tasks>
             </configuration>
             <dependencies>
-              <!-- not needed on osx; dependency>
-                <groupId>com.sun</groupId>
-                <artifactId>tools</artifactId>
-                <version>1.6.0</version>
-                <scope>system</scope>
-                <systemPath>${java.home}/../lib/tools.jar</systemPath>
-              </dependency -->
+                <dependency>
+                    <groupId>org.apache.activemq</groupId>
+                    <artifactId>activemq-openwire-generator</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
             </dependencies>
           </plugin>
         </plugins>

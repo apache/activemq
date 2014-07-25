@@ -21,7 +21,6 @@ import java.{lang=>jl}
 import java.{util=>ju}
 
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import java.util.concurrent.atomic.AtomicBoolean
 import collection.immutable.TreeMap
 import collection.mutable.{HashMap, ListBuffer}
 import org.iq80.leveldb._
@@ -31,20 +30,30 @@ import record.{CollectionKey, EntryKey, EntryRecord, CollectionRecord}
 import org.apache.activemq.leveldb.util._
 import java.util.concurrent._
 import org.fusesource.hawtbuf._
-import java.io.{IOException, ObjectInputStream, ObjectOutputStream, File}
+import java.io._
 import scala.Option._
 import org.apache.activemq.command.{MessageAck, Message}
 import org.apache.activemq.util.{IOExceptionSupport, ByteSequence}
 import java.text.SimpleDateFormat
 import java.util.{Date, Collections}
-import org.apache.activemq.leveldb.util.TimeMetric
-import org.apache.activemq.leveldb.RecordLog.LogInfo
 import org.fusesource.leveldbjni.internal.JniDB
+import org.apache.activemq.ActiveMQMessageAuditNoSync
+import org.apache.activemq.leveldb.util.TimeMetric
+import org.fusesource.hawtbuf.ByteArrayInputStream
+import org.apache.activemq.leveldb.RecordLog.LogInfo
+import scala.Some
+import scala.Serializable
+import org.fusesource.hawtbuf.ByteArrayOutputStream
+import org.apache.activemq.broker.SuppressReplyException
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 object LevelDBClient extends Log {
+
+  class WriteThread(r:Runnable) extends Thread(r) {
+    setDaemon(true)
+  }
 
   final val STORE_SCHEMA_PREFIX = "activemq_leveldb_store:"
   final val STORE_SCHEMA_VERSION = 1
@@ -66,6 +75,7 @@ object LevelDBClient extends Log {
   final val DIRTY_INDEX_KEY = bytes(":dirty")
   final val LOG_REF_INDEX_KEY = bytes(":log-refs")
   final val LOGS_INDEX_KEY = bytes(":logs")
+  final val PRODUCER_IDS_INDEX_KEY = bytes(":producer_ids")
 
   final val COLLECTION_META_KEY = bytes(":collection-meta")
   final val TRUE = bytes("true")
@@ -83,6 +93,7 @@ object LevelDBClient extends Log {
   final val LOG_REMOVE_ENTRY        = 4.toByte
   final val LOG_DATA                = 5.toByte
   final val LOG_TRACE               = 6.toByte
+  final val LOG_UPDATE_ENTRY        = 7.toByte
 
   final val LOG_SUFFIX  = ".log"
   final val INDEX_SUFFIX  = ".index"
@@ -497,6 +508,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def storeTrace(ascii:String, force:Boolean=false) = {
+    assert_write_thread_executing
     val time = new SimpleDateFormat("dd/MMM/yyyy:HH:mm::ss Z").format(new Date)
     log.appender { appender =>
       appender.append(LOG_TRACE, new AsciiBuffer("%s: %s".format(time, ascii)))
@@ -508,12 +520,20 @@ class LevelDBClient(store: LevelDBStore) {
 
   def might_fail[T](func : =>T):T = {
     def handleFailure(e:IOException) = {
+      var failure:Throwable = e;
       if( store.broker_service !=null ) {
         // This should start stopping the broker but it might block,
         // so do it on another thread...
         new Thread("LevelDB IOException handler.") {
           override def run() {
-            store.broker_service.handleIOException(e);
+            try {
+              store.broker_service.handleIOException(e)
+            } catch {
+              case e:RuntimeException =>
+                failure = e
+            } finally {
+              store.stop()
+            }
           }
         }.start()
         // Lets wait until the broker service has started stopping.  Once the
@@ -523,8 +543,7 @@ class LevelDBClient(store: LevelDBStore) {
           Thread.sleep(100);
         }
       }
-      store.stop()
-      throw e;
+      throw new SuppressReplyException(failure);
     }
     try {
       func
@@ -541,7 +560,10 @@ class LevelDBClient(store: LevelDBStore) {
       log.open()
     }
     replay_from(lastIndexSnapshotPos, log.appender_limit)
+    replay_write_batch = null;
   }
+
+  def assert_write_thread_executing = assert(Thread.currentThread().getClass == classOf[WriteThread])
 
   def init() ={
 
@@ -567,11 +589,7 @@ class LevelDBClient(store: LevelDBStore) {
     version_file.writeText(STORE_SCHEMA_PREFIX + STORE_SCHEMA_VERSION)
 
     writeExecutor = Executors.newFixedThreadPool(1, new ThreadFactory() {
-      def newThread(r: Runnable) = {
-        val rc = new Thread(r, "LevelDB store io write")
-        rc.setDaemon(true)
-        rc
-      }
+      def newThread(r: Runnable) = new WriteThread(r)
     })
 
     val factoryNames = store.indexFactory
@@ -580,7 +598,7 @@ class LevelDBClient(store: LevelDBStore) {
         Some(this.getClass.getClassLoader.loadClass(name).newInstance().asInstanceOf[DBFactory])
       } catch {
         case e:Throwable =>
-          debug(e, "Could not load factory: "+name+" due to: "+e)
+          debug("Could not load factory: "+name+" due to: "+e)
           None
       }
     }.headOption.getOrElse(throw new Exception("Could not load any of the index factory classes: "+factoryNames))
@@ -615,11 +633,15 @@ class LevelDBClient(store: LevelDBStore) {
     log = createLog
     log.logSize = store.logSize
     log.on_log_rotate = ()=> {
+      post_log_rotate
+    }
+  }
+
+  def post_log_rotate ={
       // We snapshot the index every time we rotate the logs.
       writeExecutor {
         snapshotIndex(false)
       }
-    }
   }
 
   def replay_init() = {
@@ -645,6 +667,7 @@ class LevelDBClient(store: LevelDBStore) {
       for( (id, file)<- lastSnapshotIndex ) {
         try {
           copyIndex(file, dirtyIndexFile)
+          debug("Recovering from last index snapshot at: "+dirtyIndexFile)
         } catch {
           case e:Exception =>
             warn(e, "Could not recover snapshot of the index: "+e)
@@ -652,11 +675,9 @@ class LevelDBClient(store: LevelDBStore) {
         }
       }
       index = new RichDB(factory.open(dirtyIndexFile, indexOptions));
-      if ( store.paranoidChecks ) {
-        for(value <- index.get(DIRTY_INDEX_KEY) ) {
-          if( java.util.Arrays.equals(value, TRUE) ) {
-            warn("Recovering from a dirty index.")
-          }
+      for(value <- index.get(DIRTY_INDEX_KEY) ) {
+        if( java.util.Arrays.equals(value, TRUE) ) {
+          warn("Recovering from a dirty index.")
         }
       }
       index.put(DIRTY_INDEX_KEY, TRUE)
@@ -664,45 +685,61 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
-  def replay_from(from:Long, limit:Long) = {
+  var replay_write_batch: WriteBatch = null
+  var indexRecoveryPosition = 0L
+
+  def replay_from(from:Long, limit:Long, print_progress:Boolean=true) = {
+    debug("Replay of journal from: %d to %d.", from, limit)
+    if( replay_write_batch==null ) {
+      replay_write_batch = index.db.createWriteBatch()
+    }
     might_fail {
       try {
         // Update the index /w what was stored on the logs..
-        var pos = from;
+        indexRecoveryPosition = from;
         var last_reported_at = System.currentTimeMillis();
         var showing_progress = false
         var last_reported_pos = 0L
         try {
-          while (pos < limit) {
-            val now = System.currentTimeMillis();
-            if( now > last_reported_at+1000 ) {
-              val at = pos-from
-              val total = limit-from
-              val rate = (pos-last_reported_pos)*1000.0 / (now - last_reported_at)
-              val eta = (total-at)/rate
-              val remaining = if(eta > 60*60) {
-                "%.2f hrs".format(eta/(60*60))
-              } else if(eta > 60) {
-                "%.2f mins".format(eta/60)
-              } else {
-                "%.0f secs".format(eta)
-              }
+          while (indexRecoveryPosition < limit) {
 
-              System.out.print("Replaying recovery log: %f%% done (%,d/%,d bytes) @ %,.2f kb/s, %s remaining.     \r".format(
-                at*100.0/total, at, total, rate/1024, remaining))
-              showing_progress = true;
-              last_reported_at = now
-              last_reported_pos = pos
+            if( print_progress ) {
+              val now = System.currentTimeMillis();
+              if( now > last_reported_at+1000 ) {
+                val at = indexRecoveryPosition-from
+                val total = limit-from
+                val rate = (indexRecoveryPosition-last_reported_pos)*1000.0 / (now - last_reported_at)
+                val eta = (total-at)/rate
+                val remaining = if(eta > 60*60) {
+                  "%.2f hrs".format(eta/(60*60))
+                } else if(eta > 60) {
+                  "%.2f mins".format(eta/60)
+                } else {
+                  "%.0f secs".format(eta)
+                }
+
+                System.out.print("Replaying recovery log: %f%% done (%,d/%,d bytes) @ %,.2f kb/s, %s remaining.     \r".format(
+                  at*100.0/total, at, total, rate/1024, remaining))
+                showing_progress = true;
+                last_reported_at = now
+                last_reported_pos = indexRecoveryPosition
+              }
             }
 
 
-            log.read(pos).map {
+            log.read(indexRecoveryPosition).map {
               case (kind, data, nextPos) =>
                 kind match {
+                  case LOG_DATA =>
+                    val message = decodeMessage(data)
+                    store.db.producerSequenceIdTracker.isDuplicate(message.getMessageId)
+                    trace("Replay of LOG_DATA at %d, message id: ", indexRecoveryPosition, message.getMessageId)
+
                   case LOG_ADD_COLLECTION =>
                     val record= decodeCollectionRecord(data)
-                    index.put(encodeLongKey(COLLECTION_PREFIX, record.getKey), data)
+                    replay_write_batch.put(encodeLongKey(COLLECTION_PREFIX, record.getKey), data)
                     collectionMeta.put(record.getKey, new CollectionMeta)
+                    trace("Replay of LOG_ADD_COLLECTION at %d, collection: %s", indexRecoveryPosition, record.getKey)
 
                   case LOG_REMOVE_COLLECTION =>
                     val record = decodeCollectionKeyRecord(data)
@@ -720,21 +757,27 @@ class LevelDBClient(store: LevelDBStore) {
                     }
                     index.delete(data)
                     collectionMeta.remove(record.getKey)
+                    trace("Replay of LOG_REMOVE_COLLECTION at %d, collection: %s", indexRecoveryPosition, record.getKey)
 
-                  case LOG_ADD_ENTRY =>
+                  case LOG_ADD_ENTRY | LOG_UPDATE_ENTRY =>
                     val record = decodeEntryRecord(data)
 
                     val index_record = new EntryRecord.Bean()
                     index_record.setValueLocation(record.getValueLocation)
-                    index_record.setValueLength(record.getValueLength)
-                    val    index_value = encodeEntryRecord(index_record.freeze()).toByteArray
-
-                    index.put(encodeEntryKey(ENTRY_PREFIX, record.getCollectionKey, record.getEntryKey), index_value)
-
-                    if ( record.hasValueLocation ) {
-                      logRefIncrement(record.getValueLocation)
+                    if( record.hasValueLength ) {
+                      index_record.setValueLength(record.getValueLength)
                     }
-                    collectionIncrementSize(record.getCollectionKey, record.getEntryKey.toByteArray)
+                    val index_value = encodeEntryRecord(index_record.freeze()).toByteArray
+
+                    replay_write_batch.put(encodeEntryKey(ENTRY_PREFIX, record.getCollectionKey, record.getEntryKey), index_value)
+
+                    if( kind==LOG_ADD_ENTRY ) {
+                      logRefIncrement(record.getValueLocation)
+                      collectionIncrementSize(record.getCollectionKey, record.getEntryKey.toByteArray)
+                      trace("Replay of LOG_ADD_ENTRY at %d, collection: %s, entry: %s", indexRecoveryPosition, record.getCollectionKey, record.getEntryKey)
+                    } else {
+                      trace("Replay of LOG_UPDATE_ENTRY at %d, collection: %s, entry: %s", indexRecoveryPosition, record.getCollectionKey, record.getEntryKey)
+                    }
 
                   case LOG_REMOVE_ENTRY =>
                     val record = decodeEntryRecord(data)
@@ -744,13 +787,21 @@ class LevelDBClient(store: LevelDBStore) {
                       logRefDecrement(record.getValueLocation)
                     }
 
-                    index.delete(encodeEntryKey(ENTRY_PREFIX, record.getCollectionKey, record.getEntryKey))
+                    replay_write_batch.delete(encodeEntryKey(ENTRY_PREFIX, record.getCollectionKey, record.getEntryKey))
                     collectionDecrementSize( record.getCollectionKey)
+                    trace("Replay of LOG_REMOVE_ENTRY collection: %s, entry: %s", indexRecoveryPosition, record.getCollectionKey, record.getEntryKey)
 
-                  case _ => // Skip other records, they don't modify the index.
+                  case LOG_TRACE =>
+                    trace("Replay of LOG_TRACE, message: %s", indexRecoveryPosition, data.ascii())
+                  case RecordLog.UOW_END_RECORD =>
+                    trace("Replay of UOW_END_RECORD")
+                    index.db.write(replay_write_batch)
+                    replay_write_batch=index.db.createWriteBatch()
+                  case kind => // Skip other records, they don't modify the index.
+                    trace("Skipping replay of %d record kind at %d", kind, indexRecoveryPosition)
 
                 }
-                pos = nextPos
+                indexRecoveryPosition = nextPos
             }
           }
         }
@@ -758,33 +809,34 @@ class LevelDBClient(store: LevelDBStore) {
           case e:Throwable => e.printStackTrace()
         }
         if(showing_progress) {
-          System.out.print("                                                                       \r");
+          System.out.println("Replaying recovery log: 100% done                                 ");
         }
 
       } catch {
         case e:Throwable =>
           // replay failed.. good thing we are in a retry block...
           index.close
+          replay_write_batch = null
           throw e;
       } finally {
         recoveryLogs = null
+        debug("Replay end")
       }
     }
   }
 
   private def logRefDecrement(pos: Long) {
     for( key <- logRefKey(pos) ) {
-      logRefs.get(key).foreach { counter =>
-        if (counter.decrementAndGet() == 0) {
-          logRefs.remove(key)
-        }
+      logRefs.get(key) match {
+        case Some(counter) => counter.decrementAndGet() == 0
+        case None => warn("invalid: logRefDecrement: "+pos)
       }
     }
   }
 
   private def logRefIncrement(pos: Long) {
     for( key <- logRefKey(pos) ) {
-      logRefs.getOrElseUpdate(key, new LongCounter()).incrementAndGet()
+      logRefs.getOrElseUpdate(key, new LongCounter(0)).incrementAndGet()
     }
   }
 
@@ -828,7 +880,7 @@ class LevelDBClient(store: LevelDBStore) {
         index.put(key, baos.toByteArray)
       }
       catch {
-        case e => throw e
+        case e : Throwable => throw e
       }
     }
     def storeList[T <: AnyRef](key:Array[Byte], list:Array[Long]) {
@@ -843,13 +895,22 @@ class LevelDBClient(store: LevelDBStore) {
         index.put(key, baos.toByteArray)
       }
       catch {
-        case e => throw e
+        case e : Throwable => throw e
       }
+    }
+    def storeObject(key:Array[Byte], o:Object) = {
+      val baos = new ByteArrayOutputStream()
+      val os = new ObjectOutputStream(baos);
+      os.writeObject(o)
+      os.close()
+      index.put(key, baos.toByteArray)
     }
 
     storeMap(LOG_REF_INDEX_KEY, logRefs)
     storeMap(COLLECTION_META_KEY, collectionMeta)
     storeList(LOGS_INDEX_KEY, log.log_file_positions)
+    storeObject(PRODUCER_IDS_INDEX_KEY, store.db.producerSequenceIdTracker)
+
   }
 
   private def loadCounters = {
@@ -878,6 +939,13 @@ class LevelDBClient(store: LevelDBStore) {
         rc
       }
     }
+    def loadObject(key:Array[Byte]) = {
+      index.get(key, new ReadOptions).map { value=>
+        val bais = new ByteArrayInputStream(value)
+        val is = new ObjectInputStream(bais);
+        is.readObject();
+      }
+    }
 
     loadMap(LOG_REF_INDEX_KEY, logRefs)
     loadMap(COLLECTION_META_KEY, collectionMeta)
@@ -887,15 +955,42 @@ class LevelDBClient(store: LevelDBStore) {
         recoveryLogs.put(k, null)
       }
     }
+    for( audit <- loadObject(PRODUCER_IDS_INDEX_KEY) ) {
+      store.db.producerSequenceIdTracker = audit.asInstanceOf[ActiveMQMessageAuditNoSync]
+    }
   }
 
-  var wal_append_position = 0L
 
-  def stop() = {
-    if( writeExecutor!=null ) {
-      writeExecutor.shutdown
-      writeExecutor.awaitTermination(60, TimeUnit.SECONDS)
-      writeExecutor = null
+  var stored_wal_append_position = 0L
+
+  def wal_append_position = this.synchronized {
+    if (log!=null && log.isOpen) {
+      log.appender_limit
+    } else {
+      stored_wal_append_position
+    }
+  }
+
+  def dirty_stop = this.synchronized {
+    def ingorefailure(func: =>Unit) = try { func } catch { case e:Throwable=> }
+    ingorefailure(index.close)
+    ingorefailure(log.close)
+    ingorefailure(plist.close)
+    ingorefailure(might_fail(throw new IOException("non-clean close")))
+  }
+
+  def stop():Unit = {
+    var executorToShutdown:ExecutorService = null
+    this synchronized {
+      if (writeExecutor != null) {
+        executorToShutdown = writeExecutor
+        writeExecutor = null
+      }
+    }
+
+    if (executorToShutdown != null) {
+      executorToShutdown.shutdown
+      executorToShutdown.awaitTermination(60, TimeUnit.SECONDS)
 
       // this blocks until all io completes..
       snapshotRwLock.writeLock().lock()
@@ -906,11 +1001,12 @@ class LevelDBClient(store: LevelDBStore) {
           index.put(DIRTY_INDEX_KEY, FALSE, new WriteOptions().sync(true))
           index.close
           index = null
-        }
-        if (log.isOpen) {
-          log.close
+          debug("Gracefuly closed the index")
           copyDirtyIndexToSnapshot
-          wal_append_position = log.appender_limit
+        }
+        if (log!=null && log.isOpen) {
+          log.close
+          stored_wal_append_position = log.appender_limit
           log = null
         }
         if( plist!=null ) {
@@ -960,15 +1056,18 @@ class LevelDBClient(store: LevelDBStore) {
     snapshotRwLock.writeLock().unlock()
   }
 
+  def nextIndexSnapshotPos:Long = wal_append_position
+
   def copyDirtyIndexToSnapshot:Unit = {
-    if( log.appender_limit == lastIndexSnapshotPos  ) {
+    if( nextIndexSnapshotPos == lastIndexSnapshotPos  ) {
       // no need to snapshot again...
       return
     }
-    copyDirtyIndexToSnapshot(log.appender_limit)
+    copyDirtyIndexToSnapshot(nextIndexSnapshotPos)
   }
 
   def copyDirtyIndexToSnapshot(walPosition:Long):Unit = {
+    debug("Taking a snapshot of the current index: "+snapshotIndexFile(walPosition))
     // Where we start copying files into.  Delete this on
     // restart.
     val tmpDir = tempIndexFile
@@ -1036,6 +1135,8 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def addCollection(record: CollectionRecord.Buffer) = {
+    assert_write_thread_executing
+
     val key = encodeLongKey(COLLECTION_PREFIX, record.getKey)
     val value = record.toUnframedBuffer
     might_fail_using_index {
@@ -1064,6 +1165,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def removeCollection(collectionKey: Long) = {
+    assert_write_thread_executing
     val key = encodeLongKey(COLLECTION_PREFIX, collectionKey)
     val value = encodeVLong(collectionKey)
     val entryKeyPrefix = encodeLongKey(ENTRY_PREFIX, collectionKey)
@@ -1092,6 +1194,7 @@ class LevelDBClient(store: LevelDBStore) {
   }
 
   def collectionEmpty(collectionKey: Long) = {
+    assert_write_thread_executing
     val key = encodeLongKey(COLLECTION_PREFIX, collectionKey)
     val value = encodeVLong(collectionKey)
     val entryKeyPrefix = encodeLongKey(ENTRY_PREFIX, collectionKey)
@@ -1125,14 +1228,47 @@ class LevelDBClient(store: LevelDBStore) {
     }
   }
 
+  def decodeQueueEntryMeta(value:EntryRecord.Getter):Int= {
+    if( value.hasMeta ) {
+      val is = new DataByteArrayInputStream(value.getMeta);
+      val metaVersion = is.readVarInt()
+      metaVersion match {
+        case 1 =>
+          return is.readVarInt()
+        case _ =>
+      }
+    }
+    return 0
+  }
+
+  def getDeliveryCounter(collectionKey: Long, seq:Long):Int = {
+    val ro = new ReadOptions
+    ro.fillCache(true)
+    ro.verifyChecksums(verifyChecksums)
+    val key = encodeEntryKey(ENTRY_PREFIX, collectionKey, encodeLong(seq))
+    var rc = 0
+    might_fail_using_index {
+      for( v <- index.get(key, ro) ) {
+        rc = decodeQueueEntryMeta(EntryRecord.FACTORY.parseUnframed(v))
+      }
+    }
+    return rc
+  }
+
   def queueCursor(collectionKey: Long, seq:Long)(func: (Message)=>Boolean) = {
     collectionCursor(collectionKey, encodeLong(seq)) { (key, value) =>
       val seq = decodeLong(key)
-      var locator = DataLocator(value.getValueLocation, value.getValueLength)
+      var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
       val msg = getMessage(locator)
-      msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
-      msg.getMessageId().setDataLocator(locator)
-      func(msg)
+      if( msg !=null ) {
+        msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
+        msg.getMessageId().setDataLocator(locator)
+        msg.setRedeliveryCounter(decodeQueueEntryMeta(value))
+        func(msg)
+      } else {
+        warn("Could not load message seq: "+seq+" from "+locator)
+        true
+      }
     }
   }
 
@@ -1148,16 +1284,21 @@ class LevelDBClient(store: LevelDBStore) {
         val seq = is.readLong()
         val sub = is.readLong()
         val ack = store.wireFormat.unmarshal(is).asInstanceOf[MessageAck]
-        ack.getLastMessageId.setDataLocator(DataLocator(log, offset))
+        ack.getLastMessageId.setDataLocator(DataLocator(store, log, offset))
         ack.getLastMessageId.setEntryLocator(EntryLocator(qid, seq))
 
         func(XaAckRecord(collectionKey, seq, ack, sub))
       } else {
-        var locator = DataLocator(value.getValueLocation, value.getValueLength)
+        var locator = DataLocator(store, value.getValueLocation, value.getValueLength)
         val msg = getMessage(locator)
-        msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
-        msg.getMessageId().setDataLocator(locator)
-        func(msg)
+        if( msg !=null ) {
+          msg.getMessageId().setEntryLocator(EntryLocator(collectionKey, seq))
+          msg.getMessageId().setDataLocator(locator)
+          func(msg)
+        } else {
+          warn("Could not load XA message seq: "+seq+" from "+locator)
+          true
+        }
       }
     }
   }
@@ -1177,22 +1318,23 @@ class LevelDBClient(store: LevelDBStore) {
       case x:MessageRecord =>
         // Encoded form is still in memory..
         Some(x.data)
-      case DataLocator(pos, len) =>
+      case DataLocator(store, pos, len) =>
         // Load the encoded form from disk.
         log.read(pos, len).map(new Buffer(_))
     }
 
     // Lets decode
-    buffer.map{ x =>
-      var data = if( store.snappyCompressLogs ) {
-        Snappy.uncompress(x)
-      } else {
-        x
-      }
-      store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[Message]
-    }.getOrElse(null)
+    buffer.map(decodeMessage(_)).getOrElse(null)
   }
 
+  def decodeMessage(x: Buffer): Message = {
+    var data = if (store.snappyCompressLogs) {
+      Snappy.uncompress(x)
+    } else {
+      x
+    }
+    store.wireFormat.unmarshal(new ByteSequence(data.data, data.offset, data.length)).asInstanceOf[Message]
+  }
 
   def collectionCursor(collectionKey: Long, cursorPosition:Buffer)(func: (Buffer, EntryRecord.Buffer)=>Boolean) = {
     val ro = new ReadOptions
@@ -1232,6 +1374,7 @@ class LevelDBClient(store: LevelDBStore) {
   val max_index_write_latency = TimeMetric()
 
   def store(uows: Array[DelayableUOW]) {
+    assert_write_thread_executing
     might_fail_using_index {
       log.appender { appender =>
         val syncNeeded = index.write(new WriteOptions, max_index_write_latency) { batch =>
@@ -1267,10 +1410,11 @@ class LevelDBClient(store: LevelDBStore) {
         var dataLocator: DataLocator = null
 
         if (messageRecord != null && messageRecord.locator == null) {
+          store.db.producerSequenceIdTracker.isDuplicate(messageRecord.id)
           val start = System.nanoTime()
           val p = appender.append(LOG_DATA, messageRecord.data)
           log_info = p._2
-          dataLocator = DataLocator(p._1, messageRecord.data.length)
+          dataLocator = DataLocator(store, p._1, messageRecord.data.length)
           messageRecord.locator = dataLocator
 //          println("msg: "+messageRecord.id+" -> "+dataLocator)
           write_message_total += System.nanoTime() - start
@@ -1324,21 +1468,30 @@ class LevelDBClient(store: LevelDBStore) {
           log_record.setEntryKey(new Buffer(key, 9, 8))
           log_record.setValueLocation(dataLocator.pos)
           log_record.setValueLength(dataLocator.len)
-          appender.append(LOG_ADD_ENTRY, encodeEntryRecord(log_record.freeze()))
+
+          val kind = if (entry.deliveries==0) LOG_ADD_ENTRY else LOG_UPDATE_ENTRY
+          appender.append(kind, encodeEntryRecord(log_record.freeze()))
 
           val index_record = new EntryRecord.Bean()
           index_record.setValueLocation(dataLocator.pos)
           index_record.setValueLength(dataLocator.len)
-          batch.put(key, encodeEntryRecord(index_record.freeze()).toByteArray)
+
+          // Store the delivery counter.
+          if( entry.deliveries!=0 ) {
+            val os = new DataByteArrayOutputStream()
+            os.writeVarInt(1) // meta data format version
+            os.writeVarInt(entry.deliveries)
+            index_record.setMeta(os.toBuffer)
+          }
 
           val index_data = encodeEntryRecord(index_record.freeze()).toByteArray
           batch.put(key, index_data)
 
-          for (key <- logRefKey(dataLocator.pos, log_info)) {
-            logRefs.getOrElseUpdate(key, new LongCounter()).incrementAndGet()
+          if( kind==LOG_ADD_ENTRY ) {
+            logRefIncrement(dataLocator.pos)
+            collectionIncrementSize(entry.queueKey, log_record.getEntryKey.toByteArray)
           }
 
-          collectionIncrementSize(entry.queueKey, log_record.getEntryKey.toByteArray)
           write_enqueue_total += System.nanoTime() - start
         }
 
@@ -1383,11 +1536,11 @@ class LevelDBClient(store: LevelDBStore) {
         log_record.setCollectionKey(entry.subKey)
         log_record.setEntryKey(ACK_POSITION)
         log_record.setValueLocation(entry.ackPosition)
-        appender.append(LOG_ADD_ENTRY, encodeEntryRecord(log_record.freeze()))
+        appender.append(LOG_UPDATE_ENTRY, encodeEntryRecord(log_record.freeze()))
 
         val index_record = new EntryRecord.Bean()
         index_record.setValueLocation(entry.ackPosition)
-        batch.put(key, encodeEntryRecord(log_record.freeze()).toByteArray)
+        batch.put(key, encodeEntryRecord(index_record.freeze()).toByteArray)
       }
 
       if (uow.syncNeeded) {
@@ -1471,17 +1624,6 @@ class LevelDBClient(store: LevelDBStore) {
 
   def gc(topicPositions:Seq[(Long, Long)]):Unit = {
 
-    detect_if_compact_needed
-
-    // Lets compact the leveldb index if it looks like we need to.
-    if( index.compact_needed ) {
-      debug("Compacting the leveldb index at: %s", dirtyIndexFile)
-      val start = System.nanoTime()
-      index.compact
-      val duration = System.nanoTime() - start;
-      info("Compacted the leveldb index at: %s in %.2f ms", dirtyIndexFile, (duration / 1000000.0))
-    }
-
     // Delete message refs for topics who's consumers have advanced..
     if( !topicPositions.isEmpty ) {
       might_fail_using_index {
@@ -1492,6 +1634,7 @@ class LevelDBClient(store: LevelDBStore) {
             ro.verifyChecksums(verifyChecksums)
             val start = encodeEntryKey(ENTRY_PREFIX, topic, 0)
             val end =  encodeEntryKey(ENTRY_PREFIX, topic, first)
+            debug("Topic: %d GC to seq: %d", topic, first)
             index.cursorRange(start, end, ro) { case (key, value) =>
               val entry = EntryRecord.FACTORY.parseUnframed(value)
               batch.delete(key)
@@ -1503,8 +1646,29 @@ class LevelDBClient(store: LevelDBStore) {
       }
     }
 
+    detect_if_compact_needed
+
+    // Lets compact the leveldb index if it looks like we need to.
+    if( index.compact_needed ) {
+      val start = System.nanoTime()
+      index.compact
+      val duration = System.nanoTime() - start;
+      info("Compacted the leveldb index at: %s in %.2f ms", dirtyIndexFile, (duration / 1000000.0))
+    }
+
     import collection.JavaConversions._
-    lastIndexSnapshotPos
+
+    // drop the logs that are no longer referenced.
+    for( (x,y) <- logRefs.toSeq ) {
+      if( y.get() <= 0 ) {
+        if( y.get() < 0 ) {
+          warn("Found a negative log reference for log: "+x)
+        }
+        debug("Log no longer referenced: %x", x)
+        logRefs.remove(x)
+      }
+    }
+
     val emptyJournals = log.log_infos.keySet.toSet -- logRefs.keySet
 
     // We don't want to delete any journals that the index has not snapshot'ed or
@@ -1515,6 +1679,7 @@ class LevelDBClient(store: LevelDBStore) {
 
     emptyJournals.foreach { id =>
       if ( id < deleteLimit ) {
+        debug("Deleting log at %x", id)
         log.delete(id)
       }
     }

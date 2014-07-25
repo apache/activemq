@@ -45,17 +45,35 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
-import org.apache.activemq.broker.jmx.*;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
+import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.jmx.ConnectorView;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.HealthView;
+import org.apache.activemq.broker.jmx.HealthViewMBean;
+import org.apache.activemq.broker.jmx.JmsConnectorView;
+import org.apache.activemq.broker.jmx.JobSchedulerView;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
+import org.apache.activemq.broker.jmx.Log4JConfigView;
+import org.apache.activemq.broker.jmx.ManagedRegionBroker;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.NetworkConnectorView;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.ProxyConnectorView;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -69,6 +87,7 @@ import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
+import org.apache.activemq.broker.scheduler.memory.InMemoryJobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.BrokerId;
@@ -93,16 +112,24 @@ import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.*;
+import org.apache.activemq.util.BrokerSupport;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.IOExceptionHandler;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.InetAddressUtil;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
+import org.apache.activemq.util.TimeUtils;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
- * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
+ * Manages the life-cycle of an ActiveMQ Broker. A BrokerService consists of a
  * number of transport connectors, network connectors and a bunch of properties
  * which can be used to configure the broker as its lazily created.
- *
  *
  * @org.apache.xbean.XBean
  */
@@ -112,9 +139,13 @@ public class BrokerService implements Service {
     public static final String BROKER_VERSION;
     public static final String DEFAULT_BROKER_NAME = "localhost";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
+    public static final long DEFAULT_START_TIMEOUT = 600000L;
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
+
+    @SuppressWarnings("unused")
     private static final long serialVersionUID = 7353129142305630237L;
+
     private boolean useJmx = true;
     private boolean enableStatistics = true;
     private boolean persistent = true;
@@ -128,7 +159,7 @@ public class BrokerService implements Service {
     private boolean shutdownOnMasterFailure;
     private boolean shutdownOnSlaveFailure;
     private boolean waitForSlave;
-    private long waitForSlaveTimeout = 600000L;
+    private long waitForSlaveTimeout = DEFAULT_START_TIMEOUT;
     private boolean passiveSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
@@ -170,7 +201,7 @@ public class BrokerService implements Service {
     private boolean useMirroredQueues = false;
     private boolean useTempMirroredQueues = true;
     private BrokerId brokerId;
-    private DestinationInterceptor[] destinationInterceptors;
+    private volatile DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
     private PListStore tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
@@ -203,6 +234,8 @@ public class BrokerService implements Service {
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
     private JobSchedulerStore jobSchedulerStore;
+    private final AtomicLong totalConnections = new AtomicLong();
+    private final AtomicInteger currentConnections = new AtomicInteger();
 
     private long offlineDurableSubscriberTimeout = -1;
     private long offlineDurableSubscriberTaskSchedule = 300000;
@@ -497,11 +530,24 @@ public class BrokerService implements Service {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to autoStart, done to prevent backwards incompatible signature change
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            autoStart();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org. apache.xbean.InitMethod
      */
-    @PostConstruct
     public void autoStart() throws Exception {
         if(shouldAutostart()) {
             start();
@@ -551,7 +597,7 @@ public class BrokerService implements Service {
             startBroker(startAsync);
             brokerRegistry.bind(getBrokerName(), BrokerService.this);
         } catch (Exception e) {
-            LOG.error("Failed to start Apache ActiveMQ (" + getBrokerName() + ", " + brokerId + "). Reason: " + e, e);
+            LOG.error("Failed to start Apache ActiveMQ ({}, {})", new Object[]{ getBrokerName(), brokerId }, e);
             try {
                 if (!stopped.get()) {
                     stop();
@@ -589,7 +635,7 @@ public class BrokerService implements Service {
     private void doStartPersistenceAdapter() throws Exception {
         getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
         getPersistenceAdapter().setBrokerName(getBrokerName());
-        LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
+        LOG.info("Using Persistence Adapter: {}", getPersistenceAdapter());
         if (deleteAllMessagesOnStartup) {
             deleteAllMessages();
         }
@@ -627,10 +673,7 @@ public class BrokerService implements Service {
         brokerId = broker.getBrokerId();
 
         // need to log this after creating the broker so we have its id and name
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") is starting");
-        }
+        LOG.info("Apache ActiveMQ {} ({}, {}) is starting", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId });
         broker.start();
 
         if (isUseJmx()) {
@@ -649,13 +692,16 @@ public class BrokerService implements Service {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
 
+        if (isUseJmx() && Log4JConfigView.isLog4JAvailable()) {
+            ObjectName objectName = BrokerMBeanSupport.createLog4JConfigViewName(getBrokerObjectName().toString());
+            Log4JConfigView log4jConfigView = new Log4JConfigView();
+            AnnotatedMBean.registerMBean(getManagementContext(), log4jConfigView, objectName);
+        }
+
         startAllConnectors();
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") started");
-            LOG.info("For help or more information please see: http://activemq.apache.org");
-        }
+        LOG.info("Apache ActiveMQ {} ({}, {}) started", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
+        LOG.info("For help or more information please see: http://activemq.apache.org");
 
         getBroker().brokerServiceStarted();
         checkSystemUsageLimits();
@@ -664,12 +710,25 @@ public class BrokerService implements Service {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to stop, done to prevent backwards incompatible signature change
+     */
+    @PreDestroy
+    private void preDestroy () {
+        try {
+            stop();
+        } catch (Exception ex) {
+            throw new RuntimeException();
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache .xbean.DestroyMethod
      */
     @Override
-    @PreDestroy
     public void stop() throws Exception {
         if (!stopping.compareAndSet(false, true)) {
             LOG.trace("Broker already stopping/stopped");
@@ -687,10 +746,7 @@ public class BrokerService implements Service {
             }.start();
         }
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") is shutting down");
-        }
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutting down", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId} );
 
         removeShutdownHook();
         if (this.scheduler != null) {
@@ -750,14 +806,10 @@ public class BrokerService implements Service {
         this.destinationInterceptors = null;
         this.destinationFactory = null;
 
-        if (LOG.isInfoEnabled()) {
-            if (startDate != null) {
-                LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                        + getBrokerName() + ", " + brokerId + ") uptime " + getUptime());
-            }
-            LOG.info("Apache ActiveMQ " + getBrokerVersion() + " ("
-                    + getBrokerName() + ", " + brokerId + ") is shutdown");
+        if (startDate != null) {
+            LOG.info("Apache ActiveMQ {} ({}, {}) uptime {}", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId, getUptime()});
         }
+        LOG.info("Apache ActiveMQ {} ({}, {}) is shutdown", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
 
         synchronized (shutdownHooks) {
             for (Runnable hook : shutdownHooks) {
@@ -787,8 +839,7 @@ public class BrokerService implements Service {
                     queueSize = entry.getValue().getDestinationStatistics().getMessages().getCount();
                     count += queueSize;
                     if (queueSize > 0) {
-                        LOG.info("Queue has pending message:" + entry.getValue().getName() + " queueSize is:"
-                                + queueSize);
+                        LOG.info("Queue has pending message: {} queueSize is: {}", entry.getValue().getName(), queueSize);
                     }
                 }
             }
@@ -820,8 +871,9 @@ public class BrokerService implements Service {
             if (pollInterval <= 0) {
                 pollInterval = 30;
             }
-            LOG.info("Stop gracefully with connectorName:" + connectorName + " queueName:" + queueName + " timeout:"
-                    + timeout + " pollInterval:" + pollInterval);
+            LOG.info("Stop gracefully with connectorName: {} queueName: {} timeout: {} pollInterval: {}", new Object[]{
+                    connectorName, queueName, timeout, pollInterval
+            });
             TransportConnector connector;
             for (int i = 0; i < transportConnectors.size(); i++) {
                 connector = transportConnectors.get(i);
@@ -861,13 +913,30 @@ public class BrokerService implements Service {
         }
     }
 
+    public boolean isStopped() {
+        return stopped.get();
+    }
+
     /**
      * A helper method to block the caller thread until the broker has fully started
      * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
     public boolean waitUntilStarted() {
+        return waitUntilStarted(DEFAULT_START_TIMEOUT);
+    }
+
+    /**
+     * A helper method to block the caller thread until the broker has fully started
+     *
+     * @param timeout
+     *        the amount of time to wait before giving up and returning false.
+     *
+     * @return boolean true if wait succeeded false if broker was not started or was stopped
+     */
+    public boolean waitUntilStarted(long timeout) {
         boolean waitSucceeded = isStarted();
-        while (!isStarted() && !stopped.get() && !waitSucceeded) {
+        long expiration = Math.max(0, timeout + System.currentTimeMillis());
+        while (!isStarted() && !stopped.get() && !waitSucceeded && expiration > System.currentTimeMillis()) {
             try {
                 if (startException != null) {
                     return waitSucceeded;
@@ -923,7 +992,7 @@ public class BrokerService implements Service {
         }
         String str = brokerName.replaceAll("[^a-zA-Z0-9\\.\\_\\-\\:]", "_");
         if (!str.equals(brokerName)) {
-            LOG.error("Broker Name: " + brokerName + " contained illegal characters - replaced with " + str);
+            LOG.error("Broker Name: {} contained illegal characters - replaced with {}", brokerName, str);
         }
         this.brokerName = str.trim();
     }
@@ -1021,16 +1090,16 @@ public class BrokerService implements Service {
 
                 systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore(), getJobSchedulerStore());
                 systemUsage.setExecutor(getExecutor());
-                systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // 64 MB
+                systemUsage.getMemoryUsage().setLimit(1024L * 1024 * 1024 * 1); // 1 GB
                 systemUsage.getTempUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
                 systemUsage.getStoreUsage().setLimit(1024L * 1024 * 1024 * 100); // 100 GB
-                systemUsage.getJobSchedulerUsage().setLimit(1024L * 1024 * 1000 * 50); // 50 // Gb
+                systemUsage.getJobSchedulerUsage().setLimit(1024L * 1024 * 1024 * 50); // 50 GB
                 addService(this.systemUsage);
             }
             return systemUsage;
         } catch (IOException e) {
             LOG.error("Cannot create SystemUsage", e);
-            throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage());
+            throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage(), e);
         }
     }
 
@@ -1121,7 +1190,7 @@ public class BrokerService implements Service {
      */
     public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) throws IOException {
         if (!isPersistent() && ! (persistenceAdapter instanceof MemoryPersistenceAdapter)) {
-            LOG.warn("persistent=\"false\", ignoring configured persistenceAdapter: " + persistenceAdapter);
+            LOG.warn("persistent=\"false\", ignoring configured persistenceAdapter: {}", persistenceAdapter);
             return;
         }
         this.persistenceAdapter = persistenceAdapter;
@@ -1478,7 +1547,7 @@ public class BrokerService implements Service {
             try {
                 vmConnectorURI = new URI("vm://" + getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
             } catch (URISyntaxException e) {
-                LOG.error("Badly formed URI from " + getBrokerName(), e);
+                LOG.error("Badly formed URI from {}", getBrokerName(), e);
             }
         }
         return vmConnectorURI;
@@ -1496,7 +1565,7 @@ public class BrokerService implements Service {
                     try {
                         result = tc.getPublishableConnectString();
                     } catch (Exception e) {
-                      LOG.warn("Failed to get the ConnectURI for "+tc,e);
+                      LOG.warn("Failed to get the ConnectURI for {}", tc, e);
                     }
                     if (result != null) {
                         // find first publishable uri
@@ -1627,7 +1696,7 @@ public class BrokerService implements Service {
                 }
                 if (!empty) {
                     String str = result ? "Successfully deleted" : "Failed to delete";
-                    LOG.info(str + " temporary storage");
+                    LOG.info("{} temporary storage", str);
                 }
 
                 String clazz = "org.apache.activemq.store.kahadb.plist.PListStoreImpl";
@@ -1784,18 +1853,69 @@ public class BrokerService implements Service {
     }
 
     public synchronized JobSchedulerStore getJobSchedulerStore() {
-        if (jobSchedulerStore == null && isSchedulerSupport()) {
-            try {
-                String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
-                jobSchedulerStore = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
-                jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
+
+        // If support is off don't allow any scheduler even is user configured their own.
+        if (!isSchedulerSupport()) {
+            return null;
+        }
+
+        // If the user configured their own we use it even if persistence is disabled since
+        // we don't know anything about their implementation.
+        if (jobSchedulerStore == null) {
+
+            if (!isPersistent()) {
+                this.jobSchedulerStore = new InMemoryJobSchedulerStore();
                 configureService(jobSchedulerStore);
-                jobSchedulerStore.start();
-                LOG.info("JobScheduler using directory: " + getSchedulerDirectoryFile());
+                try {
+                    jobSchedulerStore.start();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return this.jobSchedulerStore;
+            }
+
+            try {
+                PersistenceAdapter pa = getPersistenceAdapter();
+                if (pa != null) {
+                    this.jobSchedulerStore = pa.createJobSchedulerStore();
+                    jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
+                    configureService(jobSchedulerStore);
+                    jobSchedulerStore.start();
+                    return this.jobSchedulerStore;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (UnsupportedOperationException ex) {
+                // It's ok if the store doesn't implement a scheduler.
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
+            try {
+                PersistenceAdapter pa = getPersistenceAdapter();
+                if (pa != null && pa instanceof JobSchedulerStore) {
+                    this.jobSchedulerStore = (JobSchedulerStore) pa;
+                    configureService(jobSchedulerStore);
+                    return this.jobSchedulerStore;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            // Load the KahaDB store as a last resort, this only works if KahaDB is
+            // included at runtime, otherwise this will fail.  User should disable
+            // scheduler support if this fails.
+            try {
+                String clazz = "org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter";
+                PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).newInstance();
+                jobSchedulerStore = adaptor.createJobSchedulerStore();
+                jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
+                configureService(jobSchedulerStore);
+                jobSchedulerStore.start();
+                LOG.info("JobScheduler using directory: {}", getSchedulerDirectoryFile());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return jobSchedulerStore;
     }
@@ -1848,10 +1968,10 @@ public class BrokerService implements Service {
         long jvmLimit = Runtime.getRuntime().maxMemory();
 
         if (memLimit > jvmLimit) {
+            usage.getMemoryUsage().setPercentOfJvmHeap(70);
             LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
-                      " mb) is more than the maximum available for the JVM: " +
-                      jvmLimit / (1024 * 1024) + " mb - resetting to maximum available: " + jvmLimit / (1024 * 1024) + " mb");
-            usage.getMemoryUsage().setLimit(jvmLimit);
+                    " mb) is more than the maximum available for the JVM: " +
+                    jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
         }
 
         if (getPersistenceAdapter() != null) {
@@ -1864,18 +1984,20 @@ public class BrokerService implements Service {
                     dir = new File(dirPath);
                 }
 
-                while (dir != null && dir.isDirectory() == false) {
+                while (dir != null && !dir.isDirectory()) {
                     dir = dir.getParentFile();
                 }
                 long storeLimit = usage.getStoreUsage().getLimit();
+                long storeCurrent = usage.getStoreUsage().getUsage();
                 long dirFreeSpace = dir.getUsableSpace();
-                if (storeLimit > dirFreeSpace) {
+                if (storeLimit > (dirFreeSpace + storeCurrent)) {
                     LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
-                             " mb, whilst the data directory: " + dir.getAbsolutePath() +
+                             " mb (current store usage is " + storeCurrent / (1024 * 1024) +
+                             " mb). The data directory: " + dir.getAbsolutePath() +
                              " only has " + dirFreeSpace / (1024 * 1024) +
-                             " mb of usable space - resetting to maximum available disk space:  " +
-                            dirFreeSpace / (1024 * 1024) + " mb");
-                    usage.getStoreUsage().setLimit(dirFreeSpace);
+                             " mb of usable space - resetting to maximum available disk space: " +
+                            (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
+                    usage.getStoreUsage().setLimit(dirFreeSpace + storeCurrent);
                 }
             }
 
@@ -1904,14 +2026,14 @@ public class BrokerService implements Service {
             }
 
             long storeLimit = usage.getTempUsage().getLimit();
-            while (tmpDir != null && tmpDir.isDirectory() == false) {
+            while (tmpDir != null && !tmpDir.isDirectory()) {
                 tmpDir = tmpDir.getParentFile();
             }
             long dirFreeSpace = tmpDir.getUsableSpace();
             if (storeLimit > dirFreeSpace) {
                 LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
-                          " mb, whilst the temporary data directory: " + tmpDirPath +
-                          " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
+                        " mb, whilst the temporary data directory: " + tmpDirPath +
+                        " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
                         dirFreeSpace / (1024 * 1024) + " mb.");
                 usage.getTempUsage().setLimit(dirFreeSpace);
             }
@@ -1945,15 +2067,15 @@ public class BrokerService implements Service {
                     schedulerDir = new File(schedulerDirPath);
                 }
 
-                while (schedulerDir != null && schedulerDir.isDirectory() == false) {
+                while (schedulerDir != null && !schedulerDir.isDirectory()) {
                     schedulerDir = schedulerDir.getParentFile();
                 }
-                long schedularLimit = usage.getJobSchedulerUsage().getLimit();
+                long schedulerLimit = usage.getJobSchedulerUsage().getLimit();
                 long dirFreeSpace = schedulerDir.getUsableSpace();
-                if (schedularLimit > dirFreeSpace) {
-                    LOG.warn("Job Schedular Store limit is " + schedularLimit / (1024 * 1024) +
+                if (schedulerLimit > dirFreeSpace) {
+                    LOG.warn("Job Scheduler Store limit is " + schedulerLimit / (1024 * 1024) +
                              " mb, whilst the data directory: " + schedulerDir.getAbsolutePath() +
-                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - reseting to " +
+                             " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to " +
                             dirFreeSpace / (1024 * 1024) + " mb.");
                     usage.getJobSchedulerUsage().setLimit(dirFreeSpace);
                 }
@@ -2021,7 +2143,7 @@ public class BrokerService implements Service {
         return BrokerMBeanSupport.createConnectorName(getBrokerObjectName(), "clientConnectors", connector.getName());
     }
 
-    protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
+    public void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
         NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
         try {
             ObjectName objectName = createNetworkConnectorObjectName(connector);
@@ -2037,7 +2159,7 @@ public class BrokerService implements Service {
     }
 
     public ObjectName createDuplexNetworkConnectorObjectName(String transport) throws MalformedObjectNameException {
-        return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport.toString());
+        return BrokerMBeanSupport.createNetworkConnectorName(getBrokerObjectName(), "duplexNetworkConnectors", transport);
     }
 
     protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
@@ -2046,7 +2168,7 @@ public class BrokerService implements Service {
                 ObjectName objectName = createNetworkConnectorObjectName(connector);
                 getManagementContext().unregisterMBean(objectName);
             } catch (Exception e) {
-                LOG.error("Network Connector could not be unregistered from JMX: " + e, e);
+                LOG.warn("Network Connector could not be unregistered from JMX due " + e.getMessage() + ". This exception is ignored.", e);
             }
         }
     }
@@ -2132,7 +2254,7 @@ public class BrokerService implements Service {
                 regionBroker = new ManagedRegionBroker(this, getManagementContext(), getBrokerObjectName(),
                     getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor,getScheduler(),getExecutor());
             } catch(MalformedObjectNameException me){
-                LOG.error("Couldn't create ManagedRegionBroker",me);
+                LOG.warn("Cannot create ManagedRegionBroker due " + me.getMessage(), me);
                 throw new IOException(me);
             }
         } else {
@@ -2262,7 +2384,7 @@ public class BrokerService implements Service {
         Object port = options.get("port");
         if (port == null) {
             port = DEFAULT_PORT;
-            LOG.warn("No port specified so defaulting to: " + port);
+            LOG.warn("No port specified so defaulting to: {}", port);
         }
         return port;
     }
@@ -2284,7 +2406,7 @@ public class BrokerService implements Service {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
             } catch (Exception e) {
-                LOG.debug("Caught exception, must be shutting down: " + e);
+                LOG.debug("Caught exception, must be shutting down. This exception is ignored.", e);
             }
         }
     }
@@ -2417,10 +2539,10 @@ public class BrokerService implements Service {
                         @Override
                         public void run() {
                             try {
-                                LOG.info("Async start of " + connector);
+                                LOG.info("Async start of {}", connector);
                                 connector.start();
                             } catch(Exception e) {
-                                LOG.error("Async start of network connector: " + connector + " failed", e);
+                                LOG.error("Async start of network connector: {} failed", connector, e);
                             }
                         }
                     });
@@ -2485,7 +2607,7 @@ public class BrokerService implements Service {
         if (ioExceptionHandler != null) {
             ioExceptionHandler.handle(exception);
          } else {
-            LOG.info("No IOExceptionHandler registered, ignoring IO exception, " + exception, exception);
+            LOG.info("No IOExceptionHandler registered, ignoring IO exception", exception);
          }
     }
 
@@ -2566,7 +2688,7 @@ public class BrokerService implements Service {
             try {
                 this.scheduler.start();
             } catch (Exception e) {
-               LOG.error("Failed to start Scheduler ",e);
+               LOG.error("Failed to start Scheduler", e);
             }
         }
         return this.scheduler;
@@ -2894,5 +3016,31 @@ public class BrokerService implements Service {
 
     public void setStoreOpenWireVersion(int storeOpenWireVersion) {
         this.storeOpenWireVersion = storeOpenWireVersion;
+    }
+
+    /**
+     * @return the current number of connections on this Broker.
+     */
+    public int getCurrentConnections() {
+        return this.currentConnections.get();
+    }
+
+    /**
+     * @return the total number of connections this broker has handled since startup.
+     */
+    public long getTotalConnections() {
+        return this.totalConnections.get();
+    }
+
+    public void incrementCurrentConnections() {
+        this.currentConnections.incrementAndGet();
+    }
+
+    public void decrementCurrentConnections() {
+        this.currentConnections.decrementAndGet();
+    }
+
+    public void incrementTotalConnections() {
+        this.totalConnections.incrementAndGet();
     }
 }

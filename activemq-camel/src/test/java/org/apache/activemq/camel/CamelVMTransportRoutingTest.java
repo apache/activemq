@@ -34,9 +34,9 @@ import org.apache.activemq.util.ThreadTracker;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Assert;
 
 // see: https://issues.apache.org/activemq/browse/AMQ-2966
 public class CamelVMTransportRoutingTest extends TestCase {
@@ -55,39 +55,40 @@ public class CamelVMTransportRoutingTest extends TestCase {
     private final String SENDER_TOPIC = "A";
     private final String RECEIVER_TOPIC = "B";
 
+    @SuppressWarnings("unused")
     public void testSendReceiveWithCamelRouteIntercepting() throws Exception {
 
-    	final int MSG_COUNT = 1000;
+        final int MSG_COUNT = 1000;
 
-    	Session sendSession = senderConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    	Session receiverSession1 = receiverConnection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    	Session receiverSession2 = receiverConnection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session sendSession = senderConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session receiverSession1 = receiverConnection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session receiverSession2 = receiverConnection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-    	Destination sendTo = sendSession.createTopic(SENDER_TOPIC);
-    	Destination receiveFrom = receiverSession1.createTopic(RECEIVER_TOPIC);
+        Destination sendTo = sendSession.createTopic(SENDER_TOPIC);
+        Destination receiveFrom = receiverSession1.createTopic(RECEIVER_TOPIC);
 
-    	TextMessage message = sendSession.createTextMessage(MSG_STRING);
+        TextMessage message = sendSession.createTextMessage(MSG_STRING);
 
-    	MessageConsumer receiver1 = receiverSession1.createConsumer(receiveFrom);
-    	MessageConsumer receiver2 = receiverSession2.createConsumer(receiveFrom);
+        MessageConsumer receiver1 = receiverSession1.createConsumer(receiveFrom);
+        MessageConsumer receiver2 = receiverSession2.createConsumer(receiveFrom);
 
-    	MessageProducer sender = sendSession.createProducer(sendTo);
-    	for( int i = 0; i < MSG_COUNT; ++i ) {
-    		sender.send(message);
-    	}
+        MessageProducer sender = sendSession.createProducer(sendTo);
+        for( int i = 0; i < MSG_COUNT; ++i ) {
+            sender.send(message);
+        }
 
-    	for( int i = 0; i < MSG_COUNT; ++i ) {
+        for( int i = 0; i < MSG_COUNT; ++i ) {
 
-    		log.debug("Attempting Received for Message #" + i);
-    		TextMessage received1 = (TextMessage) receiver1.receive(5000);
-        	Assert.assertNotNull(received1);
-        	Assert.assertEquals(MSG_STRING, received1.getText());
+            log.debug("Attempting Received for Message #" + i);
+            TextMessage received1 = (TextMessage) receiver1.receive(5000);
+            Assert.assertNotNull(received1);
+            Assert.assertEquals(MSG_STRING, received1.getText());
         }
     }
 
     protected BrokerService createBroker() throws Exception {
 
-    	BrokerService service = new BrokerService();
+        BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
         connector = service.addConnector("tcp://localhost:0");
@@ -95,15 +96,16 @@ public class CamelVMTransportRoutingTest extends TestCase {
         return service;
     }
 
+    @Override
     public void setUp() throws Exception {
 
-    	broker = createBroker();
-    	broker.start();
-    	broker.waitUntilStarted();
+        broker = createBroker();
+        broker.start();
+        broker.waitUntilStarted();
 
-    	Thread.sleep(1000);
+        Thread.sleep(1000);
 
-    	createCamelContext();
+        createCamelContext();
 
         ActiveMQConnectionFactory connFactory = new ActiveMQConnectionFactory(connector.getConnectUri());
         senderConnection = connFactory.createConnection();
@@ -114,22 +116,23 @@ public class CamelVMTransportRoutingTest extends TestCase {
         receiverConnection2.start();
     }
 
+    @Override
     public void tearDown() throws Exception {
 
-    	if( senderConnection != null ) {
-    		senderConnection.close();
-    	}
+        if( senderConnection != null ) {
+            senderConnection.close();
+        }
 
-    	if( receiverConnection1 != null ) {
-    		receiverConnection1.close();
-    	}
+        if( receiverConnection1 != null ) {
+            receiverConnection1.close();
+        }
 
-    	if( receiverConnection2 != null ) {
-    		receiverConnection2.close();
-    	}
+        if( receiverConnection2 != null ) {
+            receiverConnection2.close();
+        }
 
-    	camelContext.stop();
-    	broker.stop();
+        camelContext.stop();
+        broker.stop();
 
         ThreadTracker.result();
     }
@@ -139,10 +142,10 @@ public class CamelVMTransportRoutingTest extends TestCase {
         final String fromEndpoint = "activemq:topic:" + SENDER_TOPIC;
         final String toEndpoint = "activemq:topic:" + RECEIVER_TOPIC;
 
-    	log.info("creating context and sending message");
+        log.info("creating context and sending message");
         camelContext = new DefaultCamelContext();
         camelContext.addComponent("activemq",
-        		ActiveMQComponent.activeMQComponent("vm://localhost?create=false&waitForStart=10000"));
+                ActiveMQComponent.activeMQComponent("vm://localhost?create=false&waitForStart=10000"));
         camelContext.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {

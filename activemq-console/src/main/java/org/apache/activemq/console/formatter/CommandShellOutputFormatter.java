@@ -45,8 +45,6 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Retrieve the output stream being used by the formatter
-     * 
-     * @return
      */
     public OutputStream getOutputStream() {
         return outputStream;

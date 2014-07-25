@@ -19,7 +19,6 @@ package org.apache.activemq.broker.scheduler;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -31,34 +30,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ScheduledMessage;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.util.IOHelper;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
-public class JobSchedulerTxTest {
-
-    private BrokerService broker;
-    private final String connectionUri = "vm://localhost";
-    private final ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
-    private final ActiveMQQueue destination = new ActiveMQQueue("Target.Queue");
-
-    @Before
-    public void setUp() throws Exception {
-        broker = createBroker();
-        broker.start();
-        broker.waitUntilStarted();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-    }
+public class JobSchedulerTxTest extends JobSchedulerTestSupport {
 
     @Test
     public void testTxSendWithRollback() throws Exception {
@@ -128,30 +103,5 @@ public class JobSchedulerTxTest {
         assertEquals(COUNT, latch.getCount());
         latch.await(5, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
-    }
-
-    protected Connection createConnection() throws Exception {
-        return cf.createConnection();
-    }
-
-    protected BrokerService createBroker() throws Exception {
-        return createBroker(true);
-    }
-
-    protected BrokerService createBroker(boolean delete) throws Exception {
-        File schedulerDirectory = new File("target/scheduler");
-        if (delete) {
-            IOHelper.mkdirs(schedulerDirectory);
-            IOHelper.deleteChildren(schedulerDirectory);
-        }
-        BrokerService answer = new BrokerService();
-        answer.setPersistent(true);
-        answer.setDeleteAllMessagesOnStartup(true);
-        answer.setDataDirectory("target");
-        answer.setSchedulerDirectoryFile(schedulerDirectory);
-        answer.setSchedulerSupport(true);
-        answer.setUseJmx(false);
-        answer.addConnector(connectionUri);
-        return answer;
     }
 }

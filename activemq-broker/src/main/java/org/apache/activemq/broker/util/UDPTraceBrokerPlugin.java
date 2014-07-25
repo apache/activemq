@@ -125,7 +125,7 @@ public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
             socket.send(datagram);
 
         } catch (Throwable e) {
-            LOG.debug("Failed to trace: " + command, e);
+            LOG.debug("Failed to trace: {}", command, e);
         }
     }
 

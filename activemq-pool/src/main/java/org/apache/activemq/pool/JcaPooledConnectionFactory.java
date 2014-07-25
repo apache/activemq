@@ -15,27 +15,19 @@
  */
 package org.apache.activemq.pool;
 
+import java.io.IOException;
+import javax.jms.Connection;
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.jms.pool.ConnectionPool;
+import org.apache.activemq.jms.pool.JcaConnectionPool;
+import org.apache.activemq.transport.TransportListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- */
 public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
+    private static final transient Logger LOG = LoggerFactory.getLogger(JcaPooledConnectionFactory.class);
 
     private String name;
-
-    public JcaPooledConnectionFactory() {
-        super();
-    }
-
-    public JcaPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-        super(connectionFactory);
-    }
-
-    public JcaPooledConnectionFactory(String brokerURL) {
-        super(brokerURL);
-    }
 
     public String getName() {
         return name;
@@ -45,7 +37,50 @@ public class JcaPooledConnectionFactory extends XaPooledConnectionFactory {
         this.name = name;
     }
 
-    protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        return new JcaConnectionPool(connection, getTransactionManager(), getName());
+    protected ConnectionPool createConnectionPool(Connection connection) {
+        return new JcaConnectionPool(connection, getTransactionManager(), getName()) {
+
+            @Override
+            protected Connection wrap(final Connection connection) {
+                // Add a transport Listener so that we can notice if this connection
+                // should be expired due to a connection failure.
+                ((ActiveMQConnection)connection).addTransportListener(new TransportListener() {
+                    @Override
+                    public void onCommand(Object command) {
+                    }
+
+                    @Override
+                    public void onException(IOException error) {
+                        synchronized (this) {
+                            setHasExpired(true);
+                            LOG.info("Expiring connection " + connection + " on IOException: " + error);
+                            LOG.debug("Expiring connection on IOException", error);
+                        }
+                    }
+
+                    @Override
+                    public void transportInterupted() {
+                    }
+
+                    @Override
+                    public void transportResumed() {
+                    }
+                });
+
+                // make sure that we set the hasFailed flag, in case the transport already failed
+                // prior to the addition of our new TransportListener
+                setHasExpired(((ActiveMQConnection) connection).isTransportFailed());
+
+                // may want to return an amq EnhancedConnection
+                return connection;
+            }
+
+            @Override
+            protected void unWrap(Connection connection) {
+                if (connection != null) {
+                    ((ActiveMQConnection)connection).cleanUpTempDestinations();
+                }
+            }
+        };
     }
 }

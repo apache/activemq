@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.replicated
 
-import org.apache.activemq.leveldb.LevelDBStore
+import org.apache.activemq.leveldb.{LevelDBClient, LevelDBStore}
 import org.apache.activemq.util.ServiceStopper
 import java.util
 import org.fusesource.hawtdispatch._
@@ -28,7 +28,7 @@ import org.apache.activemq.leveldb.util._
 
 import FileSupport._
 import java.io.{IOException, RandomAccessFile, File}
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 object SlaveLevelDBStore extends Log
@@ -53,7 +53,23 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
   var status = "initialized"
 
+  override def createClient = new LevelDBClient(this) {
+    // We don't want to start doing index snapshots until
+    // he slave is caught up.
+    override def post_log_rotate: Unit = {
+      if( caughtUp ) {
+        writeExecutor {
+          snapshotIndex(false)
+        }
+      }
+    }
+
+    // The snapshots we create are based on what has been replayed.
+    override def nextIndexSnapshotPos:Long = indexRecoveryPosition
+  }
+
   override def doStart() = {
+    queue.setLabel("slave: "+node_id)
     client.init()
     if (purgeOnStatup) {
       purgeOnStatup = false
@@ -87,10 +103,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
   }
 
   def start_slave_connections = {
-    val transport = new TcpTransport()
-    transport.setBlockingExecutor(blocking_executor)
-    transport.setDispatchQueue(queue)
-    transport.connecting(new URI(connect), null)
+    val transport: TcpTransport = create_transport
 
     status = "Attaching to master: "+connect
     info(status)
@@ -100,40 +113,53 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       // the stashed data might be the best option to become the master.
       stash(directory)
       delete_store(directory)
-      debug("Log replicaiton session connected")
+      debug("Log replication session connected")
       session.request_then(SYNC_ACTION, null) { body =>
         val response = JsonCodec.decode(body, classOf[SyncResponse])
         transfer_missing(response)
         session.handler = wal_handler(session)
       }
     })
+    wal_session.start
+  }
+
+  def create_transport: TcpTransport = {
+    val transport = new TcpTransport()
+    transport.setBlockingExecutor(blocking_executor)
+    transport.setDispatchQueue(queue)
+    transport.connecting(new URI(connect), null)
+    transport
   }
 
   def stop_connections(cb:Task) = {
-    var then = ^{
+    var task = ^{
       unstash(directory)
       cb.run()
     }
-    if( wal_session !=null ) {
-      val next = then
-      then = ^{
-        wal_session.transport.stop(next)
-        wal_session = null
+    val wal_session_copy = wal_session
+    if( wal_session_copy !=null ) {
+      wal_session = null
+      val next = task
+      task = ^{
+        wal_session_copy.transport.stop(next)
       }
     }
-    if( transfer_session !=null ) {
-      val next = then
-      then = ^{
-        transfer_session.transport.stop(next)
-        transfer_session = null
+    val transfer_session_copy = transfer_session
+    if( transfer_session_copy !=null ) {
+      transfer_session = null
+      val next = task
+      task = ^{
+        transfer_session_copy.transport.stop(next)
       }
     }
-    then.run();
+    task.run();
   }
 
 
   var wal_append_position = 0L
   var wal_append_offset = 0L
+  @volatile
+  var wal_date = 0L
 
   def send_wal_ack = {
     queue.assertExecuting()
@@ -141,16 +167,18 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
       val ack = new WalAck()
       ack.position = wal_append_position
 //      info("Sending ack: "+wal_append_position)
-      wal_session.send(ACK_ACTION, ack)
+      wal_session.send_replication_frame(ACK_ACTION, ack)
       if( replay_from != ack.position ) {
         val old_replay_from = replay_from
         replay_from = ack.position
         client.writeExecutor {
-          client.replay_from(old_replay_from, ack.position)
+          client.replay_from(old_replay_from, ack.position, false)
         }
       }
     }
   }
+
+  val pending_log_removes = new util.ArrayList[Long]()
 
   def wal_handler(session:Session): (AnyRef)=>Unit = (command)=>{
     command match {
@@ -158,19 +186,21 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         command.action match {
           case WAL_ACTION =>
             val value = JsonCodec.decode(command.body, classOf[LogWrite])
-            if( caughtUp && value.offset ==0 ) {
+            if( caughtUp && value.offset ==0 && value.file!=0 ) {
               client.log.rotate
             }
+            trace("%s, Slave WAL update: (file:%s, offset: %d, length: %d)".format(directory, value.file.toHexString, value.offset, value.length))
             val file = client.log.next_log(value.file)
             val buffer = map(file, value.offset, value.length, false)
             session.codec.readData(buffer, ^{
               if( value.sync ) {
                 buffer.force()
               }
+
               unmap(buffer)
-//              info("Slave WAL update: %s, (offset: %d, length: %d), sending ack:%s", file, value.offset, value.length, caughtUp)
               wal_append_offset = value.offset+value.length
               wal_append_position = value.file + wal_append_offset
+              wal_date = value.date
               if( !stopped ) {
                 if( caughtUp ) {
                   client.log.current_appender.skip(value.length)
@@ -178,6 +208,15 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
                 send_wal_ack
               }
             })
+          case LOG_DELETE_ACTION =>
+
+            val value = JsonCodec.decode(command.body, classOf[LogDelete])
+            if( !caughtUp ) {
+              pending_log_removes.add(value.log)
+            } else {
+              client.log.delete(value.log)
+            }
+
           case OK_ACTION =>
             // This comes in as response to a disconnect we send.
           case _ => session.fail("Unexpected command action: "+command.action)
@@ -212,7 +251,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     }
 
     def disconnect(cb:Task) = queue {
-      send(DISCONNECT_ACTION, null)
+      send_replication_frame(DISCONNECT_ACTION, null)
       transport.flush()
       transport.stop(cb)
     }
@@ -240,7 +279,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
 
     def request(action:AsciiBuffer, body:AnyRef)(cb:(ReplicationFrame)=>Unit) = {
       response_callbacks.addLast(cb)
-      send(action, body)
+      send_replication_frame(action, body)
     }
 
     def response_handler: (AnyRef)=>Unit = (command)=> {
@@ -269,7 +308,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     transport.setDispatchQueue(queue)
     transport.connecting(new URI(connect), null)
 
-    debug("Connecting download session.")
+    debug("%s: Connecting download session. Snapshot index at: %s".format(directory, state.snapshot_position.toHexString))
     transfer_session = new Session(transport, (session)=> {
 
       var total_files = 0
@@ -305,20 +344,11 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
           if (stashed_file.length() == x.length )
             return stashed_file.cached_crc32 == x.crc32
 
-          if ( stashed_file.crc32(x.length) == x.crc32 ) {
-            // we don't want to truncate the log file currently being appended to.
-            if( x.file != state.append_log ) {
-              // Our log file might be longer. lets truncate to match.
-              val raf = new RandomAccessFile(stashed_file, "rw")
-              try {
-                raf.setLength(x.length)
-              } finally {
-                raf.close();
-              }
-            }
-            return true;
+          if( x.file == state.append_log ) {
+            return false;
           }
-          return false
+
+          return stashed_file.cached_crc32 == x.crc32
         }
 
         // We don't have to transfer log files that have been previously transferred.
@@ -342,6 +372,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
             val buffer = map(target_file, 0, x.length, false)
             session.codec.readData(buffer, ^{
               unmap(buffer)
+              trace("%s, Downloaded %s, offset:%d, length:%d", directory, transfer.file, transfer.offset, transfer.length)
               downloaded_size += x.length
               downloaded_files += 1
               update_download_status
@@ -366,6 +397,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
           val buffer = map(dirty_index / x.file, 0, x.length, false)
           session.codec.readData(buffer, ^{
             unmap(buffer)
+            trace("%s, Downloaded %s, offset:%d, length:%d", directory, transfer.file, transfer.offset, transfer.length)
             downloaded_size += x.length
             downloaded_files += 1
             update_download_status
@@ -387,6 +419,7 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         }
         client.writeExecutor {
           if( !state.index_files.isEmpty ) {
+            trace("%s: Index sync complete, copying to snapshot.", directory)
             client.copyDirtyIndexToSnapshot(state.wal_append_position)
           }
           client.replay_init()
@@ -394,8 +427,13 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
         caughtUp = true
         client.log.open(wal_append_offset)
         send_wal_ack
+        for( i <- pending_log_removes ) {
+          client.log.delete(i);
+        }
+        pending_log_removes.clear()
       }
     })
+    transfer_session.start
     state.snapshot_position
   }
 

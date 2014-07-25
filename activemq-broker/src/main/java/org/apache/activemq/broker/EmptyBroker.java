@@ -78,6 +78,11 @@ public class EmptyBroker implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return Collections.EMPTY_MAP;
+    }
+
+    @Override
     public Set getDestinations(ActiveMQDestination destination) {
         return Collections.EMPTY_SET;
     }
@@ -302,7 +307,7 @@ public class EmptyBroker implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                         Subscription subscription) {
+                                         Subscription subscription, Throwable poisonCause) {
         return false;
     }
 
@@ -355,6 +360,11 @@ public class EmptyBroker implements Broker {
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
+    }
+
+    @Override
+    public void reapplyInterceptor() {
+
     }
 
     @Override

@@ -16,11 +16,6 @@
  */
 package org.apache.activemq.proxy;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Iterator;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.Transport;
@@ -32,10 +27,14 @@ import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * @org.apache.xbean.XBean
- * 
- * 
  */
 public class ProxyConnector implements Service {
 
@@ -45,47 +44,61 @@ public class ProxyConnector implements Service {
     private URI remote;
     private URI localUri;
     private String name;
+
     /**
      * Should we proxy commands to the local broker using VM transport as well?
      */
     private boolean proxyToLocalBroker = true;
-    
+
     private final CopyOnWriteArrayList<ProxyConnection> connections = new CopyOnWriteArrayList<ProxyConnection>();
 
+    @Override
     public void start() throws Exception {
 
         this.getServer().setAcceptListener(new TransportAcceptListener() {
+            @Override
             public void onAccept(Transport localTransport) {
+                ProxyConnection connection = null;
                 try {
-                    Transport remoteTransport = createRemoteTransport();
-                    ProxyConnection connection = new ProxyConnection(localTransport, remoteTransport);
-                    connections.add(connection);
+                    Transport remoteTransport = createRemoteTransport(localTransport);
+                    connection = new ProxyConnection(localTransport, remoteTransport);
                     connection.start();
+                    connections.add(connection);
                 } catch (Exception e) {
                     onAcceptError(e);
+                    try {
+                        if (connection != null) {
+                            connection.stop();
+                        }
+                    } catch (Exception eoc) {
+                        LOG.error("Could not close broken connection: ", eoc);
+                    }
                 }
             }
 
+            @Override
             public void onAcceptError(Exception error) {
-                LOG.error("Could not accept connection: " + error, error);
+                LOG.error("Could not accept connection: ", error);
             }
         });
         getServer().start();
-        LOG.info("Proxy Connector " + getName() + " Started");
-
+        LOG.info("Proxy Connector {} started", getName());
     }
 
+    @Override
     public void stop() throws Exception {
         ServiceStopper ss = new ServiceStopper();
         if (this.server != null) {
             ss.stop(this.server);
         }
+
         for (Iterator<ProxyConnection> iter = connections.iterator(); iter.hasNext();) {
             LOG.info("Connector stopped: Stopping proxy.");
             ss.stop(iter.next());
         }
+        connections.clear();
         ss.throwFirstException();
-        LOG.info("Proxy Connector " + getName() + " Stopped");
+        LOG.info("Proxy Connector {} stopped", getName());
     }
 
     // Properties
@@ -133,11 +146,11 @@ public class ProxyConnector implements Service {
         return TransportFactory.bind(bind);
     }
 
-    private Transport createRemoteTransport() throws Exception {
+    private Transport createRemoteTransport(final Transport local) throws Exception {
         Transport transport = TransportFactory.compositeConnect(remote);
         CompositeTransport ct = transport.narrow(CompositeTransport.class);
         if (ct != null && localUri != null && proxyToLocalBroker) {
-            ct.add(false,new URI[] {localUri});
+            ct.add(false, new URI[] { localUri });
         }
 
         // Add a transport filter so that we can track the transport life cycle
@@ -146,7 +159,9 @@ public class ProxyConnector implements Service {
             public void stop() throws Exception {
                 LOG.info("Stopping proxy.");
                 super.stop();
-                connections.remove(this);
+                ProxyConnection dummy = new ProxyConnection(local, this);
+                LOG.debug("Removing proxyConnection {}", dummy.toString());
+                connections.remove(dummy);
             }
         };
         return transport;
@@ -175,4 +190,7 @@ public class ProxyConnector implements Service {
         this.proxyToLocalBroker = proxyToLocalBroker;
     }
 
+    protected Integer getConnectionCount() {
+        return connections.size();
+    }
 }

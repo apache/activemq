@@ -83,10 +83,11 @@ public class DurableSubSelectorDelayWithRestartTest {
         }
 
         final KahaDBPersistenceAdapter pa = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
-        assertTrue("only one journal file should be left ", Wait.waitFor(new Wait.Condition() {
+        assertTrue("small number of journal files should be left ", Wait.waitFor(new Wait.Condition() {
 
             @Override
             public boolean isSatisified() throws Exception {
+                LOG.info("journal data file count - expected {} actual {}", 4, pa.getStore().getJournal().getFileMap().size());
                 return pa.getStore().getJournal().getFileMap().size() < 4;
             }
         }, TimeUnit.MINUTES.toMillis(3)));
@@ -225,8 +226,10 @@ public class DurableSubSelectorDelayWithRestartTest {
                 } while (true);
 
             } finally {
-                sess.close();
-                con.close();
+                try {
+                    sess.close();
+                    con.close();
+                } catch (Exception e) {}
 
                 LOG.info(toString() + " OFFLINE.");
             }
@@ -297,6 +300,7 @@ public class DurableSubSelectorDelayWithRestartTest {
         KahaDBPersistenceAdapter kahadb = new KahaDBPersistenceAdapter();
         kahadb.setDirectory(kahadbData);
         kahadb.setJournalMaxFileLength(  10 * 1024);
+        kahadb.setCleanupInterval(5000);
         broker.setPersistenceAdapter(kahadb);
 
         broker.addConnector("tcp://localhost:61656");

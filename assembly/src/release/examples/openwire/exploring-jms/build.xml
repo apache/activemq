@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project name="JMS_Samples">
+
+   <property name="activemq.home" value="../../.." />
+
+   <property name="PTP1" value=".\QueuePTPSamples\QueueMonitor"/>
+   <property name="QMON" location=".\QueuePTPSamples\QueueMonitor\QueueMonitor.properties"/>
+   <property name="PTP2" value=".\QueuePTPSamples\QueueRoundTrip"/>
+   <property name="PTP3" value=".\QueuePTPSamples\RequestReply"/>
+   <property name="PTP4" value=".\QueuePTPSamples\SelectorTalk"/>
+   <property name="PTP5" value=".\QueuePTPSamples\Talk"/>
+   <property name="PTP6" value=".\QueuePTPSamples\TransactedTalk"/>
+   <property name="PS1" value=".\TopicPubSubSamples\Chat"/>
+   <property name="PS2" value=".\TopicPubSubSamples\DurableChat"/>
+   <property name="PS3" value=".\TopicPubSubSamples\HierarchicalChat"/>
+   <property name="PS4" value=".\TopicPubSubSamples\MessageMonitor"/>
+   <property name="PS5" value=".\TopicPubSubSamples\RequestReply"/>
+   <property name="PS6" value=".\TopicPubSubSamples\SelectorChat"/>
+   <property name="PS7" value=".\TopicPubSubSamples\TransactedChat"/>
+   
+   <property name="PUBSUB_SAMPLES" value="${PS1};${PS2};${PS3};${PS4};${PS5};${PS6};${PS7};"/>
+   
+   <property name="PTP_SAMPLES" value="${PTP1};${PTP2};${PTP3};${PTP4};${PTP5};${PTP6};"/>
+
+	<target name="init">
+		<path id="javac.classpath">
+			<pathelement path="conf" />
+			<fileset dir="../../../lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</path>
+	</target>
+
+	<target name="compile" depends="init" description="Compile all Java">
+		<javac srcdir="${PTP1}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PTP2}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PTP3}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PTP4}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PTP5}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PTP6}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PS1}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PS2}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PS3}"><classpath refid="javac.classpath"/></javac>
+		<javac srcdir="${PS4}"><classpath refid="javac.classpath"/></javac>		
+		<javac srcdir="${PS5}"><classpath refid="javac.classpath"/></javac>		
+		<javac srcdir="${PS6}"><classpath refid="javac.classpath"/></javac>	
+		<javac srcdir="${PS7}"><classpath refid="javac.classpath"/></javac>
+	</target>
+
+   <target name="chat1" depends="compile">
+   	<java classname="Chat" fork="true">
+		   <classpath>
+             <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+
+   	       <arg value="-u"/>
+   	       <arg value="Chatter1"/>
+   	</java>
+   </target>
+   
+  <target name="chat2" depends="compile">
+   	<java classname="Chat" fork="true">
+		   <classpath>
+          	 <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   	       <arg value="-u"/>
+   	       <arg value="Chatter2"/>
+   	</java>
+   </target>
+   
+  <target name="chat3" depends="compile">
+   	<java classname="Chat" fork="true">
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>   	       
+   		   <arg value="-u"/>
+   	       <arg value="Chatter3"/>
+   	</java>
+   </target>
+   
+  <target name="durable1" depends="compile">
+   	<java classname="DurableChat" fork="true">
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   		   <arg value="-u"/>
+   	       <arg value="DurableChatter_1"/>
+   	</java>
+   </target>
+   
+  <target name="durable2" depends="compile">
+   	<java classname="DurableChat" fork="true">
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>   		
+   	       <arg value="-u"/>
+   	       <arg value="DurableChatter_2"/>
+   	</java>
+   </target>
+
+  <target name="durable3" depends="compile">
+   	<java classname="DurableChat" fork="true">
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   	       <arg value="-u"/>
+   	       <arg value="DurableChatter_3"/>
+   	</java>
+   </target>
+   
+  <target name="wildcard" depends="compile">
+   	<java classname="HierarchicalChat" fork="true">
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   	       <arg value="-u"/>
+   	       <arg value="HierarchicalChatter"/>
+   	</java>
+   </target>
+   
+  <target name="tmonitor" depends="compile">
+   	<java classname="MessageMonitor" fork="true">
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>   	
+   	</java>
+   </target>
+   
+  <target name="filterchat1" depends="compile">
+   	<java classname="SelectorChat" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="SelectiveChatter_1"/>
+   	       <arg value="-s"/>
+   	       <arg value="SelectiveChatter_1"/>
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   	</java>
+   </target>
+   
+  <target name="filterchat2" depends="compile">
+   	<java classname="SelectorChat" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="SelectiveChatter_2"/>
+   	       <arg value="-s"/>
+   	       <arg value="2"/>
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   	</java>
+   </target>
+   
+  <target name="xnchat" depends="compile">
+   	<java classname="TransactedChat" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="TransactedChatter"/>
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath>
+   	</java>
+   </target>
+   
+  <target name="talk1" depends="compile">
+   	<java classname="Talk" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="Talker_1"/>
+   	       <arg value="-qs"/>
+   	       <arg value="Q1"/>
+   	       <arg value="-qr"/>
+   	       <arg value="Q2"/>
+		   <classpath>
+       	     <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath>
+   	</java>
+   </target>
+   
+  <target name="talk2" depends="compile">
+   	<java classname="Talk" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="Talker_2"/>
+   	       <arg value="-qs"/>
+   	       <arg value="Q2"/>
+   	       <arg value="-qr"/>
+   	       <arg value="Q1"/>
+		   <classpath>
+    	     <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath>   		
+   	</java>
+   </target>
+   
+  <target name="talk3" depends="compile">
+   	<java classname="Talk" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="Talker_3"/>
+   	       <arg value="-qs"/>
+   	       <arg value="Q3"/>
+   	       <arg value="-qr"/>
+   	       <arg value="Q1"/>
+		   <classpath>
+ 	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="qmonitor" depends="compile">
+   	<java classname="QueueMonitor" fork="true">
+		   <classpath>
+ 	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="filtertalk1" depends="compile">
+   	<java classname="SelectorTalk" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="SelectiveTalker_1"/>
+   	       <arg value="-s"/>
+   	       <arg value="1"/>
+   	       <arg value="-qs"/>
+   	       <arg value="Q1"/>
+   	       <arg value="-qr"/>
+   	       <arg value="Q1"/>
+		   <classpath>
+ 	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="filtertalk2" depends="compile">
+   	<java classname="SelectorTalk" fork="true">
+   	       <arg value="-u"/>
+   	       <arg value="SelectiveTalker_2"/>
+   	       <arg value="-s"/>
+   	       <arg value="2"/>
+   	       <arg value="-qs"/>
+   	       <arg value="Q1"/>
+   	       <arg value="-qr"/>
+   	       <arg value="Q1"/>
+		   <classpath>
+ 	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="xntalk" depends="compile">
+   	<java classname="TransactedTalk" fork="true" classpath="${javac.classpath}">
+   	       <arg value="-u"/>
+   	       <arg value="TransactedTalker"/>
+   	       <arg value="-qs"/>
+   	       <arg value="Q1"/>
+   	       <arg value="-qr"/>
+   	       <arg value="Q2"/>
+		   <classpath>
+	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="qreply" depends="compile">
+   	<java classname="Replier" fork="true" classpath="${javac.classpath}">
+   	       <arg value="-u"/>
+   	       <arg value="ReplyingTalker"/>
+		   <classpath>
+	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="qrequest" depends="compile">
+   	<java classname="Requestor" fork="true" classpath="${javac.classpath}">
+   	       <arg value="-u"/>
+   	       <arg value="RequestingTalker"/>
+		   <classpath>
+	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="treply" depends="compile">
+   	<java classname="TopicReplier" fork="true" classpath="${javac.classpath}">
+   	       <arg value="-u"/>
+   	       <arg value="ReplyingChatter"/>
+		   <classpath>
+	         <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="trequest" depends="compile">
+   	<java classname="TopicRequestor" fork="true" classpath="${javac.classpath}">
+   	       <arg value="-u"/>
+   	       <arg value="RequestingChatter"/>
+		   <classpath>
+	         <path refid="javac.classpath"/>
+             <pathelement path="${PUBSUB_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>
+   
+  <target name="roundtrip" depends="compile">
+   	<java classname="QueueRoundTrip" fork="true" classpath="${javac.classpath}">
+   	       <arg value="-u"/>
+   	       <arg value="QueueRoundTrip"/>
+   	       <arg value="-n"/>
+   	       <arg value="10000"/>
+		   <classpath>
+	         <path refid="javac.classpath"/>
+             <pathelement path="${PTP_SAMPLES}"/>
+           </classpath> 
+   	</java>
+   </target>	
+	
+</project>

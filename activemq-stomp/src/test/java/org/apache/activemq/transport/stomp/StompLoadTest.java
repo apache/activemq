@@ -55,7 +55,7 @@ public class StompLoadTest extends StompTestSupport {
     private AtomicInteger receiveCount;
 
     @Override
-	protected void addStompConnector() throws Exception {
+    protected void addStompConnector() throws Exception {
         TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
         port = connector.getConnectUri().getPort();
     }
@@ -101,7 +101,7 @@ public class StompLoadTest extends StompTestSupport {
         }
     }
 
-    @Test(timeout=20*60*1000*1000)
+    @Test(timeout=5*60*1000)
     public void testStompUnloadLoad() throws Exception {
 
         for (int i = 0; i < TASK_COUNT; ++i) {

@@ -60,4 +60,16 @@ public interface Connector extends Service {
     public boolean  isUpdateClusterClientsOnRemove();
 
     int connectionCount();
+
+    /**
+     * If enabled, older connections with the same clientID are stopped
+     * @return true/false if link stealing is enabled
+     */
+    boolean isAllowLinkStealing();
+    
+    /**
+     * @return The comma separated string of regex patterns to match 
+     * broker names for cluster client updates
+     */
+    String getUpdateClusterFilter();
 }

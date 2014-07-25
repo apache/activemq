@@ -89,7 +89,7 @@ public class XATransaction extends Transaction {
         } catch (Throwable t) {
             LOG.warn("Store COMMIT FAILED: ", t);
             rollback();
-            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back.");
+            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back");
             xae.errorCode = XAException.XA_RBOTHER;
             xae.initCause(t);
             throw xae;
@@ -104,7 +104,7 @@ public class XATransaction extends Transaction {
 
     private void checkForPreparedState(boolean onePhase) throws XAException {
         if (!onePhase) {
-            XAException xae = new XAException("Cannot do 2 phase commit if the transaction has not been prepared.");
+            XAException xae = new XAException("Cannot do 2 phase commit if the transaction has not been prepared");
             xae.errorCode = XAException.XAER_PROTO;
             throw xae;
         }
@@ -118,7 +118,7 @@ public class XATransaction extends Transaction {
         } catch (Throwable e) {
             LOG.warn("PRE-PREPARE FAILED: ", e);
             rollback();
-            XAException xae = new XAException("PRE-PREPARE FAILED: Transaction rolled back.");
+            XAException xae = new XAException("PRE-PREPARE FAILED: Transaction rolled back");
             xae.errorCode = XAException.XA_RBOTHER;
             xae.initCause(e);
             throw xae;

@@ -50,6 +50,8 @@ import org.apache.activemq.util.IdGenerator;
  */
 public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicConnection, XAQueueConnection, XAConnection {
 
+    private int xaAckMode;
+
     protected ActiveMQXAConnection(Transport transport, IdGenerator clientIdGenerator,
                                    IdGenerator connectionIdGenerator, JMSStatsImpl factoryStats) throws Exception {
         super(transport, clientIdGenerator, connectionIdGenerator, factoryStats);
@@ -70,6 +72,18 @@ public class ActiveMQXAConnection extends ActiveMQConnection implements XATopicC
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
-        return new ActiveMQXASession(this, getNextSessionId(), Session.SESSION_TRANSACTED, isDispatchAsync());
+        return new ActiveMQXASession(this, getNextSessionId(), getAckMode(), isDispatchAsync());
+    }
+
+    private int getAckMode() {
+        return xaAckMode > 0 ? xaAckMode : Session.SESSION_TRANSACTED;
+    }
+
+    public void setXaAckMode(int xaAckMode) {
+        this.xaAckMode = xaAckMode;
+    }
+
+    public int getXaAckMode() {
+        return xaAckMode;
     }
 }

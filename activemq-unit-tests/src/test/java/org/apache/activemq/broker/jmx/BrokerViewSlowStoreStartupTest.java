@@ -80,6 +80,7 @@ public class BrokerViewSlowStoreStartupTest {
                 try {
                     broker.start();
                 } catch(Exception e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -111,7 +112,7 @@ public class BrokerViewSlowStoreStartupTest {
             }
         }));
 
-        BrokerView view = broker.getAdminView();
+        final BrokerView view = broker.getAdminView();
 
         try {
             view.getBrokerName();
@@ -326,6 +327,12 @@ public class BrokerViewSlowStoreStartupTest {
         holdStoreStart.countDown();
         startThread.join();
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return view.getBroker() != null;
+            }
+        });
         assertNotNull(view.getBroker());
 
         try {

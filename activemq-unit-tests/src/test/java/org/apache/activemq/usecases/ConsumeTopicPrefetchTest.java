@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
+import java.util.LinkedList;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -64,11 +65,26 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
         }
 
         validateConsumerPrefetch(this.getSubject(), prefetchSize);
-        
+
+        LinkedList<TextMessage> consumed = new LinkedList<TextMessage>();
         // lets consume them in two fetch batches
-        for (int i = 0; i < messageCount; i++) {
-            consumeMessge(i);
+        int batchSize = messageCount/2;
+        for (int i = 0; i < batchSize; i++) {
+            consumed.add(consumeMessge(i));
         }
+
+        // delayed delivered ack a .5 prefetch
+        validateConsumerPrefetchGreaterOrEqual(this.getSubject(), (long) Math.min(messageCount, 1.5 * prefetchSize));
+
+        for (int i = 0; i < batchSize; i++) {
+            consumed.remove().acknowledge();
+        }
+
+        // second batch to consume the rest
+        for (int i = batchSize; i < messageCount; i++) {
+            consumeMessge(i).acknowledge();
+        }
+        validateConsumerPrefetch(this.getSubject(), 0);
     }
 
     protected Connection createConnection() throws Exception {
@@ -95,9 +111,17 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
         }
     }
 
-    protected void validateConsumerPrefetch(String destination, final long expectedCount) throws JMSException {
+    private void validateConsumerPrefetchGreaterOrEqual(String subject, long min) throws JMSException {
+        doValidateConsumerPrefetch(subject, min, true);
+    }
+
+    protected void validateConsumerPrefetch(String subject, final long expectedCount) throws JMSException {
+        doValidateConsumerPrefetch(subject, expectedCount, false);
+    }
+
+    protected void doValidateConsumerPrefetch(String destination, final long expectedCount, final boolean greaterOrEqual) throws JMSException {
         RegionBroker regionBroker = (RegionBroker) BrokerRegistry.getInstance().lookup("localhost").getRegionBroker();
-        for (org.apache.activemq.broker.region.Destination dest : regionBroker.getQueueRegion().getDestinationMap().values()) {
+        for (org.apache.activemq.broker.region.Destination dest : regionBroker.getTopicRegion().getDestinationMap().values()) {
             final org.apache.activemq.broker.region.Destination target = dest;
             if (dest.getName().equals(destination)) {
                 try {
@@ -105,7 +129,11 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
                         public boolean isSatisified() throws Exception {
                             DestinationStatistics stats = target.getDestinationStatistics();
                             LOG.info("inflight for : " + target.getName() + ": " +  stats.getInflight().getCount());
-                            return stats.getInflight().getCount() == expectedCount;
+                            if (greaterOrEqual) {
+                                return stats.getInflight().getCount() >= expectedCount;
+                            } else {
+                                return stats.getInflight().getCount() == expectedCount;
+                            }
                         }
                     });
                 } catch (Exception e) {
@@ -113,8 +141,13 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
                 }
                 DestinationStatistics stats = dest.getDestinationStatistics();
                 LOG.info("inflight for : " + dest.getName() + ": " + stats.getInflight().getCount());
-                assertEquals("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " matches", 
-                        expectedCount, stats.getInflight().getCount());      
+                if (greaterOrEqual) {
+                    assertTrue("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " > " + stats.getInflight().getCount(),
+                                             stats.getInflight().getCount() >= expectedCount);
+                } else {
+                    assertEquals("inflight for: " + dest.getName() + ": " + stats.getInflight().getCount() + " matches",
+                        expectedCount, stats.getInflight().getCount());
+                }
             }
         }
     }

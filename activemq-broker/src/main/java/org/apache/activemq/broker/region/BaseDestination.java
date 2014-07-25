@@ -18,7 +18,9 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.List;
+
 import javax.jms.ResourceAllocationException;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
@@ -92,7 +94,7 @@ public abstract class BaseDestination implements Destination {
     protected int storeUsageHighWaterMark = 100;
     private SlowConsumerStrategy slowConsumerStrategy;
     private boolean prioritizedMessages;
-    private long inactiveTimoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
+    private long inactiveTimeoutBeforeGC = DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean gcIfInactive;
     private boolean gcWithNetworkConsumers;
     private long lastActiveTime=0l;
@@ -104,6 +106,7 @@ public abstract class BaseDestination implements Destination {
      * percentage of in-flight messages above which optimize message store is disabled
      */
     private int optimizeMessageStoreInFlightLimit = 10;
+    private boolean persistJMSRedelivered;
 
     /**
      * @param brokerService
@@ -143,6 +146,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @return the producerFlowControl
      */
+    @Override
     public boolean isProducerFlowControl() {
         return producerFlowControl;
     }
@@ -150,14 +154,17 @@ public abstract class BaseDestination implements Destination {
     /**
      * @param producerFlowControl the producerFlowControl to set
      */
+    @Override
     public void setProducerFlowControl(boolean producerFlowControl) {
         this.producerFlowControl = producerFlowControl;
     }
 
+    @Override
     public boolean isAlwaysRetroactive() {
         return alwaysRetroactive;
     }
 
+    @Override
     public void setAlwaysRetroactive(boolean alwaysRetroactive) {
         this.alwaysRetroactive = alwaysRetroactive;
     }
@@ -170,6 +177,7 @@ public abstract class BaseDestination implements Destination {
      * @param blockedProducerWarningInterval the interval at which warning about
      *            blocked producers will be triggered.
      */
+    @Override
     public void setBlockedProducerWarningInterval(long blockedProducerWarningInterval) {
         this.blockedProducerWarningInterval = blockedProducerWarningInterval;
     }
@@ -179,6 +187,7 @@ public abstract class BaseDestination implements Destination {
      * @return the interval at which warning about blocked producers will be
      *         triggered.
      */
+    @Override
     public long getBlockedProducerWarningInterval() {
         return blockedProducerWarningInterval;
     }
@@ -186,6 +195,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @return the maxProducersToAudit
      */
+    @Override
     public int getMaxProducersToAudit() {
         return maxProducersToAudit;
     }
@@ -193,6 +203,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @param maxProducersToAudit the maxProducersToAudit to set
      */
+    @Override
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         this.maxProducersToAudit = maxProducersToAudit;
     }
@@ -200,6 +211,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @return the maxAuditDepth
      */
+    @Override
     public int getMaxAuditDepth() {
         return maxAuditDepth;
     }
@@ -207,6 +219,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @param maxAuditDepth the maxAuditDepth to set
      */
+    @Override
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
     }
@@ -214,6 +227,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @return the enableAudit
      */
+    @Override
     public boolean isEnableAudit() {
         return enableAudit;
     }
@@ -221,53 +235,65 @@ public abstract class BaseDestination implements Destination {
     /**
      * @param enableAudit the enableAudit to set
      */
+    @Override
     public void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
     }
 
+    @Override
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().increment();
         this.lastActiveTime=0l;
     }
 
+    @Override
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().decrement();
     }
 
+    @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception{
         destinationStatistics.getConsumers().increment();
         this.lastActiveTime=0l;
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception{
         destinationStatistics.getConsumers().decrement();
     }
 
 
+    @Override
     public final MemoryUsage getMemoryUsage() {
         return memoryUsage;
     }
 
-	public void setMemoryUsage(MemoryUsage memoryUsage) {
-    	this.memoryUsage = memoryUsage;
+    @Override
+    public void setMemoryUsage(MemoryUsage memoryUsage) {
+        this.memoryUsage = memoryUsage;
     }
 
+    @Override
     public DestinationStatistics getDestinationStatistics() {
         return destinationStatistics;
     }
 
+    @Override
     public ActiveMQDestination getActiveMQDestination() {
         return destination;
     }
 
+    @Override
     public final String getName() {
         return getActiveMQDestination().getPhysicalName();
     }
 
+    @Override
     public final MessageStore getMessageStore() {
         return store;
     }
 
+    @Override
     public boolean isActive() {
         boolean isActive = destinationStatistics.getConsumers().getCount() != 0 ||
                            destinationStatistics.getProducers().getCount() != 0;
@@ -277,18 +303,22 @@ public abstract class BaseDestination implements Destination {
         return isActive;
     }
 
+    @Override
     public int getMaxPageSize() {
         return maxPageSize;
     }
 
+    @Override
     public void setMaxPageSize(int maxPageSize) {
         this.maxPageSize = maxPageSize;
     }
 
+    @Override
     public int getMaxBrowsePageSize() {
-        return this.maxBrowsePageSize;
+        return this.maxBrowsePageSize > 0 ? this.maxBrowsePageSize : getMaxPageSize();
     }
 
+    @Override
     public void setMaxBrowsePageSize(int maxPageSize) {
         this.maxBrowsePageSize = maxPageSize;
     }
@@ -309,26 +339,32 @@ public abstract class BaseDestination implements Destination {
         return expireMessagesPeriod;
     }
 
+    @Override
     public boolean isUseCache() {
         return useCache;
     }
 
+    @Override
     public void setUseCache(boolean useCache) {
         this.useCache = useCache;
     }
 
+    @Override
     public int getMinimumMessageSize() {
         return minimumMessageSize;
     }
 
+    @Override
     public void setMinimumMessageSize(int minimumMessageSize) {
         this.minimumMessageSize = minimumMessageSize;
     }
 
+    @Override
     public boolean isLazyDispatch() {
         return lazyDispatch;
     }
 
+    @Override
     public void setLazyDispatch(boolean lazyDispatch) {
         this.lazyDispatch = lazyDispatch;
     }
@@ -433,6 +469,7 @@ public abstract class BaseDestination implements Destination {
     /**
      * @return the dead letter strategy
      */
+    @Override
     public DeadLetterStrategy getDeadLetterStrategy() {
         return deadLetterStrategy;
     }
@@ -446,10 +483,12 @@ public abstract class BaseDestination implements Destination {
         this.deadLetterStrategy = deadLetterStrategy;
     }
 
+    @Override
     public int getCursorMemoryHighWaterMark() {
         return this.cursorMemoryHighWaterMark;
     }
 
+    @Override
     public void setCursorMemoryHighWaterMark(int cursorMemoryHighWaterMark) {
         this.cursorMemoryHighWaterMark = cursorMemoryHighWaterMark;
     }
@@ -460,6 +499,7 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param messageReference
      */
+    @Override
     public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
         if (advisoryForConsumed) {
             broker.messageConsumed(context, messageReference);
@@ -472,6 +512,7 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param messageReference
      */
+    @Override
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
         if (advisoryForDelivery) {
             broker.messageDelivered(context, messageReference);
@@ -485,6 +526,7 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param messageReference
      */
+    @Override
     public void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference) {
         if (advisoryForDiscardingMessages) {
             broker.messageDiscarded(context, sub, messageReference);
@@ -497,6 +539,7 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param subs
      */
+    @Override
     public void slowConsumer(ConnectionContext context, Subscription subs) {
         if (advisoryForSlowConsumers) {
             broker.slowConsumer(context, this, subs);
@@ -512,6 +555,7 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param producerInfo
      */
+    @Override
     public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
         if (advisoryForFastProducers) {
             broker.fastProducer(context, producerInfo, getActiveMQDestination());
@@ -524,12 +568,14 @@ public abstract class BaseDestination implements Destination {
      * @param context
      * @param usage
      */
+    @Override
     public void isFull(ConnectionContext context, Usage<?> usage) {
         if (advisoryWhenFull) {
             broker.isFull(context, this, usage);
         }
     }
 
+    @Override
     public void dispose(ConnectionContext context) throws IOException {
         if (this.store != null) {
             this.store.removeAllMessages(context);
@@ -540,6 +586,7 @@ public abstract class BaseDestination implements Destination {
         this.disposed = true;
     }
 
+    @Override
     public boolean isDisposed() {
         return this.disposed;
     }
@@ -595,6 +642,7 @@ public abstract class BaseDestination implements Destination {
         }
     }
 
+    @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
     }
 
@@ -612,12 +660,12 @@ public abstract class BaseDestination implements Destination {
 
     protected final void waitForSpace(ConnectionContext context, ProducerBrokerExchange producerBrokerExchange, Usage<?> usage, int highWaterMark, String warning) throws IOException, InterruptedException, ResourceAllocationException {
         if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-            getLog().debug("sendFailIfNoSpace, forcing exception on send, usage:  " + usage + ": " + warning);
+            getLog().debug("sendFailIfNoSpace, forcing exception on send, usage: {}: {}", usage, warning);
             throw new ResourceAllocationException(warning);
         }
         if (!context.isNetworkConnection() && systemUsage.getSendFailIfNoSpaceAfterTimeout() != 0) {
             if (!usage.waitForSpace(systemUsage.getSendFailIfNoSpaceAfterTimeout(), highWaterMark)) {
-                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: " + usage + ": " + warning);
+                getLog().debug("sendFailIfNoSpaceAfterTimeout expired, forcing exception on send, usage: {}: {}", usage, warning);
                 throw new ResourceAllocationException(warning);
             }
         } else {
@@ -632,7 +680,7 @@ public abstract class BaseDestination implements Destination {
 
                 long now = System.currentTimeMillis();
                 if (now >= nextWarn) {
-                    getLog().info("" + usage + ": " + warning + " (blocking for: " + (now - start) / 1000 + "s)");
+                    getLog().info("{}: {} (blocking for: {}s)", new Object[]{ usage, warning, new Long(((now - start) / 1000))});
                     nextWarn = now + blockedProducerWarningInterval;
                 }
             }
@@ -650,11 +698,13 @@ public abstract class BaseDestination implements Destination {
         this.slowConsumerStrategy = slowConsumerStrategy;
     }
 
+    @Override
     public SlowConsumerStrategy getSlowConsumerStrategy() {
         return this.slowConsumerStrategy;
     }
 
 
+    @Override
     public boolean isPrioritizedMessages() {
         return this.prioritizedMessages;
     }
@@ -667,17 +717,18 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @return the inactiveTimoutBeforeGC
+     * @return the inactiveTimeoutBeforeGC
      */
-    public long getInactiveTimoutBeforeGC() {
-        return this.inactiveTimoutBeforeGC;
+    @Override
+    public long getInactiveTimeoutBeforeGC() {
+        return this.inactiveTimeoutBeforeGC;
     }
 
     /**
-     * @param inactiveTimoutBeforeGC the inactiveTimoutBeforeGC to set
+     * @param inactiveTimeoutBeforeGC the inactiveTimeoutBeforeGC to set
      */
-    public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
-        this.inactiveTimoutBeforeGC = inactiveTimoutBeforeGC;
+    public void setInactiveTimeoutBeforeGC(long inactiveTimeoutBeforeGC) {
+        this.inactiveTimeoutBeforeGC = inactiveTimeoutBeforeGC;
     }
 
     /**
@@ -706,17 +757,19 @@ public abstract class BaseDestination implements Destination {
         return gcWithNetworkConsumers;
     }
 
+    @Override
     public void markForGC(long timeStamp) {
         if (isGcIfInactive() && this.lastActiveTime == 0 && isActive() == false
-                && destinationStatistics.messages.getCount() == 0 && getInactiveTimoutBeforeGC() > 0l) {
+                && destinationStatistics.messages.getCount() == 0 && getInactiveTimeoutBeforeGC() > 0l) {
             this.lastActiveTime = timeStamp;
         }
     }
 
+    @Override
     public boolean canGC() {
         boolean result = false;
         if (isGcIfInactive()&& this.lastActiveTime != 0l) {
-            if ((System.currentTimeMillis() - this.lastActiveTime) >= getInactiveTimoutBeforeGC()) {
+            if ((System.currentTimeMillis() - this.lastActiveTime) >= getInactiveTimeoutBeforeGC()) {
                 result = true;
             }
         }
@@ -731,10 +784,12 @@ public abstract class BaseDestination implements Destination {
         return this.reduceMemoryFootprint;
     }
 
+    @Override
     public boolean isDoOptimzeMessageStorage() {
         return doOptimzeMessageStorage;
     }
 
+    @Override
     public void setDoOptimzeMessageStorage(boolean doOptimzeMessageStorage) {
         this.doOptimzeMessageStorage = doOptimzeMessageStorage;
     }
@@ -748,6 +803,7 @@ public abstract class BaseDestination implements Destination {
     }
 
 
+    @Override
     public abstract List<Subscription> getConsumers();
 
     protected boolean hasRegularConsumers(List<Subscription> consumers) {
@@ -761,7 +817,7 @@ public abstract class BaseDestination implements Destination {
         return hasRegularConsumers;
     }
 
-    protected ConnectionContext createConnectionContext() {
+    public ConnectionContext createConnectionContext() {
         ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
         answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
@@ -779,15 +835,40 @@ public abstract class BaseDestination implements Destination {
             ack.copy(a);
             ack = a;
             // Convert to non-ranged.
-            ack.setFirstMessageId(node.getMessageId());
-            ack.setLastMessageId(node.getMessageId());
             ack.setMessageCount(1);
         }
+        // always use node messageId so we can access entry/data Location
+        ack.setFirstMessageId(node.getMessageId());
+        ack.setLastMessageId(node.getMessageId());
         return ack;
     }
 
+    @Override
     public boolean isDLQ() {
         return getDeadLetterStrategy().isDLQ(this.getActiveMQDestination());
     }
 
+    @Override
+    public void duplicateFromStore(Message message, Subscription durableSub) {
+        ConnectionContext connectionContext = createConnectionContext();
+        getLog().warn("duplicate message from store {}, redirecting for dlq processing", message.getMessageId());
+        Throwable cause = new Throwable("duplicate from store for " + destination);
+        message.setRegionDestination(this);
+        broker.getRoot().sendToDeadLetterQueue(connectionContext, message, null, cause);
+        MessageAck messageAck = new MessageAck(message, MessageAck.POSION_ACK_TYPE, 1);
+        messageAck.setPoisonCause(cause);
+        try {
+            acknowledge(connectionContext, durableSub, messageAck, message);
+        } catch (IOException e) {
+            getLog().error("Failed to acknowledge duplicate message {} from {} with {}", message.getMessageId(), destination, messageAck);
+        }
+    }
+
+    public void setPersistJMSRedelivered(boolean persistJMSRedelivered) {
+        this.persistJMSRedelivered = persistJMSRedelivered;
+    }
+
+    public boolean isPersistJMSRedelivered() {
+        return persistJMSRedelivered;
+    }
 }

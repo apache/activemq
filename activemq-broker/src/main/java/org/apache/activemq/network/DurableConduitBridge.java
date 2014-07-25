@@ -33,7 +33,7 @@ public class DurableConduitBridge extends ConduitBridge {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConduitBridge.class);
 
     public String toString() {
-        return "DurableConduitBridge";
+        return "DurableConduitBridge:" + configuration.getBrokerName() + "->" + getRemoteBrokerName();
     }
     /**
      * Constructor
@@ -59,17 +59,16 @@ public class DurableConduitBridge extends ConduitBridge {
             for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest) && !doesConsumerExist(dest)) {
                     DemandSubscription sub = createDemandSubscription(dest);
+                    sub.setStaticallyIncluded(true);
                     if (dest.isTopic()) {
                         sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
                     }
                     try {
                         addSubscription(sub);
                     } catch (IOException e) {
-                        LOG.error("Failed to add static destination " + dest, e);
+                        LOG.error("Failed to add static destination {}", dest, e);
                     }
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Forwarding messages for durable destination: " + dest);
-                    }
+                    LOG.trace("Forwarding messages for durable destination: {}", dest);
                 }
             }
         }

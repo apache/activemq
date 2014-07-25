@@ -63,7 +63,7 @@ public class AMQ2584Test extends org.apache.activemq.TestSupport {
 
     private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name="{0}")
     public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
         TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
         TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};

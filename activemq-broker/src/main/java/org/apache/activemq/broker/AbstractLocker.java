@@ -27,6 +27,7 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
     protected String name;
     protected boolean failIfLocked = false;
     protected long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
+    protected LockableServiceSupport lockable;
 
     @Override
     public boolean keepAlive() throws IOException {
@@ -38,6 +39,10 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
         this.lockAcquireSleepInterval = lockAcquireSleepInterval;
     }
 
+    public long getLockAcquireSleepInterval() {
+        return lockAcquireSleepInterval;
+    }
+
     @Override
     public void setName(String name) {
         this.name = name;
@@ -46,5 +51,10 @@ public abstract class AbstractLocker extends ServiceSupport implements Locker {
     @Override
     public void setFailIfLocked(boolean failIfLocked) {
         this.failIfLocked = failIfLocked;
+    }
+
+    @Override
+    public void setLockable(LockableServiceSupport lockableServiceSupport) {
+        this.lockable = lockableServiceSupport;
     }
 }

@@ -28,7 +28,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.broker.region.TopicSubscription;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
+import org.apache.activemq.broker.region.group.GroupFactoryFinder;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.network.NetworkBridgeFilterFactory;
@@ -53,6 +53,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
     private long memoryLimit;
+    private String messageGroupMapFactoryType = "cached";
     private MessageGroupMapFactory messageGroupMapFactory;
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
@@ -94,7 +95,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean allConsumersExclusiveByDefault;
     private boolean gcInactiveDestinations;
     private boolean gcWithNetworkConsumers;
-    private long inactiveTimoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
+    private long inactiveTimeoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean reduceMemoryFootprint;
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
     private boolean doOptimzeMessageStorage = true;
@@ -102,6 +103,7 @@ public class PolicyEntry extends DestinationMapEntry {
      * percentage of in-flight messages above which optimize message store is disabled
      */
     private int optimizeMessageStoreInFlightLimit = 10;
+    private boolean persistJMSRedelivered = false;
 
 
     public void configure(Broker broker,Queue queue) {
@@ -126,6 +128,22 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
         queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
         queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+        queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
+    }
+
+    public void update(Queue queue) {
+        baseUpdate(queue);
+        if (memoryLimit > 0) {
+            queue.getMemoryUsage().setLimit(memoryLimit);
+        }
+        queue.setUseConsumerPriority(isUseConsumerPriority());
+        queue.setStrictOrderDispatch(isStrictOrderDispatch());
+        queue.setOptimizedDispatch(isOptimizedDispatch());
+        queue.setLazyDispatch(isLazyDispatch());
+        queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
+        queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
+        queue.setAllConsumersExclusiveByDefault(isAllConsumersExclusiveByDefault());
+        queue.setPersistJMSRedelivered(isPersistJMSRedelivered());
     }
 
     public void configure(Broker broker,Topic topic) {
@@ -145,28 +163,51 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setLazyDispatch(isLazyDispatch());
     }
 
-    public void baseConfiguration(Broker broker, BaseDestination destination) {
+    public void update(Topic topic) {
+        baseUpdate(topic);
+        if (memoryLimit > 0) {
+            topic.getMemoryUsage().setLimit(memoryLimit);
+        }
+        topic.setLazyDispatch(isLazyDispatch());
+    }
+
+    // attributes that can change on the fly
+    public void baseUpdate(BaseDestination destination) {
         destination.setProducerFlowControl(isProducerFlowControl());
         destination.setAlwaysRetroactive(isAlwaysRetroactive());
         destination.setBlockedProducerWarningInterval(getBlockedProducerWarningInterval());
-        destination.setEnableAudit(isEnableAudit());
-        destination.setMaxAuditDepth(getMaxQueueAuditDepth());
-        destination.setMaxProducersToAudit(getMaxProducersToAudit());
+
         destination.setMaxPageSize(getMaxPageSize());
         destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
-        destination.setUseCache(isUseCache());
+
         destination.setMinimumMessageSize((int) getMinimumMessageSize());
+        destination.setMaxExpirePageSize(getMaxExpirePageSize());
+        destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
+        destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
+
+        destination.setGcIfInactive(isGcInactiveDestinations());
+        destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
+        destination.setInactiveTimeoutBeforeGC(getInactiveTimeoutBeforeGC());
+        destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
+        destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
+        destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
+
         destination.setAdvisoryForConsumed(isAdvisoryForConsumed());
         destination.setAdvisoryForDelivery(isAdvisoryForDelivery());
         destination.setAdvisoryForDiscardingMessages(isAdvisoryForDiscardingMessages());
         destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
         destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
-        destination.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
+        destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
+    }
+
+    public void baseConfiguration(Broker broker, BaseDestination destination) {
+        baseUpdate(destination);
+        destination.setEnableAudit(isEnableAudit());
+        destination.setMaxAuditDepth(getMaxQueueAuditDepth());
+        destination.setMaxProducersToAudit(getMaxProducersToAudit());
+        destination.setUseCache(isUseCache());
         destination.setExpireMessagesPeriod(getExpireMessagesPeriod());
-        destination.setMaxExpirePageSize(getMaxExpirePageSize());
-        destination.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
-        destination.setStoreUsageHighWaterMark(getStoreUsageHighWaterMark());
         SlowConsumerStrategy scs = getSlowConsumerStrategy();
         if (scs != null) {
             scs.setBrokerService(broker);
@@ -174,12 +215,6 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         destination.setSlowConsumerStrategy(scs);
         destination.setPrioritizedMessages(isPrioritizedMessages());
-        destination.setGcIfInactive(isGcInactiveDestinations());
-        destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
-        destination.setInactiveTimoutBeforeGC(getInactiveTimoutBeforeGC());
-        destination.setReduceMemoryFootprint(isReduceMemoryFootprint());
-        destination.setDoOptimzeMessageStorage(isDoOptimzeMessageStorage());
-        destination.setOptimizeMessageStoreInFlightLimit(getOptimizeMessageStoreInFlightLimit());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -193,9 +228,7 @@ public class PolicyEntry extends DestinationMapEntry {
                 }
             }
             if (value >= 0) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Setting the maximumPendingMessages size to: " + value + " for consumer: " + subscription.getInfo().getConsumerId());
-                }
+                LOG.debug("Setting the maximumPendingMessages size to: {} for consumer: {}", value, subscription.getInfo().getConsumerId());
                 subscription.setMaximumPendingMessages(value);
             }
         }
@@ -245,6 +278,9 @@ public class PolicyEntry extends DestinationMapEntry {
         // we can remove this and perform a more efficient dispatch.
         sub.setMaxProducersToAudit(Integer.MAX_VALUE);
         sub.setMaxAuditDepth(Short.MAX_VALUE);
+
+        // part solution - dispatching to browsers needs to be restricted
+        sub.setMaxMessages(getMaxBrowsePageSize());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueSubscription sub) {
@@ -365,7 +401,11 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public MessageGroupMapFactory getMessageGroupMapFactory() {
         if (messageGroupMapFactory == null) {
-            messageGroupMapFactory = new MessageGroupHashBucketFactory();
+            try {
+            messageGroupMapFactory = GroupFactoryFinder.createMessageGroupMapFactory(getMessageGroupMapFactoryType());
+            }catch(Exception e){
+                LOG.error("Failed to create message group Factory ",e);
+            }
         }
         return messageGroupMapFactory;
     }
@@ -379,6 +419,16 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setMessageGroupMapFactory(MessageGroupMapFactory messageGroupMapFactory) {
         this.messageGroupMapFactory = messageGroupMapFactory;
     }
+
+
+    public String getMessageGroupMapFactoryType() {
+        return messageGroupMapFactoryType;
+    }
+
+    public void setMessageGroupMapFactoryType(String messageGroupMapFactoryType) {
+        this.messageGroupMapFactoryType = messageGroupMapFactoryType;
+    }
+
 
     /**
      * @return the pendingDurableSubscriberPolicy
@@ -825,12 +875,44 @@ public class PolicyEntry extends DestinationMapEntry {
         this.gcInactiveDestinations = gcInactiveDestinations;
     }
 
+    /**
+     * @return the amount of time spent inactive before GC of the destination kicks in.
+     *
+     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     */
+    @Deprecated
     public long getInactiveTimoutBeforeGC() {
-        return this.inactiveTimoutBeforeGC;
+        return getInactiveTimeoutBeforeGC();
     }
 
+    /**
+     * Sets the amount of time a destination is inactive before it is marked for GC
+     *
+     * @param inactiveTimoutBeforeGC
+     *        time in milliseconds to configure as the inactive timeout.
+     *
+     * @deprecated use getInactiveTimeoutBeforeGC instead.
+     */
+    @Deprecated
     public void setInactiveTimoutBeforeGC(long inactiveTimoutBeforeGC) {
-        this.inactiveTimoutBeforeGC = inactiveTimoutBeforeGC;
+        setInactiveTimeoutBeforeGC(inactiveTimoutBeforeGC);
+    }
+
+    /**
+     * @return the amount of time spent inactive before GC of the destination kicks in.
+     */
+    public long getInactiveTimeoutBeforeGC() {
+        return this.inactiveTimeoutBeforeGC;
+    }
+
+    /**
+     * Sets the amount of time a destination is inactive before it is marked for GC
+     *
+     * @param inactiveTimoutBeforeGC
+     *        time in milliseconds to configure as the inactive timeout.
+     */
+    public void setInactiveTimeoutBeforeGC(long inactiveTimeoutBeforeGC) {
+        this.inactiveTimeoutBeforeGC = inactiveTimeoutBeforeGC;
     }
 
     public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {
@@ -871,5 +953,13 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setOptimizeMessageStoreInFlightLimit(int optimizeMessageStoreInFlightLimit) {
         this.optimizeMessageStoreInFlightLimit = optimizeMessageStoreInFlightLimit;
+    }
+
+    public void setPersistJMSRedelivered(boolean val) {
+        this.persistJMSRedelivered = val;
+    }
+
+    public boolean isPersistJMSRedelivered() {
+        return persistJMSRedelivered;
     }
 }

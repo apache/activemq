@@ -39,7 +39,6 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
-//import org.apache.activemq.pool.PooledConnectionFactory;
 
 public class AMQ2754Test extends TestCase {
 

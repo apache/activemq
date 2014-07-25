@@ -17,16 +17,19 @@
 package org.apache.activemq.security;
 
 /**
- * A helper object used to configure simple authentiaction plugin
- * 
+ * A helper object used to configure simple authentication plugin
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class AuthenticationUser {
 
     String username;
     String password;
     String groups;
+
+    public AuthenticationUser() {
+    }
 
     public AuthenticationUser(String username, String password, String groups) {
         this.username = username;
@@ -57,5 +60,4 @@ public class AuthenticationUser {
     public void setUsername(String username) {
         this.username = username;
     }
-
 }

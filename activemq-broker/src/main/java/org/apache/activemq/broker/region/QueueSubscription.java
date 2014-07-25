@@ -56,9 +56,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         if (n.isExpired()) {
             // sync with message expiry processing
             if (!broker.isExpired(n)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ignoring ack {}, for already expired message: {}", ack, n);
-                }
+                LOG.debug("ignoring ack {}, for already expired message: {}", ack, n);
                 return;
             }
         }
@@ -74,23 +72,6 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         }
         result = result && (isBrowser() || node.lock(this));
         return result;
-    }
-
-    /**
-     * Assigns the message group to this subscription and set the flag on the
-     * message that it is the first message to be dispatched.
-     */
-    protected void assignGroupToMe(MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
-        messageGroupOwners.put(groupId, info.getConsumerId());
-        Message message = n.getMessage();
-        if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage)message;
-            try {
-                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
-            } catch (JMSException e) {
-                LOG.warn("Failed to set boolean header: " + e, e);
-            }
-        }
     }
 
     @Override

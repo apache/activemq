@@ -1,8 +1,25 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.leveldb.replicated
 
 import org.apache.activemq.leveldb.replicated.groups._
-import org.codehaus.jackson.annotate.JsonProperty
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.activemq.leveldb.util.{Log, JsonCodec}
+import java.io.IOException
 
 
 class LevelDBNodeState extends NodeState {
@@ -18,6 +35,9 @@ class LevelDBNodeState extends NodeState {
 
   @JsonProperty
   var position: Long = -1
+
+  @JsonProperty
+  var weight: Int = 0
 
   @JsonProperty
   var elected: String = _
@@ -67,7 +87,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
     var next = create_state
     if (next != last_state) {
       last_state = next
-      update(next)
+      join(next)
     }
   }
 
@@ -76,6 +96,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
     rc.id = store.brokerName
     rc.elected = elected
     rc.position = position
+    rc.weight = store.weight
     rc.address = address
     rc.container = store.container
     rc.address = address
@@ -85,9 +106,14 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
   object change_listener extends ChangeListener {
 
     def connected = changed
-    def disconnected = changed
+    def disconnected = {
+      changed
+    }
 
+    var stopped = false;
     def changed:Unit = elector.synchronized {
+      debug("ZooKeeper group changed: %s", members)
+
 //      info(eid+" cluster state changed: "+members)
       if (isMaster) {
         // We are the master elector, we will choose which node will startup the MasterLevelDBStore
@@ -96,6 +122,10 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
             info("Not enough cluster members connected to elect a new master.")
           case Some(members) =>
 
+            if (members.size > store.replicas) {
+              warn("Too many cluster members are connected.  Expected at most "+store.replicas+
+                      " members but there are "+members.size+" connected.")
+            }
             if (members.size < store.clusterSizeQuorum) {
               info("Not enough cluster members connected to elect a master.")
               elected = null
@@ -114,7 +144,10 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
               if (elected == null) {
                 // Find the member with the most updates.
                 val sortedMembers = members.filter(_._2.position >= 0).sortWith {
-                  (a, b) => a._2.position > b._2.position
+                  (a, b) => {
+                    a._2.position > b._2.position ||
+                      (a._2.position == b._2.position &&  a._2.weight > b._2.weight )
+                  }
                 }
                 if (sortedMembers.size != members.size) {
                   info("Not enough cluster members have reported their update positions yet.")
@@ -131,7 +164,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
         elected = null
       }
 
-      val master_elected = master.map(_.elected).getOrElse(null) 
+      val master_elected = if(eid==null) null else master.map(_.elected).getOrElse(null)
 
       // If no master is currently elected, we need to report our current store position.
       // Since that will be used to select the master.
@@ -147,11 +180,12 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       }
 
       // Do we need to stop the running master?
-      if (master_elected != eid && address != null && !updating_store) {
+      if ((eid==null || master_elected != eid) && address!=null && !updating_store) {
         info("Demoted to slave")
         updating_store = true
         store.stop_master {
           elector.synchronized {
+            updating_store = false
             info("Master stopped")
             address = null
             changed
@@ -160,7 +194,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       }
 
       // Have we been promoted to being the master?
-      if (master_elected == eid && address==null && !updating_store ) {
+      if (eid!=null && master_elected == eid && address==null && !updating_store ) {
         info("Promoted to master")
         updating_store = true
         store.start_master { port =>
@@ -174,7 +208,7 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
       }
 
       // Can we become a slave?
-      if (master_elected != eid && address == null) {
+      if ( (eid==null || master_elected != eid) && address == null) {
         // Did the master address change?
         if (connect_target != connected_address) {
 
@@ -205,8 +239,9 @@ class MasterElector(store: ElectingLevelDBStore) extends ClusteredSingleton[Leve
           }
         }
       }
-
-      update
+      if( group.zk.isConnected ) {
+        update
+      }
     }
   }
 }

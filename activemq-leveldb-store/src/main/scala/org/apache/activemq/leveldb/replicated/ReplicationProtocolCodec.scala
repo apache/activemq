@@ -25,8 +25,10 @@ import java.io.{OutputStream, File}
 import org.fusesource.hawtdispatch.transport.ProtocolCodec.BufferState
 import java.util
 
-case class ReplicationFrame(action:AsciiBuffer, body:Buffer)
-case class FileTransferFrame(file:File, offset:Long, length:Long)
+class ReplicationFrame(val action:AsciiBuffer, _body:Buffer) {
+  def body = _body
+}
+class FileTransferFrame(val file:File, val offset:Long, var length:Long)
 
 class ReplicationProtocolCodec extends AbstractProtocolCodec {
   import ReplicationSupport._
@@ -86,7 +88,7 @@ class ReplicationProtocolCodec extends AbstractProtocolCodec {
       if( data!=null ) {
         data.moveTail(-1);
         nextDecodeAction = readHeader
-        ReplicationFrame(action, data)
+        new ReplicationFrame(action, data)
       } else {
         null
       }

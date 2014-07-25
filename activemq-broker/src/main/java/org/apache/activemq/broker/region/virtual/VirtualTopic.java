@@ -120,4 +120,9 @@ public class VirtualTopic implements VirtualDestination {
     public void setLocal(boolean local) {
         this.local = local;
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder("VirtualTopic:").append(prefix).append(',').append(name).append(',').append(postfix).append(',').append(selectorAware).append(',').append(local).toString();
+    }
 }

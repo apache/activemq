@@ -46,6 +46,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
 
     private static final Logger LOG = LoggerFactory.getLogger(JournalPersistenceAdapterFactory.class);
 
+    private long checkpointInterval = 1000 * 60 * 5;
     private int journalLogFileSize = 1024 * 1024 * 20;
     private int journalLogFiles = 2;
     private TaskRunnerFactory taskRunnerFactory;
@@ -66,6 +67,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
         }
         JournalPersistenceAdapter result =  new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         result.setDirectory(getDataDirectoryFile());
+        result.setCheckpointInterval(getCheckpointInterval());
         return result;
 
     }
@@ -104,6 +106,14 @@ public class JournalPersistenceAdapterFactory extends DataSourceServiceSupport i
 
     public boolean isUseJournal() {
         return useJournal;
+    }
+
+    public long getCheckpointInterval() {
+        return checkpointInterval;
+    }
+
+    public void setCheckpointInterval(long checkpointInterval) {
+        this.checkpointInterval = checkpointInterval;
     }
 
     /**

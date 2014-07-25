@@ -571,8 +571,8 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
 
 
     public void testDuplicateQueueSubs() throws Exception {
-    	
-    	createBroker("BrokerD");
+
+        configureBroker(createBroker("BrokerD"));
         
         bridgeAllBrokers("default", 3, false);
         startAllBrokers();
@@ -596,7 +596,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             if (!brokerName.equals(broker.getBrokerName())) {
-                verifyConsumerCount(broker, 3, dest);
+                verifyConsumerCount(broker, 5, dest);
                 verifyConsumePriority(broker, ConsumerInfo.NORMAL_PRIORITY, dest);
             }
         }
@@ -605,7 +605,14 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         
         // wait for advisories
         Thread.sleep(2000);
-        
+
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
+            if (!brokerName.equals(broker.getBrokerName())) {
+                logConsumerCount(broker, 0, dest);
+            }
+        }
+
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = i.next().broker;
             verifyConsumerCount(broker, 0, dest);
@@ -620,7 +627,19 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
             }
         });
         Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next();
+        LOG.info("Verify: consumer count on " + broker.getBrokerName() + " matches:" + count + ", val:" + internalQueue.getConsumers().size());
         assertEquals("consumer count on " + broker.getBrokerName() + " matches for q: " + internalQueue, count, internalQueue.getConsumers().size());      
+    }
+
+    private void logConsumerCount(BrokerService broker, int count, final Destination dest) throws Exception {
+        final RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+        waitFor(new Condition() {
+            public boolean isSatisified() throws Exception {
+                return !regionBroker.getDestinations(ActiveMQDestination.transform(dest)).isEmpty();
+            }
+        });
+        Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next();
+        LOG.info("Verify: consumer count on " + broker.getBrokerName() + " matches:" + count + ", val:" + internalQueue.getConsumers().size());
     }
 
     private void verifyConsumePriority(BrokerService broker, byte expectedPriority, Destination dest) throws Exception {
@@ -630,7 +649,12 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
             assertEquals("consumer on " + broker.getBrokerName() + " matches priority: " + internalQueue, expectedPriority, consumer.getConsumerInfo().getPriority());      
         }
     }
-    
+
+    @Override
+    public void configureBroker(BrokerService brokerService) {
+        brokerService.setBrokerId(brokerService.getBrokerName());
+    }
+
     @Override
     public void setUp() throws Exception {
         super.setAutoFail(true);

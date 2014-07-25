@@ -16,14 +16,13 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.command.Response;
-
 import java.io.IOException;
 
+import org.apache.activemq.command.Response;
 
 /**
  * Interface used by the AMQPProtocolConverter for callbacks.
  */
 interface ResponseHandler {
-    void onResponse(AmqpProtocolConverter converter, Response response) throws IOException;
+    void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException;
 }

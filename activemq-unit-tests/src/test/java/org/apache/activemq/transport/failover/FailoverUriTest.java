@@ -21,25 +21,28 @@ import junit.framework.Test;
 import org.apache.activemq.transport.tcp.TransportUriTest;
 
 public class FailoverUriTest extends TransportUriTest {
-	
+
+    @Override
     public void initCombosForTestUriOptionsWork() {
-		addCombinationValues("prefix", new Object[] {"failover:(", "failover://("});
-		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"
-				, "?wireFormat.tightEncodingEnabled=false)?jms.useAsyncSend=true&jms.copyMessageOnSend=false"
-				, "?wireFormat.maxInactivityDuration=0&keepAlive=true)?jms.prefetchPolicy.all=500&initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false"});
-	}
-	
-	public void initCombosForTestBadVersionNumberDoesNotWork() {
-		addCombinationValues("prefix", new Object[] {"failover:("});
-		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
-	}
-	
-	public void initCombosForTestBadPropertyNameFails() {
-		addCombinationValues("prefix", new Object[] {"failover:("});
-		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
-	}
-	
+        addCombinationValues("prefix", new Object[]{"failover:(", "failover://("});
+        addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"
+                , "?wireFormat.tightEncodingEnabled=false)?jms.useAsyncSend=true&jms.copyMessageOnSend=false"
+                , "?wireFormat.maxInactivityDuration=0&keepAlive=true)?jms.prefetchPolicy.all=500&initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false"});
+    }
+
+    @Override
+    public void initCombosForTestBadVersionNumberDoesNotWork() {
+        addCombinationValues("prefix", new Object[]{"failover:("});
+        addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
+    }
+
+    @Override
+    public void initCombosForTestBadPropertyNameFails() {
+        addCombinationValues("prefix", new Object[]{"failover:("});
+        addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
+    }
+
     public static Test suite() {
-    	return suite(FailoverUriTest.class);
+        return suite(FailoverUriTest.class);
     }
 }

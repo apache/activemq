@@ -70,6 +70,16 @@ public interface DestinationViewMBean {
     long getDequeueCount();
 
     /**
+     * Returns the number of messages that have been acknowledged by network subscriptions from the
+     * destination.
+     *
+     * @return The number of messages that have been acknowledged by network subscriptions from the
+     *         destination.
+     */
+    @MBeanInfo("Number of messages that have been forwarded (to a networked broker) from the destination.")
+    long getForwardCount();
+
+    /**
      * Returns the number of messages that have been dispatched but not
      * acknowledged
      *
@@ -254,11 +264,18 @@ public interface DestinationViewMBean {
     @MBeanInfo("The shortest time a message has been held this destination.")
     long getMinEnqueueTime();
 
-    /**
-     * @return average time a message is held by a destination
-     */
+
     @MBeanInfo("Average time a message has been held this destination.")
     double getAverageEnqueueTime();
+
+    @MBeanInfo("Average message size on this destination")
+    double getAverageMessageSize();
+
+    @MBeanInfo("Max message size on this destination")
+    public long getMaxMessageSize();
+
+    @MBeanInfo("Min message size on this destination")
+    public long getMinMessageSize();
 
     /**
      * @return the producerFlowControl

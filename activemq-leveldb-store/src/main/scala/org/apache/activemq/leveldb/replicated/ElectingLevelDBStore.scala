@@ -17,12 +17,12 @@
 package org.apache.activemq.leveldb.replicated
 
 import org.linkedin.util.clock.Timespan
-import scala.reflect.BeanProperty
-import org.apache.activemq.util.{JMXSupport, ServiceStopper, ServiceSupport}
-import org.apache.activemq.leveldb.{LevelDBStoreViewMBean, LevelDBClient, RecordLog, LevelDBStore}
+import scala.beans.BeanProperty
+import org.apache.activemq.util.ServiceStopper
+import org.apache.activemq.leveldb.{LevelDBClient, RecordLog, LevelDBStore}
 import java.net.{NetworkInterface, InetAddress}
 import org.fusesource.hawtdispatch._
-import org.apache.activemq.broker.Locker
+import org.apache.activemq.broker.{LockableServiceSupport, Locker}
 import org.apache.activemq.store.PersistenceAdapter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,11 +30,9 @@ import org.apache.activemq.leveldb.util.Log
 import java.io.File
 import org.apache.activemq.usage.SystemUsage
 import org.apache.activemq.ActiveMQMessageAuditNoSync
-import org.fusesource.hawtdispatch
 import org.apache.activemq.broker.jmx.{OpenTypeSupport, BrokerMBeanSupport, AnnotatedMBean}
-import org.apache.activemq.leveldb.LevelDBStore._
 import javax.management.ObjectName
-import javax.management.openmbean.{CompositeDataSupport, SimpleType, CompositeType, CompositeData}
+import javax.management.openmbean.{CompositeDataSupport, SimpleType, CompositeData}
 import java.util
 import org.apache.activemq.leveldb.replicated.groups._
 
@@ -84,6 +82,8 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var bind = "tcp://0.0.0.0:61619"
 
   @BeanProperty
+  var weight = 1
+  @BeanProperty
   var replicas = 3
   @BeanProperty
   var sync="quorum_mem"
@@ -124,7 +124,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   @BeanProperty
   var indexCacheSize: Long = 1024 * 1024 * 256L
   @BeanProperty
-  var flushDelay = 1000 * 5
+  var flushDelay = 0
   @BeanProperty
   var asyncBufferSize = 1024 * 1024 * 4
   @BeanProperty
@@ -138,9 +138,14 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   var slave: SlaveLevelDBStore = _
 
   var zk_client: ZKClient = _
-  var zk_group: Group = _
+  var zk_group: ZooKeeperGroup = _
 
   var position: Long = -1L
+
+
+  override def toString: String = {
+    return "Replicated LevelDB[%s, %s/%s]".format(directory.getAbsolutePath, zkAddress, zkPath)
+  }
 
   var usageManager: SystemUsage = _
   override def setUsageManager(usageManager: SystemUsage) {
@@ -151,7 +156,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   def init() {
 
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new ReplicatedLevelDBStoreView(this), objectName)
       } catch {
@@ -179,9 +184,11 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     zk_client.start
     zk_client.waitForConnected(Timespan.parse("30s"))
 
-    val zk_group = ZooKeeperGroupFactory.create(zk_client, zkPath)
+    zk_group = ZooKeeperGroupFactory.create(zk_client, zkPath)
     val master_elector = new MasterElector(this)
+    debug("Starting ZooKeeper group monitor")
     master_elector.start(zk_group)
+    debug("Joining ZooKeeper group")
     master_elector.join
 
     this.setUseLock(true)
@@ -190,6 +197,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   def createDefaultLocker(): Locker = new Locker {
 
+    def setLockable(lockable: LockableServiceSupport) {}
     def configure(persistenceAdapter: PersistenceAdapter) {}
     def setFailIfLocked(failIfLocked: Boolean) {}
     def setLockAcquireSleepInterval(lockAcquireSleepInterval: Long) {}
@@ -235,7 +243,19 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       master_stopped.set(true)
       position = master.wal_append_position
       stopped_latch.countDown()
+      master = null
       func
+    })
+    master.blocking_executor.execute(^{
+      val broker = brokerService
+      if( broker!=null ) {
+        try {
+            broker.requestRestart();
+            broker.stop();
+        } catch {
+          case e:Exception=> warn("Failure occurred while restarting the broker", e);
+        }
+      }
     })
   }
 
@@ -250,11 +270,28 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   }
 
   protected def doStop(stopper: ServiceStopper) {
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
+    zk_group.close
     zk_client.close()
     zk_client = null
+
+    if( master!=null ) {
+      val latch = new CountDownLatch(1)
+      stop_master {
+        latch.countDown()
+      }
+      latch.await()
+    }
+    if( slave !=null ) {
+      val latch = new CountDownLatch(1)
+      stop_slave {
+        latch.countDown()
+      }
+      latch.await()
+
+    }
     if( master_started.get() ) {
       stopped_latch.countDown()
     }
@@ -430,6 +467,21 @@ class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends Replica
       return new java.lang.Long(master.wal_append_position)
     }
     null
+  }
+
+  def getPositionDate:java.lang.Long = {
+    val rc = if( slave!=null ) {
+      slave.wal_date
+    } else if( master!=null ) {
+      master.wal_date
+    } else {
+      0
+    }
+    if( rc != 0 ) {
+      return new java.lang.Long(rc)
+    } else {
+      return null
+    }
   }
 
   def getDirectory = directory.getCanonicalPath

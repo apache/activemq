@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
  */
 public class MasterLevelDBStoreTest {
 
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*10)
     public void testStoppingStoreStopsTransport() throws Exception {
         final MasterLevelDBStore store = new MasterLevelDBStore();
         store.setReplicas(0);

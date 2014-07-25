@@ -17,6 +17,7 @@
 package org.apache.activemq.broker;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -142,6 +143,13 @@ public interface Broker extends Region, Service {
      * @throws Exception TODO
      */
     ActiveMQDestination[] getDestinations() throws Exception;
+
+    /**
+     * return a reference destination map of a region based on the destination type
+     * @param destination
+     * @return
+     */
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination);
 
     /**
      * Gets a list of all the prepared xa transactions.
@@ -317,13 +325,13 @@ public interface Broker extends Region, Service {
     /**
      * A message needs to go the a DLQ
      *
+     *
      * @param context
      * @param messageReference
-     * @param subscription, may be null
-     *
+     * @param poisonCause reason for dlq submission, may be null
      * @return true if Message was placed in a DLQ false if discarded.
      */
-    boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription);
+    boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference, Subscription subscription, Throwable poisonCause);
 
     /**
      * @return the broker sequence id

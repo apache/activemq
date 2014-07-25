@@ -53,7 +53,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
     /**
      * Create a JMS message query filter
      *
-     * @param brokerUrl   - broker url to connect to
+     * @param connectionFactory - to connect with
      * @param destination - JMS destination to query
      */
     public AmqMessagesQueryFilter(ConnectionFactory connectionFactory, Destination destination) {

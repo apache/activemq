@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.leveldb.test;
 
 import org.apache.activemq.broker.ConnectionContext;
@@ -16,18 +32,25 @@ import java.util.ArrayList;
 public class ReplicationTestSupport {
 
     static long id_counter = 0L;
-    static String payload = "";
-    {
-        for (int i = 0; i < 1024; i++) {
+    static String payload = createPlayload(1024);
+
+    public static String createPlayload(int size) {
+        String payload = "";
+        for (int i = 0; i < size; i++) {
             payload += "x";
         }
+        return payload;
     }
 
-    static public ActiveMQTextMessage addMessage(MessageStore ms, String body) throws JMSException, IOException {
+    static public ActiveMQTextMessage addMessage(MessageStore ms, String id) throws JMSException, IOException {
+        return addMessage(ms, id, payload);
+    }
+
+    static public ActiveMQTextMessage addMessage(MessageStore ms, String id, String payload) throws JMSException, IOException {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setPersistent(true);
         message.setResponseRequired(true);
-        message.setStringProperty("id", body);
+        message.setStringProperty("id", id);
         message.setText(payload);
         id_counter += 1;
         MessageId messageId = new MessageId("ID:localhost-56913-1254499826208-0:0:1:1:" + id_counter);

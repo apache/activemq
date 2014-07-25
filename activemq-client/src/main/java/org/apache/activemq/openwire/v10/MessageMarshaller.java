@@ -105,6 +105,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         }
         info.setBrokerInTime(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setBrokerOutTime(tightUnmarshalLong(wireFormat, dataIn, bs));
+        info.setJMSXGroupFirstForConsumer(bs.readBoolean());
 
         info.afterUnmarshall(wireFormat);
 
@@ -147,6 +148,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalObjectArray1(wireFormat, info.getCluster(), bs);
         rc+=tightMarshalLong1(wireFormat, info.getBrokerInTime(), bs);
         rc+=tightMarshalLong1(wireFormat, info.getBrokerOutTime(), bs);
+        bs.writeBoolean(info.isJMSXGroupFirstForConsumer());
 
         return rc + 9;
     }
@@ -191,6 +193,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         tightMarshalObjectArray2(wireFormat, info.getCluster(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getBrokerInTime(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getBrokerOutTime(), dataOut, bs);
+        bs.readBoolean();
 
         info.afterMarshall(wireFormat);
 
@@ -261,6 +264,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         }
         info.setBrokerInTime(looseUnmarshalLong(wireFormat, dataIn));
         info.setBrokerOutTime(looseUnmarshalLong(wireFormat, dataIn));
+        info.setJMSXGroupFirstForConsumer(dataIn.readBoolean());
 
         info.afterUnmarshall(wireFormat);
 
@@ -306,6 +310,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         looseMarshalObjectArray(wireFormat, info.getCluster(), dataOut);
         looseMarshalLong(wireFormat, info.getBrokerInTime(), dataOut);
         looseMarshalLong(wireFormat, info.getBrokerOutTime(), dataOut);
+        dataOut.writeBoolean(info.isJMSXGroupFirstForConsumer());
 
     }
 }

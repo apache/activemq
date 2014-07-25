@@ -26,7 +26,6 @@ import java.util.Map;
 
 import javax.jms.JMSException;
 
-import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerContextAware;
@@ -42,6 +41,7 @@ import com.thoughtworks.xstream.converters.basic.AbstractSingleValueConverter;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+import com.thoughtworks.xstream.io.json.JsonHierarchicalStreamDriver;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
@@ -253,6 +253,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 
         if (xstream == null) {
             xstream = new XStream();
+            xstream.ignoreUnknownElements();
         }
 
         // For any object whose elements contains an UTF8Buffer instance instead of a String
@@ -279,6 +280,11 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     @Override
     public void setBrokerContext(BrokerContext brokerContext) {
         this.brokerContext = brokerContext;
+    }
+
+    @Override
+    public  BrokerContext getBrokerContext() {
+        return this.brokerContext;
     }
 
     /**

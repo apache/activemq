@@ -18,7 +18,9 @@ package org.apache.activemq.transport.tcp;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+
 import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -26,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
@@ -35,10 +37,9 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     private static final String TOS = "&typeOfService=";
 
     protected Connection connection;
-    
+
     public String prefix;
     public String postfix;
-
 
     public void initCombosForTestUriOptionsWork() {
         initSharedCombos();
@@ -62,7 +63,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
             testValidOptionsWork(DIFF_SERV + opt, "");
         }
         String[] validNameOptions = { "CS0", "CS1", "CS2", "CS3", "CS4", "CS5", "CS6",
-                "CS7", "EF", "AF11", "AF12","AF13", "AF21", "AF22", "AF23", "AF31", 
+                "CS7", "EF", "AF11", "AF12","AF13", "AF21", "AF22", "AF23", "AF31",
                 "AF32", "AF33", "AF41", "AF42", "AF43" };
         for (String opt : validNameOptions) {
             testValidOptionsWork(DIFF_SERV + opt, "");
@@ -129,7 +130,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     public void initCombosForTestBadPropertyNameFails() {
         initSharedCombos();
     }
-        
+
     public void testBadPropertyNameFails() throws Exception {
         testInvalidOptionsDoNotWork("&cheese=abc", "");
     }
@@ -196,7 +197,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         answer.addConnector(bindAddress);
         return answer;
     }
-    
+
     public static Test suite() {
         return suite(TransportUriTest.class);
     }

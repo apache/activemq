@@ -70,11 +70,11 @@ public class LeaseDatabaseLockerTest {
 
         LeaseDatabaseLocker lockerA = new LeaseDatabaseLocker();
         lockerA.setLeaseHolderId("First");
-        lockerA.configure(jdbc);
+        jdbc.setLocker(lockerA);
 
         final LeaseDatabaseLocker lockerB = new LeaseDatabaseLocker();
         lockerB.setLeaseHolderId("Second");
-        lockerB.configure(jdbc);
+        jdbc.setLocker(lockerB);
         final AtomicBoolean blocked = new AtomicBoolean(true);
 
         final Connection connection = dataSource.getConnection();
@@ -141,11 +141,11 @@ public class LeaseDatabaseLockerTest {
 
         final LeaseDatabaseLocker lockerA = new LeaseDatabaseLocker();
         lockerA.setLeaseHolderId("A");
-        lockerA.configure(jdbc);
+        jdbc.setLocker(lockerA);
 
         final LeaseDatabaseLocker lockerB = new LeaseDatabaseLocker();
         lockerB.setLeaseHolderId("B");
-        lockerB.configure(jdbc);
+        jdbc.setLocker(lockerB);
 
         final Set<LeaseDatabaseLocker> lockedSet = new HashSet<LeaseDatabaseLocker>();
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -259,6 +259,7 @@ public class LeaseDatabaseLockerTest {
         }});
 
         underTest.configure(jdbcPersistenceAdapter);
+        underTest.setLockable(jdbcPersistenceAdapter);
         return underTest.determineTimeDifference(connection);
     }
 

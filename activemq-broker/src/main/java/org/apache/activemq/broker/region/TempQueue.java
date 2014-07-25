@@ -76,9 +76,7 @@ public class TempQueue extends Queue{
                                         .getConnectionId()))) {
 
             tempDest.setConnectionId(sub.getConsumerInfo().getConsumerId().getConnectionId());
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
-            }
+            LOG.debug("changed ownership of {} to {}", this, tempDest.getConnectionId());
         }
         super.addSubscription(context, sub);
     }
@@ -86,15 +84,13 @@ public class TempQueue extends Queue{
     @Override
     public void dispose(ConnectionContext context) throws IOException {
         if (this.destinationStatistics.getMessages().getCount() > 0) {
-            LOG.info(getActiveMQDestination().getQualifiedName()
-                            + " on dispose, purge of "
-                            + this.destinationStatistics.getMessages().getCount() + " pending messages: " + messages);
+            LOG.info("{} on dispose, purge of {} pending messages: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), this.destinationStatistics.getMessages().getCount(), messages });
             // we may want to capture these message ids in an advisory
         }
         try {
-           purge();
+            purge();
         } catch (Exception e) {
-          LOG.warn("Caught an exception purging Queue: " + destination);
+            LOG.warn("Caught an exception purging Queue: {}", destination, e);
         }
         super.dispose(context);
     }

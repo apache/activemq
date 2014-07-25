@@ -299,5 +299,7 @@ public interface PendingMessageCursor extends Service {
      * @return true if cache is being used
      */
     public boolean isCacheEnabled();
-   
+
+    public void rebase();
+
 }

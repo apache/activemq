@@ -86,7 +86,7 @@ public class AMQ3140Test {
 
         broker = new BrokerService();
         broker.setSchedulerSupport(true);
-        broker.setPersistent(false);
+        broker.setPersistent(true);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setDataDirectory("target");
         broker.setSchedulerDirectoryFile(schedulerDirectory);
@@ -115,6 +115,7 @@ public class AMQ3140Test {
         MessageConsumer consumer = session.createConsumer(session.createQueue(QUEUE_NAME));
         consumer.setMessageListener(new MessageListener() {
 
+            @Override
             public void onMessage(Message message) {
                 receiveCounter.incrementAndGet();
             }
@@ -133,7 +134,7 @@ public class AMQ3140Test {
         }
 
         // wait until all scheduled messages has been received
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.MINUTES.sleep(2);
 
         session.close();
         connection.close();

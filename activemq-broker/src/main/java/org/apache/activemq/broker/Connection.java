@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.IOException;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.Response;
+
+import java.io.IOException;
 
 /**
  * 
@@ -118,5 +119,20 @@ public interface Connection extends Service {
     boolean isFaultTolerantConnection();
     
     void updateClient(ConnectionControl control);
+
+
+    /**
+     * Returns the number of active transactions established on this Connection.
+     *
+     * @return the number of active transactions established on this Connection..
+     */
+    public int getActiveTransactionCount();
+
+    /**
+     * Returns the number of active transactions established on this Connection.
+     *
+     * @return the number of active transactions established on this Connection..
+     */
+    public Long getOldestActiveTransactionDuration();
 
 }

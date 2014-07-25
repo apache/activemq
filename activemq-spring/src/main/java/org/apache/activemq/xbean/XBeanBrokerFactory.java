@@ -20,8 +20,10 @@ import java.beans.PropertyEditorManager;
 import java.net.MalformedURLException;
 import java.net.URI;
 
+import org.apache.activemq.broker.BrokerContextAware;
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -85,10 +87,11 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
         
-        if (broker instanceof ApplicationContextAware) {
-        	((ApplicationContextAware)broker).setApplicationContext(context);
-        }
-        
+        SpringBrokerContext springBrokerContext = new SpringBrokerContext();
+        springBrokerContext.setApplicationContext(context);
+        springBrokerContext.setConfigurationUrl(uri);
+        broker.setBrokerContext(springBrokerContext);
+
         // TODO warning resources from the context may not be closed down!
 
         return broker;

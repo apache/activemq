@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -89,7 +90,6 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.Callback;
-import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -220,6 +220,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected boolean sessionAsyncDispatch;
     protected final boolean debug;
     protected Object sendMutex = new Object();
+    private final AtomicBoolean clearInProgress = new AtomicBoolean();
 
     private MessageListener messageListener;
     private final JMSSessionStatsImpl stats;
@@ -289,6 +290,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *
      * @see org.apache.activemq.management.StatsCapable#getStats()
      */
+    @Override
     public StatsImpl getStats() {
         return stats;
     }
@@ -311,6 +313,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public BytesMessage createBytesMessage() throws JMSException {
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
         configureMessage(message);
@@ -327,6 +330,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public MapMessage createMapMessage() throws JMSException {
         ActiveMQMapMessage message = new ActiveMQMapMessage();
         configureMessage(message);
@@ -344,6 +348,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public Message createMessage() throws JMSException {
         ActiveMQMessage message = new ActiveMQMessage();
         configureMessage(message);
@@ -359,6 +364,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public ObjectMessage createObjectMessage() throws JMSException {
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
         configureMessage(message);
@@ -375,6 +381,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
         configureMessage(message);
@@ -391,6 +398,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public StreamMessage createStreamMessage() throws JMSException {
         ActiveMQStreamMessage message = new ActiveMQStreamMessage();
         configureMessage(message);
@@ -406,6 +414,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public TextMessage createTextMessage() throws JMSException {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         configureMessage(message);
@@ -422,6 +431,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to create this message due
      *                 to some internal error.
      */
+    @Override
     public TextMessage createTextMessage(String text) throws JMSException {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setText(text);
@@ -517,6 +527,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @return true if the session is in transacted mode
      * @throws JMSException if there is some internal error.
      */
+    @Override
     public boolean getTransacted() throws JMSException {
         checkClosed();
         return isTransacted();
@@ -534,6 +545,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @see javax.jms.Connection#createSession(boolean,int)
      * @since 1.1 exception JMSException if there is some internal error.
      */
+    @Override
     public int getAcknowledgeMode() throws JMSException {
         checkClosed();
         return this.acknowledgementMode;
@@ -550,6 +562,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws javax.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
+    @Override
     public void commit() throws JMSException {
         checkClosed();
         if (!getTransacted()) {
@@ -570,6 +583,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws javax.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
+    @Override
     public void rollback() throws JMSException {
         checkClosed();
         if (!getTransacted()) {
@@ -609,6 +623,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException if the JMS provider fails to close the session due
      *                 to some internal error.
      */
+    @Override
     public void close() throws JMSException {
         if (!closed) {
             if (getTransactionContext().isInXATransaction()) {
@@ -647,22 +662,43 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
-    void clearMessagesInProgress() {
+    final AtomicInteger clearRequestsCounter = new AtomicInteger(0);
+    void clearMessagesInProgress(AtomicInteger transportInterruptionProcessingComplete) {
+        clearRequestsCounter.incrementAndGet();
         executor.clearMessagesInProgress();
-        // we are called from inside the transport reconnection logic
-        // which involves us clearing all the connections' consumers
-        // dispatch and delivered lists. So rather than trying to
-        // grab a mutex (which could be already owned by the message
-        // listener calling the send or an ack) we allow it to complete in
-        // a separate thread via the scheduler and notify us via
-        // connection.transportInterruptionProcessingComplete()
+        // we are called from inside the transport reconnection logic which involves us
+        // clearing all the connections' consumers dispatch and delivered lists. So rather
+        // than trying to grab a mutex (which could be already owned by the message listener
+        // calling the send or an ack) we allow it to complete in a separate thread via the
+        // scheduler and notify us via connection.transportInterruptionProcessingComplete()
         //
-        for (final ActiveMQMessageConsumer consumer : consumers) {
-            consumer.inProgressClearRequired();
+        // We must be careful though not to allow multiple calls to this method from a
+        // connection that is having issue becoming fully established from causing a large
+        // build up of scheduled tasks to clear the same consumers over and over.
+        if (consumers.isEmpty()) {
+            return;
+        }
+
+        if (clearInProgress.compareAndSet(false, true)) {
+            for (final ActiveMQMessageConsumer consumer : consumers) {
+                consumer.inProgressClearRequired();
+                transportInterruptionProcessingComplete.incrementAndGet();
+                try {
+                    connection.getScheduler().executeAfterDelay(new Runnable() {
+                        @Override
+                        public void run() {
+                            consumer.clearMessagesInProgress();
+                        }}, 0l);
+                } catch (JMSException e) {
+                    connection.onClientInternalException(e);
+                }
+            }
+
             try {
                 connection.getScheduler().executeAfterDelay(new Runnable() {
+                    @Override
                     public void run() {
-                        consumer.clearMessagesInProgress();
+                        clearInProgress.set(false);
                     }}, 0l);
             } catch (JMSException e) {
                 connection.onClientInternalException(e);
@@ -764,6 +800,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws IllegalStateException if the method is called by a transacted
      *                 session.
      */
+    @Override
     public void recover() throws JMSException {
 
         checkClosed();
@@ -788,6 +825,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @see javax.jms.ServerSessionPool
      * @see javax.jms.ServerSession
      */
+    @Override
     public MessageListener getMessageListener() throws JMSException {
         checkClosed();
         return this.messageListener;
@@ -814,6 +852,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @see javax.jms.ServerSessionPool
      * @see javax.jms.ServerSession
      */
+    @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         // only check for closed if we set a new listener, as we allow to clear
         // the listener, such as when an application is shutting down, and is
@@ -834,18 +873,36 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *
      * @see javax.jms.ServerSession
      */
+    @Override
     public void run() {
         MessageDispatch messageDispatch;
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
             ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
-            if (message.isExpired() || connection.isDuplicate(ActiveMQSession.this, message)) {
-                // TODO: Ack it without delivery to client
-                continue;
+
+            MessageAck earlyAck = null;
+            if (message.isExpired()) {
+                earlyAck = new MessageAck(md, MessageAck.EXPIRED_ACK_TYPE, 1);
+            } else if (connection.isDuplicate(ActiveMQSession.this, message)) {
+                LOG.debug("{} got duplicate: {}", this, message.getMessageId());
+                earlyAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
+                earlyAck.setFirstMessageId(md.getMessage().getMessageId());
+                earlyAck.setPoisonCause(new Throwable("Duplicate delivery to " + this));
+            }
+            if (earlyAck != null) {
+                try {
+                    asyncSendPacket(earlyAck);
+                } catch (Throwable t) {
+                    LOG.error("error dispatching ack: {} ", earlyAck, t);
+                    connection.onClientInternalException(t);
+                } finally {
+                    continue;
+                }
             }
 
             if (isClientAcknowledge()||isIndividualAcknowledge()) {
                 message.setAcknowledgeCallback(new Callback() {
+                    @Override
                     public void execute() throws Exception {
                     }
                 });
@@ -865,16 +922,37 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 if (ack.getTransactionId() != null) {
                     getTransactionContext().addSynchronization(new Synchronization() {
 
+                        final int clearRequestCount = (clearRequestsCounter.get() == Integer.MAX_VALUE ? clearRequestsCounter.incrementAndGet() : clearRequestsCounter.get());
                         @Override
                         public void beforeEnd() throws Exception {
-                            asyncSendPacket(ack);
+                            // validate our consumer so we don't push stale acks that get ignored
+                            if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
+                                LOG.debug("forcing rollback - {} consumer no longer active on {}", ack, connection);
+                                throw new TransactionRolledBackException("consumer " + ack.getConsumerId() + " no longer active on " + connection);
+                            }
+                            LOG.trace("beforeEnd ack {}", ack);
+                            sendAck(ack);
                         }
 
                         @Override
                         public void afterRollback() throws Exception {
+                            LOG.trace("rollback {}", ack, new Throwable("here"));
                             md.getMessage().onMessageRolledBack();
                             // ensure we don't filter this as a duplicate
                             connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
+
+                            // don't redeliver if we have been interrupted b/c the broker will redeliver on reconnect
+                            if (clearRequestsCounter.get() > clearRequestCount) {
+                                LOG.debug("No redelivery of {} on rollback of {} due to failover of {}", md, ack.getTransactionId(), connection.getTransport());
+                                return;
+                            }
+
+                            // validate our consumer so we don't push stale acks that get ignored or redeliver what will be redispatched
+                            if (ack.getTransactionId().isXATransaction() && !connection.hasDispatcher(ack.getConsumerId())) {
+                                LOG.debug("No local redelivery of {} on rollback of {} because consumer is no longer active on {}", md, ack.getTransactionId(), connection.getTransport());
+                                return;
+                            }
+
                             RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
                             int redeliveryCounter = md.getMessage().getRedeliveryCounter();
                             if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
@@ -902,6 +980,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 }
                                 connection.getScheduler().executeAfterDelay(new Runnable() {
 
+                                    @Override
                                     public void run() {
                                         ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
                                     }
@@ -911,6 +990,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     });
                 }
 
+                LOG.trace("{} onMessage({})", this, message.getMessageId());
                 messageListener.onMessage(message);
 
             } catch (Throwable e) {
@@ -957,6 +1037,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 specified.
      * @since 1.1
      */
+    @Override
     public MessageProducer createProducer(Destination destination) throws JMSException {
         checkClosed();
         if (destination instanceof CustomDestination) {
@@ -981,6 +1062,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 specified.
      * @since 1.1
      */
+    @Override
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
         return createConsumer(destination, (String) null);
     }
@@ -1008,6 +1090,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
+    @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         return createConsumer(destination, messageSelector, false);
     }
@@ -1095,6 +1178,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
+    @Override
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         return createConsumer(destination, messageSelector, noLocal, null);
     }
@@ -1176,6 +1260,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 internal error.
      * @since 1.1
      */
+    @Override
     public Queue createQueue(String queueName) throws JMSException {
         checkClosed();
         if (queueName.startsWith(ActiveMQDestination.TEMP_DESTINATION_NAME_PREFIX)) {
@@ -1204,6 +1289,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 internal error.
      * @since 1.1
      */
+    @Override
     public Topic createTopic(String topicName) throws JMSException {
         checkClosed();
         if (topicName.startsWith(ActiveMQDestination.TEMP_DESTINATION_NAME_PREFIX)) {
@@ -1255,6 +1341,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidDestinationException if an invalid topic is specified.
      * @since 1.1
      */
+    @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
         checkClosed();
         return createDurableSubscriber(topic, name, null, false);
@@ -1300,16 +1387,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
+    @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
 
         if (topic == null) {
             throw new InvalidDestinationException("Topic cannot be null");
-        }
-
-        if (isIndividualAcknowledge()) {
-            throw JMSExceptionSupport.create("Cannot create a durable consumer for a Session in "+
-                                             "INDIVIDUAL_ACKNOWLEDGE mode.", null);
         }
 
         if (topic instanceof CustomDestination) {
@@ -1337,6 +1420,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 specified
      * @since 1.1
      */
+    @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         checkClosed();
         return createBrowser(queue, null);
@@ -1359,6 +1443,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
+    @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         checkClosed();
         return new ActiveMQQueueBrowser(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(queue), messageSelector, asyncDispatch);
@@ -1373,6 +1458,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 to some internal error.
      * @since 1.1
      */
+    @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         checkClosed();
         return (TemporaryQueue)connection.createTempDestination(false);
@@ -1387,6 +1473,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 to some internal error.
      * @since 1.1
      */
+    @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
         checkClosed();
         return (TemporaryTopic)connection.createTempDestination(true);
@@ -1403,6 +1490,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException
      * @throws InvalidDestinationException if an invalid queue is specified.
      */
+    @Override
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
         checkClosed();
         return createReceiver(queue, null);
@@ -1423,6 +1511,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidDestinationException if an invalid queue is specified.
      * @throws InvalidSelectorException if the message selector is invalid.
      */
+    @Override
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
         checkClosed();
 
@@ -1447,6 +1536,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 internal error.
      * @throws InvalidDestinationException if an invalid queue is specified.
      */
+    @Override
     public QueueSender createSender(Queue queue) throws JMSException {
         checkClosed();
         if (queue instanceof CustomDestination) {
@@ -1477,6 +1567,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 some internal error.
      * @throws InvalidDestinationException if an invalid topic is specified.
      */
+    @Override
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
         checkClosed();
         return createSubscriber(topic, null, false);
@@ -1515,6 +1606,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws InvalidDestinationException if an invalid topic is specified.
      * @throws InvalidSelectorException if the message selector is invalid.
      */
+    @Override
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
 
@@ -1543,6 +1635,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 some internal error.
      * @throws InvalidDestinationException if an invalid topic is specified.
      */
+    @Override
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         checkClosed();
 
@@ -1573,11 +1666,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *                 specified.
      * @since 1.1
      */
+    @Override
     public void unsubscribe(String name) throws JMSException {
         checkClosed();
         connection.unsubscribe(name);
     }
 
+    @Override
     public void dispatch(MessageDispatch messageDispatch) {
         try {
             executor.execute(messageDispatch);
@@ -2012,7 +2107,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         for (Iterator<ActiveMQMessageConsumer> i = consumers.iterator(); i.hasNext();) {
             ActiveMQMessageConsumer consumer = i.next();
-            if (consumer.getMessageListener() != null) {
+            if (consumer.hasMessageListener()) {
                 throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
             }
         }

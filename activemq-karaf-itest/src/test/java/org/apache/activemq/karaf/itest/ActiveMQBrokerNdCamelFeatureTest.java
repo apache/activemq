@@ -34,7 +34,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
 
     @Configuration
     public static Option[] configure() {
-        Option[] baseOptions = configure("activemq");
+        Option[] baseOptions = configure("activemq", "activemq-camel");
         return configureBrokerStart(append(scanFeatures(getCamelFeatureUrl(
                 MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")
         ), "activemq-camel"), baseOptions), "activemq-nd-camel");
@@ -42,7 +42,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
 
     @Test
     public void test() throws Throwable {
-        System.err.println(executeCommand("features:list").trim());
+        System.err.println(executeCommand("osgi:list").trim());
 
         withinReason(new Callable<Boolean>() {
             @Override

@@ -44,10 +44,8 @@ public class DiscardingDLQBroker extends BrokerFilter {
     }
 
     @Override
-    public boolean sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef, Subscription subscription) {
-        if (log.isTraceEnabled()) {
-            log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null));
-        }
+    public boolean sendToDeadLetterQueue(ConnectionContext ctx, MessageReference msgRef, Subscription subscription, Throwable poisonCause) {
+        log.trace("Discarding DLQ BrokerFilter[pass through] - skipping message: {}", (msgRef != null ? msgRef.getMessage() : null));
         boolean dropped = true;
         Message msg = null;
         ActiveMQDestination dest = null;
@@ -73,12 +71,12 @@ public class DiscardingDLQBroker extends BrokerFilter {
             skipMessage("dropOnly", msgRef);
         } else {
             dropped = false;
-            return next.sendToDeadLetterQueue(ctx, msgRef, subscription);
+            return next.sendToDeadLetterQueue(ctx, msgRef, subscription, poisonCause);
         }
 
         if (dropped && getReportInterval() > 0) {
             if ((++dropCount) % getReportInterval() == 0) {
-                log.info("Total of " + dropCount + " messages were discarded, since their destination was the dead letter queue");
+                log.info("Total of {} messages were discarded, since their destination was the dead letter queue", dropCount);
             }
         }
 
@@ -95,10 +93,7 @@ public class DiscardingDLQBroker extends BrokerFilter {
     }
 
     private void skipMessage(String prefix, MessageReference msgRef) {
-        if (log.isDebugEnabled()) {
-            String lmsg = "Discarding DLQ BrokerFilter[" + prefix + "] - skipping message:" + (msgRef != null ? msgRef.getMessage() : null);
-            log.debug(lmsg);
-        }
+        log.debug("Discarding DLQ BrokerFilter[{}] - skipping message: {}", prefix, (msgRef != null ? msgRef.getMessage() : null));
     }
 
     public void setDropTemporaryTopics(boolean dropTemporaryTopics) {

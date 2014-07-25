@@ -62,7 +62,7 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
                     }
                 }
                 catch (Exception e) {
-                    LOG.error("Failed to lookup the mirror destination for: " + destination + ". Reason: " + e, e);
+                    LOG.error("Failed to lookup the mirror destination for: {}", destination, e);
                 }
             }
         }
@@ -79,7 +79,7 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
             try {
                 brokerService.removeDestination(topic);
             } catch (Exception e) {
-                LOG.error("Failed to remove mirror destination for " + destination + ". Reason: " + e,e);
+                LOG.error("Failed to remove mirror destination for {}", destination, e);
             }
         }
         

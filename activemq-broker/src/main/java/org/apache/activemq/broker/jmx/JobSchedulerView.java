@@ -16,23 +16,39 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.util.List;
+
+import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
+import javax.management.openmbean.TabularData;
+import javax.management.openmbean.TabularDataSupport;
+import javax.management.openmbean.TabularType;
+
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 import org.apache.activemq.broker.scheduler.JobSupport;
 
-import javax.management.openmbean.*;
-import java.io.IOException;
-import java.util.List;
-
+/**
+ * MBean object that can be used to manage a single instance of a JobScheduler.  The object
+ * provides methods for querying for jobs and removing some or all of the jobs that are
+ * scheduled in the managed store.
+ */
 public class JobSchedulerView implements JobSchedulerViewMBean {
 
     private final JobScheduler jobScheduler;
 
+    /**
+     * Creates a new instance of the JobScheduler management MBean.
+     *
+     * @param jobScheduler
+     *        The scheduler instance to manage.
+     */
     public JobSchedulerView(JobScheduler jobScheduler) {
         this.jobScheduler = jobScheduler;
     }
 
+    @Override
     public TabularData getAllJobs() throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
@@ -45,6 +61,7 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
         return rc;
     }
 
+    @Override
     public TabularData getAllJobs(String startTime, String finishTime) throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
@@ -59,6 +76,7 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
         return rc;
     }
 
+    @Override
     public TabularData getNextScheduleJobs() throws Exception {
         OpenTypeFactory factory = OpenTypeSupport.getFactory(Job.class);
         CompositeType ct = factory.getCompositeType();
@@ -71,31 +89,51 @@ public class JobSchedulerView implements JobSchedulerViewMBean {
         return rc;
     }
 
+    @Override
     public String getNextScheduleTime() throws Exception {
         long time = this.jobScheduler.getNextScheduleTime();
         return JobSupport.getDateTime(time);
     }
 
+    @Override
     public void removeAllJobs() throws Exception {
         this.jobScheduler.removeAllJobs();
-
     }
 
+    @Override
     public void removeAllJobs(String startTime, String finishTime) throws Exception {
         long start = JobSupport.getDataTime(startTime);
         long finish = JobSupport.getDataTime(finishTime);
         this.jobScheduler.removeAllJobs(start, finish);
-
     }
 
+    @Override
+    public void removeAllJobsAtScheduledTime(String time) throws Exception {
+        long removeAtTime = JobSupport.getDataTime(time);
+        this.jobScheduler.remove(removeAtTime);
+    }
+
+    @Override
+    public void removeJobAtScheduledTime(String time) throws Exception {
+        removeAllJobsAtScheduledTime(time);
+    }
+
+    @Override
     public void removeJob(String jobId) throws Exception {
         this.jobScheduler.remove(jobId);
-
     }
 
-    public void removeJobAtScheduledTime(String time) throws IOException {
-        // TODO Auto-generated method stub
+    @Override
+    public int getExecutionCount(String jobId) throws Exception {
+        int result = 0;
 
+        List<Job> jobs = this.jobScheduler.getAllJobs();
+        for (Job job : jobs) {
+            if (job.getJobId().equals(jobId)) {
+                result = job.getExecutionCount();
+            }
+        }
+
+        return result;
     }
-
 }

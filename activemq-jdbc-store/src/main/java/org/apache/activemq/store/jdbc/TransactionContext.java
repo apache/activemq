@@ -21,6 +21,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -30,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Helps keep track of the current transaction/JDBC connection.
- * 
- * 
  */
 public class TransactionContext {
 
@@ -46,7 +46,8 @@ public class TransactionContext {
     private PreparedStatement updateLastAckStatement;
     // a cheap dirty level that we can live with    
     private int transactionIsolation = Connection.TRANSACTION_READ_UNCOMMITTED;
-    
+    private LinkedList<Runnable> completions = new LinkedList<Runnable>();
+
     public TransactionContext(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         this.persistenceAdapter = persistenceAdapter;
         this.dataSource = persistenceAdapter.getDataSource();
@@ -65,15 +66,19 @@ public class TransactionContext {
                 }
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
+                inTx = false;
+                close();
                 IOException ioe = IOExceptionSupport.create(e);
                 persistenceAdapter.getBrokerService().handleIOException(ioe);
                 throw ioe;
-
             }
 
             try {
                 connection.setTransactionIsolation(transactionIsolation);
             } catch (Throwable e) {
+                // ignore
+                LOG.trace("Cannot set transaction isolation to " + transactionIsolation + " due " + e.getMessage()
+                        + ". This exception is ignored.", e);
             }
         }
         return connection;
@@ -138,16 +143,22 @@ public class TransactionContext {
 
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Error while closing connection: ", e);
-                throw IOExceptionSupport.create(e);
+                IOException ioe = IOExceptionSupport.create(e);
+                persistenceAdapter.getBrokerService().handleIOException(ioe);
+                throw ioe;
             } finally {
                 try {
                     if (connection != null) {
                         connection.close();
                     }
                 } catch (Throwable e) {
-                    LOG.warn("Close failed: " + e.getMessage(), e);
+                    // ignore
+                    LOG.trace("Closing connection failed due: " + e.getMessage() + ". This exception is ignored.", e);
                 } finally {
                     connection = null;
+                }
+                for (Runnable completion: completions) {
+                    completion.run();
                 }
             }
         }
@@ -172,10 +183,12 @@ public class TransactionContext {
             }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Commit failed: ", e);
-            
-            this.rollback(); 
-            
-            throw IOExceptionSupport.create(e);
+            try {
+                doRollback();
+            } catch (Exception ignored) {}
+            IOException ioe = IOExceptionSupport.create(e);
+            persistenceAdapter.getBrokerService().handleIOException(ioe);
+            throw ioe;
         } finally {
             inTx = false;
             close();
@@ -187,20 +200,7 @@ public class TransactionContext {
             throw new IOException("Not started.");
         }
         try {
-            if (addMessageStatement != null) {
-                addMessageStatement.close();
-                addMessageStatement = null;
-            }
-            if (removedMessageStatement != null) {
-                removedMessageStatement.close();
-                removedMessageStatement = null;
-            }
-            if (updateLastAckStatement != null) {
-                updateLastAckStatement.close();
-                updateLastAckStatement = null;
-            }
-            connection.rollback();
-
+            doRollback();
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
@@ -208,6 +208,22 @@ public class TransactionContext {
             inTx = false;
             close();
         }
+    }
+
+    private void doRollback() throws SQLException {
+        if (addMessageStatement != null) {
+            addMessageStatement.close();
+            addMessageStatement = null;
+        }
+        if (removedMessageStatement != null) {
+            removedMessageStatement.close();
+            removedMessageStatement = null;
+        }
+        if (updateLastAckStatement != null) {
+            updateLastAckStatement.close();
+            updateLastAckStatement = null;
+        }
+        connection.rollback();
     }
 
     public PreparedStatement getAddMessageStatement() {
@@ -238,4 +254,7 @@ public class TransactionContext {
         this.transactionIsolation = transactionIsolation;
     }
 
+    public void onCompletion(Runnable runnable) {
+        completions.add(runnable);
+    }
 }

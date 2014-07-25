@@ -74,6 +74,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
+    private boolean allowLinkStealing;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
 
@@ -88,6 +89,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             if (uri != null && uri.getScheme().equals("vm")) {
                 setEnableStatusMonitor(false);
             }
+        }
+        if (server != null){
+            setAllowLinkStealing(server.isAllowLinkStealing());
         }
     }
 
@@ -122,6 +126,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
+        rc.setAllowLinkStealing(isAllowLinkStealing());
         return rc;
     }
 
@@ -211,8 +216,12 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                         @Override
                         public void run() {
                             try {
-                                Connection connection = createConnection(transport);
-                                connection.start();
+                                if (!brokerService.isStopping()) {
+                                    Connection connection = createConnection(transport);
+                                    connection.start();
+                                } else {
+                                    throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
+                                }
                             } catch (Exception e) {
                                 String remoteHost = transport.getRemoteAddress();
                                 ServiceSupport.dispose(transport);
@@ -251,15 +260,17 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             this.statusDector.start();
         }
 
-        LOG.info("Connector " + getName() + " Started");
+        LOG.info("Connector {} started", getName());
     }
 
     public String getPublishableConnectString() throws Exception {
         String publishableConnectString = publishedAddressPolicy.getPublishableConnectString(this);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Publishing: " + publishableConnectString + " for broker transport URI: " + getConnectUri());
-        }
+        LOG.debug("Publishing: {} for broker transport URI: {}", publishableConnectString, getConnectUri());
         return publishableConnectString;
+    }
+
+    public URI getPublishableConnectURI() throws Exception {
+        return publishedAddressPolicy.getPublishableConnectURI(this);
     }
 
     @Override
@@ -280,7 +291,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
         server = null;
         ss.throwFirstException();
-        LOG.info("Connector " + getName() + " Stopped");
+        LOG.info("Connector {} stopped", getName());
     }
 
     // Implementation methods
@@ -567,6 +578,15 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public int connectionCount() {
         return connections.size();
+    }
+
+    @Override
+    public boolean isAllowLinkStealing() {
+        return allowLinkStealing;
+    }
+
+    public void setAllowLinkStealing (boolean allowLinkStealing) {
+        this.allowLinkStealing=allowLinkStealing;
     }
 
     public boolean isAuditNetworkProducers() {

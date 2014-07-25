@@ -27,6 +27,7 @@ public class ConnectorView implements ConnectorViewMBean {
         this.connector = connector;
     }
 
+    @Override
     public void start() throws Exception {
         connector.start();
     }
@@ -35,6 +36,7 @@ public class ConnectorView implements ConnectorViewMBean {
         return getBrokerInfo().getBrokerName();
     }
 
+    @Override
     public void stop() throws Exception {
         connector.stop();
     }
@@ -50,6 +52,7 @@ public class ConnectorView implements ConnectorViewMBean {
     /**
      * Resets the statistics
      */
+    @Override
     public void resetStatistics() {
         connector.getStatistics().reset();
     }
@@ -57,6 +60,7 @@ public class ConnectorView implements ConnectorViewMBean {
     /**
      * enable statistics gathering
      */
+    @Override
     public void enableStatistics() {
         connector.getStatistics().setEnabled(true);
     }
@@ -64,15 +68,17 @@ public class ConnectorView implements ConnectorViewMBean {
     /**
      * disable statistics gathering
      */
+    @Override
     public void disableStatistics() {
         connector.getStatistics().setEnabled(false);
     }
 
     /**
      * Returns true if statistics is enabled
-     * 
+     *
      * @return true if statistics is enabled
      */
+    @Override
     public boolean isStatisticsEnabled() {
         return connector.getStatistics().isEnabled();
     }
@@ -80,8 +86,54 @@ public class ConnectorView implements ConnectorViewMBean {
     /**
      * Returns the number of current connections
      */
+    @Override
     public int connectionCount() {
         return connector.connectionCount();
     }
 
+    /**
+     * Returns true if updating cluster client URL is enabled
+     *
+     * @return true if update cluster client URL is enabled
+     */
+    @Override
+    public boolean isUpdateClusterClients() {
+        return this.connector.isUpdateClusterClientsOnRemove();
+    }
+
+    /**
+     * Returns true if rebalancing cluster clients is enabled
+     *
+     * @return true if rebalance cluster clients is enabled
+     */
+    @Override
+    public boolean isRebalanceClusterClients() {
+        return this.connector.isRebalanceClusterClients();
+    }
+
+    /**
+     * Returns true if updating cluster client URL when brokers are removed is
+     * enabled
+     *
+     * @return true if update cluster client URL when brokers are removed is
+     *         enabled
+     */
+    @Override
+    public boolean isUpdateClusterClientsOnRemove() {
+        return this.connector.isUpdateClusterClientsOnRemove();
+    }
+
+    /**
+     * @return The comma separated string of regex patterns to match broker
+     *         names for cluster client updates
+     */
+    @Override
+    public String getUpdateClusterFilter() {
+        return this.connector.getUpdateClusterFilter();
+    }
+
+    @Override
+    public boolean isAllowLinkStealingEnabled() {
+        return this.connector.isAllowLinkStealing();
+    }
 }

@@ -35,13 +35,15 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.AuthorizationEntry;
-import org.apache.activemq.security.AuthorizationMap;
 import org.apache.activemq.security.AuthorizationPlugin;
 import org.apache.activemq.security.DefaultAuthorizationMap;
 import org.apache.activemq.security.SimpleAuthenticationPlugin;
+import org.apache.activemq.security.TempDestinationAuthorizationEntry;
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.transport.stomp.util.ResourceLoadingSslContext;
 import org.apache.activemq.transport.stomp.util.XStreamBrokerContext;
 import org.junit.After;
@@ -162,6 +164,12 @@ public class StompTestSupport {
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(true);
         brokerService.setPopulateJMSXUserID(true);
+        brokerService.setSchedulerSupport(true);
+
+        JobSchedulerStoreImpl jobStore = new JobSchedulerStoreImpl();
+        jobStore.setDirectory(new File("activemq-data"));
+
+        brokerService.setJobSchedulerStore(jobStore);
     }
 
     protected BrokerPlugin configureAuthentication() throws Exception {
@@ -222,7 +230,13 @@ public class StompTestSupport {
         entry.setAdmin("guests,users");
         authorizationEntries.add(entry);
 
-        AuthorizationMap authorizationMap = new DefaultAuthorizationMap(authorizationEntries);
+        TempDestinationAuthorizationEntry tempEntry = new TempDestinationAuthorizationEntry();
+        tempEntry.setRead("admins");
+        tempEntry.setWrite("admins");
+        tempEntry.setAdmin("admins");
+
+        DefaultAuthorizationMap authorizationMap = new DefaultAuthorizationMap(authorizationEntries);
+        authorizationMap.setTempDestinationAuthorizationEntry(tempEntry);
         AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin(authorizationMap);
 
         return authorizationPlugin;
@@ -304,11 +318,10 @@ public class StompTestSupport {
         return proxy;
     }
 
-    protected QueueViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
-        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+    protected TopicViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
+        ObjectName topicViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
+        TopicViewMBean proxy = (TopicViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(topicViewMBeanName, TopicViewMBean.class, true);
         return proxy;
     }
-
 }

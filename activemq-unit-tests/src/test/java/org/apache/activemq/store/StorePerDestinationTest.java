@@ -62,7 +62,7 @@ public class StorePerDestinationTest  {
         return broker;
     }
 
-    protected KahaDBPersistenceAdapter createStore(boolean delete) throws IOException {
+    protected PersistenceAdapter createStore(boolean delete) throws IOException {
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
         kaha.setJournalMaxFileLength(maxFileLength);
         kaha.setCleanupInterval(5000);
@@ -183,7 +183,7 @@ public class StorePerDestinationTest  {
 
         FilteredKahaDBPersistenceAdapter otherFilteredKahaDBPersistenceAdapter =
                 new FilteredKahaDBPersistenceAdapter();
-        KahaDBPersistenceAdapter otherStore = createStore(false);
+        PersistenceAdapter otherStore = createStore(false);
         File someOtherDisk = new File("target" + File.separator + "someOtherDisk");
         otherStore.setDirectory(someOtherDisk);
         otherFilteredKahaDBPersistenceAdapter.setPersistenceAdapter(otherStore);
@@ -192,7 +192,7 @@ public class StorePerDestinationTest  {
 
         FilteredKahaDBPersistenceAdapter filteredKahaDBPersistenceAdapterDefault =
                 new FilteredKahaDBPersistenceAdapter();
-        KahaDBPersistenceAdapter storeDefault = createStore(false);
+        PersistenceAdapter storeDefault = createStore(false);
         filteredKahaDBPersistenceAdapterDefault.setPersistenceAdapter(storeDefault);
         adapters.add(filteredKahaDBPersistenceAdapterDefault);
 

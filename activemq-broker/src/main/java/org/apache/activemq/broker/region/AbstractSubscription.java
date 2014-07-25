@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
+import java.util.concurrent.atomic.AtomicLong;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
@@ -53,6 +53,7 @@ public abstract class AbstractSubscription implements Subscription {
     private int cursorMemoryHighWaterMark = 70;
     private boolean slowConsumer;
     private long lastAckTime;
+    private AtomicLong consumedCount = new AtomicLong();
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -88,6 +89,7 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         this.lastAckTime = System.currentTimeMillis();
+        this.consumedCount.incrementAndGet();
     }
 
     @Override
@@ -101,9 +103,14 @@ public abstract class AbstractSubscription implements Subscription {
         try {
             return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
-            LOG.info("Selector failed to evaluate: " + e.getMessage(), e);
+            LOG.info("Selector failed to evaluate: {}", e.getMessage(), e);
             return false;
         }
+    }
+
+    @Override
+    public boolean isWildcard() {
+        return destinationFilter.isWildcard();
     }
 
     @Override
@@ -275,5 +282,17 @@ public abstract class AbstractSubscription implements Subscription {
 
     public void setTimeOfLastMessageAck(long value) {
         this.lastAckTime = value;
+    }
+
+    public long getConsumedCount(){
+        return consumedCount.get();
+    }
+
+    public void incrementConsumedCount(){
+        consumedCount.incrementAndGet();
+    }
+
+    public void resetConsumedCount(){
+        consumedCount.set(0);
     }
 }

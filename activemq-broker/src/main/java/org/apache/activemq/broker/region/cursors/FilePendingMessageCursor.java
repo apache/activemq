@@ -240,7 +240,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 return false;
 
             } catch (Exception e) {
-                LOG.error("Caught an Exception adding a message: " + node + " first to FilePendingMessageCursor ", e);
+                LOG.error("Caught an Exception adding a message: {} first to FilePendingMessageCursor ", node, e);
                 throw new RuntimeException(e);
             }
         } else {
@@ -287,7 +287,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 node.getMessageId().setPlistLocator(locator);
 
             } catch (Exception e) {
-                LOG.error("Caught an Exception adding a message: " + node + " first to FilePendingMessageCursor ", e);
+                LOG.error("Caught an Exception adding a message: {} first to FilePendingMessageCursor ", node, e);
                 throw new RuntimeException(e);
             }
         } else {
@@ -411,10 +411,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return true;
     }
 
-    protected boolean isSpaceInMemoryList() {
-        return hasSpace() && isDiskListEmpty();
-    }
-
     protected synchronized void expireOldMessages() {
         if (!memoryList.isEmpty()) {
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
@@ -433,7 +429,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             long start = 0;
              if (LOG.isTraceEnabled()) {
                 start = System.currentTimeMillis();
-                LOG.trace("" + name + ", flushToDisk() mem list size: " +memoryList.size()  + " " +  (systemUsage != null ? systemUsage.getMemoryUsage() : "") );
+                LOG.trace("{}, flushToDisk() mem list size: {} {}", new Object[]{ name, memoryList.size(), (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
              }
             for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
@@ -450,9 +446,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
             memoryList.clear();
             setCacheEnabled(false);
-             if (LOG.isTraceEnabled()) {
-                LOG.trace("" + name + ", flushToDisk() done - " + (System.currentTimeMillis() - start) + "ms " + (systemUsage != null ? systemUsage.getMemoryUsage() : ""));
-             }
+            LOG.trace("{}, flushToDisk() done - {} ms {}", new Object[]{ name, (System.currentTimeMillis() - start), (systemUsage != null ? systemUsage.getMemoryUsage() : "") });
         }
     }
 
@@ -465,7 +459,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             try {
                 diskList = store.getPList(name);
             } catch (Exception e) {
-                LOG.error("Caught an IO Exception getting the DiskList " + name, e);
+                LOG.error("Caught an IO Exception getting the DiskList {}", name, e);
                 throw new RuntimeException(e);
             }
         }
@@ -473,9 +467,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     }
 
     private void discardExpiredMessage(MessageReference reference) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Discarding expired message " + reference);
-        }
+        LOG.debug("Discarding expired message {}", reference);
         if (broker.isExpired(reference)) {
             ConnectionContext context = new ConnectionContext(new NonCachedMessageEvaluationContext());
             context.setBroker(broker);

@@ -30,4 +30,10 @@ public interface AbortSlowAckConsumerStrategyViewMBean extends AbortSlowConsumer
     @MBeanInfo("sets whether consumers that are idle (no dispatched messages) should be included when checking for slow acks.")
     void setIgnoreIdleConsumers(boolean ignoreIdleConsumers);
 
+    @MBeanInfo("returns the current value of the ignore network connector consumers setting.")
+    boolean isIgnoreNetworkConsumers();
+
+    @MBeanInfo("sets whether consumers that are from network connector should be included when checking for slow acks.")
+    void setIgnoreNetworkConsumers(boolean ignoreIdleConsumers);
+
 }

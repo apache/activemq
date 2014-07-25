@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.9-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-osgi</artifactId>
@@ -32,33 +32,35 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-        !org.apache.commons.daemon,
-        !org.apache.maven*,
-        sun.misc*;resolution:=optional,
-        sun.nio*;resolution:=optional,
-        javax.jmdns*;resolution:=optional,
-        javax.resource*;resolution:=optional,
-        javax.servlet*;resolution:=optional,
-        com.thoughtworks.xstream*;resolution:=optional,
-        org.apache.activeio*;resolution:=optional,
-        org.apache.camel*;resolution:=optional,
-        org.apache.derby.jdbc*;resolution:=optional,
-        org.apache.geronimo.transaction.manager*;resolution:=optional,
-        org.apache.hadoop*;resolution:=optional,
-        org.apache.http*;resolution:=optional,
-        org.apache.xpath*;resolution:=optional,
-        org.bouncycastle*;resolution:=optional,
-        org.codehaus.jackson*;resolution:=optional,
-        org.codehaus.jettison*;resolution:=optional,
-        org.jasypt*;resolution:=optional,
-        org.eclipse.jetty*;resolution:=optional,
-      org.apache.zookeeper;resolution:=optional,
-      org.linkedin*;resolution:=optional,
-        org.springframework.jms*;version="[3,4]";resolution:=optional,
-        org.springframework.osgi*;version="[1.2,1.3]";resolution:=optional,
-        org.springframework.transaction*;version="[3,4]";resolution:=optional,
-        org.xmlpull*;resolution:=optional,
-        scala*;resolution:=optional,
+      !org.apache.commons.daemon,
+      !org.apache.maven*,
+      sun.misc*;resolution:=optional,
+      sun.nio*;resolution:=optional,
+      javax.jmdns*;resolution:=optional,
+      javax.resource*;resolution:=optional,
+      javax.servlet*;resolution:=optional,
+      com.thoughtworks.xstream*;resolution:=optional,
+      org.apache.activeio*;resolution:=optional,
+      org.apache.activemq.camel*;resolution:=optional,
+      org.apache.camel*;resolution:=optional,
+      org.apache.derby.jdbc*;resolution:=optional,
+      org.apache.geronimo.transaction.manager*;resolution:=optional,
+      org.apache.hadoop*;resolution:=optional,
+      org.apache.http*;resolution:=optional,
+      org.apache.xpath*;resolution:=optional,
+      org.bouncycastle*;resolution:=optional,
+      org.codehaus.jackson*;resolution:=optional,
+      org.codehaus.jettison*;resolution:=optional,
+      org.jasypt*;resolution:=optional,
+      org.eclipse.jetty*;resolution:=optional,
+      org.apache.zookeeper*;resolution:=optional,
+      org.fusesource.leveldbjni*;resolution:=optional,
+      org.fusesource.hawtjni*;resolution:=optional,
+      org.springframework.jms*;version="[3,4]";resolution:=optional,
+      org.springframework.osgi*;version="[1.2,1.3]";resolution:=optional,
+      org.springframework.transaction*;version="[3,4]";resolution:=optional,
+      org.xmlpull*;resolution:=optional,
+      scala*;resolution:=optional,
       org.springframework*;version="[3,4]";resolution:=optional,
       org.apache.xbean.spring*;resolution:=optional,
       javax.annotation*,
@@ -68,7 +70,14 @@
       javax.naming*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.commons.net*;resolution:=optional,
-      com.sun.syndication*;resolution:=optional,
+      com.sun*;resolution:=optional,
+      org.jvnet.jaxb2_commons*;resolution:=optional,
+      org.xerial.snappy*;resolution:=optional,
+      groovy.lang*;resolution:=optional,
+      org.codehaus.groovy*;resolution:=optional,
+      org.apache.tools.ant*;resolution:=optional,
+      org.apache.log4j*;resolution:=optional,
+      org.json*;resolution:=optional,
         *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
@@ -76,9 +85,12 @@
       org.apache.activemq.web*;version=${project.version};-noimport:=true;-split-package:=merge-first,
     </activemq.osgi.export>
     <activemq.osgi.private.pkg>
-         org.fusesource*,
+         org.fusesource.hawtdispatch*,
+         org.fusesource.mqtt*,
+         org.fusesource.hawtbuf*,
          org.apache.qpid*,
          com.google.common*,
+         org.linkedin*,
          org.iq80*
     </activemq.osgi.private.pkg>
     <activemq.osgi.dynamic.import>*</activemq.osgi.dynamic.import>
@@ -124,19 +136,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-http</artifactId>
     </dependency>
-    <!--
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-xmpp</artifactId>
+      <artifactId>activemq-partition</artifactId>
     </dependency>
-    -->
 
     <!-- Additional Dependencies. -->
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-camel</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-jaas</artifactId>
@@ -160,6 +165,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-runtime-config</artifactId>
     </dependency>
 
     <dependency>
@@ -191,6 +201,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven-dependency-plugin-version}</version>
         <executions>
           <execution>
             <id>unpack</id>
@@ -264,14 +275,20 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
+          <excludeDependencies>activemq-all;scope=compile|runtime</excludeDependencies>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
             <Embed-Dependency>
               *;
               groupId=org.apache.activemq;inline=META-INF/services/*,
+              groupId=org.apache.qpid;inline=META-INF/services/*
+              <!--
               groupId=org.fusesource.leveldbjni;inline=META-INF/native/*,
-              groupId=org.xerial.snappy;inline=org/xerial/snappy/*</Embed-Dependency>
+              groupId=org.xerial.snappy;inline=org/xerial/snappy/*
+              -->
+            </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
+            <!--
             <Bundle-NativeCode>
               META-INF/native/windows32/leveldbjni.dll;osname=Win32;processor=x86,
               META-INF/native/windows64/leveldbjni.dll;osname=Win32;processor=x86-64,
@@ -286,10 +303,44 @@
               org/xerial/snappy/native/Linux/arm/libsnappyjava.so;osname=linux;processor=arm,
               *
             </Bundle-NativeCode>
+            -->
          </instructions>
         </configuration>
       </plugin>
     </plugins>
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>
+    									org.apache.maven.plugins
+    								</groupId>
+    								<artifactId>
+    									maven-dependency-plugin
+    								</artifactId>
+    								<versionRange>[2.8,)</versionRange>
+    								<goals>
+    									<goal>unpack</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
   </build>
 
   <profiles>
@@ -333,13 +384,6 @@
         <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>activemq-openwire-legacy</artifactId>
-          <version>${project.version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>activemq-camel</artifactId>
           <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>

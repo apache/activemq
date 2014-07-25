@@ -19,34 +19,10 @@ package org.apache.activemq;
 import java.net.MalformedURLException;
 import java.util.Enumeration;
 
-import javax.jms.BytesMessage;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
+import javax.jms.*;
 import javax.jms.Message;
-import javax.jms.MessageEOFException;
-import javax.jms.ObjectMessage;
-import javax.jms.Queue;
-import javax.jms.StreamMessage;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.TextMessage;
-import javax.jms.Topic;
-
 import org.apache.activemq.blob.BlobDownloader;
-import org.apache.activemq.blob.BlobUploader;
-import org.apache.activemq.command.ActiveMQBlobMessage;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMapMessage;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQObjectMessage;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQStreamMessage;
-import org.apache.activemq.command.ActiveMQTempQueue;
-import org.apache.activemq.command.ActiveMQTempTopic;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.*;
 
 /**
  * A helper class for converting normal JMS interfaces into ActiveMQ specific
@@ -173,7 +149,9 @@ public final class ActiveMQMessageTransformation {
             	BlobMessage blobMessage = (BlobMessage)message;
             	ActiveMQBlobMessage msg = new ActiveMQBlobMessage();
             	msg.setConnection(connection);
-            	msg.setBlobDownloader(new BlobDownloader(connection.getBlobTransferPolicy()));
+                if (connection != null){
+            	    msg.setBlobDownloader(new BlobDownloader(connection.getBlobTransferPolicy()));
+                }
             	try {
 					msg.setURL(blobMessage.getURL());
 				} catch (MalformedURLException e) {

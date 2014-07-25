@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.camel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
-import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.camel.AMQ2611Test.Consumer;
 import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,16 @@ import org.slf4j.LoggerFactory;
 public class AMQ2240Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2240Test.class);
+
+    private CamelContext camelContext = null;
+
+    @After
+    public void destroyCamelContext() throws Exception {
+        if (camelContext != null) {
+            camelContext.stop();
+            camelContext = null;
+        }
+    }
 
     @Test
     public void testBadVMTransportOptionsJMSPrefix() throws Exception {
@@ -44,7 +54,9 @@ public class AMQ2240Test {
                 "jms.maxXXXXReconnectAttempts=1&jms.timeout=3000";
 
             LOG.info("creating context with bad URI: " + vmUri);
-            ActiveMQComponent.activeMQComponent(vmUri);
+            ActiveMQComponent amq = ActiveMQComponent.activeMQComponent(vmUri);
+
+            amq.getConfiguration().getConnectionFactory();
 
             fail("Should have received an exception from the bad URI.");
         } catch(Exception e) {
@@ -54,12 +66,27 @@ public class AMQ2240Test {
 
     @Test
     public void testBadVMTransportOptionsBrokerPrefix() throws Exception {
-        try{
+        try {
+
             final String vmUri = "vm://localhost?" +
                 "broker.XXX=foo&broker.persistent=XXX&broker.useJmx=false";
 
             LOG.info("creating context with bad URI: " + vmUri);
-            ActiveMQComponent.activeMQComponent(vmUri).start();
+            ActiveMQComponent amq = ActiveMQComponent.activeMQComponent(vmUri);
+
+            camelContext = new DefaultCamelContext();
+            camelContext.addComponent("activemq", amq);
+            final String queueEndpointName = "activemq:queuetest.Queue";
+            camelContext.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    from(queueEndpointName).bean(Consumer.class, "consume");
+                }
+            });
+
+            camelContext.start();
+            final ProducerTemplate producerTemplate = camelContext.createProducerTemplate();
+            producerTemplate.sendBody(queueEndpointName, "message");
 
             fail("Should have received an exception from the bad URI.");
         } catch(Exception e) {

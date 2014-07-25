@@ -26,7 +26,7 @@ public class HsqldbJDBCAdapter extends BytesJDBCAdapter {
 
     @Override
     public void setStatements(Statements statements) {
-        statements.setBinaryDataType("OTHER");
+        statements.setBinaryDataType("BLOB");
         super.setStatements(statements);
     }
 

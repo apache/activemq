@@ -341,7 +341,8 @@ public abstract class MessageServletSupport extends HttpServlet {
     protected String getPostedMessageBody(HttpServletRequest request) throws IOException {
         String answer = request.getParameter(bodyParameter);
         String contentType = request.getContentType();
-        if (answer == null && contentType != null && contentType.toLowerCase().startsWith("text/xml")) {
+        if (answer == null && contentType != null) {
+            LOG.debug("Content-Type={}", contentType);
             // lets read the message body instead
             BufferedReader reader = request.getReader();
             StringBuffer buffer = new StringBuffer();

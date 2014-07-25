@@ -48,7 +48,12 @@ class FuseMQQTTClientProvider implements MQTTClientProvider {
 
     @Override
     public void publish(String topic, byte[] payload, int qos) throws Exception {
-        connection.publish(topic,payload, QoS.values()[qos],false);
+        publish(topic,payload,qos,false);
+    }
+
+    @Override
+    public void publish(String topic, byte[] payload, int qos, boolean retained) throws Exception {
+        connection.publish(topic,payload, QoS.values()[qos],retained);
     }
 
     @Override

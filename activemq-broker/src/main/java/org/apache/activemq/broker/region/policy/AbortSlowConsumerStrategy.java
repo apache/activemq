@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +30,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ConsumerControl;
+import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transport.InactivityIOException;
 import org.slf4j.Logger;
@@ -91,8 +95,8 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
         HashMap<Subscription, SlowConsumerEntry> toAbort = new HashMap<Subscription, SlowConsumerEntry>();
         for (Entry<Subscription, SlowConsumerEntry> entry : slowConsumers.entrySet()) {
             if (entry.getKey().isSlowConsumer()) {
-                if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod > maxSlowDuration)
-                        || maxSlowCount > 0 && entry.getValue().slowCount > maxSlowCount) {
+                if (maxSlowDuration > 0 && (entry.getValue().markCount * checkPeriod >= maxSlowDuration)
+                        || maxSlowCount > 0 && entry.getValue().slowCount >= maxSlowCount) {
                     toAbort.put(entry.getKey(), entry.getValue());
                     slowConsumers.remove(entry.getKey());
                 }
@@ -106,38 +110,98 @@ public class AbortSlowConsumerStrategy implements SlowConsumerStrategy, Runnable
     }
 
     protected void abortSubscription(Map<Subscription, SlowConsumerEntry> toAbort, boolean abortSubscriberConnection) {
+
+        Map<Connection, List<Subscription>> abortMap = new HashMap<Connection, List<Subscription>>();
+
         for (final Entry<Subscription, SlowConsumerEntry> entry : toAbort.entrySet()) {
             ConnectionContext connectionContext = entry.getValue().context;
-            if (connectionContext!= null) {
-                try {
-                    LOG.info("aborting "
-                            + (abortSubscriberConnection ? "connection" : "consumer")
-                            + ", slow consumer: " + entry.getKey());
+            if (connectionContext == null) {
+                continue;
+            }
 
-                    final Connection connection = connectionContext.getConnection();
-                    if (connection != null) {
-                        if (abortSubscriberConnection) {
-                            scheduler.executeAfterDelay(new Runnable() {
-                                @Override
-                                public void run() {
-                                    connection.serviceException(new InactivityIOException("Consumer was slow too often (>"
-                                            + maxSlowCount +  ") or too long (>"
-                                            + maxSlowDuration + "): " + entry.getKey().getConsumerInfo().getConsumerId()));
-                                }}, 0l);
-                        } else {
-                            // just abort the consumer by telling it to stop
-                            ConsumerControl stopConsumer = new ConsumerControl();
-                            stopConsumer.setConsumerId(entry.getKey().getConsumerInfo().getConsumerId());
-                            stopConsumer.setClose(true);
-                            connection.dispatchAsync(stopConsumer);
-                        }
-                    } else {
-                        LOG.debug("slowConsumer abort ignored, no connection in context:"  + connectionContext);
+            Connection connection = connectionContext.getConnection();
+            if (connection == null) {
+                LOG.debug("slowConsumer abort ignored, no connection in context:"  + connectionContext);
+            }
+
+            if (!abortMap.containsKey(connection)) {
+                abortMap.put(connection, new ArrayList<Subscription>());
+            }
+
+            abortMap.get(connection).add(entry.getKey());
+        }
+
+        for (Entry<Connection, List<Subscription>> entry : abortMap.entrySet()) {
+            final Connection connection = entry.getKey();
+            final List<Subscription> subscriptions = entry.getValue();
+
+            if (abortSubscriberConnection) {
+
+                LOG.info("aborting connection:{} with {} slow consumers",
+                         connection.getConnectionId(), subscriptions.size());
+
+                if (LOG.isTraceEnabled()) {
+                    for (Subscription subscription : subscriptions) {
+                        LOG.trace("Connection {} being aborted because of slow consumer: {} on destination: {}",
+                                  new Object[] { connection.getConnectionId(),
+                                                 subscription.getConsumerInfo().getConsumerId(),
+                                                 subscription.getActiveMQDestination() });
                     }
+                }
+
+                try {
+                    scheduler.executeAfterDelay(new Runnable() {
+                        @Override
+                        public void run() {
+                            connection.serviceException(new InactivityIOException(
+                                    subscriptions.size() + " Consumers was slow too often (>"
+                                    + maxSlowCount +  ") or too long (>"
+                                    + maxSlowDuration + "): "));
+                        }}, 0l);
                 } catch (Exception e) {
-                    LOG.info("exception on stopping "
-                            + (abortSubscriberConnection ? "connection" : "consumer")
-                            + " to abort slow consumer: " + entry.getKey(), e);
+                    LOG.info("exception on aborting connection {} with {} slow consumers",
+                             connection.getConnectionId(), subscriptions.size());
+                }
+            } else {
+                // just abort each consumer
+                for (Subscription subscription : subscriptions) {
+                    final Subscription subToClose = subscription;
+                    LOG.info("aborting slow consumer: {} for destination:{}",
+                             subscription.getConsumerInfo().getConsumerId(),
+                             subscription.getActiveMQDestination());
+
+                    // tell the remote consumer to close
+                    try {
+                        ConsumerControl stopConsumer = new ConsumerControl();
+                        stopConsumer.setConsumerId(subscription.getConsumerInfo().getConsumerId());
+                        stopConsumer.setClose(true);
+                        connection.dispatchAsync(stopConsumer);
+                    } catch (Exception e) {
+                        LOG.info("exception on aborting slow consumer: {}", subscription.getConsumerInfo().getConsumerId(), e);
+                    }
+
+                    // force a local remove in case remote is unresponsive
+                    try {
+                        scheduler.executeAfterDelay(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    RemoveInfo removeCommand = subToClose.getConsumerInfo().createRemoveCommand();
+                                    if (connection instanceof CommandVisitor) {
+                                        // avoid service exception handling and logging
+                                        removeCommand.visit((CommandVisitor) connection);
+                                    } else {
+                                        connection.service(removeCommand);
+                                    }
+                                } catch (IllegalStateException ignoredAsRemoteHasDoneTheJob) {
+                                } catch (Exception e) {
+                                    LOG.info("exception on local remove of slow consumer: {}", subToClose.getConsumerInfo().getConsumerId(), e);
+                                }
+                            }}, 1000l);
+
+                    } catch (Exception e) {
+                        LOG.info("exception on local remove of slow consumer: {}", subscription.getConsumerInfo().getConsumerId(), e);
+                    }
                 }
             }
         }

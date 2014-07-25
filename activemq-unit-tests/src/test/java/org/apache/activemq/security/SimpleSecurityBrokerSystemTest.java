@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
@@ -36,6 +37,12 @@ import org.apache.activemq.jaas.GroupPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.*;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+
 /**
  * Tests that the broker allows/fails access to destinations based on the
  * security policy installed on the broker.
@@ -43,11 +50,19 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
-
-    static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
-    static final GroupPrincipal USERS = new GroupPrincipal("users");
-    static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
     private static final Logger LOG = LoggerFactory.getLogger(SimpleSecurityBrokerSystemTest.class);
+
+    public static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
+    public static final GroupPrincipal USERS = new GroupPrincipal("users");
+    public static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
+    public static Principal WILDCARD;
+    static {
+        try {
+         WILDCARD = (Principal) DefaultAuthorizationMap.createGroupPrincipal("*", GroupPrincipal.class.getName());
+        } catch (Exception e) {
+            LOG.error("Failed to make wildcard principal", e);
+        }
+    }
 
     public BrokerPlugin authorizationPlugin;
     public BrokerPlugin authenticationPlugin;
@@ -72,6 +87,30 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+    /**
+     * @throws javax.jms.JMSException
+     */
+    public void testPopulateJMSXUserID() throws Exception {
+        destination = new ActiveMQQueue("TEST");
+        Connection connection = factory.createConnection("system", "manager");
+        connections.add(connection);
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        sendMessages(session, destination, 1);
+
+        // make sure that the JMSXUserID is exposed over JMX
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        CompositeData[] browse = (CompositeData[]) mbs.invoke(new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName=TEST"), "browse", null, null);
+        assertEquals("system", browse[0].get("JMSXUserID"));
+
+        // And also via JMS.
+        MessageConsumer consumer = session.createConsumer(destination);
+        Message m = consumer.receive(1000);
+        assertTrue(m.propertyExists("JMSXUserID"));
+        assertEquals("system",  m.getStringProperty("JMSXUserID"));
+    }
+
     public static AuthorizationMap createAuthorizationMap() {
         DestinationMap readAccess = new DefaultAuthorizationMap();
         readAccess.put(new ActiveMQQueue(">"), ADMINS);
@@ -91,10 +130,8 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         writeAccess.put(new ActiveMQTopic("GUEST.>"), USERS);
         writeAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
+        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
 
         DestinationMap adminAccess = new DefaultAuthorizationMap();
         adminAccess.put(new ActiveMQTopic(">"), ADMINS);
@@ -107,7 +144,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         return new SimpleAuthorizationMap(writeAccess, readAccess, adminAccess);
     }
 
-    static class SimpleAuthenticationFactory implements BrokerPlugin {
+    public static class SimpleAuthenticationFactory implements BrokerPlugin {
         public Broker installPlugin(Broker broker) {
 
             HashMap<String, String> u = new HashMap<String, String>();
@@ -140,6 +177,8 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
+        broker.setPopulateJMSXUserID(true);
+        broker.setUseAuthenticatedPrincipalForJMSXUserID(true);
         broker.setPlugins(new BrokerPlugin[] {authorizationPlugin, authenticationPlugin});
         broker.setPersistent(false);
         return broker;

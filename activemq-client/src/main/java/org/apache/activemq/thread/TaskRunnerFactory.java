@@ -47,10 +47,10 @@ public class TaskRunnerFactory implements Executor {
     private String name;
     private int priority;
     private boolean daemon;
-    private AtomicLong id = new AtomicLong(0);
+    private final AtomicLong id = new AtomicLong(0);
     private boolean dedicatedTaskRunner;
     private long shutdownAwaitTermination = 30000;
-    private AtomicBoolean initDone = new AtomicBoolean(false);
+    private final AtomicBoolean initDone = new AtomicBoolean(false);
     private int maxThreadPoolSize = Integer.MAX_VALUE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
 
@@ -140,6 +140,7 @@ public class TaskRunnerFactory implements Executor {
         }
     }
 
+    @Override
     public void execute(Runnable runnable) {
         execute(runnable, name);
     }
@@ -164,7 +165,8 @@ public class TaskRunnerFactory implements Executor {
     }
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, getMaxThreadPoolSize(), 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, getMaxThreadPoolSize(), getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+            @Override
             public Thread newThread(Runnable runnable) {
                 String threadName = name + "-" + id.incrementAndGet();
                 Thread thread = new Thread(runnable, threadName);
@@ -253,4 +255,7 @@ public class TaskRunnerFactory implements Executor {
         this.shutdownAwaitTermination = shutdownAwaitTermination;
     }
 
+    private static int getDefaultKeepAliveTime() {
+        return Integer.getInteger("org.apache.activemq.thread.TaskRunnerFactory.keepAliveTime", 30);
+    }
 }

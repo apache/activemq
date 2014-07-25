@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
@@ -34,6 +30,10 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.LRUCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 
 public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicInterceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SelectorAwareVirtualTopicInterceptor.class);
@@ -70,10 +70,9 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
             if (sub.matches(message, msgContext)) {
                 matches = true;
                 break;
-
             }
         }
-        if (matches == false && subs.size() == 0) {
+        if (matches == false) {
             matches = tryMatchingCachedSubs(broker, dest, msgContext);
         }
         return matches;
@@ -87,11 +86,14 @@ public class SelectorAwareVirtualTopicInterceptor extends VirtualTopicIntercepto
         final SubQueueSelectorCacheBroker cache = getSubQueueSelectorCacheBrokerPlugin(broker);
 
         if (cache != null) {
-            final String selector = cache.getSelector(dest.getActiveMQDestination().getQualifiedName());
-            if (selector != null) {
+            final Set<String> selectors = cache.getSelector(dest.getActiveMQDestination().getQualifiedName());
+            for (String selector : selectors) {
                 try {
                     final BooleanExpression expression = getExpression(selector);
                     matches = expression.matches(msgContext);
+                    if (matches) {
+                        return true;
+                    }
                 } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                 }

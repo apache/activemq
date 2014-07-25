@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.9-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-camel</artifactId>
@@ -33,6 +33,8 @@
   <properties>
     <activemq.osgi.import.pkg>
        org.springframework.jms*;version="[3,4)",
+       org.apache.activemq.pool,
+       *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq.camel*;version=${project.version};-noimport:=true
@@ -125,16 +127,22 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.openejb</groupId>
+      <artifactId>openejb-core</artifactId>
+      <version>3.1</version>
+      <optional>true</optional>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>org.objectweb.howl</groupId>
       <artifactId>howl</artifactId>
       <version>1.0.1-1</version>
-      <optional>true</optional>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>openejb-core</artifactId>
-      <version>3.1.2</version>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
@@ -147,14 +155,13 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-ra</artifactId>
+      <artifactId>activemq-jaas</artifactId>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jencks</groupId>
-      <artifactId>jencks-amqpool</artifactId>
-      <version>2.2</version>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-ra</artifactId>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
@@ -184,7 +191,8 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>pertest</forkMode>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <argLine>-Xmx512M</argLine>
@@ -194,9 +202,9 @@
               <value>target/</value>
             </property>
           </systemProperties>
-          <excludes>
-            <exclude>**/JmsJdbcXALoadTest.java</exclude><!-- used only for manual xa performance testing -->
-          </excludes>
+          <systemPropertyVariables>
+            <derby.stream.error.file>target/derby.log</derby.stream.error.file>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>

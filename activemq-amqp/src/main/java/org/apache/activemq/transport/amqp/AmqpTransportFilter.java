@@ -16,20 +16,21 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.IOException;
+import java.security.cert.X509Certificate;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.qpid.proton.jms.InboundTransformer;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.qpid.proton.jms.InboundTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.security.cert.X509Certificate;
 
 /**
  * The AMQPTransportFilter normally sits on top of a TcpTransport that has been
@@ -41,30 +42,30 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransportFilter.class);
     static final Logger TRACE_BYTES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".BYTES");
     static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
-    private final AmqpProtocolConverter protocolConverter;
-//    private AmqpInactivityMonitor monitor;
+    private IAmqpProtocolConverter protocolConverter;
     private AmqpWireFormat wireFormat;
 
     private boolean trace;
     private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
         super(next);
-        this.protocolConverter = new AmqpProtocolConverter(this, brokerContext);
-
+        this.protocolConverter = new AMQPProtocolDiscriminator(this);
         if (wireFormat instanceof AmqpWireFormat) {
             this.wireFormat = (AmqpWireFormat) wireFormat;
         }
     }
 
+    @Override
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command) o;
-            protocolConverter.lock.lock();
+            lock.lock();
             try {
                 protocolConverter.onActiveMQCommand(command);
             } finally {
-                protocolConverter.lock.unlock();
+                lock.unlock();
             }
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
@@ -73,28 +74,30 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public void onException(IOException error) {
-        protocolConverter.lock.lock();
+        lock.lock();
         try {
             protocolConverter.onAMQPException(error);
         } finally {
-            protocolConverter.lock.unlock();
+            lock.unlock();
         }
     }
 
+    @Override
     public void sendToActiveMQ(IOException error) {
         super.onException(error);
     }
 
+    @Override
     public void onCommand(Object command) {
         try {
-            if (trace && TRACE_BYTES.isTraceEnabled()) {
-                TRACE_BYTES.trace("Received: \n" + command);
+            if (trace) {
+                TRACE_BYTES.trace("Received: \n{}", command);
             }
-            protocolConverter.lock.lock();
+            lock.lock();
             try {
                 protocolConverter.onAMQPData(command);
             } finally {
-                protocolConverter.lock.unlock();
+                lock.unlock();
             }
         } catch (IOException e) {
             handleException(e);
@@ -103,18 +106,20 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         }
     }
 
+    @Override
     public void sendToActiveMQ(Command command) {
-        assert protocolConverter.lock.isHeldByCurrentThread();
+        assert lock.isHeldByCurrentThread();
         TransportListener l = transportListener;
         if (l != null) {
             l.onCommand(command);
         }
     }
 
+    @Override
     public void sendToAmqp(Object command) throws IOException {
-        assert protocolConverter.lock.isHeldByCurrentThread();
-        if (trace && TRACE_BYTES.isTraceEnabled()) {
-            TRACE_BYTES.trace("Sending: \n" + command);
+        assert lock.isHeldByCurrentThread();
+        if (trace) {
+            TRACE_BYTES.trace("Sending: \n{}", command);
         }
         Transport n = next;
         if (n != null) {
@@ -122,6 +127,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         }
     }
 
+    @Override
     public X509Certificate[] getPeerCertificates() {
         if (next instanceof SslTransport) {
             X509Certificate[] peerCerts = ((SslTransport) next).getPeerCertificates();
@@ -133,6 +139,7 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         return null;
     }
 
+    @Override
     public boolean isTrace() {
         return trace;
     }
@@ -142,32 +149,31 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         this.protocolConverter.updateTracer();
     }
 
-//    @Override
-//    public AmqpInactivityMonitor getInactivityMonitor() {
-//        return monitor;
-//    }
-//
-//    public void setInactivityMonitor(AmqpInactivityMonitor monitor) {
-//        this.monitor = monitor;
-//    }
-
     @Override
     public AmqpWireFormat getWireFormat() {
         return this.wireFormat;
     }
 
-
-
     public void handleException(IOException e) {
         super.onException(e);
     }
 
-
+    @Override
     public String getTransformer() {
         return transformer;
     }
 
     public void setTransformer(String transformer) {
         this.transformer = transformer;
+    }
+
+    @Override
+    public IAmqpProtocolConverter getProtocolConverter() {
+        return protocolConverter;
+    }
+
+    @Override
+    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter) {
+        this.protocolConverter = protocolConverter;
     }
 }

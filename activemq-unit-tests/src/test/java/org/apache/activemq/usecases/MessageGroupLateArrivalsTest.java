@@ -31,8 +31,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
-import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -40,10 +38,18 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageGroupLateArrivalsTest extends JmsTestSupport {
+import static org.junit.Assert.*;
+
+@RunWith(BlockJUnit4ClassRunner.class)
+public class MessageGroupLateArrivalsTest {
     public static final Logger log = LoggerFactory.getLogger(MessageGroupLateArrivalsTest.class);
     protected Connection connection;
     protected Session session;
@@ -56,15 +62,7 @@ public class MessageGroupLateArrivalsTest extends JmsTestSupport {
     protected HashMap<String, Integer> messageCount = new HashMap<String, Integer>();
     protected HashMap<String, Set<String>> messageGroups = new HashMap<String, Set<String>>();
 
-    public static Test suite() {
-        return suite(MessageGroupLateArrivalsTest.class);
-    }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
-    @Override
+    @Before
     public void setUp() throws Exception {
         broker = createBroker();
         broker.start();
@@ -76,7 +74,6 @@ public class MessageGroupLateArrivalsTest extends JmsTestSupport {
         connection.start();
     }
 
-    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
@@ -92,7 +89,7 @@ public class MessageGroupLateArrivalsTest extends JmsTestSupport {
         return service;
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         producer.close();
         session.close();
@@ -100,6 +97,7 @@ public class MessageGroupLateArrivalsTest extends JmsTestSupport {
         broker.stop();
     }
 
+    @Test(timeout = 30 * 1000)
     public void testConsumersLateToThePartyGetSomeNewGroups() throws Exception {
 
         final int perBatch = 3;
@@ -164,6 +162,7 @@ public class MessageGroupLateArrivalsTest extends JmsTestSupport {
         }
     }
 
+    @Test(timeout = 30 * 1000)
     public void testConsumerLateToBigPartyGetsNewGroup() throws Exception {
 
         final int perBatch = 2;

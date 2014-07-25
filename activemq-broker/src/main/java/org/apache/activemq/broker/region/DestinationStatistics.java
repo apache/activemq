@@ -20,7 +20,7 @@ package org.apache.activemq.broker.region;
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
-import org.apache.activemq.management.TimeStatisticImpl;
+import org.apache.activemq.management.*;
 
 /**
  * The J2EE Statistics for the a Destination.
@@ -31,6 +31,7 @@ public class DestinationStatistics extends StatsImpl {
 
     protected CountStatisticImpl enqueues;
     protected CountStatisticImpl dequeues;
+    protected CountStatisticImpl forwards;
     protected CountStatisticImpl consumers;
     protected CountStatisticImpl producers;
     protected CountStatisticImpl messages;
@@ -41,6 +42,7 @@ public class DestinationStatistics extends StatsImpl {
     protected TimeStatisticImpl processTime;
     protected CountStatisticImpl blockedSends;
     protected TimeStatisticImpl blockedTime;
+    protected SizeStatisticImpl messageSize;
 
 
     public DestinationStatistics() {
@@ -48,6 +50,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the destination");
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
+        forwards = new CountStatisticImpl("forwards", "The number of messages that have been forwarded to a networked broker from the destination");
         inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
         expired = new CountStatisticImpl("expired", "The number of messages that have expired");
 
@@ -61,6 +64,7 @@ public class DestinationStatistics extends StatsImpl {
         processTime = new TimeStatisticImpl("processTime", "information around length of time messages are held by a destination");
         blockedSends = new CountStatisticImpl("blockedSends", "number of messages that have to wait for flow control");
         blockedTime = new TimeStatisticImpl("blockedTime","amount of time messages are blocked for flow control");
+        messageSize = new SizeStatisticImpl("messageSize","Size of messages passing through the destination");
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
@@ -73,6 +77,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("processTime", processTime);
         addStatistic("blockedSends",blockedSends);
         addStatistic("blockedTime",blockedTime);
+        addStatistic("messageSize",messageSize);
     }
 
     public CountStatisticImpl getEnqueues() {
@@ -81,6 +86,10 @@ public class DestinationStatistics extends StatsImpl {
 
     public CountStatisticImpl getDequeues() {
         return dequeues;
+    }
+
+    public CountStatisticImpl getForwards() {
+        return forwards;
     }
 
     public CountStatisticImpl getInflight() {
@@ -125,17 +134,22 @@ public class DestinationStatistics extends StatsImpl {
     public TimeStatisticImpl getBlockedTime(){
         return this.blockedTime;
     }
+    public SizeStatisticImpl getMessageSize(){
+        return this.messageSize;
+    }
 
     public void reset() {
         if (this.isDoReset()) {
             super.reset();
             enqueues.reset();
             dequeues.reset();
+            forwards.reset();
             dispatched.reset();
             inflight.reset();
             expired.reset();
             blockedSends.reset();
             blockedTime.reset();
+            messageSize.reset();
         }
     }
 
@@ -144,6 +158,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
+        forwards.setEnabled(enabled);
         inflight.setEnabled(enabled);
         expired.setEnabled(true);
         consumers.setEnabled(enabled);
@@ -153,6 +168,7 @@ public class DestinationStatistics extends StatsImpl {
         processTime.setEnabled(enabled);
         blockedSends.setEnabled(enabled);
         blockedTime.setEnabled(enabled);
+        messageSize.setEnabled(enabled);
 
     }
 
@@ -161,6 +177,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
+            forwards.setParent(parent.forwards);
             inflight.setParent(parent.inflight);
             expired.setParent(parent.expired);
             consumers.setParent(parent.consumers);
@@ -170,10 +187,12 @@ public class DestinationStatistics extends StatsImpl {
             processTime.setParent(parent.processTime);
             blockedSends.setParent(parent.blockedSends);
             blockedTime.setParent(parent.blockedTime);
+            messageSize.setParent(parent.messageSize);
         } else {
             enqueues.setParent(null);
             dispatched.setParent(null);
             dequeues.setParent(null);
+            forwards.setParent(null);
             inflight.setParent(null);
             expired.setParent(null);
             consumers.setParent(null);
@@ -183,6 +202,7 @@ public class DestinationStatistics extends StatsImpl {
             processTime.setParent(null);
             blockedSends.setParent(null);
             blockedTime.setParent(null);
+            messageSize.setParent(null);
         }
     }
 

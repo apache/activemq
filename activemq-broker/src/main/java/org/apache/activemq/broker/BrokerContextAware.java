@@ -23,5 +23,6 @@ package org.apache.activemq.broker;
  */
 public interface BrokerContextAware {
 
-    void setBrokerContext(BrokerContext brokerContext);    
+    void setBrokerContext(BrokerContext brokerContext);
+    BrokerContext getBrokerContext();
 }

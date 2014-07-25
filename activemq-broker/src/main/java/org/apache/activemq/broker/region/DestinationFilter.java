@@ -88,8 +88,8 @@ public class DestinationFilter implements Destination {
     }
 
     @Override
-    public long getInactiveTimoutBeforeGC() {
-        return next.getInactiveTimoutBeforeGC();
+    public long getInactiveTimeoutBeforeGC() {
+        return next.getInactiveTimeoutBeforeGC();
     }
 
     @Override
@@ -388,6 +388,11 @@ public class DestinationFilter implements Destination {
         return next.isDLQ();
     }
 
+    @Override
+    public void duplicateFromStore(Message message, Subscription subscription) {
+        next.duplicateFromStore(message, subscription);
+    }
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (next instanceof DestinationFilter) {
             DestinationFilter filter = (DestinationFilter) next;
@@ -396,5 +401,9 @@ public class DestinationFilter implements Destination {
             Topic topic = (Topic)next;
             topic.deleteSubscription(context, key);
         }
+    }
+
+    public Destination getNext() {
+        return next;
     }
 }

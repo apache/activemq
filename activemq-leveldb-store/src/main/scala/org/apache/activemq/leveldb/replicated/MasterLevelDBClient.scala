@@ -148,7 +148,15 @@ class MasterLevelDBClient(val store:MasterLevelDBStore) extends LevelDBClient(st
           }
         }
 
+        override def on_close {
+          super.force
+        }
       }
+    }
+
+    override protected def onDelete(file: Long) = {
+      super.onDelete(file)
+      store.replicate_log_delete(file)
     }
   }
 }

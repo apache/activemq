@@ -157,9 +157,20 @@ public class ShellCommand extends AbstractCommand {
 
     ArrayList<Command> getCommands() {
         ServiceLoader<Command> loader = ServiceLoader.load(Command.class);
+        Iterator<Command> iterator = loader.iterator();
         ArrayList<Command> rc = new ArrayList<Command>();
-        for( Command command: loader ) {
-            rc.add(command);
+        boolean done = false;
+        while (!done) {
+            try {
+                if( iterator.hasNext() ) {
+                    rc.add(iterator.next());
+                } else {
+                    done = true;
+                }
+            } catch (ServiceConfigurationError e) {
+                // it's ok, some commands may not load if their dependencies
+                // are not available.
+            }
         }
         return rc;
     }

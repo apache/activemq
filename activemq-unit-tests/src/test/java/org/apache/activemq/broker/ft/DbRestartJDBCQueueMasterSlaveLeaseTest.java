@@ -20,8 +20,11 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.jdbc.JDBCIOExceptionHandler;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,29 +39,22 @@ public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMa
         persistenceAdapter.setLockKeepAlivePeriod(getLockKeepAlivePeriod());
     }
 
+    @Override
+    protected void configureBroker(BrokerService brokerService) {
+        //let the brokers die on exception and master should have lease on restart
+        // which will delay slave start till it expires
+        JDBCIOExceptionHandler trapSQLExceptions = new JDBCIOExceptionHandler();
+        trapSQLExceptions.setIgnoreSQLExceptions(false);
+        trapSQLExceptions.setStopStartConnectors(false);
+        trapSQLExceptions.setResumeCheckSleepPeriod(500l);
+        brokerService.setIoExceptionHandler(trapSQLExceptions);
+    }
+
     private long getLockKeepAlivePeriod() {
-        return 500;
+        return 1000;
     }
 
     private long getLockAcquireSleepInterval() {
-        return 2000;
-    }
-
-    @Override
-    protected void delayTillRestartRequired() {
-
-        LOG.info("delay for less than lease quantum. While Db is offline, master should stay alive");
-        try {
-            TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void verifyExpectedBroker(int inflightMessageCount) {
-        if (inflightMessageCount == 0 || inflightMessageCount == failureCount + 10) {
-            assertEquals("connected to master", master.getBrokerName(), ((ActiveMQConnection)sendConnection).getBrokerName());
-        }
+        return 8000;
     }
 }

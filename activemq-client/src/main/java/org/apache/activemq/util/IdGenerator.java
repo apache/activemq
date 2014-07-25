@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Generator for Globally unique Strings.
  */
-
 public class IdGenerator {
 
     private static final Logger LOG = LoggerFactory.getLogger(IdGenerator.class);
@@ -34,7 +33,7 @@ public class IdGenerator {
     private static int instanceCount;
     private static String hostName;
     private String seed;
-    private AtomicLong sequence = new AtomicLong(1);
+    private final AtomicLong sequence = new AtomicLong(1);
     private int length;
     public static final String PROPERTY_IDGENERATOR_PORT ="activemq.idgenerator.port";
 
@@ -60,11 +59,16 @@ public class IdGenerator {
                 ss = new ServerSocket(idGeneratorPort);
                 stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
                 Thread.sleep(100);
-            } catch (Exception ioe) {
+            } catch (Exception e) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("could not generate unique stub by using DNS and binding to local port", ioe);
+                    LOG.trace("could not generate unique stub by using DNS and binding to local port", e);
                 } else {
-                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", ioe.getClass().getCanonicalName(), ioe.getMessage());
+                    LOG.warn("could not generate unique stub by using DNS and binding to local port: {} {}", e.getClass().getCanonicalName(), e.getMessage());
+                }
+
+                // Restore interrupted state so higher level code can deal with it.
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
                 }
             } finally {
                 if (ss != null) {
@@ -85,6 +89,8 @@ public class IdGenerator {
         if (hostName == null) {
             hostName = "localhost";
         }
+        hostName = sanitizeHostName(hostName);
+
         if (stub.length() == 0) {
             stub = "-1-" + System.currentTimeMillis() + "-";
         }
@@ -107,27 +113,46 @@ public class IdGenerator {
 
     /**
      * As we have to find the hostname as a side-affect of generating a unique
-     * stub, we allow it's easy retrevial here
+     * stub, we allow it's easy retrieval here
      *
      * @return the local host name
      */
-
     public static String getHostName() {
         return hostName;
     }
 
-
     /**
-     * Generate a unqiue id
+     * Generate a unique id
      *
      * @return a unique id
      */
-
     public synchronized String generateId() {
         StringBuilder sb = new StringBuilder(length);
         sb.append(seed);
         sb.append(sequence.getAndIncrement());
         return sb.toString();
+    }
+
+    public static String sanitizeHostName(String hostName) {
+        boolean changed = false;
+
+        StringBuilder sb = new StringBuilder();
+        for (char ch : hostName.toCharArray()) {
+            // only include ASCII chars
+            if (ch < 127) {
+                sb.append(ch);
+            } else {
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            String newHost = sb.toString();
+            LOG.info("Sanitized hostname from: {} to: {}", hostName, newHost);
+            return newHost;
+        } else {
+            return hostName;
+        }
     }
 
     /**
@@ -186,7 +211,6 @@ public class IdGenerator {
      * @param id2
      * @return 0 if equal else a positive if id1 is > id2 ...
      */
-
     public static int compare(String id1, String id2) {
         int result = -1;
         String seed1 = IdGenerator.getSeedFromId(id1);

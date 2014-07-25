@@ -74,6 +74,7 @@ public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursor
             while(underTest.hasNext()) {
                 MessageReference ref = underTest.next();
                 underTest.remove();
+                ref.decrementReferenceCount();
                 assertEquals("id is correct", receivedCount++, ref.getMessageId().getProducerSequenceId());
             }
             assertEquals("got all messages back", receivedCount, numMessages);

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.util
 
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.fusesource.hawtbuf.{ByteArrayOutputStream, Buffer}
 import java.io.InputStream
 

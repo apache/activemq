@@ -52,6 +52,9 @@ public interface ReplicatedLevelDBStoreViewMBean {
     @MBeanInfo("The current position of the replication log.")
     Long getPosition();
 
+    @MBeanInfo("When the last entry was added to the replication log.")
+    Long getPositionDate();
+
     @MBeanInfo("The directory holding the data.")
     String getDirectory();
 

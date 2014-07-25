@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +29,13 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 public class ActiveMQPrefetchPolicy extends Object implements Serializable {
+
     public static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE;
     public static final int DEFAULT_QUEUE_PREFETCH = 1000;
     public static final int DEFAULT_QUEUE_BROWSER_PREFETCH = 500;
     public static final int DEFAULT_DURABLE_TOPIC_PREFETCH = 100;
-    public static final int DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH=1000;
-    public static final int DEFAULT_INPUT_STREAM_PREFETCH=100;
+    public static final int DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH = 1000;
+    public static final int DEFAULT_INPUT_STREAM_PREFETCH = 100;
     public static final int DEFAULT_TOPIC_PREFETCH = MAX_PREFETCH_SIZE;
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQPrefetchPolicy.class);
@@ -66,7 +68,8 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     }
 
     /**
-     * @param durableTopicPrefetch The durableTopicPrefetch to set.
+     * @param durableTopicPrefetch
+     *            The durableTopicPrefetch to set.
      */
     public void setDurableTopicPrefetch(int durableTopicPrefetch) {
         this.durableTopicPrefetch = getMaxPrefetchLimit(durableTopicPrefetch);
@@ -80,7 +83,8 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     }
 
     /**
-     * @param queuePrefetch The queuePrefetch to set.
+     * @param queuePrefetch
+     *            The queuePrefetch to set.
      */
     public void setQueuePrefetch(int queuePrefetch) {
         this.queuePrefetch = getMaxPrefetchLimit(queuePrefetch);
@@ -94,7 +98,8 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     }
 
     /**
-     * @param queueBrowserPrefetch The queueBrowserPrefetch to set.
+     * @param queueBrowserPrefetch
+     *            The queueBrowserPrefetch to set.
      */
     public void setQueueBrowserPrefetch(int queueBrowserPrefetch) {
         this.queueBrowserPrefetch = getMaxPrefetchLimit(queueBrowserPrefetch);
@@ -108,7 +113,8 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     }
 
     /**
-     * @param topicPrefetch The topicPrefetch to set.
+     * @param topicPrefetch
+     *            The topicPrefetch to set.
      */
     public void setTopicPrefetch(int topicPrefetch) {
         this.topicPrefetch = getMaxPrefetchLimit(topicPrefetch);
@@ -122,8 +128,8 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     }
 
     /**
-     * @param optimizeAcknowledgePrefetch The optimizeDurableTopicPrefetch to
-     *                set.
+     * @param optimizeAcknowledgePrefetch
+     *            The optimizeDurableTopicPrefetch to set.
      */
     public void setOptimizeDurableTopicPrefetch(int optimizeAcknowledgePrefetch) {
         this.optimizeDurableTopicPrefetch = optimizeAcknowledgePrefetch;
@@ -150,33 +156,35 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     }
 
     public void setAll(int i) {
-        this.durableTopicPrefetch = i;
-        this.queueBrowserPrefetch = i;
-        this.queuePrefetch = i;
-        this.topicPrefetch = i;
-        this.inputStreamPrefetch = 1;
-        this.optimizeDurableTopicPrefetch = i;
+        this.durableTopicPrefetch = getMaxPrefetchLimit(i);
+        this.queueBrowserPrefetch = getMaxPrefetchLimit(i);
+        this.queuePrefetch = getMaxPrefetchLimit(i);
+        this.topicPrefetch = getMaxPrefetchLimit(i);
+        this.inputStreamPrefetch = getMaxPrefetchLimit(i);
+        this.optimizeDurableTopicPrefetch = getMaxPrefetchLimit(i);
     }
 
+    @Deprecated
     public int getInputStreamPrefetch() {
         return inputStreamPrefetch;
     }
 
+    @Deprecated
     public void setInputStreamPrefetch(int inputStreamPrefetch) {
         this.inputStreamPrefetch = getMaxPrefetchLimit(inputStreamPrefetch);
     }
 
-    public boolean equals(Object object){
-        if (object instanceof ActiveMQPrefetchPolicy){
+    @Override
+    public boolean equals(Object object) {
+        if (object instanceof ActiveMQPrefetchPolicy) {
             ActiveMQPrefetchPolicy other = (ActiveMQPrefetchPolicy) object;
             return this.queuePrefetch == other.queuePrefetch &&
-            this.queueBrowserPrefetch == other.queueBrowserPrefetch &&
-            this.topicPrefetch == other.topicPrefetch &&
-            this.durableTopicPrefetch == other.durableTopicPrefetch &&
-            this.optimizeDurableTopicPrefetch == other.optimizeDurableTopicPrefetch &&
-            this.inputStreamPrefetch == other.inputStreamPrefetch;
+                   this.queueBrowserPrefetch == other.queueBrowserPrefetch &&
+                   this.topicPrefetch == other.topicPrefetch &&
+                   this.durableTopicPrefetch == other.durableTopicPrefetch &&
+                   this.optimizeDurableTopicPrefetch == other.optimizeDurableTopicPrefetch &&
+                   this.inputStreamPrefetch == other.inputStreamPrefetch;
         }
         return false;
     }
-
 }

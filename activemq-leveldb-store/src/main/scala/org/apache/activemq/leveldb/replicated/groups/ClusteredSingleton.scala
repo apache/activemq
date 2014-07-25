@@ -18,15 +18,16 @@ package org.apache.activemq.leveldb.replicated.groups
 
 
 import collection.mutable.{ListBuffer, HashMap}
-import internal.ChangeListenerSupport
 
 import java.io._
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import collection.JavaConversions._
 import java.util.LinkedHashMap
 import java.lang.{IllegalStateException, String}
-import reflect.BeanProperty
-import org.codehaus.jackson.annotate.JsonProperty
+import beans.BeanProperty
+import com.fasterxml.jackson.annotation.JsonProperty
+import org.apache.zookeeper.KeeperException.NoNodeException
+import scala.reflect.ClassTag
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -82,7 +83,7 @@ object ClusteredSupport {
 class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends ChangeListenerSupport {
   import ClusteredSupport._
   
-  protected var _group:Group = _
+  protected var _group:ZooKeeperGroup = _
   def group = _group
 
   /**
@@ -108,18 +109,22 @@ class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends
     }
 
     def connected = {
+      onConnected
       changed
       ClusteredSingletonWatcher.this.fireConnected
     }
 
     def disconnected = {
+      onDisconnected
       changed
       ClusteredSingletonWatcher.this.fireDisconnected
     }
   }
 
+  protected def onConnected = {}
+  protected def onDisconnected = {}
 
-  def start(group:Group) = this.synchronized {
+  def start(group:ZooKeeperGroup) = this.synchronized {
     if(_group !=null )
       throw new IllegalStateException("Already started.")
     _group = group
@@ -158,8 +163,9 @@ class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends
   }
 
   def masters = this.synchronized {
-    _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassManifest[T] {
-      def erasure = stateClass
+    _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassTag[T] {
+      def runtimeClass = stateClass
+      override def erasure = stateClass
     })
   }
 
@@ -181,7 +187,7 @@ class ClusteredSingleton[T <: NodeState ](stateClass:Class[T]) extends Clustered
 
   override def stop = {
     this.synchronized {
-      if(_eid != null) {
+      if(_state != null) {
         leave
       }
       super.stop
@@ -195,10 +201,22 @@ class ClusteredSingleton[T <: NodeState ](stateClass:Class[T]) extends Clustered
       throw new IllegalArgumentException("The state id cannot be null")
     if(_group==null)
       throw new IllegalStateException("Not started.")
-    if(this._state!=null)
-      throw new IllegalStateException("Already joined")
     this._state = state
-    _eid = group.join(encode(state, mapper))
+
+    while( connected ) {
+      if( _eid == null ) {
+        _eid = group.join(encode(state, mapper))
+        return;
+      } else {
+        try {
+          _group.update(_eid, encode(state, mapper))
+          return;
+        } catch {
+          case e:NoNodeException =>
+            this._eid = null;
+        }
+      }
+    }
   }
 
   def leave:Unit = this.synchronized {
@@ -206,25 +224,21 @@ class ClusteredSingleton[T <: NodeState ](stateClass:Class[T]) extends Clustered
       throw new IllegalStateException("Not joined")
     if(_group==null)
       throw new IllegalStateException("Not started.")
-    _group.leave(_eid)
-    _eid = null
+
     this._state = null.asInstanceOf[T]
+    if( _eid!=null && connected ) {
+      _group.leave(_eid)
+      _eid = null
+    }
   }
 
-  def update(state:T) = this.synchronized {
-    if(this._state==null)
-      throw new IllegalStateException("Not joined")
-    if(state==null)
-      throw new IllegalArgumentException("State cannot be null")
-    if(state.id==null)
-      throw new IllegalArgumentException("The state id cannot be null")
-    if(state.id!=this._state.id)
-      throw new IllegalArgumentException("The state id cannot change")
+  override protected def onDisconnected {
+  }
 
-    if(_group==null)
-      throw new IllegalStateException("Not started.")
-    this._state = state
-    _group.update(_eid, encode(state, mapper))
+  override protected def onConnected {
+    if( this._state!=null ) {
+      join(this._state)
+    }
   }
 
   def isMaster:Boolean = this.synchronized {

@@ -80,7 +80,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         return subscriberDatabase.get(new SubscriptionKey(clientId, subscriptionName));
     }
 
-    public synchronized void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
+    public synchronized void addSubscription(SubscriptionInfo info, boolean retroactive) throws IOException {
         SubscriptionKey key = new SubscriptionKey(info);
         MemoryTopicSub sub = new MemoryTopicSub();
         topicSubMap.put(key, sub);

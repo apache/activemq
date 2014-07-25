@@ -67,6 +67,11 @@ public class ErrorBroker implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return Collections.EMPTY_MAP;
+    }
+
+    @Override
     public Set getDestinations(ActiveMQDestination destination) {
         return Collections.EMPTY_SET;
     }
@@ -312,7 +317,7 @@ public class ErrorBroker implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                         Subscription subscription) {
+                                         Subscription subscription, Throwable poisonCause) {
         throw new BrokerStoppedException(this.message);
     }
 
@@ -364,6 +369,11 @@ public class ErrorBroker implements Broker {
     @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    @Override
+    public void reapplyInterceptor() {
         throw new BrokerStoppedException(this.message);
     }
 

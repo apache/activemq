@@ -127,6 +127,32 @@ public class FailoverTransportTest {
         assertNotNull("Should have received a Response", this.transport.request(info));
     }
 
+    @Test
+    public void testLocalhostPortSyntax() throws Exception {
+        transport = TransportFactory.connect(
+                new URI("failover://(tcp://localhost:1111/localhost:2111)"));
+
+        transport.setTransportListener(new TransportListener() {
+
+            public void onCommand(Object command) {
+            }
+
+            public void onException(IOException error) {
+            }
+
+            public void transportInterupted() {
+            }
+
+            public void transportResumed() {
+            }
+        });
+
+        failoverTransport = transport.narrow(FailoverTransport.class);
+
+        transport.start();
+
+    }
+
     protected Transport createTransport() throws Exception {
         Transport transport = TransportFactory.connect(
                 new URI("failover://(tcp://localhost:1234?transport.connectTimeout=10000)"));

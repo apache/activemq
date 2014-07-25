@@ -31,6 +31,7 @@ import org.apache.activemq.broker.LockableServiceSupport;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.PersistenceAdapterView;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -44,6 +45,8 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.SharedFileLocker;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionIdTransformer;
+import org.apache.activemq.store.TransactionIdTransformerAware;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
 import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
@@ -58,7 +61,7 @@ import org.apache.activemq.util.ServiceStopper;
  * @org.apache.xbean.XBean element="kahaDB"
  *
  */
-public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore {
+public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter, JournaledStore, TransactionIdTransformerAware {
     private final KahaDBStore letter = new KahaDBStore();
 
     /**
@@ -560,18 +563,6 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setArchiveCorruptedIndex(archiveCorruptedIndex);
     }
 
-    /**
-     * When true, persist the redelivery status such that the message redelivery flag can survive a broker failure
-     * used with org.apache.activemq.ActiveMQConnectionFactory#setTransactedIndividualAck(boolean)  true
-     */
-    public void setRewriteOnRedelivery(boolean rewriteOnRedelivery) {
-        letter.setRewriteOnRedelivery(rewriteOnRedelivery);
-    }
-
-    public boolean isRewriteOnRedelivery() {
-        return letter.isRewriteOnRedelivery();
-    }
-
     public float getIndexLFUEvictionFactor() {
         return letter.getIndexLFUEvictionFactor();
     }
@@ -655,4 +646,13 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         return "KahaDBPersistenceAdapter[" + path + "]";
     }
 
+    @Override
+    public void setTransactionIdTransformer(TransactionIdTransformer transactionIdTransformer) {
+        getStore().setTransactionIdTransformer(transactionIdTransformer);
+    }
+
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        return this.letter.createJobSchedulerStore();
+    }
 }

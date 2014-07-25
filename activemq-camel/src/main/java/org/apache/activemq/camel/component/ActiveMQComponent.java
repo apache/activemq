@@ -80,8 +80,6 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
                     .setBrokerURL(brokerURL);
         }
 
-        // set the connection factory with the provided broker url
-        answer.setConnectionFactory(new ActiveMQConnectionFactory(brokerURL));
         return answer;
     }
 

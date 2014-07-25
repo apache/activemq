@@ -41,10 +41,9 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQXAConnectionFactory;
-import org.apache.activemq.ActiveMQXASession;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.jms.pool.PooledSession;
 import org.apache.activemq.test.TestSupport;
 
 public class XAConnectionPoolTest extends TestSupport {
@@ -57,13 +56,14 @@ public class XAConnectionPoolTest extends TestSupport {
         pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
 
         // simple TM that is in a tx and will track syncs
-        pcf.setTransactionManager(new TransactionManager(){
+        pcf.setTransactionManager(new TransactionManager() {
             @Override
             public void begin() throws NotSupportedException, SystemException {
             }
 
             @Override
-            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException,
+                SystemException {
             }
 
             @Override
@@ -106,7 +106,6 @@ public class XAConnectionPoolTest extends TestSupport {
                     public void setRollbackOnly() throws IllegalStateException, SystemException {
                     }
                 };
-
             }
 
             @Override
@@ -135,8 +134,6 @@ public class XAConnectionPoolTest extends TestSupport {
         TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
 
         assertTrue(session instanceof PooledSession);
-        PooledSession pooledSession = (PooledSession) session;
-        assertTrue(pooledSession.getInternalSession() instanceof ActiveMQXASession);
 
         TopicPublisher publisher = session.createPublisher(topic);
         publisher.publish(session.createMessage());
@@ -151,7 +148,105 @@ public class XAConnectionPoolTest extends TestSupport {
         connection.close();
     }
 
-    public void testInstanceOf() throws  Exception {
+    public void testAckModeOfPoolNonXAWithTM() throws Exception {
+        final Vector<Synchronization> syncs = new Vector<Synchronization>();
+        ActiveMQTopic topic = new ActiveMQTopic("test");
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE));
+
+        // simple TM that is in a tx and will track syncs
+        pcf.setTransactionManager(new TransactionManager() {
+            @Override
+            public void begin() throws NotSupportedException, SystemException {
+            }
+
+            @Override
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException,
+                SystemException {
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return Status.STATUS_ACTIVE;
+            }
+
+            @Override
+            public Transaction getTransaction() throws SystemException {
+                return new Transaction() {
+                    @Override
+                    public void commit() throws HeuristicMixedException, HeuristicRollbackException, RollbackException, SecurityException, SystemException {
+                    }
+
+                    @Override
+                    public boolean delistResource(XAResource xaRes, int flag) throws IllegalStateException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean enlistResource(XAResource xaRes) throws IllegalStateException, RollbackException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public int getStatus() throws SystemException {
+                        return 0;
+                    }
+
+                    @Override
+                    public void registerSynchronization(Synchronization synch) throws IllegalStateException, RollbackException, SystemException {
+                        syncs.add(synch);
+                    }
+
+                    @Override
+                    public void rollback() throws IllegalStateException, SystemException {
+                    }
+
+                    @Override
+                    public void setRollbackOnly() throws IllegalStateException, SystemException {
+                    }
+                };
+            }
+
+            @Override
+            public void resume(Transaction tobj) throws IllegalStateException, InvalidTransactionException, SystemException {
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SecurityException, SystemException {
+            }
+
+            @Override
+            public void setRollbackOnly() throws IllegalStateException, SystemException {
+            }
+
+            @Override
+            public void setTransactionTimeout(int seconds) throws SystemException {
+            }
+
+            @Override
+            public Transaction suspend() throws SystemException {
+                return null;
+            }
+        });
+
+        TopicConnection connection = (TopicConnection) pcf.createConnection();
+        TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        assertEquals("client ack is enforce", Session.CLIENT_ACKNOWLEDGE, session.getAcknowledgeMode());
+        TopicPublisher publisher = session.createPublisher(topic);
+        publisher.publish(session.createMessage());
+
+        // simulate a commit
+        for (Synchronization sync : syncs) {
+            sync.beforeCompletion();
+        }
+        for (Synchronization sync : syncs) {
+            sync.afterCompletion(1);
+        }
+        connection.close();
+    }
+
+    public void testInstanceOf() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof QueueConnectionFactory);
         assertTrue(pcf instanceof TopicConnectionFactory);
@@ -160,7 +255,7 @@ public class XAConnectionPoolTest extends TestSupport {
     public void testBindable() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
         assertTrue(pcf instanceof ObjectFactory);
-        assertTrue(((ObjectFactory)pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
+        assertTrue(((ObjectFactory) pcf).getObjectInstance(null, null, null, null) instanceof XaPooledConnectionFactory);
         assertTrue(pcf.isTmFromJndi());
     }
 
@@ -175,7 +270,7 @@ public class XAConnectionPoolTest extends TestSupport {
 
     public void testSenderAndPublisherDest() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
 
         QueueConnection connection = pcf.createQueueConnection();
         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -194,7 +289,7 @@ public class XAConnectionPoolTest extends TestSupport {
 
     public void testSessionArgsIgnoredWithTm() throws Exception {
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQConnectionFactory("vm://test?broker.persistent=false"));
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
         // simple TM that with no tx
         pcf.setTransactionManager(new TransactionManager() {
             @Override
@@ -203,7 +298,8 @@ public class XAConnectionPoolTest extends TestSupport {
             }
 
             @Override
-            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException,
+                SystemException {
                 throw new IllegalStateException("NoTx");
             }
 

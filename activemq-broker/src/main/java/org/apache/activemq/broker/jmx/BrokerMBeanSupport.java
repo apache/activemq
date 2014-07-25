@@ -113,7 +113,15 @@ public class BrokerMBeanSupport {
         String objectNameStr = brokerObjectName;
 
         objectNameStr += "," + "transactionType=RecoveredXaTransaction";
-        objectNameStr += "," + "Xid=" + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString());
+        objectNameStr += "," + "xid=" + JMXSupport.encodeObjectNamePart(transaction.getTransactionId().toString());
+
+        return new ObjectName(objectNameStr);
+    }
+
+    public static ObjectName createLog4JConfigViewName(String brokerObjectName) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName;
+
+        objectNameStr += "," + "service=Log4JConfiguration";
 
         return new ObjectName(objectNameStr);
     }
@@ -121,8 +129,8 @@ public class BrokerMBeanSupport {
     public static ObjectName createPersistenceAdapterName(String brokerObjectName, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
 
-        objectNameStr += "," + "Service=PersistenceAdapter";
-        objectNameStr += "," + "InstanceName=" + JMXSupport.encodeObjectNamePart(name);
+        objectNameStr += "," + "service=PersistenceAdapter";
+        objectNameStr += "," + "instanceName=" + JMXSupport.encodeObjectNamePart(name);
 
         return new ObjectName(objectNameStr);
     }
@@ -133,7 +141,7 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createAbortSlowConsumerStrategyName(String brokerObjectName, AbortSlowConsumerStrategy strategy) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
-        objectNameStr += ",Service=SlowConsumerStrategy,InstanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
+        objectNameStr += ",service=SlowConsumerStrategy,instanceName="+ JMXSupport.encodeObjectNamePart(strategy.getName());
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
     }
@@ -173,6 +181,21 @@ public class BrokerMBeanSupport {
         return new ObjectName(connectorName.getDomain(), map);
     }
 
+    public static ObjectName createNetworkOutBoundDestinationObjectName(ObjectName networkName, ActiveMQDestination destination) throws MalformedObjectNameException {
+        String str = networkName.toString();
+        str += ",direction=outbound" + createDestinationProperties(destination);
+        return new ObjectName(str);
+
+    }
+
+    public static ObjectName createNetworkInBoundDestinationObjectName(ObjectName networkName, ActiveMQDestination destination) throws MalformedObjectNameException {
+        String str = networkName.toString();
+        str += ",direction=inbound" + createDestinationProperties(destination);
+        return new ObjectName(str);
+
+    }
+
+
     public static ObjectName createProxyConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
         return createProxyConnectorName(brokerObjectName.toString(), type, name);
     }
@@ -190,7 +213,7 @@ public class BrokerMBeanSupport {
 
     public static ObjectName createJmsConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
-        objectNameStr += ",connector=" + type + ",JmsConnectors="+ JMXSupport.encodeObjectNamePart(name);
+        objectNameStr += ",connector=" + type + ",jmsConnectors="+ JMXSupport.encodeObjectNamePart(name);
         ObjectName objectName = new ObjectName(objectNameStr);
         return objectName;
     }

@@ -16,28 +16,26 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.fusesource.hawtbuf.Buffer;
-
 import java.nio.ByteBuffer;
 
+import org.fusesource.hawtbuf.Buffer;
+
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class AmqpSupport {
 
     static public Buffer toBuffer(ByteBuffer data) {
-        if( data == null ) {
+        if (data == null) {
             return null;
         }
         Buffer rc;
-        if( data.isDirect() ) {
+        if (data.isDirect()) {
             rc = new Buffer(data.remaining());
             data.get(rc.data);
         } else {
             rc = new Buffer(data);
-            data.position(data.position()+data.remaining());
+            data.position(data.position() + data.remaining());
         }
         return rc;
     }
-
 }

@@ -44,6 +44,8 @@ public class TwoBrokerFailoverClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_A_NAME).waitUntilStopped();
         removeBroker(BROKER_A_NAME);
 
+        Thread.sleep(1000);
+
         assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
 
         Thread.sleep(5000);

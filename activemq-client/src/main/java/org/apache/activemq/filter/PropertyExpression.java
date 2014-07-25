@@ -195,6 +195,13 @@ public class PropertyExpression implements Expression {
                 return Arrays.toString(message.getBrokerPath());
             }
         });
+        JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupFirstForConsumer", new SubExpression() {
+
+            @Override
+            public Object evaluate(Message message) {
+                return Boolean.valueOf(message.isJMSXGroupFirstForConsumer());
+            }
+        });
     }
 
     private final String name;

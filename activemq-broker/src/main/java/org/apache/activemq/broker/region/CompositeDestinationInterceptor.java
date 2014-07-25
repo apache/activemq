@@ -27,7 +27,7 @@ import org.apache.activemq.command.ActiveMQDestination;
  */
 public class CompositeDestinationInterceptor implements DestinationInterceptor {
 
-    private final DestinationInterceptor[] interceptors;
+    private volatile DestinationInterceptor[] interceptors;
 
     public CompositeDestinationInterceptor(final DestinationInterceptor[] interceptors) {
         this.interceptors = interceptors;
@@ -52,5 +52,13 @@ public class CompositeDestinationInterceptor implements DestinationInterceptor {
             interceptors[i].create(broker, context, destination);
         }
     }
-    
+
+    public void setInterceptors(final DestinationInterceptor[] interceptors) {
+        this.interceptors = interceptors;
+    }
+
+    public DestinationInterceptor[] getInterceptors() {
+        return interceptors;
+    }
+
 }

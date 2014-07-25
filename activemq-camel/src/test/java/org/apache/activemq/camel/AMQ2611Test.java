@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.camel;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerService;
@@ -34,20 +31,10 @@ import org.slf4j.LoggerFactory;
 public class AMQ2611Test extends TestCase {
 
     private static final String BROKER_URL = "tcp://localhost:61616";
-
     private static final String QUEUE_NAME = "test.queue";
-
     private static final Logger log = LoggerFactory.getLogger(AMQ2611Test.class);
-
     private BrokerService brokerService = null;
-
-    private Timer statisticsTimer = null;
-
     private CamelContext camelContext = null;
-
-    public AMQ2611Test() {
-
-    }
 
     private void createBroker() throws Exception {
         brokerService = new BrokerService();
@@ -64,8 +51,7 @@ public class AMQ2611Test extends TestCase {
     private void createCamelContext() throws Exception {
         log.info("creating context and sending message");
         camelContext = new DefaultCamelContext();
-        camelContext.addComponent("activemq", ActiveMQComponent
-                .activeMQComponent(BROKER_URL));
+        camelContext.addComponent("activemq", ActiveMQComponent.activeMQComponent(BROKER_URL));
         final String queueEndpointName = "activemq:queue" + QUEUE_NAME;
         camelContext.addRoutes(new RouteBuilder() {
             @Override
@@ -74,8 +60,7 @@ public class AMQ2611Test extends TestCase {
             }
         });
         camelContext.start();
-        final ProducerTemplate producerTemplate = camelContext
-                .createProducerTemplate();
+        final ProducerTemplate producerTemplate = camelContext.createProducerTemplate();
         producerTemplate.sendBody(queueEndpointName, "message");
     }
 
@@ -100,5 +85,4 @@ public class AMQ2611Test extends TestCase {
             log.warn("run", e);
         }
     }
-
 }

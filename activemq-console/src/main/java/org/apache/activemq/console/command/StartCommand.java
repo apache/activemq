@@ -116,7 +116,12 @@ public class StartCommand extends AbstractCommand {
 
             // The broker has stopped..
             shutdownLatch.await();
-            Runtime.getRuntime().removeShutdownHook(jvmShutdownHook);
+            try {
+                Runtime.getRuntime().removeShutdownHook(jvmShutdownHook);
+            } catch (Throwable e) {
+                // may already be shutdown in progress so ignore
+            }
+
             if( !broker.isRestartRequested() ) {
                 break;
             }

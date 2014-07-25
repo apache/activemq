@@ -19,12 +19,12 @@ package org.apache.activemq.transport.xstream;
 import java.io.IOException;
 import java.io.Reader;
 
-import com.thoughtworks.xstream.XStream;
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.MarshallAware;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.wireformat.WireFormat;
+
+import com.thoughtworks.xstream.XStream;
 
 /**
  * A {@link WireFormat} implementation which uses the <a
@@ -37,10 +37,12 @@ public class XStreamWireFormat extends TextWireFormat {
     private XStream xStream;
     private int version;
 
+    @Override
     public int getVersion() {
         return version;
     }
 
+    @Override
     public void setVersion(int version) {
         this.version = version;
     }
@@ -49,14 +51,17 @@ public class XStreamWireFormat extends TextWireFormat {
         return new XStreamWireFormat();
     }
 
+    @Override
     public Object unmarshalText(String text) {
-        return (Command)getXStream().fromXML(text);
+        return getXStream().fromXML(text);
     }
 
+    @Override
     public Object unmarshalText(Reader reader) {
-        return (Command)getXStream().fromXML(reader);
+        return getXStream().fromXML(reader);
     }
 
+    @Override
     public String marshalText(Object command) throws IOException {
         if (command instanceof MarshallAware) {
             ((MarshallAware)command).beforeMarshall(this);
@@ -105,7 +110,9 @@ public class XStreamWireFormat extends TextWireFormat {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected XStream createXStream() {
-        return new XStream();
+        XStream xstream = new XStream();
+        xstream.ignoreUnknownElements();
+        return xstream;
     }
 
 }

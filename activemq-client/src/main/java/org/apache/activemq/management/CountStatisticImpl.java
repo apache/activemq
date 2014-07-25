@@ -105,6 +105,9 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
     }
 
     public void setParent(CountStatisticImpl parent) {
+        if (this.parent != null) {
+            this.parent.subtract(this.getCount());
+        }
         this.parent = parent;
     }
 

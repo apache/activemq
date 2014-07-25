@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQMessageTransformation;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -61,6 +62,7 @@ public final class AdvisorySupport {
     public static final String MSG_PROPERTY_CONSUMER_ID = "consumerId";
     public static final String MSG_PROPERTY_PRODUCER_ID = "producerId";
     public static final String MSG_PROPERTY_MESSAGE_ID = "orignalMessageId";
+    public static final String MSG_PROPERTY_DESTINATION = "orignalDestination";
     public static final String MSG_PROPERTY_CONSUMER_COUNT = "consumerCount";
     public static final String MSG_PROPERTY_DISCARDED_COUNT = "discardedCount";
 
@@ -105,11 +107,13 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getConsumerAdvisoryTopic(ActiveMQDestination destination) {
+        String prefix;
         if (destination.isQueue()) {
-            return new ActiveMQTopic(QUEUE_CONSUMER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
+            prefix = QUEUE_CONSUMER_ADVISORY_TOPIC_PREFIX;
         } else {
-            return new ActiveMQTopic(TOPIC_CONSUMER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
+            prefix = TOPIC_CONSUMER_ADVISORY_TOPIC_PREFIX;
         }
+        return getAdvisoryTopic(destination, prefix, true);
     }
 
     public static ActiveMQTopic getProducerAdvisoryTopic(Destination destination) throws JMSException {
@@ -117,11 +121,17 @@ public final class AdvisorySupport {
     }
 
     public static ActiveMQTopic getProducerAdvisoryTopic(ActiveMQDestination destination) {
+        String prefix;
         if (destination.isQueue()) {
-            return new ActiveMQTopic(QUEUE_PRODUCER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
+            prefix = QUEUE_PRODUCER_ADVISORY_TOPIC_PREFIX;
         } else {
-            return new ActiveMQTopic(TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
+            prefix = TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX;
         }
+        return getAdvisoryTopic(destination, prefix, false);
+    }
+
+    private static ActiveMQTopic getAdvisoryTopic(ActiveMQDestination destination, String prefix, boolean consumerTopics) {
+        return new ActiveMQTopic(prefix + destination.getPhysicalName().replaceAll(",", "&sbquo;"));
     }
 
     public static ActiveMQTopic getExpiredMessageTopic(Destination destination) throws JMSException {

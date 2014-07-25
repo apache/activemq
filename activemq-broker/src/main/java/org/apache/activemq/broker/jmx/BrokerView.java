@@ -18,11 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -89,12 +85,22 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
+    public int getCurrentConnectionsCount() {
+        return brokerService.getCurrentConnections();
+    }
+
+    @Override
+    public long getTotalConnectionsCount() {
+        return brokerService.getTotalConnections();
+    }
+
+    @Override
     public void gc() throws Exception {
         brokerService.getBroker().gc();
         try {
             brokerService.getPersistenceAdapter().checkpoint(true);
         } catch (IOException e) {
-            LOG.error("Failed to checkpoint persistence adapter on gc request, reason:" + e, e);
+            LOG.error("Failed to checkpoint persistence adapter on gc request", e);
         }
     }
 
@@ -110,8 +116,12 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public void restart() throws Exception {
-        brokerService.requestRestart();
-        brokerService.stop();
+        if (brokerService.isRestartAllowed()) {
+            brokerService.requestRestart();
+            brokerService.stop();
+        } else {
+            throw new Exception("Restart is not allowed");
+        }
     }
 
     @Override
@@ -143,6 +153,31 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalMessageCount() {
         return safeGetBroker().getDestinationStatistics().getMessages().getCount();
+    }
+
+    /**
+     * @return the average size of a message (bytes)
+     */
+    @Override
+    public long getAverageMessageSize() {
+        // we are okay with the size without decimals so cast to long
+        return (long) safeGetBroker().getDestinationStatistics().getMessageSize().getAverageSize();
+    }
+
+    /**
+     * @return the max size of a message (bytes)
+     */
+    @Override
+    public long getMaxMessageSize() {
+        return safeGetBroker().getDestinationStatistics().getMessageSize().getMaxSize();
+    }
+
+    /**
+     * @return the min size of a message (bytes)
+     */
+    @Override
+    public long getMinMessageSize() {
+        return safeGetBroker().getDestinationStatistics().getMessageSize().getMinSize();
     }
 
     public long getTotalMessagesCached() {
@@ -330,6 +365,7 @@ public class BrokerView implements BrokerViewMBean {
         if (connector == null) {
             throw new NoSuchElementException("Not connector matched the given name: " + discoveryAddress);
         }
+        brokerService.registerNetworkConnectorMBean(connector);
         connector.start();
         return connector.getName();
     }
@@ -408,38 +444,9 @@ public class BrokerView implements BrokerViewMBean {
         brokerService.getBroker().removeSubscription(context, info);
     }
 
-    //  doc comment inherited from BrokerViewMBean
     @Override
     public void reloadLog4jProperties() throws Throwable {
-
-        // Avoid a direct dependency on log4j.. use reflection.
-        try {
-            ClassLoader cl = getClass().getClassLoader();
-            Class<?> logManagerClass = cl.loadClass("org.apache.log4j.LogManager");
-
-            Method resetConfiguration = logManagerClass.getMethod("resetConfiguration", new Class[]{});
-            resetConfiguration.invoke(null, new Object[]{});
-
-            String configurationOptionStr = System.getProperty("log4j.configuration");
-            URL log4jprops = null;
-            if (configurationOptionStr != null) {
-                try {
-                    log4jprops = new URL(configurationOptionStr);
-                } catch (MalformedURLException ex) {
-                    log4jprops = cl.getResource("log4j.properties");
-                }
-            } else {
-               log4jprops = cl.getResource("log4j.properties");
-            }
-
-            if (log4jprops != null) {
-                Class<?> propertyConfiguratorClass = cl.loadClass("org.apache.log4j.PropertyConfigurator");
-                Method configure = propertyConfiguratorClass.getMethod("configure", new Class[]{URL.class});
-                configure.invoke(null, new Object[]{log4jprops});
-            }
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
-        }
+        Log4JConfigView.doReloadLog4jProperties();
     }
 
     @Override

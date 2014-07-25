@@ -418,14 +418,19 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     /**
      * Configures the socket for use
      *
-     * @param sock
+     * @param sock  the socket
      * @throws SocketException, IllegalArgumentException if setting the options
      *         on the socket failed.
      */
-    protected void initialiseSocket(Socket sock) throws SocketException,
-            IllegalArgumentException {
+    protected void initialiseSocket(Socket sock) throws SocketException, IllegalArgumentException {
         if (socketOptions != null) {
-            IntrospectionSupport.setProperties(socket, socketOptions);
+            // copy the map as its used values is being removed when calling setProperties
+            // and we need to be able to set the options again in case socket is re-initailized
+            Map<String, Object> copy = new HashMap<String, Object>(socketOptions);
+            IntrospectionSupport.setProperties(socket, copy);
+            if (!copy.isEmpty()) {
+                throw new IllegalArgumentException("Invalid socket parameters: " + copy);
+            }
         }
 
         try {
@@ -433,7 +438,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             sock.setSendBufferSize(socketBufferSize);
         } catch (SocketException se) {
             LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
-            LOG.debug("Cannot set socket buffer size. Reason: " + se, se);
+            LOG.debug("Cannot set socket buffer size. Reason: " + se.getMessage() + ". This exception is ignored.", se);
         }
         sock.setSoTimeout(soTimeout);
 

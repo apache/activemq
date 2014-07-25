@@ -17,6 +17,7 @@
 package org.apache.activemq.spring;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -32,7 +33,13 @@ public class Utils {
         if (file.exists()) {
             resource = new FileSystemResource(uri);
         } else if (ResourceUtils.isUrl(uri)) {
-            resource = new UrlResource(uri);
+            try {
+                resource = new UrlResource(ResourceUtils.getURL(uri));
+            } catch (FileNotFoundException e) {
+                MalformedURLException malformedURLException = new MalformedURLException(uri);
+                malformedURLException.initCause(e);
+                throw  malformedURLException;
+            }
         } else {
             resource = new ClassPathResource(uri);
         }

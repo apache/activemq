@@ -85,4 +85,16 @@ public class MessageTest extends DataStructureTestSupport {
         assertBeanMarshalls(new MessageId("c1:1:1", 1));
     }
 
+    public void testPropRemove() throws Exception {
+        ActiveMQMessage message = new ActiveMQMessage();
+        message.setStringProperty("RM","RM");
+
+        ActiveMQMessage unMarshalled = (ActiveMQMessage) marshalAndUnmarshall(message, wireFormat);
+
+        unMarshalled.getBooleanProperty("NA");
+        unMarshalled.removeProperty("RM");
+
+        ActiveMQMessage unMarshalledAgain = (ActiveMQMessage) marshalAndUnmarshall(unMarshalled, wireFormat);
+        assertNull("Prop is gone", unMarshalledAgain.getProperty("RM"));
+    }
 }

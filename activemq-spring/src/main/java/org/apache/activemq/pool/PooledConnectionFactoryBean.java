@@ -20,7 +20,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import javax.transaction.TransactionManager;
-
+import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
@@ -38,7 +38,7 @@ import org.springframework.beans.factory.FactoryBean;
  * </bean>
  * </pre>
  *
- * The <code>resourceName</code> property should be used along with the {@link ActiveMQResourceManager} and have
+ * The <code>resourceName</code> property should be used along with the {@link org.apache.activemq.jms.pool.GenericResourceManager} and have
  * the same value than its <code>resourceName</code> property. This will make sure the transaction manager
  * maps correctly the connection factory to the recovery process.
  *
@@ -96,11 +96,24 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (pooledConnectionFactory == null && transactionManager != null && resourceName != null) {
             try {
@@ -147,11 +160,24 @@ public class PooledConnectionFactoryBean implements FactoryBean {
     }
 
     /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to destroy, done to prevent backwards incompatible signature change.
+     */
+    @PreDestroy
+    private void preDestroy() {
+        try {
+            destroy();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
      *
      * @throws Exception
      * @org.apache.xbean.DestroyMethod
      */
-    @PreDestroy
     public void destroy() throws Exception {
         if (pooledConnectionFactory != null) {
             pooledConnectionFactory.stop();
@@ -159,9 +185,12 @@ public class PooledConnectionFactoryBean implements FactoryBean {
         }
     }
 
-    // FactoryBean methods
     @Override
     public Object getObject() throws Exception {
+        // in case spring-dm calls getObject before this bean has been initialized
+        if (pooledConnectionFactory == null) {
+            afterPropertiesSet();
+        }
         return pooledConnectionFactory;
     }
 

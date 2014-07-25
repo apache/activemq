@@ -18,15 +18,38 @@ package org.apache.activemq.advisory;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.region.*;
-import org.apache.activemq.command.*;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.TopicRegion;
+import org.apache.activemq.broker.region.TopicSubscription;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
@@ -46,7 +69,9 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
     protected final ConcurrentHashMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
-    protected final ConcurrentHashMap<ConsumerId, ConsumerInfo> consumers = new ConcurrentHashMap<ConsumerId, ConsumerInfo>();
+
+    protected final Queue<ConsumerInfo> consumers = new ConcurrentLinkedQueue<ConsumerInfo>();
+
     protected final ConcurrentHashMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
     protected final ConcurrentHashMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
     protected final ConcurrentHashMap<BrokerInfo, ActiveMQMessage> networkBridges = new ConcurrentHashMap<BrokerInfo, ActiveMQMessage>();
@@ -78,14 +103,14 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            consumers.put(info.getConsumerId(), info);
+            consumers.offer(info);
             fireConsumerAdvisory(context, info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
             // for this newly added consumer.
             if (AdvisorySupport.isConnectionAdvisoryTopic(info.getDestination())) {
                 // Replay the connections.
-                for (Iterator<ConnectionInfo> iter = connections.values().iterator(); iter.hasNext();) {
+                for (Iterator<ConnectionInfo> iter = connections.values().iterator(); iter.hasNext(); ) {
                     ConnectionInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
                     fireAdvisory(context, topic, value, info.getConsumerId());
@@ -114,25 +139,25 @@ public class AdvisoryBroker extends BrokerFilter {
 
             // Replay the producers.
             if (AdvisorySupport.isProducerAdvisoryTopic(info.getDestination())) {
-                for (Iterator<ProducerInfo> iter = producers.values().iterator(); iter.hasNext();) {
+                for (Iterator<ProducerInfo> iter = producers.values().iterator(); iter.hasNext(); ) {
                     ProducerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(value.getDestination());
-                    fireProducerAdvisory(context, value.getDestination(),topic, value, info.getConsumerId());
+                    fireProducerAdvisory(context, value.getDestination(), topic, value, info.getConsumerId());
                 }
             }
 
             // Replay the consumers.
             if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination())) {
-                for (Iterator<ConsumerInfo> iter = consumers.values().iterator(); iter.hasNext();) {
+                for (Iterator<ConsumerInfo> iter = consumers.iterator(); iter.hasNext(); ) {
                     ConsumerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(value.getDestination());
-                    fireConsumerAdvisory(context,value.getDestination(), topic, value, info.getConsumerId());
+                    fireConsumerAdvisory(context, value.getDestination(), topic, value, info.getConsumerId());
                 }
             }
 
             // Replay network bridges
             if (AdvisorySupport.isNetworkBridgeAdvisoryTopic(info.getDestination())) {
-                for (Iterator<BrokerInfo> iter = networkBridges.keySet().iterator(); iter.hasNext();) {
+                for (Iterator<BrokerInfo> iter = networkBridges.keySet().iterator(); iter.hasNext(); ) {
                     BrokerInfo key = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
                     fireAdvisory(context, topic, key, null, networkBridges.get(key));
@@ -155,12 +180,12 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
-        Destination answer = super.addDestination(context, destination,create);
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean create) throws Exception {
+        Destination answer = super.addDestination(context, destination, create);
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
-            if( previous==null ) {
+            if (previous == null) {
                 ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
                 fireAdvisory(context, topic, info);
             }
@@ -175,7 +200,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
-            if( previous==null ) {
+            if (previous == null) {
                 ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
                 fireAdvisory(context, topic, info);
             }
@@ -194,7 +219,7 @@ public class AdvisoryBroker extends BrokerFilter {
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
             fireAdvisory(context, topic, info);
             ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destination);
-            for(ActiveMQTopic advisoryDestination : advisoryDestinations) {
+            for (ActiveMQTopic advisoryDestination : advisoryDestinations) {
                 try {
                     next.removeDestination(context, advisoryDestination, -1);
                 } catch (Exception expectedIfDestinationDidNotExistYet) {
@@ -215,7 +240,7 @@ public class AdvisoryBroker extends BrokerFilter {
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destInfo.getDestination());
             fireAdvisory(context, topic, info);
             ActiveMQTopic[] advisoryDestinations = AdvisorySupport.getAllDestinationAdvisoryTopics(destInfo.getDestination());
-            for(ActiveMQTopic advisoryDestination : advisoryDestinations) {
+            for (ActiveMQTopic advisoryDestination : advisoryDestinations) {
                 try {
                     next.removeDestination(context, advisoryDestination, -1);
                 } catch (Exception expectedIfDestinationDidNotExistYet) {
@@ -241,9 +266,9 @@ public class AdvisoryBroker extends BrokerFilter {
         ActiveMQDestination dest = info.getDestination();
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
-            consumers.remove(info.getConsumerId());
+            consumers.remove(info);
             if (!dest.isTemporary() || destinations.containsKey(dest)) {
-                fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
+                fireConsumerAdvisory(context, dest, topic, info.createRemoveCommand());
             }
         }
     }
@@ -252,7 +277,22 @@ public class AdvisoryBroker extends BrokerFilter {
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
 
-        DurableTopicSubscription sub = ((TopicRegion)((RegionBroker)next).getTopicRegion()).getDurableSubscription(key);
+        RegionBroker regionBroker = null;
+        if (next instanceof RegionBroker) {
+            regionBroker = (RegionBroker) next;
+        } else {
+            BrokerService service = next.getBrokerService();
+            regionBroker = (RegionBroker) service.getRegionBroker();
+        }
+
+        if (regionBroker == null) {
+            LOG.warn("Cannot locate a RegionBroker instance to pass along the removeSubscription call");
+            throw new IllegalStateException("No RegionBroker found.");
+        }
+
+        DurableTopicSubscription sub = ((TopicRegion) regionBroker.getTopicRegion()).getDurableSubscription(key);
+
+        super.removeSubscription(context, info);
 
         if (sub == null) {
             LOG.warn("We cannot send an advisory message for a durable sub removal when we don't know about the durable sub");
@@ -260,8 +300,6 @@ public class AdvisoryBroker extends BrokerFilter {
         }
 
         ActiveMQDestination dest = sub.getConsumerInfo().getDestination();
-
-        super.removeSubscription(context, info);
 
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(dest)) {
@@ -280,8 +318,8 @@ public class AdvisoryBroker extends BrokerFilter {
         if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(dest)) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(dest);
             producers.remove(info.getProducerId());
-            if (!dest.isTemporary() || destinations.contains(dest)) {
-                fireProducerAdvisory(context, dest,topic, info.createRemoveCommand());
+            if (!dest.isTemporary() || destinations.containsKey(dest)) {
+                fireProducerAdvisory(context, dest, topic, info.createRemoveCommand());
             }
         }
     }
@@ -290,7 +328,7 @@ public class AdvisoryBroker extends BrokerFilter {
     public void messageExpired(ConnectionContext context, MessageReference messageReference, Subscription subscription) {
         super.messageExpired(context, messageReference, subscription);
         try {
-            if(!messageReference.isAdvisory()) {
+            if (!messageReference.isAdvisory()) {
                 ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
@@ -307,11 +345,17 @@ public class AdvisoryBroker extends BrokerFilter {
     public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
         super.messageConsumed(context, messageReference);
         try {
-            if(!messageReference.isAdvisory()) {
+            if (!messageReference.isAdvisory()) {
                 ActiveMQTopic topic = AdvisorySupport.getMessageConsumedAdvisoryTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
-                fireAdvisory(context, topic,payload);
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
+                ActiveMQDestination destination = payload.getDestination();
+                if (destination != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, payload.getMessageId().toString());
+                }
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("consumed", e);
@@ -326,7 +370,13 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQTopic topic = AdvisorySupport.getMessageDeliveredAdvisoryTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
-                fireAdvisory(context, topic,payload);
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
+                ActiveMQDestination destination = payload.getDestination();
+                if (destination != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, payload.getMessageId().toString());
+                }
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("delivered", e);
@@ -343,9 +393,14 @@ public class AdvisoryBroker extends BrokerFilter {
                 payload.clearBody();
                 ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                 if (sub instanceof TopicSubscription) {
-                    advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT, ((TopicSubscription)sub).discarded());
+                    advisoryMessage.setIntProperty(AdvisorySupport.MSG_PROPERTY_DISCARDED_COUNT, ((TopicSubscription) sub).discarded());
                 }
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
                 advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, sub.getConsumerInfo().getConsumerId().toString());
+                ActiveMQDestination destination = payload.getDestination();
+                if (destination != null) {
+                    advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_DESTINATION, payload.getMessageId().toString());
+                }
                 fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
@@ -354,8 +409,8 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
-        super.slowConsumer(context, destination,subs);
+    public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
+        super.slowConsumer(context, destination, subs);
         try {
             if (!AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
                 ActiveMQTopic topic = AdvisorySupport.getSlowConsumerAdvisoryTopic(destination.getActiveMQDestination());
@@ -369,7 +424,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo,ActiveMQDestination destination) {
+    public void fastProducer(ConnectionContext context, ProducerInfo producerInfo, ActiveMQDestination destination) {
         super.fastProducer(context, producerInfo, destination);
         try {
             if (!AdvisorySupport.isAdvisoryTopic(destination)) {
@@ -409,7 +464,7 @@ public class AdvisoryBroker extends BrokerFilter {
             ConnectionContext context = new ConnectionContext();
             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
             context.setBroker(getBrokerService().getBroker());
-            fireAdvisory(context, topic,null,null,advisoryMessage);
+            fireAdvisory(context, topic, null, null, advisoryMessage);
         } catch (Exception e) {
             handleFireFailure("now master broker", e);
         }
@@ -417,15 +472,15 @@ public class AdvisoryBroker extends BrokerFilter {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                         Subscription subscription) {
-        boolean wasDLQd = super.sendToDeadLetterQueue(context, messageReference, subscription);
+                                         Subscription subscription, Throwable poisonCause) {
+        boolean wasDLQd = super.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
         if (wasDLQd) {
             try {
-                if(!messageReference.isAdvisory()) {
+                if (!messageReference.isAdvisory()) {
                     ActiveMQTopic topic = AdvisorySupport.getMessageDLQdAdvisoryTopic(messageReference.getMessage().getDestination());
                     Message payload = messageReference.getMessage().copy();
                     payload.clearBody();
-                    fireAdvisory(context, topic,payload);
+                    fireAdvisory(context, topic, payload);
                 }
             } catch (Exception e) {
                 handleFireFailure("add to DLQ", e);
@@ -438,20 +493,20 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void networkBridgeStarted(BrokerInfo brokerInfo, boolean createdByDuplex, String remoteIp) {
         try {
-         if (brokerInfo != null) {
-             ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-             advisoryMessage.setBooleanProperty("started", true);
-             advisoryMessage.setBooleanProperty("createdByDuplex", createdByDuplex);
-             advisoryMessage.setStringProperty("remoteIp", remoteIp);
-             networkBridges.putIfAbsent(brokerInfo, advisoryMessage);
+            if (brokerInfo != null) {
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setBooleanProperty("started", true);
+                advisoryMessage.setBooleanProperty("createdByDuplex", createdByDuplex);
+                advisoryMessage.setStringProperty("remoteIp", remoteIp);
+                networkBridges.putIfAbsent(brokerInfo, advisoryMessage);
 
-             ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
+                ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 
-             ConnectionContext context = new ConnectionContext();
-             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-             context.setBroker(getBrokerService().getBroker());
-             fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
-         }
+                ConnectionContext context = new ConnectionContext();
+                context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+                context.setBroker(getBrokerService().getBroker());
+                fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+            }
         } catch (Exception e) {
             handleFireFailure("network bridge started", e);
         }
@@ -460,28 +515,26 @@ public class AdvisoryBroker extends BrokerFilter {
     @Override
     public void networkBridgeStopped(BrokerInfo brokerInfo) {
         try {
-         if (brokerInfo != null) {
-             ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-             advisoryMessage.setBooleanProperty("started", false);
-             networkBridges.remove(brokerInfo);
+            if (brokerInfo != null) {
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setBooleanProperty("started", false);
+                networkBridges.remove(brokerInfo);
 
-             ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
+                ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
 
-             ConnectionContext context = new ConnectionContext();
-             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-             context.setBroker(getBrokerService().getBroker());
-             fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
-         }
+                ConnectionContext context = new ConnectionContext();
+                context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
+                context.setBroker(getBrokerService().getBroker());
+                fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+            }
         } catch (Exception e) {
             handleFireFailure("network bridge stopped", e);
         }
     }
 
     private void handleFireFailure(String message, Throwable cause) {
-        LOG.warn("Failed to fire "  + message + " advisory, reason: " + cause);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(message + " detail", cause);
-        }
+        LOG.warn("Failed to fire {} advisory, reason: {}", message, cause);
+        LOG.debug("{} detail: {}", message, cause);
     }
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
@@ -493,16 +546,16 @@ public class AdvisoryBroker extends BrokerFilter {
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination,ActiveMQTopic topic, Command command) throws Exception {
-        fireConsumerAdvisory(context, consumerDestination,topic, command, null);
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination, ActiveMQTopic topic, Command command) throws Exception {
+        fireConsumerAdvisory(context, consumerDestination, topic, command, null);
     }
 
-    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination,ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         int count = 0;
-        Set<Destination>set = getDestinations(consumerDestination);
+        Set<Destination> set = getDestinations(consumerDestination);
         if (set != null) {
-            for (Destination dest:set) {
+            for (Destination dest : set) {
                 count += dest.getDestinationStatistics().getConsumers().getCount();
             }
         }
@@ -511,11 +564,11 @@ public class AdvisoryBroker extends BrokerFilter {
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    protected void fireProducerAdvisory(ConnectionContext context,ActiveMQDestination producerDestination, ActiveMQTopic topic, Command command) throws Exception {
-        fireProducerAdvisory(context,producerDestination, topic, command, null);
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQDestination producerDestination, ActiveMQTopic topic, Command command) throws Exception {
+        fireProducerAdvisory(context, producerDestination, topic, command, null);
     }
 
-    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQDestination producerDestination,ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQDestination producerDestination, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         int count = 0;
         if (producerDestination != null) {
@@ -570,7 +623,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return connections;
     }
 
-    public Map<ConsumerId, ConsumerInfo> getAdvisoryConsumers() {
+    public Queue<ConsumerInfo> getAdvisoryConsumers() {
         return consumers;
     }
 

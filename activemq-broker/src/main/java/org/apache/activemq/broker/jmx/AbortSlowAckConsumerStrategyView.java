@@ -18,7 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.broker.region.policy.AbortSlowAckConsumerStrategy;
 
-public class AbortSlowAckConsumerStrategyView extends AbortSlowConsumerStrategyView {
+public class AbortSlowAckConsumerStrategyView extends AbortSlowConsumerStrategyView implements AbortSlowAckConsumerStrategyViewMBean {
 
     private final AbortSlowAckConsumerStrategy strategy;
 
@@ -27,19 +27,33 @@ public class AbortSlowAckConsumerStrategyView extends AbortSlowConsumerStrategyV
         this.strategy = slowConsumerStrategy;
     }
 
+    @Override
     public long getMaxTimeSinceLastAck() {
         return strategy.getMaxTimeSinceLastAck();
     }
 
+    @Override
     public void setMaxTimeSinceLastAck(long maxTimeSinceLastAck) {
         this.strategy.setMaxTimeSinceLastAck(maxTimeSinceLastAck);
     }
 
+    @Override
     public boolean isIgnoreIdleConsumers() {
         return strategy.isIgnoreIdleConsumers();
     }
 
+    @Override
     public void setIgnoreIdleConsumers(boolean ignoreIdleConsumers) {
         this.strategy.setIgnoreIdleConsumers(ignoreIdleConsumers);
+    }
+
+    @Override
+    public boolean isIgnoreNetworkConsumers() {
+        return this.strategy.isIgnoreNetworkSubscriptions();
+    }
+
+    @Override
+    public void setIgnoreNetworkConsumers(boolean ignoreNetworkConsumers) {
+        this.strategy.setIgnoreNetworkConsumers(ignoreNetworkConsumers);
     }
 }

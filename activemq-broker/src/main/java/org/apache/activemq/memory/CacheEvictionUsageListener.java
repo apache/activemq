@@ -53,7 +53,7 @@ public class CacheEvictionUsageListener implements UsageListener {
 
     boolean evictMessages() {
         // Try to take the memory usage down below the low mark.
-        LOG.debug("Evicting cache memory usage: " + usage.getPercentUsage());
+        LOG.debug("Evicting cache memory usage: {}", usage.getPercentUsage());
 
         List<CacheEvictor> list = new LinkedList<CacheEvictor>(evictors);
         while (list.size() > 0 && usage.getPercentUsage() > usageLowMark) {

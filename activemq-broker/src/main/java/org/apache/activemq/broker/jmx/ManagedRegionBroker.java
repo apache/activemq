@@ -61,6 +61,7 @@ import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
@@ -131,7 +132,7 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 managementContext.unregisterMBean(name);
             } catch (InstanceNotFoundException e) {
-                LOG.warn("The MBean: " + name + " is no longer registered with JMX");
+                LOG.warn("The MBean {} is no longer registered with JMX", name);
             } catch (Exception e) {
                 stopper.onException(this, e);
             }
@@ -170,13 +171,13 @@ public class ManagedRegionBroker extends RegionBroker {
                 view = new TopicView(this, (Topic)destination);
             } else {
                 view = null;
-                LOG.warn("JMX View is not supported for custom destination: " + destination);
+                LOG.warn("JMX View is not supported for custom destination {}", destination);
             }
             if (view != null) {
                 registerDestination(objectName, destName, view);
             }
         } catch (Exception e) {
-            LOG.error("Failed to register destination " + destName, e);
+            LOG.error("Failed to register destination {}", destName, e);
         }
     }
 
@@ -185,7 +186,7 @@ public class ManagedRegionBroker extends RegionBroker {
             ObjectName objectName = BrokerMBeanSupport.createDestinationName(brokerObjectName, destName);
             unregisterDestination(objectName);
         } catch (Exception e) {
-            LOG.error("Failed to unregister " + destName, e);
+            LOG.error("Failed to unregister {}", destName, e);
         }
     }
 
@@ -220,9 +221,22 @@ public class ManagedRegionBroker extends RegionBroker {
             subscriptionMap.put(sub, objectName);
             return objectName;
         } catch (Exception e) {
-            LOG.error("Failed to register subscription " + sub, e);
+            LOG.error("Failed to register subscription {}", sub, e);
             return null;
         }
+    }
+
+    @Override
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        super.addConnection(context, info);
+        this.contextBroker.getBrokerService().incrementCurrentConnections();
+        this.contextBroker.getBrokerService().incrementTotalConnections();
+    }
+
+    @Override
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+        super.removeConnection(context, info, error);
+        this.contextBroker.getBrokerService().decrementCurrentConnections();
     }
 
     @Override
@@ -294,7 +308,7 @@ public class ManagedRegionBroker extends RegionBroker {
                     managementContext.unregisterMBean(inactiveName);
                 }
             } catch (Exception e) {
-                LOG.error("Failed to unregister subscription " + sub, e);
+                LOG.error("Failed to unregister subscription {}", sub, e);
             }
         }
     }
@@ -317,8 +331,8 @@ public class ManagedRegionBroker extends RegionBroker {
             AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            LOG.warn("Failed to register MBean: " + key);
-            LOG.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register MBean {}", key);
+            LOG.debug("Failure reason: ", e);
         }
     }
 
@@ -332,8 +346,8 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 managementContext.unregisterMBean(key);
             } catch (Throwable e) {
-                LOG.warn("Failed to unregister MBean: " + key);
-                LOG.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister MBean {}", key);
+                LOG.debug("Failure reason: ", e);
             }
         }
         if (view != null) {
@@ -342,8 +356,8 @@ public class ManagedRegionBroker extends RegionBroker {
                 try {
                     managementContext.unregisterMBean(key);
                 } catch (Throwable e) {
-                    LOG.warn("Failed to unregister slow consumer strategy MBean: " + key);
-                    LOG.debug("Failure reason: " + e, e);
+                    LOG.warn("Failed to unregister slow consumer strategy MBean {}", key);
+                    LOG.debug("Failure reason: ", e);
                 }
             }
         }
@@ -373,8 +387,8 @@ public class ManagedRegionBroker extends RegionBroker {
             AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            LOG.warn("Failed to register MBean: " + key);
-            LOG.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register MBean {}", key);
+            LOG.debug("Failure reason: ", e);
         }
     }
 
@@ -388,8 +402,8 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 managementContext.unregisterMBean(key);
             } catch (Throwable e) {
-                LOG.warn("Failed to unregister MBean: " + key);
-                LOG.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister MBean {}", key);
+                LOG.debug("Failure reason: ", e);
             }
         }
     }
@@ -425,7 +439,7 @@ public class ManagedRegionBroker extends RegionBroker {
                             managementContext.unregisterMBean(inactiveName);
                         }
                     } catch (Throwable e) {
-                        LOG.error("Unable to unregister inactive durable subscriber: " + subscriptionKey, e);
+                        LOG.error("Unable to unregister inactive durable subscriber {}", subscriptionKey, e);
                     }
                 } else {
                     topicSubscribers.put(key, view);
@@ -437,10 +451,9 @@ public class ManagedRegionBroker extends RegionBroker {
             AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            LOG.warn("Failed to register MBean: " + key);
-            LOG.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register MBean {}", key);
+            LOG.debug("Failure reason: ", e);
         }
-
     }
 
     protected void unregisterSubscription(ObjectName key, boolean addToInactive) throws Exception {
@@ -452,8 +465,8 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 managementContext.unregisterMBean(key);
             } catch (Throwable e) {
-                LOG.warn("Failed to unregister MBean: " + key);
-                LOG.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister MBean {}", key);
+                LOG.debug("Failure reason: ", e);
             }
         }
         DurableSubscriptionView view = (DurableSubscriptionView)durableTopicSubscribers.remove(key);
@@ -483,7 +496,7 @@ public class ManagedRegionBroker extends RegionBroker {
                             SubscriptionInfo info = infos[i];
                             SubscriptionKey key = new SubscriptionKey(info);
                             if (!alreadyKnown(key)) {
-                                LOG.debug("Restoring durable subscription mbean: " + info);
+                                LOG.debug("Restoring durable subscription MBean {}", info);
                                 subscriptions.put(key, info);
                             }
                         }
@@ -500,9 +513,7 @@ public class ManagedRegionBroker extends RegionBroker {
     private boolean alreadyKnown(SubscriptionKey key) {
         boolean known = false;
         known = ((TopicRegion) getTopicRegion()).durableSubscriptionExists(key);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Sub with key: " + key + ", " + (known ? "": "not") +  " already registered");
-        }
+        LOG.trace("Sub with key: {}, {} already registered", key, (known ? "": "not"));
         return known;
     }
 
@@ -516,14 +527,14 @@ public class ManagedRegionBroker extends RegionBroker {
                 AsyncAnnotatedMBean.registerMBean(asyncInvokeService, mbeanTimeout, managementContext, view, objectName);
                 registeredMBeans.add(objectName);
             } catch (Throwable e) {
-                LOG.warn("Failed to register MBean: " + key);
-                LOG.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to register MBean {}", key);
+                LOG.debug("Failure reason: ", e);
             }
 
             inactiveDurableTopicSubscribers.put(objectName, view);
             subscriptionKeys.put(key, objectName);
         } catch (Exception e) {
-            LOG.error("Failed to register subscription " + info, e);
+            LOG.error("Failed to register subscription {}", info, e);
         }
     }
 
@@ -534,7 +545,7 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 c[i] = OpenTypeSupport.convert(messages.get(i));
             } catch (Throwable e) {
-                LOG.error("failed to browse : " + view, e);
+                LOG.error("Failed to browse: {}", view, e);
             }
         }
         return c;
@@ -585,7 +596,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 }
             });
         } catch (Throwable e) {
-            LOG.error("Failed to browse messages for Subscription " + view, e);
+            LOG.error("Failed to browse messages for Subscription {}", view, e);
         }
         return result;
 
@@ -691,8 +702,8 @@ public class ManagedRegionBroker extends RegionBroker {
                 registeredMBeans.add(objectName);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to register MBean: " + strategy);
-            LOG.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register MBean {}", strategy);
+            LOG.debug("Failure reason: ", e);
         }
         return objectName;
     }
@@ -706,8 +717,8 @@ public class ManagedRegionBroker extends RegionBroker {
                 registeredMBeans.add(objectName);
             }
         } catch (Exception e) {
-            LOG.warn("Failed to register prepared transaction MBean: " + transaction);
-            LOG.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register prepared transaction MBean {}", transaction);
+            LOG.debug("Failure reason: ", e);
         }
     }
 
@@ -718,12 +729,12 @@ public class ManagedRegionBroker extends RegionBroker {
                 try {
                     managementContext.unregisterMBean(objectName);
                 } catch (Throwable e) {
-                    LOG.warn("Failed to unregister MBean: " + objectName);
-                    LOG.debug("Failure reason: " + e, e);
+                    LOG.warn("Failed to unregister MBean {}", objectName);
+                    LOG.debug("Failure reason: ", e);
                 }
             }
         } catch (Exception e) {
-            LOG.warn("Failed to create object name to unregister " + transaction, e);
+            LOG.warn("Failed to create object name to unregister {}", transaction, e);
         }
     }
 

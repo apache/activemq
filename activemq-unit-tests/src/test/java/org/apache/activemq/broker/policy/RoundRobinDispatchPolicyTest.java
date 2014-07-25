@@ -16,17 +16,21 @@
  */
 package org.apache.activemq.broker.policy;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.QueueSubscriptionTest;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
+@RunWith(BlockJUnit4ClassRunner.class)
 public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
 
     protected BrokerService createBroker() throws Exception {
@@ -43,6 +47,7 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         return broker;
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesOnePrefetch();
 
@@ -52,11 +57,13 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         assertEachConsumerReceivedAtLeastXMessages(1);
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
         assertMessagesDividedAmongConsumers();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesOnePrefetch();
 
@@ -66,11 +73,13 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         assertEachConsumerReceivedAtLeastXMessages(1);
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersLargeMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesLargePrefetch();
         assertMessagesDividedAmongConsumers();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerManyConsumersFewMessages() throws Exception {
         super.testOneProducerManyConsumersFewMessages();
 
@@ -79,16 +88,19 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         assertMessagesDividedAmongConsumers();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerManyConsumersManyMessages() throws Exception {
         super.testOneProducerManyConsumersManyMessages();
         assertMessagesDividedAmongConsumers();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testManyProducersManyConsumers() throws Exception {
         super.testManyProducersManyConsumers();
         assertMessagesDividedAmongConsumers();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoMatchingConsumersOneNotMatchingConsumer() throws Exception {
         // Create consumer that won't consume any message
         createMessageConsumer(createConnectionFactory().createConnection(), createDestination(), "JMSPriority<1");

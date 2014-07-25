@@ -57,6 +57,7 @@ public class Statements {
     private String removeAllMessagesStatement;
     private String removeAllSubscriptionsStatement;
     private String[] createSchemaStatements;
+    private String[] createLockSchemaStatements;
     private String[] dropSchemaStatements;
     private String lockCreateStatement;
     private String lockUpdateStatement;
@@ -106,10 +107,6 @@ public class Statements {
                     + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                     + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
                     + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
-                "CREATE TABLE " + getFullLockTableName() 
-                    + "( ID " + longDataType + " NOT NULL, TIME " + longDataType
-                    + ", BROKER_NAME " + stringIdDataType + ", PRIMARY KEY (ID) )",
-                "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD PRIORITY " + sequenceDataType,
                 "CREATE INDEX " + getFullMessageTableName() + "_PIDX ON " + getFullMessageTableName() + " (PRIORITY)",
                 "ALTER TABLE " + getFullMessageTableName() + " ADD XID " + stringIdDataType,
@@ -121,7 +118,24 @@ public class Statements {
                 "CREATE INDEX " + getFullAckTableName() + "_XIDX ON " + getFullAckTableName() + " (XID)"
             };
         }
-        return createSchemaStatements;
+        getCreateLockSchemaStatements();
+        String[] allCreateStatements = new String[createSchemaStatements.length + createLockSchemaStatements.length];
+        System.arraycopy(createSchemaStatements, 0, allCreateStatements, 0, createSchemaStatements.length);
+        System.arraycopy(createLockSchemaStatements, 0, allCreateStatements, createSchemaStatements.length, createLockSchemaStatements.length);
+
+        return allCreateStatements;
+    }
+
+    public String[] getCreateLockSchemaStatements() {
+        if (createLockSchemaStatements == null) {
+            createLockSchemaStatements = new String[] {
+                "CREATE TABLE " + getFullLockTableName()
+                    + "( ID " + longDataType + " NOT NULL, TIME " + longDataType
+                    + ", BROKER_NAME " + stringIdDataType + ", PRIMARY KEY (ID) )",
+                "INSERT INTO " + getFullLockTableName() + "(ID) VALUES (1)"
+            };
+        }
+        return createLockSchemaStatements;
     }
 
     public String getDropAckPKAlterStatementEnd() {
@@ -155,7 +169,7 @@ public class Statements {
 
     public String getUpdateMessageStatement() {
         if (updateMessageStatement == null) {
-            updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE ID=?";
+            updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE MSGID_PROD=? AND MSGID_SEQ=? AND CONTAINER=?";
         }
         return updateMessageStatement;
     }
@@ -484,7 +498,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                                        + " WHERE CONTAINER=? AND ID > ? AND XID IS NULL ORDER BY ID";
+                                        + " WHERE CONTAINER=? AND ID > ? AND ID < ? AND XID IS NULL ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
@@ -497,7 +511,7 @@ public class Statements {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
                                         + " AND XID IS NULL"
-                                        + " AND ((ID > ? AND PRIORITY = ?) OR PRIORITY < ?)"
+                                        + " AND ((ID > ? AND ID < ? AND PRIORITY = ?) OR PRIORITY < ?)"
                                         + " ORDER BY PRIORITY DESC, ID";
         }
         return findNextMessagesByPriorityStatement;
@@ -760,6 +774,10 @@ public class Statements {
 
     public void setCreateSchemaStatements(String[] createSchemaStatments) {
         this.createSchemaStatements = createSchemaStatments;
+    }
+
+    public void setCreateLockSchemaStatements(String[] createLockSchemaStatments) {
+        this.createLockSchemaStatements = createLockSchemaStatments;
     }
 
     public void setDeleteOldMessagesStatementWithPriority(String deleteOldMessagesStatementWithPriority) {

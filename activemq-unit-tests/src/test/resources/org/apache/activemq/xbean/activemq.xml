@@ -37,7 +37,7 @@
     </networkConnectors>
 
     <persistenceFactory>
-      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="${basedir}/target/foo" />
+      <journalPersistenceAdapterFactory journalLogFiles="5" dataDirectory="${basedir}/target" />
       
       <!-- To use a different dataSource, use the following syntax : -->
       <!-- 

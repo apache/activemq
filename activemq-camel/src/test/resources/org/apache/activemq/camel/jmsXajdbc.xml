@@ -40,7 +40,7 @@
         <property name="transactionLog" ref="transactionLog"/>
     </bean>
 
-    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
         <property name="brokerURL" value="tcp://localhost:61616?jms.dispatchAsync=false"/>
     </bean>
 

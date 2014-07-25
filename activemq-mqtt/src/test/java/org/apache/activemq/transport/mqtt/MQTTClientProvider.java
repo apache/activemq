@@ -19,6 +19,7 @@ package org.apache.activemq.transport.mqtt;
 public interface  MQTTClientProvider {
     void connect(String host) throws Exception;
     void disconnect() throws Exception;
+    public void publish(String topic, byte[] payload, int qos, boolean retained) throws Exception;
     void publish(String topic,byte[] payload,int qos) throws Exception;
     void subscribe(String topic,int qos) throws Exception;
     void unsubscribe(String topic) throws Exception;

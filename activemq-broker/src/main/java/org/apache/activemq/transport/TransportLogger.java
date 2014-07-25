@@ -145,16 +145,11 @@ public class TransportLogger extends TransportFilter {
         return next.toString();
     }
 
-
-    /**
-     * We need to override this method
-     * so that we can unregister the associated
-     * MBean to avoid a memory leak.
-     */
-    public void finalize() throws Throwable {
+    @Override
+    public void stop() throws Exception {
+        super.stop();
         if (view != null) {
-            view.unregister();    
+            view.unregister();
         }
     }
-
 }

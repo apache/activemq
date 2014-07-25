@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.command;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.state.CommandVisitor;
 
 /**
@@ -32,6 +34,7 @@ public class ProducerInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean dispatchAsync;
     protected int windowSize;
+    protected AtomicLong sentCount = new AtomicLong();
 
     public ProducerInfo() {
     }
@@ -133,6 +136,18 @@ public class ProducerInfo extends BaseCommand {
 
     public void setWindowSize(int windowSize) {
         this.windowSize = windowSize;
+    }
+
+    public long getSentCount(){
+        return sentCount.get();
+    }
+
+    public void incrementSentCount(){
+        sentCount.incrementAndGet();
+    }
+
+    public void resetSentCount(){
+        sentCount.set(0);
     }
 
 }

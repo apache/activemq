@@ -86,11 +86,11 @@ public class TransportStatusDetector implements Service, Runnable {
     }
 
     protected void doCollection(TransportConnection tc) {
-        LOG.warn("found a blocked client - stopping: " + tc);
+        LOG.warn("found a blocked client - stopping: {}", tc);
         try {
             tc.stop();
         } catch (Exception e) {
-            LOG.error("Error stopping " + tc, e);
+            LOG.error("Error stopping {}", tc, e);
         }
     }
 

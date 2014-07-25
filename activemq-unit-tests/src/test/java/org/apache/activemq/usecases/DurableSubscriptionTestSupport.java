@@ -29,12 +29,13 @@ import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
 
 /**
- * 
+ *
  */
 public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
@@ -44,21 +45,25 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     private MessageProducer producer;
     private BrokerService broker;
 
+    @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory("vm://durable-broker");
     }
 
+    @Override
     protected Connection createConnection() throws Exception {
         Connection rc = super.createConnection();
         rc.setClientID(getName());
         return rc;
     }
 
+    @Override
     protected void setUp() throws Exception {
         createBroker();
         super.setUp();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         destroyBroker();
@@ -104,7 +109,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     protected abstract PersistenceAdapter createPersistenceAdapter() throws Exception;
-    
+
     public void testMessageExpire() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
@@ -117,12 +122,12 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Make sure it works when the durable sub is active.
         producer.send(session.createTextMessage("Msg:1"));
         assertTextMessageEquals("Msg:1", consumer.receive(1000));
-        
+
         consumer.close();
-        
+
         producer.send(session.createTextMessage("Msg:2"));
         producer.send(session.createTextMessage("Msg:3"));
-        
+
         consumer = session.createDurableSubscriber(topic, "sub1");
 
         // Try to get the message.
@@ -225,7 +230,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:2", consumer.receive(5000));
         assertNull(consumer.receive(5000));
     }
-    
+
     public void testDurableSubscriptionBrokerRestart() throws Exception {
 
         // Create the durable sub.
@@ -235,12 +240,12 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         // Ensure that consumer will receive messages sent before it was created
         Topic topic = session.createTopic("TestTopic?consumer.retroactive=true");
         consumer = session.createDurableSubscriber(topic, "sub1");
-        
+
         producer = session.createProducer(topic);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
         producer.send(session.createTextMessage("Msg:1"));
         assertTextMessageEquals("Msg:1", consumer.receive(5000));
-        
+
         // Make sure cleanup kicks in
         Thread.sleep(1000);
 
@@ -428,8 +433,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         consumer = session.createDurableSubscriber(topic, "sub1");
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
-        assertEquals("Message 1", ((TextMessage)msg).getText());
-
+        assertEquals("Message 1", ((TextMessage) msg).getText());
     }
 
     public void testDurableSubWorksInNewConnection() throws Exception {
@@ -459,8 +463,56 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
         consumer = session.createDurableSubscriber(topic, "sub1");
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
-        assertEquals("Message 1", ((TextMessage)msg).getText());
+        assertEquals("Message 1", ((TextMessage) msg).getText());
+    }
 
+    public void testIndividualAckWithDurableSubs() throws Exception {
+        // Create the consumer.
+        connection.start();
+
+        Session session = connection.createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
+        Topic topic = session.createTopic("topic-" + getName());
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
+        // Drain any messages that may allready be in the sub
+        while (consumer.receive(1000) != null) {
+        }
+        consumer.close();
+
+        MessageProducer producer = session.createProducer(topic);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+        producer.send(session.createTextMessage("Message 1"));
+        producer.send(session.createTextMessage("Message 2"));
+        producer.send(session.createTextMessage("Message 3"));
+        producer.close();
+
+        connection.close();
+        connection = createConnection();
+        connection.start();
+
+        session = connection.createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
+        consumer = session.createDurableSubscriber(topic, "sub1");
+
+        Message message = null;
+        for (int i = 0; i < 3; ++i) {
+            message = consumer.receive(5000);
+            assertNotNull(message);
+            assertEquals("Message " + (i + 1), ((TextMessage) message).getText());
+        }
+
+        message.acknowledge();
+
+        connection.close();
+        connection = createConnection();
+        connection.start();
+
+        session = connection.createSession(false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
+        consumer = session.createDurableSubscriber(topic, "sub1");
+
+        for (int i = 0; i < 2; ++i) {
+            message = consumer.receive(5000);
+            assertNotNull(message);
+            assertEquals("Message " + (i + 1), ((TextMessage) message).getText());
+        }
     }
 
     private MessageProducer createProducer(Session session, Destination queue) throws JMSException {
@@ -476,7 +528,7 @@ public abstract class DurableSubscriptionTestSupport extends TestSupport {
     private void assertTextMessageEquals(String string, Message message) throws JMSException {
         assertNotNull("Message was null", message);
         assertTrue("Message is not a TextMessage", message instanceof TextMessage);
-        assertEquals(string, ((TextMessage)message).getText());
+        assertEquals(string, ((TextMessage) message).getText());
     }
 
 }

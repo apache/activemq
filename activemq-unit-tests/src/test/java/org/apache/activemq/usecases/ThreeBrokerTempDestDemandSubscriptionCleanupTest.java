@@ -122,7 +122,7 @@ public class ThreeBrokerTempDestDemandSubscriptionCleanupTest extends JmsMultipl
         threadService.submit(tester);
 
         threadService.shutdown();
-        assertTrue("executor done on time", threadService.awaitTermination(10l, TimeUnit.SECONDS));
+        assertTrue("executor done on time", threadService.awaitTermination(30l, TimeUnit.SECONDS));
 
         // for the real test... we should not have any subscriptions left on broker C for the temp dests
         BrokerItem brokerC = brokers.get(BROKER_C);

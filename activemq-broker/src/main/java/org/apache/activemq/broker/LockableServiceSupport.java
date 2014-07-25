@@ -54,9 +54,14 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
         this.useLock = useLock;
     }
 
+    public boolean isUseLock() {
+        return this.useLock;
+    }
+
     @Override
     public void setLocker(Locker locker) throws IOException {
         this.locker = locker;
+        locker.setLockable(this);
         if (this instanceof PersistenceAdapter) {
             this.locker.configure((PersistenceAdapter)this);
         }
@@ -64,7 +69,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     public Locker getLocker() throws IOException {
         if (this.locker == null) {
-            this.locker = createDefaultLocker();
+            setLocker(createDefaultLocker());
         }
         return this.locker;
     }
@@ -121,8 +126,10 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
                     stop = true;
                 }
             }
+        } catch (SuppressReplyException e) {
+            LOG.warn("locker keepAlive resulted in", e);
         } catch (IOException e) {
-            LOG.warn("locker keepalive resulted in: " + e, e);
+            LOG.warn("locker keepAlive resulted in", e);
         }
         if (stop) {
             stopBroker();
@@ -131,7 +138,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
 
     protected void stopBroker() {
         // we can no longer keep the lock so lets fail
-        LOG.info(brokerService.getBrokerName() + ", no longer able to keep the exclusive lock so giving up being a master");
+        LOG.error("{}, no longer able to keep the exclusive lock so giving up being a master", brokerService.getBrokerName());
         try {
             if( brokerService.isRestartAllowed() ) {
                 brokerService.requestRestart();
@@ -158,5 +165,9 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
     @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+    }
+
+    public BrokerService getBrokerService() {
+        return this.brokerService;
     }
 }

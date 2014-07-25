@@ -89,7 +89,7 @@ public class TopicRegion extends AbstractRegion {
             if (!sub.isActive()) {
                 long offline = sub.getOfflineTimestamp();
                 if (offline != -1 && now - offline >= broker.getBrokerService().getOfflineDurableSubscriberTimeout()) {
-                    LOG.info("Destroying durable subscriber due to inactivity: " + sub);
+                    LOG.info("Destroying durable subscriber due to inactivity: {}", sub);
                     try {
                         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
                         info.setClientId(entry.getKey().getClientId());
@@ -231,9 +231,7 @@ public class TopicRegion extends AbstractRegion {
             for (int i = 0; i < infos.length; i++) {
 
                 SubscriptionInfo info = infos[i];
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Restoring durable subscription: " + info);
-                }
+                LOG.debug("Restoring durable subscription: {}", info);
                 SubscriptionKey key = new SubscriptionKey(info);
 
                 // A single durable sub may be subscribing to multiple topics.

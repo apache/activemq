@@ -166,17 +166,17 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
             try {
                 InboundContextSupport.register(this);
                 if ( session.isRunning() ) {
-                session.run();
+                    session.run();
                 } else {
-                    log.debug("JMS Session is no longer running (maybe due to loss of connection?), marking ServerSesison as stale");
+                    log.debug("JMS Session {} with unconsumed {} is no longer running (maybe due to loss of connection?), marking ServerSession as stale", session, session.getUnconsumedMessages().size());
                     stale = true;
                 }
             } catch (Throwable e) {
                 stale = true;
                 if ( log.isDebugEnabled() ) {
-                    log.debug("Endpoint failed to process message.", e);
+                    log.debug("Endpoint {} failed to process message.", session, e);
                 } else if ( log.isInfoEnabled() ) {
-                    log.info("Endpoint failed to process message. Reason: " + e.getMessage());                    
+                    log.info("Endpoint {} failed to process message. Reason: " + e.getMessage(), session);
                 }
             } finally {
                 InboundContextSupport.unregister(this);
@@ -190,6 +190,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                     }
                     if (!session.hasUncomsumedMessages()) {
                         runningFlag = false;
+                        log.debug("Session has no unconsumed message, returning to pool");
                         pool.returnToPool(this);
                         break;
                     }
@@ -255,7 +256,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      */
     @Override
     public String toString() {
-        return "ServerSessionImpl:" + serverSessionId;
+        return "ServerSessionImpl:" + serverSessionId + "{" + session +"}";
     }
 
     public void close() {

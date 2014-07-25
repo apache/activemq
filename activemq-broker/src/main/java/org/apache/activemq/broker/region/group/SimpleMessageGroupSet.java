@@ -36,4 +36,8 @@ public class SimpleMessageGroupSet implements MessageGroupSet {
         set.add(group);
     }
 
+    protected Set<String> getUnderlyingSet(){
+        return set;
+    }
+
 }

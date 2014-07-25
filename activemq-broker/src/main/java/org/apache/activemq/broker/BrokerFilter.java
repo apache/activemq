@@ -73,6 +73,11 @@ public class BrokerFilter implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return next.getDestinationMap(destination);
+    }
+
+    @Override
     public Set <Destination>getDestinations(ActiveMQDestination destination) {
         return next.getDestinations(destination);
     }
@@ -309,8 +314,8 @@ public class BrokerFilter implements Broker {
 
     @Override
     public boolean sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference,
-                                      Subscription subscription) {
-        return next.sendToDeadLetterQueue(context, messageReference, subscription);
+                                         Subscription subscription, Throwable poisonCause) {
+        return next.sendToDeadLetterQueue(context, messageReference, subscription, poisonCause);
     }
 
     @Override
@@ -363,6 +368,11 @@ public class BrokerFilter implements Broker {
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
         next.processConsumerControl(consumerExchange, control);
+    }
+
+    @Override
+    public void reapplyInterceptor() {
+        next.reapplyInterceptor();
     }
 
     @Override

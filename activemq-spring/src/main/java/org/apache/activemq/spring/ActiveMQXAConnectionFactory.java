@@ -17,6 +17,7 @@
 package org.apache.activemq.spring;
 
 import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.BeanNameAware;
 
 /**
@@ -24,22 +25,33 @@ import org.springframework.beans.factory.BeanNameAware;
  * factory which will automatically use the Spring bean name as the clientIDPrefix property
  * so that connections created have client IDs related to your Spring.xml file for
  * easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.
- * 
+ *
  * @org.apache.xbean.XBean element="xaConnectionFactory"
- * 
- * 
  */
 public class ActiveMQXAConnectionFactory extends org.apache.activemq.ActiveMQXAConnectionFactory implements BeanNameAware {
 
     private String beanName;
     private boolean useBeanNameAsClientIdPrefix;
-    
+
+    /**
+     * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
+     *
+     * delegates to afterPropertiesSet, done to prevent backwards incompatible signature change.
+     */
+    @PostConstruct
+    private void postConstruct() {
+        try {
+            afterPropertiesSet();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     /**
      *
      * @throws Exception
      * @org.apache.xbean.InitMethod
      */
-    @PostConstruct
     public void afterPropertiesSet() throws Exception {
         if (isUseBeanNameAsClientIdPrefix() && getClientIDPrefix() == null) {
             setClientIDPrefix(getBeanName());
@@ -49,7 +61,8 @@ public class ActiveMQXAConnectionFactory extends org.apache.activemq.ActiveMQXAC
     public String getBeanName() {
         return beanName;
     }
-    
+
+    @Override
     public void setBeanName(String beanName) {
         this.beanName = beanName;
     }

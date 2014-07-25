@@ -138,7 +138,7 @@ public class AMQ2314Test extends CombinationTestSupport {
         consumingThread.join();
         connection.close();
 
-        LOG.info("Subscrition Usage: " + tempUsageBySubscription + ", endUsage: "
+        LOG.info("Subscription Usage: " + tempUsageBySubscription + ", endUsage: "
                 + broker.getSystemUsage().getTempUsage().getUsage());
 
         assertTrue("temp usage decreased with removed sub", Wait.waitFor(new Wait.Condition(){
@@ -157,6 +157,7 @@ public class AMQ2314Test extends CombinationTestSupport {
         broker.setUseJmx(true);
         broker.setAdvisorySupport(false);
         broker.setDeleteAllMessagesOnStartup(true);
+        broker.getSystemUsage().getMemoryUsage().setLimit(1024l*1024*64);
 
         broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -48,12 +49,16 @@ public class ValidateXMLConfigTest {
     public void validateExampleConfig() throws Exception {
         // resource:copy-resource brings all config files into target/conf
         File sampleConfDir = new File("target/conf");
-        
+
+        final HashSet<String> skipped = new HashSet<String>(java.util.Arrays.asList(new String[]{
+            "resin-web.xml", "web.xml"
+        }));
+
         for (File xmlFile : sampleConfDir.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
-                return pathname.isFile() && pathname.getName().endsWith("xml");
+                return pathname.isFile() && pathname.getName().endsWith("xml") && !skipped.contains(pathname.getName());
             }})) {
-            
+
             validateXML(xmlFile);
         }
     }

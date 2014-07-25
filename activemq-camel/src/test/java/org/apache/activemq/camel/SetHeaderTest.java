@@ -24,17 +24,21 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.util.ObjectHelper;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit38.AbstractJUnit38SpringContextTests;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * 
  */
+
 @ContextConfiguration
-public class SetHeaderTest extends AbstractJUnit38SpringContextTests {
+@RunWith(SpringJUnit4ClassRunner.class)
+public class SetHeaderTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(SetHeaderTest.class);
 
     @Autowired
@@ -43,6 +47,7 @@ public class SetHeaderTest extends AbstractJUnit38SpringContextTests {
     @EndpointInject(uri = "mock:results")
     protected MockEndpoint expectedEndpoint;
 
+    @Test
     public void testMocksAreValid() throws Exception {
         // lets add more expectations
         expectedEndpoint.expectedMessageCount(1);

@@ -34,12 +34,13 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 
 public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
+
     protected Connection serverConnection;
     protected Session serverSession;
     protected Connection clientConnection;
     protected Session clientSession;
     protected Destination serverDestination;
-    protected int messagesToSend = 2000;
+    protected int messagesToSend = 10;
     protected boolean deleteTempQueue = true;
     protected boolean serverTransactional = false;
     protected boolean clientTransactional = false;
@@ -52,7 +53,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testLoadRequestReply() throws Exception {
-        for (int i=0; i< numConsumers; i++) {
+        for (int i = 0; i < numConsumers; i++) {
             serverSession.createConsumer(serverDestination).setMessageListener(new MessageListener() {
                 @Override
                 public void onMessage(Message msg) {
@@ -73,17 +74,19 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
 
         class Producer extends Thread {
             private final int numToSend;
+
             public Producer(int numToSend) {
                 this.numToSend = numToSend;
             }
+
             @Override
             public void run() {
                 try {
-                    Session session = clientConnection.createSession(clientTransactional,
-                            clientTransactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
+                    Session session = clientConnection.createSession(clientTransactional, clientTransactional ?
+                        Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
                     MessageProducer producer = session.createProducer(serverDestination);
 
-                    for (int i =0; i< numToSend; i++) {
+                    for (int i = 0; i < numToSend; i++) {
                         TemporaryQueue replyTo = session.createTemporaryQueue();
                         MessageConsumer consumer = session.createConsumer(replyTo);
                         Message msg = session.createMessage();
@@ -109,8 +112,8 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
             }
         }
         Vector<Thread> threads = new Vector<Thread>(numProducers);
-        for (int i=0; i<numProducers ; i++) {
-            threads.add(new Producer(messagesToSend/numProducers));
+        for (int i = 0; i < numProducers; i++) {
+            threads.add(new Producer(messagesToSend / numProducers));
         }
         startAndJoinThreads(threads);
 
@@ -119,14 +122,13 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         clientConnection.close();
         serverConnection.close();
 
-        AdvisoryBroker ab = (AdvisoryBroker) broker.getBroker().getAdaptor(
-                AdvisoryBroker.class);
+        AdvisoryBroker ab = (AdvisoryBroker) broker.getBroker().getAdaptor(AdvisoryBroker.class);
 
-        ///The server destination will be left
+        // The server destination will be left
         assertTrue(ab.getAdvisoryDestinations().size() == 1);
 
-        assertTrue("should be zero but is "+ab.getAdvisoryConsumers().size(),ab.getAdvisoryConsumers().size() == 0);
-        assertTrue("should be zero but is "+ab.getAdvisoryProducers().size(),ab.getAdvisoryProducers().size() == 0);
+        assertTrue("should be zero but is " + ab.getAdvisoryConsumers().size(), ab.getAdvisoryConsumers().size() == 0);
+        assertTrue("should be zero but is " + ab.getAdvisoryProducers().size(), ab.getAdvisoryProducers().size() == 0);
 
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(RegionBroker.class);
 
@@ -134,10 +136,10 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     }
 
     private void startAndJoinThreads(Vector<Thread> threads) throws Exception {
-        for (Thread thread: threads) {
+        for (Thread thread : threads) {
             thread.start();
         }
-        for (Thread thread: threads) {
+        for (Thread thread : threads) {
             thread.join();
         }
     }

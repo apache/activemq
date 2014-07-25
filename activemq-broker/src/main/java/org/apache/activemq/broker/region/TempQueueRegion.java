@@ -18,16 +18,12 @@ package org.apache.activemq.broker.region;
 
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 

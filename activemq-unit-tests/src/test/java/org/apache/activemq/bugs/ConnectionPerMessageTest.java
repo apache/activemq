@@ -35,19 +35,19 @@ import org.slf4j.LoggerFactory;
 public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ConnectionPerMessageTest.class);
-	private static final int COUNT = 20000;
+	private static final int COUNT = 2000;
 	protected String bindAddress;
 
 	public void testConnectionPerMessage() throws Exception {
 		final String topicName = "test.topic";
 
-		LOG.info("Initializing pooled connection factory for JMS to URL: "
+		LOG.info("Initializing connection factory for JMS to URL: "
 				+ bindAddress);
 		final ActiveMQConnectionFactory normalFactory = new ActiveMQConnectionFactory();
 		normalFactory.setBrokerURL(bindAddress);
 		for (int i = 0; i < COUNT; i++) {
 
-			if (i % 1000 == 0) {
+			if (i % 100 == 0) {
 				LOG.info(new Integer(i).toString());
 			}
 
@@ -86,6 +86,7 @@ public class ConnectionPerMessageTest extends EmbeddedBrokerTestSupport {
 
 	protected BrokerService createBroker() throws Exception {
 		BrokerService answer = new BrokerService();
+        answer.setDeleteAllMessagesOnStartup(true);
 		answer.setUseJmx(false);
 		answer.setPersistent(isPersistent());
 		answer.addConnector(bindAddress);

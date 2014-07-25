@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
-import javax.jms.QueueConnection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
@@ -73,25 +72,26 @@ public abstract class JmsConnector implements Service {
 
     private ReconnectionPolicy policy = new ReconnectionPolicy();
     protected ThreadPoolExecutor connectionSerivce;
-    private List<DestinationBridge> inboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
-    private List<DestinationBridge> outboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
+    private final List<DestinationBridge> inboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
+    private final List<DestinationBridge> outboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
     private String name;
 
     private static LRUCache<Destination, DestinationBridge> createLRUCache() {
         return new LRUCache<Destination, DestinationBridge>() {
             private static final long serialVersionUID = -7446792754185879286L;
 
+            @Override
             protected boolean removeEldestEntry(Map.Entry<Destination, DestinationBridge> enty) {
                 if (size() > maxCacheSize) {
                     Iterator<Map.Entry<Destination, DestinationBridge>> iter = entrySet().iterator();
                     Map.Entry<Destination, DestinationBridge> lru = iter.next();
                     remove(lru.getKey());
-                    DestinationBridge bridge = (DestinationBridge)lru.getValue();
+                    DestinationBridge bridge = lru.getValue();
                     try {
                         bridge.stop();
-                        LOG.info("Expired bridge: " + bridge);
+                        LOG.info("Expired bridge: {}", bridge);
                     } catch (Exception e) {
-                        LOG.warn("stopping expired bridge" + bridge + " caused an exception", e);
+                        LOG.warn("Stopping expired bridge {} caused an exception", bridge, e);
                     }
                 }
                 return false;
@@ -151,6 +151,7 @@ public abstract class JmsConnector implements Service {
         return true;
     }
 
+    @Override
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
             init();
@@ -160,15 +161,30 @@ public abstract class JmsConnector implements Service {
             for (DestinationBridge bridge : outboundBridges) {
                 bridge.start();
             }
-            LOG.info("JMS Connector " + getName() + " Started");
+            LOG.info("JMS Connector {} started", getName());
         }
     }
 
+    @Override
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
 
             ThreadPoolUtils.shutdown(connectionSerivce);
             connectionSerivce = null;
+
+            if (foreignConnection.get() != null) {
+                try {
+                    foreignConnection.get().close();
+                } catch (Exception e) {
+                }
+            }
+
+            if (localConnection.get() != null) {
+                try {
+                    localConnection.get().close();
+                } catch (Exception e) {
+                }
+            }
 
             for (DestinationBridge bridge : inboundBridges) {
                 bridge.stop();
@@ -176,7 +192,7 @@ public abstract class JmsConnector implements Service {
             for (DestinationBridge bridge : outboundBridges) {
                 bridge.stop();
             }
-            LOG.info("JMS Connector " + getName() + " Stopped");
+            LOG.info("JMS Connector {} stopped", getName());
         }
     }
 
@@ -475,12 +491,12 @@ public abstract class JmsConnector implements Service {
             return;
         }
 
-        LOG.info("JmsConnector handling loss of connection [" + connection.toString() + "]");
+        LOG.info("JmsConnector handling loss of connection [{}]", connection.toString());
 
         // TODO - How do we handle the re-wiring of replyToBridges in this case.
         replyToBridges.clear();
 
-        if (this.foreignConnection.compareAndSet((QueueConnection)connection, null)) {
+        if (this.foreignConnection.compareAndSet(connection, null)) {
 
             // Stop the inbound bridges when the foreign connection is dropped since
             // the bridge has no consumer and needs to be restarted once a new connection
@@ -500,12 +516,12 @@ public abstract class JmsConnector implements Service {
                     try {
                         doInitializeConnection(false);
                     } catch (Exception e) {
-                        LOG.error("Failed to initialize forgein connection for the JMSConnector", e);
+                        LOG.error("Failed to initialize foreign connection for the JMSConnector", e);
                     }
                 }
             });
 
-        } else if (this.localConnection.compareAndSet((QueueConnection)connection, null)) {
+        } else if (this.localConnection.compareAndSet(connection, null)) {
 
             // Stop the outbound bridges when the local connection is dropped since
             // the bridge has no consumer and needs to be restarted once a new connection
@@ -552,7 +568,7 @@ public abstract class JmsConnector implements Service {
                 try {
                     doInitializeConnection(false);
                 } catch (Exception e) {
-                    LOG.error("Failed to initialize forgein connection for the JMSConnector", e);
+                    LOG.error("Failed to initialize foreign connection for the JMSConnector", e);
                 }
             }
         });
@@ -606,8 +622,7 @@ public abstract class JmsConnector implements Service {
 
                 return;
             } catch(Exception e) {
-                LOG.debug("Failed to establish initial " + (local ? "local" : "foriegn") +
-                          " connection for JmsConnector [" + attempt + "]: " + e.getMessage());
+                LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
             }
         }
         while (maxRetries < ++attempt && !connectionSerivce.isTerminating());
@@ -615,7 +630,8 @@ public abstract class JmsConnector implements Service {
         this.failed.set(true);
     }
 
-    private ThreadFactory factory = new ThreadFactory() {
+    private final ThreadFactory factory = new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable runnable) {
             Thread thread = new Thread(runnable, "JmsConnector Async Connection Task: ");
             thread.setDaemon(true);

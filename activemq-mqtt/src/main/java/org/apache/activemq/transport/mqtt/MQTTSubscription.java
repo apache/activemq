@@ -18,8 +18,8 @@ package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
 import java.util.zip.DataFormatException;
-
 import javax.jms.JMSException;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerInfo;
@@ -53,6 +53,13 @@ class MQTTSubscription {
         if (publish.qos().ordinal() > this.qos.ordinal()) {
             publish.qos(this.qos);
         }
+        switch (publish.qos()) {
+            case AT_LEAST_ONCE:
+            case EXACTLY_ONCE:
+                // set packet id, and optionally dup flag
+                protocolConverter.getPacketIdGenerator().setPacketId(protocolConverter.getClientId(), this, message, publish);
+            case AT_MOST_ONCE:
+        }
         return publish;
     }
 
@@ -67,4 +74,9 @@ class MQTTSubscription {
     public ConsumerInfo getConsumerInfo() {
         return consumerInfo;
     }
+
+    public QoS qos() {
+        return qos;
+    }
+
 }

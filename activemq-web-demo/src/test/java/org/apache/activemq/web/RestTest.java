@@ -26,12 +26,16 @@ import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpStatus;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 public class RestTest extends JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(RestTest.class);
 
+    @Test(timeout = 60 * 1000)
     public void testConsume() throws Exception {
         producer.send(session.createTextMessage("test"));
         LOG.info("message sent");
@@ -46,6 +50,7 @@ public class RestTest extends JettyTestSupport {
         assertEquals("test", contentExchange.getResponseContent());
     }
 
+    @Test(timeout = 60 * 1000)
     public void testSubscribeFirst() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -63,6 +68,7 @@ public class RestTest extends JettyTestSupport {
         assertEquals("test", contentExchange.getResponseContent());
     }
 
+    @Test(timeout = 60 * 1000)
     public void testSelector() throws Exception {
         TextMessage msg1 = session.createTextMessage("test1");
         msg1.setIntProperty("test", 1);
@@ -86,7 +92,12 @@ public class RestTest extends JettyTestSupport {
     }
 
     // test for https://issues.apache.org/activemq/browse/AMQ-2827
+    @Test(timeout = 15 * 1000)
     public void testCorrelation() throws Exception {
+        HttpClient httpClient = new HttpClient();
+        httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+        httpClient.start();
+
         for (int i = 0; i < 200; i++) {
             String correlId = "RESTY" + RandomStringUtils.randomNumeric(10);
 
@@ -95,13 +106,9 @@ public class RestTest extends JettyTestSupport {
             message.setJMSCorrelationID(correlId);
 
             LOG.info("Sending: " + correlId);
-
             producer.send(message);
 
-            HttpClient httpClient = new HttpClient();
-            httpClient.start();
             ContentExchange contentExchange = new ContentExchange();
-            httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
             contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue&clientId=test");
             httpClient.send(contentExchange);
             contentExchange.waitForDone();
@@ -109,8 +116,10 @@ public class RestTest extends JettyTestSupport {
             assertEquals(200, contentExchange.getResponseStatus());
             assertEquals(correlId, contentExchange.getResponseContent());
         }
+    	httpClient.stop();
     }
 
+    @Test(timeout = 15 * 1000)
     public void testDisconnect() throws Exception {
 
         producer.send(session.createTextMessage("test"));
@@ -136,6 +145,7 @@ public class RestTest extends JettyTestSupport {
         assertEquals("Consumers not closed", 0 , subs.size());
     }
 
+    @Test(timeout = 15 * 1000)
     public void testPost() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -156,6 +166,7 @@ public class RestTest extends JettyTestSupport {
     }
 
     // test for https://issues.apache.org/activemq/browse/AMQ-3857
+    @Test(timeout = 15 * 1000)
     public void testProperties() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
@@ -179,6 +190,8 @@ public class RestTest extends JettyTestSupport {
         assertEquals("header value", "value", fields.getStringField("property"));
     }
 
+
+    @Test(timeout = 15 * 1000)
     public void testAuth() throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.start();

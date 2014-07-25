@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -33,7 +32,9 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ProxyMessageStore;
 import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
@@ -43,11 +44,11 @@ import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaEntryType;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,12 +78,12 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddQueueMessage(transactionStore, context, getDelegate(), message);
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddQueueMessage(transactionStore, context, getDelegate(), message);
             }
 
@@ -111,12 +112,12 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddTopicMessage(transactionStore, context, getDelegate(), message);
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 return MultiKahaDBTransactionStore.this.asyncAddTopicMessage(transactionStore, context, getDelegate(), message);
             }
 
@@ -193,6 +194,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return inflightTransactions.remove(txid);
     }
 
+    @Override
     public void prepare(TransactionId txid) throws IOException {
         Tx tx = getTx(txid);
         for (TransactionStore store : tx.getStores()) {
@@ -200,6 +202,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
+    @Override
     public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit, Runnable postCommit)
             throws IOException {
 
@@ -237,11 +240,11 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
     public void persistOutcome(Tx tx, TransactionId txid) throws IOException {
-        tx.trackPrepareLocation(store(new KahaPrepareCommand().setTransactionInfo(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid))));
+        tx.trackPrepareLocation(store(new KahaPrepareCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid)))));
     }
 
     public void persistCompletion(TransactionId txid) throws IOException {
-        store(new KahaCommitCommand().setTransactionInfo(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid)));
+        store(new KahaCommitCommand().setTransactionInfo(TransactionIdConversion.convert(multiKahaDBPersistenceAdapter.transactionIdTransformer.transform(txid))));
     }
 
     private Location store(JournalCommand<?> data) throws IOException {
@@ -254,6 +257,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return location;
     }
 
+    @Override
     public void rollback(TransactionId txid) throws IOException {
         Tx tx = removeTx(txid);
         if (tx != null) {
@@ -263,6 +267,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
+    @Override
     public void start() throws Exception {
         journal = new Journal() {
             @Override
@@ -296,6 +301,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         return new File(multiKahaDBPersistenceAdapter.getDirectory(), "txStore");
     }
 
+    @Override
     public void stop() throws Exception {
         journal.close();
         journal = null;
@@ -341,9 +347,10 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
     }
 
 
+    @Override
     public synchronized void recover(final TransactionRecoveryListener listener) throws IOException {
 
-        for (final KahaDBPersistenceAdapter adapter : multiKahaDBPersistenceAdapter.adapters) {
+        for (final PersistenceAdapter adapter : multiKahaDBPersistenceAdapter.adapters) {
             adapter.createTransactionStore().recover(new TransactionRecoveryListener() {
                 @Override
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] acks) {
@@ -390,7 +397,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         destination.addMessage(context, message);
     }
 
-    Future<Object> asyncAddQueueMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
+    ListenableFuture<Object> asyncAddQueueMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
         if (message.getTransactionId() != null) {
             getTx(message.getTransactionId()).trackStore(transactionStore);
@@ -401,7 +408,7 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
     }
 
-    Future<Object> asyncAddTopicMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
+    ListenableFuture<Object> asyncAddTopicMessage(final TransactionStore transactionStore, ConnectionContext context, final MessageStore destination, final Message message)
             throws IOException {
 
         if (message.getTransactionId() != null) {

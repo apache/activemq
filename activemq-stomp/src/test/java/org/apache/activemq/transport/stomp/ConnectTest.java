@@ -29,9 +29,11 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.JaasDualAuthenticationPlugin;
 import org.apache.activemq.util.Wait;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,28 +64,16 @@ public class ConnectTest {
         brokerService.addConnector("stomp://0.0.0.0:0?transport.soLinger=0");
         brokerService.start();
 
-        Thread t1 = new Thread() {
-            StompConnection connection = new StompConnection();
-
-            @Override
-            public void run() {
-                try {
-                    connection.open("localhost", brokerService.getTransportConnectors().get(0).getConnectUri().getPort());
-                    connection.connect("system", "manager");
-                    connection.disconnect();
-                } catch (Exception ex) {
-                    LOG.error("unexpected exception on connect/disconnect", ex);
-                    exceptions.add(ex);
-                }
-            }
-        };
-
-        int i = 0;
-        long done = System.currentTimeMillis() + (15 * 1000);
-        while (System.currentTimeMillis() < done) {
-            t1.run();
-            if (++i % 5000 == 0) {
-                LOG.info("connection count on stomp connector:" + brokerService.getTransportConnectors().get(0).connectionCount());
+        StompConnection connection = new StompConnection();
+        //test 500 connect/disconnects
+        for (int x = 0; x < 500; x++) {
+            try {
+                connection.open("localhost", brokerService.getTransportConnectors().get(0).getConnectUri().getPort());
+                connection.connect("system", "manager");
+                connection.disconnect();
+            } catch (Exception ex) {
+                LOG.error("unexpected exception on connect/disconnect", ex);
+                exceptions.add(ex);
             }
         }
 
@@ -119,7 +109,7 @@ public class ConnectTest {
             }
         };
 
-        t1.run();
+        t1.start();
 
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -143,7 +133,7 @@ public class ConnectTest {
     @Test
     public void testInactivityMonitor() throws Exception {
 
-        brokerService.addConnector("stomp://0.0.0.0:0?transport.defaultHeartBeat=5000,0&transport.useKeepAlive=false");
+        brokerService.addConnector("stomp://0.0.0.0:0?transport.defaultHeartBeat=1000,0&transport.useKeepAlive=false");
         brokerService.start();
 
         Thread t1 = new Thread() {
@@ -161,7 +151,7 @@ public class ConnectTest {
             }
         };
 
-        t1.run();
+        t1.start();
 
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
                  @Override

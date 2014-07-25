@@ -24,15 +24,21 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
 /**
  * User: gtully
  */
+@RunWith(BlockJUnit4ClassRunner.class)
 public class ExpiryHogTest extends JmsMultipleClientsTestSupport {
     boolean sleep = false;
 
     int numMessages = 4;
 
+    @Test(timeout = 2 * 60 * 1000)
     public void testImmediateDispatchWhenCacheDisabled() throws Exception {
         ConnectionFactory f = createConnectionFactory();
         destination = createDestination();
@@ -67,7 +73,8 @@ public class ExpiryHogTest extends JmsMultipleClientsTestSupport {
     }
 
     @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         autoFail = false;
         persistent = true;
         super.setUp();

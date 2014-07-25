@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.management.ObjectName;
-import org.apache.activemq.Service;
-
 import java.util.Map;
+
+import javax.management.ObjectName;
+
+import org.apache.activemq.Service;
 
 
 /**
@@ -51,6 +52,16 @@ public interface BrokerViewMBean extends Service {
      */
     @MBeanInfo("Uptime of the broker.")
     String getUptime();
+
+    /**
+     * @return The current number of active connections on this Broker.
+     */
+    int getCurrentConnectionsCount();
+
+    /**
+     * @return The total number of connections serviced since this Broker was started.
+     */
+    long getTotalConnectionsCount();
 
     /**
      * The Broker will flush it's caches so that the garbage collector can
@@ -88,6 +99,15 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Number of unacknowledged messages on the broker.")
     long getTotalMessageCount();
 
+    @MBeanInfo("Average message size on this broker")
+    long getAverageMessageSize();
+
+    @MBeanInfo("Max message size on this broker")
+    public long getMaxMessageSize();
+
+    @MBeanInfo("Min message size on this broker")
+    public long getMinMessageSize();
+
     @MBeanInfo("Percent of memory limit used.")
     int getMemoryPercentUsage();
 
@@ -111,7 +131,7 @@ public interface BrokerViewMBean extends Service {
     long getTempLimit();
 
     void setTempLimit(@MBeanInfo("bytes") long limit);
-    
+
     @MBeanInfo("Percent of job store limit used.")
     int getJobSchedulerStorePercentUsage();
 
@@ -138,6 +158,7 @@ public interface BrokerViewMBean extends Service {
     /**
      * Stop the broker and all it's components.
      */
+    @Override
     @MBeanInfo("Stop the broker and all its components.")
     void stop() throws Exception;
 
@@ -314,5 +335,4 @@ public interface BrokerViewMBean extends Service {
 
     @MBeanInfo("JMSJobScheduler")
     ObjectName getJMSJobScheduler();
-
 }

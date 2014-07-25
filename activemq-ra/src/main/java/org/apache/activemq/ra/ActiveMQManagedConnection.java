@@ -181,7 +181,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      *      javax.resource.spi.ConnectionRequestInfo)
      */
     public Object getConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
-        ManagedConnectionProxy proxy = new ManagedConnectionProxy(this);
+        ManagedConnectionProxy proxy = new ManagedConnectionProxy(this, info);
         proxyConnections.add(proxy);
         return proxy;
     }
@@ -196,18 +196,20 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      * @see javax.resource.spi.ManagedConnection#destroy()
      */
     public void destroy() throws ResourceException {
-        // Have we allready been destroyed??
+        // Have we already been destroyed??
         if (isDestroyed()) {
             return;
         }
 
-        cleanup();
-
         try {
-            physicalConnection.close();
-            destroyed = true;
-        } catch (JMSException e) {
-            LOG.info("Error occured during close of a JMS connection.", e);
+            cleanup();
+        } finally {
+            try {
+                physicalConnection.close();
+                destroyed = true;
+            } catch (JMSException e) {
+                LOG.trace("Error occurred during close of a JMS connection.", e);
+            }
         }
     }
 
@@ -219,7 +221,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      */
     public void cleanup() throws ResourceException {
 
-        // Have we allready been destroyed??
+        // Have we already been destroyed??
         if (isDestroyed()) {
             return;
         }
@@ -233,10 +235,10 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             physicalConnection.cleanup();
         } catch (JMSException e) {
             throw new ResourceException("Could cleanup the ActiveMQ connection: " + e, e);
+        } finally {
+            // defer transaction cleanup till after close so that close is aware of the current tx
+            localAndXATransaction.cleanup();
         }
-        // defer transaction cleanup till after close so that close is aware of the current tx
-        localAndXATransaction.cleanup();
-
     }
 
     /**
@@ -368,7 +370,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     }
 
     /**
-     * When a proxy is closed this cleans up the proxy and notifys the
+     * When a proxy is closed this cleans up the proxy and notifies the
      * ConnectionEventListeners that a connection closed.
      * 
      * @param proxy
@@ -386,7 +388,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         for (ManagedConnectionProxy proxy:proxyConnections) {
             proxy.onException(e);
         }
-        // Let the container know that the error occured.
+        // Let the container know that the error occurred.
         fireErrorOccurredEvent(e);
     }
 
@@ -395,6 +397,11 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      */
     public TransactionContext getTransactionContext() {
         return transactionContext;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + super.toString() + "," + physicalConnection +"]";
     }
 
 }

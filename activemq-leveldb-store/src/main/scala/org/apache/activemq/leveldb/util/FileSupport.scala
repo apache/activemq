@@ -252,7 +252,7 @@ object ProcessSupport {
               FileSupport.copy(in, out)
             }
           } catch {
-            case _ =>
+            case _ : Throwable =>
           }
         }
       } else {
@@ -266,7 +266,7 @@ object ProcessSupport {
               FileSupport.copy(in, out)
             }
           } catch {
-            case _ =>
+            case _ : Throwable =>
           }
         }
       } else {
@@ -280,7 +280,7 @@ object ProcessSupport {
               FileSupport.copy(in, err)
             }
           } catch {
-            case _ =>
+            case _ : Throwable =>
           }
         }
       } else {

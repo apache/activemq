@@ -16,20 +16,17 @@
  */
 package org.apache.activemq.network;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Configuration for a NetworkBridge
  */
 public class NetworkBridgeConfiguration {
-    private static final Logger LOG = LoggerFactory.getLogger(NetworkBridgeConfiguration.class);
 
     private boolean conduitSubscriptions = true;
     private boolean dynamicOnly;
@@ -61,6 +58,10 @@ public class NetworkBridgeConfiguration {
     private boolean staticBridge = false;
     private boolean useCompression = false;
     private boolean advisoryForFailedForward = false;
+    private boolean useBrokerNamesAsIdSeed = true;
+    private boolean gcDestinationViews = true;
+    private long gcSweepTime = 60 * 1000;
+    private boolean checkDuplicateMessagesOnDuplex = false;
 
     /**
      * @return the conduitSubscriptions
@@ -415,4 +416,37 @@ public class NetworkBridgeConfiguration {
     public int getMessageTTL() {
         return messageTTL;
     }
+
+    public boolean isUseBrokerNamesAsIdSeed() {
+        return useBrokerNamesAsIdSeed;
+    }
+
+    public void setUseBrokerNameAsIdSees(boolean val) {
+        useBrokerNamesAsIdSeed = val;
+    }
+
+    public boolean isGcDestinationViews() {
+        return gcDestinationViews;
+    }
+
+    public void setGcDestinationViews(boolean gcDestinationViews) {
+        this.gcDestinationViews = gcDestinationViews;
+    }
+
+    public long getGcSweepTime() {
+        return gcSweepTime;
+    }
+
+    public void setGcSweepTime(long gcSweepTime) {
+        this.gcSweepTime = gcSweepTime;
+    }
+
+    public boolean isCheckDuplicateMessagesOnDuplex() {
+        return checkDuplicateMessagesOnDuplex;
+    }
+
+    public void setCheckDuplicateMessagesOnDuplex(boolean checkDuplicateMessagesOnDuplex) {
+        this.checkDuplicateMessagesOnDuplex = checkDuplicateMessagesOnDuplex;
+    }
+
 }

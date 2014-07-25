@@ -19,7 +19,11 @@ package org.apache.activemq.network;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -47,7 +51,35 @@ import org.apache.activemq.broker.region.Region;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTempDestination;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.BrokerId;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionError;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.KeepAliveInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.NetworkBridgeFilter;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
+import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.SecurityContext;
@@ -75,7 +107,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
     protected final Transport remoteBroker;
-    protected final IdGenerator idGenerator = new IdGenerator();
+    protected IdGenerator idGenerator;
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     protected ConnectionInfo localConnectionInfo;
     protected ConnectionInfo remoteConnectionInfo;
@@ -96,14 +128,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected ActiveMQDestination[] durableDestinations;
     protected final ConcurrentHashMap<ConsumerId, DemandSubscription> subscriptionMapByLocalId = new ConcurrentHashMap<ConsumerId, DemandSubscription>();
     protected final ConcurrentHashMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<ConsumerId, DemandSubscription>();
-    protected final BrokerId localBrokerPath[] = new BrokerId[] { null };
+    protected final BrokerId localBrokerPath[] = new BrokerId[]{null};
     protected final CountDownLatch startedLatch = new CountDownLatch(2);
     protected final CountDownLatch localStartedLatch = new CountDownLatch(1);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
     protected final NetworkBridgeFilterFactory defaultFilterFactory = new DefaultNetworkBridgeFilterFactory();
 
-    protected final BrokerId remoteBrokerPath[] = new BrokerId[] { null };
+    protected final BrokerId remoteBrokerPath[] = new BrokerId[]{null};
     protected BrokerId remoteBrokerId;
 
     final AtomicLong enqueueCounter = new AtomicLong();
@@ -119,6 +151,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private final AtomicBoolean started = new AtomicBoolean();
     private TransportConnection duplexInitiatingConnection;
+    private final AtomicBoolean duplexInitiatingConnectionInfoReceived = new AtomicBoolean();
     protected BrokerService brokerService = null;
     private ObjectName mbeanObjectName;
     private final ExecutorService serialExecutor = Executors.newSingleThreadExecutor();
@@ -221,9 +254,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             if (disposed.compareAndSet(false, true)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(" stopping " + configuration.getBrokerName() + " bridge to " + remoteBrokerName);
-                }
+                LOG.debug(" stopping {} bridge to {}", configuration.getBrokerName(), remoteBrokerName);
 
                 futureRemoteBrokerInfo.cancel(true);
                 futureLocalBrokerInfo.cancel(true);
@@ -235,9 +266,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 try {
                     // local start complete
                     if (startedLatch.getCount() < 2) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace(configuration.getBrokerName() + " unregister bridge (" + this + ") to " + remoteBrokerName);
-                        }
+                        LOG.trace("{} unregister bridge ({}) to {}", new Object[]{
+                                configuration.getBrokerName(), this, remoteBrokerName
+                        });
                         brokerService.getBroker().removeBroker(null, remoteBrokerInfo);
                         brokerService.getBroker().networkBridgeStopped(remoteBrokerInfo);
                     }
@@ -252,16 +283,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 serialExecutor.shutdown();
                                 if (!serialExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
                                     List<Runnable> pendingTasks = serialExecutor.shutdownNow();
-                                    if (LOG.isInfoEnabled()) {
-                                        LOG.info("pending tasks on stop" + pendingTasks);
-                                    }
+                                    LOG.info("pending tasks on stop {}", pendingTasks);
                                 }
                                 localBroker.oneway(new ShutdownInfo());
                                 remoteBroker.oneway(new ShutdownInfo());
                             } catch (Throwable e) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Caught exception sending shutdown", e);
-                                }
+                                LOG.debug("Caught exception sending shutdown", e);
                             } finally {
                                 sendShutdown.countDown();
                             }
@@ -287,9 +314,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
             }
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info(configuration.getBrokerName() + " bridge to " + remoteBrokerName + " stopped");
-            }
+            LOG.info("{} bridge to {} stopped", configuration.getBrokerName(), remoteBrokerName);
         }
     }
 
@@ -299,7 +324,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             public void run() {
                 final String originalName = Thread.currentThread().getName();
                 Thread.currentThread().setName("triggerStartAsyncNetworkBridgeCreation: " +
-                    "remoteBroker=" + remoteBroker + ", localBroker= " + localBroker);
+                        "remoteBroker=" + remoteBroker + ", localBroker= " + localBroker);
 
                 try {
                     // First we collect the info data from both the local and remote ends
@@ -339,21 +364,24 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             // and if so just stop now before registering anything.
             remoteBrokerId = remoteBrokerInfo.getBrokerId();
             if (localBrokerId.equals(remoteBrokerId)) {
-                 if (LOG.isTraceEnabled()) {
-                     LOG.trace(configuration.getBrokerName() +
-                         " disconnecting remote loop back connection for: " +
-                         remoteBrokerName + ", with id:" + remoteBrokerId);
-                 }
-                 ServiceSupport.dispose(localBroker);
-                 ServiceSupport.dispose(remoteBroker);
-                 // the bridge is left in a bit of limbo, but it won't get retried
-                 // in this state.
-                 return;
+                LOG.trace("{} disconnecting remote loop back connector for: {}, with id: {}", new Object[]{
+                        configuration.getBrokerName(), remoteBrokerName, remoteBrokerId
+                });
+                ServiceSupport.dispose(localBroker);
+                ServiceSupport.dispose(remoteBroker);
+                // the bridge is left in a bit of limbo, but it won't get retried
+                // in this state.
+                return;
             }
 
             // Fill in the remote broker's information now.
             remoteBrokerPath[0] = remoteBrokerId;
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
+            if (configuration.isUseBrokerNamesAsIdSeed()) {
+                idGenerator = new IdGenerator(brokerService.getBrokerName() + "->" + remoteBrokerName);
+            } else {
+                idGenerator = new IdGenerator();
+            }
         } catch (Throwable e) {
             serviceLocalException(e);
         }
@@ -384,7 +412,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             new ActiveMQDestination[configuration.getDynamicallyIncludedDestinations().size()]);
                 }
             } catch (Throwable t) {
-                LOG.error("Error mapping remote configuration: " + props, t);
+                LOG.error("Error mapping remote configuration: {}", props, t);
             }
         }
 
@@ -405,9 +433,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private void startLocalBridge() throws Throwable {
         if (localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace(configuration.getBrokerName() + " starting local Bridge, localBroker=" + localBroker);
-                }
+                LOG.trace("{} starting local Bridge, localBroker={}", configuration.getBrokerName(), localBroker);
                 if (!disposed.get()) {
                     localConnectionInfo = new ConnectionInfo();
                     localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
@@ -437,7 +463,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         ConnectionInfo duplexLocalConnectionInfo = new ConnectionInfo();
                         duplexLocalConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
                         duplexLocalConnectionInfo.setClientId(configuration.getName() + "_" + remoteBrokerName + "_inbound_duplex_"
-                            + configuration.getBrokerName());
+                                + configuration.getBrokerName());
                         duplexLocalConnectionInfo.setUserName(configuration.getUserName());
                         duplexLocalConnectionInfo.setPassword(configuration.getPassword());
 
@@ -466,12 +492,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     // new peer broker (a consumer can work with remote broker also)
                     brokerService.getBroker().addBroker(null, remoteBrokerInfo);
 
-                    if (LOG.isInfoEnabled()) {
-                        LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace(configuration.getBrokerName() + " register bridge (" + this + ") to " + remoteBrokerName);
-                        }
-                    }
+                    LOG.info("Network connection between {} and {} ({}) has been established.", new Object[]{
+                            localBroker, remoteBroker, remoteBrokerName
+                    });
+                    LOG.trace("{} register bridge ({}) to {}", new Object[]{
+                            configuration.getBrokerName(), this, remoteBrokerName
+                    });
                 } else {
                     LOG.warn("Bridge was disposed before the startLocalBridge() method was fully executed.");
                 }
@@ -482,17 +508,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (!disposed.get()) {
                 setupStaticDestinations();
             } else {
-                LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName
-                    + ") was interrupted during establishment.");
+                LOG.warn("Network connection between {} and {} ({}) was interrupted during establishment.", new Object[]{
+                        localBroker, remoteBroker, remoteBrokerName
+                });
             }
         }
     }
 
     protected void startRemoteBridge() throws Exception {
         if (remoteBridgeStarted.compareAndSet(false, true)) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(configuration.getBrokerName() + " starting remote Bridge, remoteBroker=" + remoteBroker);
-            }
+            LOG.trace("{} starting remote Bridge, remoteBroker={}", configuration.getBrokerName(), remoteBroker);
             synchronized (this) {
                 if (!isCreatedByDuplex()) {
                     BrokerInfo brokerInfo = new BrokerInfo();
@@ -547,11 +572,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     public void serviceRemoteException(Throwable error) {
         if (!disposed.get()) {
             if (error instanceof SecurityException || error instanceof GeneralSecurityException) {
-                LOG.error("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a remote error: " + error);
+                LOG.error("Network connection between {} and {} shutdown due to a remote error: {}", new Object[]{
+                        localBroker, remoteBroker, error
+                });
             } else {
-                LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a remote error: " + error);
+                LOG.warn("Network connection between {} and {} shutdown due to a remote error: {}", new Object[]{
+                        localBroker, remoteBroker, error
+                });
             }
-            LOG.debug("The remote Exception was: " + error, error);
+            LOG.debug("The remote Exception was: {}", error, error);
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
                 public void run() {
@@ -577,13 +606,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     serviceRemoteException(ce.getException());
                 } else {
                     if (isDuplex()) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace(configuration.getBrokerName() + " duplex command type: " + command.getDataStructureType());
-                        }
+                        LOG.trace("{} duplex command type: {}", configuration.getBrokerName(), command.getDataStructureType());
                         if (command.isMessage()) {
                             final ActiveMQMessage message = (ActiveMQMessage) command;
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())
-                                || AdvisorySupport.isDestinationAdvisoryTopic(message.getDestination())) {
+                                    || AdvisorySupport.isDestinationAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                                 ackAdvisory(message);
                             } else {
@@ -592,30 +619,46 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 }
                                 // message being forwarded - we need to
                                 // propagate the response to our local send
-                                message.setProducerId(duplexInboundLocalProducerInfo.getProducerId());
-                                if (message.isResponseRequired() || configuration.isAlwaysSyncSend()) {
-                                    duplexInboundLocalBroker.asyncRequest(message, new ResponseCallback() {
-                                        final int correlationId = message.getCommandId();
+                                if (canDuplexDispatch(message)) {
+                                    message.setProducerId(duplexInboundLocalProducerInfo.getProducerId());
+                                    if (message.isResponseRequired() || configuration.isAlwaysSyncSend()) {
+                                        duplexInboundLocalBroker.asyncRequest(message, new ResponseCallback() {
+                                            final int correlationId = message.getCommandId();
 
-                                        @Override
-                                        public void onCompletion(FutureResponse resp) {
-                                            try {
-                                                Response reply = resp.getResult();
-                                                reply.setCorrelationId(correlationId);
-                                                remoteBroker.oneway(reply);
-                                            } catch (IOException error) {
-                                                LOG.error("Exception: " + error + " on duplex forward of: " + message);
-                                                serviceRemoteException(error);
+                                            @Override
+                                            public void onCompletion(FutureResponse resp) {
+                                                try {
+                                                    Response reply = resp.getResult();
+                                                    reply.setCorrelationId(correlationId);
+                                                    remoteBroker.oneway(reply);
+                                                } catch (IOException error) {
+                                                    LOG.error("Exception: {} on duplex forward of: {}", error, message);
+                                                    serviceRemoteException(error);
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
+                                    } else {
+                                        duplexInboundLocalBroker.oneway(message);
+                                    }
+                                    serviceInboundMessage(message);
                                 } else {
-                                    duplexInboundLocalBroker.oneway(message);
+                                    if (message.isResponseRequired() || configuration.isAlwaysSyncSend()) {
+                                        Response reply = new Response();
+                                        reply.setCorrelationId(message.getCommandId());
+                                        remoteBroker.oneway(reply);
+                                    }
                                 }
                             }
                         } else {
                             switch (command.getDataStructureType()) {
                                 case ConnectionInfo.DATA_STRUCTURE_TYPE:
+                                    if (duplexInitiatingConnection != null && duplexInitiatingConnectionInfoReceived.compareAndSet(false, true)) {
+                                        // end of initiating connection setup - propogate to initial connection to get mbean by clientid
+                                        duplexInitiatingConnection.processAddConnection((ConnectionInfo) command);
+                                    } else {
+                                        localBroker.oneway(command);
+                                    }
+                                    break;
                                 case SessionInfo.DATA_STRUCTURE_TYPE:
                                     localBroker.oneway(command);
                                     break;
@@ -629,7 +672,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         ack.setConsumerId(localSub.getLocalInfo().getConsumerId());
                                         localBroker.oneway(ack);
                                     } else {
-                                        LOG.warn("Matching local subscription not found for ack: " + ack);
+                                        LOG.warn("Matching local subscription not found for ack: {}", ack);
                                     }
                                     break;
                                 case ConsumerInfo.DATA_STRUCTURE_TYPE:
@@ -638,7 +681,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                         addConsumerInfo((ConsumerInfo) command);
                                     } else {
                                         // received a subscription whilst stopping
-                                        LOG.warn("Stopping - ignoring ConsumerInfo: " + command);
+                                        LOG.warn("Stopping - ignoring ConsumerInfo: {}", command);
                                     }
                                     break;
                                 case ShutdownInfo.DATA_STRUCTURE_TYPE:
@@ -648,9 +691,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                     serviceRemoteException(new IOException(command.toString()));
                                     break;
                                 default:
-                                    if (LOG.isDebugEnabled()) {
-                                        LOG.debug("Ignoring remote command: " + command);
-                                    }
+                                    LOG.debug("Ignoring remote command: {}", command);
                             }
                         }
                     } else {
@@ -660,14 +701,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             case ShutdownInfo.DATA_STRUCTURE_TYPE:
                                 break;
                             default:
-                                LOG.warn("Unexpected remote command: " + command);
+                                LOG.warn("Unexpected remote command: {}", command);
                         }
                     }
                 }
             } catch (Throwable e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Exception processing remote command: " + command, e);
-                }
+                LOG.debug("Exception processing remote command: {}", command, e);
                 serviceRemoteException(e);
             }
         }
@@ -691,34 +730,30 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             BrokerId[] path = info.getBrokerPath();
 
             if (info.isBrowser()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.info(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", browsers explicitly suppressed");
-                }
+                LOG.debug("{} Ignoring sub from {}, browsers explicitly suppressed", configuration.getBrokerName(), remoteBrokerName);
                 return;
             }
 
             if (path != null && networkTTL > -1 && path.length >= networkTTL) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", restricted to " + networkTTL
-                        + " network hops only : " + info);
-                }
+                LOG.debug("{} Ignoring sub from {}, restricted to {} network hops only: {}", new Object[]{
+                        configuration.getBrokerName(), remoteBrokerName, networkTTL, info
+                });
                 return;
             }
 
             if (contains(path, localBrokerPath[0])) {
                 // Ignore this consumer as it's a consumer we locally sent to the broker.
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", already routed through this broker once : " + info);
-                }
+                LOG.debug("{} Ignoring sub from {}, already routed through this broker once: {}", new Object[]{
+                        configuration.getBrokerName(), remoteBrokerName, info
+                });
                 return;
             }
 
             if (!isPermissableDestination(info.getDestination())) {
                 // ignore if not in the permitted or in the excluded list
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", destination " + info.getDestination()
-                        + " is not permiited :" + info);
-                }
+                LOG.debug("{} Ignoring sub from {}, destination {} is not permitted: {}", new Object[]{
+                        configuration.getBrokerName(), remoteBrokerName, info.getDestination(), info
+                });
                 return;
             }
 
@@ -732,15 +767,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             final DestinationInfo destInfo = (DestinationInfo) data;
             BrokerId[] path = destInfo.getBrokerPath();
             if (path != null && networkTTL > -1 && path.length >= networkTTL) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring destination " + destInfo + " restricted to " + networkTTL + " network hops only");
-                }
+                LOG.debug("{} Ignoring destination {} restricted to {} network hops only", new Object[]{
+                        configuration.getBrokerName(), destInfo, networkTTL
+                });
                 return;
             }
             if (contains(destInfo.getBrokerPath(), localBrokerPath[0])) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring destination " + destInfo + " already routed through this broker once");
-                }
+                LOG.debug("{} Ignoring destination {} already routed through this broker once", configuration.getBrokerName(), destInfo);
                 return;
             }
             destInfo.setConnectionId(localConnectionInfo.getConnectionId());
@@ -750,10 +783,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 tempDest.setConnectionId(localSessionInfo.getSessionId().getConnectionId());
             }
             destInfo.setBrokerPath(appendToBrokerPath(destInfo.getBrokerPath(), getRemoteBrokerPath()));
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(configuration.getBrokerName() + " bridging " + (destInfo.isAddOperation() ? "add" : "remove") + " destination on " + localBroker
-                    + " from " + remoteBrokerName + ", destination: " + destInfo);
-            }
+            LOG.trace("{} bridging {} destination on {} from {}, destination: {}", new Object[]{
+                    configuration.getBrokerName(), (destInfo.isAddOperation() ? "add" : "remove"), localBroker, remoteBrokerName, destInfo
+            });
             if (destInfo.isRemoveOperation()) {
                 // Serialize with removeSub operations such that all removeSub advisories
                 // are generated
@@ -763,7 +795,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         try {
                             localBroker.oneway(destInfo);
                         } catch (IOException e) {
-                            LOG.warn("failed to deliver remove command for destination:" + destInfo.getDestination(), e);
+                            LOG.warn("failed to deliver remove command for destination: {}", destInfo.getDestination(), e);
                         }
                     }
                 });
@@ -810,27 +842,23 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 // not a reason to terminate the bridge - temps can disappear with
                 // pending sends as the demand sub may outlive the remote dest
                 if (messageDispatch != null) {
-                    LOG.warn("PoisonAck of " + messageDispatch.getMessage().getMessageId() + " on forwarding error: " + error);
+                    LOG.warn("PoisonAck of {} on forwarding error: {}", messageDispatch.getMessage().getMessageId(), error);
                     try {
                         MessageAck poisonAck = new MessageAck(messageDispatch, MessageAck.POSION_ACK_TYPE, 1);
                         poisonAck.setPoisonCause(error);
                         localBroker.oneway(poisonAck);
                     } catch (IOException ioe) {
-                        LOG.error("Failed to posion ack message following forward failure: " + ioe, ioe);
+                        LOG.error("Failed to posion ack message following forward failure: ", ioe);
                     }
                     fireFailedForwardAdvisory(messageDispatch, error);
                 } else {
-                    LOG.warn("Ignoring exception on forwarding to non existent temp dest: " + error, error);
+                    LOG.warn("Ignoring exception on forwarding to non existent temp dest: ", error);
                 }
                 return;
             }
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
-            }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("The local Exception was:" + error, error);
-            }
+            LOG.info("Network connection between {} and {} shutdown due to a local error: {}", new Object[]{localBroker, remoteBroker, error});
+            LOG.debug("The local Exception was: {}", error, error);
 
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
@@ -856,14 +884,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ActiveMQMessage advisoryMessage = new ActiveMQMessage();
                     advisoryMessage.setStringProperty("cause", error.getLocalizedMessage());
                     advisoryBroker.fireAdvisory(context, AdvisorySupport.getNetworkBridgeForwardFailureAdvisoryTopic(), messageDispatch.getMessage(), null,
-                        advisoryMessage);
+                            advisoryMessage);
 
                 }
             } catch (Exception e) {
-                LOG.warn("failed to fire forward failure advisory, cause: " + e);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("detail", e);
-                }
+                LOG.warn("failed to fire forward failure advisory, cause: {}", e);
+                LOG.debug("detail", e);
             }
         }
     }
@@ -885,10 +911,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void removeSubscription(final DemandSubscription sub) throws IOException {
         if (sub != null) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(configuration.getBrokerName() + " remove local subscription:" + sub.getLocalInfo().getConsumerId() + " for remote "
-                    + sub.getRemoteInfo().getConsumerId());
-            }
+            LOG.trace("{} remove local subscription: {} for remote {}", new Object[]{configuration.getBrokerName(), sub.getLocalInfo().getConsumerId(), sub.getRemoteInfo().getConsumerId()});
 
             // ensure not available for conduit subs pending removal
             subscriptionMapByLocalId.remove(sub.getLocalInfo().getConsumerId());
@@ -904,7 +927,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     try {
                         localBroker.oneway(sub.getLocalInfo().createRemoveCommand());
                     } catch (IOException e) {
-                        LOG.warn("failed to deliver remove command for local subscription, for remote " + sub.getRemoteInfo().getConsumerId(), e);
+                        LOG.warn("failed to deliver remove command for local subscription, for remote {}", sub.getRemoteInfo().getConsumerId(), e);
                     }
                 }
             });
@@ -939,11 +962,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     if (sub != null && md.getMessage() != null && sub.incrementOutstandingResponses()) {
 
                         if (suppressMessageDispatch(md, sub)) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug(configuration.getBrokerName() + " message not forwarded to " + remoteBrokerName
-                                    + " because message came from there or fails TTL, brokerPath: " + Arrays.toString(md.getMessage().getBrokerPath())
-                                    + ", message: " + md.getMessage());
-                            }
+                            LOG.debug("{} message not forwarded to {} because message came from there or fails TTL, brokerPath: {}, message: {}", new Object[]{
+                                    configuration.getBrokerName(), remoteBrokerName, Arrays.toString(md.getMessage().getBrokerPath()), md.getMessage()
+                            });
                             // still ack as it may be durable
                             try {
                                 localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
@@ -954,11 +975,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         }
 
                         Message message = configureMessage(md);
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("bridging (" + configuration.getBrokerName() + " -> " + remoteBrokerName + ") "
-                                + (LOG.isTraceEnabled() ? message : message.getMessageId()) + ", consumer: " + md.getConsumerId() + ", destination "
-                                + message.getDestination() + ", brokerPath: " + Arrays.toString(message.getBrokerPath()) + ", message: " + message);
-                        }
+                        LOG.debug("bridging ({} -> {}), consumer: {}, destinaition: {}, brokerPath: {}, message: {}", new Object[]{
+                                configuration.getBrokerName(), remoteBrokerName, (LOG.isTraceEnabled() ? message : message.getMessageId()), md.getConsumerId(), message.getDestination(), Arrays.toString(message.getBrokerPath()), message
+                        });
 
                         if (isDuplex() && AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
                             try {
@@ -1007,16 +1026,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 sub.decrementOutstandingResponses();
                             }
                         }
+                        serviceOutbound(message);
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("No subscription registered with this network bridge for consumerId " + md.getConsumerId() + " for message: "
-                                + md.getMessage());
-                        }
+                        LOG.debug("No subscription registered with this network bridge for consumerId: {} for message: {}", md.getConsumerId(), md.getMessage());
                     }
                 } else if (command.isBrokerInfo()) {
                     futureLocalBrokerInfo.set((BrokerInfo) command);
                 } else if (command.isShutdownInfo()) {
-                    LOG.info(configuration.getBrokerName() + " Shutting down");
+                    LOG.info("{} Shutting down", configuration.getBrokerName());
                     stop();
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;
@@ -1026,7 +1043,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         case WireFormatInfo.DATA_STRUCTURE_TYPE:
                             break;
                         default:
-                            LOG.warn("Unexpected local command: " + command);
+                            LOG.warn("Unexpected local command: {}", command);
                     }
                 }
             } catch (Throwable e) {
@@ -1072,7 +1089,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected BrokerId[] appendToBrokerPath(BrokerId[] brokerPath, BrokerId idToAppend) {
         if (brokerPath == null || brokerPath.length == 0) {
-            return new BrokerId[] { idToAppend };
+            return new BrokerId[]{idToAppend};
         }
         BrokerId rc[] = new BrokerId[brokerPath.length + 1];
         System.arraycopy(brokerPath, 0, rc, 0, brokerPath.length);
@@ -1136,14 +1153,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
                 DemandSubscription sub = createDemandSubscription(dest);
+                sub.setStaticallyIncluded(true);
                 try {
                     addSubscription(sub);
                 } catch (IOException e) {
-                    LOG.error("Failed to add static destination " + dest, e);
+                    LOG.error("Failed to add static destination {}", dest, e);
                 }
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace(configuration.getBrokerName() + ", bridging messages for static destination: " + dest);
-                }
+                LOG.trace("{}, bridging messages for static destination: {}", configuration.getBrokerName(), dest);
             }
         }
     }
@@ -1160,7 +1176,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     sub.getDurableRemoteSubs().add(new SubscriptionInfo(sub.getRemoteInfo().getClientId(), consumerInfo.getSubscriptionName()));
                 }
                 addSubscription(sub);
-                LOG.debug(configuration.getBrokerName() + " new demand subscription: " + sub);
+                LOG.debug("{} new demand subscription: {}", configuration.getBrokerName(), sub);
             }
         }
     }
@@ -1180,7 +1196,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         boolean suppress = false;
 
         if (consumerInfo.getDestination().isQueue() && !configuration.isSuppressDuplicateQueueSubscriptions() || consumerInfo.getDestination().isTopic()
-            && !configuration.isSuppressDuplicateTopicSubscriptions()) {
+                && !configuration.isSuppressDuplicateTopicSubscriptions()) {
             return suppress;
         }
 
@@ -1210,24 +1226,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         boolean suppress = false;
 
         if (existingSub.getConsumerInfo().getPriority() >= candidateInfo.getPriority()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(configuration.getBrokerName() + " Ignoring duplicate subscription from " + remoteBrokerName + ", sub: " + candidateInfo
-                    + " is duplicated by network subscription with equal or higher network priority: " + existingSub + ", networkConsumerIds: "
-                    + existingSub.getConsumerInfo().getNetworkConsumerIds());
-            }
+            LOG.debug("{} Ignoring duplicate subscription from {}, sub: {} is duplicate by network subscription with equal or higher network priority: {}, networkConsumerIds: {}", new Object[]{
+                    configuration.getBrokerName(), remoteBrokerName, candidateInfo, existingSub, existingSub.getConsumerInfo().getNetworkConsumerIds()
+            });
             suppress = true;
         } else {
             // remove the existing lower priority duplicate and allow this candidate
             try {
                 removeDuplicateSubscription(existingSub);
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Replacing duplicate subscription " + existingSub.getConsumerInfo() + " with sub from "
-                        + remoteBrokerName + ", which has a higher priority, new sub: " + candidateInfo + ", networkComsumerIds: "
-                        + candidateInfo.getNetworkConsumerIds());
-                }
+                LOG.debug("{} Replacing duplicate subscription {} with sub from {}, which has a higher priority, new sub: {}, networkConsumerIds: {}", new Object[]{
+                        configuration.getBrokerName(), existingSub.getConsumerInfo(), remoteBrokerName, candidateInfo, candidateInfo.getNetworkConsumerIds()
+                });
             } catch (IOException e) {
-                LOG.error("Failed to remove duplicated sub as a result of sub with higher priority, sub: " + existingSub, e);
+                LOG.error("Failed to remove duplicated sub as a result of sub with higher priority, sub: {}", existingSub, e);
             }
         }
         return suppress;
@@ -1304,9 +1316,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 priority -= info.getBrokerPath().length + 1;
             }
             result.getLocalInfo().setPriority(priority);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(configuration.getBrokerName() + " using priority :" + priority + " for subscription: " + info);
-            }
+            LOG.debug("{} using priority: {} for subscription: {}", new Object[]{configuration.getBrokerName(), priority, info});
         }
         configureDemandSubscription(info, result);
         return result;
@@ -1318,7 +1328,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         info.setDestination(destination);
 
         // Indicate that this subscription is being made on behalf of the remote broker.
-        info.setBrokerPath(new BrokerId[] { remoteBrokerId });
+        info.setBrokerPath(new BrokerId[]{remoteBrokerId});
 
         // the remote info held by the DemandSubscription holds the original
         // consumerId, the local info get's overwritten
@@ -1354,15 +1364,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
         DemandSubscription sub = subscriptionMapByRemoteId.remove(id);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(configuration.getBrokerName() + " remove request on " + localBroker + " from " + remoteBrokerName + " , consumer id: " + id
-                + ", matching sub: " + sub);
-        }
+        LOG.debug("{} remove request on {} from {}, consumer id: {}, matching sub: {}", new Object[]{
+                configuration.getBrokerName(), localBroker, remoteBrokerName, id, sub
+        });
         if (sub != null) {
             removeSubscription(sub);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(configuration.getBrokerName() + " removed sub on " + localBroker + " from " + remoteBrokerName + " :  " + sub.getRemoteInfo());
-            }
+            LOG.debug("{} removed sub on {} from {}: {}", new Object[]{
+                    configuration.getBrokerName(), localBroker, remoteBrokerName, sub.getRemoteInfo()
+            });
         }
     }
 
@@ -1374,7 +1383,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 removeDemandSubscription(sub.getRemoteInfo().getConsumerId());
                 removeDone = true;
             } catch (IOException e) {
-                LOG.debug("removeDemandSubscriptionByLocalId failed for localId: " + consumerId, e);
+                LOG.debug("removeDemandSubscriptionByLocalId failed for localId: {}", consumerId, e);
             }
         }
         return removeDone;
@@ -1383,8 +1392,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     /**
      * Performs a timed wait on the started latch and then checks for disposed
      * before performing another wait each time the the started wait times out.
-     *
-     * @throws InterruptedException
      */
     protected void safeWaitUntilStarted() throws InterruptedException {
         while (!disposed.get()) {
@@ -1434,7 +1441,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     /**
      * @param dynamicallyIncludedDestinations
-     *            The dynamicallyIncludedDestinations to set.
+     *         The dynamicallyIncludedDestinations to set.
      */
     public void setDynamicallyIncludedDestinations(ActiveMQDestination[] dynamicallyIncludedDestinations) {
         this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
@@ -1448,8 +1455,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     /**
-     * @param excludedDestinations
-     *            The excludedDestinations to set.
+     * @param excludedDestinations The excludedDestinations to set.
      */
     public void setExcludedDestinations(ActiveMQDestination[] excludedDestinations) {
         this.excludedDestinations = excludedDestinations;
@@ -1463,8 +1469,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     /**
-     * @param staticallyIncludedDestinations
-     *            The staticallyIncludedDestinations to set.
+     * @param staticallyIncludedDestinations The staticallyIncludedDestinations to set.
      */
     public void setStaticallyIncludedDestinations(ActiveMQDestination[] staticallyIncludedDestinations) {
         this.staticallyIncludedDestinations = staticallyIncludedDestinations;
@@ -1478,8 +1483,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     /**
-     * @param durableDestinations
-     *            The durableDestinations to set.
+     * @param durableDestinations The durableDestinations to set.
      */
     public void setDurableDestinations(ActiveMQDestination[] durableDestinations) {
         this.durableDestinations = durableDestinations;
@@ -1507,8 +1511,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     /**
-     * @param createdByDuplex
-     *            the createdByDuplex to set
+     * @param createdByDuplex the createdByDuplex to set
      */
     public void setCreatedByDuplex(boolean createdByDuplex) {
         this.createdByDuplex = createdByDuplex;
@@ -1527,6 +1530,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     @Override
     public String getRemoteBrokerName() {
         return remoteBrokerInfo == null ? null : remoteBrokerInfo.getBrokerName();
+    }
+
+    @Override
+    public String getRemoteBrokerId() {
+        return (remoteBrokerInfo == null || remoteBrokerInfo.getBrokerId() == null) ? null : remoteBrokerInfo.getBrokerId().toString();
     }
 
     @Override
@@ -1567,6 +1575,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     @Override
     public ObjectName getMbeanObjectName() {
         return mbeanObjectName;
+    }
+
+    @Override
+    public void resetStats() {
+        enqueueCounter.set(0);
+        dequeueCounter.set(0);
     }
 
     /*
@@ -1613,9 +1627,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 return info;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Operation interupted: " + e, e);
-                }
+                LOG.debug("Operation interrupted: {}", e, e);
                 throw new InterruptedException("Interrupted.");
             }
         }
@@ -1645,6 +1657,45 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             this.info = info;
             this.slot.countDown();
         }
+    }
+
+    protected void serviceOutbound(Message message) {
+        NetworkBridgeListener l = this.networkBridgeListener;
+        if (l != null) {
+            l.onOutboundMessage(this, message);
+        }
+    }
+
+    protected void serviceInboundMessage(Message message) {
+        NetworkBridgeListener l = this.networkBridgeListener;
+        if (l != null) {
+            l.onInboundMessage(this, message);
+        }
+    }
+
+    protected boolean canDuplexDispatch(Message message) {
+        boolean result = true;
+        if (configuration.isCheckDuplicateMessagesOnDuplex()){
+            final long producerSequenceId = message.getMessageId().getProducerSequenceId();
+            //  messages are multiplexed on this producer so we need to query the persistenceAdapter
+            long lastStoredForMessageProducer = getStoredSequenceIdForMessage(message.getMessageId());
+            if (producerSequenceId <= lastStoredForMessageProducer) {
+                result = false;
+                LOG.debug("suppressing duplicate message send [{}] from network producer with producerSequence [{}] less than last stored: {}", new Object[]{
+                        (LOG.isTraceEnabled() ? message : message.getMessageId()), producerSequenceId, lastStoredForMessageProducer
+                });
+            }
+        }
+        return result;
+    }
+
+    protected long getStoredSequenceIdForMessage(MessageId messageId) {
+        try {
+            return brokerService.getPersistenceAdapter().getLastProducerSequenceId(messageId.getProducerId());
+        } catch (IOException ignored) {
+            LOG.debug("Failed to determine last producer sequence id for: {}", messageId, ignored);
+        }
+        return -1;
     }
 
 }

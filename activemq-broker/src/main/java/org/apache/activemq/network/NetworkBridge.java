@@ -54,6 +54,11 @@ public interface NetworkBridge extends Service {
     String getRemoteBrokerName();
 
     /**
+     * @return the id of the remote broker this bridge is connected to.
+     */
+    String getRemoteBrokerId();
+
+    /**
      * @return the network address of the local broker connection.
      */
     String getLocalAddress();
@@ -83,4 +88,6 @@ public interface NetworkBridge extends Service {
      * @return the MBean name used to identify this bridge in the MBean server.
      */
     ObjectName getMbeanObjectName();
+
+    void resetStats();
 }

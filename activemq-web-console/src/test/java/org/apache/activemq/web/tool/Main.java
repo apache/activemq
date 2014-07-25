@@ -47,6 +47,7 @@ public final class Main {
             port = Integer.parseInt(text);
         }
         System.out.println("Starting Web Server on port: " + port);
+        System.setProperty("jetty.port", "" + port);
         Server server = new Server();
         SelectChannelConnector connector = new SelectChannelConnector();
         connector.setPort(port);

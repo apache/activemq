@@ -213,6 +213,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
     public void testConcurrentDurableConsumer() throws Exception{
         
         broker.start();
+        broker.waitUntilStarted();
         
         factory = createConnectionFactory();
         final String topicName = getName();
@@ -253,7 +254,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
                                 }
                             }
                         } while (msg == null);
-                        
+
                         consumerConnection.close();
                     }
                     assertTrue(received >= acked);
@@ -408,6 +409,7 @@ public class DurableConsumerTest extends CombinationTestSupport{
         super.tearDown();
         if (broker != null) {
             broker.stop();
+            broker.waitUntilStopped();
             broker = null;
         }
     }

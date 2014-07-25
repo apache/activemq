@@ -18,7 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.JMSException;
@@ -65,7 +65,7 @@ public class TopicSubscription extends AbstractSubscription {
     private final Object matchedListMutex = new Object();
     private final AtomicLong enqueueCounter = new AtomicLong(0);
     private final AtomicLong dequeueCounter = new AtomicLong(0);
-    private final AtomicBoolean prefetchWindowOpen = new AtomicBoolean(false);
+    private final AtomicInteger prefetchExtension = new AtomicInteger(0);
     private int memoryUsageHighWaterMark = 95;
     // allow duplicate suppression in a ring network of brokers
     protected int maxProducersToAudit = 1024;
@@ -115,7 +115,7 @@ public class TopicSubscription extends AbstractSubscription {
             if (info.getPrefetchSize() > 1 && matched.size() > info.getPrefetchSize()) {
                 // Slow consumers should log and set their state as such.
                 if (!isSlowConsumer()) {
-                    LOG.warn(toString() + ": has twice its prefetch limit pending, without an ack; it appears to be slow");
+                    LOG.warn("{}: has twice its prefetch limit pending, without an ack; it appears to be slow", toString());
                     setSlowConsumer(true);
                     for (Destination dest: destinations) {
                         dest.slowConsumer(getContext(), this);
@@ -128,18 +128,18 @@ public class TopicSubscription extends AbstractSubscription {
                     synchronized (matchedListMutex) {
                         while (matched.isFull()) {
                             if (getContext().getStopping().get()) {
-                                LOG.warn(toString() + ": stopped waiting for space in pendingMessage cursor for: "
-                                        + node.getMessageId());
+                                LOG.warn("{}: stopped waiting for space in pendingMessage cursor for: {}", toString(), node.getMessageId());
                                 enqueueCounter.decrementAndGet();
                                 return;
                             }
                             if (!warnedAboutWait) {
-                                LOG.info(toString() + ": Pending message cursor [" + matched
-                                        + "] is full, temp usage ("
-                                        + +matched.getSystemUsage().getTempUsage().getPercentUsage()
-                                        + "%) or memory usage ("
-                                        + matched.getSystemUsage().getMemoryUsage().getPercentUsage()
-                                        + "%) limit reached, blocking message add() pending the release of resources.");
+                                LOG.info("{}: Pending message cursor [{}] is full, temp usag ({}%) or memory usage ({}%) limit reached, blocking message add() pending the release of resources.",
+                                        new Object[]{
+                                                toString(),
+                                                matched,
+                                                matched.getSystemUsage().getTempUsage().getPercentUsage(),
+                                                matched.getSystemUsage().getMemoryUsage().getPercentUsage()
+                                        });
                                 warnedAboutWait = true;
                             }
                             matchedListMutex.wait(20);
@@ -188,7 +188,9 @@ public class TopicSubscription extends AbstractSubscription {
                             // lets avoid an infinite loop if we are given a bad eviction strategy
                             // for a bad strategy lets just not evict
                             if (messagesToEvict == 0) {
-                                LOG.warn("No messages to evict returned for "  + destination + " from eviction strategy: " + messageEvictionStrategy + " out of " + list.size() + " candidates");
+                                LOG.warn("No messages to evict returned for {} from eviction strategy: {} out of {} candidates", new Object[]{
+                                        destination, messageEvictionStrategy, list.size()
+                                });
                                 break;
                             }
                         }
@@ -205,7 +207,7 @@ public class TopicSubscription extends AbstractSubscription {
             duplicate = audit.isDuplicate(node);
             if (LOG.isDebugEnabled()) {
                 if (duplicate) {
-                    LOG.debug(this + ", ignoring duplicate add: " + node.getMessageId());
+                    LOG.debug("{}, ignoring duplicate add: {}", this, node.getMessageId());
                 }
             }
         }
@@ -283,19 +285,40 @@ public class TopicSubscription extends AbstractSubscription {
                 if (singleDestination && destination != null) {
                     destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                     destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
+                    if (info.isNetworkSubscription()) {
+                        destination.getDestinationStatistics().getForwards().add(ack.getMessageCount());
+                    }
                 }
                 dequeueCounter.addAndGet(ack.getMessageCount());
+            }
+            while (true) {
+                int currentExtension = prefetchExtension.get();
+                int newExtension = Math.max(0, currentExtension - ack.getMessageCount());
+                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                    break;
+                }
             }
             dispatchMatched();
             return;
         } else if (ack.isDeliveredAck()) {
             // Message was delivered but not acknowledged: update pre-fetch counters.
-            // also. get these for a consumer expired message.
-            if (destination != null && !ack.isInTransaction()) {
-                destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
+            prefetchExtension.addAndGet(ack.getMessageCount());
+            dispatchMatched();
+            return;
+        } else if (ack.isExpiredAck()) {
+            if (singleDestination && destination != null) {
                 destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
+                destination.getDestinationStatistics().getExpired().add(ack.getMessageCount());
+                destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
             }
             dequeueCounter.addAndGet(ack.getMessageCount());
+            while (true) {
+                int currentExtension = prefetchExtension.get();
+                int newExtension = Math.max(0, currentExtension - ack.getMessageCount());
+                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                    break;
+                }
+            }
             dispatchMatched();
             return;
         } else if (ack.isRedeliveredAck()) {
@@ -311,15 +334,16 @@ public class TopicSubscription extends AbstractSubscription {
         // The slave should not deliver pull messages.
         if (getPrefetchSize() == 0 ) {
 
-            prefetchWindowOpen.set(true);
+            final long currentDispatchedCount = dispatchedCounter.get();
+            prefetchExtension.incrementAndGet();
             dispatchMatched();
 
             // If there was nothing dispatched.. we may need to setup a timeout.
-            if (prefetchWindowOpen.get()) {
+            if (currentDispatchedCount == dispatchedCounter.get()) {
 
                 // immediate timeout used by receiveNoWait()
                 if (pull.getTimeout() == -1) {
-                    prefetchWindowOpen.set(false);
+                    prefetchExtension.decrementAndGet();
                     // Send a NULL message to signal nothing pending.
                     dispatch(null);
                 }
@@ -329,7 +353,7 @@ public class TopicSubscription extends AbstractSubscription {
 
                         @Override
                         public void run() {
-                            pullTimeout();
+                            pullTimeout(currentDispatchedCount);
                         }
                     }, pull.getTimeout());
                 }
@@ -342,13 +366,15 @@ public class TopicSubscription extends AbstractSubscription {
      * Occurs when a pull times out. If nothing has been dispatched since the
      * timeout was setup, then send the NULL message.
      */
-    private final void pullTimeout() {
+    private final void pullTimeout(long currentDispatchedCount) {
         synchronized (matchedListMutex) {
-            if (prefetchWindowOpen.compareAndSet(true, false)) {
+            if (currentDispatchedCount == dispatchedCounter.get()) {
                 try {
                     dispatch(null);
                 } catch (Exception e) {
                     context.getConnection().serviceException(e);
+                } finally {
+                    prefetchExtension.decrementAndGet();
                 }
             }
         }
@@ -361,7 +387,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     @Override
     public int getDispatchedQueueSize() {
-        return (int)(dispatchedCounter.get() - dequeueCounter.get());
+        return (int)(dispatchedCounter.get() - prefetchExtension.get() - dequeueCounter.get());
     }
 
     public int getMaximumPendingMessages() {
@@ -460,7 +486,7 @@ public class TopicSubscription extends AbstractSubscription {
     // -------------------------------------------------------------------------
     @Override
     public boolean isFull() {
-        return getDispatchedQueueSize() >= info.getPrefetchSize() && !prefetchWindowOpen.get();
+        return getDispatchedQueueSize() >= info.getPrefetchSize();
     }
 
     @Override
@@ -551,7 +577,6 @@ public class TopicSubscription extends AbstractSubscription {
                             continue; // just drop it.
                         }
                         dispatch(message);
-                        prefetchWindowOpen.set(false);
                     }
                 } finally {
                     matched.release();
@@ -623,14 +648,12 @@ public class TopicSubscription extends AbstractSubscription {
         if(destination != null) {
             destination.getDestinationStatistics().getDequeues().increment();
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(this + ", discarding message " + message);
-        }
+        LOG.debug("{}, discarding message {}", this, message);
         Destination dest = (Destination) message.getRegionDestination();
         if (dest != null) {
             dest.messageDiscarded(getContext(), this, message);
         }
-        broker.getRoot().sendToDeadLetterQueue(getContext(), message, this);
+        broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
     }
 
     @Override

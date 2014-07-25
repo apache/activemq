@@ -38,6 +38,7 @@ object ReplicationSupport {
   val OK_ACTION = ascii("ok")
   val DISCONNECT_ACTION = ascii("disconnect")
   val ERROR_ACTION = ascii("error")
+  val LOG_DELETE_ACTION = ascii("rm")
 
   def unmap(buffer:MappedByteBuffer ) {
     try {

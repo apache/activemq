@@ -16,7 +16,15 @@
  */
 package org.apache.activemq.osgi;
 
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.osgi.framework.BundleContext;
@@ -27,8 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.Resource;
-
-import java.util.*;
 
 public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
@@ -42,17 +48,22 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
         return "ActiveMQ Server Controller";
     }
 
+    public Map<String, BrokerService> getBrokersMap() {
+        return Collections.unmodifiableMap(brokers);
+    }
+
+    @SuppressWarnings("rawtypes")
     @Override
     synchronized public void updated(String pid, Dictionary properties) throws ConfigurationException {
 
         // First stop currently running broker (if any)
         deleted(pid);
 
-        String config = (String)properties.get("config");
+        String config = (String) properties.get("config");
         if (config == null) {
             throw new ConfigurationException("config", "Property must be set");
         }
-        String name = (String)properties.get("broker-name");
+        String name = (String) properties.get("broker-name");
         if (name == null) {
             throw new ConfigurationException("broker-name", "Property must be set");
         }
@@ -64,18 +75,18 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             Resource resource = Utils.resourceFromString(config);
 
             ResourceXmlApplicationContext ctx = new ResourceXmlApplicationContext(resource, Collections.EMPTY_LIST, null, Collections.EMPTY_LIST, false) {
+                @Override
                 protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
                     reader.setValidating(false);
                 }
             };
 
             // Handle properties in configuration
-            PropertyPlaceholderConfigurer configurator =
-                        new PropertyPlaceholderConfigurer();
+            PropertyPlaceholderConfigurer configurator = new PropertyPlaceholderConfigurer();
 
-            //convert dictionary to properties. Is there a better way?
+            // convert dictionary to properties. Is there a better way?
             Properties props = new Properties();
-            Enumeration elements = properties.keys();
+            Enumeration<?> elements = properties.keys();
             while (elements.hasMoreElements()) {
                 Object key = elements.nextElement();
                 props.put(key, properties.get(key));
@@ -93,14 +104,16 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             if (broker == null) {
                 throw new ConfigurationException(null, "Broker not defined");
             }
-            //TODO deal with multiple brokers
+            // TODO deal with multiple brokers
 
+            SpringBrokerContext brokerContext = new SpringBrokerContext();
+            brokerContext.setConfigurationUrl(resource.getURL().toExternalForm());
+            brokerContext.setApplicationContext(ctx);
+            broker.setBrokerContext(brokerContext);
 
             broker.start();
             broker.waitUntilStarted();
             brokers.put(pid, broker);
-
-
         } catch (Exception e) {
             throw new ConfigurationException(null, "Cannot start the broker", e);
         }
@@ -122,7 +135,7 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
     }
 
     synchronized public void destroy() {
-        for (String broker: brokers.keySet()) {
+        for (String broker : brokers.keySet()) {
             deleted(broker);
         }
     }

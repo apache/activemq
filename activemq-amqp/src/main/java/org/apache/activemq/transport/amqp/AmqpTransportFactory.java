@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -25,9 +28,6 @@ import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * A <a href="http://amqp.org/">AMQP</a> transport factory
  */
@@ -35,10 +35,12 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
 
     private BrokerContext brokerContext = null;
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "amqp";
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new AmqpTransportFilter(transport, format, brokerContext);
@@ -46,6 +48,7 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
         return super.compositeConfigure(transport, format, options);
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
     }
@@ -56,25 +59,12 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
         transport = super.serverConfigure(transport, format, options);
 
         // strip off the mutex transport.
-        if( transport instanceof MutexTransport ) {
-            transport = ((MutexTransport)transport).getNext();
+        if (transport instanceof MutexTransport) {
+            transport = ((MutexTransport) transport).getNext();
         }
-//        MutexTransport mutex = transport.narrow(MutexTransport.class);
-//        if (mutex != null) {
-//            mutex.setSyncOnCommand(true);
-//        }
+
         return transport;
     }
-
-//    @Override
-//    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
-//        AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
-//
-//        AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
-//        filter.setInactivityMonitor(monitor);
-//
-//        return monitor;
-//    }
 
     @Override
     protected boolean isUseInactivityMonitor(Transport transport) {

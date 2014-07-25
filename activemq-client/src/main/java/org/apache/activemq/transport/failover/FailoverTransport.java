@@ -24,6 +24,7 @@ import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +59,7 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,6 +101,7 @@ public class FailoverTransport implements CompositeTransport {
     private int maxReconnectAttempts = INFINITE;
     private int startupMaxReconnectAttempts = INFINITE;
     private int connectFailures;
+    private int warnAfterReconnectAttempts = 10;
     private long reconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private Exception connectionFailure;
     private boolean firstConnection = true;
@@ -124,6 +127,8 @@ public class FailoverTransport implements CompositeTransport {
     private boolean priorityBackup = false;
     private final ArrayList<URI> priorityList = new ArrayList<URI>();
     private boolean priorityBackupAvailable = false;
+    private String nestedExtraQueryOptions;
+    private boolean shuttingDown = false;
 
     public FailoverTransport() throws InterruptedIOException {
         brokerSslContext = SslContext.getCurrentSslContext();
@@ -237,27 +242,30 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public final void handleTransportFailure(IOException e) throws InterruptedException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(this + " handleTransportFailure: " + e);
-        }
-        Transport transport = connectedTransport.getAndSet(null);
-        if (transport == null) {
-            // sync with possible in progress reconnect
-            synchronized (reconnectMutex) {
-                transport = connectedTransport.getAndSet(null);
+        synchronized (reconnectMutex) {
+            if (shuttingDown) {
+                // shutdown info sent and remote socket closed and we see that before a local close
+                // let the close do the work
+                return;
             }
-        }
-        if (transport != null) {
 
-            disposeTransport(transport);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(this + " handleTransportFailure: " + e, e);
+            }
 
-            boolean reconnectOk = false;
-            synchronized (reconnectMutex) {
+            Transport transport = connectedTransport.getAndSet(null);
+
+            if (transport != null) {
+
+                disposeTransport(transport);
+
+                boolean reconnectOk = false;
+
                 if (canReconnect()) {
                     reconnectOk = true;
                 }
-                LOG.warn("Transport (" + transport.getRemoteAddress() + ") failed, reason:  " + e
-                        + (reconnectOk ? "," : ", not")  +" attempting to automatically reconnect");
+                LOG.warn("Transport (" + transport + ") failed"
+                        + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect", e);
 
                 initialized = false;
                 failedConnectTransportURI = connectedTransportURI;
@@ -265,12 +273,12 @@ public class FailoverTransport implements CompositeTransport {
                 connected = false;
                 connectedToPriority = false;
 
-                // notify before any reconnect attempt so ack state can be whacked
-                if (transportListener != null) {
-                    transportListener.transportInterupted();
-                }
-
                 if (reconnectOk) {
+                    // notify before any reconnect attempt so ack state can be whacked
+                    if (transportListener != null) {
+                        transportListener.transportInterupted();
+                    }
+
                     updated.remove(failedConnectTransportURI);
                     reconnectTask.wakeup();
                 } else if (!isDisposed()) {
@@ -601,7 +609,7 @@ public class FailoverTransport implements CompositeTransport {
                                 LOG.trace("Waiting for transport to reconnect..: " + command);
                             }
                             long end = System.currentTimeMillis();
-                            if (timeout > 0 && (end - start > timeout)) {
+                            if (command.isMessage() && timeout > 0 && (end - start > timeout)) {
                                 timedout = true;
                                 if (LOG.isInfoEnabled()) {
                                     LOG.info("Failover timed out after " + (end - start) + "ms");
@@ -634,11 +642,16 @@ public class FailoverTransport implements CompositeTransport {
                             break;
                         }
 
+                        Tracked tracked = null;
+                        try {
+                            tracked = stateTracker.track(command);
+                        } catch (IOException ioe) {
+                            LOG.debug("Cannot track the command " + command, ioe);
+                        }
                         // If it was a request and it was not being tracked by
                         // the state tracker,
                         // then hold it in the requestMap so that we can replay
                         // it later.
-                        Tracked tracked = stateTracker.track(command);
                         synchronized (requestMap) {
                             if (tracked != null && tracked.isWaitingForResponse()) {
                                 requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
@@ -651,6 +664,9 @@ public class FailoverTransport implements CompositeTransport {
                         try {
                             transport.oneway(command);
                             stateTracker.trackBack(command);
+                            if (command.isShutdownInfo()) {
+                                shuttingDown = true;
+                            }
                         } catch (IOException e) {
 
                             // If the command was not tracked.. we will retry in
@@ -784,7 +800,8 @@ public class FailoverTransport implements CompositeTransport {
         if (randomize) {
             // Randomly, reorder the list by random swapping
             for (int i = 0; i < l.size(); i++) {
-                int p = (int) (Math.random() * 100 % l.size());
+                // meed parenthesis due other JDKs (see AMQ-4826)
+                int p = ((int) (Math.random() * 100)) % l.size();
                 URI t = l.get(p);
                 l.set(p, l.get(i));
                 l.set(i, t);
@@ -999,7 +1016,7 @@ public class FailoverTransport implements CompositeTransport {
                             // We could be starting with a backup and if so we wait to grab a
                             // URI from the pool until next time around.
                             if (transport == null) {
-                                uri = iter.next();
+                                uri = addExtraQueryOptions(iter.next());
                                 transport = TransportFactory.compositeConnect(uri);
                             }
 
@@ -1096,6 +1113,12 @@ public class FailoverTransport implements CompositeTransport {
                 propagateFailureToExceptionListener(connectionFailure);
                 return false;
             }
+
+            int warnInterval = getWarnAfterReconnectAttempts();
+            if (warnInterval > 0 && (connectFailures % warnInterval) == 0) {
+                LOG.warn("Failed to connect to {} after: {} attempt(s) continuing to retry.",
+                         uris, connectFailures);
+            }
         }
 
         if (!disposed) {
@@ -1180,7 +1203,7 @@ public class FailoverTransport implements CompositeTransport {
                 backups.removeAll(disposedList);
                 disposedList.clear();
                 for (Iterator<URI> iter = backupList.iterator(); !disposed && iter.hasNext() && shouldBuildBackups(); ) {
-                    URI uri = iter.next();
+                    URI uri = addExtraQueryOptions(iter.next());
                     if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
                         try {
                             SslContext.setCurrentSslContext(brokerSslContext);
@@ -1398,4 +1421,42 @@ public class FailoverTransport implements CompositeTransport {
         }
         return result;
     }
+
+    private URI addExtraQueryOptions(URI uri) {
+        try {
+            if( nestedExtraQueryOptions!=null && !nestedExtraQueryOptions.isEmpty() ) {
+                if( uri.getQuery() == null ) {
+                    uri = URISupport.createURIWithQuery(uri, nestedExtraQueryOptions);
+                } else {
+                    uri = URISupport.createURIWithQuery(uri, uri.getQuery()+"&"+nestedExtraQueryOptions);
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        return uri;
+    }
+
+    public void setNestedExtraQueryOptions(String nestedExtraQueryOptions) {
+        this.nestedExtraQueryOptions = nestedExtraQueryOptions;
+    }
+
+    public int getWarnAfterReconnectAttempts() {
+        return warnAfterReconnectAttempts;
+    }
+
+    /**
+     * Sets the number of Connect / Reconnect attempts that must occur before a warn message
+     * is logged indicating that the transport is not connected.  This can be useful when the
+     * client is running inside some container or service as it give an indication of some
+     * problem with the client connection that might not otherwise be visible.  To disable the
+     * log messages this value should be set to a value @{code attempts <= 0}
+     *
+     * @param warnAfterReconnectAttempts
+     *      The number of failed connection attempts that must happen before a warning is logged.
+     */
+    public void setWarnAfterReconnectAttempts(int warnAfterReconnectAttempts) {
+        this.warnAfterReconnectAttempts = warnAfterReconnectAttempts;
+    }
+
 }
