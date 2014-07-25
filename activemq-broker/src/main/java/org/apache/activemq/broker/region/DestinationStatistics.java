@@ -31,6 +31,7 @@ public class DestinationStatistics extends StatsImpl {
 
     protected CountStatisticImpl enqueues;
     protected CountStatisticImpl dequeues;
+    protected CountStatisticImpl forwards;
     protected CountStatisticImpl consumers;
     protected CountStatisticImpl producers;
     protected CountStatisticImpl messages;
@@ -49,6 +50,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the destination");
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
+        forwards = new CountStatisticImpl("forwards", "The number of messages that have been forwarded to a networked broker from the destination");
         inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
         expired = new CountStatisticImpl("expired", "The number of messages that have expired");
 
@@ -84,6 +86,10 @@ public class DestinationStatistics extends StatsImpl {
 
     public CountStatisticImpl getDequeues() {
         return dequeues;
+    }
+
+    public CountStatisticImpl getForwards() {
+        return forwards;
     }
 
     public CountStatisticImpl getInflight() {
@@ -137,6 +143,7 @@ public class DestinationStatistics extends StatsImpl {
             super.reset();
             enqueues.reset();
             dequeues.reset();
+            forwards.reset();
             dispatched.reset();
             inflight.reset();
             expired.reset();
@@ -151,6 +158,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
+        forwards.setEnabled(enabled);
         inflight.setEnabled(enabled);
         expired.setEnabled(true);
         consumers.setEnabled(enabled);
@@ -169,6 +177,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
+            forwards.setParent(parent.forwards);
             inflight.setParent(parent.inflight);
             expired.setParent(parent.expired);
             consumers.setParent(parent.consumers);
@@ -183,6 +192,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(null);
             dispatched.setParent(null);
             dequeues.setParent(null);
+            forwards.setParent(null);
             inflight.setParent(null);
             expired.setParent(null);
             consumers.setParent(null);

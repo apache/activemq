@@ -21,6 +21,7 @@ import javax.jms.DeliveryMode;
 import junit.framework.Test;
 
 import org.apache.activemq.broker.StubConnection;
+import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
@@ -72,6 +73,11 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         // Close consumer to cause the message to rollback.
         connection1.send(consumerInfo1.createRemoveCommand());
 
+        final DestinationStatistics destinationStatistics = broker.getDestination(destination).getDestinationStatistics();
+        assertEquals("broker dest stat dispatched", 1, destinationStatistics.getDispatched().getCount());
+        assertEquals("broker dest stat dequeues", 0, destinationStatistics.getDequeues().getCount());
+        assertEquals("broker dest stat forwards", 0, destinationStatistics.getForwards().getCount());
+
         // Now create remote consumer that should cause message to move to this
         // remote consumer.
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
@@ -84,6 +90,15 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
                 return receiveMessage(connection2) != null;
             }
         }));
+
+        assertTrue("broker dest stat forwards", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == destinationStatistics.getForwards().getCount();
+            }
+        }));
+        assertEquals("broker dest stat dequeues", 1, destinationStatistics.getDequeues().getCount());
+        assertEquals("remote broker dest stat dequeues", 1, remoteBroker.getDestination(destination).getDestinationStatistics().getDequeues().getCount());
     }
 
     public void initCombosForTestAddConsumerThenSend() {

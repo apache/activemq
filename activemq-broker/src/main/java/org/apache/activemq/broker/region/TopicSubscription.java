@@ -285,6 +285,9 @@ public class TopicSubscription extends AbstractSubscription {
                 if (singleDestination && destination != null) {
                     destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                     destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
+                    if (info.isNetworkSubscription()) {
+                        destination.getDestinationStatistics().getForwards().add(ack.getMessageCount());
+                    }
                 }
                 dequeueCounter.addAndGet(ack.getMessageCount());
             }
