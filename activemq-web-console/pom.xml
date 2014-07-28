@@ -172,8 +172,7 @@
     </dependency>
     <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jsp_2.2_spec</artifactId>
-        <version>1.2</version>
+        <artifactId>geronimo-jsp_2.1_spec</artifactId>
         <scope>provided</scope>
     </dependency>
 

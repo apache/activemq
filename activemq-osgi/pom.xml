@@ -49,7 +49,7 @@
       org.apache.http*;resolution:=optional,
       org.apache.xpath*;resolution:=optional,
       org.bouncycastle*;resolution:=optional,
-      org.codehaus.jackson*;resolution:=optional,
+      com.fasterxml.jackson*;resolution:=optional,
       org.codehaus.jettison*;resolution:=optional,
       org.jasypt*;resolution:=optional,
       org.eclipse.jetty*;resolution:=optional,
