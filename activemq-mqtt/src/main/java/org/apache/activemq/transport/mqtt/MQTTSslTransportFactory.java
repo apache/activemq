@@ -16,15 +16,20 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.broker.BrokerContext;
+import javax.net.ssl.SSLServerSocketFactory;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
+import org.apache.activemq.transport.tcp.SslTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -47,6 +52,13 @@ public class MQTTSslTransportFactory extends SslTransportFactory implements Brok
         return super.compositeConfigure(transport, format, options);
     }
 
+    @Override
+    protected SslTransportServer createSslTransportServer(URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        final SslTransportServer server = super.createSslTransportServer(location, serverSocketFactory);
+        server.setAllowLinkStealing(true);
+        return server;
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
@@ -56,7 +68,6 @@ public class MQTTSslTransportFactory extends SslTransportFactory implements Brok
         if (mutex != null) {
             mutex.setSyncOnCommand(true);
         }
-
         return transport;
     }
 

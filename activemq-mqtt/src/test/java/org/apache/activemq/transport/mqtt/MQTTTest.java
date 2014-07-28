@@ -18,6 +18,7 @@ package org.apache.activemq.transport.mqtt;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -1080,6 +1081,56 @@ public class MQTTTest extends MQTTTestSupport {
         message.ack();
         assertEquals("Message body", DOLLAR_TOPIC, new String(message.getPayload()));
 
+        connection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testDuplicateClientId() throws Exception {
+        // test link stealing enabled by default
+        stopBroker();
+        startBroker();
+
+        final String clientId = "duplicateClient";
+        MQTT mqtt = createMQTTConnection(clientId, false);
+        mqtt.setKeepAlive((short) 2);
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+        final String TOPICA = "TopicA";
+        connection.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
+
+        MQTT mqtt1 = createMQTTConnection(clientId, false);
+        mqtt1.setKeepAlive((short) 2);
+        BlockingConnection connection1 = mqtt1.blockingConnection();
+        connection1.connect();
+
+        assertTrue("Duplicate client disconnected", connection1.isConnected());
+        assertFalse("Old client still connected", connection.isConnected());
+        connection1.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
+        connection1.disconnect();
+
+        // disable link stealing
+        stopBroker();
+        protocolConfig = "allowLinkStealing=false";
+        startBroker();
+
+        mqtt = createMQTTConnection(clientId, false);
+        mqtt.setKeepAlive((short) 2);
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
+
+        mqtt1 = createMQTTConnection(clientId, false);
+        mqtt1.setKeepAlive((short) 2);
+        connection1 = mqtt1.blockingConnection();
+        try {
+            connection1.connect();
+            fail("Duplicate client connected");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertTrue("Old client disconnected", connection.isConnected());
+        connection.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
         connection.disconnect();
     }
 
