@@ -133,6 +133,7 @@ public class MQTTProtocolConverter {
     private int activeMQSubscriptionPrefetch=1;
     protected static final String QOS_PROPERTY_NAME = "ActiveMQ.MQTT.QoS";
     private final MQTTPacketIdGenerator packetIdGenerator;
+    private boolean publishDollarTopics;
 
     public MQTTProtocolConverter(MQTTTransport mqttTransport, BrokerService brokerService) {
         this.mqttTransport = mqttTransport;
@@ -152,7 +153,7 @@ public class MQTTProtocolConverter {
         // Lets intercept message send requests..
         if( command instanceof ActiveMQMessage) {
             ActiveMQMessage msg = (ActiveMQMessage) command;
-            if( msg.getDestination().getPhysicalName().startsWith("$") ) {
+            if( !getPublishDollarTopics() && msg.getDestination().getPhysicalName().startsWith("$") ) {
                 // We don't allow users to send to $ prefixed topics to avoid failing MQTT 3.1.1 spec requirements
                 if( handler!=null ) {
                     try {
@@ -970,5 +971,13 @@ public class MQTTProtocolConverter {
 
     public MQTTPacketIdGenerator getPacketIdGenerator() {
         return packetIdGenerator;
+    }
+
+    public void setPublishDollarTopics(boolean publishDollarTopics) {
+        this.publishDollarTopics = publishDollarTopics;
+    }
+
+    public boolean getPublishDollarTopics() {
+        return publishDollarTopics;
     }
 }

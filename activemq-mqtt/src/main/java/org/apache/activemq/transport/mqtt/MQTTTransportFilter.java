@@ -189,6 +189,14 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         protocolConverter.setDefaultKeepAlive(defaultHeartBeat);
     }
 
+    public boolean getPublishDollarTopics() {
+        return protocolConverter != null && protocolConverter.getPublishDollarTopics();
+    }
+
+    public void setPublishDollarTopics(boolean publishDollarTopics) {
+        protocolConverter.setPublishDollarTopics(publishDollarTopics);
+    }
+
     public int getActiveMQSubscriptionPrefetch() {
         return protocolConverter.getActiveMQSubscriptionPrefetch();
     }

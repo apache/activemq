@@ -16,14 +16,6 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -44,6 +35,13 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -1041,6 +1039,47 @@ public class MQTTTest extends MQTTTestSupport {
                 return connection.isConnected();
             }
         }));
+
+        connection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testPublishDollarTopics() throws Exception {
+        stopBroker();
+        startBroker();
+
+        MQTT mqtt = createMQTTConnection();
+        final String clientId = "publishDollar";
+        mqtt.setClientId(clientId);
+        mqtt.setKeepAlive((short) 2);
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        final String DOLLAR_TOPIC = "$TopicA";
+        connection.subscribe(new Topic[] { new Topic(DOLLAR_TOPIC, QoS.EXACTLY_ONCE)});
+        connection.publish(DOLLAR_TOPIC, DOLLAR_TOPIC.getBytes(), QoS.EXACTLY_ONCE, true);
+
+        Message message = connection.receive(10, TimeUnit.SECONDS);
+        assertNull("Publish enabled for $ Topics by default", message);
+        connection.disconnect();
+
+        stopBroker();
+        protocolConfig = "transport.publishDollarTopics=true";
+        startBroker();
+
+        mqtt = createMQTTConnection();
+        mqtt.setClientId(clientId);
+        mqtt.setKeepAlive((short) 2);
+        connection = mqtt.blockingConnection();
+        connection.connect();
+
+        connection.subscribe(new Topic[] { new Topic(DOLLAR_TOPIC, QoS.EXACTLY_ONCE)});
+        connection.publish(DOLLAR_TOPIC, DOLLAR_TOPIC.getBytes(), QoS.EXACTLY_ONCE, true);
+
+        message = connection.receive(10, TimeUnit.SECONDS);
+        assertNotNull(message);
+        message.ack();
+        assertEquals("Message body", DOLLAR_TOPIC, new String(message.getPayload()));
 
         connection.disconnect();
     }
