@@ -643,20 +643,11 @@ public class TransactionContext implements XAResource {
     }
 
     public Xid[] recover(int flag) throws XAException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Recover: " + flag);
-        }
+        LOG.debug("recover({})", flag);
 
         TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
         try {
             this.connection.checkClosedOrFailed();
-            final FailoverTransport failoverTransport = this.connection.getTransport().narrow(FailoverTransport.class);
-            if (failoverTransport != null && !failoverTransport.isConnected()) {
-                // otherwise call will block on reconnect forfeting any app level periodic check
-                XAException xaException = new XAException("Failover transport not connected: " + this.getConnection());
-                xaException.errorCode = XAException.XAER_RMERR;
-                throw xaException;
-            }
             this.connection.ensureConnectionInfoSent();
 
             DataArrayResponse receipt = (DataArrayResponse)this.connection.syncSendPacket(info);
@@ -668,7 +659,7 @@ public class TransactionContext implements XAResource {
                 answer = new XATransactionId[data.length];
                 System.arraycopy(data, 0, answer, 0, data.length);
             }
-            LOG.trace("recover({})={}", flag, answer);
+            LOG.debug("recover({})={}", flag, answer);
             return answer;
         } catch (JMSException e) {
             throw toXAException(e);
