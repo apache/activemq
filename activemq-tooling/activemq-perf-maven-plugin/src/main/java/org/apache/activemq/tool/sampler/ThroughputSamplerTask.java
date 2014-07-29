@@ -19,18 +19,16 @@ package org.apache.activemq.tool.sampler;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.tool.reports.AbstractPerfReportWriter;
 
 public class ThroughputSamplerTask extends AbstractPerformanceSampler {
 
-    private final Object mutex = new Object();
-    private List<MeasurableClient> clients = new ArrayList<MeasurableClient>();
+    private List<MeasurableClient> clients = new CopyOnWriteArrayList<>();
 
     public void registerClient(MeasurableClient client) {
-        synchronized (mutex) {
-            clients.add(client);
-        }
+        clients.add(client);
     }
 
     public void sampleData() {
