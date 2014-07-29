@@ -22,14 +22,20 @@ import org.apache.activemq.command.ActiveMQQueue;
 
 /**
  * Represents a virtual queue which forwards to a number of other destinations.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
+ *
  */
 public class CompositeQueue extends CompositeDestination {
 
+    @Override
     public ActiveMQDestination getVirtualDestination() {
         return new ActiveMQQueue(getName());
+    }
+
+    @Override
+    public Destination interceptMappedDestination(Destination destination) {
+        // nothing to do for mapped destinations
+        return destination;
     }
 }

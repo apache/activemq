@@ -41,10 +41,12 @@ import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -1424,6 +1426,55 @@ public class MQTTTest extends MQTTTestSupport {
         }
         assertEquals("Should receive 2 retained messages", 2, retain[0]);
         assertEquals("Should receive 2 non-retained messages", 2, nonretain[0]);
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testSendMQTTReceiveJMSVirtualTopic() throws Exception {
+
+        final MQTTClientProvider provider = getMQTTClientProvider();
+        initializeConnection(provider);
+        final String DESTINATION_NAME = "Consumer.jms.VirtualTopic.TopicA";
+
+        // send retained message
+        final String RETAINED = "RETAINED";
+        final String MQTT_DESTINATION_NAME = "VirtualTopic/TopicA";
+        provider.publish(MQTT_DESTINATION_NAME, RETAINED.getBytes(), AT_LEAST_ONCE, true);
+
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) new ActiveMQConnectionFactory(jmsUri).createConnection();
+        // MUST set to true to receive retained messages
+        activeMQConnection.setUseRetroactiveConsumer(true);
+        activeMQConnection.start();
+        Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue jmsQueue = s.createQueue(DESTINATION_NAME);
+        MessageConsumer consumer = s.createConsumer(jmsQueue);
+
+        // check whether we received retained message on JMS subscribe
+        ActiveMQMessage message = (ActiveMQMessage) consumer.receive(5000);
+        assertNotNull("Should get retained message", message);
+        ByteSequence bs = message.getContent();
+        assertEquals(RETAINED, new String(bs.data, bs.offset, bs.length));
+        assertTrue(message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY));
+
+        for (int i = 0; i < NUM_MESSAGES; i++) {
+            String payload = "Test Message: " + i;
+            provider.publish(MQTT_DESTINATION_NAME, payload.getBytes(), AT_LEAST_ONCE);
+            message = (ActiveMQMessage) consumer.receive(5000);
+            assertNotNull("Should get a message", message);
+            bs = message.getContent();
+            assertEquals(payload, new String(bs.data, bs.offset, bs.length));
+        }
+
+        // re-create consumer and check we received retained message again
+        consumer.close();
+        consumer = s.createConsumer(jmsQueue);
+        message = (ActiveMQMessage) consumer.receive(5000);
+        assertNotNull("Should get retained message", message);
+        bs = message.getContent();
+        assertEquals(RETAINED, new String(bs.data, bs.offset, bs.length));
+        assertTrue(message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY));
+
+        activeMQConnection.close();
+        provider.disconnect();
     }
 
     @Test(timeout = 60 * 1000)

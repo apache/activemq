@@ -22,10 +22,11 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.CommandTypes;
 
 /**
- * 
- * 
+ *
+ *
  */
 public abstract class CompositeDestination implements VirtualDestination {
 
@@ -35,14 +36,17 @@ public abstract class CompositeDestination implements VirtualDestination {
     private boolean copyMessage = true;
     private boolean concurrentSend = false;
 
+    @Override
     public Destination intercept(Destination destination) {
         return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage(), isConcurrentSend());
     }
-    
+
+    @Override
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) {
     }
 
-    public void remove(Destination destination) {        
+    @Override
+    public void remove(Destination destination) {
     }
 
     public String getName() {
@@ -104,4 +108,39 @@ public abstract class CompositeDestination implements VirtualDestination {
         return this.concurrentSend;
     }
 
+    @Override
+    public ActiveMQDestination getMappedDestinations() {
+
+        final ActiveMQDestination[] destinations = new ActiveMQDestination[forwardTo.size()];
+        int i = 0;
+        for (Object dest : forwardTo) {
+            if (dest instanceof FilteredDestination) {
+                FilteredDestination filteredDestination = (FilteredDestination) dest;
+                destinations[i++] = filteredDestination.getDestination();
+            } else if (dest instanceof ActiveMQDestination) {
+                destinations[i++] = (ActiveMQDestination) dest;
+            } else {
+                // highly unlikely, but just in case!
+                throw new IllegalArgumentException("Unknown mapped destination type " + dest);
+            }
+        }
+
+        // used just for matching destination paths
+        return new ActiveMQDestination(destinations) {
+            @Override
+            protected String getQualifiedPrefix() {
+                return "mapped://";
+            }
+
+            @Override
+            public byte getDestinationType() {
+                return QUEUE_TYPE | TOPIC_TYPE;
+            }
+
+            @Override
+            public byte getDataStructureType() {
+                return CommandTypes.ACTIVEMQ_QUEUE | CommandTypes.ACTIVEMQ_TOPIC;
+            }
+        };
+    }
 }

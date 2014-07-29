@@ -16,19 +16,29 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  * Represents a virtual topic which forwards to a number of other destinations.
- * 
+ *
  * @org.apache.xbean.XBean
- * 
- * 
+ *
  */
 public class CompositeTopic extends CompositeDestination {
 
+    @Override
     public ActiveMQDestination getVirtualDestination() {
         return new ActiveMQTopic(getName());
+    }
+
+    @Override
+    public Destination interceptMappedDestination(Destination destination) {
+        if (!isForwardOnly() && destination.getActiveMQDestination().isQueue()) {
+            // recover retroactive messages in mapped Queue
+            return new MappedQueueFilter(getVirtualDestination(), destination);
+        }
+        return destination;
     }
 }

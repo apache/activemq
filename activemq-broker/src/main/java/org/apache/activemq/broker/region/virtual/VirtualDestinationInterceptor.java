@@ -34,21 +34,26 @@ import org.apache.activemq.filter.DestinationMap;
 
 /**
  * Implements <a
- * href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>.
- * 
+ * href="http://activemq.apache.org/virtual-destinations.html">Virtual
+ * Topics</a>.
+ *
  * @org.apache.xbean.XBean
- * 
+ *
  */
 public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     private DestinationMap destinationMap = new DestinationMap();
+    private DestinationMap mappedDestinationMap = new DestinationMap();
+
     private VirtualDestination[] virtualDestinations;
 
+    @Override
     public Destination intercept(Destination destination) {
-        Set matchingDestinations = destinationMap.get(destination.getActiveMQDestination());
+        final ActiveMQDestination activeMQDestination = destination.getActiveMQDestination();
+        Set matchingDestinations = destinationMap.get(activeMQDestination);
         List<Destination> destinations = new ArrayList<Destination>();
         for (Iterator iter = matchingDestinations.iterator(); iter.hasNext();) {
-            VirtualDestination virtualDestination = (VirtualDestination)iter.next();
+            VirtualDestination virtualDestination = (VirtualDestination) iter.next();
             Destination newDestination = virtualDestination.intercept(destination);
             destinations.add(newDestination);
         }
@@ -60,17 +65,28 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
                 return createCompositeDestination(destination, destinations);
             }
         }
+        // check if the destination instead matches any mapped destinations
+        Set mappedDestinations = mappedDestinationMap.get(activeMQDestination);
+        assert mappedDestinations.size() < 2;
+        if (!mappedDestinations.isEmpty()) {
+            // create a mapped destination interceptor
+            VirtualDestination virtualDestination = (VirtualDestination)
+                mappedDestinations.toArray(new VirtualDestination[mappedDestinations.size()])[0];
+            return virtualDestination.interceptMappedDestination(destination);
+        }
+
         return destination;
     }
-    
 
+    @Override
     public synchronized void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        for (VirtualDestination virt: virtualDestinations) {
+        for (VirtualDestination virt : virtualDestinations) {
             virt.create(broker, context, destination);
         }
     }
 
-    public synchronized void remove(Destination destination) {     
+    @Override
+    public synchronized void remove(Destination destination) {
     }
 
     public VirtualDestination[] getVirtualDestinations() {
@@ -79,15 +95,18 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     public void setVirtualDestinations(VirtualDestination[] virtualDestinations) {
         destinationMap = new DestinationMap();
+        mappedDestinationMap = new DestinationMap();
         this.virtualDestinations = virtualDestinations;
         for (int i = 0; i < virtualDestinations.length; i++) {
             VirtualDestination virtualDestination = virtualDestinations[i];
             destinationMap.put(virtualDestination.getVirtualDestination(), virtualDestination);
+            mappedDestinationMap.put(virtualDestination.getMappedDestinations(), virtualDestination);
         }
     }
 
     protected Destination createCompositeDestination(Destination destination, final List<Destination> destinations) {
         return new DestinationFilter(destination) {
+            @Override
             public void send(ProducerBrokerExchange context, Message messageSend) throws Exception {
                 for (Iterator<Destination> iter = destinations.iterator(); iter.hasNext();) {
                     Destination destination = iter.next();
