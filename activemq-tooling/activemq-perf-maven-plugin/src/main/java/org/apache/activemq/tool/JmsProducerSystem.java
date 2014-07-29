@@ -28,14 +28,17 @@ public class JmsProducerSystem extends AbstractJmsClientSystem {
     protected JmsProducerSystemProperties sysTest = new JmsProducerSystemProperties();
     protected JmsProducerProperties producer = new JmsProducerProperties();
 
+    @Override
     public JmsClientSystemProperties getSysTest() {
         return sysTest;
     }
 
+    @Override
     public void setSysTest(JmsClientSystemProperties sysTestProps) {
         sysTest = (JmsProducerSystemProperties)sysTestProps;
     }
 
+    @Override
     public JmsClientProperties getJmsClientProperties() {
         return getProducer();
     }
@@ -48,6 +51,19 @@ public class JmsProducerSystem extends AbstractJmsClientSystem {
         this.producer = producer;
     }
 
+    @Override
+    protected ClientRunBasis getClientRunBasis() {
+        assert (producer != null);
+        return ClientRunBasis.valueOf(producer.getSendType().toLowerCase());
+    }
+
+    @Override
+    protected long getClientRunDuration() {
+        return producer.getSendDuration();
+    }
+
+
+    @Override
     protected void runJmsClient(String clientName, int clientDestIndex, int clientDestCount) {
         ThroughputSamplerTask sampler = getTpSampler();
 

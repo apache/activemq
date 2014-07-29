@@ -17,8 +17,11 @@
 package org.apache.activemq.tool.properties;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JmsClientSystemProperties extends AbstractObjectProperties {
+    
     public static final String DEST_DISTRO_ALL    = "all";    // Each client will send/receive to all destination;
     public static final String DEST_DISTRO_EQUAL  = "equal";  // Equally divide the number of destinations to the number of clients
     public static final String DEST_DISTRO_DIVIDE = "divide"; // Divide the destination among the clients, even if some have more destination than others
@@ -69,6 +72,14 @@ public class JmsClientSystemProperties extends AbstractObjectProperties {
 
     public String getSamplers() {
         return samplers;
+    }
+
+    public Set<String> getSamplersSet() {
+        Set<String> samplersSet = new HashSet<>();
+        for (String sampler : samplers.split(",")) {
+            samplersSet.add(sampler.trim());
+        }
+        return samplersSet;
     }
 
     public void setSamplers(String samplers) {
