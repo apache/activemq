@@ -226,7 +226,7 @@ public abstract class AbstractFeatureTest {
                 
                 KarafDistributionOption.keepRuntimeFolder(),
                 //logLevel(LogLevelOption.LogLevel.DEBUG),
-                replaceConfigurationFile("etc/config.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/config.properties")),
+                replaceConfigurationFile("etc/config.properties", new File(basedir+"/target/classes/org/apache/activemq/karaf/itest/config.properties")),
                 replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
                 scanFeatures(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
 

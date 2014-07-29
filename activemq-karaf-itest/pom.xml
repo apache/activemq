@@ -29,10 +29,6 @@
   <name>ActiveMQ :: Karaf Integration Tests</name>
   <description>Performs Karaf compliance integration tests</description>
 
-  <properties>
-    <pax-exam-version>2.6.0</pax-exam-version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>org.apache.activemq</groupId>
@@ -187,6 +183,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+          <filtering>true</filtering>
+        </resource>
+      </resources>
     <plugins>
       <!-- generate dependencies versions -->
       <plugin>
@@ -210,7 +212,6 @@
           <redirectTestOutputToFile>false</redirectTestOutputToFile>
           <argLine>-Xmx256m</argLine>
           <excludes>
-          <!--<exclude>**/*Cxf*.*</exclude>-->
           </excludes>
           <systemPropertyVariables>
             <activemqVersion>${project.version}</activemqVersion>
@@ -282,6 +283,7 @@
               <systemPropertyVariables>
                 <activemqVersion>${project.version}</activemqVersion>
                 <karafVersion>${karaf-version}</karafVersion>
+                <felixFrameworkVersion>${felix-framework-version}</felixFrameworkVersion>
               </systemPropertyVariables>
             </configuration>
           </plugin>
