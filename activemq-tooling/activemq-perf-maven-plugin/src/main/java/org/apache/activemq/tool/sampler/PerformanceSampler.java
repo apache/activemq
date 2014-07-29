@@ -16,25 +16,36 @@
  */
 package org.apache.activemq.tool.sampler;
 
+import org.apache.activemq.tool.ClientRunBasis;
 import org.apache.activemq.tool.reports.PerformanceReportWriter;
+
+import java.util.concurrent.CountDownLatch;
 
 public interface PerformanceSampler extends Runnable {
     
-    long getRampUpTime();
+    Long getRampUpTime();
 
     void setRampUpTime(long rampUpTime);
 
-    long getRampDownTime();
+    Long getRampDownTime();
 
     void setRampDownTime(long rampDownTime);
 
-    long getDuration();
+    Long getDuration();
 
     void setDuration(long duration);
 
     long getInterval();
 
     void setInterval(long interval);
+
+    long getRampUpPercent();
+
+    void setRampUpPercent(long rampUpPercent);
+
+    long getRampDownPercent();
+
+    void setRampDownPercent(long rampDownPercent);
 
     PerformanceReportWriter getPerfReportWriter();
 
@@ -44,9 +55,11 @@ public interface PerformanceSampler extends Runnable {
 
     void setPerfEventListener(PerformanceEventListener listener);
 
+    void finishSampling();
+
     void sampleData();
 
-    boolean isRunning();
 
-    void waitUntilDone();
+    void startSampler(CountDownLatch completionLatch, ClientRunBasis clientRunBasis, long clientRunDuration);
+
 }

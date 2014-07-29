@@ -48,6 +48,18 @@ public class JmsProducerSystem extends AbstractJmsClientSystem {
         this.producer = producer;
     }
 
+    @Override
+    protected ClientRunBasis getClientRunBasis() {
+        assert (producer != null);
+        return ClientRunBasis.valueOf(producer.getSendType().toLowerCase());
+    }
+
+    @Override
+    protected long getClientRunDuration() {
+        return producer.getSendDuration();
+    }
+
+
     protected void runJmsClient(String clientName, int clientDestIndex, int clientDestCount) {
         ThroughputSamplerTask sampler = getTpSampler();
 
