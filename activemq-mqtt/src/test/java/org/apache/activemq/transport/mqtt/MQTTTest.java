@@ -46,7 +46,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -1041,8 +1040,8 @@ public class MQTTTest extends MQTTTestSupport {
         compositeTopic.setForwardOnly(false);
 
         final VirtualDestinationInterceptor destinationInterceptor = new VirtualDestinationInterceptor();
-        destinationInterceptor.setVirtualDestinations(new VirtualDestination[] {compositeTopic} );
-        brokerService.setDestinationInterceptors(new DestinationInterceptor[] { destinationInterceptor });
+        destinationInterceptor.setVirtualDestinations(new VirtualDestination[]{compositeTopic});
+        brokerService.setDestinationInterceptors(new DestinationInterceptor[]{destinationInterceptor});
         brokerService.start();
         brokerService.waitUntilStarted();
 
