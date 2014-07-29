@@ -19,8 +19,8 @@ package org.apache.activemq.tool;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.ConnectionMetaData;
@@ -35,6 +35,7 @@ import org.apache.activemq.tool.reports.PerformanceReportWriter;
 import org.apache.activemq.tool.reports.VerbosePerfReportWriter;
 import org.apache.activemq.tool.reports.XmlFilePerfReportWriter;
 import org.apache.activemq.tool.sampler.CpuSamplerTask;
+import org.apache.activemq.tool.sampler.PerformanceSampler;
 import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
 import org.apache.activemq.tool.spi.SPIConnectionFactory;
 import org.slf4j.Logger;
@@ -49,7 +50,6 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
     // Properties
     protected JmsFactoryProperties factory = new JmsFactoryProperties();
     protected ThroughputSamplerTask tpSampler = new ThroughputSamplerTask();
-    protected CpuSamplerTask cpuSampler = new CpuSamplerTask();
 
     private int clientDestIndex;
     private int clientDestCount;
@@ -62,20 +62,40 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
 
         // Create performance sampler
         PerformanceReportWriter writer = createPerfWriter();
-        tpSampler.setPerfReportWriter(writer);
-        cpuSampler.setPerfReportWriter(writer);
-
         writer.openReportWriter();
         writer.writeProperties("jvmSettings", System.getProperties());
         writer.writeProperties("testSystemSettings", ReflectionUtil.retrieveObjectProperties(getSysTest()));
         writer.writeProperties("jmsFactorySettings", ReflectionUtil.retrieveObjectProperties(jmsConnFactory));
         writer.writeProperties("jmsClientSettings", ReflectionUtil.retrieveObjectProperties(getJmsClientProperties()));
-        writer.writeProperties("tpSamplerSettings", ReflectionUtil.retrieveObjectProperties(tpSampler));
-        writer.writeProperties("cpuSamplerSettings", ReflectionUtil.retrieveObjectProperties(cpuSampler));
 
+        // set up performance samplers indicated by the user
+        List<PerformanceSampler> samplers = new ArrayList<>();
+
+        Set<String> requestedSamplers = getSysTest().getSamplersSet();
+        if (requestedSamplers.contains(JmsClientSystemProperties.SAMPLER_TP)) {
+            writer.writeProperties("tpSamplerSettings", ReflectionUtil.retrieveObjectProperties(tpSampler));
+            samplers.add(tpSampler);
+        }
+
+        if (requestedSamplers.contains(JmsClientSystemProperties.SAMPLER_CPU)) {
+            CpuSamplerTask cpuSampler = new CpuSamplerTask();
+            writer.writeProperties("cpuSamplerSettings", ReflectionUtil.retrieveObjectProperties(cpuSampler));
+
+            try {
+                cpuSampler.createPlugin();
+                samplers.add(cpuSampler);
+            } catch (IOException e) {
+                LOG.warn("Unable to start CPU sampler plugin. Reason: " + e.getMessage());
+            }
+        }
+
+        // spawn client threads
         clientThreadGroup = new ThreadGroup(getSysTest().getClientPrefix() + " Thread Group");
-        for (int i = 0; i < getSysTest().getNumClients(); i++) {
-            distributeDestinations(getSysTest().getDestDistro(), i, getSysTest().getNumClients(), getSysTest().getTotalDests());
+
+        int numClients = getSysTest().getNumClients();
+        final CountDownLatch clientCompletionLatch = new CountDownLatch(numClients);
+        for (int i = 0; i < numClients; i++) {
+            distributeDestinations(getSysTest().getDestDistro(), i, numClients, getSysTest().getTotalDests());
 
             final String clientName = getSysTest().getClientPrefix() + i;
             final int clientDestIndex = this.clientDestIndex;
@@ -83,46 +103,53 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
             Thread t = new Thread(clientThreadGroup, new Runnable() {
                 public void run() {
                     runJmsClient(clientName, clientDestIndex, clientDestCount);
+                    LOG.info("Client completed");
+                    clientCompletionLatch.countDown();
                 }
             });
             t.setName(getSysTest().getClientPrefix() + i + " Thread");
             t.start();
         }
 
-        // Run samplers
-        if (getSysTest().getSamplers().indexOf(JmsClientSystemProperties.SAMPLER_TP) > -1) {
-            tpSampler.startSampler();
+        // start the samplers
+        final CountDownLatch samplerCompletionLatch = new CountDownLatch(requestedSamplers.size());
+        for (PerformanceSampler sampler : samplers) {
+            sampler.setPerfReportWriter(writer);
+            sampler.startSampler(samplerCompletionLatch, getClientRunBasis(), getClientRunDuration());
         }
 
-        if (getSysTest().getSamplers().indexOf(JmsClientSystemProperties.SAMPLER_CPU) > -1) {
+        try {
+            // wait for the clients to finish
+            clientCompletionLatch.await();
+            LOG.debug("All clients completed");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            // if count-based, ramp-down time is not relevant, shut the samplers down
+            if (getClientRunBasis() == ClientRunBasis.count) {
+                for (PerformanceSampler sampler : samplers) {
+                    sampler.finishSampling();
+                }
+            }
+
             try {
-                cpuSampler.createPlugin();
-                cpuSampler.startSampler();
-            } catch (IOException e) {
-                LOG.warn("Unable to start CPU sampler plugin. Reason: " + e.getMessage());
+                LOG.debug("Waiting for samplers to shut down");
+                samplerCompletionLatch.await();
+                LOG.debug("All samplers completed");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                writer.closeReportWriter();
             }
         }
-
-        tpSampler.waitUntilDone();
-        cpuSampler.waitUntilDone();
-
-        writer.closeReportWriter();
     }
+
+    protected abstract ClientRunBasis getClientRunBasis();
+
+    protected abstract long getClientRunDuration();
 
     public ThroughputSamplerTask getTpSampler() {
         return tpSampler;
-    }
-
-    public void setTpSampler(ThroughputSamplerTask tpSampler) {
-        this.tpSampler = tpSampler;
-    }
-
-    public CpuSamplerTask getCpuSampler() {
-        return cpuSampler;
-    }
-
-    public void setCpuSampler(CpuSamplerTask cpuSampler) {
-        this.cpuSampler = cpuSampler;
     }
 
     public JmsFactoryProperties getFactory() {

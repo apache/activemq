@@ -56,11 +56,12 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public void sendMessages() throws JMSException {
         // Send a specific number of messages
         if (client.getSendType().equalsIgnoreCase(JmsProducerProperties.COUNT_BASED_SENDING)) {
-            sendCountBasedMessages(client.getSendCount());
-
+            long sendCount = client.getSendCount();
+            sendCountBasedMessages(sendCount);
         // Send messages for a specific duration
         } else {
-            sendTimeBasedMessages(client.getSendDuration());
+            long sendDuration = client.getSendDuration();
+            sendTimeBasedMessages(sendDuration);
         }
     }
 
@@ -155,6 +156,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                 }
             }
         } finally {
+            LOG.info("Finished sending");
             getConnection().close();
         }
     }
@@ -243,6 +245,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                 }
             }
         } finally {
+            LOG.info("Finished sending");
             getConnection().close();
         }
     }
