@@ -58,7 +58,8 @@ public class PooledConnectionFactoryTest {
     @Test
     public void testClearAllConnections() throws Exception {
 
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(3);
@@ -89,7 +90,8 @@ public class PooledConnectionFactoryTest {
     @Test
     public void testMaxConnectionsAreCreated() throws Exception {
 
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(3);
@@ -108,7 +110,8 @@ public class PooledConnectionFactoryTest {
     @Test
     public void testConnectionsAreRotated() throws Exception {
 
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(10);
@@ -149,7 +152,8 @@ public class PooledConnectionFactoryTest {
     @Test
     public void testConnectionsArePooledAsyncCreate() throws Exception {
 
-        final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         final PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(1);
@@ -205,6 +209,7 @@ public class PooledConnectionFactoryTest {
 
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
         brokerService.addConnector("tcp://localhost:0");
         brokerService.start();
         brokerService.waitUntilStarted();
