@@ -147,7 +147,7 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
         bs = message.getContent();
         assertEquals(RETAINED, new String(bs.data, bs.offset, bs.length));
         assertTrue(message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY));
-        assertNull("Should not get second retained message from " + FORWARD_QUEUE, queueConsumer.receive(5000));
+        assertNull("Should not get second retained message from " + FORWARD_QUEUE, queueConsumer.receive(2000));
 
         // check whether we received retained message on mapped Topic, again
         message = (ActiveMQMessage) topicConsumer.receive(5000);
@@ -155,11 +155,11 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
         bs = message.getContent();
         assertEquals(RETAINED, new String(bs.data, bs.offset, bs.length));
         assertTrue(message.getBooleanProperty(RetainedMessageSubscriptionRecoveryPolicy.RETAINED_PROPERTY));
-        assertNull("Should not get second retained message from " + FORWARD_TOPIC, topicConsumer.receive(5000));
+        assertNull("Should not get second retained message from " + FORWARD_TOPIC, topicConsumer.receive(2000));
 
         // create second queue consumer and verify that it doesn't trigger message recovery
         final MessageConsumer queueConsumer2 = s.createConsumer(jmsQueue);
-        assertNull("Second consumer MUST not receive retained message from " + FORWARD_QUEUE, queueConsumer2.receive(5000));
+        assertNull("Second consumer MUST not receive retained message from " + FORWARD_QUEUE, queueConsumer2.receive(2000));
 
         activeMQConnection.close();
         provider.disconnect();

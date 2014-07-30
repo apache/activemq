@@ -51,7 +51,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
-import org.junit.runners.Parameterized.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,12 +65,8 @@ public class MQTTTestSupport {
     protected LinkedList<Throwable> exceptions = new LinkedList<Throwable>();
     protected boolean persistent;
     protected String protocolConfig;
-
-    @Parameter(0)
-    public String protocolScheme;
-
-    @Parameter(1)
-    public boolean useSSL;
+    protected String protocolScheme;
+    protected boolean useSSL;
 
     public static final int AT_MOST_ONCE = 0;
     public static final int AT_LEAST_ONCE = 1;
@@ -89,9 +84,9 @@ public class MQTTTestSupport {
         this.useSSL = false;
     }
 
-    public MQTTTestSupport(String connectorScheme, boolean useSsl) {
+    public MQTTTestSupport(String connectorScheme, boolean useSSL) {
         this.protocolScheme = connectorScheme;
-        this.useSSL = useSsl;
+        this.useSSL = useSSL;
     }
 
     public String getName() {

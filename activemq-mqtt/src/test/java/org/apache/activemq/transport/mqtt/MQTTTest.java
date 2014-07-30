@@ -27,7 +27,6 @@ import static org.junit.Assert.fail;
 import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -64,28 +63,14 @@ import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.fusesource.mqtt.codec.PUBLISH;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(Parameterized.class)
 public class MQTTTest extends MQTTTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTTest.class);
 
     private static final int NUM_MESSAGES = 250;
-
-    @Parameters(name= "{index}: scheme({0})")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                {"mqtt", false},
-                {"mqtt+ssl", true},
-                {"mqtt+nio", false}
-                // TODO - Fails {"mqtt+nio+ssl", true}
-            });
-    }
 
     @Test(timeout = 60 * 1000)
     public void testSendAndReceiveMQTT() throws Exception {

@@ -20,8 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,24 +34,12 @@ import org.apache.activemq.ActiveMQConnection;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(Parameterized.class)
 public class PahoMQTTTest extends MQTTTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(PahoMQTTTest.class);
-
-    @Parameters(name= "{index}: scheme({0})")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                {"mqtt", false},
-                {"mqtt+nio", false}
-            });
-    }
 
     @Test(timeout = 300000)
     public void testLotsOfClients() throws Exception {
