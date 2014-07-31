@@ -117,16 +117,15 @@ public abstract class AbstractJmsClient {
         } else {
             Destination[] dest = new Destination[destCount];
             for (int i = 0; i < destCount; i++) {
-                String destName = getClient().getDestName();
-                if (destCount > 1) {
-                    // more than one destination used in this test; append a numerical suffix
-                    destName = destName + "." + (destIndex + i);
-                } // else just use the destination name as is
-                dest[i] = createDestination(destName);
+                dest[i] = createDestination(withDestinationSuffix(getClient().getDestName(), i, destCount));
             }
 
             return dest;
         }
+    }
+
+    private String withDestinationSuffix(String name, int destIndex, int destCount) {
+        return (destCount == 1) ? name : name + "." + destIndex;
     }
 
     public Destination createCompositeDestination(int destIndex, int destCount) throws JMSException {
@@ -134,7 +133,6 @@ public abstract class AbstractJmsClient {
     }
 
     protected Destination createCompositeDestination(String name, int destIndex, int destCount) throws JMSException {
-        String compDestName;
         String simpleName;
 
         if (name.startsWith("queue://")) {
@@ -145,13 +143,13 @@ public abstract class AbstractJmsClient {
             simpleName = name;
         }
 
-        int i;
-        compDestName = name + "." + destIndex + ","; // First destination
-        for (i = 1; i < destCount - 1; i++) {
-            compDestName += simpleName + "." + (destIndex + i) + ",";
+        String compDestName = "";
+        for (int i = 0; i < destCount; i++) {
+            if (i > 0) {
+                compDestName += ",";
+            }
+            compDestName += withDestinationSuffix(simpleName, i, destCount);
         }
-        // Last destination (minus the comma)
-        compDestName += simpleName + "." + (destIndex + i);
 
         return createDestination(compDestName);
     }
