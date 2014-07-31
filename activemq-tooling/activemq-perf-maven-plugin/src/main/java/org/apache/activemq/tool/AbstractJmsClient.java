@@ -37,7 +37,7 @@ public abstract class AbstractJmsClient {
     protected int destCount = 1;
     protected int destIndex;
     protected String clientName = "";
-    
+
     private int internalTxCounter = 0;
 
     public AbstractJmsClient(ConnectionFactory factory) {
@@ -117,11 +117,14 @@ public abstract class AbstractJmsClient {
         } else {
             Destination[] dest = new Destination[destCount];
             for (int i = 0; i < destCount; i++) {
-                dest[i] = createDestination(getClient().getDestName() + "." + (destIndex + i));
+                dest[i] = createDestination(withDestinationSuffix(getClient().getDestName(), i, destCount));
             }
-
             return dest;
         }
+    }
+
+    private String withDestinationSuffix(String name, int destIndex, int destCount) {
+        return (destCount == 1) ? name : name + "." + destIndex;
     }
 
     public Destination createCompositeDestination(int destIndex, int destCount) throws JMSException {
@@ -129,7 +132,6 @@ public abstract class AbstractJmsClient {
     }
 
     protected Destination createCompositeDestination(String name, int destIndex, int destCount) throws JMSException {
-        String compDestName;
         String simpleName;
 
         if (name.startsWith("queue://")) {
@@ -140,13 +142,13 @@ public abstract class AbstractJmsClient {
             simpleName = name;
         }
 
-        int i;
-        compDestName = name + "." + destIndex + ","; // First destination
-        for (i = 1; i < destCount - 1; i++) {
-            compDestName += simpleName + "." + (destIndex + i) + ",";
+        String compDestName = "";
+        for (int i = 0; i < destCount; i++) {
+            if (i > 0) {
+                compDestName += ",";
+            }
+            compDestName += withDestinationSuffix(simpleName, i, destCount);
         }
-        // Last destination (minus the comma)
-        compDestName += simpleName + "." + (destIndex + i);
 
         return createDestination(compDestName);
     }
@@ -161,24 +163,24 @@ public abstract class AbstractJmsClient {
         }
     }
 
-    /** 
-     * Helper method that checks if session is 
-     * transacted and whether to commit the tx based on commitAfterXMsgs 
-     * property. 
-     * 
-     * @return true if transaction was committed. 
+    /**
+     * Helper method that checks if session is
+     * transacted and whether to commit the tx based on commitAfterXMsgs
+     * property.
+     *
+     * @return true if transaction was committed.
      * @throws JMSException in case the call to JMS Session.commit() fails.
      */
     public boolean commitTxIfNecessary() throws JMSException {
-    	
-    	internalTxCounter++;
+
+        internalTxCounter++;
         if (getClient().isSessTransacted()) {
-        	if ((internalTxCounter % getClient().getCommitAfterXMsgs()) == 0) {
-        		LOG.debug("Committing transaction.");
-        		internalTxCounter = 0;
-        		getSession().commit();
-        		return true;
-        	}
+            if ((internalTxCounter % getClient().getCommitAfterXMsgs()) == 0) {
+                LOG.debug("Committing transaction.");
+                internalTxCounter = 0;
+                getSession().commit();
+                return true;
+            }
         }
         return false;
     }
