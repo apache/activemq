@@ -117,7 +117,12 @@ public abstract class AbstractJmsClient {
         } else {
             Destination[] dest = new Destination[destCount];
             for (int i = 0; i < destCount; i++) {
-                dest[i] = createDestination(getClient().getDestName() + "." + (destIndex + i));
+                String destName = getClient().getDestName();
+                if (destCount > 1) {
+                    // more than one destination used in this test; append a numerical suffix
+                    destName = destName + "." + (destIndex + i);
+                } // else just use the destination name as is
+                dest[i] = createDestination(destName);
             }
 
             return dest;
