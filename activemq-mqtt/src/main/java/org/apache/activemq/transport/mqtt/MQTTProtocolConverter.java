@@ -40,6 +40,7 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.virtual.VirtualTopicInterceptor;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -500,7 +501,11 @@ public class MQTTProtocolConverter {
             for (Subscription subscription : dest.getConsumers()) {
                 if (subscription.getConsumerInfo().getConsumerId().equals(consumerId)) {
                     try {
-                        ((org.apache.activemq.broker.region.Topic)dest).recoverRetroactiveMessages(connectionContext, subscription);
+                        if (dest instanceof org.apache.activemq.broker.region.Topic) {
+                            ((org.apache.activemq.broker.region.Topic)dest).recoverRetroactiveMessages(connectionContext, subscription);
+                        } else if (dest instanceof VirtualTopicInterceptor) {
+                            ((VirtualTopicInterceptor)dest).getTopic().recoverRetroactiveMessages(connectionContext, subscription);
+                        }
                         if (subscription instanceof PrefetchSubscription) {
                             // request dispatch for prefetch subs
                             PrefetchSubscription prefetchSubscription = (PrefetchSubscription) subscription;
@@ -917,7 +922,6 @@ public class MQTTProtocolConverter {
                 case '>':
                     chars[i] = '#';
                     break;
-
                 case '+':
                     chars[i] = '*';
                     break;
