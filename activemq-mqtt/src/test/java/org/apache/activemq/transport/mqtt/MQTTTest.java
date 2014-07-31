@@ -518,14 +518,14 @@ public class MQTTTest extends MQTTTestSupport {
             assertEquals(RETAIN, new String(msg.getPayload()));
             msg.ack();
             assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
-            connection.unsubscribe(new String[]{"TopicA"});
+            connection.unsubscribe(new String[]{TOPICA});
 
             // clear retained message and check that we don't receive it
             connection.publish(TOPICA, "".getBytes(), QoS.AT_MOST_ONCE, true);
             connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
             msg = connection.receive(500, TimeUnit.MILLISECONDS);
             assertNull("Retained message not cleared for " + clientId, msg);
-            connection.unsubscribe(new String[]{"TopicA"});
+            connection.unsubscribe(new String[]{TOPICA});
 
             // set retained message again and check
             connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
@@ -547,8 +547,7 @@ public class MQTTTest extends MQTTTestSupport {
             msg.ack();
             assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
 
-            connection.unsubscribe(new String[]{"TopicA"});
-
+            connection.unsubscribe(new String[]{TOPICA});
             connection.disconnect();
         }
     }
