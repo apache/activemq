@@ -20,14 +20,14 @@ import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     private static final Integer AMQP_PORT = 61636;
 
