@@ -30,6 +30,19 @@ public class TempDestinationAuthorizationEntry extends AuthorizationEntry {
         // we don't need to check if destination is specified since
         // the TempDestinationAuthorizationEntry should map to all temp
         // destinations
+
+
+        if (adminRoles != null) {
+            setAdminACLs(parseACLs(adminRoles));
+        }
+
+        if (writeRoles != null) {
+            setWriteACLs(parseACLs(writeRoles));
+        }
+
+        if (readRoles != null) {
+            setReadACLs(parseACLs(readRoles));
+        }
     }
 
 }
