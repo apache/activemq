@@ -28,8 +28,8 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
-import static org.ops4j.pax.exam.CoreOptions.scanFeatures;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
 @RunWith(JUnit4TestRunner.class)
 public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeatureTest {
@@ -40,7 +40,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeature
         Option[] baseOptions = append(
                 replaceConfigurationFile("data/tmp/camel.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/camel.xml")),
                 configure("activemq", "activemq-camel"));
-        return configureBrokerStart(append(scanFeatures(getCamelFeatureUrl(
+        return configureBrokerStart(append(features(getCamelFeatureUrl(
                 MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")
         ), "activemq-camel"), baseOptions));
     }
