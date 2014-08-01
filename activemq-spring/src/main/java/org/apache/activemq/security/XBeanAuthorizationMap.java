@@ -57,6 +57,11 @@ public class XBeanAuthorizationMap extends DefaultAuthorizationMap implements In
             }
             ((XBeanAuthorizationEntry)entry).afterPropertiesSet();
         }
+
+        // also check group class of temp destination ACL
+        if (getTempDestinationAuthorizationEntry() != null && getTempDestinationAuthorizationEntry().getGroupClass() != null) {
+            getTempDestinationAuthorizationEntry().afterPropertiesSet();
+        }
         super.setEntries(authorizationEntries);
     }
 
