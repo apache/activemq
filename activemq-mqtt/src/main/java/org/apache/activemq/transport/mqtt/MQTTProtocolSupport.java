@@ -16,6 +16,17 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import org.fusesource.mqtt.codec.CONNECT;
+import org.fusesource.mqtt.codec.DISCONNECT;
+import org.fusesource.mqtt.codec.PINGREQ;
+import org.fusesource.mqtt.codec.PUBACK;
+import org.fusesource.mqtt.codec.PUBCOMP;
+import org.fusesource.mqtt.codec.PUBLISH;
+import org.fusesource.mqtt.codec.PUBREC;
+import org.fusesource.mqtt.codec.PUBREL;
+import org.fusesource.mqtt.codec.SUBSCRIBE;
+import org.fusesource.mqtt.codec.UNSUBSCRIBE;
+
 /**
  * A set of static methods useful for handling MQTT based client connections.
  */
@@ -69,5 +80,42 @@ public class MQTTProtocolSupport {
      */
     public static String convertActiveMQToMQTT(String destinationName) {
         return destinationName.replace('.', '/');
+    }
+
+    /**
+     * Given an MQTT header byte, determine the command type that the header
+     * represents.
+     *
+     * @param header
+     *        the byte value for the MQTT frame header.
+     *
+     * @return a string value for the given command type.
+     */
+    public static String commandType(byte header) {
+        byte messageType = (byte) ((header & 0xF0) >>> 4);
+        switch (messageType) {
+            case PINGREQ.TYPE:
+                return "PINGREQ";
+            case CONNECT.TYPE:
+                return "CONNECT";
+            case DISCONNECT.TYPE:
+                return "DISCONNECT";
+            case SUBSCRIBE.TYPE:
+                return "SUBSCRIBE";
+            case UNSUBSCRIBE.TYPE:
+                return "UNSUBSCRIBE";
+            case PUBLISH.TYPE:
+                return "PUBLISH";
+            case PUBACK.TYPE:
+                return "PUBACK";
+            case PUBREC.TYPE:
+                return "PUBREC";
+            case PUBREL.TYPE:
+                return "PUBREL";
+            case PUBCOMP.TYPE:
+                return "PUBCOMP";
+            default:
+                return "UNKNOWN";
+        }
     }
 }
