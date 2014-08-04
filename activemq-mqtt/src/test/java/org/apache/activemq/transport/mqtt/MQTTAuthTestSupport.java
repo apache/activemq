@@ -34,6 +34,14 @@ import org.apache.activemq.security.TempDestinationAuthorizationEntry;
  */
 public class MQTTAuthTestSupport extends MQTTTestSupport {
 
+    public MQTTAuthTestSupport() {
+        super();
+    }
+
+    public MQTTAuthTestSupport(String connectorScheme, boolean useSSL) {
+        super(connectorScheme, useSSL);
+    }
+
     @Override
     protected BrokerPlugin configureAuthentication() throws Exception {
         List<AuthenticationUser> users = new ArrayList<AuthenticationUser>();
