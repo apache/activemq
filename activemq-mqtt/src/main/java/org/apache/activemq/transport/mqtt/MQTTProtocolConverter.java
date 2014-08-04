@@ -40,6 +40,7 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.virtual.VirtualTopicInterceptor;
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -414,7 +415,6 @@ public class MQTTProtocolConverter {
 
         final String topicName = topic.name().toString();
         final QoS topicQoS = topic.qos();
-        ActiveMQDestination destination = new ActiveMQTopic(convertMQTTToActiveMQ(topicName));
 
         if (mqttSubscriptionByTopic.containsKey(topicName)) {
             final MQTTSubscription mqttSubscription = mqttSubscriptionByTopic.get(topicName);
@@ -423,10 +423,12 @@ public class MQTTProtocolConverter {
                 onUnSubscribe(topicName);
             } else {
                 // duplicate SUBSCRIBE packet, find all matching topics and re-send retained messages
-                resendRetainedMessages(topicName, destination, mqttSubscription);
+                resendRetainedMessages(mqttSubscription);
                 return (byte) topicQoS.ordinal();
             }
         }
+
+        ActiveMQDestination destination = new ActiveMQTopic(MQTTProtocolSupport.convertMQTTToActiveMQ(topicName));
 
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
@@ -438,7 +440,7 @@ public class MQTTProtocolConverter {
         if (!connect.cleanSession() && connect.clientId() != null && topicQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal()) {
             consumerInfo.setSubscriptionName(topicQoS + ":" + topicName);
         }
-        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topicQoS, consumerInfo);
+        MQTTSubscription mqttSubscription = new MQTTSubscription(this, topicName, topicQoS, consumerInfo);
 
         // optimistic add to local maps first to be able to handle commands in onActiveMQCommand
         subscriptionsByConsumerId.put(id, mqttSubscription);
@@ -468,14 +470,17 @@ public class MQTTProtocolConverter {
         return qos[0];
     }
 
-    private void resendRetainedMessages(String topicName, ActiveMQDestination destination,
-                                        MQTTSubscription mqttSubscription) throws MQTTProtocolException {
+    private void resendRetainedMessages(MQTTSubscription mqttSubscription) throws MQTTProtocolException {
+
+        ActiveMQDestination destination = mqttSubscription.getDestination();
+
         // check whether the Topic has been recovered in restoreDurableSubs
         // mark subscription available for recovery for duplicate subscription
         if (restoredSubs.remove(destination.getPhysicalName())) {
             return;
         }
 
+        String topicName = mqttSubscription.getTopicName();
         // get TopicRegion
         RegionBroker regionBroker;
         try {
@@ -500,7 +505,11 @@ public class MQTTProtocolConverter {
             for (Subscription subscription : dest.getConsumers()) {
                 if (subscription.getConsumerInfo().getConsumerId().equals(consumerId)) {
                     try {
-                        ((org.apache.activemq.broker.region.Topic)dest).recoverRetroactiveMessages(connectionContext, subscription);
+                        if (dest instanceof org.apache.activemq.broker.region.Topic) {
+                            ((org.apache.activemq.broker.region.Topic)dest).recoverRetroactiveMessages(connectionContext, subscription);
+                        } else if (dest instanceof VirtualTopicInterceptor) {
+                            ((VirtualTopicInterceptor)dest).getTopic().recoverRetroactiveMessages(connectionContext, subscription);
+                        }
                         if (subscription instanceof PrefetchSubscription) {
                             // request dispatch for prefetch subs
                             PrefetchSubscription prefetchSubscription = (PrefetchSubscription) subscription;
@@ -545,7 +554,7 @@ public class MQTTProtocolConverter {
             // check if the durable sub also needs to be removed
             if (subs.getConsumerInfo().getSubscriptionName() != null) {
                 // also remove it from restored durable subscriptions set
-                restoredSubs.remove(convertMQTTToActiveMQ(topicName));
+                restoredSubs.remove(MQTTProtocolSupport.convertMQTTToActiveMQ(topicName));
 
                 RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
                 rsi.setConnectionId(connectionId);
@@ -675,7 +684,7 @@ public class MQTTProtocolConverter {
         synchronized (activeMQTopicMap) {
             topic = activeMQTopicMap.get(command.topicName());
             if (topic == null) {
-                String topicName = convertMQTTToActiveMQ(command.topicName().toString());
+                String topicName = MQTTProtocolSupport.convertMQTTToActiveMQ(command.topicName().toString());
                 topic = new ActiveMQTopic(topicName);
                 activeMQTopicMap.put(command.topicName().toString(), topic);
             }
@@ -705,7 +714,7 @@ public class MQTTProtocolConverter {
         synchronized (mqttTopicMap) {
             topicName = mqttTopicMap.get(message.getJMSDestination());
             if (topicName == null) {
-                topicName = convertActiveMQToMQTT(message.getDestination().getPhysicalName());
+                topicName = MQTTProtocolSupport.convertActiveMQToMQTT(message.getDestination().getPhysicalName());
                 mqttTopicMap.put(message.getJMSDestination(), topicName);
             }
         }
@@ -750,10 +759,6 @@ public class MQTTProtocolConverter {
             }
         }
         return result;
-    }
-
-    private String convertActiveMQToMQTT(String physicalName) {
-        return physicalName.replace('.', '/');
     }
 
     public MQTTTransport getMQTTTransport() {
@@ -847,18 +852,6 @@ public class MQTTProtocolConverter {
         }
     }
 
-    String getClientId() {
-        if (clientId == null) {
-            if (connect != null && connect.clientId() != null) {
-                clientId = connect.clientId().toString();
-            }
-            else {
-                clientId = "";
-            }
-        }
-        return clientId;
-    }
-
     private void stopTransport() {
         try {
             getMQTTTransport().stop();
@@ -907,35 +900,6 @@ public class MQTTProtocolConverter {
         return null;
     }
 
-    private String convertMQTTToActiveMQ(String name) {
-        char[] chars = name.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            switch(chars[i]) {
-                case '#':
-                    chars[i] = '>';
-                    break;
-                case '>':
-                    chars[i] = '#';
-                    break;
-
-                case '+':
-                    chars[i] = '*';
-                    break;
-                case '*':
-                    chars[i] = '+';
-                    break;
-                case '/':
-                    chars[i] = '.';
-                    break;
-                case '.':
-                    chars[i] = '/';
-                    break;
-            }
-        }
-        String rc = new String(chars);
-        return rc;
-    }
-
     public long getDefaultKeepAlive() {
         return defaultKeepAlive;
     }
@@ -974,5 +938,20 @@ public class MQTTProtocolConverter {
 
     public boolean getPublishDollarTopics() {
         return publishDollarTopics;
+    }
+
+    public ConnectionId getConnectionId() {
+        return connectionId;
+    }
+
+    public String getClientId() {
+        if (clientId == null) {
+            if (connect != null && connect.clientId() != null) {
+                clientId = connect.clientId().toString();
+            } else {
+                clientId = "";
+            }
+        }
+        return clientId;
     }
 }

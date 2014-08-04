@@ -51,6 +51,17 @@
       <version>1.6.2</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-atinject_1.0_spec</artifactId>
+      <version>1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+    </dependency>
+    <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
       <version>${pax-exam-version}</version>
@@ -105,9 +116,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.openengsb.labs.paxexam.karaf</groupId>
-      <artifactId>paxexam-karaf-container</artifactId>
-      <version>${paxexam-karaf-container-version}</version>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-karaf</artifactId>
+      <version>${pax-exam-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

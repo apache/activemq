@@ -21,21 +21,21 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
 
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.CoreOptions.scanFeatures;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
 
     @Configuration
     public static Option[] configure() {
         Option[] baseOptions = configure("activemq", "activemq-camel");
-        return configureBrokerStart(append(scanFeatures(getCamelFeatureUrl(
+        return configureBrokerStart(append(features(getCamelFeatureUrl(
                 MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")
         ), "activemq-camel"), baseOptions), "activemq-nd-camel");
     }

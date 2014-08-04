@@ -18,6 +18,7 @@ package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
 import java.util.zip.DataFormatException;
+
 import javax.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -31,24 +32,47 @@ import org.fusesource.mqtt.codec.PUBLISH;
 /**
  * Keeps track of the MQTT client subscription so that acking is correctly done.
  */
-class MQTTSubscription {
+public class MQTTSubscription {
+
     private final MQTTProtocolConverter protocolConverter;
 
     private final ConsumerInfo consumerInfo;
-    private ActiveMQDestination destination;
+    private final String topicName;
     private final QoS qos;
 
-    public MQTTSubscription(MQTTProtocolConverter protocolConverter, QoS qos, ConsumerInfo consumerInfo) {
+    public MQTTSubscription(MQTTProtocolConverter protocolConverter, String topicName, QoS qos, ConsumerInfo consumerInfo) {
         this.protocolConverter = protocolConverter;
         this.consumerInfo = consumerInfo;
         this.qos = qos;
+        this.topicName = topicName;
     }
 
-    MessageAck createMessageAck(MessageDispatch md) {
+    /**
+     * Create a {@link MessageAck} that will acknowledge the given {@link MessageDispatch}.
+     *
+     * @param md
+     *        the {@link MessageDispatch} to acknowledge.
+     *
+     * @return a new {@link MessageAck} command to acknowledge the message.
+     */
+    public MessageAck createMessageAck(MessageDispatch md) {
         return new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
     }
 
-    PUBLISH createPublish(ActiveMQMessage message) throws DataFormatException, IOException, JMSException {
+    /**
+     * Creates a PUBLISH command that can be sent to a remote client from an
+     * incoming {@link ActiveMQMessage} instance.
+     *
+     * @param message
+     *        the message to convert to a PUBLISH command.
+     *
+     * @return a new PUBLISH command that is populated from the {@link ActiveMQMessage}.
+     *
+     * @throws DataFormatException
+     * @throws IOException
+     * @throws JMSException
+     */
+    public PUBLISH createPublish(ActiveMQMessage message) throws DataFormatException, IOException, JMSException {
         PUBLISH publish = protocolConverter.convertMessage(message);
         if (publish.qos().ordinal() > this.qos.ordinal()) {
             publish.qos(this.qos);
@@ -63,6 +87,15 @@ class MQTTSubscription {
         return publish;
     }
 
+    /**
+     * Given a PUBLISH command determine if it will expect an ACK based on the
+     * QoS of the Publish command and the QoS of this subscription.
+     *
+     * @param publish
+     *        The publish command to inspect.
+     *
+     * @return true if the client will expect an PUBACK for this PUBLISH.
+     */
     public boolean expectAck(PUBLISH publish) {
         QoS publishQoS = publish.qos();
         if (publishQoS.compareTo(this.qos) > 0){
@@ -71,12 +104,35 @@ class MQTTSubscription {
         return !publishQoS.equals(QoS.AT_MOST_ONCE);
     }
 
+    /**
+     * @returns the original topic name value the client used when subscribing.
+     */
+    public String getTopicName() {
+        return this.topicName;
+    }
+
+    /**
+     * The real {@link ActiveMQDestination} that this subscription is assigned.
+     *
+     * @return the real {@link ActiveMQDestination} assigned to this subscription.
+     */
+    public ActiveMQDestination getDestination() {
+        return consumerInfo.getDestination();
+    }
+
+    /**
+     * Gets the {@link ConsumerInfo} that describes the subscription sent to ActiveMQ.
+     *
+     * @return the {@link ConsumerInfo} used to create this subscription.
+     */
     public ConsumerInfo getConsumerInfo() {
         return consumerInfo;
     }
 
+    /**
+     * @return the assigned QoS value for this subscription.
+     */
     public QoS qos() {
         return qos;
     }
-
 }

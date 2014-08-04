@@ -20,10 +20,11 @@ import java.io.IOException;
 
 import org.apache.activemq.command.Response;
 
-
 /**
  * Interface used by the MQTTProtocolConverter for callbacks.
  */
-interface ResponseHandler {
+public interface ResponseHandler {
+
     void onResponse(MQTTProtocolConverter converter, Response response) throws IOException;
+
 }
