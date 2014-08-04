@@ -122,6 +122,16 @@ public class AbstractJmsClientTest {
     }
 
     @Test
+    public void testCreateDestinations_multipleComposite() throws JMSException {
+        clientProperties.setDestComposite(true);
+        clientProperties.setDestName("queue://foo,queue://cheese");
+        Destination[] destinations = jmsClient.createDestinations(1);
+        assertEquals(1, destinations.length);
+        // suffixes should be added
+        assertDestinationNameType("foo,cheese", QUEUE_TYPE, asAmqDest(destinations[0]));
+    }
+
+    @Test
     public void testCreateDestinations_composite() throws JMSException {
         clientProperties.setDestComposite(true);
         Destination[] destinations = jmsClient.createDestinations(2);

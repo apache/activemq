@@ -35,6 +35,7 @@ public abstract class AbstractJmsClient {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractJmsClient.class);
     private static final String QUEUE_SCHEME = "queue://";
     private static final String TOPIC_SCHEME = "topic://";
+    public static final String DESTINATION_SEPARATOR = ",";
 
     protected ConnectionFactory factory;
     protected Connection jmsConnection;
@@ -117,16 +118,39 @@ public abstract class AbstractJmsClient {
     public Destination[] createDestinations(int destCount) throws JMSException {
         final String destName = getClient().getDestName();
         ArrayList<Destination> destinations = new ArrayList<>();
-        if (destName.contains(",")) {
-            LOG.info("User requested multiple destinations created from \"{}\"; splitting", destName);
-            String[] destinationNames = destName.split(",");
-            for (String splitDestName : destinationNames) {
-                addDestinations(destinations, splitDestName, destCount);
+        if (destName.contains(DESTINATION_SEPARATOR)) {
+            if (getClient().isDestComposite() && (destCount == 1)) {
+                // user was explicit about which destinations to make composite
+                String[] simpleNames = mapToSimpleNames(destName.split(DESTINATION_SEPARATOR));
+                String joinedSimpleNames = join(simpleNames, DESTINATION_SEPARATOR);
+
+                // use the type of the 1st destination for the Destination instance
+                byte destinationType = getDestinationType(destName);
+                destinations.add(createCompositeDestination(destinationType, joinedSimpleNames, 1));
+            } else {
+                LOG.info("User requested multiple destinations, splitting: {}", destName);
+                // either composite with multiple destinations to be suffixed
+                // or multiple non-composite destinations
+                String[] destinationNames = destName.split(DESTINATION_SEPARATOR);
+                for (String splitDestName : destinationNames) {
+                    addDestinations(destinations, splitDestName, destCount);
+                }
             }
         } else {
             addDestinations(destinations, destName, destCount);
         }
         return destinations.toArray(new Destination[] {});
+    }
+
+    private String join(String[] stings, String separator) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < stings.length; i++) {
+            if (i > 0) {
+                sb.append(separator);
+            }
+            sb.append(stings[i]);
+        }
+        return sb.toString();
     }
 
     private void addDestinations(List<Destination> destinations, String destName, int destCount) throws JMSException {
@@ -145,7 +169,10 @@ public abstract class AbstractJmsClient {
     }
 
     protected Destination createCompositeDestination(String destName, int destCount) throws JMSException {
-        byte destinationType = getDestinationType(destName);
+        return createCompositeDestination(getDestinationType(destName), destName, destCount);
+    }
+
+    protected Destination createCompositeDestination(byte destinationType, String destName, int destCount) throws JMSException {
         String simpleName = getSimpleName(destName);
 
         String compDestName = "";
@@ -159,6 +186,15 @@ public abstract class AbstractJmsClient {
         LOG.info("Creating composite destination: {}", compDestName);
         return (destinationType == ActiveMQDestination.TOPIC_TYPE) ?
                 getSession().createTopic(compDestName) : getSession().createQueue(compDestName);
+    }
+
+    private String[] mapToSimpleNames(String[] destNames) {
+        assert (destNames != null);
+        String[] simpleNames = new String[destNames.length];
+        for (int i = 0; i < destNames.length; i++) {
+            simpleNames[i] = getSimpleName(destNames[i]);
+        }
+        return simpleNames;
     }
 
     private String getSimpleName(String destName) {
