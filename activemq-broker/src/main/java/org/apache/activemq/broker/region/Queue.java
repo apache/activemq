@@ -1232,9 +1232,17 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } finally {
             pagedInMessagesLock.readLock().unlock();
         }
-        LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, destinationStatistics.getMessages().getCount(), memoryUsage.getPercentUsage()});
+        int messagesInQueue = 0;
+        messagesLock.readLock().lock();
+        try {
+            messagesInQueue = messages.size();
+        } finally {
+            messagesLock.readLock().unlock();
+        }
+
+        LOG.trace("max {}, alreadyPagedIn {}, messagesCount {}, memoryUsage {}%", new Object[]{max, alreadyPagedIn, messagesInQueue, memoryUsage.getPercentUsage()});
         return (alreadyPagedIn < max)
-                && (alreadyPagedIn < destinationStatistics.getMessages().getCount())
+                && (alreadyPagedIn < messagesInQueue)
                 && messages.hasSpace();
     }
 
