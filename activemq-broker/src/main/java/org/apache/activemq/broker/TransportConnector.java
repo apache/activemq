@@ -90,9 +90,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 setEnableStatusMonitor(false);
             }
         }
-        if (server != null){
-            setAllowLinkStealing(server.isAllowLinkStealing());
-        }
     }
 
     /**
@@ -582,7 +579,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     @Override
     public boolean isAllowLinkStealing() {
-        return allowLinkStealing;
+        return server.isAllowLinkStealing();
     }
 
     public void setAllowLinkStealing (boolean allowLinkStealing) {
