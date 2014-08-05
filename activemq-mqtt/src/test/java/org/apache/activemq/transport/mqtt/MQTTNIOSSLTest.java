@@ -14,28 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.karaf.itest;
+package org.apache.activemq.transport.mqtt;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.junit.PaxExam;
+/**
+ * Run the basic tests with the NIO Transport.
+ */
+public class MQTTNIOSSLTest extends MQTTTest {
 
-@RunWith(PaxExam.class)
-public class ActiveMQClientBundleTest extends AbstractFeatureTest {
-
-    @Configuration
-    public static Option[] configure() {
-        return configure("activemq-client");
+    @Override
+    public String getProtocolScheme() {
+        return "mqtt+nio+ssl";
     }
 
-    @Test
-    public void test() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        factory.getBrokerURL();
-
-        // todo: validate connection to remote broker
+    @Override
+    public boolean isUseSSL() {
+        return true;
     }
 }

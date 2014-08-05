@@ -23,13 +23,14 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import javax.net.SocketFactory;
+
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
 
 public class MQTTNIOSSLTransport extends NIOSSLTransport {
 
-    MQTTCodec codec;
+    private MQTTCodec codec;
 
     public MQTTNIOSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -55,5 +56,4 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
         DataByteArrayInputStream dis = new DataByteArrayInputStream(fill);
         codec.parse(dis, fill.length);
     }
-
 }

@@ -19,6 +19,7 @@ package org.apache.activemq.transport.mqtt;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.security.ProtectionDomain;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -157,6 +158,7 @@ public class MQTTTestSupport {
 
         brokerService.start();
         brokerService.waitUntilStarted();
+        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
     }
 
     protected void applyMemoryLimitPolicy() throws Exception {
@@ -214,7 +216,11 @@ public class MQTTTestSupport {
             connectorURI.append("?").append(protocolConfig);
         }
 
-        port = brokerService.addConnector(connectorURI.toString()).getConnectUri().getPort();
+        TransportConnector connector = new TransportConnector();
+        connector.setUri(new URI(connectorURI.toString()));
+        connector.setName("mqtt");
+        brokerService.addConnector(connector);
+
         LOG.info("Added connector {} to broker", getProtocolScheme());
     }
 

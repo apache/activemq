@@ -66,9 +66,13 @@ public class MQTTAuthTests extends MQTTAuthTestSupport {
         return Arrays.asList(new Object[][] {
                 {"mqtt", false},
                 {"mqtt+ssl", true},
-                {"mqtt+nio", false}
-                // TODO - Fails {"mqtt+nio+ssl", true}
+                {"mqtt+nio", false},
+                {"mqtt+nio+ssl", true}
             });
+    }
+
+    public MQTTAuthTests(String connectorScheme, boolean useSSL) {
+        super(connectorScheme, useSSL);
     }
 
     @Test(timeout = 60 * 1000)
