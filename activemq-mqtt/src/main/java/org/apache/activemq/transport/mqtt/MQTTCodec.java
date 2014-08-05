@@ -19,31 +19,27 @@ package org.apache.activemq.transport.mqtt;
 import java.io.IOException;
 
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
-import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.mqtt.codec.MQTTFrame;
 
 public class MQTTCodec {
 
     private final MQTTFrameSink frameSink;
-    private final DataByteArrayOutputStream currentCommand = new DataByteArrayOutputStream();
+
     private byte header;
-
     private int contentLength = -1;
-    private int payLoadRead = 0;
-
-    public interface MQTTFrameSink {
-        void onFrame(MQTTFrame mqttFrame);
-    }
 
     private FrameParser currentParser;
 
-    // Internal parsers implement this and we switch to the next as we go.
-    private interface FrameParser {
+    private final Buffer scratch = new Buffer(8 * 1024);
+    private Buffer currentBuffer;
 
-        void parse(DataByteArrayInputStream data, int readSize) throws IOException;
-
-        void reset() throws IOException;
+    /**
+     * Sink for newly decoded MQTT Frames.
+     */
+    public interface MQTTFrameSink {
+        void onFrame(MQTTFrame mqttFrame);
     }
 
     public MQTTCodec(MQTTFrameSink sink) {
@@ -70,7 +66,16 @@ public class MQTTCodec {
     }
 
     private void processCommand() throws IOException {
-        MQTTFrame frame = new MQTTFrame(currentCommand.toBuffer().deepCopy()).header(header);
+
+        Buffer frameContents = null;
+        if (currentBuffer == scratch) {
+            frameContents = scratch.deepCopy();
+        } else {
+            frameContents = currentBuffer;
+            currentBuffer = null;
+        }
+
+        MQTTFrame frame = new MQTTFrame(frameContents).header(header);
         frameSink.onFrame(frame);
     }
 
@@ -93,6 +98,13 @@ public class MQTTCodec {
 
     //----- Frame parser implementations -------------------------------------//
 
+    private interface FrameParser {
+
+        void parse(DataByteArrayInputStream data, int readSize) throws IOException;
+
+        void reset() throws IOException;
+    }
+
     private final FrameParser headerParser = new FrameParser() {
 
         @Override
@@ -108,7 +120,9 @@ public class MQTTCodec {
                 header = b;
 
                 currentParser = initializeVariableLengthParser();
-                currentParser.parse(data, readSize - 1);
+                if (readSize > 1) {
+                    currentParser.parse(data, readSize - 1);
+                }
                 return;
             }
         }
@@ -116,32 +130,7 @@ public class MQTTCodec {
         @Override
         public void reset() throws IOException {
             header = -1;
-        }
-    };
-
-    private final FrameParser contentParser = new FrameParser() {
-
-        @Override
-        public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
-            int i = 0;
-            while (i++ < readSize) {
-                currentCommand.write(data.readByte());
-                payLoadRead++;
-
-                if (payLoadRead == contentLength) {
-                    processCommand();
-                    currentParser = initializeHeaderParser();
-                    currentParser.parse(data, readSize - i);
-                    return;
-                }
-            }
-        }
-
-        @Override
-        public void reset() throws IOException {
             contentLength = -1;
-            payLoadRead = 0;
-            currentCommand.reset();
         }
     };
 
@@ -166,7 +155,11 @@ public class MQTTCodec {
                         currentParser = initializeContentParser();
                         contentLength = length;
                     }
-                    currentParser.parse(data, readSize - i);
+
+                    readSize = readSize - i;
+                    if (readSize > 0) {
+                        currentParser.parse(data, readSize);
+                    }
                     return;
                 }
             }
@@ -177,6 +170,43 @@ public class MQTTCodec {
             digit = 0;
             multiplier = 1;
             length = 0;
+        }
+    };
+
+    private final FrameParser contentParser = new FrameParser() {
+
+        private int payLoadRead = 0;
+
+        @Override
+        public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
+            if (currentBuffer == null) {
+                if (contentLength < scratch.length()) {
+                    currentBuffer = scratch;
+                    currentBuffer.length = contentLength;
+                } else {
+                    currentBuffer = new Buffer(contentLength);
+                }
+            }
+
+            int length = Math.min(readSize, contentLength - payLoadRead);
+            payLoadRead += data.read(currentBuffer.data, payLoadRead, length);
+
+            if (payLoadRead == contentLength) {
+                processCommand();
+                currentParser = initializeHeaderParser();
+                readSize = readSize - payLoadRead;
+                if (readSize > 0) {
+                    currentParser.parse(data, readSize);
+                }
+            }
+        }
+
+        @Override
+        public void reset() throws IOException {
+            contentLength = -1;
+            payLoadRead = 0;
+            scratch.reset();
+            currentBuffer = null;
         }
     };
 }

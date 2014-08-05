@@ -22,13 +22,18 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.hawtbuf.DataByteArrayOutputStream;
 import org.fusesource.hawtbuf.UTF8Buffer;
+import org.fusesource.mqtt.client.QoS;
+import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.codec.CONNECT;
 import org.fusesource.mqtt.codec.MQTTFrame;
+import org.fusesource.mqtt.codec.PUBLISH;
+import org.fusesource.mqtt.codec.SUBSCRIBE;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,6 +50,9 @@ public class MQTTCodecTest {
 
     private List<MQTTFrame> frames;
     private MQTTCodec codec;
+
+    private final int MESSAGE_SIZE = 5 * 1024 * 1024;
+    private final int ITERATIONS = 1000;
 
     @Before
     public void setUp() throws Exception {
@@ -78,6 +86,45 @@ public class MQTTCodecTest {
         connect = new CONNECT().decode(frames.get(0));
         LOG.info("Unmarshalled: {}", connect);
         assertTrue(connect.cleanSession());
+    }
+
+    @Test
+    public void testConnectThenSubscribe() throws Exception {
+
+        CONNECT connect = new CONNECT();
+        connect.cleanSession(true);
+        connect.clientId(new UTF8Buffer(""));
+
+        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
+        wireFormat.marshal(connect.encode(), output);
+        Buffer marshalled = output.toBuffer();
+
+        DataByteArrayInputStream input = new DataByteArrayInputStream(marshalled);
+        codec.parse(input, marshalled.length());
+
+        assertTrue(!frames.isEmpty());
+        assertEquals(1, frames.size());
+
+        connect = new CONNECT().decode(frames.get(0));
+        LOG.info("Unmarshalled: {}", connect);
+        assertTrue(connect.cleanSession());
+
+        frames.clear();
+
+        SUBSCRIBE subscribe = new SUBSCRIBE();
+        subscribe.topics(new Topic[] {new Topic("TEST", QoS.EXACTLY_ONCE) });
+
+        output = new DataByteArrayOutputStream();
+        wireFormat.marshal(subscribe.encode(), output);
+        marshalled = output.toBuffer();
+
+        input = new DataByteArrayInputStream(marshalled);
+        codec.parse(input, marshalled.length());
+
+        assertTrue(!frames.isEmpty());
+        assertEquals(1, frames.size());
+
+        subscribe = new SUBSCRIBE().decode(frames.get(0));
     }
 
     @Test
@@ -174,5 +221,72 @@ public class MQTTCodecTest {
         assertEquals("user", connect.userName().toString());
         assertEquals("pass", connect.password().toString());
         assertEquals("test", connect.clientId().toString());
+    }
+
+    @Test
+    public void testMessageDecoding() throws Exception {
+
+        byte[] CONTENTS = new byte[MESSAGE_SIZE];
+        for (int i = 0; i < MESSAGE_SIZE; i++) {
+            CONTENTS[i] = 'a';
+        }
+
+        PUBLISH publish = new PUBLISH();
+
+        publish.dup(false);
+        publish.messageId((short) 127);
+        publish.qos(QoS.AT_LEAST_ONCE);
+        publish.payload(new Buffer(CONTENTS));
+        publish.topicName(new UTF8Buffer("TOPIC"));
+
+        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
+        wireFormat.marshal(publish.encode(), output);
+        Buffer marshalled = output.toBuffer();
+
+        DataByteArrayInputStream input = new DataByteArrayInputStream(marshalled);
+        codec.parse(input, marshalled.length());
+
+        assertTrue(!frames.isEmpty());
+        assertEquals(1, frames.size());
+
+        publish = new PUBLISH().decode(frames.get(0));
+        assertFalse(publish.dup());
+        assertEquals(MESSAGE_SIZE, publish.payload().length());
+    }
+
+    @Test
+    public void testMessageDecodingPerformance() throws Exception {
+
+        byte[] CONTENTS = new byte[MESSAGE_SIZE];
+        for (int i = 0; i < MESSAGE_SIZE; i++) {
+            CONTENTS[i] = 'a';
+        }
+
+        PUBLISH publish = new PUBLISH();
+
+        publish.dup(false);
+        publish.messageId((short) 127);
+        publish.qos(QoS.AT_LEAST_ONCE);
+        publish.payload(new Buffer(CONTENTS));
+        publish.topicName(new UTF8Buffer("TOPIC"));
+
+        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
+        wireFormat.marshal(publish.encode(), output);
+        Buffer marshalled = output.toBuffer();
+
+        long startTime = System.currentTimeMillis();
+
+        for (int i = 0; i < ITERATIONS; ++i) {
+            DataByteArrayInputStream input = new DataByteArrayInputStream(marshalled);
+            codec.parse(input, marshalled.length());
+
+            assertTrue(!frames.isEmpty());
+            publish = new PUBLISH().decode(frames.get(0));
+            frames.clear();
+        }
+
+        long duration = System.currentTimeMillis() - startTime;
+
+        LOG.info("Total time to process: {}", TimeUnit.MILLISECONDS.toSeconds(duration));
     }
 }
