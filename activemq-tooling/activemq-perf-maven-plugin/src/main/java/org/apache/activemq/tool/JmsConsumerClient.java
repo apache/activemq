@@ -26,6 +26,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Topic;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.activemq.tool.properties.JmsConsumerProperties;
 import org.slf4j.Logger;
@@ -208,12 +209,18 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
     }
 
     public MessageConsumer createJmsConsumer() throws JMSException {
-        Destination[] dest = createDestination(destIndex, destCount);
+        Destination[] dest = createDestinations(destCount);
+
+        Destination consumedDestination = dest[0];
+        if (dest.length > 1) {
+            String destinationName = ((ActiveMQDestination) consumedDestination).getPhysicalName();
+            LOG.warn("Multiple destinations requested for consumer; using only first: {}", destinationName);
+        }
 
         if (this.client.getMessageSelector() == null)
-            return createJmsConsumer(dest[0]);
+            return createJmsConsumer(consumedDestination);
         else
-            return createJmsConsumer(dest[0], this.client.getMessageSelector(), false);
+            return createJmsConsumer(consumedDestination, this.client.getMessageSelector(), false);
     }
 
     public MessageConsumer createJmsConsumer(Destination dest) throws JMSException {
