@@ -23,7 +23,13 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 
+import javax.jms.Connection;
+import javax.jms.Message;
+import javax.jms.Session;
+import javax.jms.TemporaryQueue;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4TestRunner.class)
@@ -61,6 +67,17 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
         System.err.println(executeCommand("activemq:bstat").trim());
 
         assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
+    }
+
+    @Test
+    public void testTemporaryDestinations() throws Throwable {
+        Connection connection = getConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        TemporaryQueue temporaryQueue = session.createTemporaryQueue();
+        session.createProducer(temporaryQueue).send(session.createTextMessage("TEST"));
+        Message msg = session.createConsumer(temporaryQueue).receive(3000);
+        assertNotNull("Didn't receive the message", msg);
+        connection.close();
     }
 
 }
