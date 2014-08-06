@@ -17,6 +17,8 @@
 package org.apache.activemq.karaf.itest;
 
 import java.util.concurrent.Callable;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -70,6 +72,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
     }
 
     @Test
+    @Ignore
     public void testTemporaryDestinations() throws Throwable {
         Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
