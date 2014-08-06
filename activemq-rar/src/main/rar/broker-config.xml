@@ -37,7 +37,7 @@
      </persistenceAdapter>
 
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616"/>
+      <transportConnector name="openwire" uri="tcp://localhost:61616"/>
     </transportConnectors>
     
   </broker>
