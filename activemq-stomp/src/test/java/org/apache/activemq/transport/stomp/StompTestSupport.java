@@ -37,6 +37,7 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.plugin.StatisticsBrokerPlugin;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.AuthorizationEntry;
 import org.apache.activemq.security.AuthorizationPlugin;
@@ -145,6 +146,8 @@ public class StompTestSupport {
         if (authorizationPlugin != null) {
             plugins.add(configureAuthentication());
         }
+
+        plugins.add(new StatisticsBrokerPlugin());
 
         if (!plugins.isEmpty()) {
             BrokerPlugin[] array = new BrokerPlugin[plugins.size()];

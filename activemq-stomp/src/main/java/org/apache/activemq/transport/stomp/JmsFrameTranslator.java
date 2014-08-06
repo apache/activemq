@@ -104,19 +104,23 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     public StompFrame convertMessage(ProtocolConverter converter,
             ActiveMQMessage message) throws IOException, JMSException {
 
+        StompFrame command = new StompFrame();
+        command.setAction(Stomp.Responses.MESSAGE);
+        Map<String, String> headers = new HashMap<String, String>(25);
+        command.setHeaders(headers);
+
+        FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
+                converter, message, command, this);
+
         if (message.getDataStructureType() == ActiveMQObjectMessage.DATA_STRUCTURE_TYPE) {
-            StompFrame command = new StompFrame();
-            command.setAction(Stomp.Responses.MESSAGE);
-            Map<String, String> headers = new HashMap<String, String>(25);
-            command.setHeaders(headers);
-
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
-
-            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
+            if (Stomp.Transformations.JMS_XML.toString().equals(headers.get(Stomp.Headers.TRANSFORMATION))) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_XML.toString());
-            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
+            } else if (Stomp.Transformations.JMS_JSON.toString().equals(headers.get(Stomp.Headers.TRANSFORMATION))) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_JSON.toString());
+            }
+
+            if (!headers.containsKey(Stomp.Headers.TRANSFORMATION)) {
+                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_XML.toString());
             }
 
             ActiveMQObjectMessage msg = (ActiveMQObjectMessage) message.copy();
@@ -126,18 +130,14 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
             return command;
 
         } else if (message.getDataStructureType() == ActiveMQMapMessage.DATA_STRUCTURE_TYPE) {
-            StompFrame command = new StompFrame();
-            command.setAction(Stomp.Responses.MESSAGE);
-            Map<String, String> headers = new HashMap<String, String>(25);
-            command.setHeaders(headers);
-
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
-
-            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
+            if (Stomp.Transformations.JMS_XML.toString().equals(headers.get(Stomp.Headers.TRANSFORMATION))) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_XML.toString());
-            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
+            } else if (Stomp.Transformations.JMS_JSON.toString().equals(headers.get(Stomp.Headers.TRANSFORMATION))) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_JSON.toString());
+            }
+
+            if (!headers.containsKey(Stomp.Headers.TRANSFORMATION)) {
+                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_XML.toString());
             }
 
             ActiveMQMapMessage msg = (ActiveMQMapMessage) message.copy();
@@ -146,22 +146,13 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
             return command;
         } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
                 AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
-
-            StompFrame command = new StompFrame();
-            command.setAction(Stomp.Responses.MESSAGE);
-            Map<String, String> headers = new HashMap<String, String>(25);
-            command.setHeaders(headers);
-
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
-
-            if (!headers.containsKey(Stomp.Headers.TRANSFORMATION)) {
+            if (Stomp.Transformations.JMS_XML.toString().equals(headers.get(Stomp.Headers.TRANSFORMATION))) {
+                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_XML.toString());
+            } else if (Stomp.Transformations.JMS_JSON.toString().equals(headers.get(Stomp.Headers.TRANSFORMATION))) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_JSON.toString());
             }
 
-            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_XML.toString());
-            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
+            if (!headers.containsKey(Stomp.Headers.TRANSFORMATION)) {
                 headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_JSON.toString());
             }
 
