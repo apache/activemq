@@ -26,7 +26,7 @@ import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
 
-class FuseMQQTTClientProvider implements MQTTClientProvider {
+public class FuseMQTTClientProvider implements MQTTClientProvider {
     private final MQTT mqtt = new MQTT();
     private BlockingConnection connection;
     @Override
