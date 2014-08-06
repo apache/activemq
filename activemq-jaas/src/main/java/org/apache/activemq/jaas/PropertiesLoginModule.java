@@ -54,6 +54,7 @@ public class PropertiesLoginModule implements LoginModule {
     private final Set<Principal> principals = new HashSet<Principal>();
     private File baseDir;
     private boolean loginSucceeded;
+    private boolean decrypt = true;
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
@@ -79,6 +80,15 @@ public class PropertiesLoginModule implements LoginModule {
                 LOG.debug("Reloading users from " + uf.getAbsolutePath());
             }
             users = new PrincipalProperties("user", uf, LOG);
+            if( decrypt ) {
+                try {
+                    EncryptionSupport.decrypt(users.getPrincipals());
+                } catch(NoClassDefFoundError e) {
+                    // this Happens whe jasypt is not on the classpath..
+                    decrypt = false;
+                    LOG.info("jasypt is not on the classpath: password decryption disabled.");
+                }
+            }
         }
 
         String groupsFile = (String) options.get(GROUP_FILE) + "";

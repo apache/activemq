@@ -29,6 +29,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.fusesource.hawtbuf.UTF8Buffer;
 
 /**
  * @openwire:marshaller code="1"
@@ -248,6 +249,18 @@ public class WireFormatInfo implements Command, MarshallAware {
 
     public void setTightEncodingEnabled(boolean tightEncodingEnabled) throws IOException {
         setProperty("TightEncodingEnabled", tightEncodingEnabled ? Boolean.TRUE : Boolean.FALSE);
+    }
+
+    public String getHost() throws IOException {
+        UTF8Buffer buff = (UTF8Buffer) getProperty("Host");
+        if( buff == null ) {
+            return null;
+        }
+        return (String) buff.toString();
+    }
+
+    public void setHost(String hostname) throws IOException {
+        setProperty("Host", hostname);
     }
 
     /**

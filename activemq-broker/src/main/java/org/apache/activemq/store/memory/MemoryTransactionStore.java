@@ -22,7 +22,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.store.AbstractMessageStore;
+import org.apache.activemq.store.InlineListenableFuture;
+import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.ProxyMessageStore;
@@ -33,9 +34,11 @@ import org.apache.activemq.store.TransactionStore;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware
@@ -46,7 +49,7 @@ import java.util.concurrent.Future;
 public class MemoryTransactionStore implements TransactionStore {
 
     protected ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
-    protected ConcurrentHashMap<TransactionId, Tx> preparedTransactions = new ConcurrentHashMap<TransactionId, Tx>();
+    protected Map<TransactionId, Tx> preparedTransactions = Collections.synchronizedMap(new LinkedHashMap<TransactionId, Tx>());
     protected final PersistenceAdapter persistenceAdapter;
 
     private boolean doingRecover;
@@ -117,6 +120,8 @@ public class MemoryTransactionStore implements TransactionStore {
         MessageStore getMessageStore();
 
         void run(ConnectionContext context) throws IOException;
+
+        void setMessageStore(MessageStore messageStore);
     }
 
     public interface RemoveMessageCommand {
@@ -132,7 +137,7 @@ public class MemoryTransactionStore implements TransactionStore {
     }
 
     public MessageStore proxy(MessageStore messageStore) {
-        return new ProxyMessageStore(messageStore) {
+        ProxyMessageStore proxyMessageStore = new ProxyMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), send);
@@ -144,15 +149,15 @@ public class MemoryTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
-            public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canoptimize) throws IOException {
+            public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canoptimize) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
@@ -165,6 +170,11 @@ public class MemoryTransactionStore implements TransactionStore {
                 MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
             }
         };
+        onProxyQueueStore(proxyMessageStore);
+        return proxyMessageStore;
+    }
+
+    protected void onProxyQueueStore(ProxyMessageStore proxyMessageStore) {
     }
 
     public TopicMessageStore proxy(TopicMessageStore messageStore) {
@@ -180,15 +190,15 @@ public class MemoryTransactionStore implements TransactionStore {
             }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
-            public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
+            public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
                 MemoryTransactionStore.this.addMessage(getDelegate(), message);
-                return AbstractMessageStore.FUTURE;
+                return new InlineListenableFuture();
              }
 
             @Override
@@ -309,6 +319,7 @@ public class MemoryTransactionStore implements TransactionStore {
         if (message.getTransactionId() != null) {
             Tx tx = getTx(message.getTransactionId());
             tx.add(new AddMessageCommand() {
+                MessageStore messageStore = destination;
                 public Message getMessage() {
                     return message;
                 }
@@ -320,6 +331,11 @@ public class MemoryTransactionStore implements TransactionStore {
 
                 public void run(ConnectionContext ctx) throws IOException {
                     destination.addMessage(ctx, message);
+                }
+
+                @Override
+                public void setMessageStore(MessageStore messageStore) {
+                    this.messageStore = messageStore;
                 }
 
             });

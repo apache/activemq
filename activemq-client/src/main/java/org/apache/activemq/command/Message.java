@@ -213,6 +213,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
                 properties = unmarsallProperties(marshalledProperties);
                 marshalledProperties = null;
             }
+        } else {
+            marshalledProperties = null;
         }
     }
 

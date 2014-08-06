@@ -32,9 +32,11 @@ import org.xml.sax.InputSource;
 public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
 
     private static final XPathFactory FACTORY = XPathFactory.newInstance();
-    private javax.xml.xpath.XPathExpression expression;
+    private final javax.xml.xpath.XPathExpression expression;
+    private final String xpathExpression;
 
     public JAXPXPathEvaluator(String xpathExpression) {
+        this.xpathExpression = xpathExpression;
         try {
             XPath xpath = FACTORY.newXPath();
             expression = xpath.compile(xpathExpression);
@@ -72,5 +74,10 @@ public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
         } catch (XPathExpressionException e) {
             return false;
         }
+    }
+
+    @Override
+    public String toString() {
+        return xpathExpression;
     }
 }

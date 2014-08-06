@@ -35,7 +35,6 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
-import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 
 public class JoramJmsTest extends TestCase {
@@ -52,7 +51,7 @@ public class JoramJmsTest extends TestCase {
         suite.addTestSuite(MessageHeaderTest.class);
         suite.addTestSuite(QueueBrowserTest.class);
         suite.addTestSuite(MessageTypeTest.class);
-        suite.addTestSuite(UnifiedSessionTest.class);
+        // suite.addTestSuite(UnifiedSessionTest.class);   // https://issues.apache.org/jira/browse/AMQ-4375
         suite.addTestSuite(TemporaryTopicTest.class);
         suite.addTestSuite(TopicConnectionTest.class);
         suite.addTestSuite(SelectorSyntaxTest.class);

@@ -33,7 +33,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
-import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.util.InsertionCountList;
@@ -91,7 +91,7 @@ public class Topic extends BaseDestination implements Task {
             subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
             setAlwaysRetroactive(true);
         } else {
-            subscriptionRecoveryPolicy = new NoSubscriptionRecoveryPolicy();
+            subscriptionRecoveryPolicy = new RetainedMessageSubscriptionRecoveryPolicy(null);
         }
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
     }
@@ -255,7 +255,7 @@ public class Topic extends BaseDestination implements Task {
                 // This destination might be a pattern
                 synchronized (consumers) {
                     consumers.add(subscription);
-                    topicStore.addSubsciption(info, subscription.getConsumerInfo().isRetroactive());
+                    topicStore.addSubscription(info, subscription.getConsumerInfo().isRetroactive());
                 }
             }
 
@@ -305,7 +305,7 @@ public class Topic extends BaseDestination implements Task {
         sub.remove(context, this, dispatched);
     }
 
-    protected void recoverRetroactiveMessages(ConnectionContext context, Subscription subscription) throws Exception {
+    public void recoverRetroactiveMessages(ConnectionContext context, Subscription subscription) throws Exception {
         if (subscription.getConsumerInfo().isRetroactive()) {
             subscriptionRecoveryPolicy.recover(context, this, subscription);
         }
@@ -340,7 +340,8 @@ public class Topic extends BaseDestination implements Task {
 
                 if (warnOnProducerFlowControl) {
                     warnOnProducerFlowControl = false;
-                    LOG.info("{}, Usage Manager memory limit reached for {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.", getActiveMQDestination().getQualifiedName());
+                    LOG.info("{}, Usage Manager memory limit reached {}. Producers will be throttled to the rate at which messages are removed from this destination to prevent flooding it. See http://activemq.apache.org/producer-flow-control.html for more info.",
+                            getActiveMQDestination().getQualifiedName(), memoryUsage.getLimit());
                 }
 
                 if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
@@ -497,6 +498,11 @@ public class Topic extends BaseDestination implements Task {
                         message.decrementReferenceCount();
                     }
                 }
+
+                @Override
+                public void afterRollback() throws Exception {
+                    message.decrementReferenceCount();
+                }
             });
 
         } else {
@@ -554,7 +560,7 @@ public class Topic extends BaseDestination implements Task {
         }
 
         if (getExpireMessagesPeriod() > 0) {
-            scheduler.schedualPeriodically(expireMessagesTask, getExpireMessagesPeriod());
+            scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
         }
     }
 
@@ -669,8 +675,14 @@ public class Topic extends BaseDestination implements Task {
         return subscriptionRecoveryPolicy;
     }
 
-    public void setSubscriptionRecoveryPolicy(SubscriptionRecoveryPolicy subscriptionRecoveryPolicy) {
-        this.subscriptionRecoveryPolicy = subscriptionRecoveryPolicy;
+    public void setSubscriptionRecoveryPolicy(SubscriptionRecoveryPolicy recoveryPolicy) {
+        if (this.subscriptionRecoveryPolicy != null && this.subscriptionRecoveryPolicy instanceof RetainedMessageSubscriptionRecoveryPolicy) {
+            // allow users to combine retained message policy with other ActiveMQ policies
+            RetainedMessageSubscriptionRecoveryPolicy policy = (RetainedMessageSubscriptionRecoveryPolicy) this.subscriptionRecoveryPolicy;
+            policy.setWrapped(recoveryPolicy);
+        } else {
+            this.subscriptionRecoveryPolicy = recoveryPolicy;
+        }
     }
 
     // Implementation methods
@@ -801,6 +813,17 @@ public class Topic extends BaseDestination implements Task {
                         destination,
                         durableTopicSubscription.pending }, exception);
             }
+        }
+    }
+
+    private void rollback(MessageId poisoned) {
+        dispatchLock.readLock().lock();
+        try {
+            for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {
+                durableTopicSubscription.getPending().rollback(poisoned);
+            }
+        } finally {
+            dispatchLock.readLock().unlock();
         }
     }
 

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- this file can only be parsed using the xbean-spring library -->
+<!-- START SNIPPET: example -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    <broker xmlns="http://activemq.apache.org/schema/core"
+            useJmx="false" persistent="false" populateJMSXUserID="true">
+
+        <destinations>
+            <queue physicalName="TEST.Q"/>
+        </destinations>
+
+        <transportConnectors>
+            <transportConnector name="default" uri="tcp://0.0.0.0:61616"/>
+        </transportConnectors>
+
+        <plugins>
+            <bean id="shiroPlugin"
+                  class="org.apache.activemq.shiro.ShiroPlugin"
+                  xmlns="http://www.springframework.org/schema/beans">
+                <property name="iniConfig">
+                    <value>
+                        [main]
+
+                        # Shiro object graph configuration here if desired/necessary
+
+                        [users]
+
+                        # users section format:
+                        #
+                        # username = password [, assignedRole1, assignedRole2, ..., assignedRoleN]
+                        #
+                        # for example:
+                        #
+                        # scott = tiger, users, administrators, advisory
+                        #
+                        # Roles and permissions assigned to roles are defined in the [roles] section
+                        # below. By transitive association, any user assigned a role is granted the
+                        # role's permissions.
+
+                        # ActiveMQ System User
+                        # needed for in-VM/local connections when authentication is enabled:
+                        system = manager, system
+
+                        [roles]
+
+                        # roles section format:
+                        #
+                        # roleName = wildcardPermission1, wildcardPermission2, ..., wildcardPermissionN
+
+                        # The 'system' role is assigned all permissions (*). Be careful when assigning
+                        # this to actual users other than then system user:
+                        system = *
+
+                        # Full access rights should generally be given to the ActiveMQ.Advisory.*
+                        # destinations because by default an ActiveMQConnection uses advisory topics to
+                        # get early knowledge of temp destination creation and deletion. For more info:
+                        #
+                        # http://activemq.apache.org/security.html
+                        #
+                        # So we create an 'advisory' role here with a wildcard/catch-all permissions
+                        # for all advisory topics. To make your life easy, ensure you assign this to
+                        # any/all users, e.g.
+                        #
+                        # jsmith = password, advisory, ...
+
+                        advisory = topic:ActiveMQ.Advisory*
+                    </value>
+                </property>
+            </bean>
+        </plugins>
+    </broker>
+
+</beans>

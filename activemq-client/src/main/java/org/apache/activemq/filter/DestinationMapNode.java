@@ -92,7 +92,7 @@ public class DestinationMapNode implements DestinationNode {
     }
 
     /**
-     * Returns a mutable List of the values available at this node in the tree
+     * Removes values available at this node in the tree
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public List removeValues() {
@@ -112,7 +112,11 @@ public class DestinationMapNode implements DestinationNode {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void removeDesendentValues(Set answer) {
-        answer.addAll(removeValues());
+        for (Map.Entry<String, DestinationNode> child : childNodes.entrySet()) {
+            // remove all the values from the child
+            answer.addAll(child.getValue().removeValues());
+            answer.addAll(child.getValue().removeDesendentValues());
+        }
     }
 
     /**
@@ -130,6 +134,15 @@ public class DestinationMapNode implements DestinationNode {
             values.add(value);
         } else {
             getChildOrCreate(paths[idx]).add(paths, idx + 1, value);
+        }
+    }
+
+    public void set(String[] paths, int idx, Object value) {
+        if (idx >= paths.length) {
+            values.clear();
+            values.add(value);
+        } else {
+            getChildOrCreate(paths[idx]).set(paths, idx + 1, value);
         }
     }
 
@@ -153,6 +166,7 @@ public class DestinationMapNode implements DestinationNode {
                 break;
             }
 
+            // TODO is this correct, we are appending wildcard values here???
             node.appendMatchingWildcards(answer, paths, i);
             if (path.equals(ANY_CHILD)) {
                 // node = node.getAnyChildNode();
@@ -170,10 +184,9 @@ public class DestinationMapNode implements DestinationNode {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void appendDescendantValues(Set answer) {
-        answer.addAll(values);
-
-        // lets add all the children too
+        // add children values, then recursively add their children
         for(DestinationNode child : childNodes.values()) {
+            answer.addAll(child.getValues());
             child.appendDescendantValues(answer);
         }
     }
@@ -199,6 +212,9 @@ public class DestinationMapNode implements DestinationNode {
         }
         wildCardNode = getChild(ANY_DESCENDENT);
         if (wildCardNode != null) {
+            // for a wildcard Node match, add all values of the descendant node
+            answer.addAll(wildCardNode.getValues());
+            // and all descendants for paths like ">.>"
             answer.addAll(wildCardNode.getDesendentValues());
         }
     }

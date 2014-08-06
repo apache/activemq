@@ -90,6 +90,8 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
     private int refreshInterval = -1;
     private boolean refreshDisabled = false;
 
+    protected String groupClass = DefaultAuthorizationMap.DEFAULT_GROUP_CLASS;
+
     // Internal State
     private long lastUpdated;
 
@@ -255,6 +257,7 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
         // Create and swap in the new instance with updated LDAP data.
         newMap.setAuthorizationEntries(new ArrayList<DestinationMapEntry>(entries.values()));
+        newMap.setGroupClass(groupClass);
         this.map.set(newMap);
 
         updated();
@@ -1105,6 +1108,15 @@ public class SimpleCachedLDAPAuthorizationMap implements AuthorizationMap {
 
     public void setRefreshInterval(int refreshInterval) {
         this.refreshInterval = refreshInterval;
+    }
+
+    public String getGroupClass() {
+        return groupClass;
+    }
+
+    public void setGroupClass(String groupClass) {
+        this.groupClass = groupClass;
+        map.get().setGroupClass(groupClass);
     }
 
     protected static enum DestinationType {

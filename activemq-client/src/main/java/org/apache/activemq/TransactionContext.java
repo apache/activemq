@@ -40,6 +40,7 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.slf4j.Logger;
@@ -71,9 +72,8 @@ public class TransactionContext implements XAResource {
     private final static HashMap<TransactionId, List<TransactionContext>> ENDED_XA_TRANSACTION_CONTEXTS =
     		new HashMap<TransactionId, List<TransactionContext>>();
 
-    private final ActiveMQConnection connection;
+    private ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;
-    private final ConnectionId connectionId;
     private List<Synchronization> synchronizations;
 
     // To track XA transactions.
@@ -82,10 +82,14 @@ public class TransactionContext implements XAResource {
     private LocalTransactionEventListener localTransactionEventListener;
     private int beforeEndIndex;
 
+    // for RAR recovery
+    public TransactionContext() {
+        localTransactionIdGenerator = null;
+    }
+
     public TransactionContext(ActiveMQConnection connection) {
         this.connection = connection;
         this.localTransactionIdGenerator = connection.getLocalTransactionIdGenerator();
-        this.connectionId = connection.getConnectionInfo().getConnectionId();
     }
 
     public boolean isInXATransaction() {
@@ -231,7 +235,7 @@ public class TransactionContext implements XAResource {
         if (transactionId == null) {
             synchronizations = null;
             beforeEndIndex = 0;
-            this.transactionId = new LocalTransactionId(connectionId, localTransactionIdGenerator.getNextSequenceId());
+            this.transactionId = new LocalTransactionId(getConnectionId(), localTransactionIdGenerator.getNextSequenceId());
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             this.connection.ensureConnectionInfoSent();
             this.connection.asyncSendPacket(info);
@@ -347,7 +351,7 @@ public class TransactionContext implements XAResource {
     public void start(Xid xid, int flags) throws XAException {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Start: " + xid);
+            LOG.debug("Start: " + xid + ", flags:" + flags);
         }
         if (isInLocalTransaction()) {
             throw new XAException(XAException.XAER_PROTO);
@@ -380,7 +384,7 @@ public class TransactionContext implements XAResource {
     public void end(Xid xid, int flags) throws XAException {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("End: " + xid);
+            LOG.debug("End: " + xid + ", flags:" + flags);
         }
 
         if (isInLocalTransaction()) {
@@ -639,9 +643,7 @@ public class TransactionContext implements XAResource {
     }
 
     public Xid[] recover(int flag) throws XAException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Recover: " + flag);
-        }
+        LOG.debug("recover({})", flag);
 
         TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
         try {
@@ -657,6 +659,7 @@ public class TransactionContext implements XAResource {
                 answer = new XATransactionId[data.length];
                 System.arraycopy(data, 0, answer, 0, data.length);
             }
+            LOG.debug("recover({})={}", flag, answer);
             return answer;
         } catch (JMSException e) {
             throw toXAException(e);
@@ -676,7 +679,7 @@ public class TransactionContext implements XAResource {
     // Helper methods.
     //
     // ///////////////////////////////////////////////////////////
-    private String getResourceManagerId() throws JMSException {
+    protected String getResourceManagerId() throws JMSException {
         return this.connection.getResourceManagerId();
     }
 
@@ -695,11 +698,11 @@ public class TransactionContext implements XAResource {
             associatedXid = xid;
             transactionId = new XATransactionId(xid);
 
-            TransactionInfo info = new TransactionInfo(connectionId, transactionId, TransactionInfo.BEGIN);
+            TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             try {
                 this.connection.asyncSendPacket(info);
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Started XA transaction: " + transactionId);
+                    LOG.debug("{} started XA transaction {} ", this, transactionId);
                 }
             } catch (JMSException e) {
                 disassociate();
@@ -709,11 +712,11 @@ public class TransactionContext implements XAResource {
         } else {
 
             if (transactionId != null) {
-                TransactionInfo info = new TransactionInfo(connectionId, transactionId, TransactionInfo.END);
+                TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.END);
                 try {
                     syncSendPacketWithInterruptionHandling(info);
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Ended XA transaction: " + transactionId);
+                        LOG.debug("{} ended XA transaction {}", this, transactionId);
                     }
                 } catch (JMSException e) {
                     disassociate();
@@ -800,6 +803,14 @@ public class TransactionContext implements XAResource {
         return connection;
     }
 
+
+    // for RAR xa recovery where xaresource connection is per request
+    public ActiveMQConnection setConnection(ActiveMQConnection connection) {
+        ActiveMQConnection existing = this.connection;
+        this.connection = connection;
+        return existing;
+    }
+
     public void cleanup() {
         associatedXid = null;
         transactionId = null;
@@ -809,6 +820,7 @@ public class TransactionContext implements XAResource {
     public String toString() {
         return "TransactionContext{" +
                 "transactionId=" + transactionId +
+                ",connection=" + connection +
                 '}';
     }
 }

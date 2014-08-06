@@ -44,7 +44,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     public void doStart() throws Exception {
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
-        String sql = statements.getLockCreateStatement();
+        String sql = getStatements().getLockCreateStatement();
         LOG.debug("Locking Query is "+sql);
         
         while (true) {
@@ -158,7 +158,7 @@ public class DefaultDatabaseLocker extends AbstractJDBCLocker {
     public boolean keepAlive() throws IOException {
         boolean result = false;
         try {
-            lockUpdateStatement = connection.prepareStatement(statements.getLockUpdateStatement());
+            lockUpdateStatement = connection.prepareStatement(getStatements().getLockUpdateStatement());
             lockUpdateStatement.setLong(1, System.currentTimeMillis());
             setQueryTimeout(lockUpdateStatement);
             int rows = lockUpdateStatement.executeUpdate();

@@ -21,10 +21,11 @@ import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.features.FeaturesService;
 import org.junit.After;
 import org.junit.Before;
-import org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.TestProbeBuilder;
-import org.ops4j.pax.exam.junit.ProbeBuilder;
+import org.ops4j.pax.exam.ProbeBuilder;
+import org.ops4j.pax.exam.karaf.options.KarafDistributionOption;
+import org.ops4j.pax.exam.karaf.options.LogLevelOption;
 import org.ops4j.pax.exam.options.UrlReference;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -45,10 +46,12 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 
-import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.openengsb.labs.paxexam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.junit.Assert.assertTrue;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
 public abstract class AbstractFeatureTest {
 
@@ -152,18 +155,8 @@ public abstract class AbstractFeatureTest {
 
 
 	public static String karafVersion() {
-        return System.getProperty("karafVersion", "2.3.3");
+        return System.getProperty("karafVersion", "unknown-need-env-var");
     }
-
-    public static String activemqVersion() {
-        Package p = Package.getPackage("org.apache.activemq");
-        String version=null;
-        if (p != null) {
-            version = p.getImplementationVersion();
-        }
-        return System.getProperty("activemqVersion", version);
-    }
-
 
     public static UrlReference getActiveMQKarafFeatureUrl() {
         String type = "xml/features";
@@ -220,15 +213,15 @@ public abstract class AbstractFeatureTest {
             new Option[]{
                 karafDistributionConfiguration().frameworkUrl(
                     maven().groupId("org.apache.karaf").artifactId("apache-karaf").type("tar.gz").version(karafVersion()))
-                    //This version doesn't affect the version of karaf we use 
+                    //This version doesn't affect the version of karaf we use
                     .karafVersion(karafVersion()).name("Apache Karaf")
                     .unpackDirectory(new File("target/paxexam/unpack/")),
-                
+
                 KarafDistributionOption.keepRuntimeFolder(),
-                //logLevel(LogLevelOption.LogLevel.DEBUG),
-                replaceConfigurationFile("etc/config.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/config.properties")),
+                logLevel(LogLevelOption.LogLevel.INFO),
+                replaceConfigurationFile("etc/config.properties", new File(basedir+"/target/classes/org/apache/activemq/karaf/itest/config.properties")),
                 replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
-                scanFeatures(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
+                features(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
 
         return options;
     }

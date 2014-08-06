@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 class DedicatedTaskRunner implements TaskRunner {
 
@@ -36,6 +36,7 @@ class DedicatedTaskRunner implements TaskRunner {
     public DedicatedTaskRunner(final Task task, String name, int priority, boolean daemon) {
         this.task = task;
         thread = new Thread(name) {
+            @Override
             public void run() {
                 try {
                     runTask();
@@ -52,6 +53,7 @@ class DedicatedTaskRunner implements TaskRunner {
 
     /**
      */
+    @Override
     public void wakeup() throws InterruptedException {
         synchronized (mutex) {
             if (shutdown) {
@@ -64,12 +66,13 @@ class DedicatedTaskRunner implements TaskRunner {
 
     /**
      * shut down the task
-     * 
+     *
      * @param timeout
      * @throws InterruptedException
      */
+    @Override
     public void shutdown(long timeout) throws InterruptedException {
-        LOG.trace("Shutdown timeout: {} task: {}", task);
+        LOG.trace("Shutdown timeout: {} task: {}", timeout, task);
         synchronized (mutex) {
             shutdown = true;
             pending = true;
@@ -85,9 +88,10 @@ class DedicatedTaskRunner implements TaskRunner {
 
     /**
      * shut down the task
-     * 
+     *
      * @throws InterruptedException
      */
+    @Override
     public void shutdown() throws InterruptedException {
         shutdown(0);
     }

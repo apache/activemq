@@ -20,14 +20,20 @@ import java.io.IOException;
 
 import org.apache.activemq.store.kahadb.data.KahaAckMessageFileMapCommand;
 import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaAddScheduledJobCommand;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
+import org.apache.activemq.store.kahadb.data.KahaDestroySchedulerCommand;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaProducerAuditCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
 import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveScheduledJobCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveScheduledJobsCommand;
+import org.apache.activemq.store.kahadb.data.KahaRescheduleJobCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
 import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
 import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
+import org.apache.activemq.store.kahadb.data.KahaUpdateMessageCommand;
 
 public class Visitor {
 
@@ -59,5 +65,23 @@ public class Visitor {
     }
 
     public void visit(KahaAckMessageFileMapCommand kahaProducerAuditCommand) throws IOException {
+    }
+
+    public void visit(KahaAddScheduledJobCommand kahaAddScheduledJobCommand) throws IOException {
+    }
+
+    public void visit(KahaRescheduleJobCommand KahaRescheduleJobCommand) throws IOException {
+    }
+
+    public void visit(KahaRemoveScheduledJobCommand kahaRemoveScheduledJobCommand) throws IOException {
+    }
+
+    public void visit(KahaRemoveScheduledJobsCommand kahaRemoveScheduledJobsCommand) throws IOException {
+    }
+
+    public void visit(KahaDestroySchedulerCommand KahaDestroySchedulerCommand) throws IOException {
+    }
+
+    public void visit(KahaUpdateMessageCommand kahaUpdateMessageCommand) throws IOException {
     }
 }

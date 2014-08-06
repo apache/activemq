@@ -149,5 +149,7 @@ public interface Region extends Service {
     Set <Destination>getDestinations(ActiveMQDestination destination);
     
     void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control);
+
+    void reapplyInterceptor();
     
 }

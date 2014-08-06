@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.bugs;
 
+import java.util.Arrays;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -31,12 +32,20 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.region.policy.FilePendingDurableSubscriberMessageStoragePolicy;
+import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RunWith(value = Parameterized.class)
 public class AMQ4656Test {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(AMQ4656Test.class);
@@ -45,9 +54,22 @@ public class AMQ4656Test {
 
     private String connectionUri;
 
+    @Parameterized.Parameter
+    public PendingDurableSubscriberMessageStoragePolicy pendingDurableSubPolicy;
+
+    @Parameterized.Parameters(name="{0}")
+    public static Iterable<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{new FilePendingDurableSubscriberMessageStoragePolicy()},{new StorePendingDurableSubscriberMessageStoragePolicy()}});
+    }
+
     @Before
     public void setUp() throws Exception {
         brokerService = new BrokerService();
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry defaultEntry = new PolicyEntry();
+        defaultEntry.setPendingDurableSubscriberPolicy(pendingDurableSubPolicy);
+        policyMap.setDefaultEntry(defaultEntry);
+        brokerService.setDestinationPolicy(policyMap);
         brokerService.setPersistent(false);
         brokerService.setUseJmx(true);
         brokerService.setDeleteAllMessagesOnStartup(true);

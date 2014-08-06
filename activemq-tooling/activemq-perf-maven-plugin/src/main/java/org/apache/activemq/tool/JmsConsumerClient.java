@@ -26,6 +26,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Topic;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.activemq.tool.properties.JmsConsumerProperties;
 import org.slf4j.Logger;
@@ -83,11 +84,9 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             LOG.info("Starting to synchronously receive messages for " + duration + " ms...");
             long endTime = System.currentTimeMillis() + duration;
 
-            int counter = 0;
             while (System.currentTimeMillis() < endTime) {
                 getJmsConsumer().receive();
                 incThroughput();
-                counter++;
                 sleep();
                 commitTxIfNecessary();
             }
@@ -134,13 +133,14 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         }
 
         getJmsConsumer().setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message msg) {
                 incThroughput();
                 sleep();
                 try {
-                	commitTxIfNecessary();
+                    commitTxIfNecessary();
                 } catch (JMSException ex) {
-                	LOG.error("Error committing transaction: " + ex.getMessage());
+                    LOG.error("Error committing transaction: " + ex.getMessage());
                 }
             }
         });
@@ -170,17 +170,18 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
         final AtomicInteger recvCount = new AtomicInteger(0);
         getJmsConsumer().setMessageListener(new MessageListener() {
+            @Override
             public void onMessage(Message msg) {
                 incThroughput();
                 recvCount.incrementAndGet();
                 synchronized (recvCount) {
                     recvCount.notify();
-                } 
-                
+                }
+
                 try {
-                	commitTxIfNecessary();
+                    commitTxIfNecessary();
                 } catch (JMSException ex) {
-                	LOG.error("Error committing transaction: " + ex.getMessage());
+                    LOG.error("Error committing transaction: " + ex.getMessage());
                 }
             }
         });
@@ -208,12 +209,19 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
     }
 
     public MessageConsumer createJmsConsumer() throws JMSException {
-        Destination[] dest = createDestination(destIndex, destCount);
-        
-        if (this.client.getMessageSelector() == null)
-        	return createJmsConsumer(dest[0]);
-        else 
-        	return createJmsConsumer(dest[0], this.client.getMessageSelector(), false);
+        Destination[] dest = createDestinations(destCount);
+
+        Destination consumedDestination = dest[0];
+        if (dest.length > 1) {
+            String destinationName = ((ActiveMQDestination) consumedDestination).getPhysicalName();
+            LOG.warn("Multiple destinations requested for consumer; using only first: {}", destinationName);
+        }
+
+        if (this.client.getMessageSelector() == null) {
+            return createJmsConsumer(consumedDestination);
+        } else {
+            return createJmsConsumer(consumedDestination, this.client.getMessageSelector(), false);
+        }
     }
 
     public MessageConsumer createJmsConsumer(Destination dest) throws JMSException {
@@ -252,26 +260,28 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         return jmsConsumer;
     }
 
+    @Override
     public JmsClientProperties getClient() {
         return client;
     }
 
+    @Override
     public void setClient(JmsClientProperties clientProps) {
         client = (JmsConsumerProperties)clientProps;
     }
-    
+
     /**
-     * A way to throttle the consumer. Time to sleep is 
-     * configured via recvDelay property. 
+     * A way to throttle the consumer. Time to sleep is
+     * configured via recvDelay property.
      */
     protected void sleep() {
         if (client.getRecvDelay() > 0) {
-        	try {
-        		LOG.trace("Sleeping for " + client.getRecvDelay() + " milliseconds");
-        		Thread.sleep(client.getRecvDelay());
-        	} catch (java.lang.InterruptedException ex) {
-        		LOG.warn(ex.getMessage());
-        	}
+            try {
+                LOG.trace("Sleeping for " + client.getRecvDelay() + " milliseconds");
+                Thread.sleep(client.getRecvDelay());
+            } catch (java.lang.InterruptedException ex) {
+                LOG.warn(ex.getMessage());
+            }
         }
     }
 }

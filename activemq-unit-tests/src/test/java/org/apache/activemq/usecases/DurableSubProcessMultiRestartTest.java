@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -38,6 +39,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -251,6 +253,12 @@ public class DurableSubProcessMultiRestartTest {
 
                 unsubscribe();
 
+            } catch (JMSException maybe) {
+                if (maybe.getCause() instanceof IOException) {
+                    // ok on broker shutdown;
+                } else {
+                    exit(toString() + " failed with JMSException", maybe);
+                }
             } catch (Throwable e) {
                 exit(toString() + " failed.", e);
             }

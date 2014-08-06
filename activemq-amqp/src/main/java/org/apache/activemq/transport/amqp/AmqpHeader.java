@@ -19,64 +19,63 @@ package org.apache.activemq.transport.amqp;
 import org.fusesource.hawtbuf.Buffer;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class AmqpHeader {
 
-    static final Buffer PREFIX = new Buffer(new byte[]{
-      'A', 'M', 'Q', 'P'
-    });
+    static final Buffer PREFIX = new Buffer(new byte[] { 'A', 'M', 'Q', 'P' });
 
     private Buffer buffer;
 
-    public AmqpHeader(){
-        this(new Buffer(new byte[]{
-          'A', 'M', 'Q', 'P', 0, 1, 0, 0
-        }));
+    public AmqpHeader() {
+        this(new Buffer(new byte[] { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 }));
     }
 
-    public AmqpHeader(Buffer buffer){
+    public AmqpHeader(Buffer buffer) {
         setBuffer(buffer);
     }
 
     public int getProtocolId() {
         return buffer.get(4) & 0xFF;
     }
+
     public void setProtocolId(int value) {
-        buffer.data[buffer.offset+4] = (byte) value;
+        buffer.data[buffer.offset + 4] = (byte) value;
     }
 
     public int getMajor() {
         return buffer.get(5) & 0xFF;
     }
+
     public void setMajor(int value) {
-        buffer.data[buffer.offset+5] = (byte) value;
+        buffer.data[buffer.offset + 5] = (byte) value;
     }
 
     public int getMinor() {
         return buffer.get(6) & 0xFF;
     }
+
     public void setMinor(int value) {
-        buffer.data[buffer.offset+6] = (byte) value;
+        buffer.data[buffer.offset + 6] = (byte) value;
     }
 
     public int getRevision() {
         return buffer.get(7) & 0xFF;
     }
+
     public void setRevision(int value) {
-        buffer.data[buffer.offset+7] = (byte) value;
+        buffer.data[buffer.offset + 7] = (byte) value;
     }
 
     public Buffer getBuffer() {
         return buffer;
     }
+
     public void setBuffer(Buffer value) {
-        if( !value.startsWith(PREFIX) || value.length()!=8 ) {
+        if (!value.startsWith(PREFIX) || value.length() != 8) {
             throw new IllegalArgumentException("Not an AMQP header buffer");
         }
         buffer = value.buffer();
     }
-
 
     @Override
     public String toString() {

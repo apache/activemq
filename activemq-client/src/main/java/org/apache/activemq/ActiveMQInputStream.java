@@ -43,6 +43,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
 /**
  *
  */
+@Deprecated
 public class ActiveMQInputStream extends InputStream implements ActiveMQDispatcher {
 
     private final ActiveMQConnection connection;

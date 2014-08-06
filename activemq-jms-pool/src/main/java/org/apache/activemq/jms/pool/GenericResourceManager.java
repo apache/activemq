@@ -151,7 +151,12 @@ public class GenericResourceManager {
                     @Override
                     public NamedXAResource getNamedXAResource() throws SystemException {
                         try {
-                            final XAConnection xaConnection = connFactory.createXAConnection(rm.getUserName(), rm.getPassword());
+                            final XAConnection xaConnection;
+                            if (rm.getUserName() != null && rm.getPassword() != null) {
+                                xaConnection = connFactory.createXAConnection(rm.getUserName(), rm.getPassword());
+                            } else {
+                                xaConnection = connFactory.createXAConnection();
+                            }
                             final XASession session = xaConnection.createXASession();
                             xaConnection.start();
                             LOGGER.debug("new namedXAResource's connection: " + xaConnection);

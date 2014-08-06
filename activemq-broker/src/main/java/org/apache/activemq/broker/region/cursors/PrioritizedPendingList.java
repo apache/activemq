@@ -156,4 +156,13 @@ public class PrioritizedPendingList implements PendingList {
         }
     }
 
+    @Override
+    public MessageReference get(MessageId messageId) {
+        PendingNode node = map.get(messageId);
+        if (node != null) {
+            return node.getMessage();
+        }
+        return null;
+    }
+
 }

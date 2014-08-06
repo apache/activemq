@@ -70,6 +70,16 @@ public interface DestinationViewMBean {
     long getDequeueCount();
 
     /**
+     * Returns the number of messages that have been acknowledged by network subscriptions from the
+     * destination.
+     *
+     * @return The number of messages that have been acknowledged by network subscriptions from the
+     *         destination.
+     */
+    @MBeanInfo("Number of messages that have been forwarded (to a networked broker) from the destination.")
+    long getForwardCount();
+
+    /**
      * Returns the number of messages that have been dispatched but not
      * acknowledged
      *

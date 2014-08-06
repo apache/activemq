@@ -303,6 +303,11 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     }
 
                     @Override
+                    public String getRemoteBrokerId() {
+                        return next.getRemoteBrokerId();
+                    }
+
+                    @Override
                     public String getLocalAddress() {
                         return next.getLocalAddress();
                     }
@@ -330,6 +335,10 @@ public class AMQ4160Test extends JmsMultipleBrokersTestSupport {
                     @Override
                     public ObjectName getMbeanObjectName() {
                         return next.getMbeanObjectName();
+                    }
+
+                    public void resetStats(){
+                        next.resetStats();
                     }
                 };
             }

@@ -178,7 +178,6 @@ public class RedeliveryPlugin extends BrokerPluginSupport {
 
         message.setTransactionId(null);
         message.setMemoryUsage(null);
-        message.setMarshalledProperties(null);
         message.removeProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
 
         message.setProperty(REDELIVERY_DELAY, delay);

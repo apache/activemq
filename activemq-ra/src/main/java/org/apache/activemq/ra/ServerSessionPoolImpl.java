@@ -30,6 +30,7 @@ import javax.jms.Session;
 import javax.resource.spi.UnavailableException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQQueueSession;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicSession;
@@ -60,7 +61,12 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
         MessageActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
-        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.getConnection().createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
+        final ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
+        if (connection == null) {
+            // redispatch of pending prefetched messages after disconnect can have a null connection
+            return null;
+        }
+        final ActiveMQSession session = (ActiveMQSession)connection.createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
         MessageEndpoint endpoint;
         try {
             int batchSize = 0;
@@ -221,11 +227,24 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         try {
             ActiveMQSession session = (ActiveMQSession)ss.getSession();
             List l = session.getUnconsumedMessages();
-            for (Iterator i = l.iterator(); i.hasNext();) {
-                dispatchToSession((MessageDispatch)i.next());
+            if (!l.isEmpty()) {
+                ActiveMQConnection connection = activeMQAsfEndpointWorker.getConnection();
+                if (connection != null) {
+                    for (Iterator i = l.iterator(); i.hasNext();) {
+                        MessageDispatch md = (MessageDispatch)i.next();
+                        if (connection.hasDispatcher(md.getConsumerId())) {
+                            dispatchToSession(md);
+                            LOG.trace("on remove of {} redispatch of {}", session, md);
+                        } else {
+                            LOG.trace("on remove not redispatching {}, dispatcher no longer present on {}", md, session.getConnection());
+                        }
+                    }
+                } else {
+                    LOG.trace("on remove of {} not redispatching while disconnected", session);
+                }
             }
         } catch (Throwable t) {
-            LOG.error("Error redispatching unconsumed messages from stale session", t);
+            LOG.error("Error redispatching unconsumed messages from stale server session {}", ss, t);
         }
         ss.close();
         synchronized (closing) {
@@ -262,7 +281,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
 
     public void close() {
         closing.set(true);
-        int activeCount = closeIdleSessions();
+        int activeCount = closeSessions();
         // we may have to wait erroneously 250ms if an
         // active session is removed during our wait and we
         // are not notified
@@ -278,14 +297,26 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
                 Thread.currentThread().interrupt();
                 return;
             }
-            activeCount = closeIdleSessions();
+            activeCount = closeSessions();
         }
     }
 
 
-    protected int closeIdleSessions() {
+    protected int closeSessions() {
         sessionLock.lock();
         try {
+            for (ServerSessionImpl ss : activeSessions) {
+                try {
+                    ActiveMQSession session = (ActiveMQSession) ss.getSession();
+                    if (!session.isClosed()) {
+                        session.close();
+                    }
+                } catch (JMSException ignored) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Failed to close active running server session {}, reason:{}", ss, ignored.toString(), ignored);
+                    }
+                }
+            }
             for (ServerSessionImpl ss : idleSessions) {
                 ss.close();
             }

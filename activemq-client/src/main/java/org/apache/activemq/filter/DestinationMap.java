@@ -35,8 +35,6 @@ import org.apache.activemq.command.ActiveMQDestination;
  * pretty fast. <br>
  * Looking up of a value could return a single value or a List of matching
  * values if a wildcard or composite destination is used.
- *
- *
  */
 public class DestinationMap {
     protected static final String ANY_DESCENDENT = DestinationFilter.ANY_DESCENDENT;
@@ -57,7 +55,7 @@ public class DestinationMap {
      * @return a List of matching values or an empty list if there are no
      *         matching values.
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public synchronized Set get(ActiveMQDestination key) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
@@ -66,7 +64,7 @@ public class DestinationMap {
                 ActiveMQDestination childDestination = destinations[i];
                 Object value = get(childDestination);
                 if (value instanceof Set) {
-                    answer.addAll((Set)value);
+                    answer.addAll((Set) value);
                 } else if (value != null) {
                     answer.add(value);
                 }
@@ -88,6 +86,7 @@ public class DestinationMap {
         String[] paths = key.getDestinationPaths();
         getRootNode(key).add(paths, 0, value);
     }
+
 
     /**
      * Removes the value from the associated destination
@@ -137,12 +136,12 @@ public class DestinationMap {
      * A helper method to allow the destination map to be populated from a
      * dependency injection framework such as Spring
      */
-    @SuppressWarnings({ "rawtypes" })
-    protected void setEntries(List<DestinationMapEntry>  entries) {
+    @SuppressWarnings({"rawtypes"})
+    protected void setEntries(List<DestinationMapEntry> entries) {
         for (Object element : entries) {
             Class<? extends DestinationMapEntry> type = getEntryClass();
             if (type.isInstance(element)) {
-                DestinationMapEntry entry = (DestinationMapEntry)element;
+                DestinationMapEntry entry = (DestinationMapEntry) element;
                 put(entry.getDestination(), entry.getValue());
             } else {
                 throw new IllegalArgumentException("Each entry must be an instance of type: " + type.getName() + " but was: " + element);
@@ -156,12 +155,12 @@ public class DestinationMap {
      * restrict the type of allowed entries to make a type safe destination map
      * for custom policies.
      */
-    @SuppressWarnings({ "rawtypes" })
+    @SuppressWarnings({"rawtypes"})
     protected Class<? extends DestinationMapEntry> getEntryClass() {
         return DestinationMapEntry.class;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected Set findWildcardMatches(ActiveMQDestination key) {
         String[] paths = key.getDestinationPaths();
         Set answer = new HashSet();
@@ -173,7 +172,7 @@ public class DestinationMap {
      * @param key
      * @return
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Set removeAll(ActiveMQDestination key) {
         Set rc = new HashSet();
         if (key.isComposite()) {
@@ -196,7 +195,7 @@ public class DestinationMap {
      * @param destination the destination to find the value for
      * @return the largest matching value or null if no value matches
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public Object chooseValue(ActiveMQDestination destination) {
         Set set = get(destination);
         if (set == null || set.isEmpty()) {
@@ -210,7 +209,7 @@ public class DestinationMap {
      * Returns the root node for the given destination type
      */
     protected DestinationMapNode getRootNode(ActiveMQDestination key) {
-        if (key.isTemporary()){
+        if (key.isTemporary()) {
             if (key.isQueue()) {
                 return tempQueueRootNode;
             } else {
@@ -232,14 +231,14 @@ public class DestinationMap {
         tempTopicRootNode = new DestinationMapNode(null);
     }
 
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return queueRootNode.isEmpty() && topicRootNode.isEmpty() && tempQueueRootNode.isEmpty() && tempTopicRootNode.isEmpty();
     }
 
     public static Set union(Set existing, Set candidates) {
-        if ( candidates != null ) {
+        if (candidates != null) {
             if (existing != null) {
-                for (Iterator<Object> iterator = existing.iterator(); iterator.hasNext();) {
+                for (Iterator<Object> iterator = existing.iterator(); iterator.hasNext(); ) {
                     Object toMatch = iterator.next();
                     if (!candidates.contains(toMatch)) {
                         iterator.remove();
@@ -248,7 +247,7 @@ public class DestinationMap {
             } else {
                 existing = candidates;
             }
-        } else if ( existing != null ) {
+        } else if (existing != null) {
             existing.clear();
         }
         return existing;

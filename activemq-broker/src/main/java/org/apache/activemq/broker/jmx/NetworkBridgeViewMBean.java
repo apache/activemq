@@ -26,6 +26,8 @@ public interface NetworkBridgeViewMBean extends Service {
 
     String getRemoteBrokerName();
 
+    String getRemoteBrokerId();
+
     String getLocalBrokerName();
 
     long getEnqueueCounter();
@@ -33,5 +35,7 @@ public interface NetworkBridgeViewMBean extends Service {
     long getDequeueCounter();
 
     boolean isCreatedByDuplex();
+
+    void resetStats();
 
 }

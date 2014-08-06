@@ -141,6 +141,9 @@ public class TransactedStoreUsageSuspendResumeTest {
 
         boolean allMessagesReceived = messagesReceivedCountDown.await(120, TimeUnit.SECONDS);
         assertTrue("Got all messages: " + messagesReceivedCountDown, allMessagesReceived);
+
+        // give consumers a chance to exit gracefully
+        TimeUnit.SECONDS.sleep(2);
     }
 
     private void sendMessages() throws Exception {

@@ -18,144 +18,195 @@ package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
 
-import javax.jms.JMSException;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
-import org.fusesource.hawtbuf.DataByteArrayOutputStream;
-import org.fusesource.mqtt.codec.*;
+import org.fusesource.mqtt.codec.MQTTFrame;
 
 public class MQTTCodec {
 
-    TcpTransport transport;
+    private final MQTTFrameSink frameSink;
 
-    DataByteArrayOutputStream currentCommand = new DataByteArrayOutputStream();
-    boolean processedHeader = false;
-    String action;
-    byte header;
-    int contentLength = -1;
-    int previousByte = -1;
-    int payLoadRead = 0;
+    private byte header;
+    private int contentLength = -1;
 
-    public MQTTCodec(TcpTransport transport) {
-        this.transport = transport;
+    private FrameParser currentParser;
+
+    private final Buffer scratch = new Buffer(8 * 1024);
+    private Buffer currentBuffer;
+
+    /**
+     * Sink for newly decoded MQTT Frames.
+     */
+    public interface MQTTFrameSink {
+        void onFrame(MQTTFrame mqttFrame);
+    }
+
+    public MQTTCodec(MQTTFrameSink sink) {
+        this.frameSink = sink;
+    }
+
+    public MQTTCodec(final TcpTransport transport) {
+        this.frameSink = new MQTTFrameSink() {
+
+            @Override
+            public void onFrame(MQTTFrame mqttFrame) {
+                transport.doConsume(mqttFrame);
+            }
+        };
     }
 
     public void parse(DataByteArrayInputStream input, int readSize) throws Exception {
-        int i = 0;
-        byte b;
-        while (i++ < readSize) {
-            b = input.readByte();
-            // skip repeating nulls
-            if (!processedHeader && b == 0) {
-                previousByte = 0;
-                continue;
-            }
+        if (currentParser == null) {
+            currentParser = initializeHeaderParser();
+        }
 
-            if (!processedHeader) {
-                i += processHeader(b, input);
-                if (contentLength == 0) {
-                    processCommand();
+        // Parser stack will run until current incoming data has all been consumed.
+        currentParser.parse(input, readSize);
+    }
+
+    private void processCommand() throws IOException {
+
+        Buffer frameContents = null;
+        if (currentBuffer == scratch) {
+            frameContents = scratch.deepCopy();
+        } else {
+            frameContents = currentBuffer;
+            currentBuffer = null;
+        }
+
+        MQTTFrame frame = new MQTTFrame(frameContents).header(header);
+        frameSink.onFrame(frame);
+    }
+
+    //----- Prepare the current frame parser for use -------------------------//
+
+    private FrameParser initializeHeaderParser() throws IOException {
+        headerParser.reset();
+        return headerParser;
+    }
+
+    private FrameParser initializeVariableLengthParser() throws IOException {
+        variableLengthParser.reset();
+        return variableLengthParser;
+    }
+
+    private FrameParser initializeContentParser() throws IOException {
+        contentParser.reset();
+        return contentParser;
+    }
+
+    //----- Frame parser implementations -------------------------------------//
+
+    private interface FrameParser {
+
+        void parse(DataByteArrayInputStream data, int readSize) throws IOException;
+
+        void reset() throws IOException;
+    }
+
+    private final FrameParser headerParser = new FrameParser() {
+
+        @Override
+        public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
+            int i = 0;
+            while (i++ < readSize) {
+                byte b = data.readByte();
+                // skip repeating nulls
+                if (b == 0) {
+                    continue;
                 }
 
-            } else {
+                header = b;
 
-                if (contentLength == -1) {
-                    // end of command reached, unmarshal
-                    if (b == 0) {
+                currentParser = initializeVariableLengthParser();
+                if (readSize > 1) {
+                    currentParser.parse(data, readSize - 1);
+                }
+                return;
+            }
+        }
+
+        @Override
+        public void reset() throws IOException {
+            header = -1;
+            contentLength = -1;
+        }
+    };
+
+    private final FrameParser variableLengthParser = new FrameParser() {
+
+        private byte digit;
+        private int multiplier = 1;
+        private int length;
+
+        @Override
+        public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
+            int i = 0;
+            while (i++ < readSize) {
+                digit = data.readByte();
+                length += (digit & 0x7F) * multiplier;
+                multiplier <<= 7;
+                if ((digit & 0x80) == 0) {
+                    if (length == 0) {
                         processCommand();
+                        currentParser = initializeHeaderParser();
                     } else {
-                        currentCommand.write(b);
+                        currentParser = initializeContentParser();
+                        contentLength = length;
                     }
+
+                    readSize = readSize - i;
+                    if (readSize > 0) {
+                        currentParser.parse(data, readSize);
+                    }
+                    return;
+                }
+            }
+        }
+
+        @Override
+        public void reset() throws IOException {
+            digit = 0;
+            multiplier = 1;
+            length = 0;
+        }
+    };
+
+    private final FrameParser contentParser = new FrameParser() {
+
+        private int payLoadRead = 0;
+
+        @Override
+        public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
+            if (currentBuffer == null) {
+                if (contentLength < scratch.length()) {
+                    currentBuffer = scratch;
+                    currentBuffer.length = contentLength;
                 } else {
-                    // read desired content length
-                    if (payLoadRead == contentLength) {
-                        processCommand();
-                        i += processHeader(b, input);
-                    } else {
-                        currentCommand.write(b);
-                        payLoadRead++;
-                    }
+                    currentBuffer = new Buffer(contentLength);
                 }
             }
 
-            previousByte = b;
-        }
-        if (processedHeader && payLoadRead == contentLength) {
-            processCommand();
-        }
-    }
+            int length = Math.min(readSize, contentLength - payLoadRead);
+            payLoadRead += data.read(currentBuffer.data, payLoadRead, length);
 
-    /**
-     * sets the content length
-     *
-     * @return number of bytes read
-     */
-    private int processHeader(byte header, DataByteArrayInputStream input) {
-        this.header = header;
-        byte digit;
-        int multiplier = 1;
-        int read = 0;
-        int length = 0;
-        do {
-            digit = input.readByte();
-            length += (digit & 0x7F) * multiplier;
-            multiplier <<= 7;
-            read++;
-        } while ((digit & 0x80) != 0);
-
-        contentLength = length;
-        processedHeader = true;
-        return read;
-    }
-
-
-    private void processCommand() throws Exception {
-        MQTTFrame frame = new MQTTFrame(currentCommand.toBuffer().deepCopy()).header(header);
-        transport.doConsume(frame);
-        processedHeader = false;
-        currentCommand.reset();
-        contentLength = -1;
-        payLoadRead = 0;
-    }
-
-    public static String commandType(byte header) throws IOException, JMSException {
-
-        byte messageType = (byte) ((header & 0xF0) >>> 4);
-        switch (messageType) {
-            case PINGREQ.TYPE: {
-                return "PINGREQ";
+            if (payLoadRead == contentLength) {
+                processCommand();
+                currentParser = initializeHeaderParser();
+                readSize = readSize - payLoadRead;
+                if (readSize > 0) {
+                    currentParser.parse(data, readSize);
+                }
             }
-            case CONNECT.TYPE: {
-                return "CONNECT";
-            }
-            case DISCONNECT.TYPE: {
-                return "DISCONNECT";
-            }
-            case SUBSCRIBE.TYPE: {
-                return "SUBSCRIBE";
-            }
-            case UNSUBSCRIBE.TYPE: {
-                return "UNSUBSCRIBE";
-            }
-            case PUBLISH.TYPE: {
-                return "PUBLISH";
-            }
-            case PUBACK.TYPE: {
-                return "PUBACK";
-            }
-            case PUBREC.TYPE: {
-                return "PUBREC";
-            }
-            case PUBREL.TYPE: {
-                return "PUBREL";
-            }
-            case PUBCOMP.TYPE: {
-                return "PUBCOMP";
-            }
-            default:
-                return "UNKNOWN";
         }
 
-    }
-
+        @Override
+        public void reset() throws IOException {
+            contentLength = -1;
+            payLoadRead = 0;
+            scratch.reset();
+            currentBuffer = null;
+        }
+    };
 }

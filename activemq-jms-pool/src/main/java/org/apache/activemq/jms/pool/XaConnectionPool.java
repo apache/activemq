@@ -27,10 +27,9 @@ import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
 /**
- * An XA-aware connection pool.  When a session is created and an xa transaction is active,
- * the session will automatically be enlisted in the current transaction.
- *
- * @author gnodet
+ * An XA-aware connection pool. When a session is created and an xa transaction
+ * is active, the session will automatically be enlisted in the current
+ * transaction.
  */
 public class XaConnectionPool extends ConnectionPool {
 
@@ -43,7 +42,7 @@ public class XaConnectionPool extends ConnectionPool {
 
     @Override
     protected Session makeSession(SessionKey key) throws JMSException {
-        return ((XAConnection)connection).createXASession();
+        return ((XAConnection) connection).createXASession();
     }
 
     @Override
@@ -51,7 +50,8 @@ public class XaConnectionPool extends ConnectionPool {
         try {
             boolean isXa = (transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION);
             if (isXa) {
-                // if the xa tx aborts inflight we don't want to auto create a local transaction or auto ack
+                // if the xa tx aborts inflight we don't want to auto create a
+                // local transaction or auto ack
                 transacted = false;
                 ackMode = Session.CLIENT_ACKNOWLEDGE;
             } else if (transactionManager != null) {
@@ -104,8 +104,6 @@ public class XaConnectionPool extends ConnectionPool {
                 // This will return session to the pool.
                 session.setIgnoreClose(false);
                 session.close();
-                session.setIgnoreClose(true);
-                session.setIsXa(false);
                 decrementReferenceCount();
             } catch (JMSException e) {
                 throw new RuntimeException(e);

@@ -42,6 +42,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     protected int maxAllowableDiffFromDBTime = 0;
     protected long diffFromCurrentTime = Long.MAX_VALUE;
     protected String leaseHolderId;
+    protected boolean handleStartException;
 
     public void doStart() throws Exception {
 
@@ -52,7 +53,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
         }
 
         LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the master");
-        String sql = statements.getLeaseObtainStatement();
+        String sql = getStatements().getLeaseObtainStatement();
         LOG.debug(getLeaseHolderId() + " locking Query is "+sql);
 
         long now = 0l;
@@ -83,6 +84,15 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
             } catch (Exception e) {
                 LOG.debug(getLeaseHolderId() + " lease acquire failure: "+ e, e);
+                if (isStopping()) {
+                    throw new Exception(
+                            "Cannot start broker as being asked to shut down. "
+                                    + "Interrupted attempt to acquire lock: "
+                                    + e, e);
+                }
+                if (handleStartException) {
+                    lockable.getBrokerService().handleIOException(IOExceptionSupport.create(e));
+                }
             } finally {
                 close(statement);
                 close(connection);
@@ -101,7 +111,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     private void reportLeasOwnerShipAndDuration(Connection connection) throws SQLException {
         PreparedStatement statement = null;
         try {
-            statement = connection.prepareStatement(statements.getLeaseOwnerStatement());
+            statement = connection.prepareStatement(getStatements().getLeaseOwnerStatement());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 LOG.info(getLeaseHolderId() + " Lease held by " + resultSet.getString(1) + " till " + new Date(resultSet.getLong(2)));
@@ -123,7 +133,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     }
 
     protected long determineTimeDifference(Connection connection) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement(statements.getCurrentDateTime());
+        PreparedStatement statement = connection.prepareStatement(getStatements().getCurrentDateTime());
         ResultSet resultSet = statement.executeQuery();
         long result = 0l;
         if (resultSet.next()) {
@@ -151,7 +161,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
         PreparedStatement statement = null;
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(statements.getLeaseUpdateStatement());
+            statement = connection.prepareStatement(getStatements().getLeaseUpdateStatement());
             statement.setString(1, null);
             statement.setLong(2, 0l);
             statement.setString(3, getLeaseHolderId());
@@ -169,7 +179,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     @Override
     public boolean keepAlive() throws IOException {
         boolean result = false;
-        final String sql = statements.getLeaseUpdateStatement();
+        final String sql = getStatements().getLeaseUpdateStatement();
         LOG.debug(getLeaseHolderId() + ", lease keepAlive Query is " + sql);
 
         Connection connection = null;
@@ -222,6 +232,14 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
     public void setMaxAllowableDiffFromDBTime(int maxAllowableDiffFromDBTime) {
         this.maxAllowableDiffFromDBTime = maxAllowableDiffFromDBTime;
+    }
+
+    public boolean isHandleStartException() {
+        return handleStartException;
+    }
+
+    public void setHandleStartException(boolean handleStartException) {
+        this.handleStartException = handleStartException;
     }
 
     @Override

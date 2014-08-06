@@ -1,28 +1,17 @@
 Deploying the ActiveMQ-WebConsole
 =================================
 
-From ActiveMQ 5.9 onwards ActiveMQ ships with two web consoles:
-- new console using hawtio
-- old console
-
-The old console is deprecated and replaced with a new modern console based on hawtio (http://hawt.io)
-
-The old console is accessible at its usual location at:
+From ActiveMQ 5.9 onwards ActiveMQ ships with a web console which
+is accessible at its usual location at:
   http://localhost:8161/admin/
 
-And the new console is located at:
-  http://localhost:8161/hawtio/
-
 In the default configuration ActiveMQ automatically starts the web console in the
-same VM as the broker. The console is accessibly under http://localhost:8161/hawtio/.
+same VM as the broker. The console is accessibly under http://localhost:8161/admin/.
 
 The broker may ask for credentials to login the web console the first time.
 The default username and password is admin/admin. 
 
-In the new console using hawtio, you can configure the default users, in the 
-conf/users.properties, and conf/groups.properties files.
-
-In the old web console you can configure the default users, in the
+In the web console you can configure the default users, in the
 conf/jetty-real.properties file. And in the conf/jetty.xml file you can configure
 to disable login for the web consoles.
 
@@ -69,26 +58,6 @@ or the client only (web console not available):
 
 You can then use web:list to see the context-path the console is accessible,
 that is usually: http://localhost:8181/activemqweb
-
-
-To install the new hawtio web console you install it as follows:
-
-If you use Karaf 2.3.3 or better:
-
-    features:chooseurl hawtio 
-
-For older releases you have to use addurl:
-
-    features:addurl mvn:io.hawt/hawtio-karaf/1.2-M19/xml/features
-
-And then you can install hawtio simply by:
-
-    features:install hawtio
-
-You can then use web:list to see the context-path the console is accessible,
-that is usually: http://localhost:8181/hawtio
-
-See also: http://hawt.io/getstarted/index.html for details how to install hawtio.
 
 
 Master/Slave monitoring

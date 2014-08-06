@@ -58,11 +58,6 @@ public class AMQPSslTransportFactory extends SslTransportFactory implements Brok
             transport = ((MutexTransport) transport).getNext();
         }
 
-        // MutexTransport mutex = transport.narrow(MutexTransport.class);
-        // if (mutex != null) {
-        // mutex.setSyncOnCommand(true);
-        // }
-
         return transport;
     }
 
@@ -70,17 +65,6 @@ public class AMQPSslTransportFactory extends SslTransportFactory implements Brok
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
     }
-
-    // protected Transport createInactivityMonitor(Transport transport,
-    // WireFormat format) {
-    // AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport,
-    // format);
-    //
-    // AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
-    // filter.setInactivityMonitor(monitor);
-    //
-    // return monitor;
-    // }
 
     @Override
     protected boolean isUseInactivityMonitor(Transport transport) {

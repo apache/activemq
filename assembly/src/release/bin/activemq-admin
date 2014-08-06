@@ -148,7 +148,7 @@ ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};"$ACTIVEMQ_CLASSPATH
 
 if [ ""$1 = "start" ] ; then
     if [ -z "$ACTIVEMQ_OPTS" ] ; then
-        ACTIVEMQ_OPTS="-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Dhawtio.realm=activemq -Dhawtio.role=admins -Dhawtio.rolePrincipalClasses=org.apache.activemq.jaas.GroupPrincipal -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+        ACTIVEMQ_OPTS="-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
     fi
 
     if [ -z "$SUNJMX" ] ; then
@@ -156,8 +156,10 @@ if [ ""$1 = "start" ] ; then
         SUNJMX="-Dcom.sun.management.jmxremote"
     fi
 
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX $SSL_OPTS -Djava.io.tmpdir="${ACTIVEMQ_TMP}""
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX -Djava.io.tmpdir="${ACTIVEMQ_TMP}""
 fi
+
+ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SSL_OPTS"
 
 # Uncomment to enable YourKit profiling
 #ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"

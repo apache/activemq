@@ -40,6 +40,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     final ActiveMQQueue destination = new ActiveMQQueue("Redelivery");
     final String data = "hi";
     final long redeliveryDelayMillis = 2000;
+    long initialRedeliveryDelayMillis = 4000;
     int maxBrokerRedeliveries = 2;
 
     public void testScheduledRedelivery() throws Exception {
@@ -47,6 +48,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
     }
 
     public void testInfiniteRedelivery() throws Exception {
+        initialRedeliveryDelayMillis = redeliveryDelayMillis;
         maxBrokerRedeliveries = RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES;
         doTestScheduledRedelivery(RedeliveryPolicy.DEFAULT_MAXIMUM_REDELIVERIES + 1, false);
     }
@@ -79,7 +81,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
             LOG.info("got: " + brokerRedeliveryMessage);
             assertNotNull("got message via broker redelivery after delay", brokerRedeliveryMessage);
             assertEquals("message matches", message.getStringProperty("data"), brokerRedeliveryMessage.getStringProperty("data"));
-            assertEquals("has expiryDelay specified", redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
+            assertEquals("has expiryDelay specified", i == 0 ? initialRedeliveryDelayMillis : redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
 
             consumerSession.rollback();
         }
@@ -107,7 +109,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
         consumerConnection.start();
         Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = consumerSession.createConsumer(destination);
-        sendMessage(1000);
+        sendMessage(1500);
         Message message = consumer.receive(1000);
         assertNotNull("got message", message);
 
@@ -149,7 +151,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
 
         RedeliveryPolicy brokerRedeliveryPolicy = new RedeliveryPolicy();
         brokerRedeliveryPolicy.setRedeliveryDelay(redeliveryDelayMillis);
-        brokerRedeliveryPolicy.setInitialRedeliveryDelay(redeliveryDelayMillis);
+        brokerRedeliveryPolicy.setInitialRedeliveryDelay(initialRedeliveryDelayMillis);
         brokerRedeliveryPolicy.setMaximumRedeliveries(maxBrokerRedeliveries);
 
         RedeliveryPolicyMap redeliveryPolicyMap = new RedeliveryPolicyMap();

@@ -38,7 +38,7 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
 
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        return new TcpTransportServer(this, location, serverSocketFactory) {
+        TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory) {
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 MQTTNIOSSLTransport transport = new MQTTNIOSSLTransport(format, socket);
                 if (context != null) {
@@ -47,6 +47,8 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
                 return transport;
             }
         };
+        result.setAllowLinkStealing(true);
+        return result;
     }
 
     @Override

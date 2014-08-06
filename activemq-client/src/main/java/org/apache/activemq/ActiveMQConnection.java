@@ -94,6 +94,7 @@ import org.apache.activemq.state.CommandVisitorAdapter;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.FutureResponse;
+import org.apache.activemq.transport.RequestTimedOutIOException;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
@@ -170,9 +171,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final AtomicBoolean transportFailed = new AtomicBoolean(false);
     private final CopyOnWriteArrayList<ActiveMQSession> sessions = new CopyOnWriteArrayList<ActiveMQSession>();
     private final CopyOnWriteArrayList<ActiveMQConnectionConsumer> connectionConsumers = new CopyOnWriteArrayList<ActiveMQConnectionConsumer>();
+    private final CopyOnWriteArrayList<TransportListener> transportListeners = new CopyOnWriteArrayList<TransportListener>();
+    // Stream are deprecated and will be removed in a later release.
     private final CopyOnWriteArrayList<ActiveMQInputStream> inputStreams = new CopyOnWriteArrayList<ActiveMQInputStream>();
     private final CopyOnWriteArrayList<ActiveMQOutputStream> outputStreams = new CopyOnWriteArrayList<ActiveMQOutputStream>();
-    private final CopyOnWriteArrayList<TransportListener> transportListeners = new CopyOnWriteArrayList<TransportListener>();
 
     // Maps ConsumerIds to ActiveMQConsumer objects
     private final ConcurrentHashMap<ConsumerId, ActiveMQDispatcher> dispatchers = new ConcurrentHashMap<ConsumerId, ActiveMQDispatcher>();
@@ -204,6 +206,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean messagePrioritySupported = true;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
+    private boolean rmIdFromConnectionId = false;
 
     private int maxThreadPoolSize = DEFAULT_THREAD_POOL_SIZE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
@@ -677,6 +680,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         ActiveMQConnectionConsumer c = i.next();
                         c.dispose();
                     }
+                    // Stream are deprecated and will be removed in a later release.
                     for (Iterator<ActiveMQInputStream> i = this.inputStreams.iterator(); i.hasNext();) {
                         ActiveMQInputStream c = i.next();
                         c.dispose();
@@ -693,7 +697,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         // know that the connection is being shutdown.
                         RemoveInfo removeCommand = info.createRemoveCommand();
                         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
-                        doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
+                        try {
+                            doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
+                        } catch (JMSException e) {
+                            if (e.getCause() instanceof RequestTimedOutIOException) {
+                                // expected
+                            } else {
+                                throw e;
+                            }
+                        }
                         doAsyncSendPacket(new ShutdownInfo());
                     }
 
@@ -1598,6 +1610,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             ActiveMQConnectionConsumer c = i.next();
             c.dispose();
         }
+
+        // Stream are deprecated and will be removed in a later release.
         for (Iterator<ActiveMQInputStream> i = this.inputStreams.iterator(); i.hasNext();) {
             ActiveMQInputStream c = i.next();
             c.dispose();
@@ -1622,14 +1636,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         started.set(false);
     }
 
-    @Override
-    public void finalize() throws Throwable{
-        Scheduler s = this.scheduler;
-        if (s != null){
-            s.stop();
-        }
-    }
-
     /**
      * Changes the associated username/password that is associated with this
      * connection. If the connection has been used, you must called cleanup()
@@ -1650,6 +1656,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public String getResourceManagerId() throws JMSException {
+        if (isRmIdFromConnectionId()) {
+            return info.getConnectionId().getValue();
+        }
         waitForBrokerInfo();
         if (brokerInfo == null) {
             throw new JMSException("Connection failed before Broker info was received.");
@@ -1777,14 +1786,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * @return the sendTimeout
+     * @return the sendTimeout (in milliseconds)
      */
     public int getSendTimeout() {
         return sendTimeout;
     }
 
     /**
-     * @param sendTimeout the sendTimeout to set
+     * @param sendTimeout the sendTimeout to set (in milliseconds)
      */
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
@@ -1841,6 +1850,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         dispatchers.remove(consumerId);
     }
 
+    public boolean hasDispatcher(ConsumerId consumerId) {
+        return dispatchers.containsKey(consumerId);
+    }
+
     /**
      * @param o - the command to consume
      */
@@ -1870,6 +1883,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 md.setMessage(msg);
                             }
                             dispatcher.dispatch(md);
+                        } else {
+                            LOG.debug("{} no dispatcher for {} in {}", this, md, dispatchers);
                         }
                         return null;
                     }
@@ -2186,45 +2201,54 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest) throws JMSException {
         return createInputStream(dest, null);
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector) throws JMSException {
         return createInputStream(dest, messageSelector, false);
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException {
-        return createInputStream(dest, messageSelector, noLocal,  -1);
+        return createInputStream(dest, messageSelector, noLocal, -1);
     }
 
     @Override
+    @Deprecated
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal, long timeout) throws JMSException {
         return doCreateInputStream(dest, messageSelector, noLocal, null, timeout);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name) throws JMSException {
         return createInputStream(dest, null, false);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException {
         return createDurableInputStream(dest, name, messageSelector, false);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException {
         return createDurableInputStream(dest, name, messageSelector, noLocal, -1);
     }
 
     @Override
+    @Deprecated
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal, long timeout) throws JMSException {
         return doCreateInputStream(dest, messageSelector, noLocal, name, timeout);
     }
 
+    @Deprecated
     private InputStream doCreateInputStream(Destination dest, String messageSelector, boolean noLocal, String subName, long timeout) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
@@ -2236,6 +2260,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * to disk/database by the broker
      */
     @Override
+    @Deprecated
     public OutputStream createOutputStream(Destination dest) throws JMSException {
         return createOutputStream(dest, null, ActiveMQMessage.DEFAULT_DELIVERY_MODE, ActiveMQMessage.DEFAULT_PRIORITY, ActiveMQMessage.DEFAULT_TIME_TO_LIVE);
     }
@@ -2244,6 +2269,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Creates a non persistent output stream; messages will not be written to
      * disk
      */
+    @Deprecated
     public OutputStream createNonPersistentOutputStream(Destination dest) throws JMSException {
         return createOutputStream(dest, null, DeliveryMode.NON_PERSISTENT, ActiveMQMessage.DEFAULT_PRIORITY, ActiveMQMessage.DEFAULT_TIME_TO_LIVE);
     }
@@ -2261,6 +2287,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                method
      */
     @Override
+    @Deprecated
     public OutputStream createOutputStream(Destination dest, Map<String, Object> streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
@@ -2338,18 +2365,22 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
     }
 
+    @Deprecated
     public void addOutputStream(ActiveMQOutputStream stream) {
         outputStreams.add(stream);
     }
 
+    @Deprecated
     public void removeOutputStream(ActiveMQOutputStream stream) {
         outputStreams.remove(stream);
     }
 
+    @Deprecated
     public void addInputStream(ActiveMQInputStream stream) {
         inputStreams.add(stream);
     }
 
+    @Deprecated
     public void removeInputStream(ActiveMQInputStream stream) {
         inputStreams.remove(stream);
     }
@@ -2525,8 +2556,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 if (result == null) {
                     checkClosed();
                     try {
-                        result = scheduler = new Scheduler("ActiveMQConnection["+info.getConnectionId().getValue()+"] Scheduler");
-                        scheduler.start();
+                        result = new Scheduler("ActiveMQConnection["+info.getConnectionId().getValue()+"] Scheduler");
+                        result.start();
+                        scheduler = result;
                     } catch(Exception e) {
                         throw JMSExceptionSupport.create(e);
                     }
@@ -2538,6 +2570,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     protected ThreadPoolExecutor getExecutor() {
         return this.executor;
+    }
+
+    protected CopyOnWriteArrayList<ActiveMQSession> getSessions() {
+        return sessions;
     }
 
     /**
@@ -2568,6 +2604,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     public void setNonBlockingRedelivery(boolean nonBlockingRedelivery) {
         this.nonBlockingRedelivery = nonBlockingRedelivery;
+    }
+
+    public boolean isRmIdFromConnectionId() {
+        return rmIdFromConnectionId;
+    }
+
+    public void setRmIdFromConnectionId(boolean rmIdFromConnectionId) {
+        this.rmIdFromConnectionId = rmIdFromConnectionId;
     }
 
     /**

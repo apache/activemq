@@ -83,6 +83,11 @@ public class MutableBrokerFilter implements Broker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        return getNext().getDestinationMap(destination);
+    }
+
+    @Override
     public Set getDestinations(ActiveMQDestination destination) {
         return getNext().getDestinations(destination);
     }
@@ -374,6 +379,11 @@ public class MutableBrokerFilter implements Broker {
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange,
             ConsumerControl control) {
         getNext().processConsumerControl(consumerExchange, control);
+    }
+
+    @Override
+    public void reapplyInterceptor() {
+        getNext().reapplyInterceptor();
     }
 
     @Override

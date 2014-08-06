@@ -19,7 +19,6 @@ package org.apache.activemq.partition;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.partition.dto.Partitioning;
-import org.codehaus.jackson.JsonParseException;
 
 import java.io.IOException;
 

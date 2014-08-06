@@ -53,7 +53,7 @@ public class QueueBridgeStandaloneReconnectTest {
 
     private final ArrayList<Connection> connections = new ArrayList<Connection>();
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testSendAndReceiveOverConnectedBridges() throws Exception {
 
         startLocalBroker();
@@ -91,7 +91,7 @@ public class QueueBridgeStandaloneReconnectTest {
         }));
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testSendAndReceiveOverBridgeWhenStartedBeforeBrokers() throws Exception {
 
         jmsQueueConnector.start();
@@ -136,7 +136,7 @@ public class QueueBridgeStandaloneReconnectTest {
         }));
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testSendAndReceiveOverBridgeWithRestart() throws Exception {
 
         startLocalBroker();

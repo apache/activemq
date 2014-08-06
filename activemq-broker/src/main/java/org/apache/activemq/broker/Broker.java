@@ -17,6 +17,7 @@
 package org.apache.activemq.broker;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -142,6 +143,13 @@ public interface Broker extends Region, Service {
      * @throws Exception TODO
      */
     ActiveMQDestination[] getDestinations() throws Exception;
+
+    /**
+     * return a reference destination map of a region based on the destination type
+     * @param destination
+     * @return
+     */
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination);
 
     /**
      * Gets a list of all the prepared xa transactions.

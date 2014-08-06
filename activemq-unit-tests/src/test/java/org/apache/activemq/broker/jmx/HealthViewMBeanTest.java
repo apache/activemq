@@ -28,6 +28,7 @@ import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -39,6 +40,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
     protected MBeanServer mbeanServer;
     protected String domain = "org.apache.activemq";
 
+    @Override
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:0";
         useTopic = false;
@@ -46,6 +48,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         mbeanServer = broker.getManagementContext().getMBeanServer();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -55,6 +58,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         return new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
     }
 
+    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
         answer.setPersistent(true);
@@ -63,6 +67,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
         answer.getSystemUsage().getTempUsage().setLimit(1024 * 1024 * 64);
         answer.getSystemUsage().getStoreUsage().setLimit(1024 * 1024 * 64);
         answer.setUseJmx(true);
+        answer.setSchedulerSupport(true);
 
         // allow options to be visible via jmx
 
@@ -84,6 +89,7 @@ public class HealthViewMBeanTest extends EmbeddedBrokerTestSupport {
             message.writeBytes(new byte[1024 *1024]);
             producer.send(message);
         }
+
         Thread.sleep(1000);
 
         String objectNameStr = broker.getBrokerObjectName().toString();

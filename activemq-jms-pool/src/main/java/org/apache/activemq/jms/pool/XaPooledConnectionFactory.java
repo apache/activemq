@@ -18,13 +18,9 @@ package org.apache.activemq.jms.pool;
 
 import java.io.Serializable;
 import java.util.Hashtable;
+
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
 import javax.jms.XAConnectionFactory;
 import javax.naming.Binding;
 import javax.naming.Context;
@@ -38,13 +34,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A pooled connection factory that automatically enlists
- * sessions in the current active XA transaction if any.
+ * A pooled connection factory that automatically enlists sessions in the
+ * current active XA transaction if any.
  */
-public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory,
-        Serializable, QueueConnectionFactory, TopicConnectionFactory {
+public class XaPooledConnectionFactory extends PooledConnectionFactory implements ObjectFactory, Serializable {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(XaPooledConnectionFactory.class);
+    private static final long serialVersionUID = -6545688026350913005L;
+
     private TransactionManager transactionManager;
     private boolean tmFromJndi = false;
     private String tmJndiName = "java:/TransactionManager";
@@ -64,6 +61,28 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
 
     public void setTransactionManager(TransactionManager transactionManager) {
         this.transactionManager = transactionManager;
+    }
+
+    @Override
+    public void setConnectionFactory(Object toUse) {
+        if (toUse instanceof XAConnectionFactory) {
+            connectionFactory = toUse;
+        } else {
+            throw new IllegalArgumentException("connectionFactory should implement javax.xml.XAConnectionFactory");
+        }
+    }
+
+    @Override
+    protected Connection createConnection(ConnectionKey key) throws JMSException {
+        if (connectionFactory instanceof XAConnectionFactory) {
+            if (key.getUserName() == null && key.getPassword() == null) {
+                return ((XAConnectionFactory) connectionFactory).createXAConnection();
+            } else {
+                return ((XAConnectionFactory) connectionFactory).createXAConnection(key.getUserName(), key.getPassword());
+            }
+        } else {
+            throw new IllegalStateException("connectionFactory should implement javax.jms.XAConnectionFactory");
+        }
     }
 
     @Override
@@ -87,10 +106,10 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
             name = name.substring(0, name.lastIndexOf('/')) + "/conf" + name.substring(name.lastIndexOf('/'));
             try {
                 InitialContext ctx = new InitialContext();
-                NamingEnumeration bindings = ctx.listBindings(name);
+                NamingEnumeration<Binding> bindings = ctx.listBindings(name);
 
                 while (bindings.hasMore()) {
-                    Binding bd = (Binding)bindings.next();
+                    Binding bd = bindings.next();
                     IntrospectionSupport.setProperty(this, bd.getName(), bd.getObject());
                 }
 
@@ -116,30 +135,10 @@ public class XaPooledConnectionFactory extends PooledConnectionFactory implement
 
     /**
      * Allow transaction manager resolution from JNDI (ee deployment)
+     *
      * @param tmFromJndi
      */
     public void setTmFromJndi(boolean tmFromJndi) {
         this.tmFromJndi = tmFromJndi;
     }
-
-    @Override
-    public QueueConnection createQueueConnection() throws JMSException {
-        return (QueueConnection) createConnection();
-    }
-
-    @Override
-    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
-        return (QueueConnection) createConnection(userName, password);
-    }
-
-    @Override
-    public TopicConnection createTopicConnection() throws JMSException {
-        return (TopicConnection) createConnection();
-    }
-
-    @Override
-    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
-        return (TopicConnection) createConnection(userName, password);
-    }
-
 }

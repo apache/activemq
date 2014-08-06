@@ -34,7 +34,6 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -75,6 +74,7 @@ public class NIOSSLTransport extends NIOTransport {
 
     @Override
     protected void initializeStreams() throws IOException {
+        NIOOutputStream outputStream = null;
         try {
             channel = socket.getChannel();
             channel.configureBlocking(false);
@@ -119,7 +119,7 @@ public class NIOSSLTransport extends NIOTransport {
             inputBuffer = ByteBuffer.allocate(sslSession.getPacketBufferSize());
             inputBuffer.clear();
 
-            NIOOutputStream outputStream = new NIOOutputStream(channel);
+            outputStream = new NIOOutputStream(channel);
             outputStream.setEngine(sslEngine);
             this.dataOut = new DataOutputStream(outputStream);
             this.buffOut = outputStream;
@@ -127,6 +127,12 @@ public class NIOSSLTransport extends NIOTransport {
             handshakeStatus = sslEngine.getHandshakeStatus();
             doHandshake();
         } catch (Exception e) {
+            try {
+                if(outputStream != null) {
+                    outputStream.close();
+                }
+                super.closeStreams();
+            } catch (Exception ex) {}
             throw new IOException(e);
         }
     }
@@ -143,10 +149,12 @@ public class NIOSSLTransport extends NIOTransport {
 
             // listen for events telling us when the socket is readable.
             selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+                @Override
                 public void onSelect(SelectorSelection selection) {
                     serviceRead();
                 }
 
+                @Override
                 public void onError(SelectorSelection selection, Throwable error) {
                     if (error instanceof IOException) {
                         onException((IOException) error);
@@ -158,6 +166,7 @@ public class NIOSSLTransport extends NIOTransport {
         }
     }
 
+    @Override
     protected void serviceRead() {
         try {
             if (handshakeInProgress) {
@@ -272,7 +281,7 @@ public class NIOSSLTransport extends NIOTransport {
             } else {
                 currentBuffer.flip();
                 Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
-                doConsume((Command) command);
+                doConsume(command);
                 nextFrameSize = -1;
                 currentBuffer = null;
             }

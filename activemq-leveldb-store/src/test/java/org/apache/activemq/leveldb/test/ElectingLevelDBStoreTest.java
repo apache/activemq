@@ -16,25 +16,17 @@
  */
 package org.apache.activemq.leveldb.test;
 
-import junit.framework.TestCase;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
-import org.apache.activemq.leveldb.util.FileSupport;
 import org.apache.activemq.store.MessageStore;
-import org.apache.zookeeper.server.NIOServerCnxnFactory;
-import org.apache.zookeeper.server.ZooKeeperServer;
-import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
@@ -43,39 +35,11 @@ import static org.junit.Assert.*;
 
 /**
  */
-public class ElectingLevelDBStoreTest {
+public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
+
     protected static final Logger LOG = LoggerFactory.getLogger(ElectingLevelDBStoreTest.class);
 
-    NIOServerCnxnFactory connector;
-
-    static File data_dir() {
-        return new File("target/activemq-data/leveldb-elections");
-    }
-
-
-    @Before
-    public void setUp() throws Exception {
-        FileSupport.toRichFile(data_dir()).recursiveDelete();
-
-        System.out.println("Starting ZooKeeper");
-        ZooKeeperServer zk_server = new ZooKeeperServer();
-        zk_server.setTickTime(500);
-        zk_server.setTxnLogFactory(new FileTxnSnapLog(new File(data_dir(), "zk-log"), new File(data_dir(), "zk-data")));
-        connector = new NIOServerCnxnFactory();
-        connector.configure(new InetSocketAddress(0), 100);
-        connector.startup(zk_server);
-        System.out.println("ZooKeeper started");
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        if( connector!=null ) {
-          connector.shutdown();
-          connector = null;
-        }
-    }
-
-    @Test(timeout = 1000*60*60)
+    @Test(timeout = 1000*60*10)
     public void testElection() throws Exception {
 
         ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
@@ -167,7 +131,7 @@ public class ElectingLevelDBStoreTest {
         }
     }
 
-    @Test(timeout = 1000 * 60 * 60)
+    @Test(timeout = 1000 * 60 * 10)
     public void testZooKeeperServerFailure() throws Exception {
 
         final ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
@@ -207,50 +171,6 @@ public class ElectingLevelDBStoreTest {
 
         for (ElectingLevelDBStore store : stores) {
             store.stop();
-        }
-    }
-
-    static interface Task {
-        public void run() throws Exception;
-    }
-
-    private void within(int time, TimeUnit unit, Task task) throws InterruptedException {
-        long timeMS = unit.toMillis(time);
-        long deadline = System.currentTimeMillis() + timeMS;
-        while (true) {
-            try {
-                task.run();
-                return;
-            } catch (Throwable e) {
-                long remaining = deadline - System.currentTimeMillis();
-                if( remaining <=0 ) {
-                    if( e instanceof RuntimeException ) {
-                        throw (RuntimeException)e;
-                    }
-                    if( e instanceof Error ) {
-                        throw (Error)e;
-                    }
-                    throw new RuntimeException(e);
-                }
-                Thread.sleep(Math.min(timeMS/10, remaining));
-            }
-        }
-    }
-
-    private CountDownFuture waitFor(int timeout, CountDownFuture... futures) throws InterruptedException {
-        long deadline =  System.currentTimeMillis()+timeout;
-        while( true ) {
-            for (CountDownFuture f:futures) {
-                if( f.await(1, TimeUnit.MILLISECONDS) ) {
-                    return f;
-                }
-            }
-            long remaining = deadline - System.currentTimeMillis();
-            if( remaining < 0 ) {
-                return null;
-            } else {
-                Thread.sleep(Math.min(remaining / 10, 100L));
-            }
         }
     }
 

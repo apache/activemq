@@ -32,18 +32,25 @@ import java.util.ArrayList;
 public class ReplicationTestSupport {
 
     static long id_counter = 0L;
-    static String payload = "";
-    {
-        for (int i = 0; i < 1024; i++) {
+    static String payload = createPlayload(1024);
+
+    public static String createPlayload(int size) {
+        String payload = "";
+        for (int i = 0; i < size; i++) {
             payload += "x";
         }
+        return payload;
     }
 
-    static public ActiveMQTextMessage addMessage(MessageStore ms, String body) throws JMSException, IOException {
+    static public ActiveMQTextMessage addMessage(MessageStore ms, String id) throws JMSException, IOException {
+        return addMessage(ms, id, payload);
+    }
+
+    static public ActiveMQTextMessage addMessage(MessageStore ms, String id, String payload) throws JMSException, IOException {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setPersistent(true);
         message.setResponseRequired(true);
-        message.setStringProperty("id", body);
+        message.setStringProperty("id", id);
         message.setText(payload);
         id_counter += 1;
         MessageId messageId = new MessageId("ID:localhost-56913-1254499826208-0:0:1:1:" + id_counter);

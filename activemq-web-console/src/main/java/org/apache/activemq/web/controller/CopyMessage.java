@@ -49,7 +49,7 @@ public class CopyMessage extends DestinationFacade implements Controller {
             	log.warn("No queue named: " + getPhysicalDestinationName());
             }
         }
-        return redirectToBrowseView();
+        return redirectToDestinationView();
     }
 
     public String getMessageId() {

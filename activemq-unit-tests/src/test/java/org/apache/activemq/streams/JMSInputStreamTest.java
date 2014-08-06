@@ -41,6 +41,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 /**
  * JMSInputStreamTest
  */
+@Deprecated
 public class JMSInputStreamTest extends JmsTestSupport {
 
     public Destination destination;

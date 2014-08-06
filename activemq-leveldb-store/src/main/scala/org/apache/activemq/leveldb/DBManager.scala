@@ -22,7 +22,7 @@ import org.fusesource.hawtdispatch.BaseRetained
 import java.util.concurrent._
 import atomic._
 import org.fusesource.hawtbuf.Buffer
-import org.apache.activemq.store.MessageRecoveryListener
+import org.apache.activemq.store.{ListenableFuture, MessageRecoveryListener}
 import java.lang.ref.WeakReference
 import scala.Option._
 import org.fusesource.hawtbuf.Buffer._
@@ -35,9 +35,12 @@ import util.TimeMetric
 import scala.Some
 import org.apache.activemq.ActiveMQMessageAuditNoSync
 import org.fusesource.hawtdispatch
+import org.apache.activemq.broker.SuppressReplyException
 
 case class EntryLocator(qid:Long, seq:Long)
-case class DataLocator(store:LevelDBStore, pos:Long, len:Int)
+case class DataLocator(store:LevelDBStore, pos:Long, len:Int) {
+  override def toString: String = "DataLocator(%x, %d)".format(pos, len)
+}
 case class MessageRecord(store:LevelDBStore, id:MessageId, data:Buffer, syncNeeded:Boolean) {
   var locator:DataLocator = _
 }
@@ -94,12 +97,13 @@ object UowCompleted extends UowState {
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
+class CountDownFuture[T <: AnyRef]() extends ListenableFuture[T] {
 
   private val latch:CountDownLatch=new CountDownLatch(1)
   @volatile
   var value:T = _
   var error:Throwable = _
+  var listener:Runnable = _
 
   def cancel(mayInterruptIfRunning: Boolean) = false
   def isCancelled = false
@@ -112,10 +116,12 @@ class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
   def set(v:T) = {
     value = v
     latch.countDown()
+    fireListener
   }
   def failed(v:Throwable) = {
     error = v
     latch.countDown()
+    fireListener
   }
 
   def get() = {
@@ -138,6 +144,25 @@ class CountDownFuture[T <: AnyRef]() extends java.util.concurrent.Future[T] {
   }
 
   def isDone = latch.await(0, TimeUnit.SECONDS);
+
+  def fireListener = {
+    if (listener != null) {
+      try {
+        listener.run()
+      } catch {
+        case e : Throwable => {
+          LevelDBStore.warn(e, "unexpected exception on future listener " +listener)
+        }
+      }
+    }
+  }
+
+  def addListener(l: Runnable) = {
+    listener = l
+    if (isDone) {
+      fireListener
+    }
+  }
 }
 
 object UowManagerConstants {
@@ -195,7 +220,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     def size = (if(messageRecord!=null) messageRecord.data.length+20 else 0) + ((enqueues.size+dequeues.size)*50) + xaAcks.foldLeft(0L){ case (sum, entry) =>
       sum + 100
     }
-    
+
     def addToPendingStore() = {
       var set = manager.pendingStores.get(id)
       if(set==null) {
@@ -214,7 +239,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
         }
       }
     }
-    
+
   }
 
   def completeAsap() = this.synchronized { disableDelay=true }
@@ -443,7 +468,7 @@ class DBManager(val parent:LevelDBStore) {
   var uowStoringCounter = 0L
   var uowStoredCounter = 0L
 
-  val uow_complete_latency = TimeMetric() 
+  val uow_complete_latency = TimeMetric()
 
 //  val closeSource = createSource(new ListEventAggregator[DelayableUOW](), dispatchQueue)
 //  closeSource.setEventHandler(^{
@@ -454,7 +479,7 @@ class DBManager(val parent:LevelDBStore) {
 //  closeSource.resume
 
   var pendingStores = new ConcurrentHashMap[MessageId, HashSet[DelayableUOW#MessageAction]]()
-  
+
   var cancelable_enqueue_actions = new HashMap[QueueEntryKey, DelayableUOW#MessageAction]()
 
   val lastUowId = new AtomicInteger(1)
@@ -479,7 +504,7 @@ class DBManager(val parent:LevelDBStore) {
 
         // The UoW may have been canceled.
         if( action.messageRecord!=null && action.enqueues.isEmpty ) {
-          action.removeFromPendingStore() 
+          action.removeFromPendingStore()
           action.messageRecord = null
           uow.delayableActions -= 1
         }
@@ -567,9 +592,6 @@ class DBManager(val parent:LevelDBStore) {
 
   def drainFlushes:Unit = {
     dispatchQueue.assertExecuting()
-    if( !started ) {
-      return
-    }
 
     // Some UOWs may have been canceled.
     import collection.JavaConversions._
@@ -588,7 +610,12 @@ class DBManager(val parent:LevelDBStore) {
             assert(action!=null)
           }
         }
-        Some(uow)
+        if( !started ) {
+          uow.onCompleted(new SuppressReplyException("Store stopped"))
+          None
+        } else {
+          Some(uow)
+        }
       }
     }
 
@@ -701,7 +728,7 @@ class DBManager(val parent:LevelDBStore) {
   def collectionIsEmpty(key:Long) = {
     client.collectionIsEmpty(key)
   }
-  
+
   def cursorMessages(preparedAcks:java.util.HashSet[MessageId], key:Long, listener:MessageRecoveryListener, startPos:Long, max:Long=Long.MaxValue) = {
     var lastmsgid:MessageId = null
     var count = 0L
@@ -751,7 +778,7 @@ class DBManager(val parent:LevelDBStore) {
     val record = new SubscriptionRecord.Bean
     record.setTopicKey(topic_key)
     record.setClientId(info.getClientId)
-    record.setSubscriptionName(info.getSubcriptionName)
+    record.setSubscriptionName(info.getSubscriptionName)
     if( info.getSelector!=null ) {
       record.setSelector(info.getSelector)
     }
@@ -772,7 +799,9 @@ class DBManager(val parent:LevelDBStore) {
   }
 
   def removeSubscription(sub:DurableSubscription) {
-    client.removeCollection(sub.subKey)
+    writeExecutor.sync {
+      client.removeCollection(sub.subKey)
+    }
   }
 
   def createTopicStore(dest:ActiveMQTopic) = {
@@ -798,7 +827,7 @@ class DBManager(val parent:LevelDBStore) {
   def createTransactionContainer(id:XATransactionId) =
     createCollection(buffer(parent.wireFormat.marshal(id)), TRANSACTION_COLLECTION_TYPE)
 
-  def removeTransactionContainer(key:Long) = { // writeExecutor.sync {
+  def removeTransactionContainer(key:Long) = writeExecutor.sync {
     client.removeCollection(key)
   }
 
@@ -821,7 +850,7 @@ class DBManager(val parent:LevelDBStore) {
           val sr = SubscriptionRecord.FACTORY.parseUnframed(record.getMeta)
           val info = new SubscriptionInfo
           info.setClientId(sr.getClientId)
-          info.setSubcriptionName(sr.getSubscriptionName)
+          info.setSubscriptionName(sr.getSubscriptionName)
           if( sr.hasSelector ) {
             info.setSelector(sr.getSelector)
           }
@@ -861,7 +890,11 @@ class DBManager(val parent:LevelDBStore) {
     val id = Option(pendingStores.get(x)).flatMap(_.headOption).map(_.id).getOrElse(x)
     val locator = id.getDataLocator()
     val msg = client.getMessage(locator)
-    msg.setMessageId(id)
+    if( msg!=null ) {
+      msg.setMessageId(id)
+    } else {
+      LevelDBStore.warn("Could not load messages for: "+x+" at: "+locator)
+    }
     msg
   }
 

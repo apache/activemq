@@ -23,7 +23,7 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
    http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
-    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQXAConnectionFactory">
         <property name="brokerURL" value="tcp://localhost:61616?jms.dispatchAsync=false"/>
         <property name="userName" value="karaf" />
         <property name="password" value="karaf" />

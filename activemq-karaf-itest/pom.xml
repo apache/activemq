@@ -22,16 +22,12 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.10-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-karaf-itest</artifactId>
   <name>ActiveMQ :: Karaf Integration Tests</name>
   <description>Performs Karaf compliance integration tests</description>
-
-  <properties>
-    <pax-exam-version>2.6.0</pax-exam-version>
-  </properties>
 
   <dependencies>
     <dependency>
@@ -53,6 +49,17 @@
       <groupId>org.ops4j.pax.logging</groupId>
       <artifactId>pax-logging-service</artifactId>
       <version>1.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-atinject_1.0_spec</artifactId>
+      <version>1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
@@ -109,9 +116,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.openengsb.labs.paxexam.karaf</groupId>
-      <artifactId>paxexam-karaf-container</artifactId>
-      <version>${paxexam-karaf-container-version}</version>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-karaf</artifactId>
+      <version>${pax-exam-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -129,6 +136,10 @@
           <groupId>org.eclipse</groupId>
           <artifactId>osgi</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.xerces</groupId>
+          <artifactId>xercesImpl</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -141,6 +152,17 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <version>${org.osgi.core-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>proton-jms</artifactId>
+      <version>${qpid-proton-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+      <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -172,6 +194,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+          <filtering>true</filtering>
+        </resource>
+      </resources>
     <plugins>
       <!-- generate dependencies versions -->
       <plugin>
@@ -190,11 +218,11 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>pertest</forkMode>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
           <redirectTestOutputToFile>false</redirectTestOutputToFile>
           <argLine>-Xmx256m</argLine>
           <excludes>
-          <!--<exclude>**/*Cxf*.*</exclude>-->
           </excludes>
           <systemPropertyVariables>
             <activemqVersion>${project.version}</activemqVersion>
@@ -203,6 +231,41 @@
         </configuration>
       </plugin>
     </plugins>
+    <pluginManagement>
+    	<plugins>
+    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+    		<plugin>
+    			<groupId>org.eclipse.m2e</groupId>
+    			<artifactId>lifecycle-mapping</artifactId>
+    			<version>1.0.0</version>
+    			<configuration>
+    				<lifecycleMappingMetadata>
+    					<pluginExecutions>
+    						<pluginExecution>
+    							<pluginExecutionFilter>
+    								<groupId>
+    									org.apache.servicemix.tooling
+    								</groupId>
+    								<artifactId>
+    									depends-maven-plugin
+    								</artifactId>
+    								<versionRange>[1.2,)</versionRange>
+    								<goals>
+    									<goal>
+    										generate-depends-file
+    									</goal>
+    								</goals>
+    							</pluginExecutionFilter>
+    							<action>
+    								<ignore></ignore>
+    							</action>
+    						</pluginExecution>
+    					</pluginExecutions>
+    				</lifecycleMappingMetadata>
+    			</configuration>
+    		</plugin>
+    	</plugins>
+    </pluginManagement>
   </build>
 
   <profiles>
@@ -231,6 +294,7 @@
               <systemPropertyVariables>
                 <activemqVersion>${project.version}</activemqVersion>
                 <karafVersion>${karaf-version}</karafVersion>
+                <felixFrameworkVersion>${felix-framework-version}</felixFrameworkVersion>
               </systemPropertyVariables>
             </configuration>
           </plugin>

@@ -23,11 +23,14 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.transport.amqp.DefaultTrustManager;
+
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
 import org.objectweb.jtests.jms.conform.message.MessageDefaultTest;
@@ -42,6 +45,7 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
+import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +56,7 @@ import org.slf4j.LoggerFactory;
     MessageHeaderTest.class,
     QueueBrowserTest.class,
     MessageTypeTest.class,
-    //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
+    UnifiedSessionTest.class,    // https://issues.apache.org/jira/browse/AMQ-4375
     TemporaryTopicTest.class,
     //,TopicConnectionTest.class    // https://issues.apache.org/jira/browse/AMQ-4654
     SelectorSyntaxTest.class,
@@ -74,15 +78,23 @@ public class JoramSslTest {
 
     @Rule
     public Timeout to = new Timeout(10 * 1000);
-
+    static SSLContext def;
+    
     @BeforeClass
     public static void beforeClass() throws Exception {
         System.setProperty("joram.jms.test.file", getJmsTestFileName());
 
         SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
+        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, null);
+        def = SSLContext.getDefault();
         SSLContext.setDefault(ctx);
     }
+    @AfterClass
+    public static void afterClass() throws Exception {
+        System.clearProperty("joram.jms.test.file");
+        SSLContext.setDefault(def);
+    }
+    
 
     public static String getJmsTestFileName() {
         return "providerSSL.properties";

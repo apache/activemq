@@ -17,6 +17,7 @@
 package org.apache.activemq.store;
 
 import org.apache.activemq.leveldb.LevelDBStore;
+import org.junit.Test;
 
 import java.io.IOException;
 
@@ -32,4 +33,13 @@ public class LevelDBStorePerDestinationTest extends StorePerDestinationTest  {
         }
         return store;
     }
+
+   @Test
+   @Override
+   public void testRollbackRecovery() throws Exception {}
+
+   @Test
+   @Override
+   public void testCommitRecovery() throws Exception {}
+
 }

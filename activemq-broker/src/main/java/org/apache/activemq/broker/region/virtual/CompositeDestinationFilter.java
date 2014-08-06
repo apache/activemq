@@ -18,8 +18,12 @@ package org.apache.activemq.broker.region.virtual;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
@@ -39,17 +43,20 @@ public class CompositeDestinationFilter extends DestinationFilter {
     private Collection forwardDestinations;
     private boolean forwardOnly;
     private boolean copyMessage;
+    private boolean concurrentSend = false;
 
-    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean copyMessage) {
+    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean copyMessage, boolean concurrentSend) {
         super(next);
         this.forwardDestinations = forwardDestinations;
         this.forwardOnly = forwardOnly;
         this.copyMessage = copyMessage;
+        this.concurrentSend = concurrentSend;
     }
 
-    public void send(ProducerBrokerExchange context, Message message) throws Exception {
+    public void send(final ProducerBrokerExchange context, final Message message) throws Exception {
         MessageEvaluationContext messageContext = null;
 
+        Collection<ActiveMQDestination> matchingDestinations = new LinkedList<ActiveMQDestination>();
         for (Iterator iter = forwardDestinations.iterator(); iter.hasNext();) {
             ActiveMQDestination destination = null;
             Object value = iter.next();
@@ -70,23 +77,53 @@ public class CompositeDestinationFilter extends DestinationFilter {
             if (destination == null) {
                 continue;
             }
+            matchingDestinations.add(destination);
+        }
 
-            Message forwarded_message;
-            if (copyMessage) {
-                forwarded_message = message.copy();
-                forwarded_message.setDestination(destination);
+        final CountDownLatch concurrent = new CountDownLatch(concurrentSend ? matchingDestinations.size() : 0);
+        final AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<Exception>();
+        final BrokerService brokerService = context.getConnectionContext().getBroker().getBrokerService();
+        for (final ActiveMQDestination destination : matchingDestinations) {
+            if (concurrent.getCount() > 0) {
+                brokerService.getTaskRunnerFactory().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (exceptionAtomicReference.get() == null) {
+                                doForward(context.copy(), message, brokerService.getRegionBroker(), destination);
+                            }
+                        } catch (Exception e) {
+                            exceptionAtomicReference.set(e);
+                        } finally {
+                            concurrent.countDown();
+                        }
+                    }
+                });
+            } else {
+                doForward(context, message, brokerService.getRegionBroker(), destination);
             }
-            else {
-                forwarded_message = message;
-            }
-
-            // Send it back through the region broker for routing.
-            context.setMutable(true);
-            Broker regionBroker = context.getConnectionContext().getBroker().getBrokerService().getRegionBroker();
-            regionBroker.send(context, forwarded_message);
         }
         if (!forwardOnly) {
             super.send(context, message);
         }
+        concurrent.await();
+        if (exceptionAtomicReference.get() != null) {
+            throw exceptionAtomicReference.get();
+        }
+    }
+
+    private void doForward(ProducerBrokerExchange context, Message message, Broker regionBroker, ActiveMQDestination destination) throws Exception {
+        Message forwarded_message;
+        if (copyMessage) {
+            forwarded_message = message.copy();
+            forwarded_message.setDestination(destination);
+        }
+        else {
+            forwarded_message = message;
+        }
+
+        // Send it back through the region broker for routing.
+        context.setMutable(true);
+        regionBroker.send(context, forwarded_message);
     }
 }

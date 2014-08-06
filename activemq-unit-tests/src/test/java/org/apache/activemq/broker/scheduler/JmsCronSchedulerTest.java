@@ -16,13 +16,20 @@
  */
 package org.apache.activemq.broker.scheduler;
 
-import java.io.File;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -30,17 +37,16 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.ScheduledMessage;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.IOHelper;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
+public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsCronSchedulerTest.class);
 
+    @Test
     public void testSimulatenousCron() throws Exception {
 
         final int COUNT = 10;
@@ -55,18 +61,26 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
         consumer.setMessageListener(new MessageListener() {
             @Override
             public void onMessage(Message message) {
-                latch.countDown();
                 count.incrementAndGet();
-                LOG.debug("Received one Message, count is at: " + count.get());
+                latch.countDown();
+                assertTrue(message instanceof TextMessage);
+                TextMessage tm = (TextMessage) message;
+                try {
+                    LOG.info("Received [{}] count: {} ", tm.getText(), count.get());
+                } catch (JMSException e) {
+                    LOG.error("Unexpected exception in onMessage", e);
+                    fail("Unexpected exception in onMessage: " + e.getMessage());
+                }
             }
         });
 
         connection.start();
         for (int i = 0; i < COUNT; i++) {
             MessageProducer producer = session.createProducer(destination);
-            TextMessage message = session.createTextMessage("test msg "+i);
+            TextMessage message = session.createTextMessage("test msg "+ i);
             message.setStringProperty(ScheduledMessage.AMQ_SCHEDULED_CRON, "* * * * *");
             producer.send(message);
+            LOG.info("Message {} sent at {}", i, new Date().toString());
             producer.close();
             //wait a couple sec so cron start time is different for next message
             Thread.sleep(2000);
@@ -80,6 +94,7 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
         assertEquals(COUNT, count.get());
     }
 
+    @Test
     public void testCronScheduleWithTtlSet() throws Exception {
 
         Connection connection = createConnection();
@@ -99,34 +114,5 @@ public class JmsCronSchedulerTest extends EmbeddedBrokerTestSupport {
 
         assertNotNull(consumer.receiveNoWait());
         assertNull(consumer.receiveNoWait());
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        bindAddress = "vm://localhost";
-        super.setUp();
-    }
-
-    @Override
-    protected BrokerService createBroker() throws Exception {
-        return createBroker(true);
-    }
-
-    protected BrokerService createBroker(boolean delete) throws Exception {
-        File schedulerDirectory = new File("target/scheduler");
-        if (delete) {
-            IOHelper.mkdirs(schedulerDirectory);
-            IOHelper.deleteChildren(schedulerDirectory);
-        }
-        BrokerService answer = new BrokerService();
-        answer.setPersistent(true);
-        answer.getManagementContext().setCreateConnector(false);
-        answer.setDeleteAllMessagesOnStartup(true);
-        answer.setDataDirectory("target");
-        answer.setSchedulerDirectoryFile(schedulerDirectory);
-        answer.setSchedulerSupport(true);
-        answer.setUseJmx(false);
-        answer.addConnector(bindAddress);
-        return answer;
     }
 }

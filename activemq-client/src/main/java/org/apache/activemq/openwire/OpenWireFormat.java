@@ -119,74 +119,57 @@ public final class OpenWireFormat implements WireFormat {
             runMarshallCacheEvictionSweep();
         }
 
-//        MarshallAware ma = null;
-//        // If not using value caching, then the marshaled form is always the
-//        // same
-//        if (!cacheEnabled && ((DataStructure)command).isMarshallAware()) {
-//            ma = (MarshallAware)command;
-//        }
-
         ByteSequence sequence = null;
-        // if( ma!=null ) {
-        // sequence = ma.getCachedMarshalledForm(this);
-        // }
+        int size = 1;
+        if (command != null) {
 
-        if (sequence == null) {
+            DataStructure c = (DataStructure)command;
+            byte type = c.getDataStructureType();
+            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            if (dsm == null) {
+                throw new IOException("Unknown data type: " + type);
+            }
+            if (tightEncodingEnabled) {
 
-            int size = 1;
-            if (command != null) {
+                BooleanStream bs = new BooleanStream();
+                size += dsm.tightMarshal1(this, c, bs);
+                size += bs.marshalledSize();
 
-                DataStructure c = (DataStructure)command;
-                byte type = c.getDataStructureType();
-                DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
-                if (dsm == null) {
-                    throw new IOException("Unknown data type: " + type);
+                bytesOut.restart(size);
+                if (!sizePrefixDisabled) {
+                    bytesOut.writeInt(size);
                 }
-                if (tightEncodingEnabled) {
-
-                    BooleanStream bs = new BooleanStream();
-                    size += dsm.tightMarshal1(this, c, bs);
-                    size += bs.marshalledSize();
-
-                    bytesOut.restart(size);
-                    if (!sizePrefixDisabled) {
-                        bytesOut.writeInt(size);
-                    }
-                    bytesOut.writeByte(type);
-                    bs.marshal(bytesOut);
-                    dsm.tightMarshal2(this, c, bytesOut, bs);
-                    sequence = bytesOut.toByteSequence();
-
-                } else {
-                    bytesOut.restart();
-                    if (!sizePrefixDisabled) {
-                        bytesOut.writeInt(0); // we don't know the final size
-                                                // yet but write this here for
-                                                // now.
-                    }
-                    bytesOut.writeByte(type);
-                    dsm.looseMarshal(this, c, bytesOut);
-                    sequence = bytesOut.toByteSequence();
-
-                    if (!sizePrefixDisabled) {
-                        size = sequence.getLength() - 4;
-                        int pos = sequence.offset;
-                        ByteSequenceData.writeIntBig(sequence, size);
-                        sequence.offset = pos;
-                    }
-                }
+                bytesOut.writeByte(type);
+                bs.marshal(bytesOut);
+                dsm.tightMarshal2(this, c, bytesOut, bs);
+                sequence = bytesOut.toByteSequence();
 
             } else {
-                bytesOut.restart(5);
-                bytesOut.writeInt(size);
-                bytesOut.writeByte(NULL_TYPE);
+                bytesOut.restart();
+                if (!sizePrefixDisabled) {
+                    bytesOut.writeInt(0); // we don't know the final size
+                    // yet but write this here for
+                    // now.
+                }
+                bytesOut.writeByte(type);
+                dsm.looseMarshal(this, c, bytesOut);
                 sequence = bytesOut.toByteSequence();
+
+                if (!sizePrefixDisabled) {
+                    size = sequence.getLength() - 4;
+                    int pos = sequence.offset;
+                    ByteSequenceData.writeIntBig(sequence, size);
+                    sequence.offset = pos;
+                }
             }
 
-            // if( ma!=null ) {
-            // ma.setCachedMarshalledForm(this, sequence);
-            // }
+        } else {
+            bytesOut.restart(5);
+            bytesOut.writeInt(size);
+            bytesOut.writeByte(NULL_TYPE);
+            sequence = bytesOut.toByteSequence();
         }
+
         return sequence;
     }
 

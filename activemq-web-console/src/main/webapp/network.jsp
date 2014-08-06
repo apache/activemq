@@ -15,10 +15,13 @@
     limitations under the License.
 --%>
 <html>
-<head>
-<title>Network Bridges</title>
+<c:set var="pageTitle" value="Network Bridges"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
 
 <div style="margin-top: 5em">
 <h2>Network Bridges</h2>
@@ -36,16 +39,17 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.networkBridges}" var="nb">
 <tr>
-	<td>${nb.remoteBrokerName}</td>
-	<td>${nb.remoteAddress}</td>
-	<td>${nb.createdByDuplex}</td>
-	<td>${nb.enqueueCounter}</td>
-	<td>${nb.dequeueCounter}</td>
+	<td><c:out value="${nb.remoteBrokerName}" /></td>
+	<td><c:out value="${nb.remoteAddress}" /></td>
+	<td><c:out value="${nb.createdByDuplex}" /></td>
+	<td><c:out value="${nb.enqueueCounter}" /></td>
+	<td><c:out value="${nb.dequeueCounter}" /></td>
 </tr>
 </c:forEach>
 </tbody>
 </table>
 </div>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

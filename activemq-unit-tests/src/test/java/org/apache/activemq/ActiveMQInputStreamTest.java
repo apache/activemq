@@ -23,11 +23,13 @@ import javax.jms.Queue;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class ActiveMQInputStreamTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQInputStreamTest.class);
@@ -39,6 +41,7 @@ public class ActiveMQInputStreamTest extends TestCase {
     private BrokerService broker;
     private String connectionUri;
 
+    @Override
     public void setUp() throws Exception {
         broker = new BrokerService();
         broker.setUseJmx(false);
@@ -53,6 +56,7 @@ public class ActiveMQInputStreamTest extends TestCase {
         connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
+    @Override
     public void tearDown() throws Exception {
         broker.stop();
         broker.waitUntilStopped();

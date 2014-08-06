@@ -16,16 +16,12 @@
  */
 package org.apache.activemq.usecases;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import java.util.Arrays;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Queue;
 import javax.jms.Session;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -51,22 +47,12 @@ public class MemoryLimitTest extends TestSupport {
     final String payload = new String(new byte[10 * 1024]); //10KB
     protected BrokerService broker;
 
-    private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
+    @Parameterized.Parameter
+    public TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
 
-    @Parameterized.Parameters
-    public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
-        TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
-        TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};
-        TestSupport.PersistenceAdapterChoice[] jdbc = {TestSupport.PersistenceAdapterChoice.JDBC};
-        List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
-        choices.add(kahaDb);
-        choices.add(levelDb);
-        choices.add(jdbc);
-        return choices;
-    }
-
-    public MemoryLimitTest(TestSupport.PersistenceAdapterChoice choice) {
-        this.persistenceAdapterChoice = choice;
+    @Parameterized.Parameters(name="store={0}")
+    public static Iterable<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{TestSupport.PersistenceAdapterChoice.KahaDB}, {PersistenceAdapterChoice.LevelDB}, {PersistenceAdapterChoice.JDBC}});
     }
 
     protected BrokerService createBroker() throws Exception {
@@ -155,7 +141,10 @@ public class MemoryLimitTest extends TestSupport {
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {
-            msg = consumer.receive(1000);
+            msg = consumer.receive(5000);
+            if (msg == null) {
+               dumpAllThreads("NoMessage");
+            }
             assertNotNull("Didn't receive message " + i, msg);
             msg.acknowledge();
         }

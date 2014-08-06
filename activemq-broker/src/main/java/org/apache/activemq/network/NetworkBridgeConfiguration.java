@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.network;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Configuration for a NetworkBridge
@@ -59,6 +59,9 @@ public class NetworkBridgeConfiguration {
     private boolean useCompression = false;
     private boolean advisoryForFailedForward = false;
     private boolean useBrokerNamesAsIdSeed = true;
+    private boolean gcDestinationViews = true;
+    private long gcSweepTime = 60 * 1000;
+    private boolean checkDuplicateMessagesOnDuplex = false;
 
     /**
      * @return the conduitSubscriptions
@@ -421,4 +424,29 @@ public class NetworkBridgeConfiguration {
     public void setUseBrokerNameAsIdSees(boolean val) {
         useBrokerNamesAsIdSeed = val;
     }
+
+    public boolean isGcDestinationViews() {
+        return gcDestinationViews;
+    }
+
+    public void setGcDestinationViews(boolean gcDestinationViews) {
+        this.gcDestinationViews = gcDestinationViews;
+    }
+
+    public long getGcSweepTime() {
+        return gcSweepTime;
+    }
+
+    public void setGcSweepTime(long gcSweepTime) {
+        this.gcSweepTime = gcSweepTime;
+    }
+
+    public boolean isCheckDuplicateMessagesOnDuplex() {
+        return checkDuplicateMessagesOnDuplex;
+    }
+
+    public void setCheckDuplicateMessagesOnDuplex(boolean checkDuplicateMessagesOnDuplex) {
+        this.checkDuplicateMessagesOnDuplex = checkDuplicateMessagesOnDuplex;
+    }
+
 }

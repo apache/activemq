@@ -48,6 +48,17 @@ public class JmsConsumerSystem extends AbstractJmsClientSystem {
         this.consumer = consumer;
     }
 
+    @Override
+    protected ClientRunBasis getClientRunBasis() {
+        assert (consumer != null);
+        return ClientRunBasis.valueOf(consumer.getRecvType().toLowerCase());
+    }
+
+    @Override
+    protected long getClientRunDuration() {
+        return consumer.getRecvDuration();
+    }
+
     protected void runJmsClient(String clientName, int clientDestIndex, int clientDestCount) {
         ThroughputSamplerTask sampler = getTpSampler();
 

@@ -21,10 +21,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,18 +47,18 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
         producerEventSource.start();
 
         consumerSession1 = createProducer();
-        assertConsumerEvent(1, true);
+        assertProducerEvent(1, true);
 
         consumerSession2 = createProducer();
-        assertConsumerEvent(2, true);
+        assertProducerEvent(2, true);
 
         consumerSession1.close();
         consumerSession1 = null;
-        assertConsumerEvent(1, false);
+        assertProducerEvent(1, false);
 
         consumerSession2.close();
         consumerSession2 = null;
-        assertConsumerEvent(0, false);
+        assertProducerEvent(0, false);
     }
 
     public void testListenWhileAlreadyConsumersActive() throws Exception {
@@ -66,17 +66,32 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
         consumerSession2 = createProducer();
 
         producerEventSource.start();
-        assertConsumerEvent(2, true);
-        assertConsumerEvent(2, true);
+        assertProducerEvent(2, true);
+        assertProducerEvent(2, true);
 
         consumerSession1.close();
         consumerSession1 = null;
-        assertConsumerEvent(1, false);
+        assertProducerEvent(1, false);
 
         consumerSession2.close();
         consumerSession2 = null;
-        assertConsumerEvent(0, false);
+        assertProducerEvent(0, false);
     }
+
+    public void testConsumerEventsOnTemporaryDestination() throws Exception {
+
+        Session s = connection.createSession(true,Session.AUTO_ACKNOWLEDGE);
+        Destination dest = useTopic ? s.createTemporaryTopic() : s.createTemporaryQueue();
+        producerEventSource = new ProducerEventSource(connection, dest);
+        producerEventSource.setProducerListener(this);
+        producerEventSource.start();
+        MessageProducer producer = s.createProducer(dest);
+        assertProducerEvent(1, true);
+        producer.close();
+        assertProducerEvent(0, false);
+    }
+
+
 
     @Override
     public void onProducerEvent(ProducerEvent event) {
@@ -110,7 +125,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
         super.tearDown();
     }
 
-    protected void assertConsumerEvent(int count, boolean started) throws InterruptedException {
+    protected void assertProducerEvent(int count, boolean started) throws InterruptedException {
         ProducerEvent event = waitForProducerEvent();
         assertEquals("Producer count", count, event.getProducerCount());
         assertEquals("started", started, event.isStarted());

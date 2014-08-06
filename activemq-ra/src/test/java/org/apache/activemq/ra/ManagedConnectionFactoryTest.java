@@ -28,6 +28,7 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.QueueConnectionFactory;
+import javax.jms.Session;
 import javax.jms.TopicConnectionFactory;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
@@ -56,6 +57,7 @@ public class ManagedConnectionFactoryTest extends TestCase {
         managedConnectionFactory.setServerUrl(DEFAULT_HOST);
         managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
         managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
+        managedConnectionFactory.setUseSessionArgs(false);
     }
 
     public void testConnectionFactoryAllocation() throws ResourceException, JMSException {
@@ -88,8 +90,26 @@ public class ManagedConnectionFactoryTest extends TestCase {
         assertTrue(connection != null);
         assertTrue(connection instanceof ManagedConnectionProxy);
 
+        Session session = connection.createSession(true, 0);
+        assertFalse("transacted attribute is ignored, only transacted with xa or local tx", session.getTransacted());
+
         connection.close();
 
+    }
+
+    public void testConnectionSessionArgs() throws ResourceException, JMSException {
+        ActiveMQConnectionRequestInfo connectionRequestInfo = new ActiveMQConnectionRequestInfo();
+        connectionRequestInfo.setServerUrl(DEFAULT_HOST);
+        connectionRequestInfo.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
+        connectionRequestInfo.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
+        connectionRequestInfo.setUseSessionArgs(true);
+
+        ManagedConnection managedConnection = managedConnectionFactory.createManagedConnection(null, connectionRequestInfo);
+        Connection connection = (Connection) managedConnection.getConnection(null, connectionRequestInfo);
+
+        Session session = connection.createSession(true, 0);
+        assertTrue("transacted attribute is respected", session.getTransacted());
+        connection.close();
     }
 
     public void testConnectionFactoryConnectionMatching() throws ResourceException, JMSException {

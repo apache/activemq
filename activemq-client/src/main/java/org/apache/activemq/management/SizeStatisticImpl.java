@@ -154,7 +154,7 @@ public class SizeStatisticImpl extends StatisticImpl{
         buffer.append(Long.toString(minSize));
         buffer.append(" totalSize: ");
         buffer.append(Long.toString(totalSize));
-        buffer.append(" averageTime: ");
+        buffer.append(" averageSize: ");
         buffer.append(Double.toString(getAverageSize()));
         buffer.append(" averageTimeExMinMax: ");
         buffer.append(Double.toString(getAveragePerSecondExcludingMinMax()));

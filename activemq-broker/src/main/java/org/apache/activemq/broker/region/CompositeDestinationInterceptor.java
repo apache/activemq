@@ -56,4 +56,9 @@ public class CompositeDestinationInterceptor implements DestinationInterceptor {
     public void setInterceptors(final DestinationInterceptor[] interceptors) {
         this.interceptors = interceptors;
     }
+
+    public DestinationInterceptor[] getInterceptors() {
+        return interceptors;
+    }
+
 }

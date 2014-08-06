@@ -16,11 +16,9 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import org.apache.activemq.command.Command;
-import org.fusesource.hawtbuf.Buffer;
-
 import java.io.IOException;
-import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.activemq.command.Command;
 
 /**
  */

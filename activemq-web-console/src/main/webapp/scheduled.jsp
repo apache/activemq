@@ -16,9 +16,14 @@
 --%>
 <html>
 <head>
-<title>Messages Scheduled for Future Delivery</title>
+<c:set var="pageTitle" value="Messages Scheduled for Future Delivery"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
 
 <c:choose>
 <c:when test="${requestContext.brokerQuery.jobSchedulerStarted}">
@@ -48,7 +53,7 @@
 	 	 <td><c:out value="${row.period}"/></td>
 	     <td><c:out value="${row.repeat}"/></td>
 		<td>
-		    <a href="deleteJob.action?jobId=${row.jobId}&secret=<c:out value='${sessionScope["secret"]}'/>">Delete</a>
+		    <a href="<c:url value="deleteJob.action?jobId=${row.jobId}&secret=${sessionScope['secret']}"/>">Delete</a>
 		</td>
 	    </tr>
 	</c:forEach>
@@ -61,6 +66,7 @@
 </div>
 </c:otherwise>
 </c:choose>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

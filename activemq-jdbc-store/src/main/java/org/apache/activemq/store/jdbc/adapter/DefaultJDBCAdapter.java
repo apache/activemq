@@ -65,6 +65,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultJDBCAdapter.class);
     public static final int MAX_ROWS = org.apache.activemq.ActiveMQPrefetchPolicy.MAX_PREFETCH_SIZE;
     protected Statements statements;
+    private boolean batchStatements = true;
+    //This is deprecated and should be removed in a future release
     protected boolean batchStatments = true;
     protected boolean prioritizedMessages;
     protected ReadWriteLock cleanupExclusiveLock = new ReentrantReadWriteLock();
@@ -216,7 +218,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
-                if (this.batchStatments) {
+                if (this.batchStatements) {
                     c.setAddMessageStatement(s);
                 }
             }
@@ -235,14 +237,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             } else {
                 s.setString(8, null);
             }
-            if (this.batchStatments) {
+            if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
                 throw new SQLException("Failed add a message");
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
-            if (!this.batchStatments) {
+            if (!this.batchStatements) {
                 if (s != null) {
                     s.close();
                 }
@@ -250,6 +252,24 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
+    @Override
+    public void doUpdateMessage(TransactionContext c, ActiveMQDestination destination, MessageId id, byte[] data) throws SQLException, IOException {
+        PreparedStatement s = null;
+        cleanupExclusiveLock.readLock().lock();
+        try {
+            s = c.getConnection().prepareStatement(this.statements.getUpdateMessageStatement());
+            setBinaryData(s, 1, data);
+            s.setString(2, id.getProducerId().toString());
+            s.setLong(3, id.getProducerSequenceId());
+            s.setString(4, destination.getQualifiedName());
+            if (s.executeUpdate() != 1) {
+                throw new IOException("Could not update message: " + id + " in " + destination);
+            }
+        } finally {
+            cleanupExclusiveLock.readLock().unlock();
+            close(s);
+        }
+    }
 
 
     public void doAddMessageReference(TransactionContext c, long sequence, MessageId messageID, ActiveMQDestination destination,
@@ -259,7 +279,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(this.statements.getAddMessageStatement());
-                if (this.batchStatments) {
+                if (this.batchStatements) {
                     c.setAddMessageStatement(s);
                 }
             }
@@ -269,14 +289,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(4, destination.getQualifiedName());
             s.setLong(5, expirationTime);
             s.setString(6, messageRef);
-            if (this.batchStatments) {
+            if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
                 throw new SQLException("Failed add a message");
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
-            if (!this.batchStatments) {
+            if (!this.batchStatements) {
                 s.close();
             }
         }
@@ -352,7 +372,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (s == null) {
                 s = c.getConnection().prepareStatement(xid == null ?
                         this.statements.getRemoveMessageStatement() : this.statements.getUpdateXidFlagStatement());
-                if (this.batchStatments) {
+                if (this.batchStatements) {
                     c.setRemovedMessageStatement(s);
                 }
             }
@@ -365,14 +385,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s.setString(1, xidString);
                 s.setLong(2, seq);
             }
-            if (this.batchStatments) {
+            if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
                 throw new SQLException("Failed to remove message");
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
-            if (!this.batchStatments && s != null) {
+            if (!this.batchStatements && s != null) {
                 s.close();
             }
         }
@@ -443,7 +463,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s = c.getConnection().prepareStatement(xid == null ?
                         this.statements.getUpdateDurableLastAckWithPriorityStatement() :
                         this.statements.getUpdateDurableLastAckWithPriorityInTxStatement());
-                if (this.batchStatments) {
+                if (this.batchStatements) {
                     c.setUpdateLastAckStatement(s);
                 }
             }
@@ -458,14 +478,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
             s.setLong(5, priority);
-            if (this.batchStatments) {
+            if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
                 throw new SQLException("Failed update last ack with priority: " + priority + ", for sub: " + subscriptionName);
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
-            if (!this.batchStatments) {
+            if (!this.batchStatements) {
                 close(s);
             }
         }
@@ -481,7 +501,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 s = c.getConnection().prepareStatement(xid == null ?
                         this.statements.getUpdateDurableLastAckStatement() :
                         this.statements.getUpdateDurableLastAckInTxStatement());
-                if (this.batchStatments) {
+                if (this.batchStatements) {
                     c.setUpdateLastAckStatement(s);
                 }
             }
@@ -496,7 +516,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s.setString(3, clientId);
             s.setString(4, subscriptionName);
 
-            if (this.batchStatments) {
+            if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
                 throw new IOException("Could not update last ack seq : "
@@ -504,7 +524,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
-            if (!this.batchStatments) {
+            if (!this.batchStatements) {
                 close(s);
             }            
         }
@@ -893,16 +913,39 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     /**
-     * @return true if batchStements
+     * @return true if batchStatements
      */
-    public boolean isBatchStatments() {
-        return this.batchStatments;
+    public boolean isBatchStatements() {
+        return batchStatements;
     }
 
     /**
+     * Set the number of statements to process as a single batch DB update
+     * @param batchStatements
+     */
+    public void setBatchStatements(boolean batchStatements) {
+        this.batchStatements = batchStatements;
+        // The next lines are deprecated and should be removed in a future release
+        // and is here in case someone created their own
+        this.batchStatments = batchStatements;
+    }
+
+    // Note - remove batchStatment in future distributions.  Here for backward compatibility
+    /**
+     * @return true if batchStements
+     */
+    public boolean isBatchStatments() {
+        return this.batchStatements;
+    }
+
+    /**
+     * This value batchStatments is deprecated and will be removed in a future release.  Use batchStatements instead (Note the 'e' in Statement)"
+     * @deprecated
      * @param batchStatments
      */
     public void setBatchStatments(boolean batchStatments) {
+        LOG.warn("batchStatments is deprecated and will be removed in a future release.  Use batchStatements instead (Note the 'e' in Statement)");
+        this.batchStatements = batchStatments;
         this.batchStatments = batchStatments;
     }
 
@@ -1034,7 +1077,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return result;
     }
 
-    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long nextSeq,
+    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long maxSeq, long lastRecoveredSeq,
             long priority, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
@@ -1047,10 +1090,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             s.setMaxRows(Math.min(maxReturned * 2, maxRows));
             s.setString(1, destination.getQualifiedName());
-            s.setLong(2, nextSeq);
+            s.setLong(2, lastRecoveredSeq);
+            s.setLong(3, maxSeq);
             if (isPrioritizedMessages) {
-                s.setLong(3, priority);
                 s.setLong(4, priority);
+                s.setLong(5, priority);
             }
             rs = s.executeQuery();
             int count = 0;

@@ -18,6 +18,8 @@ package org.apache.activemq;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -32,7 +34,6 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
-
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.jndi.JNDIBaseStorable;
@@ -48,6 +49,8 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A ConnectionFactory is an an Administered object, and is used for creating
@@ -59,8 +62,61 @@ import org.apache.activemq.util.URISupport.CompositeData;
  * @see javax.jms.ConnectionFactory
  */
 public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Cloneable {
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnectionFactory.class);
+    private static final String DEFAULT_BROKER_HOST;
+    private static final int DEFAULT_BROKER_PORT;
+    static{
+        String host = null;
+        String port = null;
+        try {
+             host = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                 @Override
+                 public String run() {
+                     String result = System.getProperty("org.apache.activemq.AMQ_HOST");
+                     result = (result==null||result.isEmpty()) ?  System.getProperty("AMQ_HOST","localhost") : result;
+                     return result;
+                 }
+             });
+             port = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                 @Override
+                 public String run() {
+                     String result = System.getProperty("org.apache.activemq.AMQ_PORT");
+                     result = (result==null||result.isEmpty()) ?  System.getProperty("AMQ_PORT","61616") : result;
+                     return result;
+                 }
+             });
+        }catch(Throwable e){
+            LOG.debug("Failed to look up System properties for host and port",e);
+        }
+        host = (host == null || host.isEmpty()) ? "localhost" : host;
+        port = (port == null || port.isEmpty()) ? "61616" : port;
+        DEFAULT_BROKER_HOST = host;
+        DEFAULT_BROKER_PORT = Integer.parseInt(port);
+    }
 
-    public static final String DEFAULT_BROKER_BIND_URL = "tcp://localhost:61616";
+
+    public static final String DEFAULT_BROKER_BIND_URL;
+
+    static{
+        final String defaultURL = "tcp://" + DEFAULT_BROKER_HOST + ":" + DEFAULT_BROKER_PORT;
+        String bindURL = null;
+
+        try {
+            bindURL = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                @Override
+                public String run() {
+                    String result = System.getProperty("org.apache.activemq.BROKER_BIND_URL");
+                    result = (result==null||result.isEmpty()) ?  System.getProperty("BROKER_BIND_URL",defaultURL) : result;
+                    return result;
+                }
+            });
+        }catch(Throwable e){
+            LOG.debug("Failed to look up System properties for host and port",e);
+        }
+        bindURL = (bindURL == null || bindURL.isEmpty()) ? defaultURL : bindURL;
+        DEFAULT_BROKER_BIND_URL = bindURL;
+    }
+
     public static final String DEFAULT_BROKER_URL = "failover://"+DEFAULT_BROKER_BIND_URL;
     public static final String DEFAULT_USER = null;
     public static final String DEFAULT_PASSWORD = null;
@@ -123,6 +179,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private TaskRunnerFactory sessionTaskRunner;
     private RejectedExecutionHandler rejectedTaskHandler = null;
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
+    private boolean rmIdFromConnectionId = false;
 
     // /////////////////////////////////////////////
     //
@@ -165,7 +222,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         }
     }
 
-    /**
+    /*boolean*
      * @param brokerURL
      * @return
      * @throws URISyntaxException
@@ -345,6 +402,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setSessionTaskRunner(getSessionTaskRunner());
         connection.setRejectedTaskHandler(getRejectedTaskHandler());
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
+        connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -616,14 +674,14 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * @return the sendTimeout
+     * @return the sendTimeout (in milliseconds)
      */
     public int getSendTimeout() {
         return sendTimeout;
     }
 
     /**
-     * @param sendTimeout the sendTimeout to set
+     * @param sendTimeout the sendTimeout to set (in milliseconds)
      */
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
@@ -765,6 +823,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
+        props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
     }
 
     public boolean isUseCompression() {
@@ -1149,4 +1208,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
         this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
     }
+
+
+    public boolean isRmIdFromConnectionId() {
+        return rmIdFromConnectionId;
+    }
+
+    /**
+     * uses the connection id as the resource identity for XAResource.isSameRM
+     * ensuring join will only occur on a single connection
+     */
+    public void setRmIdFromConnectionId(boolean rmIdFromConnectionId) {
+        this.rmIdFromConnectionId = rmIdFromConnectionId;
+    }
+
 }

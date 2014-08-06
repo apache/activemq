@@ -64,6 +64,11 @@ public class MessageAck extends BaseCommand {
      */
     public static final byte UNMATCHED_ACK_TYPE = 5;
 
+    /**
+     * the case where a consumer does not dispatch because message has expired inflight
+     */
+    public static final byte EXPIRED_ACK_TYPE = 6;
+
     protected byte ackType;
     protected ConsumerId consumerId;
     protected MessageId firstMessageId;
@@ -133,6 +138,10 @@ public class MessageAck extends BaseCommand {
 
     public boolean isUnmatchedAck() {
         return ackType == UNMATCHED_ACK_TYPE;
+    }
+
+    public boolean isExpiredAck() {
+        return ackType == EXPIRED_ACK_TYPE;
     }
 
     /**

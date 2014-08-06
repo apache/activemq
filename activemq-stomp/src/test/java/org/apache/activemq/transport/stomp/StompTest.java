@@ -257,13 +257,13 @@ public class StompTest extends StompTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SEND\n" + "AMQ_SCHEDULED_DELAY:5000\n"  + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
+        frame = "SEND\n" + "AMQ_SCHEDULED_DELAY:2000\n"  + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
 
-        TextMessage message = (TextMessage)consumer.receive(2000);
+        TextMessage message = (TextMessage)consumer.receive(1000);
         assertNull(message);
-        message = (TextMessage)consumer.receive(5000);
+        message = (TextMessage)consumer.receive(2500);
         assertNotNull(message);
     }
 
@@ -376,7 +376,7 @@ public class StompTest extends StompTestSupport {
 
     @Test
     public void testSubscriptionReceipts() throws Exception {
-        final int done = 500;
+        final int done = 20;
         int count = 0;
         int receiptId = 0;
 
@@ -591,7 +591,7 @@ public class StompTest extends StompTestSupport {
         }
 
         // sleep a while before publishing another set of messages
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(1);
 
         for (int i = 0; i < ctr; ++i) {
             data[i] = getName() + ":second:" + i;
@@ -812,7 +812,7 @@ public class StompTest extends StompTestSupport {
         sendMessage("second message");
 
         try {
-            frame = stompConnection.receiveFrame();
+            frame = stompConnection.receiveFrame(500);
             LOG.info("Received frame: " + frame);
             fail("No message should have been received since subscription was removed");
         } catch (SocketTimeoutException e) {
@@ -1523,7 +1523,7 @@ public class StompTest extends StompTestSupport {
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         } catch (InterruptedException e){}
 
         //reconnect
@@ -2315,7 +2315,7 @@ public class StompTest extends StompTestSupport {
 
         stompConnection.sendFrame(frame);
 
-        sframe = stompConnection.receive(60000);
+        sframe = stompConnection.receive(5000);
         assertNotNull(sframe);
         assertEquals("MESSAGE", sframe.getAction());
         assertEquals(bigBody, sframe.getBody());

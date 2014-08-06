@@ -25,8 +25,8 @@ public class JobImpl implements Job {
     private final JobLocation jobLocation;
     private final byte[] payload;
 
-    protected JobImpl(JobLocation location,ByteSequence bs) {
-        this.jobLocation=location;
+    protected JobImpl(JobLocation location, ByteSequence bs) {
+        this.jobLocation = location;
         this.payload = new byte[bs.getLength()];
         System.arraycopy(bs.getData(), bs.getOffset(), this.payload, 0, bs.getLength());
     }
@@ -38,22 +38,22 @@ public class JobImpl implements Job {
 
     @Override
     public byte[] getPayload() {
-       return this.payload;
+        return this.payload;
     }
 
     @Override
     public long getPeriod() {
-       return this.jobLocation.getPeriod();
+        return this.jobLocation.getPeriod();
     }
 
     @Override
     public int getRepeat() {
-       return this.jobLocation.getRepeat();
+        return this.jobLocation.getRepeat();
     }
 
     @Override
     public long getStart() {
-       return this.jobLocation.getStartTime();
+        return this.jobLocation.getStartTime();
     }
 
     @Override
@@ -76,4 +76,13 @@ public class JobImpl implements Job {
         return JobSupport.getDateTime(getStart());
     }
 
+    @Override
+    public int getExecutionCount() {
+        return this.jobLocation.getRescheduledCount();
+    }
+
+    @Override
+    public String toString() {
+        return "Job: " + getJobId();
+    }
 }

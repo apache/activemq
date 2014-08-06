@@ -122,22 +122,22 @@ public class ProxyMessageStore implements MessageStore {
     }
 
     @Override
-    public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
+    public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
        return delegate.asyncAddQueueMessage(context, message);
     }
 
     @Override
-    public Future<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+    public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
        return delegate.asyncAddQueueMessage(context,message,canOptimizeHint);
     }
 
     @Override
-    public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
+    public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
         return delegate.asyncAddTopicMessage(context, message);
      }
 
     @Override
-    public Future<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
+    public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
         return asyncAddTopicMessage(context,message,canOptimizeHint);
     }
 
@@ -154,5 +154,10 @@ public class ProxyMessageStore implements MessageStore {
     @Override
     public boolean isPrioritizedMessages() {
         return delegate.isPrioritizedMessages();
+    }
+
+    @Override
+    public void updateMessage(Message message) throws IOException {
+        delegate.updateMessage(message);
     }
 }

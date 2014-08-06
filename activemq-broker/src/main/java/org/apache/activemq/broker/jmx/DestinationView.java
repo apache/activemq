@@ -90,6 +90,11 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
+    public long getForwardCount() {
+        return destination.getDestinationStatistics().getForwards().getCount();
+    }
+
+    @Override
     public long getDispatchCount() {
         return destination.getDestinationStatistics().getDispatched().getCount();
     }

@@ -100,7 +100,6 @@ public class AnyChildDestinationNode implements DestinationNode {
         return answer;
     }
 
-
     public Collection getChildren() {
         Collection answer = new ArrayList();
         Iterator iter = getChildNodes().iterator();

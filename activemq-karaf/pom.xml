@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.10-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-karaf</artifactId>
@@ -35,7 +35,7 @@
     <jodatime-bundle-version>1.6.2</jodatime-bundle-version>
     <jdom-bundle-version>1.1_4</jdom-bundle-version>
     <dom4j-bundle-version>1.6.1_2</dom4j-bundle-version>
-    <xstream-bundle-version>1.3_3</xstream-bundle-version>
+    <xstream-bundle-version>1.4.7_1</xstream-bundle-version>
     <servicemix.specs.version>1.9.0</servicemix.specs.version>
   </properties>
 
@@ -143,6 +143,11 @@
                   <classifier>features</classifier>
                 </artifact>
                 <artifact>
+                  <file>target/classes/features-core.xml</file>
+                  <type>xml</type>
+                  <classifier>features-core</classifier>
+                </artifact>
+                <artifact>
                   <file>target/classes/activemq.xml</file>
                   <type>xml</type>
                   <classifier>activemq</classifier>
@@ -171,6 +176,8 @@
             <Export-Package>org.apache.activemq.karaf*;version=${project.version};-split-package:=merge-first</Export-Package>
             <Import-Package>
               org.apache.felix.gogo.commands,
+              org.apache.karaf.shell.console;version="[2,4)",
+              org.apache.karaf.shell.console.commands;version="[2,4)",
               *
             </Import-Package>
             <Private-Package>!*</Private-Package>

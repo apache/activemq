@@ -17,6 +17,7 @@
 package org.apache.activemq.jms.pool;
 
 import javax.jms.Destination;
+import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -34,10 +35,12 @@ public class PooledProducer implements MessageProducer {
     private boolean disableMessageTimestamp;
     private int priority;
     private long timeToLive;
+    private boolean anonymous = true;
 
     public PooledProducer(MessageProducer messageProducer, Destination destination) throws JMSException {
         this.messageProducer = messageProducer;
         this.destination = destination;
+        this.anonymous = messageProducer.getDestination() == null;
 
         this.deliveryMode = messageProducer.getDeliveryMode();
         this.disableMessageID = messageProducer.getDisableMessageID();
@@ -48,6 +51,9 @@ public class PooledProducer implements MessageProducer {
 
     @Override
     public void close() throws JMSException {
+        if (!anonymous) {
+            this.messageProducer.close();
+        }
     }
 
     @Override
@@ -67,13 +73,25 @@ public class PooledProducer implements MessageProducer {
 
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+
         if (destination == null) {
-            destination = this.destination;
+            if (messageProducer.getDestination() == null) {
+                throw new UnsupportedOperationException("A destination must be specified.");
+            }
+            throw new InvalidDestinationException("Don't understand null destinations");
         }
+
         MessageProducer messageProducer = getMessageProducer();
 
         // just in case let only one thread send at once
         synchronized (messageProducer) {
+
+            if (anonymous && this.destination != null && !this.destination.equals(destination)) {
+                throw new UnsupportedOperationException("This producer can only send messages to: " + this.destination);
+            }
+
+            // Producer will do it's own Destination validation so always use the destination
+            // based send method otherwise we might violate a JMS rule.
             messageProducer.send(destination, message, deliveryMode, priority, timeToLive);
         }
     }
@@ -137,6 +155,10 @@ public class PooledProducer implements MessageProducer {
     // -------------------------------------------------------------------------
     protected MessageProducer getMessageProducer() {
         return messageProducer;
+    }
+
+    protected boolean isAnonymous() {
+        return anonymous;
     }
 
     @Override

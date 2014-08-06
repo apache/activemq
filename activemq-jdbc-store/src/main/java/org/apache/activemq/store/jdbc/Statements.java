@@ -169,7 +169,7 @@ public class Statements {
 
     public String getUpdateMessageStatement() {
         if (updateMessageStatement == null) {
-            updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE ID=?";
+            updateMessageStatement = "UPDATE " + getFullMessageTableName() + " SET MSG=? WHERE MSGID_PROD=? AND MSGID_SEQ=? AND CONTAINER=?";
         }
         return updateMessageStatement;
     }
@@ -498,7 +498,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                                        + " WHERE CONTAINER=? AND ID > ? AND XID IS NULL ORDER BY ID";
+                                        + " WHERE CONTAINER=? AND ID > ? AND ID < ? AND XID IS NULL ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
@@ -511,7 +511,7 @@ public class Statements {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
                                         + " AND XID IS NULL"
-                                        + " AND ((ID > ? AND PRIORITY = ?) OR PRIORITY < ?)"
+                                        + " AND ((ID > ? AND ID < ? AND PRIORITY = ?) OR PRIORITY < ?)"
                                         + " ORDER BY PRIORITY DESC, ID";
         }
         return findNextMessagesByPriorityStatement;

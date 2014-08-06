@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-
 import java.util.Arrays;
 import java.util.Set;
 
@@ -56,11 +55,12 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public void sendMessages() throws JMSException {
         // Send a specific number of messages
         if (client.getSendType().equalsIgnoreCase(JmsProducerProperties.COUNT_BASED_SENDING)) {
-            sendCountBasedMessages(client.getSendCount());
-
+            long sendCount = client.getSendCount();
+            sendCountBasedMessages(sendCount);
         // Send messages for a specific duration
         } else {
-            sendTimeBasedMessages(client.getSendDuration());
+            long sendDuration = client.getSendDuration();
+            sendTimeBasedMessages(sendDuration);
         }
     }
 
@@ -77,7 +77,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public void sendCountBasedMessages(long messageCount) throws JMSException {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
-        Destination[] dest = createDestination(destIndex, destCount);
+        Destination[] dest = createDestinations(destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -90,18 +90,18 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         try {
             getConnection().start();
             if (client.getMsgFileName() != null) {
-            	LOG.info("Starting to publish " +
-            		messageCount + 
-            		" messages from file " + 
-            		client.getMsgFileName()
-            	);
+                LOG.info("Starting to publish " +
+                    messageCount +
+                    " messages from file " +
+                    client.getMsgFileName()
+                );
             } else {
-            	LOG.info("Starting to publish " +
-            		messageCount +
-            		" messages of size " +
-            		client.getMessageSize() + 
-            		" byte(s)." 
-            	);
+                LOG.info("Starting to publish " +
+                    messageCount +
+                    " messages of size " +
+                    client.getMessageSize() +
+                    " byte(s)."
+                );
             }
 
             // Send one type of message only, avoiding the creation of different messages on sending
@@ -155,6 +155,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                 }
             }
         } finally {
+            LOG.info("Finished sending");
             getConnection().close();
         }
     }
@@ -164,7 +165,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
 
-        Destination[] dest = createDestination(destIndex, destCount);
+        Destination[] dest = createDestinations(destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -178,17 +179,17 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         try {
             getConnection().start();
             if (client.getMsgFileName() != null) {
-            	LOG.info("Starting to publish messages from file " + 
-            			client.getMsgFileName() + 
-            			" for " +
-            			duration + 
-            			" ms");
+                LOG.info("Starting to publish messages from file " +
+                        client.getMsgFileName() +
+                        " for " +
+                        duration +
+                        " ms");
             } else {
-            	LOG.info("Starting to publish " + 
-            			client.getMessageSize() + 
-            			" byte(s) messages for " + 
-            			duration + 
-            			" ms");
+                LOG.info("Starting to publish " +
+                        client.getMessageSize() +
+                        " byte(s) messages for " +
+                        duration +
+                        " ms");
             }
             // Send one type of message only, avoiding the creation of different messages on sending
             if (!client.isCreateNewMsg()) {
@@ -243,6 +244,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
                 }
             }
         } finally {
+            LOG.info("Finished sending");
             getConnection().close();
         }
     }
@@ -282,22 +284,22 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     }
 
     public TextMessage createJmsTextMessage() throws JMSException {
-    	if (client.getMsgFileName() != null) {
-    		return loadJmsMessage();
-    	} else {
+        if (client.getMsgFileName() != null) {
+            return loadJmsMessage();
+        } else {
           return createJmsTextMessage(client.getMessageSize());
-    	}
+        }
     }
 
     public TextMessage createJmsTextMessage(int size) throws JMSException {
         jmsTextMessage = getSession().createTextMessage(buildText("", size));
-        
+
         // support for adding message headers
         Set<String> headerKeys = this.client.getHeaderKeys();
         for (String key : headerKeys) {
-        	jmsTextMessage.setObjectProperty(key, this.client.getHeaderValue(key));
+            jmsTextMessage.setObjectProperty(key, this.client.getHeaderValue(key));
         }
-        
+
         return jmsTextMessage;
     }
 
@@ -310,10 +312,12 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         return jmsTextMessage;
     }
 
+    @Override
     public JmsClientProperties getClient() {
         return client;
     }
 
+    @Override
     public void setClient(JmsClientProperties clientProps) {
         client = (JmsProducerProperties)clientProps;
     }
@@ -323,49 +327,49 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         Arrays.fill(data, (byte) 0);
         return text + new String(data);
     }
-    
+
     protected void sleep() {
         if (client.getSendDelay() > 0) {
-        	try {
-        		LOG.trace("Sleeping for " + client.getSendDelay() + " milliseconds");
-        		Thread.sleep(client.getSendDelay());
-        	} catch (java.lang.InterruptedException ex) {
-        		LOG.warn(ex.getMessage());
-        	}
+            try {
+                LOG.trace("Sleeping for " + client.getSendDelay() + " milliseconds");
+                Thread.sleep(client.getSendDelay());
+            } catch (java.lang.InterruptedException ex) {
+                LOG.warn(ex.getMessage());
+            }
         }
     }
-    
+
     /**
      * loads the message to be sent from the specified TextFile
      */
     protected TextMessage loadJmsMessage() throws JMSException {
-    	try {
-    		// couple of sanity checks upfront 
-    		if (client.getMsgFileName() == null) {
-    			throw new JMSException("Invalid filename specified.");
-    		}
-    		
-    		File f = new File(client.getMsgFileName());
-    		if (f.isDirectory()) {
-    			throw new JMSException("Cannot load from " + 
-    					client.getMsgFileName() + 
-    					" as it is a directory not a text file.");
-    		} 
-    		
-    		// try to load file
-    		BufferedReader br = new BufferedReader(new FileReader(f));
-    		StringBuffer payload = new StringBuffer();
-    		String tmp = null;
-    		while ((tmp = br.readLine()) != null) {
-    			payload.append(tmp);
-    		}
-    		jmsTextMessage = getSession().createTextMessage(payload.toString());
-    		return jmsTextMessage;
-    		
-    	} catch (FileNotFoundException ex) {
-    		throw new JMSException(ex.getMessage());
-    	} catch (IOException iox) {
-    		throw new JMSException(iox.getMessage());
-    	}
+        try {
+            // couple of sanity checks upfront
+            if (client.getMsgFileName() == null) {
+                throw new JMSException("Invalid filename specified.");
+            }
+
+            File f = new File(client.getMsgFileName());
+            if (f.isDirectory()) {
+                throw new JMSException("Cannot load from " +
+                        client.getMsgFileName() +
+                        " as it is a directory not a text file.");
+            }
+
+            // try to load file
+            BufferedReader br = new BufferedReader(new FileReader(f));
+            StringBuffer payload = new StringBuffer();
+            String tmp = null;
+            while ((tmp = br.readLine()) != null) {
+                payload.append(tmp);
+            }
+            br.close();
+            jmsTextMessage = getSession().createTextMessage(payload.toString());
+            return jmsTextMessage;
+        } catch (FileNotFoundException ex) {
+            throw new JMSException(ex.getMessage());
+        } catch (IOException iox) {
+            throw new JMSException(iox.getMessage());
+        }
     }
 }

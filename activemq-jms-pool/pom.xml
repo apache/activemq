@@ -22,12 +22,13 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.10-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-jms-pool</artifactId>
   <name>ActiveMQ :: Generic JMS Pool</name>
   <description>Generic JMS Pooled ConnectionFactory</description>
+  <packaging>bundle</packaging>
 
   <properties>
     <activemq.osgi.import.pkg>

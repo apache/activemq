@@ -182,6 +182,9 @@ public class StompFrame implements Command {
     }
 
     public String format(boolean forLogging) {
+        if( !forLogging && getAction().equals(Stomp.Commands.KEEPALIVE) ) {
+            return "\n";
+        }
         StringBuilder buffer = new StringBuilder();
         buffer.append(getAction());
         buffer.append("\n");

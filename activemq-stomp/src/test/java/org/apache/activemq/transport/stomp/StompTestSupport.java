@@ -35,6 +35,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.AuthorizationEntry;
@@ -317,11 +318,10 @@ public class StompTestSupport {
         return proxy;
     }
 
-    protected QueueViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
-        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+    protected TopicViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
+        ObjectName topicViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
+        TopicViewMBean proxy = (TopicViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(topicViewMBeanName, TopicViewMBean.class, true);
         return proxy;
     }
-
 }

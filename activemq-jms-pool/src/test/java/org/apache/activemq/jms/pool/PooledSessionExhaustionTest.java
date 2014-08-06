@@ -32,9 +32,15 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class PooledSessionExhaustionTest extends TestCase {
     private static final String QUEUE = "FOO";
-    private static final int NUM_MESSAGES = 700;
+    private static final int NUM_MESSAGES = 500;
 
     private Logger logger = Logger.getLogger(getClass());
 
@@ -43,6 +49,7 @@ public class PooledSessionExhaustionTest extends TestCase {
     private PooledConnectionFactory pooledFactory;
     private String connectionUri;
     private int numReceived = 0;
+    private final List<Exception> exceptionList = new ArrayList<Exception>();
 
     @Override
     protected void setUp() throws Exception {
@@ -57,6 +64,7 @@ public class PooledSessionExhaustionTest extends TestCase {
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
         pooledFactory.setBlockIfSessionPoolIsFull(false);
+        pooledFactory.setMaximumActiveSessionPerConnection(1);
     }
 
     @Override
@@ -64,6 +72,25 @@ public class PooledSessionExhaustionTest extends TestCase {
         broker.stop();
         broker.waitUntilStopped();
         broker = null;
+    }
+
+    class TestRunner implements Runnable {
+
+        CyclicBarrier barrier;
+        TestRunner(CyclicBarrier barrier) {
+            this.barrier = barrier;
+        }
+
+        @Override
+        public void run() {
+            try {
+                barrier.await();
+                sendMessages(pooledFactory);
+            } catch (Exception e) {
+                exceptionList.add(e);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void sendMessages(ConnectionFactory connectionFactory) throws Exception {
@@ -79,7 +106,7 @@ public class PooledSessionExhaustionTest extends TestCase {
             TextMessage message = session.createTextMessage(msgTo);
             producer.send(message);
             connection.close();
-            logger.debug("sent " + i + " messages using " + connectionFactory.getClass());
+            logger.info("sent " + i + " messages using " + connectionFactory.getClass());
         }
     }
 
@@ -112,9 +139,23 @@ public class PooledSessionExhaustionTest extends TestCase {
         });
         thread.start();
 
-        sendMessages(pooledFactory);
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        final CyclicBarrier barrier = new CyclicBarrier(2, new Runnable() {
+
+            @Override
+            public void run() {
+                System.out.println("Starting threads to send messages!");
+            }
+        });
+
+        threads.execute(new TestRunner(barrier));
+        threads.execute(new TestRunner(barrier));
+
         thread.join();
 
+        // we should expect that one of the threads will die because it cannot acquire a session,
+        // will throw an exception
         assertEquals(NUM_MESSAGES, numReceived);
+        assertEquals(exceptionList.size(), 1);
     }
 }

@@ -40,6 +40,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -142,6 +143,15 @@ public class RegionBroker extends EmptyBroker {
     }
 
     @Override
+    public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination) {
+        try {
+            return getRegion(destination).getDestinationMap();
+        } catch (JMSException jmse) {
+            return Collections.emptyMap();
+        }
+    }
+
+    @Override
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
         try {
             return getRegion(destination).getDestinations(destination);
@@ -222,6 +232,10 @@ public class RegionBroker extends EmptyBroker {
         return brokerService != null ? brokerService.getDestinationPolicy() : null;
     }
 
+    public ConnectionContext getConnectionContext(String clientId) {
+        return clientIdSet.get(clientId);
+    }
+
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         String clientId = info.getClientId();
@@ -234,8 +248,14 @@ public class RegionBroker extends EmptyBroker {
                 if (context.isAllowLinkStealing()){
                      clientIdSet.remove(clientId);
                      if (oldContext.getConnection() != null) {
-                        LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
-                        oldContext.getConnection().stop();
+                         Connection connection = oldContext.getConnection();
+                         LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
+                         if (connection instanceof TransportConnection){
+                            TransportConnection transportConnection = (TransportConnection) connection;
+                             transportConnection.stopAsync();
+                         }else{
+                             connection.stop();
+                         }
                      }else{
                          LOG.error("Not Connection for {}", oldContext);
                      }
@@ -597,6 +617,17 @@ public class RegionBroker extends EmptyBroker {
                 long totalTime = endTime - message.getBrokerInTime();
                 ((Destination) message.getRegionDestination()).getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
+            if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered() && message.isPersistent()) {
+                final int originalValue = message.getRedeliveryCounter();
+                message.incrementRedeliveryCounter();
+                try {
+                    ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
+                } catch (IOException error) {
+                    LOG.error("Failed to persist JMSRedeliveryFlag on {} in {}", message.getMessageId(), message.getDestination(), error);
+                } finally {
+                    message.setRedeliveryCounter(originalValue);
+                }
+            }
         }
     }
 
@@ -732,10 +763,11 @@ public class RegionBroker extends EmptyBroker {
                             // it is only populated if the message is routed to
                             // another destination like the DLQ
                             ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message, subscription);
-                            if (context.getBroker() == null) {
-                                context.setBroker(getRoot());
+                            ConnectionContext adminContext = context;
+                            if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
+                                adminContext = BrokerSupport.getConnectionContext(this);
                             }
-                            BrokerSupport.resendNoCopy(context, message, deadLetterDestination);
+                            BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
                             return true;
                         }
                     } else {
@@ -840,7 +872,7 @@ public class RegionBroker extends EmptyBroker {
                     if (dest instanceof BaseDestination) {
                         log = ((BaseDestination) dest).getLog();
                     }
-                    log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimoutBeforeGC());
+                    log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC());
                     try {
                         getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
                     } catch (Exception e) {
@@ -859,5 +891,13 @@ public class RegionBroker extends EmptyBroker {
 
     public void setAllowTempAutoCreationOnSend(boolean allowTempAutoCreationOnSend) {
         this.allowTempAutoCreationOnSend = allowTempAutoCreationOnSend;
+    }
+
+    @Override
+    public void reapplyInterceptor() {
+        queueRegion.reapplyInterceptor();
+        topicRegion.reapplyInterceptor();
+        tempQueueRegion.reapplyInterceptor();
+        tempTopicRegion.reapplyInterceptor();
     }
 }

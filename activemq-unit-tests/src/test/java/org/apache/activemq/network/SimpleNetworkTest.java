@@ -74,7 +74,7 @@ public class SimpleNetworkTest {
 
     // works b/c of non marshaling vm transport, the connection
     // ref from the client is used during the forward
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testMessageCompression() throws Exception {
 
         ActiveMQConnection localAmqConnection = (ActiveMQConnection) localConnection;
@@ -98,7 +98,7 @@ public class SimpleNetworkTest {
         assertNull(consumer1.receive(1000));
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testRequestReply() throws Exception {
         final MessageProducer remoteProducer = remoteSession.createProducer(null);
         MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
@@ -130,7 +130,7 @@ public class SimpleNetworkTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testFiltering() throws Exception {
         MessageConsumer includedConsumer = remoteSession.createConsumer(included);
         MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
@@ -145,7 +145,7 @@ public class SimpleNetworkTest {
         assertNotNull(includedConsumer.receive(1000));
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testConduitBridge() throws Exception {
         MessageConsumer consumer1 = remoteSession.createConsumer(included);
         MessageConsumer consumer2 = remoteSession.createConsumer(included);
@@ -189,7 +189,7 @@ public class SimpleNetworkTest {
         }));
     }
 
-    @Test
+    @Test(timeout = 60 * 1000)
     public void testDurableStoreAndForward() throws Exception {
         // create a remote durable consumer
         MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);

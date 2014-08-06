@@ -45,6 +45,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -56,7 +58,22 @@ import org.apache.activemq.ConfigurationException;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
-import org.apache.activemq.broker.jmx.*;
+import org.apache.activemq.broker.jmx.AnnotatedMBean;
+import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
+import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.jmx.ConnectorView;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.HealthView;
+import org.apache.activemq.broker.jmx.HealthViewMBean;
+import org.apache.activemq.broker.jmx.JmsConnectorView;
+import org.apache.activemq.broker.jmx.JobSchedulerView;
+import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
+import org.apache.activemq.broker.jmx.Log4JConfigView;
+import org.apache.activemq.broker.jmx.ManagedRegionBroker;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.NetworkConnectorView;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.ProxyConnectorView;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -70,6 +87,7 @@ import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.broker.scheduler.SchedulerBroker;
+import org.apache.activemq.broker.scheduler.memory.InMemoryJobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.BrokerId;
@@ -94,7 +112,16 @@ import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.util.*;
+import org.apache.activemq.util.BrokerSupport;
+import org.apache.activemq.util.DefaultIOExceptionHandler;
+import org.apache.activemq.util.IOExceptionHandler;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.InetAddressUtil;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
+import org.apache.activemq.util.TimeUtils;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -112,6 +139,7 @@ public class BrokerService implements Service {
     public static final String BROKER_VERSION;
     public static final String DEFAULT_BROKER_NAME = "localhost";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
+    public static final long DEFAULT_START_TIMEOUT = 600000L;
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerService.class);
 
@@ -131,7 +159,7 @@ public class BrokerService implements Service {
     private boolean shutdownOnMasterFailure;
     private boolean shutdownOnSlaveFailure;
     private boolean waitForSlave;
-    private long waitForSlaveTimeout = 600000L;
+    private long waitForSlaveTimeout = DEFAULT_START_TIMEOUT;
     private boolean passiveSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
@@ -206,6 +234,8 @@ public class BrokerService implements Service {
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
     private JobSchedulerStore jobSchedulerStore;
+    private final AtomicLong totalConnections = new AtomicLong();
+    private final AtomicInteger currentConnections = new AtomicInteger();
 
     private long offlineDurableSubscriberTimeout = -1;
     private long offlineDurableSubscriberTaskSchedule = 300000;
@@ -221,7 +251,6 @@ public class BrokerService implements Service {
     private boolean restartRequested = false;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
-    private String configurationUrl;
 
     static {
 
@@ -663,6 +692,12 @@ public class BrokerService implements Service {
             setIoExceptionHandler(new DefaultIOExceptionHandler());
         }
 
+        if (isUseJmx() && Log4JConfigView.isLog4JAvailable()) {
+            ObjectName objectName = BrokerMBeanSupport.createLog4JConfigViewName(getBrokerObjectName().toString());
+            Log4JConfigView log4jConfigView = new Log4JConfigView();
+            AnnotatedMBean.registerMBean(getManagementContext(), log4jConfigView, objectName);
+        }
+
         startAllConnectors();
 
         LOG.info("Apache ActiveMQ {} ({}, {}) started", new Object[]{ getBrokerVersion(), getBrokerName(), brokerId});
@@ -878,13 +913,30 @@ public class BrokerService implements Service {
         }
     }
 
+    public boolean isStopped() {
+        return stopped.get();
+    }
+
     /**
      * A helper method to block the caller thread until the broker has fully started
      * @return boolean true if wait succeeded false if broker was not started or was stopped
      */
     public boolean waitUntilStarted() {
+        return waitUntilStarted(DEFAULT_START_TIMEOUT);
+    }
+
+    /**
+     * A helper method to block the caller thread until the broker has fully started
+     *
+     * @param timeout
+     *        the amount of time to wait before giving up and returning false.
+     *
+     * @return boolean true if wait succeeded false if broker was not started or was stopped
+     */
+    public boolean waitUntilStarted(long timeout) {
         boolean waitSucceeded = isStarted();
-        while (!isStarted() && !stopped.get() && !waitSucceeded) {
+        long expiration = Math.max(0, timeout + System.currentTimeMillis());
+        while (!isStarted() && !stopped.get() && !waitSucceeded && expiration > System.currentTimeMillis()) {
             try {
                 if (startException != null) {
                     return waitSucceeded;
@@ -1812,7 +1864,31 @@ public class BrokerService implements Service {
         if (jobSchedulerStore == null) {
 
             if (!isPersistent()) {
-                return null;
+                this.jobSchedulerStore = new InMemoryJobSchedulerStore();
+                configureService(jobSchedulerStore);
+                try {
+                    jobSchedulerStore.start();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return this.jobSchedulerStore;
+            }
+
+            try {
+                PersistenceAdapter pa = getPersistenceAdapter();
+                if (pa != null) {
+                    this.jobSchedulerStore = pa.createJobSchedulerStore();
+                    jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
+                    configureService(jobSchedulerStore);
+                    jobSchedulerStore.start();
+                    return this.jobSchedulerStore;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (UnsupportedOperationException ex) {
+                // It's ok if the store doesn't implement a scheduler.
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
 
             try {
@@ -1826,9 +1902,13 @@ public class BrokerService implements Service {
                 throw new RuntimeException(e);
             }
 
+            // Load the KahaDB store as a last resort, this only works if KahaDB is
+            // included at runtime, otherwise this will fail.  User should disable
+            // scheduler support if this fails.
             try {
-                String clazz = "org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl";
-                jobSchedulerStore = (JobSchedulerStore) getClass().getClassLoader().loadClass(clazz).newInstance();
+                String clazz = "org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter";
+                PersistenceAdapter adaptor = (PersistenceAdapter)getClass().getClassLoader().loadClass(clazz).newInstance();
+                jobSchedulerStore = adaptor.createJobSchedulerStore();
                 jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                 configureService(jobSchedulerStore);
                 jobSchedulerStore.start();
@@ -1908,14 +1988,16 @@ public class BrokerService implements Service {
                     dir = dir.getParentFile();
                 }
                 long storeLimit = usage.getStoreUsage().getLimit();
+                long storeCurrent = usage.getStoreUsage().getUsage();
                 long dirFreeSpace = dir.getUsableSpace();
-                if (storeLimit > dirFreeSpace) {
+                if (storeLimit > (dirFreeSpace + storeCurrent)) {
                     LOG.warn("Store limit is " + storeLimit / (1024 * 1024) +
-                             " mb, whilst the data directory: " + dir.getAbsolutePath() +
+                             " mb (current store usage is " + storeCurrent / (1024 * 1024) +
+                             " mb). The data directory: " + dir.getAbsolutePath() +
                              " only has " + dirFreeSpace / (1024 * 1024) +
                              " mb of usable space - resetting to maximum available disk space: " +
-                            dirFreeSpace / (1024 * 1024) + " mb");
-                    usage.getStoreUsage().setLimit(dirFreeSpace);
+                            (dirFreeSpace + storeCurrent) / (1024 * 1024) + " mb");
+                    usage.getStoreUsage().setLimit(dirFreeSpace + storeCurrent);
                 }
             }
 
@@ -2725,7 +2807,7 @@ public class BrokerService implements Service {
      * @return the schedulerSupport
      */
     public boolean isSchedulerSupport() {
-        return this.schedulerSupport && (isPersistent() || jobSchedulerStore != null);
+        return this.schedulerSupport;
     }
 
     /**
@@ -2934,5 +3016,31 @@ public class BrokerService implements Service {
 
     public void setStoreOpenWireVersion(int storeOpenWireVersion) {
         this.storeOpenWireVersion = storeOpenWireVersion;
+    }
+
+    /**
+     * @return the current number of connections on this Broker.
+     */
+    public int getCurrentConnections() {
+        return this.currentConnections.get();
+    }
+
+    /**
+     * @return the total number of connections this broker has handled since startup.
+     */
+    public long getTotalConnections() {
+        return this.totalConnections.get();
+    }
+
+    public void incrementCurrentConnections() {
+        this.currentConnections.incrementAndGet();
+    }
+
+    public void decrementCurrentConnections() {
+        this.currentConnections.decrementAndGet();
+    }
+
+    public void incrementTotalConnections() {
+        this.totalConnections.incrementAndGet();
     }
 }

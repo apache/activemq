@@ -36,6 +36,16 @@ import org.junit.Test;
 
 public class AMQ4753Test extends AmqpTestSupport {
 
+    @Override
+    protected boolean isUseTcpConnector() {
+        return false;
+    }
+
+    @Override
+    protected boolean isUseNioPlusSslConnector() {
+        return true;
+    }
+
     @Test(timeout = 120 * 1000)
     public void testAmqpNioPlusSslSendReceive() throws JMSException{
         Connection connection = createAMQPConnection(nioPlusSslPort, true);

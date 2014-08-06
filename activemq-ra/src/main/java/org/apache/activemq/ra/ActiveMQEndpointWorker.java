@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
-import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -117,7 +116,7 @@ public class ActiveMQEndpointWorker {
                                     if (connecting.compareAndSet(false, true)) {
                                         synchronized (connectWork) {
                                             disconnect();
-                                            serverSessionPool.closeIdleSessions();
+                                            serverSessionPool.closeSessions();
                                             connect();
                                         }
                                     } else {
@@ -236,7 +235,7 @@ public class ActiveMQEndpointWorker {
                 c.close();
             }
         } catch (JMSException e) {
-            //
+            LOG.trace("failed to close c {}", c, e);
         }
     }
 
@@ -250,7 +249,7 @@ public class ActiveMQEndpointWorker {
                 cc.close();
             }
         } catch (JMSException e) {
-            //
+            LOG.trace("failed to close cc {}", cc, e);
         }
     }
 
@@ -295,17 +294,17 @@ public class ActiveMQEndpointWorker {
 
     private void connect() {
         synchronized ( connectWork ) {
-        if (!running) {
-            return;
-        }
+            if (!running) {
+                return;
+            }
 
-        try {
-            workManager.scheduleWork(connectWork, WorkManager.INDEFINITE, null, null);
-        } catch (WorkException e) {
-            running = false;
-            LOG.error("Work Manager did not accept work: ", e);
+            try {
+                workManager.scheduleWork(connectWork, WorkManager.INDEFINITE, null, null);
+            } catch (WorkException e) {
+                running = false;
+                LOG.error("Work Manager did not accept work: ", e);
+            }
         }
-    }
     }
 
     /**
@@ -326,6 +325,11 @@ public class ActiveMQEndpointWorker {
 
     protected void unregisterThreadSession(Session session) {
         THREAD_LOCAL.set(null);
+    }
+
+    // for testing
+    public void setConnection(ActiveMQConnection activeMQConnection) {
+        this.connection = activeMQConnection;
     }
 
     protected ActiveMQConnection getConnection() {

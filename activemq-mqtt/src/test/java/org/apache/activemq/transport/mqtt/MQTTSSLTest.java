@@ -16,65 +16,18 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import org.fusesource.mqtt.client.MQTT;
-
+/**
+ * Run the basic tests with the NIO Transport.
+ */
 public class MQTTSSLTest extends MQTTTest {
 
-    public void setUp() throws Exception {
-        String basedir = basedir().getPath();
-        System.setProperty("javax.net.ssl.trustStore", basedir+"/src/test/resources/client.keystore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", basedir+"/src/test/resources/server.keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        super.setUp();
-    }
-
     @Override
-    protected String getProtocolScheme() {
+    public String getProtocolScheme() {
         return "mqtt+ssl";
     }
 
-    protected MQTT createMQTTConnection() throws Exception {
-        MQTT mqtt = new MQTT();
-        mqtt.setConnectAttemptsMax(1);
-        mqtt.setReconnectAttemptsMax(0);
-        mqtt.setTracer(createTracer());
-        mqtt.setHost("ssl://localhost:"+mqttConnector.getConnectUri().getPort());
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
-        mqtt.setSslContext(ctx);
-        return mqtt;
-    }
-
-    protected void initializeConnection(MQTTClientProvider provider) throws Exception {
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
-        provider.setSslContext(ctx);
-        provider.connect("ssl://localhost:"+mqttConnector.getConnectUri().getPort());
-    }
-
-
-
-    static class DefaultTrustManager implements X509TrustManager {
-
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-        }
-
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
+    @Override
+    public boolean isUseSSL() {
+        return true;
     }
 }

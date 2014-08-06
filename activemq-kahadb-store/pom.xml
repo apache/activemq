@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.10-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-kahadb-store</artifactId>
@@ -104,6 +104,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>xalan</groupId>
@@ -163,7 +164,9 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <execute>
+                      <runOnIncremental>true</runOnIncremental>
+                    </execute>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -176,7 +179,8 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>always</forkMode>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
 
@@ -213,6 +217,24 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <executions>
+              <execution>
+                  <id>add-source</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                      <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                      <sources>
+                          <source>${basedir}/target/generated-sources/proto</source>
+                      </sources>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>      
     </plugins>
   </build>
   <profiles>

@@ -22,6 +22,7 @@ import java.util.Set;
 
 import javax.jms.JMSException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -80,6 +81,7 @@ public class StatisticsBroker extends BrokerFilter {
      * @see org.apache.activemq.broker.BrokerFilter#send(org.apache.activemq.broker.ProducerBrokerExchange,
      *      org.apache.activemq.command.Message)
      */
+    @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         ActiveMQDestination msgDest = messageSend.getDestination();
         ActiveMQDestination replyTo = messageSend.getReplyTo();
@@ -95,6 +97,9 @@ public class StatisticsBroker extends BrokerFilter {
             RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
             if (destStats) {
                 String destinationName = physicalName.substring(STATS_DESTINATION_PREFIX.length(), physicalName.length());
+                if (destinationName.startsWith(".")) {
+                    destinationName = destinationName.substring(1);
+                }
                 String destinationQuery = destinationName.replace(STATS_DENOTE_END_LIST,"");
                 boolean endListMessage = !destinationName.equals(destinationQuery);
                 ActiveMQDestination queryDestination = ActiveMQDestination.createDestination(destinationQuery,msgDest.getDestinationType());
@@ -104,6 +109,8 @@ public class StatisticsBroker extends BrokerFilter {
                     DestinationStatistics stats = dest.getDestinationStatistics();
                     if (stats != null) {
                         ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
+                        statsMessage.setString("brokerName", regionBroker.getBrokerName());
+                        statsMessage.setString("brokerId", regionBroker.getBrokerId().toString());
                         statsMessage.setString("destinationName", dest.getActiveMQDestination().toString());
                         statsMessage.setLong("size", stats.getMessages().getCount());
                         statsMessage.setLong("enqueueCount", stats.getEnqueues().getCount());
@@ -204,11 +211,13 @@ public class StatisticsBroker extends BrokerFilter {
         return this.brokerView;
     }
 
+    @Override
     public void start() throws Exception {
         super.start();
         LOG.info("Starting StatisticsBroker");
     }
 
+    @Override
     public void stop() throws Exception {
         super.stop();
     }
@@ -223,7 +232,10 @@ public class StatisticsBroker extends BrokerFilter {
     }
 
     protected ActiveMQMapMessage prepareSubscriptionMessage(SubscriptionViewMBean subscriber) throws JMSException {
+        Broker regionBroker = getBrokerService().getRegionBroker();
         ActiveMQMapMessage statsMessage = new ActiveMQMapMessage();
+        statsMessage.setString("brokerName", regionBroker.getBrokerName());
+        statsMessage.setString("brokerId", regionBroker.getBrokerId().toString());
         statsMessage.setString("destinationName", subscriber.getDestinationName());
         statsMessage.setString("clientId", subscriber.getClientId());
         statsMessage.setString("connectionId", subscriber.getConnectionId());
@@ -244,6 +256,8 @@ public class StatisticsBroker extends BrokerFilter {
     protected void sendStats(ConnectionContext context, ActiveMQMapMessage msg, ActiveMQDestination replyTo)
             throws Exception {
         msg.setPersistent(false);
+        msg.setTimestamp(System.currentTimeMillis());
+        msg.setPriority((byte) javax.jms.Message.DEFAULT_PRIORITY);
         msg.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
         msg.setMessageId(new MessageId(this.advisoryProducerId, this.messageIdGenerator.getNextSequenceId()));
         msg.setDestination(replyTo);

@@ -26,7 +26,13 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
 import org.apache.activemq.util.MessageIdList;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
+import static org.junit.Assert.*;
+
+@RunWith(BlockJUnit4ClassRunner.class)
 public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
 
     @Override
@@ -44,6 +50,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         return broker;
     }
 
+    @Test
     @Override
     public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesOnePrefetch();
@@ -51,6 +58,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+    @Test
     @Override
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesOnePrefetch();
@@ -58,6 +66,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+    @Test
     @Override
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
@@ -65,6 +74,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+    @Test
     @Override
     public void testOneProducerTwoConsumersLargeMessagesLargePrefetch() throws Exception {
         super.testOneProducerTwoConsumersLargeMessagesLargePrefetch();
@@ -72,6 +82,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+    @Test
     @Override
     public void testOneProducerManyConsumersFewMessages() throws Exception {
         super.testOneProducerManyConsumersFewMessages();
@@ -79,6 +90,8 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+
+    @Test
     @Override
     public void testOneProducerManyConsumersManyMessages() throws Exception {
         super.testOneProducerManyConsumersManyMessages();
@@ -86,6 +99,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+    @Test
     @Override
     public void testManyProducersOneConsumer() throws Exception {
         super.testManyProducersOneConsumer();
@@ -93,6 +107,7 @@ public class StrictOrderDispatchPolicyTest extends TopicSubscriptionTest {
         assertReceivedMessagesAreOrdered();
     }
 
+    @Test
     @Override
     public void testManyProducersManyConsumers() throws Exception {
         super.testManyProducersManyConsumers();

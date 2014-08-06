@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.TransactionRolledBackException;
@@ -52,15 +52,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Tracks the state of a connection so a newly established transport can be
  * re-initialized to the state that was tracked.
- * 
- * 
+ *
+ *
  */
 public class ConnectionStateTracker extends CommandVisitorAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionStateTracker.class);
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
     private static final int MESSAGE_PULL_SIZE = 400;
-    protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>(); 
+    protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>();
 
     private boolean trackTransactions;
     private boolean restoreSessions = true;
@@ -70,8 +70,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private boolean trackMessages = true;
     private boolean trackTransactionProducers = true;
     private int maxCacheSize = 128 * 1024;
-    private int currentCacheSize;
-    private Map<Object,Command> messageCache = new LinkedHashMap<Object,Command>(){
+    private long currentCacheSize;  // use long to prevent overflow for folks who set high max.
+
+    private final Map<Object,Command> messageCache = new LinkedHashMap<Object,Command>(){
+        @Override
         protected boolean removeEldestEntry(Map.Entry<Object,Command> eldest) {
             boolean result = currentCacheSize > maxCacheSize;
             if (result) {
@@ -87,7 +89,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             return result;
         }
     };
-    
+
     private class RemoveTransactionAction implements ResponseHandler {
         private final TransactionInfo info;
 
@@ -95,6 +97,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             this.info = info;
         }
 
+        @Override
         public void onResponse(Command response) {
             ConnectionId connectionId = info.getConnectionId();
             ConnectionState cs = connectionStates.get(connectionId);
@@ -103,28 +106,35 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             }
         }
     }
-    
-    private class PrepareReadonlyTransactionAction extends RemoveTransactionAction {
 
+    private class PrepareReadonlyTransactionAction extends RemoveTransactionAction {
         public PrepareReadonlyTransactionAction(TransactionInfo info) {
             super(info);
         }
 
+        @Override
         public void onResponse(Command command) {
-            IntegerResponse response = (IntegerResponse) command;
-            if (XAResource.XA_RDONLY == response.getResult()) {
-                // all done, no commit or rollback from TM
-                super.onResponse(command);
+            if (command instanceof IntegerResponse) {
+                IntegerResponse response = (IntegerResponse) command;
+                if (XAResource.XA_RDONLY == response.getResult()) {
+                    // all done, no commit or rollback from TM
+                    super.onResponse(command);
+                }
             }
         }
     }
 
     /**
-     * 
-     * 
+     * Entry point for all tracked commands in the tracker.  Commands should be tracked before
+     * there is an attempt to send them on the wire.  Upon a successful send of a command it is
+     * necessary to call the trackBack method to complete the tracking of the given command.
+     *
      * @param command
+     *      The command that is to be tracked by this tracker.
+     *
      * @return null if the command is not state tracked.
-     * @throws IOException
+     *
+     * @throws IOException if an error occurs during setup of the tracking operation.
      */
     public Tracked track(Command command) throws IOException {
         try {
@@ -135,7 +145,15 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             throw IOExceptionSupport.create(e);
         }
     }
-    
+
+    /**
+     * Completes the two phase tracking operation for a command that is sent on the wire.  Once
+     * the command is sent successfully to complete the tracking operation or otherwise update
+     * the state of the tracker.
+     *
+     * @param command
+     *      The command that was previously provided to the track method.
+     */
     public void trackBack(Command command) {
         if (command != null) {
             if (trackMessages && command.isMessage()) {
@@ -144,8 +162,12 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                     currentCacheSize = currentCacheSize +  message.getSize();
                 }
             } else if (command instanceof MessagePull) {
-                // just needs to be a rough estimate of size, ~4 identifiers
-                currentCacheSize += MESSAGE_PULL_SIZE;
+                // We only track one MessagePull per consumer so only add to cache size
+                // when the command has been marked as tracked.
+                if (((MessagePull)command).isTracked()) {
+                    // just needs to be a rough estimate of size, ~4 identifiers
+                    currentCacheSize += MESSAGE_PULL_SIZE;
+                }
             }
         }
     }
@@ -169,8 +191,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 restoreTransactions(transport, connectionState);
             }
         }
-        //now flush messages
-        for (Command msg:messageCache.values()) {
+
+        // now flush messages and MessagePull commands.
+        for (Command msg : messageCache.values()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("command: " + (msg.isMessage() ? ((Message) msg).getMessageId() : msg));
             }
@@ -184,7 +207,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("tx: " + transactionState.getId());
             }
-            
+
             // rollback any completed transactions - no way to know if commit got there
             // or if reply went missing
             //
@@ -201,7 +224,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                     }
                 }
             }
-            
+
             // replay short lived producers that may have been involved in the transaction
             for (ProducerState producerState : transactionState.getProducerStates().values()) {
                 if (LOG.isDebugEnabled()) {
@@ -209,14 +232,14 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
                 transport.oneway(producerState.getInfo());
             }
-            
+
             for (Command command : transactionState.getCommands()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("tx replay: " + command);
                 }
                 transport.oneway(command);
             }
-            
+
             for (ProducerState producerState : transactionState.getProducerStates().values()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("tx remove replayed producer :" + producerState.getInfo());
@@ -224,7 +247,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 transport.oneway(producerState.getInfo().createRemoveCommand());
             }
         }
-        
+
         for (TransactionInfo command: toRollback) {
             // respond to the outstanding commit
             ExceptionResponse response = new ExceptionResponse();
@@ -267,7 +290,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         // Restore the session's consumers but possibly in pull only (prefetch 0 state) till recovery complete
         final ConnectionState connectionState = connectionStates.get(sessionState.getInfo().getSessionId().getParentId());
         final boolean connectionInterruptionProcessingComplete = connectionState.isConnectionInterruptProcessingComplete();
-        for (ConsumerState consumerState : sessionState.getConsumerStates()) {   
+        for (ConsumerState consumerState : sessionState.getConsumerStates()) {
             ConsumerInfo infoToSend = consumerState.getInfo();
             if (!connectionInterruptionProcessingComplete && infoToSend.getPrefetchSize() > 0) {
                 infoToSend = consumerState.getInfo().copy();
@@ -278,7 +301,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 }
             }
             if (LOG.isDebugEnabled()) {
-                LOG.debug("restore consumer: " + infoToSend.getConsumerId());
+                LOG.debug("consumer: " + infoToSend.getConsumerId());
             }
             transport.oneway(infoToSend);
         }
@@ -317,6 +340,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
     }
 
+    @Override
     public Response processAddDestination(DestinationInfo info) {
         if (info != null) {
             ConnectionState cs = connectionStates.get(info.getConnectionId());
@@ -327,6 +351,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processRemoveDestination(DestinationInfo info) {
         if (info != null) {
             ConnectionState cs = connectionStates.get(info.getConnectionId());
@@ -337,6 +362,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processAddProducer(ProducerInfo info) {
         if (info != null && info.getProducerId() != null) {
             SessionId sessionId = info.getProducerId().getParentId();
@@ -356,6 +382,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processRemoveProducer(ProducerId id) {
         if (id != null) {
             SessionId sessionId = id.getParentId();
@@ -375,6 +402,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processAddConsumer(ConsumerInfo info) {
         if (info != null) {
             SessionId sessionId = info.getConsumerId().getParentId();
@@ -394,6 +422,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processRemoveConsumer(ConsumerId id, long lastDeliveredSequenceId) {
         if (id != null) {
             SessionId sessionId = id.getParentId();
@@ -414,6 +443,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processAddSession(SessionInfo info) {
         if (info != null) {
             ConnectionId connectionId = info.getSessionId().getParentId();
@@ -427,6 +457,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) {
         if (id != null) {
             ConnectionId connectionId = id.getParentId();
@@ -440,6 +471,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processAddConnection(ConnectionInfo info) {
         if (info != null) {
             connectionStates.put(info.getConnectionId(), new ConnectionState(info));
@@ -447,6 +479,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws Exception {
         if (id != null) {
             connectionStates.remove(id);
@@ -454,6 +487,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
+    @Override
     public Response processMessage(Message send) throws Exception {
         if (send != null) {
             if (trackTransactions && send.getTransactionId() != null) {
@@ -465,13 +499,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                         TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
                         if (transactionState != null) {
                             transactionState.addCommand(send);
-                            
+
                             if (trackTransactionProducers) {
                                 // for jmstemplate, track the producer in case it is closed before commit
                                 // and needs to be replayed
                                 SessionState ss = cs.getSessionState(producerId.getParentId());
                                 ProducerState producerState = ss.getProducerState(producerId);
-                                producerState.setTransactionState(transactionState);            
+                                producerState.setTransactionState(transactionState);
                             }
                         }
                     }
@@ -484,6 +518,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return null;
     }
 
+    @Override
     public Response processBeginTransaction(TransactionInfo info) {
         if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
@@ -500,8 +535,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return null;
     }
 
+    @Override
     public Response processPrepareTransaction(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -517,8 +553,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return null;
     }
 
+    @Override
     public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -534,8 +571,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return null;
     }
 
+    @Override
     public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -551,8 +589,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return null;
     }
 
+    @Override
     public Response processRollbackTransaction(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -568,8 +607,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return null;
     }
 
+    @Override
     public Response processEndTransaction(TransactionInfo info) throws Exception {
-        if (trackTransactions && info != null) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
                 ConnectionState cs = connectionStates.get(connectionId);
@@ -590,7 +630,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (pull != null) {
             // leave a single instance in the cache
             final String id = pull.getDestination() + "::" + pull.getConsumerId();
-            messageCache.put(id.intern(), pull);
+            if (messageCache.put(id.intern(), pull) == null) {
+                // Only marked as tracked if this is the first request we've seen.
+                pull.setTracked(true);
+            }
         }
         return null;
     }
@@ -626,7 +669,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     public void setTrackTransactions(boolean trackTransactions) {
         this.trackTransactions = trackTransactions;
     }
-    
+
     public boolean isTrackTransactionProducers() {
         return this.trackTransactionProducers;
     }
@@ -634,7 +677,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     public void setTrackTransactionProducers(boolean trackTransactionProducers) {
         this.trackTransactionProducers = trackTransactionProducers;
     }
-    
+
     public boolean isRestoreTransaction() {
         return restoreTransaction;
     }
@@ -659,6 +702,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         this.maxCacheSize = maxCacheSize;
     }
 
+    /**
+     * @return the current cache size for the Message and MessagePull Command cache.
+     */
+    public long getCurrentCacheSize() {
+        return this.currentCacheSize;
+    }
+
     public void connectionInterruptProcessingComplete(Transport transport, ConnectionId connectionId) {
         ConnectionState connectionState = connectionStates.get(connectionId);
         if (connectionState != null) {
@@ -673,7 +723,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("restored recovering consumer: " + control.getConsumerId() + " with: " + control.getPrefetch());
                     }
-                    transport.oneway(control);  
+                    transport.oneway(control);
                 } catch (Exception ex) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Failed to submit control for consumer: " + control.getConsumerId()

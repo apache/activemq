@@ -19,6 +19,7 @@ package org.apache.activemq.jms.pool;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueSender;
@@ -28,6 +29,8 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
+import javax.jms.XAConnection;
+import javax.jms.XAConnectionFactory;
 import javax.naming.spi.ObjectFactory;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -53,8 +56,7 @@ public class XAConnectionPoolTest extends TestSupport {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false"));
-
+        pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false")));
         // simple TM that is in a tx and will track syncs
         pcf.setTransactionManager(new TransactionManager(){
             @Override
@@ -154,7 +156,7 @@ public class XAConnectionPoolTest extends TestSupport {
         final Vector<Synchronization> syncs = new Vector<Synchronization>();
         ActiveMQTopic topic = new ActiveMQTopic("test");
         XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
-        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE));
+        pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false&jms.xaAckMode=" + Session.CLIENT_ACKNOWLEDGE)));
 
         // simple TM that is in a tx and will track syncs
         pcf.setTransactionManager(new TransactionManager(){
@@ -344,5 +346,23 @@ public class XAConnectionPoolTest extends TestSupport {
         assertNotNull("can create session(false, 0)", connection.createQueueSession(false, 0));
 
         connection.close();
+    }
+
+    static class XAConnectionFactoryOnly implements XAConnectionFactory {
+        private final XAConnectionFactory connectionFactory;
+
+        XAConnectionFactoryOnly(XAConnectionFactory connectionFactory) {
+            this.connectionFactory = connectionFactory;
+        }
+
+        @Override
+        public XAConnection createXAConnection() throws JMSException {
+            return connectionFactory.createXAConnection();
+        }
+
+        @Override
+        public XAConnection createXAConnection(String userName, String password) throws JMSException {
+            return connectionFactory.createXAConnection(userName, password);
+        }
     }
 }

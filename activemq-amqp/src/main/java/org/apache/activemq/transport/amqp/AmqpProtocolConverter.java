@@ -18,7 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.EnumSet;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.jms.InvalidClientIDException;
 import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -50,11 +51,14 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.qpid.proton.ProtonFactoryLoader;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -74,16 +78,19 @@ import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
+import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.EngineFactory;
+import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.impl.CollectorImpl;
 import org.apache.qpid.proton.engine.impl.EngineFactoryImpl;
 import org.apache.qpid.proton.engine.impl.ProtocolTracer;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
@@ -95,7 +102,8 @@ import org.apache.qpid.proton.jms.EncodedMessage;
 import org.apache.qpid.proton.jms.InboundTransformer;
 import org.apache.qpid.proton.jms.JMSMappingInboundTransformer;
 import org.apache.qpid.proton.jms.OutboundTransformer;
-import org.apache.qpid.proton.message.impl.MessageImpl;
+import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.MessageFactory;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;
@@ -103,32 +111,46 @@ import org.slf4j.LoggerFactory;
 
 class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
-    static final Logger TRACE_FRAMES = AmqpTransportFilter.TRACE_FRAMES;
-    public static final EnumSet<EndpointState> UNINITIALIZED_SET = EnumSet.of(EndpointState.UNINITIALIZED);
-    public static final EnumSet<EndpointState> INITIALIZED_SET = EnumSet.complementOf(UNINITIALIZED_SET);
-    public static final EnumSet<EndpointState> ACTIVE_STATE = EnumSet.of(EndpointState.ACTIVE);
-    public static final EnumSet<EndpointState> CLOSED_STATE = EnumSet.of(EndpointState.CLOSED);
-    public static final EnumSet<EndpointState> ALL_STATES = EnumSet.of(EndpointState.CLOSED, EndpointState.ACTIVE, EndpointState.UNINITIALIZED);
+    private static final Logger TRACE_FRAMES = AmqpTransportFilter.TRACE_FRAMES;
     private static final Logger LOG = LoggerFactory.getLogger(AmqpProtocolConverter.class);
-    static final public byte[] EMPTY_BYTE_ARRAY = new byte[] {};
+    private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private final AmqpTransport amqpTransport;
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
-    int prefetch = 100;
+    private static final ProtonFactoryLoader<MessageFactory> messageFactoryLoader = new ProtonFactoryLoader<MessageFactory>(MessageFactory.class);
 
-    EngineFactory engineFactory = new EngineFactoryImpl();
-    Transport protonTransport = engineFactory.createTransport();
-    Connection protonConnection = engineFactory.createConnection();
+    protected int prefetch = 100;
+    protected EngineFactory engineFactory = new EngineFactoryImpl();
+    protected Transport protonTransport = engineFactory.createTransport();
+    protected Connection protonConnection = engineFactory.createConnection();
+    protected MessageFactory messageFactory = messageFactoryLoader.loadFactory();
+    protected Collector eventCollector = new CollectorImpl();
 
     public AmqpProtocolConverter(AmqpTransport transport) {
         this.amqpTransport = transport;
+
+        int maxFrameSize = AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE;
+
+        // AMQ-4914 - Setting the max frame size to large stalls out the QPid
+        // client on sends or
+        // consume due to no session credit. Once fixed we should set this value
+        // using
+        // the configured maxFrameSize on the URI.
+        // int maxFrameSize = transport.getWireFormat().getMaxFrameSize() >
+        // Integer.MAX_VALUE ?
+        // Integer.MAX_VALUE : (int)
+        // transport.getWireFormat().getMaxFrameSize();
+
+        this.protonTransport.setMaxFrameSize(maxFrameSize);
         this.protonTransport.bind(this.protonConnection);
+        this.protonConnection.collect(eventCollector);
         updateTracer();
     }
 
+    @Override
     public void updateTracer() {
         if (amqpTransport.isTrace()) {
             ((TransportImpl) protonTransport).setProtocolTracer(new ProtocolTracer() {
@@ -147,21 +169,17 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     void pumpProtonToSocket() {
         try {
-            int size = 1024 * 64;
-            byte data[] = new byte[size];
             boolean done = false;
             while (!done) {
-                int count = protonTransport.output(data, 0, size);
-                if (count > 0) {
-                    final Buffer buffer;
-                    buffer = new Buffer(data, 0, count);
-                    // System.out.println("writing: " + buffer.toString().substring(5).replaceAll("(..)", "$1 "));
-                    amqpTransport.sendToAmqp(buffer);
+                ByteBuffer toWrite = protonTransport.getOutputBuffer();
+                if (toWrite != null && toWrite.hasRemaining()) {
+                    LOG.trace("Sending {} bytes out", toWrite.limit());
+                    amqpTransport.sendToAmqp(toWrite);
+                    protonTransport.outputConsumed();
                 } else {
                     done = true;
                 }
             }
-            // System.out.println("write done");
         } catch (IOException e) {
             amqpTransport.onException(e);
         }
@@ -191,7 +209,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             AmqpHeader header = (AmqpHeader) command;
             switch (header.getProtocolId()) {
                 case 0:
-                    // amqpTransport.sendToAmqp(new AmqpHeader());
                     break; // nothing to do..
                 case 3: // Client will be using SASL for auth..
                     sasl = protonTransport.sasl();
@@ -208,7 +225,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     }
 
     public void onFrame(Buffer frame) throws Exception {
-        // System.out.println("read: " + frame.toString().substring(5).replaceAll("(..)", "$1 "));
         while (frame.length > 0) {
             try {
                 int count = protonTransport.input(frame.data, frame.offset, frame.length);
@@ -232,66 +248,45 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             if (parts.length > 1) {
                                 connectionInfo.setPassword(parts[1].utf8().toString());
                             }
-                            // We can't really auth at this point since we don't know the client id yet.. :(
+                            // We can't really auth at this point since we don't
+                            // know the client id yet.. :(
                             sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
                             amqpTransport.getWireFormat().magicRead = false;
                             sasl = null;
+                            LOG.debug("SASL [PLAIN] Handshake complete.");
                         } else if ("ANONYMOUS".equals(sasl.getRemoteMechanisms()[0])) {
                             sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
                             amqpTransport.getWireFormat().magicRead = false;
                             sasl = null;
+                            LOG.debug("SASL [ANONYMOUS] Handshake complete.");
                         }
                     }
                 }
 
-                // Handle the amqp open..
-                if (protonConnection.getLocalState() == EndpointState.UNINITIALIZED && protonConnection.getRemoteState() != EndpointState.UNINITIALIZED) {
-                    onConnectionOpen();
-                }
-
-                // Lets map amqp sessions to openwire sessions..
-                Session session = protonConnection.sessionHead(UNINITIALIZED_SET, INITIALIZED_SET);
-                while (session != null) {
-                    onSessionOpen(session);
-                    session = protonConnection.sessionHead(UNINITIALIZED_SET, INITIALIZED_SET);
-                }
-
-                Link link = protonConnection.linkHead(UNINITIALIZED_SET, INITIALIZED_SET);
-                while (link != null) {
-                    onLinkOpen(link);
-                    link = protonConnection.linkHead(UNINITIALIZED_SET, INITIALIZED_SET);
-                }
-
-                Delivery delivery = protonConnection.getWorkHead();
-                while (delivery != null) {
-                    AmqpDeliveryListener listener = (AmqpDeliveryListener) delivery.getLink().getContext();
-                    if (listener != null) {
-                        listener.onDelivery(delivery);
+                Event event = null;
+                while ((event = eventCollector.peek()) != null) {
+                    switch (event.getType()) {
+                        case CONNECTION_REMOTE_STATE:
+                            processConnectionEvent(event.getConnection());
+                            break;
+                        case SESSION_REMOTE_STATE:
+                            processSessionEvent(event.getSession());
+                            break;
+                        case LINK_REMOTE_STATE:
+                            processLinkEvent(event.getLink());
+                            break;
+                        case LINK_FLOW:
+                            Link link = event.getLink();
+                            ((AmqpDeliveryListener) link.getContext()).drainCheck();
+                            break;
+                        case DELIVERY:
+                            processDelivery(event.getDelivery());
+                            break;
+                        default:
+                            break;
                     }
-                    delivery = delivery.getWorkNext();
-                }
 
-                link = protonConnection.linkHead(ACTIVE_STATE, CLOSED_STATE);
-                while (link != null) {
-                    ((AmqpDeliveryListener) link.getContext()).onClose();
-                    link.close();
-                    link = link.next(ACTIVE_STATE, CLOSED_STATE);
-                }
-
-                link = protonConnection.linkHead(ACTIVE_STATE, ALL_STATES);
-                while (link != null) {
-                    ((AmqpDeliveryListener) link.getContext()).drainCheck();
-                    link = link.next(ACTIVE_STATE, ALL_STATES);
-                }
-
-                session = protonConnection.sessionHead(ACTIVE_STATE, CLOSED_STATE);
-                while (session != null) {
-                    // TODO - close links?
-                    onSessionClose(session);
-                    session = session.next(ACTIVE_STATE, CLOSED_STATE);
-                }
-                if (protonConnection.getLocalState() == EndpointState.ACTIVE && protonConnection.getRemoteState() == EndpointState.CLOSED) {
-                    doClose();
+                    eventCollector.pop();
                 }
 
             } catch (Throwable e) {
@@ -299,6 +294,44 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             }
 
             pumpProtonToSocket();
+        }
+    }
+
+    protected void processConnectionEvent(Connection connection) throws Exception {
+        EndpointState remoteState = connection.getRemoteState();
+        if (remoteState == EndpointState.ACTIVE) {
+            onConnectionOpen();
+        } else if (remoteState == EndpointState.CLOSED) {
+            doClose();
+        }
+    }
+
+    protected void processLinkEvent(Link link) throws Exception {
+        EndpointState remoteState = link.getRemoteState();
+        if (remoteState == EndpointState.ACTIVE) {
+            onLinkOpen(link);
+        } else if (remoteState == EndpointState.CLOSED) {
+            ((AmqpDeliveryListener) link.getContext()).onClose();
+            link.close();
+        }
+    }
+
+    protected void processSessionEvent(Session session) throws Exception {
+        EndpointState remoteState = session.getRemoteState();
+        if (remoteState == EndpointState.ACTIVE) {
+            onSessionOpen(session);
+        } else if (remoteState == EndpointState.CLOSED) {
+            // TODO - close links?
+            onSessionClose(session);
+        }
+    }
+
+    protected void processDelivery(Delivery delivery) throws Exception {
+        if (!delivery.isPartial()) {
+            AmqpDeliveryListener listener = (AmqpDeliveryListener) delivery.getLink().getContext();
+            if (listener != null) {
+                listener.onDelivery(delivery);
+            }
         }
     }
 
@@ -317,6 +350,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     }
                 }
             });
+            sendToActiveMQ(new ShutdownInfo(), null);
         }
     }
 
@@ -341,7 +375,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {
-                // Pass down any unexpected errors. Should this close the connection?
+                // Pass down any unexpected errors. Should this close the
+                // connection?
                 if (response.isException()) {
                     Throwable exception = ((ExceptionResponse) response).getException();
                     handleException(exception);
@@ -358,9 +393,13 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     LOG.trace("Dispatching End of Browse Command to consumer {}", md.getConsumerId());
                 }
                 consumerContext.onMessageDispatch(md);
+                if (md.getMessage() != null) {
+                    LOG.trace("Finished Dispatch of MessageId: {} to consumer", md.getMessage().getMessageId());
+                }
             }
         } else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
-            // Pass down any unexpected async errors. Should this close the connection?
+            // Pass down any unexpected async errors. Should this close the
+            // connection?
             Throwable exception = ((ConnectionError) command).getException();
             handleException(exception);
         } else if (command.isBrokerInfo()) {
@@ -380,9 +419,11 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         abstract public void onDelivery(Delivery delivery) throws Exception;
 
-        public void onClose() throws Exception {}
+        public void onClose() throws Exception {
+        }
 
-        public void drainCheck() {}
+        public void drainCheck() {
+        }
 
         abstract void doCommit() throws Exception;
 
@@ -410,7 +451,13 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
                 if (response.isException()) {
                     Throwable exception = ((ExceptionResponse) response).getException();
-                    protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                    if (exception instanceof SecurityException) {
+                        protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                    } else if (exception instanceof InvalidClientIDException) {
+                        protonConnection.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage()));
+                    } else {
+                        protonConnection.setCondition(new ErrorCondition(AmqpError.ILLEGAL_STATE, exception.getMessage()));
+                    }
                     protonConnection.close();
                     pumpProtonToSocket();
                     amqpTransport.onException(IOExceptionSupport.create(exception));
@@ -425,6 +472,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         AmqpSessionContext sessionContext = new AmqpSessionContext(connectionId, nextSessionId++);
         session.setContext(sessionContext);
         sendToActiveMQ(new SessionInfo(sessionContext.sessionId), null);
+        session.setIncomingCapacity(Integer.MAX_VALUE);
         session.open();
     }
 
@@ -473,6 +521,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         ByteArrayOutputStream current = new ByteArrayOutputStream();
 
+        private final byte[] recvBuffer = new byte[1024 * 8];
+
         @Override
         public void onDelivery(Delivery delivery) throws Exception {
             Receiver receiver = ((Receiver) delivery.getLink());
@@ -486,9 +536,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             }
 
             int count;
-            byte data[] = new byte[1024 * 4];
-            while ((count = receiver.recv(data, 0, data.length)) > 0) {
-                current.write(data, 0, count);
+            while ((count = receiver.recv(recvBuffer, 0, recvBuffer.length)) > 0) {
+                current.write(recvBuffer, 0, count);
             }
 
             // Expecting more deliveries..
@@ -503,10 +552,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         }
 
         @Override
-        void doCommit() throws Exception {}
+        void doCommit() throws Exception {
+        }
 
         @Override
-        void doRollback() throws Exception {}
+        void doRollback() throws Exception {
+        }
 
         abstract protected void onMessage(Receiver receiver, Delivery delivery, Buffer buffer) throws Exception;
     }
@@ -515,6 +566,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         private final ProducerId producerId;
         private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
         private final ActiveMQDestination destination;
+        private boolean closed;
 
         public ProducerContext(ProducerId producerId, ActiveMQDestination destination) {
             this.producerId = producerId;
@@ -523,53 +575,102 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         @Override
         protected void onMessage(final Receiver receiver, final Delivery delivery, Buffer buffer) throws Exception {
-            EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
-            final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
-            current = null;
+            if (!closed) {
+                EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
+                final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
 
-            if (destination != null) {
-                message.setJMSDestination(destination);
-            }
-            message.setProducerId(producerId);
-
-            MessageId messageId = message.getMessageId();
-            if (messageId == null) {
-                messageId = new MessageId();
-                message.setMessageId(messageId);
-            }
-
-            messageId.setProducerId(producerId);
-            messageId.setProducerSequenceId(messageIdGenerator.getNextSequenceId());
-
-            LOG.trace("Inbound Message:{} from Producer:{}", message.getMessageId(), producerId + ":" + messageId.getProducerSequenceId());
-
-            DeliveryState remoteState = delivery.getRemoteState();
-            if (remoteState != null && remoteState instanceof TransactionalState) {
-                TransactionalState s = (TransactionalState) remoteState;
-                long txid = toLong(s.getTxnId());
-                message.setTransactionId(new LocalTransactionId(connectionId, txid));
-            }
-
-            message.onSend();
-            sendToActiveMQ(message, new ResponseHandler() {
-                @Override
-                public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
-                    if (!delivery.remotelySettled()) {
-                        if (response.isException()) {
-                            ExceptionResponse er = (ExceptionResponse) response;
-                            Rejected rejected = new Rejected();
-                            ErrorCondition condition = new ErrorCondition();
-                            condition.setCondition(Symbol.valueOf("failed"));
-                            condition.setDescription(er.getException().getMessage());
-                            rejected.setError(condition);
-                            delivery.disposition(rejected);
-                        }
-                    }
-                    receiver.flow(1);
-                    delivery.settle();
-                    pumpProtonToSocket();
+                // TODO - we need to cast TempTopic to TempQueue as we internally are using temp queues for all dynamic destinations
+                // we need to figure out how to support both queues and topics
+                if (message.getJMSReplyTo() != null && message.getJMSReplyTo() instanceof ActiveMQTempTopic) {
+                    ActiveMQTempTopic tempTopic = (ActiveMQTempTopic)message.getJMSReplyTo();
+                    message.setJMSReplyTo(new ActiveMQTempQueue(tempTopic.getPhysicalName()));
                 }
-            });
+                current = null;
+
+                if (destination != null) {
+                    message.setJMSDestination(destination);
+                }
+                message.setProducerId(producerId);
+
+                // Always override the AMQP client's MessageId with our own.
+                // Preserve the
+                // original in the TextView property for later Ack.
+                MessageId messageId = new MessageId(producerId, messageIdGenerator.getNextSequenceId());
+
+                MessageId amqpMessageId = message.getMessageId();
+                if (amqpMessageId != null) {
+                    if (amqpMessageId.getTextView() != null) {
+                        messageId.setTextView(amqpMessageId.getTextView());
+                    } else {
+                        messageId.setTextView(amqpMessageId.toString());
+                    }
+                }
+
+                message.setMessageId(messageId);
+
+                LOG.trace("Inbound Message:{} from Producer:{}", message.getMessageId(), producerId + ":" + messageId.getProducerSequenceId());
+
+                DeliveryState remoteState = delivery.getRemoteState();
+                if (remoteState != null && remoteState instanceof TransactionalState) {
+                    TransactionalState s = (TransactionalState) remoteState;
+                    long txid = toLong(s.getTxnId());
+                    message.setTransactionId(new LocalTransactionId(connectionId, txid));
+                }
+
+                // Lets handle the case where the expiration was set, but the
+                // timestamp
+                // was not set by the client. Lets assign the timestamp now, and
+                // adjust the
+                // expiration.
+                if (message.getExpiration() != 0) {
+                    if (message.getTimestamp() == 0) {
+                        message.setTimestamp(System.currentTimeMillis());
+                        message.setExpiration(message.getTimestamp() + message.getExpiration());
+                    }
+                }
+
+                message.onSend();
+                if (!delivery.remotelySettled()) {
+                    sendToActiveMQ(message, new ResponseHandler() {
+                        @Override
+                        public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
+                            if (response.isException()) {
+                                ExceptionResponse er = (ExceptionResponse) response;
+                                Rejected rejected = new Rejected();
+                                ErrorCondition condition = new ErrorCondition();
+                                condition.setCondition(Symbol.valueOf("failed"));
+                                condition.setDescription(er.getException().getMessage());
+                                rejected.setError(condition);
+                                delivery.disposition(rejected);
+                            } else {
+                                if (receiver.getCredit() <= (prefetch * .2)) {
+                                    LOG.trace("Sending more credit ({}) to producer: {}", prefetch - receiver.getCredit(), producerId);
+                                    receiver.flow(prefetch - receiver.getCredit());
+                                }
+
+                                delivery.disposition(Accepted.getInstance());
+                                delivery.settle();
+                            }
+
+                            pumpProtonToSocket();
+                        }
+                    });
+                } else {
+                    if (receiver.getCredit() <= (prefetch * .2)) {
+                        LOG.trace("Sending more credit ({}) to producer: {}", prefetch - receiver.getCredit(), producerId);
+                        receiver.flow(prefetch - receiver.getCredit());
+                        pumpProtonToSocket();
+                    }
+                    sendToActiveMQ(message, null);
+                }
+            }
+        }
+
+        @Override
+        public void onClose() throws Exception {
+            if (!closed) {
+                sendToActiveMQ(new RemoveInfo(producerId), null);
+            }
         }
     }
 
@@ -596,7 +697,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         @Override
         protected void onMessage(Receiver receiver, final Delivery delivery, Buffer buffer) throws Exception {
 
-            MessageImpl msg = new MessageImpl();
+            Message msg = messageFactory.createMessage();
             int offset = buffer.offset;
             int len = buffer.length;
             while (len > 0) {
@@ -654,6 +755,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             Rejected rejected = new Rejected();
                             rejected.setError(createErrorCondition("failed", er.getException().getMessage()));
                             delivery.disposition(rejected);
+                        } else {
+                            delivery.disposition(Accepted.getInstance());
                         }
                         LOG.debug("TX: {} settling {}", operation, action);
                         delivery.settle();
@@ -709,7 +812,11 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             receiver.setTarget(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
-                            receiver.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            if (exception instanceof SecurityException) {
+                                receiver.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                            } else {
+                                receiver.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            }
                             receiver.close();
                         } else {
                             receiver.open();
@@ -849,13 +956,29 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
                 final MessageDispatch md = outbound.removeFirst();
                 try {
+
+                    ActiveMQMessage temp = null;
                     if (md.getMessage() != null) {
-                        org.apache.activemq.command.Message message = md.getMessage();
-                        if (!message.getProperties().containsKey(MESSAGE_FORMAT_KEY)) {
-                            message.setProperty(MESSAGE_FORMAT_KEY, 0);
+
+                        // Topics can dispatch the same Message to more than one
+                        // consumer
+                        // so we must copy to prevent concurrent read / write to
+                        // the same
+                        // message object.
+                        if (md.getDestination().isTopic()) {
+                            synchronized (md.getMessage()) {
+                                temp = (ActiveMQMessage) md.getMessage().copy();
+                            }
+                        } else {
+                            temp = (ActiveMQMessage) md.getMessage();
+                        }
+
+                        if (!temp.getProperties().containsKey(MESSAGE_FORMAT_KEY)) {
+                            temp.setProperty(MESSAGE_FORMAT_KEY, 0);
                         }
                     }
-                    final ActiveMQMessage jms = (ActiveMQMessage) md.getMessage();
+
+                    final ActiveMQMessage jms = temp;
                     if (jms == null) {
                         // It's the end of browse signal.
                         endOfBrowse = true;
@@ -890,7 +1013,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             }
 
             if (ackType == -1) {
-                // we are going to settle, but redeliver.. we we won't yet ack to ActiveMQ
+                // we are going to settle, but redeliver.. we we won't yet ack
+                // to ActiveMQ
                 delivery.settle();
                 onMessageDispatch((MessageDispatch) delivery.getContext());
             } else {
@@ -910,7 +1034,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     LocalTransactionId localTxId = new LocalTransactionId(connectionId, txid);
                     ack.setTransactionId(localTxId);
 
-                    // Store the message sent in this TX we might need to re-send on rollback
+                    // Store the message sent in this TX we might need to
+                    // re-send on rollback
                     md.getMessage().setTransactionId(localTxId);
                     dispatchedInTx.addFirst(md);
                 }
@@ -939,7 +1064,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         public void drainCheck() {
             // If we are a browser.. lets not say we are drained until
             // we hit the end of browse message.
-            if( info.isBrowser() && !endOfBrowse)
+            if (info.isBrowser() && !endOfBrowse)
                 return;
 
             if (outbound.isEmpty()) {
@@ -955,11 +1080,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if (state instanceof TransactionalState) {
                 TransactionalState txState = (TransactionalState) state;
                 if (txState.getOutcome() instanceof DeliveryState) {
-
                     LOG.trace("onDelivery: TX delivery state = {}", state);
-
                     state = (DeliveryState) txState.getOutcome();
-
                     if (state instanceof Accepted) {
                         if (!delivery.remotelySettled()) {
                             delivery.disposition(new Accepted());
@@ -970,7 +1092,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             } else {
                 if (state instanceof Accepted) {
                     LOG.trace("onDelivery: accepted state = {}", state);
-
                     if (!delivery.remotelySettled()) {
                         delivery.disposition(new Accepted());
                     }
@@ -1103,8 +1224,11 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             sender.setSource(null);
                             Throwable exception = ((ExceptionResponse) response).getException();
-                            String name = exception.getClass().getName();
-                            sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            if (exception instanceof SecurityException) {
+                                sender.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                            } else {
+                                sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                            }
                         }
                         sender.open();
                         pumpProtonToSocket();
@@ -1156,11 +1280,13 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     if (response.isException()) {
                         sender.setSource(null);
                         Throwable exception = ((ExceptionResponse) response).getException();
-                        Symbol condition = AmqpError.INTERNAL_ERROR;
-                        if (exception instanceof InvalidSelectorException) {
-                            condition = AmqpError.INVALID_FIELD;
+                        if (exception instanceof SecurityException) {
+                            sender.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                        } else if (exception instanceof InvalidSelectorException) {
+                            sender.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage()));
+                        } else {
+                            sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                         }
-                        sender.setCondition(new ErrorCondition(condition, exception.getMessage()));
                         subscriptionsByConsumerId.remove(id);
                         sender.close();
                     } else {

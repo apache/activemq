@@ -16,7 +16,14 @@
  */
 package org.apache.activemq.jms.pool;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,15 +32,17 @@ import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.Session;
+import javax.jms.TopicConnectionFactory;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.util.Wait;
 import org.apache.log4j.Logger;
+import org.junit.Test;
 
 /**
  * Checks the behavior of the PooledConnectionFactory when the maximum amount of
@@ -44,30 +53,22 @@ import org.apache.log4j.Logger;
  * don't block. This test succeeds if an exception is returned and fails if the
  * call to getSession() blocks.
  */
-public class PooledConnectionFactoryTest extends TestCase {
+public class PooledConnectionFactoryTest {
 
     public final static Logger LOG = Logger.getLogger(PooledConnectionFactoryTest.class);
 
-    /**
-     * Create the test case
-     *
-     * @param testName
-     *            name of the test case
-     */
-    public PooledConnectionFactoryTest(String testName) {
-        super(testName);
+    @Test
+    public void testInstanceOf() throws  Exception {
+        PooledConnectionFactory pcf = new PooledConnectionFactory();
+        assertTrue(pcf instanceof QueueConnectionFactory);
+        assertTrue(pcf instanceof TopicConnectionFactory);
     }
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite(PooledConnectionFactoryTest.class);
-    }
-
+    @Test
     public void testClearAllConnections() throws Exception {
 
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(3);
@@ -95,9 +96,11 @@ public class PooledConnectionFactoryTest extends TestCase {
         assertNotSame(conn2.getConnection(), conn3.getConnection());
     }
 
+    @Test
     public void testMaxConnectionsAreCreated() throws Exception {
 
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(3);
@@ -113,9 +116,11 @@ public class PooledConnectionFactoryTest extends TestCase {
         assertEquals(3, cf.getNumConnections());
     }
 
+    @Test
     public void testConnectionsAreRotated() throws Exception {
 
-        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(10);
@@ -134,6 +139,7 @@ public class PooledConnectionFactoryTest extends TestCase {
         }
     }
 
+    @Test
     public void testConnectionsArePooled() throws Exception {
 
         ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
@@ -152,9 +158,11 @@ public class PooledConnectionFactoryTest extends TestCase {
         assertEquals(1, cf.getNumConnections());
     }
 
+    @Test
     public void testConnectionsArePooledAsyncCreate() throws Exception {
 
-        final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory("vm://broker1?marshal=false&broker.persistent=false");
+        final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(
+            "vm://broker1?marshal=false&broker.persistent=false&broker.useJmx=false");
         final PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(amq);
         cf.setMaxConnections(1);
@@ -188,11 +196,72 @@ public class PooledConnectionFactoryTest extends TestCase {
         executor.shutdown();
         assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
 
-        for(PooledConnection connection : connections) {
+        for (PooledConnection connection : connections) {
             assertSame(primary.getConnection(), connection.getConnection());
         }
 
         connections.clear();
+        cf.stop();
+    }
+
+    @Test
+    public void testConcurrentCreateGetsUniqueConnectionCreateOnDemand() throws Exception {
+        doTestConcurrentCreateGetsUniqueConnection(false);
+    }
+
+    @Test
+    public void testConcurrentCreateGetsUniqueConnectionCreateOnStart() throws Exception {
+        doTestConcurrentCreateGetsUniqueConnection(true);
+    }
+
+    private void doTestConcurrentCreateGetsUniqueConnection(boolean createOnStart) throws Exception {
+
+        BrokerService brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
+        brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+        brokerService.waitUntilStarted();
+
+        try {
+            final int numConnections = 2;
+
+            final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(brokerService.getTransportConnectors().get(0).getPublishableConnectString());
+            final PooledConnectionFactory cf = new PooledConnectionFactory();
+            cf.setConnectionFactory(amq);
+            cf.setMaxConnections(numConnections);
+            cf.setCreateConnectionOnStartup(createOnStart);
+            cf.start();
+
+            final ConcurrentHashMap<ConnectionId, Connection> connections = new ConcurrentHashMap<ConnectionId, Connection>();
+            final ExecutorService executor = Executors.newFixedThreadPool(numConnections);
+
+            for (int i = 0; i < numConnections; ++i) {
+                executor.execute(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            PooledConnection pooled = (PooledConnection) cf.createConnection();
+                            ActiveMQConnection amq = (ActiveMQConnection) pooled.getConnection();
+                            connections.put(amq.getConnectionInfo().getConnectionId(), pooled);
+                        } catch (JMSException e) {
+                        }
+                    }
+                });
+            }
+
+            executor.shutdown();
+            assertTrue(executor.awaitTermination(30, TimeUnit.SECONDS));
+
+            assertEquals("Should have all unique connections", numConnections, connections.size());
+
+            connections.clear();
+            cf.stop();
+
+        } finally {
+            brokerService.stop();
+        }
     }
 
     /**
@@ -213,9 +282,7 @@ public class PooledConnectionFactoryTest extends TestCase {
         if (!result.isDone() || !result.get().booleanValue()) {
             PooledConnectionFactoryTest.LOG.error("2nd call to createSession() " +
                                                   "is blocking but should have returned an error instead.");
-
             executor.shutdownNow();
-
             fail("SessionPool inside PooledConnectionFactory is blocking if " +
                  "limit is exceeded but should return an exception instead.");
         }
@@ -248,8 +315,7 @@ public class PooledConnectionFactoryTest extends TestCase {
 
                 Session two = null;
                 try {
-                    // this should raise an exception as we called
-                    // setMaximumActive(1)
+                    // this should raise an exception as we called setMaximumActive(1)
                     two = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     two.close();
 
@@ -267,10 +333,12 @@ public class PooledConnectionFactoryTest extends TestCase {
                         return new Boolean(false);
                     }
                 } finally {
-                    if (one != null)
+                    if (one != null) {
                         one.close();
-                    if (conn != null)
+                    }
+                    if (conn != null) {
                         conn.close();
+                    }
                 }
             } catch (Exception ex) {
                 LOG.error(ex.getMessage());

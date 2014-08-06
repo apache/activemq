@@ -399,6 +399,7 @@ public class Main {
             activeMQConfig = new File(System.getProperty("activemq.conf"));
         } else {
             activeMQConfig = new File(getActiveMQBase() + "/conf");
+            System.setProperty("activemq.conf", activeMQConfig.getAbsolutePath());
         }
         return activeMQConfig;
     }
@@ -410,6 +411,7 @@ public class Main {
             activeMQDataDir = new File(System.getProperty("activemq.data"));
         } else {
             activeMQDataDir = new File(getActiveMQBase() + "/data");
+            System.setProperty("activemq.data", activeMQDataDir.getAbsolutePath());
         }
         return activeMQDataDir;
     }

@@ -36,6 +36,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class ActiveMQOutputStream extends OutputStream implements Disposable {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQOutputStream.class);

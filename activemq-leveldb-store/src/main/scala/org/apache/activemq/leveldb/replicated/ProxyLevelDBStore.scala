@@ -25,6 +25,7 @@ import java.io.File
 import java.io.IOException
 import java.util.Set
 import org.apache.activemq.util.{ServiceStopper, ServiceSupport}
+import org.apache.activemq.broker.scheduler.JobSchedulerStore
 
 /**
  */
@@ -42,6 +43,10 @@ abstract class ProxyLevelDBStore extends LockableServiceSupport with BrokerServi
 
   def createTopicMessageStore(destination: ActiveMQTopic): TopicMessageStore = {
     return proxy_target.createTopicMessageStore(destination)
+  }
+
+  def createJobSchedulerStore():JobSchedulerStore = {
+    return proxy_target.createJobSchedulerStore()
   }
 
   def setDirectory(dir: File) {

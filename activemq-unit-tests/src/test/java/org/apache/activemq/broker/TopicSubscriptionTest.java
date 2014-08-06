@@ -16,23 +16,36 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.concurrent.TimeUnit;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.ThreadTracker;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
+import static org.junit.Assert.*;
+
+
+@RunWith(BlockJUnit4ClassRunner.class)
 public class TopicSubscriptionTest extends QueueSubscriptionTest {
 
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         super.setUp();
         durable = true;
         topic = true;
     }
-    
-    protected void tearDown() throws Exception {
+
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         ThreadTracker.result();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testManyProducersManyConsumers() throws Exception {
         consumerCount = 40;
         producerCount = 20;
@@ -46,6 +59,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         assertDestinationMemoryUsageGoesToZero();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersLargeMessagesOnePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -59,6 +73,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         assertDestinationMemoryUsageGoesToZero();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersSmallMessagesOnePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -72,6 +87,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         assertDestinationMemoryUsageGoesToZero();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersSmallMessagesLargePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -84,6 +100,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         assertTotalMessagesReceived(messageCount * consumerCount * producerCount);
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerTwoConsumersLargeMessagesLargePrefetch() throws Exception {
         consumerCount = 2;
         producerCount = 1;
@@ -97,6 +114,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         assertDestinationMemoryUsageGoesToZero();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerManyConsumersFewMessages() throws Exception {
         consumerCount = 50;
         producerCount = 1;
@@ -110,6 +128,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
         assertDestinationMemoryUsageGoesToZero();
     }
 
+    @Test(timeout = 60 * 1000)
     public void testOneProducerManyConsumersManyMessages() throws Exception {
         consumerCount = 50;
         producerCount = 1;
@@ -124,6 +143,7 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
     }
 
 
+    @Test(timeout = 60 * 1000)
     public void testManyProducersOneConsumer() throws Exception {
         consumerCount = 1;
         producerCount = 20;
@@ -135,11 +155,6 @@ public class TopicSubscriptionTest extends QueueSubscriptionTest {
 
         assertTotalMessagesReceived(messageCount * producerCount * consumerCount);
         assertDestinationMemoryUsageGoesToZero();
-    }
-    
-    private void assertDestinationMemoryUsageGoesToZero() throws Exception {
-        assertEquals("destination memory is back to 0", 0, 
-                TestSupport.getDestination(broker, ActiveMQDestination.transform(destination)).getMemoryUsage().getPercentUsage());
     }
 
 }

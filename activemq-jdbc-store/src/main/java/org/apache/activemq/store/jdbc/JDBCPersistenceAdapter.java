@@ -34,6 +34,7 @@ import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Locker;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -422,6 +423,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         this.lockDataSource = dataSource;
     }
 
+    @Override
     public BrokerService getBrokerService() {
         return brokerService;
     }
@@ -742,9 +744,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     }
 
     public long getNextSequenceId() {
-        synchronized(sequenceGenerator) {
-            return sequenceGenerator.getNextSequenceId();
-        }
+        return sequenceGenerator.getNextSequenceId();
     }
 
     public int getMaxRows() {
@@ -845,5 +845,10 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             c.close();
         }
         return result;
+    }
+
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        throw new UnsupportedOperationException();
     }
 }

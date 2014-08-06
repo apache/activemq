@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import java.net.Socket;
@@ -26,7 +27,9 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.JMXSupport;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,6 +48,40 @@ public class TransportConnectorMBeanTest {
     @Test
     public void verifyRemoteAddressNotInMbeanName() throws Exception {
         doVerifyRemoteAddressInMbeanName(false);
+    }
+
+    @Test
+    public void verifyClientIdNetwork() throws Exception {
+        doVerifyClientIdNetwork(false);
+    }
+
+    @Test
+    public void verifyClientIdDuplexNetwork() throws Exception {
+        doVerifyClientIdNetwork(true);
+    }
+
+    private void doVerifyClientIdNetwork(boolean duplex) throws Exception {
+        createBroker(true);
+
+        BrokerService networked = new BrokerService();
+        networked.setBrokerName("networked");
+        networked.setPersistent(false);
+        NetworkConnector nc = networked.addNetworkConnector("static:" + broker.getTransportConnectors().get(0).getPublishableConnectString());
+        nc.setDuplex(duplex);
+        networked.start();
+
+        try {
+            assertTrue("presence of mbean with clientId", Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    Set<ObjectName> registeredMbeans = getRegisteredMbeans();
+                    return match("_outbound", registeredMbeans);
+                }
+            }));
+
+        } finally {
+            networked.stop();
+        }
     }
 
     private void doVerifyRemoteAddressInMbeanName(boolean allowRemoteAddress) throws Exception {

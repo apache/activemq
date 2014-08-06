@@ -497,6 +497,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     if (timeout > 0) {
                         timeout = Math.max(deadline - System.currentTimeMillis(), 0);
                     }
+                } else if (redeliveryExceeded(md)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(getConsumerId() + " received with excessive redelivered: " + md);
+                    }
+                    posionAck(md, "dispatch to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
                 } else {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(getConsumerId() + " received message: " + md);
@@ -507,6 +512,26 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw JMSExceptionSupport.create(e);
+        }
+    }
+
+    private void posionAck(MessageDispatch md, String cause) throws JMSException {
+        MessageAck posionAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
+        posionAck.setFirstMessageId(md.getMessage().getMessageId());
+        posionAck.setPoisonCause(new Throwable(cause));
+        session.sendAck(posionAck);
+    }
+
+    private boolean redeliveryExceeded(MessageDispatch md) {
+        try {
+            return session.getTransacted()
+                    && redeliveryPolicy != null
+                    && redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                    && md.getRedeliveryCounter() > redeliveryPolicy.getMaximumRedeliveries()
+                    // redeliveryCounter > x expected after resend via brokerRedeliveryPlugin
+                    && md.getMessage().getProperty("redeliveryDelay") == null;
+        } catch (Exception ignored) {
+            return false;
         }
     }
 
@@ -898,7 +923,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             return;
         }
         if (messageExpired) {
-            acknowledge(md, MessageAck.DELIVERED_ACK_TYPE);
+            acknowledge(md, MessageAck.EXPIRED_ACK_TYPE);
             stats.getExpiredMessageCount().increment();
         } else {
             stats.onMessage();
@@ -1353,6 +1378,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 if (!unconsumedMessages.isClosed()) {
                     if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
+                            if (redeliveryExceeded(md)) {
+                                posionAck(md, "dispatch to " + getConsumerId() + " exceeds redelivery policy limit:" + redeliveryPolicy);
+                                return;
+                            }
                             ActiveMQMessage message = createActiveMQMessage(md);
                             beforeMessageIsConsumed(md);
                             try {
@@ -1384,42 +1413,24 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             }
                         }
                     } else {
-                        if (!session.isTransacted()) {
-                            LOG.warn("Duplicate non transacted dispatch to consumer: "  + getConsumerId() + ", poison acking: " + md);
-                            MessageAck poisonAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
-                            poisonAck.setFirstMessageId(md.getMessage().getMessageId());
-                            poisonAck.setPoisonCause(new Throwable("Duplicate non transacted delivery to " + getConsumerId()));
-                            session.sendAck(poisonAck);
-                        } else {
+                        // deal with duplicate delivery
+                        ConsumerId consumerWithPendingTransaction;
+                        if (redeliveryExpectedInCurrentTransaction(md, true)) {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug(getConsumerId() + " tracking transacted redelivery of duplicate: " + md.getMessage());
+                                LOG.debug("{} tracking transacted redelivery {}", getConsumerId(), md.getMessage());
                             }
-                            boolean needsPoisonAck = false;
-                            synchronized (deliveredMessages) {
-                                if (previouslyDeliveredMessages != null) {
-                                    previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
-                                } else {
-                                    // delivery while pending redelivery to another consumer on the same connection
-                                    // not waiting for redelivery will help here
-                                    needsPoisonAck = true;
-                                }
-                            }
-                            if (needsPoisonAck) {
-                                MessageAck poisonAck = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
-                                poisonAck.setFirstMessageId(md.getMessage().getMessageId());
-                                poisonAck.setPoisonCause(new JMSException("Duplicate dispatch with transacted redeliver pending on another consumer, connection: "
-                                        + session.getConnection().getConnectionInfo().getConnectionId()));
-                                LOG.warn("acking duplicate delivery as poison, redelivery must be pending to another"
-                                        + " consumer on this connection, failoverRedeliveryWaitPeriod="
-                                        + failoverRedeliveryWaitPeriod + ". Message: " + md + ", poisonAck: " + poisonAck);
-                                session.sendAck(poisonAck);
+                            if (transactedIndividualAck) {
+                                immediateIndividualTransactedAck(md);
                             } else {
-                                if (transactedIndividualAck) {
-                                    immediateIndividualTransactedAck(md);
-                                } else {
-                                    session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
-                                }
+                                session.sendAck(new MessageAck(md, MessageAck.DELIVERED_ACK_TYPE, 1));
                             }
+                        } else if ((consumerWithPendingTransaction = redeliveryPendingInCompetingTransaction(md)) != null) {
+                            LOG.warn("{} delivering duplicate {}, pending transaction completion on {} will rollback", getConsumerId(), md.getMessage(), consumerWithPendingTransaction);
+                            session.getConnection().rollbackDuplicate(this, md.getMessage());
+                            dispatch(md);
+                        } else {
+                            LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md);
+                            posionAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
                         }
                     }
                 }
@@ -1431,6 +1442,33 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         } catch (Exception e) {
             session.connection.onClientInternalException(e);
         }
+    }
+
+    private boolean redeliveryExpectedInCurrentTransaction(MessageDispatch md, boolean markReceipt) {
+        if (session.isTransacted()) {
+            synchronized (deliveredMessages) {
+                if (previouslyDeliveredMessages != null) {
+                    if (previouslyDeliveredMessages.containsKey(md.getMessage().getMessageId())) {
+                        if (markReceipt) {
+                            previouslyDeliveredMessages.put(md.getMessage().getMessageId(), true);
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private ConsumerId redeliveryPendingInCompetingTransaction(MessageDispatch md) {
+        for (ActiveMQSession activeMQSession: session.connection.getSessions()) {
+            for (ActiveMQMessageConsumer activeMQMessageConsumer : activeMQSession.consumers) {
+                if (activeMQMessageConsumer.redeliveryExpectedInCurrentTransaction(md, false)) {
+                    return activeMQMessageConsumer.getConsumerId();
+                }
+            }
+        }
+        return null;
     }
 
     // async (on next call) clear or track delivered as they may be flagged as duplicates if they arrive again

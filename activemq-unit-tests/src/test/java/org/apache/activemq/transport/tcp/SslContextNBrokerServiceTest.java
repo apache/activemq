@@ -28,7 +28,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -36,15 +38,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class SslContextNBrokerServiceTest extends TestCase {
+import static org.junit.Assert.*;
+
+public class SslContextNBrokerServiceTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(SslContextNBrokerServiceTest.class);
 
     private ClassPathXmlApplicationContext context;
     Map<String, BrokerService> beansOfType;
 
-    public void testConfigurationIsolation() throws Exception {
-
+    @Test(timeout = 2 * 60 * 1000)
+    public void testDummyConfigurationIsolation() throws Exception {
         assertTrue("dummy bean has dummy cert", verifyCredentials("dummy"));
+    }
+
+    @Test(timeout = 2 * 60 * 1000)
+    public void testActiveMQDotOrgConfigurationIsolation() throws Exception {
         assertTrue("good bean has amq cert", verifyCredentials("activemq.org"));
     }
 
@@ -53,6 +61,7 @@ public class SslContextNBrokerServiceTest extends TestCase {
         BrokerService broker = getBroker(name);
         assertNotNull(name, broker);
         broker.start();
+        broker.waitUntilStarted();
         try {
             result = verifySslCredentials(broker);
         } finally {
@@ -72,7 +81,7 @@ public class SslContextNBrokerServiceTest extends TestCase {
         SSLSocketFactory factory = context.getSocketFactory();
         LOG.info("Connecting to broker: " + broker.getBrokerName() + " on: " + brokerUri.getHost() + ":" + brokerUri.getPort());
         SSLSocket socket = (SSLSocket) factory.createSocket(brokerUri.getHost(), brokerUri.getPort());
-        socket.setSoTimeout(5000);
+        socket.setSoTimeout(60 * 1000);
         socket.startHandshake();
         socket.close();
 
@@ -105,16 +114,16 @@ public class SslContextNBrokerServiceTest extends TestCase {
         return result;
     }
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         // System.setProperty("javax.net.debug", "ssl");
         Thread.currentThread().setContextClassLoader(SslContextNBrokerServiceTest.class.getClassLoader());
         context = new ClassPathXmlApplicationContext("org/apache/activemq/transport/tcp/n-brokers-ssl.xml");
         beansOfType = context.getBeansOfType(BrokerService.class);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         context.destroy();
     }
 

@@ -16,12 +16,44 @@
  */
 package org.apache.activemq.store.kahadb;
 
-import org.apache.activemq.broker.*;
-import org.apache.activemq.command.*;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.transaction.xa.Xid;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.Lockable;
+import org.apache.activemq.broker.LockableServiceSupport;
+import org.apache.activemq.broker.Locker;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.LocalTransactionId;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.filter.AnyDestination;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.store.*;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.SharedFileLocker;
+import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.store.TransactionIdTransformer;
+import org.apache.activemq.store.TransactionIdTransformerAware;
+import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
@@ -29,13 +61,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.transaction.xa.Xid;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.*;
 
 /**
  * An implementation of {@link org.apache.activemq.store.PersistenceAdapter}  that supports
@@ -50,6 +75,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     final int LOCAL_FORMAT_ID_MAGIC = Integer.valueOf(System.getProperty("org.apache.activemq.store.kahadb.MultiKahaDBTransactionStore.localXaFormatId", "61616"));
 
     final class DelegateDestinationMap extends DestinationMap {
+        @Override
         public void setEntries(List<DestinationMapEntry>  entries) {
             super.setEntries(entries);
         }
@@ -171,6 +197,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
             }
         }
         startAdapter(filteredAdapter.getPersistenceAdapter(), destination.getQualifiedName());
+        LOG.debug("destination {} matched persistence adapter {}", new Object[]{destination.getQualifiedName(), filteredAdapter.getPersistenceAdapter()});
         return filteredAdapter.getPersistenceAdapter();
     }
 
@@ -251,7 +278,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         }
         if (adapter instanceof PersistenceAdapter) {
             adapter.removeQueueMessageStore(destination);
-            removeMessageStore((PersistenceAdapter)adapter, destination);
+            removeMessageStore(adapter, destination);
             destinationMap.removeAll(destination);
         }
     }
@@ -266,7 +293,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         }
         if (adapter instanceof PersistenceAdapter) {
             adapter.removeTopicMessageStore(destination);
-            removeMessageStore((PersistenceAdapter)adapter, destination);
+            removeMessageStore(adapter, destination);
             destinationMap.removeAll(destination);
         }
     }
@@ -452,6 +479,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         }
     }
 
+    @Override
     public BrokerService getBrokerService() {
         return brokerService;
     }
@@ -501,5 +529,10 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         SharedFileLocker locker = new SharedFileLocker();
         locker.configure(this);
         return locker;
+    }
+
+    @Override
+    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
+        return new JobSchedulerStoreImpl();
     }
 }

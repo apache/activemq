@@ -38,9 +38,6 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     // should be a multiple of 128k
     private long stackSize;
 
-    public TransportServerThreadSupport() {
-    }
-
     public TransportServerThreadSupport(URI location) {
         super(location);
     }

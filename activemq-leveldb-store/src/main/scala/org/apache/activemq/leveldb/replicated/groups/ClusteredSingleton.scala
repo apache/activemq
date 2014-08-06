@@ -20,13 +20,14 @@ package org.apache.activemq.leveldb.replicated.groups
 import collection.mutable.{ListBuffer, HashMap}
 
 import java.io._
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import collection.JavaConversions._
 import java.util.LinkedHashMap
 import java.lang.{IllegalStateException, String}
-import reflect.BeanProperty
-import org.codehaus.jackson.annotate.JsonProperty
+import beans.BeanProperty
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.zookeeper.KeeperException.NoNodeException
+import scala.reflect.ClassTag
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -162,8 +163,9 @@ class ClusteredSingletonWatcher[T <: NodeState](val stateClass:Class[T]) extends
   }
 
   def masters = this.synchronized {
-    _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassManifest[T] {
-      def erasure = stateClass
+    _members.mapValues(_.head._2).toArray.map(_._2).toArray(new ClassTag[T] {
+      def runtimeClass = stateClass
+      override def erasure = stateClass
     })
   }
 

@@ -34,11 +34,14 @@ import javax.resource.ResourceException;
 
 import org.apache.activemq.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @version $Rev$ $Date$
  */
 public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
+    protected static final Logger LOG = LoggerFactory.getLogger(JmsXARollback2CxTransactionTest.class);
     private static final String DEFAULT_HOST = "vm://localhost?create=false";
 
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
@@ -46,6 +49,12 @@ public class JmsXARollback2CxTransactionTest extends JmsQueueTransactionTest {
     private Xid xid;
     private XAResource[] xares = new XAResource[2];
     private int index = 0;
+
+    @Override
+    protected void setUp() throws Exception {
+        LOG.info("Starting ----------------------------> {}", this.getName());
+        super.setUp();
+    }
 
     @Override
     protected void setSessionTransacted() {

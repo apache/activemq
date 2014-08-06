@@ -34,8 +34,8 @@ public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
     private boolean anonymousAccessAllowed = false;
     private String anonymousUser;
     private String anonymousGroup;
-    private final Map<String,String> userPasswords;
-    private final Map<String,Set<Principal>> userGroups;
+    private Map<String,String> userPasswords;
+    private Map<String,Set<Principal>> userGroups;
 
     public SimpleAuthenticationBroker(Broker next, Map<String,String> userPasswords, Map<String,Set<Principal>> userGroups) {
         super(next);
@@ -53,6 +53,14 @@ public class SimpleAuthenticationBroker extends AbstractAuthenticationBroker {
 
     public void setAnonymousGroup(String anonymousGroup) {
         this.anonymousGroup = anonymousGroup;
+    }
+
+    public void setUserPasswords(Map<String,String> value) {
+        userPasswords = value;
+    }
+
+    public void setUserGroups(Map<String, Set<Principal>> value) {
+        userGroups = value;
     }
 
     @Override

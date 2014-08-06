@@ -17,11 +17,14 @@
 package org.apache.activemq.camel.component.broker;
 
 import javax.jms.Message;
+
 import org.apache.camel.component.jms.JmsBinding;
 import org.apache.camel.component.jms.JmsMessage;
+import org.apache.camel.component.jms.JmsMessageHelper;
 import org.apache.camel.util.ObjectHelper;
 
 public class BrokerJmsMessage extends JmsMessage {
+
     public BrokerJmsMessage(Message jmsMessage, JmsBinding binding) {
         super(jmsMessage, binding);
     }
@@ -29,12 +32,10 @@ public class BrokerJmsMessage extends JmsMessage {
     @Override
     public String toString() {
         if (getJmsMessage() != null) {
-            try {
-                return "BrokerJmsMessage[JMSMessageID: " + getJmsMessage().getJMSMessageID();
-            } catch (Exception e) {
-            }
+            return "BrokerJmsMessage[JMSMessageID: " + JmsMessageHelper.getJMSMessageID(getJmsMessage());
+        } else {
+            return "BrokerJmsMessage@" + ObjectHelper.getIdentityHashCode(this);
         }
-        return "BrokerJmsMessage@" + ObjectHelper.getIdentityHashCode(this);
     }
 
     @Override
@@ -44,7 +45,6 @@ public class BrokerJmsMessage extends JmsMessage {
             setJmsMessage(((JmsMessage) that).getJmsMessage());
         }
     }
-
 
     @Override
     public BrokerJmsMessage newInstance() {

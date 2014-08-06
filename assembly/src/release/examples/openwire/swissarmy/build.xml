@@ -214,6 +214,9 @@
             <classpath refid="javac.classpath" />
             <jvmarg value="-server" />
             <sysproperty key="activemq.home" value="${activemq.home}"/>
+            <sysproperty key="javax.net.ssl.keyStore" value="${javax.net.ssl.keyStore}"/>
+            <sysproperty key="javax.net.ssl.trustStore" value="${javax.net.ssl.trustStore}"/>
+            <sysproperty key="javax.net.ssl.keyStorePassword" value="${javax.net.ssl.keyStorePassword}"/>
             <arg value="--url=${url}" />
             <arg value="--topic=${topic}" />
             <arg value="--subject=${subject}" />
@@ -239,6 +242,9 @@
             <classpath refid="javac.classpath" />
             <jvmarg value="-server" />
             <sysproperty key="activemq.home" value="${activemq.home}"/>
+            <sysproperty key="javax.net.ssl.keyStore" value="${javax.net.ssl.keyStore}"/>
+            <sysproperty key="javax.net.ssl.trustStore" value="${javax.net.ssl.trustStore}"/>
+            <sysproperty key="javax.net.ssl.keyStorePassword" value="${javax.net.ssl.keyStorePassword}"/>
             <arg value="--url=${url}" />
             <arg value="--topic=${topic}" />
             <arg value="--subject=${subject}" />

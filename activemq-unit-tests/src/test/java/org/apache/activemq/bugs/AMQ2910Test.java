@@ -16,11 +16,6 @@
  */
 package org.apache.activemq.bugs;
 
-import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -28,7 +23,18 @@ import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePo
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
+
+@RunWith(BlockJUnit4ClassRunner.class)
 public class AMQ2910Test extends JmsMultipleClientsTestSupport {
 
     final int maxConcurrency = 60;
@@ -55,6 +61,7 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
         return broker;
     }
 
+    @Test(timeout = 30 * 1000)
     public void testConcurrentSendToPendingCursor() throws Exception {
         final ActiveMQConnectionFactory factory =
                 new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri());
@@ -103,6 +110,7 @@ public class AMQ2910Test extends JmsMultipleClientsTestSupport {
 
         if (allMessagesList.getMessageCount() != numExpected) {
             dumpAllThreads(getName());
+
         }
         allMessagesList.assertMessagesReceivedNoWait(numExpected);
 

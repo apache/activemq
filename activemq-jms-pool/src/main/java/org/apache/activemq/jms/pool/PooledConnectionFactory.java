@@ -16,13 +16,18 @@
  */
 package org.apache.activemq.jms.pool;
 
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 
-import javax.jms.XAConnectionFactory;
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.slf4j.Logger;
@@ -57,79 +62,90 @@ import org.slf4j.LoggerFactory;
  * configure the idle eviction thread to run.
  *
  */
-public class PooledConnectionFactory implements ConnectionFactory {
+public class PooledConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory {
     private static final transient Logger LOG = LoggerFactory.getLogger(PooledConnectionFactory.class);
 
     protected final AtomicBoolean stopped = new AtomicBoolean(false);
     private GenericKeyedObjectPool<ConnectionKey, ConnectionPool> connectionsPool;
 
-    private ConnectionFactory connectionFactory;
+    protected Object connectionFactory;
 
     private int maximumActiveSessionPerConnection = 500;
     private int idleTimeout = 30 * 1000;
     private boolean blockIfSessionPoolIsFull = true;
+    private long blockIfSessionPoolIsFullTimeout = -1L;
     private long expiryTimeout = 0l;
     private boolean createConnectionOnStartup = true;
+    private boolean useAnonymousProducers = true;
 
+    // Temporary value used to always fetch the result of makeObject.
+    private final AtomicReference<ConnectionPool> mostRecentlyCreated = new AtomicReference<ConnectionPool>(null);
 
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
             this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
-                    new KeyedPoolableObjectFactory<ConnectionKey, ConnectionPool>() {
+                new KeyedPoolableObjectFactory<ConnectionKey, ConnectionPool>() {
 
-                        @Override
-                        public void activateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                        }
+                    @Override
+                    public void activateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                    }
 
-                        @Override
-                        public void destroyObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                            try {
-                                if (LOG.isTraceEnabled()) {
-                                    LOG.trace("Destroying connection: {}", connection);
-                                }
-                                connection.close();
-                            } catch (Exception e) {
-                                LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
-                            }
-                        }
-
-                        @Override
-                        public ConnectionPool makeObject(ConnectionKey key) throws Exception {
-                            Connection delegate = createConnection(key);
-
-                            ConnectionPool connection = createConnectionPool(delegate);
-                            connection.setIdleTimeout(getIdleTimeout());
-                            connection.setExpiryTimeout(getExpiryTimeout());
-                            connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
-                            connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
-
+                    @Override
+                    public void destroyObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                        try {
                             if (LOG.isTraceEnabled()) {
-                                LOG.trace("Created new connection: {}", connection);
+                                LOG.trace("Destroying connection: {}", connection);
+                            }
+                            connection.close();
+                        } catch (Exception e) {
+                            LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
+                        }
+                    }
+
+                    @Override
+                    public ConnectionPool makeObject(ConnectionKey key) throws Exception {
+                        Connection delegate = createConnection(key);
+
+                        ConnectionPool connection = createConnectionPool(delegate);
+                        connection.setIdleTimeout(getIdleTimeout());
+                        connection.setExpiryTimeout(getExpiryTimeout());
+                        connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
+                        connection.setBlockIfSessionPoolIsFull(isBlockIfSessionPoolIsFull());
+                        if (isBlockIfSessionPoolIsFull() && getBlockIfSessionPoolIsFullTimeout() > 0) {
+                            connection.setBlockIfSessionPoolIsFullTimeout(getBlockIfSessionPoolIsFullTimeout());
+                        }
+                        connection.setUseAnonymousProducers(isUseAnonymousProducers());
+
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Created new connection: {}", connection);
+                        }
+
+                        PooledConnectionFactory.this.mostRecentlyCreated.set(connection);
+
+                        return connection;
+                    }
+
+                    @Override
+                    public void passivateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                    }
+
+                    @Override
+                    public boolean validateObject(ConnectionKey key, ConnectionPool connection) {
+                        if (connection != null && connection.expiredCheck()) {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("Connection has expired: {} and will be destroyed", connection);
                             }
 
-                            return connection;
+                            return false;
                         }
 
-                        @Override
-                        public void passivateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                        }
-
-                        @Override
-                        public boolean validateObject(ConnectionKey key, ConnectionPool connection) {
-                            if (connection != null && connection.expiredCheck()) {
-                                if (LOG.isTraceEnabled()) {
-                                    LOG.trace("Connection has expired: {} and will be destroyed", connection);
-                                }
-
-                                return false;
-                            }
-
-                            return true;
-                        }
-                    });
+                        return true;
+                    }
+                });
 
             // Set max idle (not max active) since our connections always idle in the pool.
             this.connectionsPool.setMaxIdle(1);
+            this.connectionsPool.setLifo(false);
 
             // We always want our validate method to control when idle objects are evicted.
             this.connectionsPool.setTestOnBorrow(true);
@@ -140,7 +156,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
     /**
      * @return the currently configured ConnectionFactory used to create the pooled Connections.
      */
-    public ConnectionFactory getConnectionFactory() {
+    public Object getConnectionFactory() {
         return connectionFactory;
     }
 
@@ -149,24 +165,37 @@ public class PooledConnectionFactory implements ConnectionFactory {
      * <p/>
      * Updates to this value do not affect Connections that were previously created and placed
      * into the pool.  In order to allocate new Connections based off this new ConnectionFactory
-     * it is first necessary to {@link clear} the pooled Connections.
+     * it is first necessary to {@link #clear} the pooled Connections.
      *
      * @param toUse
      *      The factory to use to create pooled Connections.
      */
-    public void setConnectionFactory(final ConnectionFactory toUse) {
-        if (toUse instanceof XAConnectionFactory) {
-            connectionFactory = new ConnectionFactory() {
-                        public Connection createConnection() throws JMSException {
-                            return ((XAConnectionFactory)toUse).createXAConnection();
-                        }
-                        public Connection createConnection(String userName, String password) throws JMSException {
-                            return ((XAConnectionFactory)toUse).createXAConnection(userName, password);
-                        }
-                    };
-        } else {
+    public void setConnectionFactory(final Object toUse) {
+        if (toUse instanceof ConnectionFactory) {
             this.connectionFactory = toUse;
+        } else {
+            throw new IllegalArgumentException("connectionFactory should implement javax.jmx.ConnectionFactory");
         }
+    }
+
+    @Override
+    public QueueConnection createQueueConnection() throws JMSException {
+        return (QueueConnection) createConnection();
+    }
+
+    @Override
+    public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
+        return (QueueConnection) createConnection(userName, password);
+    }
+
+    @Override
+    public TopicConnection createTopicConnection() throws JMSException {
+        return (TopicConnection) createConnection();
+    }
+
+    @Override
+    public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
+        return (TopicConnection) createConnection(userName, password);
     }
 
     @Override
@@ -188,45 +217,41 @@ public class PooledConnectionFactory implements ConnectionFactory {
         // will create a new one to meet the demand.
         if (getConnectionsPool().getNumIdle(key) < getMaxConnections()) {
             try {
-                // we want borrowObject to return the one we added.
-                connectionsPool.setLifo(true);
                 connectionsPool.addObject(key);
+                connection = mostRecentlyCreated.getAndSet(null);
+                connection.incrementReferenceCount();
             } catch (Exception e) {
                 throw createJmsException("Error while attempting to add new Connection to the pool", e);
             }
         } else {
-            // now we want the oldest one in the pool.
-            connectionsPool.setLifo(false);
-        }
+            try {
+                // We can race against other threads returning the connection when there is an
+                // expiration or idle timeout.  We keep pulling out ConnectionPool instances until
+                // we win and get a non-closed instance and then increment the reference count
+                // under lock to prevent another thread from triggering an expiration check and
+                // pulling the rug out from under us.
+                while (connection == null) {
+                    connection = connectionsPool.borrowObject(key);
+                    synchronized (connection) {
+                        if (connection.getConnection() != null) {
+                            connection.incrementReferenceCount();
+                            break;
+                        }
 
-        try {
-
-            // We can race against other threads returning the connection when there is an
-            // expiration or idle timeout.  We keep pulling out ConnectionPool instances until
-            // we win and get a non-closed instance and then increment the reference count
-            // under lock to prevent another thread from triggering an expiration check and
-            // pulling the rug out from under us.
-            while (connection == null) {
-                connection = connectionsPool.borrowObject(key);
-                synchronized (connection) {
-                    if (connection.getConnection() != null) {
-                        connection.incrementReferenceCount();
-                        break;
+                        // Return the bad one to the pool and let if get destroyed as normal.
+                        connectionsPool.returnObject(key, connection);
+                        connection = null;
                     }
-
-                    // Return the bad one to the pool and let if get destroyed as normal.
-                    connectionsPool.returnObject(key, connection);
-                    connection = null;
                 }
+            } catch (Exception e) {
+                throw createJmsException("Error while attempting to retrieve a connection from the pool", e);
             }
-        } catch (Exception e) {
-            throw createJmsException("Error while attempting to retrieve a connection from the pool", e);
-        }
 
-        try {
-            connectionsPool.returnObject(key, connection);
-        } catch (Exception e) {
-            throw createJmsException("Error when returning connection to the pool", e);
+            try {
+                connectionsPool.returnObject(key, connection);
+            } catch (Exception e) {
+                throw createJmsException("Error when returning connection to the pool", e);
+            }
         }
 
         return newPooledConnection(connection);
@@ -244,10 +269,14 @@ public class PooledConnectionFactory implements ConnectionFactory {
     }
 
     protected Connection createConnection(ConnectionKey key) throws JMSException {
-        if (key.getUserName() == null && key.getPassword() == null) {
-            return connectionFactory.createConnection();
+        if (connectionFactory instanceof ConnectionFactory) {
+            if (key.getUserName() == null && key.getPassword() == null) {
+                return ((ConnectionFactory) connectionFactory).createConnection();
+            } else {
+                return ((ConnectionFactory) connectionFactory).createConnection(key.getUserName(), key.getPassword());
+            }
         } else {
-            return connectionFactory.createConnection(key.getUserName(), key.getPassword());
+            throw new IllegalStateException("connectionFactory should implement javax.jms.ConnectionFactory");
         }
     }
 
@@ -257,7 +286,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
         if (isCreateConnectionOnStartup()) {
             try {
                 // warm the pool by creating a connection during startup
-                createConnection();
+                createConnection().close();
             } catch (JMSException e) {
                 LOG.warn("Create pooled connection during start failed. This exception will be ignored.", e);
             }
@@ -280,7 +309,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
     /**
      * Clears all connections from the pool.  Each connection that is currently in the pool is
      * closed and removed from the pool.  A new connection will be created on the next call to
-     * {@link createConnection}.  Care should be taken when using this method as Connections that
+     * {@link #createConnection}.  Care should be taken when using this method as Connections that
      * are in use be client's will be closed.
      */
     public void clear() {
@@ -334,7 +363,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
      * once the maximum number of sessions has been borrowed from the the Session Pool.
      *
      * @return true if the pooled Connection createSession method will block when the limit is hit.
-     * @see setBlockIfSessionPoolIsFull
+     * @see #setBlockIfSessionPoolIsFull(boolean)
      */
     public boolean isBlockIfSessionPoolIsFull() {
         return this.blockIfSessionPoolIsFull;
@@ -342,7 +371,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
 
     /**
      * Returns the maximum number to pooled Connections that this factory will allow before it
-     * begins to return connections from the pool on calls to ({@link createConnection}.
+     * begins to return connections from the pool on calls to ({@link #createConnection}.
      *
      * @return the maxConnections that will be created for this pool.
      */
@@ -352,7 +381,7 @@ public class PooledConnectionFactory implements ConnectionFactory {
 
     /**
      * Sets the maximum number of pooled Connections (defaults to one).  Each call to
-     * {@link createConnection} will result in a new Connection being create up to the max
+     * {@link #createConnection} will result in a new Connection being create up to the max
      * connections value.
      *
      * @param maxConnections the maxConnections to set
@@ -426,6 +455,32 @@ public class PooledConnectionFactory implements ConnectionFactory {
     }
 
     /**
+     * Should Sessions use one anonymous producer for all producer requests or should a new
+     * MessageProducer be created for each request to create a producer object, default is true.
+     *
+     * When enabled the session only needs to allocate one MessageProducer for all requests and
+     * the MessageProducer#send(destination, message) method can be used.  Normally this is the
+     * right thing to do however it does result in the Broker not showing the producers per
+     * destination.
+     *
+     * @return true if a PooledSession will use only a single anonymous message producer instance.
+     */
+    public boolean isUseAnonymousProducers() {
+        return this.useAnonymousProducers;
+    }
+
+    /**
+     * Sets whether a PooledSession uses only one anonymous MessageProducer instance or creates
+     * a new MessageProducer for each call the create a MessageProducer.
+     *
+     * @param value
+     *      Boolean value that configures whether anonymous producers are used.
+     */
+    public void setUseAnonymousProducers(boolean value) {
+        this.useAnonymousProducers = value;
+    }
+
+    /**
      * Gets the Pool of ConnectionPool instances which are keyed by different ConnectionKeys.
      *
      * @return this factories pool of ConnectionPool instances.
@@ -476,4 +531,51 @@ public class PooledConnectionFactory implements ConnectionFactory {
         return new ConnectionPool(connection);
     }
 
+    /**
+     * Returns the timeout to use for blocking creating new sessions
+     *
+     * @return true if the pooled Connection createSession method will block when the limit is hit.
+     * @see #setBlockIfSessionPoolIsFull(boolean)
+     */
+    public long getBlockIfSessionPoolIsFullTimeout() {
+        return blockIfSessionPoolIsFullTimeout;
+    }
+
+    /**
+     * Controls the behavior of the internal session pool. By default the call to
+     * Connection.getSession() will block if the session pool is full.  This setting
+     * will affect how long it blocks and throws an exception after the timeout.
+     *
+     * The size of the session pool is controlled by the @see #maximumActive
+     * property.
+     *
+     * Whether or not the call to create session blocks is controlled by the @see #blockIfSessionPoolIsFull
+     * property
+     *
+     * @param blockIfSessionPoolIsFullTimeout - if blockIfSessionPoolIsFullTimeout is true,
+     *                                        then use this setting to configure how long to block before retry
+     */
+    public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
+        this.blockIfSessionPoolIsFullTimeout = blockIfSessionPoolIsFullTimeout;
+    }
+
+    /**
+     * Called by any superclass that implements a JNDIReferencable or similar that needs to collect
+     * the properties of this class for storage etc.
+     *
+     * This method should be updated any time there is a new property added.
+     *
+     * @param props
+     *        a properties object that should be filled in with this objects property values.
+     */
+    protected void populateProperties(Properties props) {
+        props.setProperty("maximumActiveSessionPerConnection", Integer.toString(getMaximumActiveSessionPerConnection()));
+        props.setProperty("maxConnections", Integer.toString(getMaxConnections()));
+        props.setProperty("idleTimeout", Integer.toString(getIdleTimeout()));
+        props.setProperty("expiryTimeout", Long.toString(getExpiryTimeout()));
+        props.setProperty("timeBetweenExpirationCheckMillis", Long.toString(getTimeBetweenExpirationCheckMillis()));
+        props.setProperty("createConnectionOnStartup", Boolean.toString(isCreateConnectionOnStartup()));
+        props.setProperty("useAnonymousProducers", Boolean.toString(isUseAnonymousProducers()));
+        props.setProperty("blockIfSessionPoolIsFullTimeout", Long.toString(getBlockIfSessionPoolIsFullTimeout()));
+    }
 }

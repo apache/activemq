@@ -297,7 +297,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         break;
                     }
                 }
-            }else if (ack.isDeliveredAck()) {
+            }else if (ack.isDeliveredAck() || ack.isExpiredAck()) {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
                 int index = 0;
@@ -633,7 +633,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         dispatched.removeAll(references);
     }
 
-    protected void dispatchPending() throws IOException {
+    // made public so it can be used in MQTTProtocolConverter
+    public void dispatchPending() throws IOException {
        synchronized(pendingLock) {
             try {
                 int numberToDispatch = countBeforeFull();

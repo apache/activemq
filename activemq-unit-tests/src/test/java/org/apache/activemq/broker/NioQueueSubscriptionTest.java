@@ -16,6 +16,20 @@
  */
 package org.apache.activemq.broker;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jms.ConnectionFactory;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,17 +41,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+@RunWith(BlockJUnit4ClassRunner.class)
 public class NioQueueSubscriptionTest extends QueueSubscriptionTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(NioQueueSubscriptionTest.class);
@@ -49,11 +56,6 @@ public class NioQueueSubscriptionTest extends QueueSubscriptionTest {
         return new ActiveMQConnectionFactory("tcp://localhost:62621?trace=false");
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        // setMaxTestTime(20*60*1000);
-        super.setUp();
-    }
 
     @Override
     protected BrokerService createBroker() throws Exception {
@@ -74,6 +76,9 @@ public class NioQueueSubscriptionTest extends QueueSubscriptionTest {
         return answer;
     }
 
+
+    @Ignore("See AMQ-4286")
+    @Test(timeout = 60 * 1000)
     public void testLotsOfConcurrentConnections() throws Exception {
         ExecutorService executor = Executors.newCachedThreadPool();
         final ConnectionFactory factory = createConnectionFactory();

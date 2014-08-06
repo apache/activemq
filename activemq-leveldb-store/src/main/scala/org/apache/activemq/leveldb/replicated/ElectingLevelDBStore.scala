@@ -17,7 +17,7 @@
 package org.apache.activemq.leveldb.replicated
 
 import org.linkedin.util.clock.Timespan
-import scala.reflect.BeanProperty
+import scala.beans.BeanProperty
 import org.apache.activemq.util.ServiceStopper
 import org.apache.activemq.leveldb.{LevelDBClient, RecordLog, LevelDBStore}
 import java.net.{NetworkInterface, InetAddress}
@@ -124,7 +124,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   @BeanProperty
   var indexCacheSize: Long = 1024 * 1024 * 256L
   @BeanProperty
-  var flushDelay = 1000 * 5
+  var flushDelay = 0
   @BeanProperty
   var asyncBufferSize = 1024 * 1024 * 4
   @BeanProperty
@@ -142,6 +142,11 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   var position: Long = -1L
 
+
+  override def toString: String = {
+    return "Replicated LevelDB[%s, %s/%s]".format(directory.getAbsolutePath, zkAddress, zkPath)
+  }
+
   var usageManager: SystemUsage = _
   override def setUsageManager(usageManager: SystemUsage) {
     this.usageManager = usageManager
@@ -151,7 +156,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   def init() {
 
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new ReplicatedLevelDBStoreView(this), objectName)
       } catch {
@@ -238,6 +243,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       master_stopped.set(true)
       position = master.wal_append_position
       stopped_latch.countDown()
+      master = null
       func
     })
     master.blocking_executor.execute(^{
@@ -264,7 +270,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   }
 
   protected def doStop(stopper: ServiceStopper) {
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
     zk_group.close

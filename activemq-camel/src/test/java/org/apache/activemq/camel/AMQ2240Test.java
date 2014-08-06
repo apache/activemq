@@ -54,7 +54,9 @@ public class AMQ2240Test {
                 "jms.maxXXXXReconnectAttempts=1&jms.timeout=3000";
 
             LOG.info("creating context with bad URI: " + vmUri);
-            ActiveMQComponent.activeMQComponent(vmUri);
+            ActiveMQComponent amq = ActiveMQComponent.activeMQComponent(vmUri);
+
+            amq.getConfiguration().getConnectionFactory();
 
             fail("Should have received an exception from the bad URI.");
         } catch(Exception e) {

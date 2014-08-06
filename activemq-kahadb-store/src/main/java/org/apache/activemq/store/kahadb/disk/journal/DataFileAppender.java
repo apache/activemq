@@ -18,16 +18,16 @@ package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.RandomAccessFile;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.store.kahadb.disk.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.RecoverableRandomAccessFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,10 +66,12 @@ class DataFileAppender implements FileAppender {
             hash = (int)(file ^ offset);
         }
 
+        @Override
         public int hashCode() {
             return hash;
         }
 
+        @Override
         public boolean equals(Object obj) {
             if (obj instanceof WriteKey) {
                 WriteKey di = (WriteKey)obj;
@@ -131,6 +133,7 @@ class DataFileAppender implements FileAppender {
         this.syncOnComplete = this.journal.isEnableAsyncDiskSync();
     }
 
+    @Override
     public Location storeItem(ByteSequence data, byte type, boolean sync) throws IOException {
 
         // Write the packet our internal buffer.
@@ -159,6 +162,7 @@ class DataFileAppender implements FileAppender {
         return location;
     }
 
+    @Override
     public Location storeItem(ByteSequence data, byte type, Runnable onComplete) throws IOException {
         // Write the packet our internal buffer.
         int size = data.getLength() + Journal.RECORD_HEAD_SPACE;
@@ -184,6 +188,7 @@ class DataFileAppender implements FileAppender {
             if (!running) {
                 running = true;
                 thread = new Thread() {
+                    @Override
                     public void run() {
                         processQueue();
                     }
@@ -245,6 +250,7 @@ class DataFileAppender implements FileAppender {
         return new WriteBatch(file, file.getLength(), write);
     }
 
+    @Override
     public void close() throws IOException {
         synchronized (enqueueMutex) {
             if (!shutdown) {
@@ -277,7 +283,7 @@ class DataFileAppender implements FileAppender {
      */
     protected void processQueue() {
         DataFile dataFile = null;
-        RandomAccessFile file = null;
+        RecoverableRandomAccessFile file = null;
         WriteBatch wb = null;
         try {
 
@@ -364,7 +370,7 @@ class DataFileAppender implements FileAppender {
                 }
 
                 if (forceToDisk) {
-                    file.getFD().sync();
+                    file.sync();
                 }
 
                 Journal.WriteCommand lastWrite = wb.writes.getTail();
@@ -373,6 +379,7 @@ class DataFileAppender implements FileAppender {
                 signalDone(wb);
             }
         } catch (IOException e) {
+            logger.info("Journal failed while writing at: " + wb.offset);
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
                 if (wb != null) {

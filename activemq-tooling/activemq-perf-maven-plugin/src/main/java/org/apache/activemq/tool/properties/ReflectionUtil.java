@@ -39,7 +39,7 @@ public final class ReflectionUtil {
             String debugInfo;
 
             Object target = obj;
-            Class targetClass = obj.getClass();
+            Class<?> targetClass = obj.getClass();
 
             // DEBUG: Debugging Info
             debugInfo = "Invoking: " + targetClass.getName();
@@ -92,7 +92,7 @@ public final class ReflectionUtil {
             if (setterMethod == null) {
                 throw new IllegalAccessException("Unable to find appropriate setter method signature for property: " + property);
             }
-            Class paramType = setterMethod.getParameterTypes()[0];
+            Class<?> paramType = setterMethod.getParameterTypes()[0];
 
             // Set primitive type
             debugInfo += "." + setterMethod + "(" + paramType.getName() + ": " + val + ")";
@@ -160,7 +160,7 @@ public final class ReflectionUtil {
     }
 
     public static void configureClass(Object obj, Properties props) {
-        for (Iterator i = props.keySet().iterator(); i.hasNext();) {
+        for (Iterator<Object> i = props.keySet().iterator(); i.hasNext();) {
             try {
                 String key = (String)i.next();
                 String val = props.getProperty(key);

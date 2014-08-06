@@ -329,6 +329,16 @@ public class OrderPendingListTest {
                 theList.add(messageReference);
             }
         }
+
+        @Override
+        public MessageReference get(MessageId messageId) {
+            for(MessageReference messageReference : theList) {
+                if (messageReference.getMessageId().equals(messageId)) {
+                    return messageReference;
+                }
+            }
+            return null;
+        }
     }
 
     static class TestMessageReference implements MessageReference {

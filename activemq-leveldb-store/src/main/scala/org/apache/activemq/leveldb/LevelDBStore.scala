@@ -17,7 +17,7 @@
 
 package org.apache.activemq.leveldb
 
-import org.apache.activemq.broker.{LockableServiceSupport, BrokerServiceAware, ConnectionContext}
+import org.apache.activemq.broker.{SuppressReplyException, LockableServiceSupport, BrokerServiceAware, ConnectionContext}
 import org.apache.activemq.command._
 import org.apache.activemq.openwire.OpenWireFormat
 import org.apache.activemq.usage.SystemUsage
@@ -25,7 +25,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicLong
-import reflect.BeanProperty
+import beans.BeanProperty
 import org.apache.activemq.store._
 import java.util._
 import collection.mutable.ListBuffer
@@ -35,6 +35,7 @@ import org.apache.activemq.leveldb.util.Log
 import org.apache.activemq.store.PList.PListIterator
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 import org.fusesource.hawtdispatch;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -47,8 +48,7 @@ object LevelDBStore extends Log {
       }
   })
 
-  val DONE = new CountDownFuture[AnyRef]();
-  DONE.set(null)
+  val DONE = new InlineListenableFuture;
 
   def toIOException(e: Throwable): IOException = {
     if (e.isInstanceOf[ExecutionException]) {
@@ -184,9 +184,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   val topicsById = collection.mutable.HashMap[Long, LevelDBStore#LevelDBTopicMessageStore]()
   val plists = collection.mutable.HashMap[String, LevelDBStore#LevelDBPList]()
 
+  private val lock = new Object();
+
   def check_running = {
     if( this.isStopped ) {
-      throw new IOException("Store has been stopped")
+      throw new SuppressReplyException("Store has been stopped")
     }
   }
 
@@ -217,7 +219,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     debug("starting")
 
     // Expose a JMX bean to expose the status of the store.
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreView(this), objectName)
       } catch {
@@ -274,7 +276,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   def doStop(stopper: ServiceStopper): Unit = {
     db.stop
-    if(brokerService!=null){
+    if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
     info("Stopped "+this)
@@ -312,7 +314,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     return 0
   }
 
-  def createTransactionStore = this
+  def createTransactionStore = new LevelDBTransactionStore(this)
 
   val transactions = new ConcurrentHashMap[TransactionId, Transaction]()
 
@@ -394,7 +396,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           if( prepared ) {
             store.preparedAcks.remove(ack.getLastMessageId)
           }
-          uow.incrementRedelivery(store.key, ack.getLastMessageId)
         }
       }
     }
@@ -443,7 +444,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
           if( broker_service!=null ) {
             broker_service.handleIOException(e)
           }
-          throw e
+          throw new SuppressReplyException(e);
       }
     }
   }
@@ -541,12 +542,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
 
   def getPList(name: String): PList = {
-    this.synchronized(plists.get(name)).getOrElse(db.createPList(name))
+    lock.synchronized(plists.get(name)).getOrElse(db.createPList(name))
   }
 
   def createPList(name: String, key: Long):LevelDBStore#LevelDBPList = {
     var rc = new LevelDBPList(name, key)
-    this.synchronized {
+    lock.synchronized {
       plists.put(name, rc)
     }
     rc
@@ -574,34 +575,38 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   }
 
   def createQueueMessageStore(destination: ActiveMQQueue):LevelDBStore#LevelDBMessageStore = {
-    this.synchronized(queues.get(destination)).getOrElse(db.createQueueStore(destination))
+    lock.synchronized(queues.get(destination)).getOrElse(db.createQueueStore(destination))
   }
 
   def createQueueMessageStore(destination: ActiveMQQueue, key: Long):LevelDBStore#LevelDBMessageStore = {
     var rc = new LevelDBMessageStore(destination, key)
-    this.synchronized {
+    lock.synchronized {
       queues.put(destination, rc)
     }
     rc
   }
 
-  def removeQueueMessageStore(destination: ActiveMQQueue): Unit = this synchronized {
+  def removeQueueMessageStore(destination: ActiveMQQueue): Unit = lock synchronized {
     queues.remove(destination).foreach { store=>
       db.destroyQueueStore(store.key)
     }
   }
 
   def createTopicMessageStore(destination: ActiveMQTopic):LevelDBStore#LevelDBTopicMessageStore = {
-    this.synchronized(topics.get(destination)).getOrElse(db.createTopicStore(destination))
+    lock.synchronized(topics.get(destination)).getOrElse(db.createTopicStore(destination))
   }
 
   def createTopicMessageStore(destination: ActiveMQTopic, key: Long):LevelDBStore#LevelDBTopicMessageStore = {
     var rc = new LevelDBTopicMessageStore(destination, key)
-    this synchronized {
+    lock synchronized {
       topics.put(destination, rc)
       topicsById.put(key, rc)
     }
     rc
+  }
+
+  def createJobSchedulerStore():JobSchedulerStore = {
+    throw new UnsupportedOperationException();
   }
 
   def removeTopicMessageStore(destination: ActiveMQTopic): Unit = {
@@ -669,6 +674,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     lastSeq.set(db.getLastQueueEntrySeq(key))
 
+    def cursorResetPosition = 0L
+
     def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
       val seq = lastSeq.incrementAndGet()
@@ -680,7 +687,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     }
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
-    override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): Future[AnyRef] = {
+    override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): ListenableFuture[AnyRef] = {
       check_running
       message.getMessageId.setEntryLocator(null)
       if(  message.getTransactionId!=null ) {
@@ -697,6 +704,12 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     override def addMessage(context: ConnectionContext, message: Message, delay: Boolean): Unit = {
       check_running
       waitOn(asyncAddQueueMessage(context, message, delay))
+    }
+
+    override def updateMessage(message: Message): Unit = {
+      check_running
+      // the only current usage of update is to increment the redelivery counter
+      withUow {uow => uow.incrementRedelivery(key, message.getMessageId)}
     }
 
     def doRemove(uow: DelayableUOW, id: MessageId): CountDownFuture[AnyRef] = {
@@ -731,7 +744,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     def removeAllMessages(context: ConnectionContext): Unit = {
       check_running
       db.collectionEmpty(key)
-      cursorPosition = 0
+      cursorPosition = cursorResetPosition
     }
 
     def getMessageCount: Int = {
@@ -744,11 +757,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def recover(listener: MessageRecoveryListener): Unit = {
       check_running
-      cursorPosition = db.cursorMessages(preparedAcks, key, listener, 0)
+      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorResetPosition)
     }
 
     def resetBatching: Unit = {
-      cursorPosition = 0
+      cursorPosition = cursorResetPosition
     }
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
@@ -766,7 +779,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
   // This gts called when the store is first loading up, it restores
   // the existing durable subs..
   def createSubscription(sub:DurableSubscription) = {
-    this.synchronized(topicsById.get(sub.topicKey)) match {
+    lock.synchronized(topicsById.get(sub.topicKey)) match {
       case Some(topic) =>
         topic.synchronized {
           topic.subscriptions.put((sub.info.getClientId, sub.info.getSubcriptionName), sub)
@@ -779,7 +792,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
   def getTopicGCPositions = {
     import collection.JavaConversions._
-    val topics = this.synchronized {
+    val topics = lock.synchronized {
       new ArrayList(topicsById.values())
     }
     topics.flatMap(_.gcPosition).toSeq
@@ -789,9 +802,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     val subscriptions = collection.mutable.HashMap[(String, String), DurableSubscription]()
     var firstSeq = 0L
 
+    override def cursorResetPosition = firstSeq
+
     def subscription_with_key(key:Long) = subscriptions.find(_._2.subKey == key).map(_._2)
 
-    override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): Future[AnyRef] = {
+    override def asyncAddQueueMessage(context: ConnectionContext, message: Message, delay: Boolean): ListenableFuture[AnyRef] = {
       super.asyncAddQueueMessage(context, message, false)
     }
 
@@ -816,7 +831,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
-    def addSubsciption(info: SubscriptionInfo, retroactive: Boolean) = {
+    def addSubscription(info: SubscriptionInfo, retroactive: Boolean) = {
       check_running
       var sub = db.addSubscription(key, info)
       subscriptions.synchronized {
@@ -1004,6 +1019,20 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
+  }
+
+  class LevelDBTransactionStore(val store:LevelDBStore) extends TransactionStore {
+    def start() = {}
+
+    def stop() = {}
+
+    def prepare(txid: TransactionId) = store.prepare(txid)
+
+    def commit(txid: TransactionId, wasPrepared: Boolean, preCommit: Runnable, postCommit: Runnable) = store.commit(txid, wasPrepared, preCommit, postCommit)
+
+    def rollback(txid: TransactionId) = store.rollback(txid)
+
+    def recover(listener: TransactionRecoveryListener) = store.recover(listener)
   }
 
   ///////////////////////////////////////////////////////////////////////////

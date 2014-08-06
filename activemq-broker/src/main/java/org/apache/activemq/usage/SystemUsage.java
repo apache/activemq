@@ -41,6 +41,7 @@ public class SystemUsage implements Service {
     private TempUsage tempUsage;
     private ThreadPoolExecutor executor;
     private JobSchedulerUsage jobSchedulerUsage;
+    private String checkLimitsLogLevel = "warn";
 
     /**
      * True if someone called setSendFailIfNoSpace() on this particular usage
@@ -283,4 +284,12 @@ public class SystemUsage implements Service {
             this.jobSchedulerUsage.setExecutor(this.executor);
         }
     }
+
+   public String getCheckLimitsLogLevel() {
+       return checkLimitsLogLevel;
+   }
+
+   public void setCheckLimitsLogLevel(String checkLimitsLogLevel) {
+       this.checkLimitsLogLevel = checkLimitsLogLevel;
+   }
 }

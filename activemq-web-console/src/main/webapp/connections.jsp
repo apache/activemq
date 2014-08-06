@@ -16,14 +16,20 @@
 --%>
 <html>
 <head>
-<title>Connections</title>
+<c:set var="pageTitle" value="Connections"/>
+
+<%@include file="decorators/head.jsp" %>
 </head>
 <body>
+
+<%@include file="decorators/header.jsp" %>
+
+
 
 <h2>Connections</h2>
 
 <c:forEach items="${requestContext.brokerQuery.connectors}" var="connectorName">
-<h3>Connector ${connectorName}</h3>
+<h3>Connector <c:out value="${connectorName}" /></h3>
 
 <table id="connections" class="sortable autostripe">
 <thead>
@@ -38,10 +44,10 @@
 <jms:forEachConnection broker="${requestContext.brokerQuery}" connectorName="${connectorName}"
 	connection="con" connectionName="conName">
 <tr>
-	<td><a href="connection.jsp?connectionID=${conName}">${conName}</a></td>
-	<td>${con.remoteAddress}</td>
-	<td>${con.active}</td>
-	<td>${con.slow}</td>
+	<td><a href="<c:url value='connection.jsp?connectionID=${conName}' />"><c:out value="${conName}" /></a></td>
+	<td><c:out value="${con.remoteAddress}" /></td>
+	<td><c:out value="${con.active}" /></td>
+	<td><c:out value="${con.slow}" /></td>
 </tr>
 </jms:forEachConnection>
 </tbody>
@@ -56,7 +62,8 @@
 <thead>
 <tr>
 	<th>Name</th>
-	<th>Network TTL</th>
+	<th>Message TTL</th>
+	<th>Consumer TTL</th>
 	<th>Dynamic Only</th>
 	<th>Conduit Subscriptions</th>
 	<th>Bridge Temps</th>
@@ -67,18 +74,20 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.networkConnectors}" var="nc">
 <tr>
-	<td>${nc.name}</td>
-	<td>${nc.networkTTL}</td>
-	<td>${nc.dynamicOnly}</td>
-	<td>${nc.conduitSubscriptions}</td>
-	<td>${nc.bridgeTempDestinations}</td>
-	<td>${nc.decreaseNetworkConsumerPriority}</td>
-	<td>${nc.dispatchAsync}</td>
+	<td><c:out value="${nc.name}" /></td>
+	<td><c:out value="${nc.messageTTL}" /></td>
+	<td><c:out value="${nc.consumerTTL}" /></td>
+	<td><c:out value="${nc.dynamicOnly}" /></td>
+	<td><c:out value="${nc.conduitSubscriptions}" /></td>
+	<td><c:out value="${nc.bridgeTempDestinations}" /></td>
+	<td><c:out value="${nc.decreaseNetworkConsumerPriority}" /></td>
+	<td><c:out value="${nc.dispatchAsync}" /></td>
 </tr>
 </c:forEach>
 </tbody>
 </table>
 </div>
+<%@include file="decorators/footer.jsp" %>
 
 </body>
 </html>

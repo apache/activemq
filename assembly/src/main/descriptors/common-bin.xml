@@ -28,7 +28,7 @@
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>
-        <include>webapps/*.ico</include>        
+        <include>webapps/*.ico</include>
       </includes>
     </fileSet>
 
@@ -100,22 +100,6 @@
   </fileSets>
 
   <dependencySets>
-    <dependencySet>
-      <outputDirectory>/webapps/hawtio</outputDirectory>
-      <unpack>true</unpack>
-      <unpackOptions>
-        <excludes>
-          <exclude>WEB-INF/lib/slf4j-api-*.jar</exclude>
-          <exclude>WEB-INF/lib/log4j-*.jar</exclude>
-          <exclude>WEB-INF/lib/commons-codec-*.jar</exclude>
-          <exclude>WEB-INF/lib/org.eclipse.jgit-*.jar</exclude>
-        </excludes>
-      </unpackOptions>
-      <scope>runtime</scope>
-      <includes>
-        <include>io.hawt:hawtio-web:war</include>
-      </includes>
-    </dependencySet>
 
     <!-- Copy over jar files -->
     <dependencySet>
@@ -156,10 +140,6 @@
         <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
         <include>${pom.groupId}:activemq-web</include>
         <include>org.fusesource.hawtbuf:hawtbuf</include>
-        <include>org.fusesource.insight:insight-log-core</include>
-        <!-- TODO: we use a patched insight-log4j AR from assembly/src/release/lib until a new release is out 
-        <include>org.fusesource.insight:insight-log4j</include>
-        -->
       </includes>
     </dependencySet>
     <dependencySet>
@@ -188,6 +168,7 @@
         <include>${pom.groupId}:activemq-jms-pool</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-partition</include>
+        <include>${pom.groupId}:activemq-shiro</include>
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
@@ -219,9 +200,8 @@
         <include>org.jasypt:jasypt-spring3</include>
         <include>javax.jmdns:jmdns</include>
         <include>org.apache.qpid:proton</include>
-        <include>org.apache.qpid:proton-api</include>
         <include>org.apache.qpid:proton-jms</include>
-        <include>org.apache.qpid:proton-j-impl</include>
+        <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
         <include>org.jvnet.jaxb2_commons:jaxb2-basics-runtime</include>
 
@@ -235,11 +215,19 @@
         <include>org.fusesource.hawtjni:hawtjni-runtime</include>
         <include>org.xerial.snappy:*</include>
         <include>org.iq80.snappy:*</include>
-        <include>org.codehaus.jackson:*</include>
         <include>org.linkedin:org.linkedin.zookeeper-impl</include>
         <include>org.linkedin:org.linkedin.util-core</include>
         <include>org.apache.zookeeper:zookeeper</include>
-        
+        <include>com.fasterxml.jackson.core:*</include>
+
+        <!-- Apache Shiro dependencies: -->
+        <include>org.apache.shiro:shiro-core</include>
+        <include>org.apache.shiro:shiro-spring</include>
+
+        <!-- insight log -->
+        <include>io.fabric8.insight:insight-log-core</include>
+        <include>io.fabric8.insight:insight-log4j</include>
+
       </includes>
     </dependencySet>
     <dependencySet>
@@ -268,9 +256,6 @@
         <include>org.mortbay.jetty:jsp-api-2.1-glassfish</include>
         <include>org.eclipse.jdt:core</include>
 
-        <!-- JSTL and other web stuff -->
-        <include>opensymphony:sitemesh</include>
-
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
         <include>jdom:jdom</include>
@@ -278,8 +263,6 @@
         <!-- REST API -->
         <include>org.jolokia:jolokia-core</include>
         <include>com.googlecode.json-simple:json-simple</include>
-        <!-- ADDITIONAL HAWTIO PLUGINS -->
-        <include>org.ops4j.pax.url:pax-url-aether</include>
       </includes>
     </dependencySet>
   </dependencySets>

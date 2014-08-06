@@ -199,6 +199,22 @@ public abstract class TestSupport extends CombinationTestSupport {
         return adapter;
     }
 
+    public void stopBrokerWithStoreFailure(BrokerService broker, PersistenceAdapterChoice choice) throws Exception {
+        switch (choice) {
+            case KahaDB:
+                KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) broker.getPersistenceAdapter();
+
+                // have the broker stop with an IOException on next checkpoint so it has a pending local transaction to recover
+                kahaDBPersistenceAdapter.getStore().getJournal().close();
+                break;
+            default:
+                // just stop normally by default
+                broker.stop();
+        }
+        broker.waitUntilStopped();
+    }
+
+
     /**
      * Test if base directory contains spaces
      */

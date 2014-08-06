@@ -17,8 +17,14 @@
 package org.apache.activemq.jms.pool;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
+import javax.jms.Queue;
+import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.Topic;
+import javax.jms.TopicSession;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -67,5 +73,70 @@ public class PooledSessionTest {
         assertEquals(0, connection.getNumActiveSessions());
         assertEquals(1, connection.getNumtIdleSessions());
         assertEquals(1, connection.getNumSessions());
+    }
+
+    @Test
+    public void testMessageProducersAreAllTheSame() throws Exception {
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Queue queue1 = session.createTemporaryQueue();
+        Queue queue2 = session.createTemporaryQueue();
+
+        PooledProducer producer1 = (PooledProducer) session.createProducer(queue1);
+        PooledProducer producer2 = (PooledProducer) session.createProducer(queue2);
+
+        assertSame(producer1.getMessageProducer(), producer2.getMessageProducer());
+    }
+
+    @Test
+    public void testThrowsWhenDifferentDestinationGiven() throws Exception {
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Queue queue1 = session.createTemporaryQueue();
+        Queue queue2 = session.createTemporaryQueue();
+
+        PooledProducer producer = (PooledProducer) session.createProducer(queue1);
+
+        try {
+            producer.send(queue2, session.createTextMessage());
+            fail("Should only be able to send to queue 1");
+        } catch (Exception ex) {
+        }
+
+        try {
+            producer.send(null, session.createTextMessage());
+            fail("Should only be able to send to queue 1");
+        } catch (Exception ex) {
+        }
+    }
+
+    @Test
+    public void testCreateTopicPublisher() throws Exception {
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+        TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Topic topic1 = session.createTopic("Topic-1");
+        Topic topic2 = session.createTopic("Topic-2");
+
+        PooledTopicPublisher publisher1 = (PooledTopicPublisher) session.createPublisher(topic1);
+        PooledTopicPublisher publisher2 = (PooledTopicPublisher) session.createPublisher(topic2);
+
+        assertSame(publisher1.getMessageProducer(), publisher2.getMessageProducer());
+    }
+
+    @Test
+    public void testQueueSender() throws Exception {
+        PooledConnection connection = (PooledConnection) pooledFactory.createConnection();
+        QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Queue queue1 = session.createTemporaryQueue();
+        Queue queue2 = session.createTemporaryQueue();
+
+        PooledQueueSender sender1 = (PooledQueueSender) session.createSender(queue1);
+        PooledQueueSender sender2 = (PooledQueueSender) session.createSender(queue2);
+
+        assertSame(sender1.getMessageProducer(), sender2.getMessageProducer());
     }
 }

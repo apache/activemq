@@ -22,15 +22,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 import javax.jms.Session;
-import javax.jms.IllegalStateException;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
 
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.
@@ -42,8 +42,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ConnectionPool {
 
-    private static final transient Logger LOG = LoggerFactory.getLogger(ConnectionPool.class);
-
     protected Connection connection;
     private int referenceCount;
     private long lastUsed = System.currentTimeMillis();
@@ -51,9 +49,10 @@ public class ConnectionPool {
     private boolean hasExpired;
     private int idleTimeout = 30 * 1000;
     private long expiryTimeout = 0l;
+    private boolean useAnonymousProducers = true;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
-    private final GenericKeyedObjectPool<SessionKey, PooledSession> sessionPool;
+    private final GenericKeyedObjectPool<SessionKey, Session> sessionPool;
     private final List<PooledSession> loanedSessions = new CopyOnWriteArrayList<PooledSession>();
 
     public ConnectionPool(Connection connection) {
@@ -61,33 +60,29 @@ public class ConnectionPool {
         this.connection = wrap(connection);
 
         // Create our internal Pool of session instances.
-        this.sessionPool = new GenericKeyedObjectPool<SessionKey, PooledSession>(
-            new KeyedPoolableObjectFactory<SessionKey, PooledSession>() {
+        this.sessionPool = new GenericKeyedObjectPool<SessionKey, Session>(
+            new KeyedPoolableObjectFactory<SessionKey, Session>() {
 
                 @Override
-                public void activateObject(SessionKey key, PooledSession session) throws Exception {
-                    ConnectionPool.this.loanedSessions.add(session);
+                public void activateObject(SessionKey key, Session session) throws Exception {
                 }
 
                 @Override
-                public void destroyObject(SessionKey key, PooledSession session) throws Exception {
-                    ConnectionPool.this.loanedSessions.remove(session);
-                    session.getInternalSession().close();
+                public void destroyObject(SessionKey key, Session session) throws Exception {
+                    session.close();
                 }
 
                 @Override
-                public PooledSession makeObject(SessionKey key) throws Exception {
-                    Session session = makeSession(key);
-                    return new PooledSession(key, session, sessionPool, key.isTransacted());
+                public Session makeObject(SessionKey key) throws Exception {
+                    return makeSession(key);
                 }
 
                 @Override
-                public void passivateObject(SessionKey key, PooledSession session) throws Exception {
-                    ConnectionPool.this.loanedSessions.remove(session);
+                public void passivateObject(SessionKey key, Session session) throws Exception {
                 }
 
                 @Override
-                public boolean validateObject(SessionKey key, PooledSession session) {
+                public boolean validateObject(SessionKey key, Session session) {
                     return true;
                 }
             }
@@ -129,7 +124,23 @@ public class ConnectionPool {
         SessionKey key = new SessionKey(transacted, ackMode);
         PooledSession session;
         try {
-            session = sessionPool.borrowObject(key);
+            session = new PooledSession(key, sessionPool.borrowObject(key), sessionPool, key.isTransacted(), useAnonymousProducers);
+            session.addSessionEventListener(new PooledSessionEventListener() {
+
+                @Override
+                public void onTemporaryTopicCreate(TemporaryTopic tempTopic) {
+                }
+
+                @Override
+                public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
+                }
+
+                @Override
+                public void onSessionClosed(PooledSession session) {
+                    ConnectionPool.this.loanedSessions.remove(session);
+                }
+            });
+            this.loanedSessions.add(session);
         } catch (Exception e) {
             IllegalStateException illegalStateException = new IllegalStateException(e.toString());
             illegalStateException.initCause(e);
@@ -248,6 +259,14 @@ public class ConnectionPool {
         this.sessionPool.setMaxActive(maximumActiveSessionPerConnection);
     }
 
+    public boolean isUseAnonymousProducers() {
+        return this.useAnonymousProducers;
+    }
+
+    public void setUseAnonymousProducers(boolean value) {
+        this.useAnonymousProducers = value;
+    }
+
     /**
      * @return the total number of Pooled session including idle sessions that are not
      *          currently loaned out to any client.
@@ -285,6 +304,34 @@ public class ConnectionPool {
 
     public boolean isBlockIfSessionPoolIsFull() {
         return this.sessionPool.getWhenExhaustedAction() == GenericObjectPool.WHEN_EXHAUSTED_BLOCK;
+    }
+
+    /**
+     * Returns the timeout to use for blocking creating new sessions
+     *
+     * @return true if the pooled Connection createSession method will block when the limit is hit.
+     * @see #setBlockIfSessionPoolIsFull(boolean)
+     */
+    public long getBlockIfSessionPoolIsFullTimeout() {
+        return this.sessionPool.getMaxWait();
+    }
+
+    /**
+     * Controls the behavior of the internal session pool. By default the call to
+     * Connection.getSession() will block if the session pool is full.  This setting
+     * will affect how long it blocks and throws an exception after the timeout.
+     *
+     * The size of the session pool is controlled by the @see #maximumActive
+     * property.
+     *
+     * Whether or not the call to create session blocks is controlled by the @see #blockIfSessionPoolIsFull
+     * property
+     *
+     * @param blockIfSessionPoolIsFullTimeout - if blockIfSessionPoolIsFullTimeout is true,
+     *                                        then use this setting to configure how long to block before retry
+     */
+    public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
+        this.sessionPool.setMaxWait(blockIfSessionPoolIsFullTimeout);
     }
 
     @Override

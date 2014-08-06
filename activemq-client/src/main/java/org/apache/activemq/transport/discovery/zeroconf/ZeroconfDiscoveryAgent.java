@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
@@ -37,10 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a>
- * via the <a href="http://jmdns.sf.net/">jmDNS</a> library
- * 
- * 
+ * A {@link DiscoveryAgent} using <a
+ * href="http://www.zeroconf.org/">Zeroconf</a> via the <a
+ * href="http://jmdns.sf.net/">jmDNS</a> library
  */
 public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     private static final Logger LOG = LoggerFactory.getLogger(ZeroconfDiscoveryAgent.class);
@@ -52,27 +52,30 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     private String localhost;
     private int weight;
     private int priority;
+    private String typeSuffix = TYPE_SUFFIX;
 
     private DiscoveryListener listener;
     private String group = "default";
-    private final CopyOnWriteArrayList<ServiceInfo> serviceInfos = new CopyOnWriteArrayList<ServiceInfo>();
+    private final CopyOnWriteArrayList<ServiceInfo> serviceInfos =
+        new CopyOnWriteArrayList<ServiceInfo>();
 
     // DiscoveryAgent interface
     // -------------------------------------------------------------------------
+    @Override
     public void start() throws Exception {
         if (group == null) {
             throw new IOException("You must specify a group to discover");
         }
         String type = getType();
         if (!type.endsWith(".")) {
-            LOG.warn("The type '" + type + "' should end with '.' to be a valid Rendezvous type");
+            LOG.warn("The type '{}' should end with '.' to be a valid Rendezvous type", type);
             type += ".";
         }
         try {
             // force lazy construction
             getJmdns();
             if (listener != null) {
-                LOG.info("Discovering service of type: " + type);
+                LOG.info("Discovering service of type: {}", type);
                 jmdns.addServiceListener(type, this);
             }
         } catch (IOException e) {
@@ -80,6 +83,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
         }
     }
 
+    @Override
     public void stop() {
         if (jmdns != null) {
             for (Iterator<ServiceInfo> iter = serviceInfos.iterator(); iter.hasNext();) {
@@ -90,13 +94,14 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
             // Close it down async since this could block for a while.
             final JmDNS closeTarget = jmdns;
             Thread thread = new Thread() {
+                @Override
                 public void run() {
                     try {
                         if (JmDNSFactory.onClose(getLocalAddress())) {
                             closeTarget.close();
                         };
                     } catch (IOException e) {
-                        LOG.debug("Error closing JmDNS " + getLocalhost() + ". This exception will be ignored.", e);
+                        LOG.debug("Error closing JmDNS {}. This exception will be ignored.", getLocalhost(), e);
                     }
                 }
             };
@@ -108,8 +113,9 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
         }
     }
 
+    @Override
     public void registerService(String name) throws IOException {
-        ServiceInfo si = createServiceInfo(name, new HashMap());
+        ServiceInfo si = createServiceInfo(name, new HashMap<String, Object>());
         serviceInfos.add(si);
         getJmdns().registerService(si);
     }
@@ -117,9 +123,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     // ServiceListener interface
     // -------------------------------------------------------------------------
     public void addService(JmDNS jmDNS, String type, String name) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("addService with type: " + type + " name: " + name);
-        }
+        LOG.debug("addService with type: {} name: {}", type, name);
         if (listener != null) {
             listener.onServiceAdd(new DiscoveryEvent(name));
         }
@@ -127,22 +131,23 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     }
 
     public void removeService(JmDNS jmDNS, String type, String name) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("removeService with type: " + type + " name: " + name);
-        }
+        LOG.debug("removeService with type: {} name: {}", type, name);
         if (listener != null) {
             listener.onServiceRemove(new DiscoveryEvent(name));
         }
     }
 
+    @Override
     public void serviceAdded(ServiceEvent event) {
         addService(event.getDNS(), event.getType(), event.getName());
     }
 
+    @Override
     public void serviceRemoved(ServiceEvent event) {
         removeService(event.getDNS(), event.getType(), event.getName());
     }
 
+    @Override
     public void serviceResolved(ServiceEvent event) {
     }
 
@@ -199,12 +204,8 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
     // -------------------------------------------------------------------------
     protected ServiceInfo createServiceInfo(String name, Map map) {
         int port = MapHelper.getInt(map, "port", 0);
-
         String type = getType();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Registering service type: " + type + " name: " + name + " details: " + map);
-        }
+        LOG.debug("Registering service type: {} name: {} details: {}", new Object[]{type, name, map});
         return ServiceInfo.create(type, name + "." + type, port, weight, priority, "");
     }
 
@@ -219,6 +220,7 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
         return InetAddress.getLocalHost();
     }
 
+    @Override
     public void setDiscoveryListener(DiscoveryListener listener) {
         this.listener = listener;
     }
@@ -231,12 +233,20 @@ public class ZeroconfDiscoveryAgent implements DiscoveryAgent, ServiceListener {
         this.group = group;
     }
 
-    public String getType() {
-        return "_" + group + "." + TYPE_SUFFIX;
+    public void setType(String typeSuffix) {
+        this.typeSuffix = typeSuffix;
     }
 
+    public String getType() {
+        if (typeSuffix == null || typeSuffix.isEmpty()) {
+            typeSuffix = TYPE_SUFFIX;
+        }
+
+        return "_" + group + "." + typeSuffix;
+    }
+
+    @Override
     public void serviceFailed(DiscoveryEvent event) throws IOException {
         // TODO: is there a way to notify the JmDNS that the service failed?
     }
-
 }

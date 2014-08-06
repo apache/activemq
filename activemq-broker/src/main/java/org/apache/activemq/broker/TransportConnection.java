@@ -20,6 +20,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,10 +37,44 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.transaction.xa.XAResource;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.command.ConnectionError;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ControlCommand;
+import org.apache.activemq.command.DataArrayResponse;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.FlushCommand;
+import org.apache.activemq.command.IntegerResponse;
+import org.apache.activemq.command.KeepAliveInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.command.Response;
+import org.apache.activemq.command.SessionId;
+import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.MBeanNetworkListener;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
@@ -137,6 +172,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.stopTaskRunnerFactory = stopTaskRunnerFactory;
         this.transport = transport;
         final BrokerService brokerService = this.broker.getBrokerService();
+        if( this.transport instanceof BrokerServiceAware ) {
+            ((BrokerServiceAware)this.transport).setBrokerService(brokerService);
+        }
         this.transport.setTransportListener(new DefaultTransportListener() {
             @Override
             public void onCommand(Object o) {
@@ -146,9 +184,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                         throw new RuntimeException("Protocol violation - Command corrupted: " + o.toString());
                     }
                     Command command = (Command) o;
-                    Response response = service(command);
-                    if (response != null && !brokerService.isStopping() ) {
-                        dispatchSync(response);
+                    if (!brokerService.isStopping()) {
+                        Response response = service(command);
+                        if (response != null && !brokerService.isStopping()) {
+                            dispatchSync(response);
+                        }
+                    } else {
+                        throw new BrokerStoppedException("Broker " + brokerService + " is being stopped");
                     }
                 } finally {
                     serviceLock.readLock().unlock();
@@ -305,6 +347,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
 
             if (responseRequired) {
+                if (e instanceof SecurityException || e.getCause() instanceof SecurityException) {
+                    SERVICELOG.warn("Security Error occurred: {}", e.getMessage());
+                }
                 response = new ExceptionResponse(e);
             } else {
                 serviceException(e);
@@ -374,6 +419,35 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             broker.beginTransaction(context, info.getTransactionId());
         }
         return null;
+    }
+
+    @Override
+    public int getActiveTransactionCount() {
+        int rc = 0;
+        for (TransportConnectionState cs : connectionStateRegister.listConnectionStates()) {
+            Collection<TransactionState> transactions = cs.getTransactionStates();
+            for (TransactionState transaction : transactions) {
+                rc++;
+            }
+        }
+        return rc;
+    }
+
+    @Override
+    public Long getOldestActiveTransactionDuration() {
+        TransactionState oldestTX = null;
+        for (TransportConnectionState cs : connectionStateRegister.listConnectionStates()) {
+            Collection<TransactionState> transactions = cs.getTransactionStates();
+            for (TransactionState transaction : transactions) {
+                if( oldestTX ==null || oldestTX.getCreatedAt() < transaction.getCreatedAt() ) {
+                    oldestTX = transaction;
+                }
+            }
+        }
+        if( oldestTX == null ) {
+            return null;
+        }
+        return System.currentTimeMillis() - oldestTX.getCreatedAt();
     }
 
     @Override
@@ -474,6 +548,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(ack.getConsumerId());
         if (consumerExchange != null) {
             broker.acknowledge(consumerExchange, ack);
+        } else if (ack.isInTransaction()) {
+            LOG.warn("no matching consumer, ignoring ack {}", consumerExchange, ack);
         }
         return null;
     }
@@ -1297,7 +1373,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (duplexName.contains("#")) {
                     duplexName = duplexName.substring(duplexName.lastIndexOf("#"));
                 }
-                MBeanNetworkListener listener = new MBeanNetworkListener(broker.getBrokerService(), broker.getBrokerService().createDuplexNetworkConnectorObjectName(duplexName));
+                MBeanNetworkListener listener = new MBeanNetworkListener(broker.getBrokerService(), config, broker.getBrokerService().createDuplexNetworkConnectorObjectName(duplexName));
                 listener.setCreatedByDuplex(true);
                 duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport, listener);
                 duplexBridge.setBrokerService(broker.getBrokerService());
@@ -1574,5 +1650,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         }
         return result;
+    }
+
+    public WireFormatInfo getRemoteWireFormatInfo() {
+        return wireFormatInfo;
     }
 }

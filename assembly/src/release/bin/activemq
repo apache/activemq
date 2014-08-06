@@ -250,7 +250,7 @@ if [ "$CONFIG_LOAD" != "yes" ];then
 fi
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Dhawtio.realm=activemq -Dhawtio.role=admins -Dhawtio.rolePrincipalClasses=org.apache.activemq.jaas.GroupPrincipal -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 fi
 
 # create configuration if requested
@@ -621,16 +621,14 @@ invoke_stop(){
 # - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
 invoke_task(){
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
     # call task in java binary
     if ( checkRunning );then
       if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
       elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
       else
-         ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
          COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
       fi
       invokeJar

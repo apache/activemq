@@ -24,7 +24,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.net.SocketFactory;
 
-import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
@@ -32,10 +31,14 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.junit.After;
+import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JettyTestSupport extends TestCase {
+import static org.junit.Assert.*;
+
+public class JettyTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(JettyTestSupport.class);
 
     BrokerService broker;
@@ -52,7 +55,8 @@ public class JettyTestSupport extends TestCase {
         return false;
     }
 
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         broker = new BrokerService();
         broker.setBrokerName("amq-broker");
         broker.setPersistent(isPersistent());
@@ -86,7 +90,9 @@ public class JettyTestSupport extends TestCase {
         producer = session.createProducer(session.createQueue("test"));
     }
 
-    protected void tearDown() throws Exception {
+
+    @After
+    public void tearDown() throws Exception {
         session.close();
         connection.close();
         server.stop();

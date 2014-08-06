@@ -17,7 +17,6 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -53,12 +52,7 @@ import org.apache.activemq.broker.BrokerContext;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.DestinationInterceptor;
-import org.apache.activemq.broker.region.Queue;
-import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.Topic;
+import org.apache.activemq.broker.region.*;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.CompositeQueue;
@@ -69,10 +63,12 @@ import org.apache.activemq.broker.region.virtual.VirtualTopic;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
+import org.apache.activemq.schema.core.DtoAuthenticationUser;
 import org.apache.activemq.schema.core.DtoAuthorizationEntry;
 import org.apache.activemq.schema.core.DtoAuthorizationMap;
 import org.apache.activemq.schema.core.DtoAuthorizationPlugin;
@@ -83,11 +79,15 @@ import org.apache.activemq.schema.core.DtoNetworkConnector;
 import org.apache.activemq.schema.core.DtoPolicyEntry;
 import org.apache.activemq.schema.core.DtoPolicyMap;
 import org.apache.activemq.schema.core.DtoQueue;
+import org.apache.activemq.schema.core.DtoSimpleAuthenticationPlugin;
 import org.apache.activemq.schema.core.DtoTopic;
 import org.apache.activemq.schema.core.DtoVirtualDestinationInterceptor;
 import org.apache.activemq.schema.core.DtoVirtualTopic;
+import org.apache.activemq.security.AuthenticationUser;
 import org.apache.activemq.security.AuthorizationBroker;
 import org.apache.activemq.security.AuthorizationMap;
+import org.apache.activemq.security.SimpleAuthenticationBroker;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.security.TempDestinationAuthorizationEntry;
 import org.apache.activemq.security.XBeanAuthorizationEntry;
 import org.apache.activemq.security.XBeanAuthorizationMap;
@@ -95,9 +95,7 @@ import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.PluggableSchemaResolver;
 import org.springframework.core.io.Resource;
 import org.w3c.dom.Document;
@@ -112,13 +110,15 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     public static final Logger LOG = LoggerFactory.getLogger(RuntimeConfigurationBroker.class);
     public static final String objectNamePropsAppendage = ",service=RuntimeConfiguration,name=Plugin";
     private final ReentrantReadWriteLock addDestinationBarrier = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock addConnectionBarrier = new ReentrantReadWriteLock();
     PropertiesPlaceHolderUtil placeHolderUtil = null;
     private long checkPeriod;
     private long lastModified = -1;
     private Resource configToMonitor;
     private DtoBroker currentConfiguration;
     private Runnable monitorTask;
-    private ConcurrentLinkedQueue<Runnable> destinationInterceptorUpdateWork = new ConcurrentLinkedQueue<Runnable>();
+    private ConcurrentLinkedQueue<Runnable> addDestinationWork = new ConcurrentLinkedQueue<Runnable>();
+    private ConcurrentLinkedQueue<Runnable> addConnectionWork = new ConcurrentLinkedQueue<Runnable>();
     private ObjectName objectName;
     private String infoString;
     private Schema schema;
@@ -184,13 +184,13 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     // modification to virtual destinations interceptor needs exclusive access to destination add
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean createIfTemporary) throws Exception {
-        Runnable work = destinationInterceptorUpdateWork.poll();
+        Runnable work = addDestinationWork.poll();
         if (work != null) {
             try {
                 addDestinationBarrier.writeLock().lockInterruptibly();
                 do {
                     work.run();
-                    work = destinationInterceptorUpdateWork.poll();
+                    work = addDestinationWork.poll();
                 } while (work != null);
                 return super.addDestination(context, destination, createIfTemporary);
             } finally {
@@ -202,6 +202,31 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 return super.addDestination(context, destination, createIfTemporary);
             } finally {
                 addDestinationBarrier.readLock().unlock();
+            }
+        }
+    }
+
+    // modification to authentication plugin needs exclusive access to connection add
+    @Override
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        Runnable work = addConnectionWork.poll();
+        if (work != null) {
+            try {
+                addConnectionBarrier.writeLock().lockInterruptibly();
+                do {
+                    work.run();
+                    work = addConnectionWork.poll();
+                } while (work != null);
+                super.addConnection(context, info);
+            } finally {
+                addConnectionBarrier.writeLock().unlock();
+            }
+        } else {
+            try {
+                addConnectionBarrier.readLock().lockInterruptibly();
+                super.addConnection(context, info);
+            } finally {
+                addConnectionBarrier.readLock().unlock();
             }
         }
     }
@@ -235,7 +260,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void info(String s) {
-        LOG.info(s);
+        LOG.info(filterPasswords(s));
         if (infoString != null) {
             infoString += s;
             infoString += ";";
@@ -243,7 +268,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     }
 
     private void info(String s, Throwable t) {
-        LOG.info(s, t);
+        LOG.info(filterPasswords(s), t);
         if (infoString != null) {
             infoString += s;
             infoString += ", " + t;
@@ -255,8 +280,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         DtoBroker changed = loadConfiguration(configToMonitor);
         if (changed != null && !currentConfiguration.equals(changed)) {
             LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
-            LOG.debug("current:" + currentConfiguration);
-            LOG.debug("new    :" + changed);
+            LOG.debug("current:" + filterPasswords(currentConfiguration));
+            LOG.debug("new    :" + filterPasswords(changed));
             processSelectiveChanges(currentConfiguration, changed);
             currentConfiguration = changed;
         } else {
@@ -320,7 +345,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 answer.add(val);
             }
         } catch (NoSuchMethodException mappingIncomplete) {
-            LOG.debug(o + " has no modifiable elements");
+            LOG.debug(filterPasswords(o) + " has no modifiable elements");
         } catch (Exception e) {
             info("Failed to access getContents for " + o + ", runtime modifications not supported", e);
         }
@@ -360,6 +385,24 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
             }
 
+        } else if (candidate instanceof DtoSimpleAuthenticationPlugin) {
+            try {
+                final SimpleAuthenticationPlugin updatedPlugin = fromDto(candidate, new SimpleAuthenticationPlugin());
+                final SimpleAuthenticationBroker authenticationBroker =
+                    (SimpleAuthenticationBroker) getBrokerService().getBroker().getAdaptor(SimpleAuthenticationBroker.class);
+                addConnectionWork.add(new Runnable() {
+                    public void run() {
+                        authenticationBroker.setUserGroups(updatedPlugin.getUserGroups());
+                        authenticationBroker.setUserPasswords(updatedPlugin.getUserPasswords());
+                        authenticationBroker.setAnonymousAccessAllowed(updatedPlugin.isAnonymousAccessAllowed());
+                        authenticationBroker.setAnonymousUser(updatedPlugin.getAnonymousUser());
+                        authenticationBroker.setAnonymousGroup(updatedPlugin.getAnonymousGroup());
+                    }
+                });
+            } catch (Exception e) {
+                info("failed to apply SimpleAuthenticationPlugin modifications to SimpleAuthenticationBroker", e);
+            }
+
         } else if (candidate instanceof DtoPolicyMap) {
 
             List<Object> existingEntries = filter(existing, DtoPolicyMap.PolicyEntries.class);
@@ -391,12 +434,16 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
     private void applyRetrospectively(PolicyEntry updatedEntry) {
         RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
         for (Destination destination : regionBroker.getDestinations(updatedEntry.getDestination())) {
-            if (destination.getActiveMQDestination().isQueue()) {
-                updatedEntry.update((Queue) destination);
-            } else if (destination.getActiveMQDestination().isTopic()) {
-                updatedEntry.update((Topic) destination);
+            Destination target = destination;
+            if (destination instanceof DestinationFilter) {
+                target = ((DestinationFilter)destination).getNext();
             }
-            LOG.debug("applied update to:" + destination);
+            if (target.getActiveMQDestination().isQueue()) {
+                updatedEntry.update((Queue) target);
+            } else if (target.getActiveMQDestination().isTopic()) {
+                updatedEntry.update((Topic) target);
+            }
+            LOG.debug("applied update to:" + target);
         }
     }
 
@@ -450,7 +497,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             }
         } else if (o instanceof DtoVirtualDestinationInterceptor) {
             // whack it
-            destinationInterceptorUpdateWork.add(new Runnable() {
+            addDestinationWork.add(new Runnable() {
                 public void run() {
                     List<DestinationInterceptor> interceptorsList = new ArrayList<DestinationInterceptor>();
                     for (DestinationInterceptor candidate : getBrokerService().getDestinationInterceptors()) {
@@ -500,10 +547,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             }
         } else if (o instanceof DtoVirtualDestinationInterceptor) {
             final DtoVirtualDestinationInterceptor dto = (DtoVirtualDestinationInterceptor) o;
-            destinationInterceptorUpdateWork.add(new Runnable() {
+            addDestinationWork.add(new Runnable() {
                 public void run() {
 
                     boolean updatedExistingInterceptor = false;
+                    RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
 
                     for (DestinationInterceptor destinationInterceptor : getBrokerService().getDestinationInterceptors()) {
                         if (destinationInterceptor instanceof VirtualDestinationInterceptor) {
@@ -529,10 +577,11 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
                         DestinationInterceptor[] destinationInterceptors = interceptorsList.toArray(new DestinationInterceptor[]{});
                         getBrokerService().setDestinationInterceptors(destinationInterceptors);
-                        RegionBroker regionBroker = (RegionBroker) getBrokerService().getRegionBroker();
+
                         ((CompositeDestinationInterceptor) regionBroker.getDestinationInterceptor()).setInterceptors(destinationInterceptors);
                         info("applied new: " + interceptorsList);
                     }
+                    regionBroker.reapplyInterceptor();
                 }
             });
         } else if (o instanceof DtoPolicyEntry) {
@@ -570,33 +619,33 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
         Properties properties = new Properties();
         IntrospectionSupport.getProperties(dto, properties, null);
         replacePlaceHolders(properties);
-        LOG.trace("applying props: " + properties + ", to " + instance.getClass().getSimpleName());
+        LOG.trace("applying props: " + filterPasswords(properties) + ", to " + instance.getClass().getSimpleName());
         IntrospectionSupport.setProperties(instance, properties);
 
         // deal with nested elements
         for (Object nested : filter(dto, Object.class)) {
             String elementName = nested.getClass().getSimpleName();
-            if (elementName.endsWith("s")) {
-                Method setter = findSetter(instance, elementName);
-                if (setter != null) {
-
-                    List<Object> argument = new LinkedList<Object>();
-                    for (Object elementContent : filter(nested, Object.class)) {
-                        argument.add(fromDto(elementContent, inferTargetObject(elementContent)));
-                    }
-                    try {
-                        setter.invoke(instance, matchType(argument, setter.getParameterTypes()[0]));
-                    } catch (Exception e) {
-                        info("failed to invoke " + setter + " on " + instance, e);
-                    }
-                } else {
-                    info("failed to find setter for " + elementName + " on :" + instance);
+            Method setter = findSetter(instance, elementName);
+            if (setter != null) {
+                List<Object> argument = new LinkedList<Object>();
+                for (Object elementContent : filter(nested, Object.class)) {
+                    argument.add(fromDto(elementContent, inferTargetObject(elementContent)));
+                }
+                try {
+                    setter.invoke(instance, matchType(argument, setter.getParameterTypes()[0]));
+                } catch (Exception e) {
+                    info("failed to invoke " + setter + " on " + instance, e);
                 }
             } else {
-                info("unsupported mapping of element for non plural:" + elementName);
+                info("failed to find setter for " + elementName + " on :" + instance);
             }
         }
         return instance;
+    }
+
+    Pattern matchPassword = Pattern.compile("password=.*,");
+    private String filterPasswords(Object toEscape) {
+        return matchPassword.matcher(toEscape.toString()).replaceAll("password=???,");
     }
 
     private Object matchType(List<Object> parameterValues, Class<?> aClass) {
@@ -612,6 +661,8 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
             return new ActiveMQTopic();
         } else if (DtoQueue.class.isAssignableFrom(elementContent.getClass())) {
             return new ActiveMQQueue();
+        } else if (DtoAuthenticationUser.class.isAssignableFrom(elementContent.getClass())) {
+            return new AuthenticationUser();
         } else {
             info("update not supported for dto: " + elementContent);
             return new Object();
@@ -754,7 +805,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
                 Object springBean = getClass().getClassLoader().loadClass(value).newInstance();
                 if (springBean instanceof FactoryBean) {
                     // can't access the factory or created properties from spring context so we got to recreate
-                    initialProperties.putAll((Properties) FactoryBean.class.getMethod("getObject", null).invoke(springBean));
+                    initialProperties.putAll((Properties) FactoryBean.class.getMethod("getObject", (Class<?>[]) null).invoke(springBean));
                 }
             } catch (Throwable e) {
                 LOG.debug("unexpected exception processing properties bean class: " + propertiesClazzes, e);
@@ -801,20 +852,7 @@ public class RuntimeConfigurationBroker extends BrokerFilter {
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
-
-            // avoid going to the net to pull down the spring schema,
-            // REVISIT may need to be smarter in osgi
-            final PluggableSchemaResolver springResolver =
-                    new PluggableSchemaResolver(getClass().getClassLoader());
-            final InputSource beanInputSource =
-                    springResolver.resolveEntity(
-                            "http://www.springframework.org/schema/beans",
-                            "http://www.springframework.org/schema/beans/spring-beans.xsd");
-            if (beanInputSource != null) {
-                schemas.add(new StreamSource(beanInputSource.getByteStream()));
-            } else {
-                schemas.add(new StreamSource("http://www.springframework.org/schema/beans/spring-beans.xsd"));
-            }
+            schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd").toExternalForm()));
             schema = schemaFactory.newSchema(schemas.toArray(new Source[]{}));
         }
         return schema;

@@ -129,5 +129,5 @@ public interface TopicMessageStore extends MessageStore {
      * @param retroactive
      * @throws IOException
      */
-    void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
+    void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
 }

@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.10-SNAPSHOT</version>
+    <version>5.11-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-rar</artifactId>
@@ -340,6 +340,10 @@
       <artifactId>commons-pool</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-amqp</artifactId>
+    </dependency>
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
@@ -364,7 +368,8 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkMode>pertest</forkMode>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
           <childDelegation>false</childDelegation>
         </configuration>
       </plugin>

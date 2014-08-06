@@ -59,4 +59,8 @@ public class TransportServerFilter implements TransportServer {
     public boolean isSslServer() {
         return next.isSslServer();
     }
+
+    public boolean isAllowLinkStealing() {
+        return next.isAllowLinkStealing();
+    }
 }

@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -50,9 +51,7 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
     }
 
     protected String consumeMessage(String nameAndPayload) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
-        connection.start();
+        Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
         TextMessage message = (TextMessage) consumer.receive(10000);
@@ -62,11 +61,17 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
     }
 
     protected void produceMessage(String nameAndPayload) throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
-        connection.start();
+        Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createProducer(session.createQueue(nameAndPayload)).send(session.createTextMessage(nameAndPayload));
         connection.close();
+    }
+
+    protected Connection getConnection() throws JMSException {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
+        Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
+        connection.start();
+
+        return connection;
     }
 }

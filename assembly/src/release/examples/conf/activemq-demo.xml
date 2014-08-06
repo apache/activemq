@@ -247,7 +247,7 @@
 
     <!-- Postgres DataSource Sample Setup -->
     <!--
-    <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource">
+    <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource" destroy-method="close">
       <property name="serverName" value="localhost"/>
       <property name="databaseName" value="activemq"/>
       <property name="portNumber" value="0"/>

@@ -19,10 +19,9 @@ package org.apache.activemq.transport.mqtt;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.BrokerContext;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
@@ -30,7 +29,7 @@ import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.fusesource.mqtt.codec.MQTTFrame;
+import org.fusesource.mqtt.codec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,10 +48,11 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     private final AtomicBoolean stopped = new AtomicBoolean();
 
     private boolean trace;
+    private final Object sendLock = new Object();
 
-    public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
+    public MQTTTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
-        this.protocolConverter = new MQTTProtocolConverter(this, brokerContext);
+        this.protocolConverter = new MQTTProtocolConverter(this, brokerService);
 
         if (wireFormat instanceof MQTTWireFormat) {
             this.wireFormat = (MQTTWireFormat) wireFormat;
@@ -72,13 +72,13 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     @Override
     public void onCommand(Object command) {
         try {
+            MQTTFrame frame = (MQTTFrame) command;
             if (trace) {
-                TRACE.trace("Received: \n" + command);
+                TRACE.trace("Received: " + toString(frame));
             }
-
-            protocolConverter.onMQTTCommand((MQTTFrame) command);
+            protocolConverter.onMQTTCommand(frame);
         } catch (IOException e) {
-            handleException(e);
+            onException(e);
         } catch (JMSException e) {
             onException(IOExceptionSupport.create(e));
         }
@@ -96,12 +96,41 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public void sendToMQTT(MQTTFrame command) throws IOException {
         if( !stopped.get() ) {
             if (trace) {
-                TRACE.trace("Sending: \n" + command);
+                TRACE.trace("Sending : " + toString(command));
             }
             Transport n = next;
             if (n != null) {
-                n.oneway(command);
+                // sync access to underlying transport buffer
+                synchronized (sendLock) {
+                    n.oneway(command);
+                }
             }
+        }
+    }
+
+    static private String toString(MQTTFrame frame) {
+        if( frame == null )
+            return null;
+        try {
+            switch (frame.messageType()) {
+                case PINGREQ.TYPE: return new PINGREQ().decode(frame).toString();
+                case PINGRESP.TYPE: return new PINGRESP().decode(frame).toString();
+                case CONNECT.TYPE: return new CONNECT().decode(frame).toString();
+                case DISCONNECT.TYPE: return new DISCONNECT().decode(frame).toString();
+                case SUBSCRIBE.TYPE: return new SUBSCRIBE().decode(frame).toString();
+                case UNSUBSCRIBE.TYPE: return new UNSUBSCRIBE().decode(frame).toString();
+                case PUBLISH.TYPE: return new PUBLISH().decode(frame).toString();
+                case PUBACK.TYPE: return new PUBACK().decode(frame).toString();
+                case PUBREC.TYPE: return new PUBREC().decode(frame).toString();
+                case PUBREL.TYPE: return new PUBREL().decode(frame).toString();
+                case PUBCOMP.TYPE: return new PUBCOMP().decode(frame).toString();
+                case CONNACK.TYPE: return new CONNACK().decode(frame).toString();
+                case SUBACK.TYPE: return new SUBACK().decode(frame).toString();
+                default: return frame.toString();
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return frame.toString();
         }
     }
 
@@ -146,9 +175,10 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         return this.wireFormat;
     }
 
-    public void handleException(IOException e) {
+    @Override
+    public void onException(IOException error) {
         protocolConverter.onTransportError();
-        super.onException(e);
+        super.onException(error);
     }
 
     public long getDefaultKeepAlive() {
@@ -157,6 +187,14 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     public void setDefaultKeepAlive(long defaultHeartBeat) {
         protocolConverter.setDefaultKeepAlive(defaultHeartBeat);
+    }
+
+    public boolean getPublishDollarTopics() {
+        return protocolConverter != null && protocolConverter.getPublishDollarTopics();
+    }
+
+    public void setPublishDollarTopics(boolean publishDollarTopics) {
+        protocolConverter.setPublishDollarTopics(publishDollarTopics);
     }
 
     public int getActiveMQSubscriptionPrefetch() {

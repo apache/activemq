@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.ws;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.transport.mqtt.MQTTInactivityMonitor;
@@ -35,13 +37,14 @@ import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 
-public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryMessage, MQTTTransport {
+public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryMessage, MQTTTransport, BrokerServiceAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
     Connection outbound;
-    MQTTProtocolConverter protocolConverter = new MQTTProtocolConverter(this, null);
+    MQTTProtocolConverter protocolConverter = null;
     MQTTWireFormat wireFormat = new MQTTWireFormat();
     private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
+    private BrokerService brokerService;
 
     @Override
     public void onMessage(byte[] bytes, int offset, int length) {
@@ -56,10 +59,17 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
 
         try {
             MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
-            protocolConverter.onMQTTCommand(frame);
+            getProtocolConverter().onMQTTCommand(frame);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }
+    }
+
+    private MQTTProtocolConverter getProtocolConverter() {
+        if( protocolConverter == null ) {
+            protocolConverter = new MQTTProtocolConverter(this, brokerService);
+        }
+        return protocolConverter;
     }
 
     @Override
@@ -70,7 +80,7 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
     @Override
     public void onClose(int closeCode, String message) {
         try {
-            protocolConverter.onMQTTCommand(new DISCONNECT().encode());
+            getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
         } catch (Exception e) {
             LOG.warn("Failed to close WebSocket", e);
         }
@@ -101,7 +111,7 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
     @Override
     public void oneway(Object command) throws IOException {
         try {
-            protocolConverter.onActiveMQCommand((Command)command);
+            getProtocolConverter().onActiveMQCommand((Command) command);
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }
@@ -131,5 +141,10 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
     @Override
     public MQTTWireFormat getWireFormat() {
         return wireFormat;
+    }
+
+    @Override
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
     }
 }

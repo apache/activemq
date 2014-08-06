@@ -17,7 +17,7 @@
 package org.apache.activemq.transport.nio;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.AbstractSelectableChannel;
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -43,17 +43,18 @@ public final class SelectorManager {
     private int maxChannelsPerWorker = 1024;
 
     protected ExecutorService createDefaultExecutor() {
-        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ThreadPoolExecutor rc = new ThreadPoolExecutor(0, Integer.MAX_VALUE, getDefaultKeepAliveTime(), TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+            new ThreadFactory() {
 
-            private long i = 0;
+                private long i = 0;
 
-            @Override
-            public Thread newThread(Runnable runnable) {
-                this.i++;
-                final Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + this.i);
-                return t;
-            }
-        });
+                @Override
+                public Thread newThread(Runnable runnable) {
+                    this.i++;
+                    final Thread t = new Thread(runnable, "ActiveMQ NIO Worker " + this.i);
+                    return t;
+                }
+            });
 
         return rc;
     }
@@ -68,27 +69,26 @@ public final class SelectorManager {
 
     public interface Listener {
         void onSelect(SelectorSelection selector);
+
         void onError(SelectorSelection selection, Throwable error);
     }
 
-    public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
-        throws IOException {
-
+    public synchronized SelectorSelection register(AbstractSelectableChannel selectableChannel, Listener listener) throws IOException {
         SelectorSelection selection = null;
-        while( selection == null ) {
+        while (selection == null) {
             if (freeWorkers.size() > 0) {
                 SelectorWorker worker = freeWorkers.getFirst();
-                if( worker.isReleased() ) {
+                if (worker.isReleased()) {
                     freeWorkers.remove(worker);
                 } else {
                     worker.retain();
-                    selection = new SelectorSelection(worker, socketChannel, listener);
+                    selection = new SelectorSelection(worker, selectableChannel, listener);
                 }
             } else {
                 // Worker starts /w retain count of 1
                 SelectorWorker worker = new SelectorWorker(this);
                 freeWorkers.addFirst(worker);
-                selection = new SelectorSelection(worker, socketChannel, listener);
+                selection = new SelectorSelection(worker, selectableChannel, listener);
             }
         }
 

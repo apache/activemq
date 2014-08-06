@@ -885,7 +885,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         connection.setStatsEnabled(true);
 
         Session sendSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            MessageProducer producer = sendSession.createProducer(destination);
+        MessageProducer producer = sendSession.createProducer(destination);
         producer.setTimeToLive(1000);
         final int count = 4;
         for (int i = 0; i < count; i++) {
@@ -919,6 +919,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertEquals("Wrong inFlightCount: " + view.getInFlightCount(), 0, view.getInFlightCount());
         assertEquals("Wrong dispatch count: " + view.getDispatchCount(), 8, view.getDispatchCount());
         assertEquals("Wrong dequeue count: " + view.getDequeueCount(), 8, view.getDequeueCount());
+        assertEquals("Wrong expired count: " + view.getExpiredCount(), 4, view.getExpiredCount());
     }
 
     protected DestinationViewMBean createView(ActiveMQDestination destination) throws Exception {
