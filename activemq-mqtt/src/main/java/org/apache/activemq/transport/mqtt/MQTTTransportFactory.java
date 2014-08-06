@@ -17,13 +17,13 @@
 package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.activemq.broker.BrokerContext;
+import javax.net.ServerSocketFactory;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
@@ -33,8 +33,6 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
-import javax.net.ServerSocketFactory;
-
 /**
  * A <a href="http://mqtt.org/">MQTT</a> transport factory
  */
@@ -42,16 +40,19 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
 
     private BrokerService brokerService = null;
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "mqtt";
     }
 
+    @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        TcpTransportServer result =  new TcpTransportServer(this, location, serverSocketFactory);
+        TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory);
         result.setAllowLinkStealing(true);
         return result;
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new MQTTTransportFilter(transport, format, brokerService);
@@ -59,6 +60,7 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
         return super.compositeConfigure(transport, format, options);
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
     }
@@ -79,10 +81,8 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
     @Override
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         MQTTInactivityMonitor monitor = new MQTTInactivityMonitor(transport, format);
-
         MQTTTransportFilter filter = transport.narrow(MQTTTransportFilter.class);
         filter.setInactivityMonitor(monitor);
-
         return monitor;
     }
 }

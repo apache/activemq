@@ -26,7 +26,7 @@ import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
-import org.apache.activemq.broker.BrokerContext;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.transport.MutexTransport;
@@ -44,12 +44,15 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
 
     private BrokerService brokerService = null;
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "mqtt";
     }
 
+    @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory) {
+            @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 return new MQTTNIOTransport(format, socket);
             }
@@ -58,6 +61,7 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
         return result;
     }
 
+    @Override
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new MQTTNIOTransport(wf, socketFactory, location, localLocation);
     }
@@ -75,6 +79,7 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
         return transport;
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new MQTTTransportFilter(transport, format, brokerService);
@@ -82,16 +87,17 @@ public class MQTTNIOTransportFactory extends NIOTransportFactory implements Brok
         return super.compositeConfigure(transport, format, options);
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
     }
 
+    @Override
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         MQTTInactivityMonitor monitor = new MQTTInactivityMonitor(transport, format);
         MQTTTransportFilter filter = transport.narrow(MQTTTransportFilter.class);
         filter.setInactivityMonitor(monitor);
         return monitor;
     }
-
 }
 
