@@ -29,9 +29,9 @@ public class BitArrayBin implements Serializable {
     private static final long serialVersionUID = 1L;
     private final LinkedList<BitArray> list;
     private int maxNumberOfArrays;
-    private long firstIndex = -1;
+    private int firstIndex = -1;  // leave 'int' for old serialization compatibility and introduce new 'long' field
     private long lastInOrderBit=-1;
-
+    private long longFirstIndex=-1;
     /**
      * Create a BitArrayBin to a certain window size (number of messages to
      * keep)
@@ -90,7 +90,7 @@ public class BitArrayBin implements Serializable {
      * @return true/false
      */
     public boolean getBit(long index) {
-        boolean answer = index >= firstIndex;
+        boolean answer = index >= longFirstIndex;
         BitArray ba = getBitArray(index);
         if (ba != null) {
             int offset = getOffset(index);
@@ -119,7 +119,7 @@ public class BitArrayBin implements Serializable {
                 int overShoot = bin - maxNumberOfArrays + 1;
                 while (overShoot > 0) {
                     list.removeFirst();
-                    firstIndex += BitArray.LONG_SIZE;
+                    longFirstIndex += BitArray.LONG_SIZE;
                     list.add(new BitArray());
                     overShoot--;
                 }
@@ -143,10 +143,10 @@ public class BitArrayBin implements Serializable {
      */
     private int getBin(long index) {
         int answer = 0;
-        if (firstIndex < 0) {
-            firstIndex = (int) (index - (index % BitArray.LONG_SIZE));
-        } else if (firstIndex >= 0) {
-            answer = (int)((index - firstIndex) / BitArray.LONG_SIZE);
+        if (longFirstIndex < 0) {
+            longFirstIndex = (int) (index - (index % BitArray.LONG_SIZE));
+        } else if (longFirstIndex >= 0) {
+            answer = (int)((index - longFirstIndex) / BitArray.LONG_SIZE);
         }
         return answer;
     }
@@ -159,8 +159,8 @@ public class BitArrayBin implements Serializable {
      */
     private int getOffset(long index) {
         int answer = 0;
-        if (firstIndex >= 0) {
-            answer = (int)((index - firstIndex) - (BitArray.LONG_SIZE * getBin(index)));
+        if (longFirstIndex >= 0) {
+            answer = (int)((index - longFirstIndex) - (BitArray.LONG_SIZE * getBin(index)));
         }
         return answer;
     }
@@ -168,8 +168,8 @@ public class BitArrayBin implements Serializable {
     public long getLastSetIndex() {
         long result = -1;
 
-        if (firstIndex >=0) {
-            result = firstIndex;
+        if (longFirstIndex >=0) {
+            result = longFirstIndex;
             BitArray last = null;
             for (int lastBitArrayIndex = maxNumberOfArrays -1; lastBitArrayIndex >= 0; lastBitArrayIndex--) {
                 last = list.get(lastBitArrayIndex);
