@@ -62,6 +62,7 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.fusesource.mqtt.codec.PUBLISH;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +154,7 @@ public class MQTTTest extends MQTTTestSupport {
             publishProvider.publish(topic, payload.getBytes(), AT_LEAST_ONCE);
         }
 
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(20, TimeUnit.SECONDS);
         assertEquals(0, latch.getCount());
         subscriptionProvider.disconnect();
         publishProvider.disconnect();
@@ -488,13 +489,14 @@ public class MQTTTest extends MQTTTestSupport {
     @Test(timeout = 120 * 1000)
     public void testRetainedMessage() throws Exception {
         MQTT mqtt = createMQTTConnection();
-        mqtt.setKeepAlive((short) 2);
+        mqtt.setKeepAlive((short) 60);
 
         final String RETAIN = "RETAIN";
         final String TOPICA = "TopicA";
 
         final String[] clientIds = { null, "foo", "durable" };
         for (String clientId : clientIds) {
+            LOG.info("Testing now with Client ID: {}", clientId);
 
             mqtt.setClientId(clientId);
             mqtt.setCleanSession(!"durable".equals(clientId));
@@ -547,6 +549,76 @@ public class MQTTTest extends MQTTTestSupport {
             msg.ack();
             assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
 
+            connection.unsubscribe(new String[]{TOPICA});
+            connection.disconnect();
+        }
+    }
+
+    @Ignore
+    @Test(timeout = 120 * 1000)
+    public void testRetainedMessageOnVirtualTopics() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setKeepAlive((short) 60);
+
+        final String RETAIN = "RETAIN";
+        final String TOPICA = "VirtualTopic/TopicA";
+
+        final String[] clientIds = { null, "foo", "durable" };
+        for (String clientId : clientIds) {
+            LOG.info("Testing now with Client ID: {}", clientId);
+
+            mqtt.setClientId(clientId);
+            mqtt.setCleanSession(!"durable".equals(clientId));
+
+            BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+
+            // set retained message and check
+            connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No retained message for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
+
+            // test duplicate subscription
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            msg = connection.receive(15000, TimeUnit.MILLISECONDS);
+            assertNotNull("No retained message on duplicate subscription for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
+            connection.unsubscribe(new String[]{TOPICA});
+
+            // clear retained message and check that we don't receive it
+            connection.publish(TOPICA, "".getBytes(), QoS.AT_MOST_ONCE, true);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            msg = connection.receive(500, TimeUnit.MILLISECONDS);
+            assertNull("Retained message not cleared for " + clientId, msg);
+            connection.unsubscribe(new String[]{TOPICA});
+
+            // set retained message again and check
+            connection.publish(TOPICA, RETAIN.getBytes(), QoS.EXACTLY_ONCE, true);
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No reset retained message for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
+
+            // re-connect and check
+            connection.disconnect();
+            connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.subscribe(new Topic[]{new Topic(TOPICA, QoS.AT_LEAST_ONCE)});
+            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            assertNotNull("No reset retained message for " + clientId, msg);
+            assertEquals(RETAIN, new String(msg.getPayload()));
+            msg.ack();
+            assertNull(connection.receive(500, TimeUnit.MILLISECONDS));
+
+            LOG.info("Test now unsubscribing from: {} for the last time", TOPICA);
             connection.unsubscribe(new String[]{TOPICA});
             connection.disconnect();
         }
@@ -914,9 +986,12 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSendMQTTReceiveJMS() throws Exception {
+        doTestSendMQTTReceiveJMS("foo.*");
+    }
+
+    public void doTestSendMQTTReceiveJMS(String destinationName) throws Exception {
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
-        final String DESTINATION_NAME = "foo.*";
 
         // send retained message
         final String RETAINED = "RETAINED";
@@ -927,7 +1002,7 @@ public class MQTTTest extends MQTTTestSupport {
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        javax.jms.Topic jmsTopic = s.createTopic(DESTINATION_NAME);
+        javax.jms.Topic jmsTopic = s.createTopic(destinationName);
         MessageConsumer consumer = s.createConsumer(jmsTopic);
 
         // check whether we received retained message on JMS subscribe
@@ -952,6 +1027,10 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 2 * 60 * 1000)
     public void testSendJMSReceiveMQTT() throws Exception {
+        doTestSendJMSReceiveMQTT("foo.far");
+    }
+
+    public void doTestSendJMSReceiveMQTT(String destinationName) throws Exception {
         final MQTTClientProvider provider = getMQTTClientProvider();
         initializeConnection(provider);
 
@@ -959,7 +1038,7 @@ public class MQTTTest extends MQTTTestSupport {
         activeMQConnection.setUseRetroactiveConsumer(true);
         activeMQConnection.start();
         Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        javax.jms.Topic jmsTopic = s.createTopic("foo.far");
+        javax.jms.Topic jmsTopic = s.createTopic(destinationName);
         MessageProducer producer = s.createProducer(jmsTopic);
 
         // send retained message from JMS
@@ -1130,10 +1209,14 @@ public class MQTTTest extends MQTTTestSupport {
 
     @Test(timeout = 30 * 10000)
     public void testJmsMapping() throws Exception {
+        doTestJmsMapping("test.foo");
+    }
+
+    public void doTestJmsMapping(String destinationName) throws Exception {
         // start up jms consumer
         Connection jmsConn = cf.createConnection();
         Session session = jmsConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination dest = session.createTopic("test.foo");
+        Destination dest = session.createTopic(destinationName);
         MessageConsumer consumer = session.createConsumer(dest);
         jmsConn.start();
 

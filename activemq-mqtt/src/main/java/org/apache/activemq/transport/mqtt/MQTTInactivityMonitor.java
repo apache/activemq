@@ -70,9 +70,12 @@ public class MQTTInactivityMonitor extends TransportFilter {
             int currentCounter = next.getReceiveCounter();
             int previousCounter = lastReceiveCounter.getAndSet(currentCounter);
 
-            // for the PINGREQ/RESP frames, the currentCounter will be different from previousCounter, and that
-            // should be sufficient to indicate the connection is still alive. If there were random data, or something
-            // outside the scope of the spec, the wire format unrmarshalling would fail, so we don't need to handle
+            // for the PINGREQ/RESP frames, the currentCounter will be different
+            // from previousCounter, and that
+            // should be sufficient to indicate the connection is still alive.
+            // If there were random data, or something
+            // outside the scope of the spec, the wire format unrmarshalling
+            // would fail, so we don't need to handle
             // PINGREQ/RESP explicitly here
             if (inReceive.get() || currentCounter != previousCounter) {
                 if (LOG.isTraceEnabled()) {
@@ -82,23 +85,20 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 return;
             }
 
-            if( (now-lastReceiveTime) >= readKeepAliveTime+readGraceTime && monitorStarted.get() && !ASYNC_TASKS.isTerminating()) {
+            if ((now - lastReceiveTime) >= readKeepAliveTime + readGraceTime && monitorStarted.get() && !ASYNC_TASKS.isTerminating()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
                 }
                 ASYNC_TASKS.execute(new Runnable() {
                     @Override
                     public void run() {
-                        onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime+readGraceTime) + ") long: " + next.getRemoteAddress()));
+                        onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime + readGraceTime) + ") long: "
+                            + next.getRemoteAddress()));
                     }
                 });
             }
         }
     };
-
-    private boolean allowReadCheck(long elapsed) {
-        return elapsed > (readGraceTime * 9 / 10);
-    }
 
     public MQTTInactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next);

@@ -19,6 +19,7 @@ package org.apache.activemq.transport.mqtt;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.jms.JMSException;
 
 import org.apache.activemq.broker.BrokerService;
@@ -29,7 +30,20 @@ import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.fusesource.mqtt.codec.*;
+import org.fusesource.mqtt.codec.CONNACK;
+import org.fusesource.mqtt.codec.CONNECT;
+import org.fusesource.mqtt.codec.DISCONNECT;
+import org.fusesource.mqtt.codec.MQTTFrame;
+import org.fusesource.mqtt.codec.PINGREQ;
+import org.fusesource.mqtt.codec.PINGRESP;
+import org.fusesource.mqtt.codec.PUBACK;
+import org.fusesource.mqtt.codec.PUBCOMP;
+import org.fusesource.mqtt.codec.PUBLISH;
+import org.fusesource.mqtt.codec.PUBREC;
+import org.fusesource.mqtt.codec.PUBREL;
+import org.fusesource.mqtt.codec.SUBACK;
+import org.fusesource.mqtt.codec.SUBSCRIBE;
+import org.fusesource.mqtt.codec.UNSUBSCRIBE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,6 +209,14 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     public void setPublishDollarTopics(boolean publishDollarTopics) {
         protocolConverter.setPublishDollarTopics(publishDollarTopics);
+    }
+
+    public String getSubscriptionStrategyName() {
+        return protocolConverter != null ? protocolConverter.getSubscriptionStrategyName() : "default";
+    }
+
+    public void setSubscriptionStrategyName(String name) {
+        protocolConverter.setSubscriptionStrategyName(name);
     }
 
     public int getActiveMQSubscriptionPrefetch() {

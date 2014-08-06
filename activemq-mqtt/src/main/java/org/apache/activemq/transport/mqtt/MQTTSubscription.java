@@ -132,7 +132,12 @@ public class MQTTSubscription {
     /**
      * @return the assigned QoS value for this subscription.
      */
-    public QoS qos() {
+    public QoS getQoS() {
         return qos;
+    }
+
+    @Override
+    public String toString() {
+        return "MQTT Sub: topic[" + topicName + "] -> [" + consumerInfo.getDestination() + "]";
     }
 }
