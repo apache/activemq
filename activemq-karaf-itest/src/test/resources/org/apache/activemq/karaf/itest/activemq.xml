@@ -62,6 +62,10 @@
                     <authorizationEntry topic=">" read="admin" write="admin" admin="admin"/>
                     <authorizationEntry topic="ActiveMQ.Advisory.>" read="admin" write="admin" admin="admin"/>
                   </authorizationEntries>
+
+                  <tempDestinationAuthorizationEntry>
+                    <tempDestinationAuthorizationEntry read="admin" write="admin" admin="admin"/>
+                  </tempDestinationAuthorizationEntry>
                 </authorizationMap>
               </map>
             </authorizationPlugin>
