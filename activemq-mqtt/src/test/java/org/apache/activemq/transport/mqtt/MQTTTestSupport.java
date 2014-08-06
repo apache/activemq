@@ -339,7 +339,7 @@ public class MQTTTestSupport {
     }
 
     protected MQTTClientProvider getMQTTClientProvider() {
-        return new FuseMQQTTClientProvider();
+        return new FuseMQTTClientProvider();
     }
 
     protected MQTT createMQTTConnection() throws Exception {
