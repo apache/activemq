@@ -204,17 +204,16 @@ public class ProtocolConverter {
     }
 
     protected FrameTranslator findTranslator(String header) {
-        return findTranslator(header, null);
+        return findTranslator(header, null, false);
     }
 
-    protected FrameTranslator findTranslator(String header, ActiveMQDestination destination) {
+    protected FrameTranslator findTranslator(String header, ActiveMQDestination destination, boolean advisory) {
         FrameTranslator translator = frameTranslator;
         try {
             if (header != null) {
-                translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER
-                        .newInstance(header);
+                translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER.newInstance(header);
             } else {
-                if (destination != null && AdvisorySupport.isAdvisoryTopic(destination)) {
+                if (destination != null && (advisory || AdvisorySupport.isAdvisoryTopic(destination))) {
                     translator = new JmsFrameTranslator();
                 }
             }
@@ -230,7 +229,7 @@ public class ProtocolConverter {
     }
 
     /**
-     * Convert a stomp command
+     * Convert a STOMP command
      *
      * @param command
      */
@@ -894,7 +893,9 @@ public class ProtocolConverter {
         if (ignoreTransformation == true) {
             return frameTranslator.convertMessage(this, message);
         } else {
-            return findTranslator(message.getStringProperty(Stomp.Headers.TRANSFORMATION), message.getDestination()).convertMessage(this, message);
+            FrameTranslator translator = findTranslator(
+                message.getStringProperty(Stomp.Headers.TRANSFORMATION), message.getDestination(), message.isAdvisory());
+            return translator.convertMessage(this, message);
         }
     }
 

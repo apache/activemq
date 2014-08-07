@@ -176,8 +176,13 @@ public interface Stomp {
         JMS_ADVISORY_XML,
         JMS_ADVISORY_JSON;
 
+        @Override
         public String toString() {
             return name().replaceAll("_", "-").toLowerCase(Locale.ENGLISH);
+        }
+
+        public boolean equals(String value) {
+            return toString().equals(value);
         }
 
         public static Transformations getValue(String value) {

@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import static org.apache.activemq.transport.stomp.FrameTranslator.Helper.copyStandardHeadersFromFrameToMessage;
+import static org.apache.activemq.transport.stomp.FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
@@ -33,6 +36,9 @@ import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.transport.stomp.Stomp.Headers;
+import org.apache.activemq.transport.stomp.Stomp.Responses;
+import org.apache.activemq.transport.stomp.Stomp.Transformations;
 import org.codehaus.jettison.mapped.Configuration;
 import org.fusesource.hawtbuf.UTF8Buffer;
 
@@ -49,133 +55,129 @@ import com.thoughtworks.xstream.io.xml.xppdom.XppFactory;
 /**
  * Frame translator implementation that uses XStream to convert messages to and
  * from XML and JSON
- *
- * @author <a href="mailto:dejan@nighttale.net">Dejan Bosanac</a>
  */
-public class JmsFrameTranslator extends LegacyFrameTranslator implements
-        BrokerContextAware {
+public class JmsFrameTranslator extends LegacyFrameTranslator implements BrokerContextAware {
 
     XStream xStream = null;
     BrokerContext brokerContext;
 
     @Override
-    public ActiveMQMessage convertFrame(ProtocolConverter converter,
-            StompFrame command) throws JMSException, ProtocolException {
+    public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         Map<String, String> headers = command.getHeaders();
         ActiveMQMessage msg;
-        String transformation = headers.get(Stomp.Headers.TRANSFORMATION);
-        if (headers.containsKey(Stomp.Headers.CONTENT_LENGTH) || transformation.equals(Stomp.Transformations.JMS_BYTE.toString())) {
+        String transformation = headers.get(Headers.TRANSFORMATION);
+        if (headers.containsKey(Headers.CONTENT_LENGTH) || transformation.equals(Transformations.JMS_BYTE.toString())) {
             msg = super.convertFrame(converter, command);
         } else {
             HierarchicalStreamReader in;
 
             try {
                 String text = new String(command.getContent(), "UTF-8");
-                switch (Stomp.Transformations.getValue(transformation)) {
-                case JMS_OBJECT_XML:
-                    in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
-                    msg = createObjectMessage(in);
-                    break;
-                case JMS_OBJECT_JSON:
-                    in = new JettisonMappedXmlDriver().createReader(new StringReader(text));
-                    msg = createObjectMessage(in);
-                    break;
-                case JMS_MAP_XML:
-                    in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
-                    msg = createMapMessage(in);
-                    break;
-                case JMS_MAP_JSON:
-                    in = new JettisonMappedXmlDriver().createReader(new StringReader(text));
-                    msg = createMapMessage(in);
-                    break;
-                default:
-                    throw new Exception("Unkown transformation: " + transformation);
+                switch (Transformations.getValue(transformation)) {
+                    case JMS_OBJECT_XML:
+                        in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
+                        msg = createObjectMessage(in);
+                        break;
+                    case JMS_OBJECT_JSON:
+                        in = new JettisonMappedXmlDriver().createReader(new StringReader(text));
+                        msg = createObjectMessage(in);
+                        break;
+                    case JMS_MAP_XML:
+                        in = new XppReader(new StringReader(text), XppFactory.createDefaultParser());
+                        msg = createMapMessage(in);
+                        break;
+                    case JMS_MAP_JSON:
+                        in = new JettisonMappedXmlDriver().createReader(new StringReader(text));
+                        msg = createMapMessage(in);
+                        break;
+                    default:
+                        throw new Exception("Unkown transformation: " + transformation);
                 }
             } catch (Throwable e) {
-                command.getHeaders().put(Stomp.Headers.TRANSFORMATION_ERROR, e.getMessage());
+                command.getHeaders().put(Headers.TRANSFORMATION_ERROR, e.getMessage());
                 msg = super.convertFrame(converter, command);
             }
         }
-        FrameTranslator.Helper.copyStandardHeadersFromFrameToMessage(converter, command, msg, this);
+
+        copyStandardHeadersFromFrameToMessage(converter, command, msg, this);
         return msg;
     }
 
     @Override
-    public StompFrame convertMessage(ProtocolConverter converter,
-            ActiveMQMessage message) throws IOException, JMSException {
+    public StompFrame convertMessage(ProtocolConverter converter, ActiveMQMessage message) throws IOException, JMSException {
+
+        StompFrame command = new StompFrame();
+        command.setAction(Responses.MESSAGE);
+        Map<String, String> headers = new HashMap<String, String>(25);
+        command.setHeaders(headers);
+
+        copyStandardHeadersFromMessageToFrame(converter, message, command, this);
+
+        String transformation = headers.get(Headers.TRANSFORMATION);
 
         if (message.getDataStructureType() == ActiveMQObjectMessage.DATA_STRUCTURE_TYPE) {
-            StompFrame command = new StompFrame();
-            command.setAction(Stomp.Responses.MESSAGE);
-            Map<String, String> headers = new HashMap<String, String>(25);
-            command.setHeaders(headers);
 
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
+            if (Transformations.JMS_XML.equals(transformation)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_OBJECT_XML.toString());
+            } else if (Transformations.JMS_JSON.equals(transformation)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_OBJECT_JSON.toString());
+            }
 
-            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_XML.toString());
-            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_OBJECT_JSON.toString());
+            if (!headers.containsKey(Headers.TRANSFORMATION)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_OBJECT_XML.toString());
             }
 
             ActiveMQObjectMessage msg = (ActiveMQObjectMessage) message.copy();
-            command.setContent(marshall(msg.getObject(),
-                    headers.get(Stomp.Headers.TRANSFORMATION))
-                    .getBytes("UTF-8"));
-            return command;
+            command.setContent(marshall(msg.getObject(), headers.get(Headers.TRANSFORMATION)).getBytes("UTF-8"));
 
         } else if (message.getDataStructureType() == ActiveMQMapMessage.DATA_STRUCTURE_TYPE) {
-            StompFrame command = new StompFrame();
-            command.setAction(Stomp.Responses.MESSAGE);
-            Map<String, String> headers = new HashMap<String, String>(25);
-            command.setHeaders(headers);
 
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
+            if (Transformations.JMS_XML.equals(transformation)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_MAP_XML.toString());
+            } else if (Transformations.JMS_JSON.equals(transformation)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_MAP_JSON.toString());
+            }
 
-            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_XML.toString());
-            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_MAP_JSON.toString());
+            if (!headers.containsKey(Headers.TRANSFORMATION)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_MAP_XML.toString());
             }
 
             ActiveMQMapMessage msg = (ActiveMQMapMessage) message.copy();
-            command.setContent(marshall((Serializable)msg.getContentMap(),
-                    headers.get(Stomp.Headers.TRANSFORMATION)).getBytes("UTF-8"));
-            return command;
-        } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE &&
-                AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
+            command.setContent(marshall((Serializable) msg.getContentMap(), headers.get(Headers.TRANSFORMATION)).getBytes("UTF-8"));
 
-            StompFrame command = new StompFrame();
-            command.setAction(Stomp.Responses.MESSAGE);
-            Map<String, String> headers = new HashMap<String, String>(25);
-            command.setHeaders(headers);
+        } else if (message.getDataStructureType() == ActiveMQMessage.DATA_STRUCTURE_TYPE && AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
 
-            FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(
-                    converter, message, command, this);
-
-            if (!headers.containsKey(Stomp.Headers.TRANSFORMATION)) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_JSON.toString());
+            if (Transformations.JMS_XML.equals(transformation)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_ADVISORY_XML.toString());
+            } else if (Transformations.JMS_JSON.equals(transformation)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_ADVISORY_JSON.toString());
             }
 
-            if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_XML.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_XML.toString());
-            } else if (headers.get(Stomp.Headers.TRANSFORMATION).equals(Stomp.Transformations.JMS_JSON.toString())) {
-                headers.put(Stomp.Headers.TRANSFORMATION, Stomp.Transformations.JMS_ADVISORY_JSON.toString());
+            if (!headers.containsKey(Headers.TRANSFORMATION)) {
+                headers.put(Headers.TRANSFORMATION, Transformations.JMS_ADVISORY_JSON.toString());
             }
 
-            String body = marshallAdvisory(message.getDataStructure(),
-                    headers.get(Stomp.Headers.TRANSFORMATION));
+            String body = marshallAdvisory(message.getDataStructure(), headers.get(Headers.TRANSFORMATION));
             command.setContent(body.getBytes("UTF-8"));
-            return command;
+
         } else {
-            return super.convertMessage(converter, message);
+            command = super.convertMessage(converter, message);
         }
+
+        return command;
     }
 
     /**
-     * Marshalls the Object to a string using XML or JSON encoding
+     * Marshal the Object to a string using XML or JSON encoding
+     *
+     * @param object
+     *        the object to marshal
+     * @param transformation
+     *        the transformation to apply to the object.
+     *
+     * @returns the marshaled form of the given object, in JSON or XML.
+     *
+     * @throws JMSException if an error occurs during the marshal operation.
      */
     protected String marshall(Serializable object, String transformation) throws JMSException {
         StringWriter buffer = new StringWriter();
@@ -199,7 +201,7 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     @SuppressWarnings("unchecked")
     protected ActiveMQMapMessage createMapMessage(HierarchicalStreamReader in) throws JMSException {
         ActiveMQMapMessage mapMsg = new ActiveMQMapMessage();
-        Map<String, Object> map = (Map<String, Object>)getXStream().unmarshal(in);
+        Map<String, Object> map = (Map<String, Object>) getXStream().unmarshal(in);
         for (String key : map.keySet()) {
             mapMsg.setObject(key, map.get(key));
         }
@@ -256,8 +258,9 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
             xstream.ignoreUnknownElements();
         }
 
-        // For any object whose elements contains an UTF8Buffer instance instead of a String
-        // type we map it to String both in and out such that we don't marshal UTF8Buffers out
+        // For any object whose elements contains an UTF8Buffer instance instead
+        // of a String type we map it to String both in and out such that we don't
+        // marshal UTF8Buffers out
         xstream.registerConverter(new AbstractSingleValueConverter() {
 
             @Override
@@ -283,14 +286,17 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
     }
 
     @Override
-    public  BrokerContext getBrokerContext() {
+    public BrokerContext getBrokerContext() {
         return this.brokerContext;
     }
 
     /**
      * Return an Advisory message as a JSON formatted string
+     *
      * @param ds
-     * @return
+     *        the DataStructure instance that is being marshaled.
+     *
+     * @return the JSON marshaled form of the given DataStructure instance.
      */
     protected String marshallAdvisory(final DataStructure ds) {
         XStream xstream = new XStream(new JsonHierarchicalStreamDriver());

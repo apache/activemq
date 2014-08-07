@@ -27,12 +27,13 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 
 /**
- * Implementations of this interface are used to map back and forth from Stomp
+ * Implementations of this interface are used to map back and forth from STOMP
  * to ActiveMQ. There are several standard mappings which are semantically the
  * same, the inner class, Helper, provides functions to copy those properties
  * from one to the other
  */
 public interface FrameTranslator {
+
     ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame frame) throws JMSException, ProtocolException;
 
     StompFrame convertMessage(ProtocolConverter converter, ActiveMQMessage message) throws IOException, JMSException;
@@ -142,7 +143,7 @@ public interface FrameTranslator {
                 msg.setPersistent("true".equals(o));
             }
 
-            // Stomp specific headers
+            // STOMP specific headers
             headers.remove(Stomp.Headers.RECEIPT_REQUESTED);
 
             // Since we take the rest of the header and put them in properties which could then
