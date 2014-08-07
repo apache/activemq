@@ -468,7 +468,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
             fail("Expected xa exception on no tx");
         } catch (XAException expected) {
             LOG.info("got expected xa", expected);
-            assertTrue("not zero", expected.errorCode != XAResource.XA_OK);
+            assertEquals("no tx", XAException.XAER_NOTA, expected.errorCode);
         }
         connection.close();
         broker.stop();

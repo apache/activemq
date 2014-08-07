@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TransactionContext implements XAResource {
 
+    public static final String xaErrorCodeMarker = "xaErrorCode:";
     private static final Logger LOG = LoggerFactory.getLogger(TransactionContext.class);
 
     // XATransactionId -> ArrayList of TransactionContext objects
@@ -786,8 +787,7 @@ public class TransactionContext implements XAResource {
             xae.errorCode = original.errorCode;
             if (xae.errorCode == XA_OK) {
                 // detail not unmarshalled see: org.apache.activemq.openwire.v1.BaseDataStreamMarshaller.createThrowable
-                // so use a valid generic error code in place of ok
-                xae.errorCode = XAException.XAER_RMERR;
+                xae.errorCode = parseFromMessageOr(original.getMessage(), XAException.XAER_RMERR);
             }
             xae.initCause(original);
             return xae;
@@ -797,6 +797,17 @@ public class TransactionContext implements XAResource {
         xae.errorCode = XAException.XAER_RMFAIL;
         xae.initCause(e);
         return xae;
+    }
+
+    private int parseFromMessageOr(String message, int fallbackCode) {
+        final String marker = "xaErrorCode:";
+        final int index = message.lastIndexOf(marker);
+        if (index > -1) {
+            try {
+                return Integer.parseInt(message.substring(index + marker.length()));
+            } catch (Exception ignored) {}
+        }
+        return fallbackCode;
     }
 
     public ActiveMQConnection getConnection() {
