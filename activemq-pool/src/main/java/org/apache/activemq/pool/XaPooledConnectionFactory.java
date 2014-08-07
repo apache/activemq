@@ -96,8 +96,12 @@ public class XaPooledConnectionFactory extends org.apache.activemq.jms.pool.XaPo
                     public void onException(IOException error) {
                         synchronized (this) {
                             setHasExpired(true);
-                            LOG.info("Expiring connection " + connection + " on IOException: " + error);
-                            LOG.debug("Expiring connection on IOException", error);
+                            // only log if not stopped
+                            if (!stopped.get()) {
+                                LOG.info("Expiring connection " + connection + " on IOException: " + error.getMessage());
+                                // log stacktrace at debug level
+                                LOG.debug("Expiring connection " + connection + " on IOException: ", error);
+                            }
                         }
                     }
 

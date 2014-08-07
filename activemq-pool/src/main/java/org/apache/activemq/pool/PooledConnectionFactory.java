@@ -110,8 +110,12 @@ public class PooledConnectionFactory extends org.apache.activemq.jms.pool.Pooled
                     public void onException(IOException error) {
                         synchronized (this) {
                             setHasExpired(true);
-                            LOG.info("Expiring connection {} on IOException: {}" , connection, error);
-                            LOG.debug("Expiring connection on IOException", error);
+                            // only log if not stopped
+                            if (!stopped.get()) {
+                                LOG.info("Expiring connection " + connection + " on IOException: " + error.getMessage());
+                                // log stacktrace at debug level
+                                LOG.debug("Expiring connection " + connection + " on IOException: ", error);
+                            }
                         }
                     }
 
