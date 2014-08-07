@@ -27,11 +27,6 @@ package org.apache.activemq.security;
 public class TempDestinationAuthorizationEntry extends AuthorizationEntry {
 
     public void afterPropertiesSet() throws Exception {
-        // we don't need to check if destination is specified since
-        // the TempDestinationAuthorizationEntry should map to all temp
-        // destinations
-
-
         if (adminRoles != null) {
             setAdminACLs(parseACLs(adminRoles));
         }
@@ -44,5 +39,4 @@ public class TempDestinationAuthorizationEntry extends AuthorizationEntry {
             setReadACLs(parseACLs(readRoles));
         }
     }
-
 }
