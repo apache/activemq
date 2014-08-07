@@ -365,8 +365,7 @@ public class TransactionBroker extends BrokerFilter {
             return transaction;
         }
         if (xid.isXATransaction()) {
-            XAException e = new XAException("Transaction '" + xid + "' has not been started.");
-            e.errorCode = XAException.XAER_NOTA;
+            XAException e = XATransaction.newXAException("Transaction '" + xid + "' has not been started.", XAException.XAER_NOTA);
             throw e;
         } else {
             throw new JMSException("Transaction '" + xid + "' has not been started.");
