@@ -146,6 +146,8 @@ public class StompTestSupport {
             plugins.add(configureAuthentication());
         }
 
+        addAdditionalPlugins(plugins);
+
         if (!plugins.isEmpty()) {
             BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
             brokerService.setPlugins(plugins.toArray(array));
@@ -170,6 +172,9 @@ public class StompTestSupport {
         jobStore.setDirectory(new File("activemq-data"));
 
         brokerService.setJobSchedulerStore(jobStore);
+    }
+
+    protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
     }
 
     protected BrokerPlugin configureAuthentication() throws Exception {
