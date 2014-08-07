@@ -19,6 +19,7 @@ package org.apache.activemq.transaction;
 import java.io.IOException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
+import org.apache.activemq.TransactionContext;
 import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.TransactionId;
@@ -89,23 +90,20 @@ public class XATransaction extends Transaction {
         } catch (Throwable t) {
             LOG.warn("Store COMMIT FAILED: ", t);
             rollback();
-            XAException xae = new XAException("STORE COMMIT FAILED: Transaction rolled back");
-            xae.errorCode = XAException.XA_RBOTHER;
+            XAException xae = newXAException("STORE COMMIT FAILED: Transaction rolled back", XAException.XA_RBOTHER);
             xae.initCause(t);
             throw xae;
         }
     }
 
     private void illegalStateTransition(String callName) throws XAException {
-        XAException xae = new XAException("Cannot call " + callName + " now.");
-        xae.errorCode = XAException.XAER_PROTO;
+        XAException xae = newXAException("Cannot call " + callName + " now.", XAException.XAER_PROTO);
         throw xae;
     }
 
     private void checkForPreparedState(boolean onePhase) throws XAException {
         if (!onePhase) {
-            XAException xae = new XAException("Cannot do 2 phase commit if the transaction has not been prepared");
-            xae.errorCode = XAException.XAER_PROTO;
+            XAException xae = newXAException("Cannot do 2 phase commit if the transaction has not been prepared", XAException.XAER_PROTO);
             throw xae;
         }
     }
@@ -118,8 +116,7 @@ public class XATransaction extends Transaction {
         } catch (Throwable e) {
             LOG.warn("PRE-PREPARE FAILED: ", e);
             rollback();
-            XAException xae = new XAException("PRE-PREPARE FAILED: Transaction rolled back");
-            xae.errorCode = XAException.XA_RBOTHER;
+            XAException xae = newXAException("PRE-PREPARE FAILED: Transaction rolled back", XAException.XA_RBOTHER);
             xae.initCause(e);
             throw xae;
         }
@@ -155,7 +152,7 @@ public class XATransaction extends Transaction {
             doPostRollback();
             break;
         default:
-            throw new XAException("Invalid state");
+            throw newXAException("Invalid state: " + getState(), XAException.XA_RBPROTO);
         }
 
     }
@@ -167,11 +164,16 @@ public class XATransaction extends Transaction {
             // I guess this could happen. Post commit task failed
             // to execute properly.
             LOG.warn("POST ROLLBACK FAILED: ", e);
-            XAException xae = new XAException("POST ROLLBACK FAILED");
-            xae.errorCode = XAException.XAER_RMERR;
+            XAException xae = newXAException("POST ROLLBACK FAILED", XAException.XAER_RMERR);
             xae.initCause(e);
             throw xae;
         }
+    }
+
+    public static XAException newXAException(String s, int errorCode) {
+        XAException xaException = new XAException(s + " " + TransactionContext.xaErrorCodeMarker + errorCode);
+        xaException.errorCode = errorCode;
+        return xaException;
     }
 
     @Override
