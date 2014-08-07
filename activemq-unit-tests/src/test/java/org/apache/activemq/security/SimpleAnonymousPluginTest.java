@@ -63,7 +63,6 @@ public class SimpleAnonymousPluginTest extends SimpleAuthenticationPluginTest {
         }
     }
 
-
     public void testAnonymousReceiveSucceeds() throws JMSException {
         doReceive(false);
     }
@@ -84,8 +83,8 @@ public class SimpleAnonymousPluginTest extends SimpleAuthenticationPluginTest {
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestAnonymousReceiveSucceeds() {
-        addCombinationValues("userName", new Object[] {});
-        addCombinationValues("password", new Object[] {});
+        addCombinationValues("userName", new Object[] { null });
+        addCombinationValues("password", new Object[] { null });
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR")});
     }
 
@@ -93,8 +92,8 @@ public class SimpleAnonymousPluginTest extends SimpleAuthenticationPluginTest {
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestAnonymousReceiveFails() {
-        addCombinationValues("userName", new Object[] {});
-        addCombinationValues("password", new Object[] {});
+        addCombinationValues("userName", new Object[] { null });
+        addCombinationValues("password", new Object[] { null });
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO") });
     }
 
@@ -102,8 +101,8 @@ public class SimpleAnonymousPluginTest extends SimpleAuthenticationPluginTest {
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestAnonymousSendFails() {
-        addCombinationValues("userName", new Object[] {});
-        addCombinationValues("password", new Object[] {});
+        addCombinationValues("userName", new Object[] { null });
+        addCombinationValues("password", new Object[] { null });
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO")});
     }
 
@@ -111,9 +110,8 @@ public class SimpleAnonymousPluginTest extends SimpleAuthenticationPluginTest {
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestAnonymousSendSucceeds() {
-        addCombinationValues("userName", new Object[] {});
-        addCombinationValues("password", new Object[] {});
+        addCombinationValues("userName", new Object[] { null });
+        addCombinationValues("password", new Object[] { null });
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR")});
     }
-
 }
