@@ -57,11 +57,11 @@ import org.slf4j.LoggerFactory;
  * Tests various use cases that require authentication or authorization over MQTT
  */
 @RunWith(Parameterized.class)
-public class MQTTAuthTests extends MQTTAuthTestSupport {
+public class MQTTAuthTest extends MQTTAuthTestSupport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MQTTAuthTests.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MQTTAuthTest.class);
 
-    @Parameters(name= "{index}: scheme({0})")
+    @Parameters(name="{0}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 {"mqtt", false},
@@ -71,7 +71,7 @@ public class MQTTAuthTests extends MQTTAuthTestSupport {
             });
     }
 
-    public MQTTAuthTests(String connectorScheme, boolean useSSL) {
+    public MQTTAuthTest(String connectorScheme, boolean useSSL) {
         super(connectorScheme, useSSL);
     }
 
