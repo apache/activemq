@@ -206,15 +206,19 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
             LinkedList<ComboOption> l = new LinkedList<ComboOption>(optionsLeft);
             ComboOption comboOption = l.removeLast();
             int i = 0;
-            for (Iterator<Object> iter = comboOption.values.iterator(); iter.hasNext();) {
-                Object value = iter.next();
-                if (i != 0) {
-                    map = new HashMap<String, Object>(map);
-                    expandedCombos.add(map);
-                }
-                map.put(comboOption.attribute, value);
+            if (comboOption.values.isEmpty() && !l.isEmpty()) {
                 expandCombinations(l, expandedCombos);
-                i++;
+            } else {
+                for (Iterator<Object> iter = comboOption.values.iterator(); iter.hasNext();) {
+                    Object value = iter.next();
+                    if (i != 0) {
+                        map = new HashMap<String, Object>(map);
+                        expandedCombos.add(map);
+                    }
+                    map.put(comboOption.attribute, value);
+                    expandCombinations(l, expandedCombos);
+                    i++;
+                }
             }
         }
     }
