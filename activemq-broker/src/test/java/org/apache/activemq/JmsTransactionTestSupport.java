@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  */
 public abstract class JmsTransactionTestSupport extends TestSupport implements MessageListener {
 
@@ -61,8 +61,8 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     protected BrokerService broker;
 
     // for message listener test
-    private List<Message> unackMessages = new ArrayList<Message>(MESSAGE_COUNT);
-    private List<Message> ackMessages = new ArrayList<Message>(MESSAGE_COUNT);
+    private final List<Message> unackMessages = new ArrayList<Message>(MESSAGE_COUNT);
+    private final List<Message> ackMessages = new ArrayList<Message>(MESSAGE_COUNT);
     private boolean resendPhase;
 
     public JmsTransactionTestSupport() {
@@ -75,9 +75,10 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         broker = createBroker();
         broker.start();
@@ -119,19 +120,29 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
         LOG.info("Closing down connection");
 
-        session.close();
-        session = null;
-        connection.close();
-        connection = null;
-        broker.stop();
-        broker.waitUntilStopped();
-        broker = null;
+        try {
+            session.close();
+            session = null;
+            connection.close();
+            connection = null;
+        } catch (Exception e) {
+            LOG.info("Caught exception while closing resources.");
+        }
+
+        try {
+            broker.stop();
+            broker.waitUntilStopped();
+            broker = null;
+        } catch (Exception e) {
+            LOG.info("Caught exception while shutting down the Broker", e);
+        }
 
         LOG.info("Connection closed.");
     }
@@ -140,7 +151,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
     /**
      * Sends a batch of messages and validates that the messages are received.
-     * 
+     *
      * @throws Exception
      */
     public void testSendReceiveTransactedBatches() throws Exception {
@@ -174,7 +185,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Sends a batch of messages and validates that the rollbacked message was
      * not consumed.
-     * 
+     *
      * @throws Exception
      */
     public void testSendRollback() throws Exception {
@@ -295,7 +306,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Sends a batch of messages and validates that the message sent before
      * session close is not consumed.
-     * 
+     *
      * @throws Exception
      */
     public void testSendSessionAndConnectionClose() throws Exception {
@@ -343,7 +354,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Sends a batch of messages and validates that the rollbacked message was
      * redelivered.
-     * 
+     *
      * @throws Exception
      */
     public void testReceiveRollback() throws Exception {
@@ -394,7 +405,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Sends a batch of messages and validates that the rollbacked message was
      * redelivered.
-     * 
+     *
      * @throws Exception
      */
     public void testReceiveTwoThenRollback() throws Exception {
@@ -448,7 +459,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Sends a batch of messages and validates that the rollbacked message was
      * not consumed.
-     * 
+     *
      * @throws Exception
      */
     public void testSendReceiveWithPrefetchOne() throws Exception {
@@ -479,7 +490,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Perform the test that validates if the rollbacked message was redelivered
      * multiple times.
-     * 
+     *
      * @throws Exception
      */
     public void testReceiveTwoThenRollbackManyTimes() throws Exception {
@@ -491,7 +502,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Sends a batch of messages and validates that the rollbacked message was
      * not consumed. This test differs by setting the message prefetch to one.
-     * 
+     *
      * @throws Exception
      */
     public void testSendRollbackWithPrefetchOfOne() throws Exception {
@@ -503,7 +514,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
      * Sends a batch of messages and and validates that the rollbacked message
      * was redelivered. This test differs by setting the message prefetch to
      * one.
-     * 
+     *
      * @throws Exception
      */
     public void testReceiveRollbackWithPrefetchOfOne() throws Exception {
@@ -514,7 +525,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     /**
      * Tests if the messages can still be received if the consumer is closed
      * (session is not closed).
-     * 
+     *
      * @throws Exception see http://jira.codehaus.org/browse/AMQ-143
      */
     public void testCloseConsumerBeforeCommit() throws Exception {
@@ -605,7 +616,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
     /**
      * Recreates the connection.
-     * 
+     *
      * @throws JMSException
      */
     protected void reconnect() throws Exception {
@@ -622,7 +633,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
     /**
      * Recreates the connection.
-     * 
+     *
      * @throws JMSException
      */
     protected void reconnectSession() throws JMSException {
@@ -671,6 +682,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         reconnect();
     }
 
+    @Override
     public void onMessage(Message message) {
         if (!resendPhase) {
             unackMessages.add(message);
