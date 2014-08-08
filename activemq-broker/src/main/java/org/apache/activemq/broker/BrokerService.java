@@ -2493,7 +2493,6 @@ public class BrokerService implements Service {
         List<TransportConnector> al = new ArrayList<TransportConnector>();
         for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
             TransportConnector connector = iter.next();
-            connector.setBrokerService(this);
             al.add(startTransportConnector(connector));
         }
         if (al.size() > 0) {
@@ -2570,7 +2569,8 @@ public class BrokerService implements Service {
         }
     }
 
-    protected TransportConnector startTransportConnector(TransportConnector connector) throws Exception {
+    public TransportConnector startTransportConnector(TransportConnector connector) throws Exception {
+        connector.setBrokerService(this);
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
         MessageAuthorizationPolicy policy = getMessageAuthorizationPolicy();
         if (policy != null) {
