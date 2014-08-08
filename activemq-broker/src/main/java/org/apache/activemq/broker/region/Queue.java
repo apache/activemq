@@ -1232,10 +1232,10 @@ public class Queue extends BaseDestination implements Task, UsageListener {
         } finally {
             pagedInMessagesLock.readLock().unlock();
         }
-        int messagesInQueue = 0;
+        int messagesInQueue = alreadyPagedIn;
         messagesLock.readLock().lock();
         try {
-            messagesInQueue = messages.size();
+            messagesInQueue += messages.size();
         } finally {
             messagesLock.readLock().unlock();
         }
