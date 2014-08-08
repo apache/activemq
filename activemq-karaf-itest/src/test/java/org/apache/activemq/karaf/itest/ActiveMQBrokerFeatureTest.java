@@ -72,7 +72,6 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
     }
 
     @Test
-    @Ignore
     public void testTemporaryDestinations() throws Throwable {
         Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
