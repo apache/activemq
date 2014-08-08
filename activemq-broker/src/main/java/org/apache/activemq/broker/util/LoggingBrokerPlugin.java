@@ -43,7 +43,6 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private static final Logger LOG = LoggerFactory.getLogger(LoggingBrokerPlugin.class);
 
     private boolean logAll = false;
-    private boolean logMessageEvents = false;
     private boolean logConnectionEvents = true;
     private boolean logSessionEvents = true;
     private boolean logTransactionEvents = false;
@@ -85,16 +84,6 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         this.logAll = logAll;
     }
 
-    public boolean isLogMessageEvents() {
-        return logMessageEvents;
-    }
-
-    /**
-     * Logger Events that are related to message processing
-     */
-    public void setLogMessageEvents(boolean logMessageEvents) {
-        this.logMessageEvents = logMessageEvents;
-    }
 
     public boolean isLogConnectionEvents() {
         return logConnectionEvents;
@@ -604,8 +593,6 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
         buf.append(isLogConsumerEvents());
         buf.append(", logProducerEvents=");
         buf.append(isLogProducerEvents());
-        buf.append(", logMessageEvents=");
-        buf.append(isLogMessageEvents());
         buf.append(", logTransactionEvents=");
         buf.append(isLogTransactionEvents());
         buf.append(", logInternalEvents=");
