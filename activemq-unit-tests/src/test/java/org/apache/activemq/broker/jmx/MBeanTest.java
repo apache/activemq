@@ -1362,6 +1362,36 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         session.close();
     }
 
+    public void testAddRemoveConnectorBrokerView() throws Exception {
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        BrokerViewMBean brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        Map connectors = brokerView.getTransportConnectors();
+        LOG.info("Connectors: " + connectors);
+        assertEquals("one connector", 1, connectors.size());
+
+        ConnectorViewMBean connector = getProxyToConnectionView("tcp");
+        assertNotNull(connector);
+
+        String name = connectors.keySet().iterator().next().toString();
+
+        brokerView.removeConnector(name);
+
+        connectors = brokerView.getTransportConnectors();
+        assertEquals("empty", 0, connectors.size());
+
+        name = brokerView.addConnector("tcp://0.0.0.0:0");
+
+        connector = getProxyToConnectionView("tcp");
+        assertNotNull(connector);
+
+        connectors = brokerView.getTransportConnectors();
+        LOG.info("Connectors: " + connectors);
+        assertEquals("one connector", 1, connectors.size());
+        assertTrue("name is in map: " + connectors.keySet(), connectors.keySet().contains(name));
+    }
+
     public void testConnectorView() throws Exception {
         ConnectorViewMBean connector = getProxyToConnectionView("tcp");
         assertNotNull(connector);
