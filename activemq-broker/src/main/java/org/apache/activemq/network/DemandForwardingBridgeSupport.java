@@ -348,6 +348,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             remoteBrokerInfo = futureRemoteBrokerInfo.get();
             if (remoteBrokerInfo == null) {
                 fireBridgeFailed();
+                return;
             }
         } catch (Exception e) {
             serviceRemoteException(e);
@@ -358,6 +359,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             localBrokerInfo = futureLocalBrokerInfo.get();
             if (localBrokerInfo == null) {
                 fireBridgeFailed();
+                return;
             }
 
             // Before we try and build the bridge lets check if we are in a loop
