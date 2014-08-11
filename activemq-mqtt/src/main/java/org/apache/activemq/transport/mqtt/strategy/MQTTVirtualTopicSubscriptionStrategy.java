@@ -97,13 +97,13 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
             destination = new ActiveMQTopic(converted);
         }
 
-        ConsumerInfo consumerInfo = new ConsumerInfo(protocol.getNextConsumerId());
+        ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         consumerInfo.setDestination(destination);
         consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
         consumerInfo.setRetroactive(true);
         consumerInfo.setDispatchAsync(true);
 
-        return protocol.doSubscribe(consumerInfo, topicName, requestedQoS);
+        return doSubscribe(consumerInfo, topicName, requestedQoS);
     }
 
     @Override
@@ -120,27 +120,31 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         if (mqttSubscription.getDestination().isTopic()) {
             super.onReSubscribe(mqttSubscription);
         } else {
-            protocol.doUnSubscribe(mqttSubscription);
+            doUnSubscribe(mqttSubscription);
             ConsumerInfo consumerInfo = mqttSubscription.getConsumerInfo();
-            consumerInfo.setConsumerId(protocol.getNextConsumerId());
-            protocol.doSubscribe(consumerInfo, mqttSubscription.getTopicName(), mqttSubscription.getQoS());
+            consumerInfo.setConsumerId(getNextConsumerId());
+            doSubscribe(consumerInfo, mqttSubscription.getTopicName(), mqttSubscription.getQoS());
         }
     }
 
     @Override
-    public void onUnSubscribe(MQTTSubscription subscription) throws MQTTProtocolException {
-        if (subscription.getDestination().isQueue()) {
-            DestinationInfo remove = new DestinationInfo();
-            remove.setConnectionId(protocol.getConnectionId());
-            remove.setDestination(subscription.getDestination());
-            remove.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
+    public void onUnSubscribe(String topicName) throws MQTTProtocolException {
+        MQTTSubscription subscription = mqttSubscriptionByTopic.remove(topicName);
+        if (subscription != null) {
+            doUnSubscribe(subscription);
+            if (subscription.getDestination().isQueue()) {
+                DestinationInfo remove = new DestinationInfo();
+                remove.setConnectionId(protocol.getConnectionId());
+                remove.setDestination(subscription.getDestination());
+                remove.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
 
-            protocol.sendToActiveMQ(remove, new ResponseHandler() {
-                @Override
-                public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
-                    // ignore failures..
-                }
-            });
+                protocol.sendToActiveMQ(remove, new ResponseHandler() {
+                    @Override
+                    public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                        // ignore failures..
+                    }
+                });
+            }
         }
     }
 
@@ -203,13 +207,13 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                 QoS qoS = QoS.valueOf(qosString);
                 LOG.trace("Restoring subscription: {}:{}", topicName, qoS);
 
-                ConsumerInfo consumerInfo = new ConsumerInfo(protocol.getNextConsumerId());
+                ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
                 consumerInfo.setDestination(queue);
                 consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
                 consumerInfo.setRetroactive(true);
                 consumerInfo.setDispatchAsync(true);
 
-                protocol.doSubscribe(consumerInfo, topicName, qoS);
+                doSubscribe(consumerInfo, topicName, qoS);
 
                 // mark this durable subscription as restored by Broker
                 restoredQueues.add(queue);

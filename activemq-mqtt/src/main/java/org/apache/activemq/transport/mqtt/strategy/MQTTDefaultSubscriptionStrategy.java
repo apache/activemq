@@ -68,7 +68,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
     public byte onSubscribe(String topicName, QoS requestedQoS) throws MQTTProtocolException {
         ActiveMQDestination destination = new ActiveMQTopic(MQTTProtocolSupport.convertMQTTToActiveMQ(topicName));
 
-        ConsumerInfo consumerInfo = new ConsumerInfo(protocol.getNextConsumerId());
+        ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         consumerInfo.setDestination(destination);
         consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
         consumerInfo.setRetroactive(true);
@@ -78,7 +78,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
             consumerInfo.setSubscriptionName(requestedQoS + ":" + topicName);
         }
 
-        return protocol.doSubscribe(consumerInfo, topicName, requestedQoS);
+        return doSubscribe(consumerInfo, topicName, requestedQoS);
     }
 
     @Override
@@ -96,22 +96,27 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
     }
 
     @Override
-    public void onUnSubscribe(MQTTSubscription subscription) throws MQTTProtocolException {
-        // check if the durable sub also needs to be removed
-        if (subscription.getConsumerInfo().getSubscriptionName() != null) {
-            // also remove it from restored durable subscriptions set
-            restoredSubs.remove(MQTTProtocolSupport.convertMQTTToActiveMQ(subscription.getTopicName()));
+    public void onUnSubscribe(String topicName) throws MQTTProtocolException {
+        MQTTSubscription subscription = mqttSubscriptionByTopic.remove(topicName);
+        if (subscription != null) {
+            doUnSubscribe(subscription);
 
-            RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
-            rsi.setConnectionId(protocol.getConnectionId());
-            rsi.setSubscriptionName(subscription.getConsumerInfo().getSubscriptionName());
-            rsi.setClientId(protocol.getClientId());
-            protocol.sendToActiveMQ(rsi, new ResponseHandler() {
-                @Override
-                public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
-                    // ignore failures..
-                }
-            });
+            // check if the durable sub also needs to be removed
+            if (subscription.getConsumerInfo().getSubscriptionName() != null) {
+                // also remove it from restored durable subscriptions set
+                restoredSubs.remove(MQTTProtocolSupport.convertMQTTToActiveMQ(subscription.getTopicName()));
+
+                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                rsi.setConnectionId(protocol.getConnectionId());
+                rsi.setSubscriptionName(subscription.getConsumerInfo().getSubscriptionName());
+                rsi.setClientId(protocol.getClientId());
+                protocol.sendToActiveMQ(rsi, new ResponseHandler() {
+                    @Override
+                    public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                        // ignore failures..
+                    }
+                });
+            }
         }
     }
 
@@ -140,7 +145,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
                 String name = sub.getSubcriptionName();
                 String[] split = name.split(":", 2);
                 QoS qoS = QoS.valueOf(split[0]);
-                protocol.onSubscribe(new Topic(split[1], qoS));
+                onSubscribe(new Topic(split[1], qoS));
                 // mark this durable subscription as restored by Broker
                 restoredSubs.add(split[1]);
             }

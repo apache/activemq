@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.transport.mqtt.strategy;
 
+import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -30,9 +32,18 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
 import org.apache.activemq.transport.mqtt.MQTTProtocolException;
 import org.apache.activemq.transport.mqtt.MQTTSubscription;
+import org.apache.activemq.transport.mqtt.ResponseHandler;
+import org.apache.activemq.util.LongSequenceGenerator;
+import org.fusesource.mqtt.client.QoS;
+import org.fusesource.mqtt.client.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract implementation of the {@link MQTTSubscriptionStrategy} interface providing
@@ -40,8 +51,17 @@ import org.apache.activemq.transport.mqtt.MQTTSubscription;
  */
 public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscriptionStrategy, BrokerServiceAware {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractMQTTSubscriptionStrategy.class);
+
+    private static final byte SUBSCRIBE_ERROR = (byte) 0x80;
+
     protected MQTTProtocolConverter protocol;
     protected BrokerService brokerService;
+
+    protected final ConcurrentHashMap<ConsumerId, MQTTSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, MQTTSubscription>();
+    protected final ConcurrentHashMap<String, MQTTSubscription> mqttSubscriptionByTopic = new ConcurrentHashMap<String, MQTTSubscription>();
+
+    protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
 
     @Override
     public void initialize(MQTTProtocolConverter protocol) throws MQTTProtocolException {
@@ -61,6 +81,34 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
     @Override
     public MQTTProtocolConverter getProtocolConverter() {
         return protocol;
+    }
+
+    @Override
+    public byte onSubscribe(final Topic topic) throws MQTTProtocolException {
+
+        final String destinationName = topic.name().toString();
+        final QoS requestedQoS = topic.qos();
+
+        final MQTTSubscription mqttSubscription = mqttSubscriptionByTopic.get(destinationName);
+        if (mqttSubscription != null) {
+            if (requestedQoS != mqttSubscription.getQoS()) {
+                // remove old subscription as the QoS has changed
+                onUnSubscribe(destinationName);
+            } else {
+                try {
+                    onReSubscribe(mqttSubscription);
+                } catch (IOException e) {
+                    throw new MQTTProtocolException("Failed to find subscription strategy", true, e);
+                }
+                return (byte) requestedQoS.ordinal();
+            }
+        }
+
+        try {
+            return onSubscribe(destinationName, requestedQoS);
+        } catch (IOException e) {
+            throw new MQTTProtocolException("Failed while intercepting subscribe", true, e);
+        }
     }
 
     @Override
@@ -125,5 +173,62 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
     @Override
     public boolean isControlTopic(ActiveMQDestination destination) {
         return destination.getPhysicalName().startsWith("$");
+    }
+
+    @Override
+    public MQTTSubscription getSubscription(ConsumerId consumerId) {
+        return subscriptionsByConsumerId.get(consumerId);
+    }
+
+    protected ConsumerId getNextConsumerId() {
+        return new ConsumerId(protocol.getSessionId(), consumerIdGenerator.getNextSequenceId());
+    }
+
+    protected byte doSubscribe(ConsumerInfo consumerInfo, final String topicName, final QoS qoS) throws MQTTProtocolException {
+
+        MQTTSubscription mqttSubscription = new MQTTSubscription(protocol, topicName, qoS, consumerInfo);
+
+        // optimistic add to local maps first to be able to handle commands in onActiveMQCommand
+        subscriptionsByConsumerId.put(consumerInfo.getConsumerId(), mqttSubscription);
+        mqttSubscriptionByTopic.put(topicName, mqttSubscription);
+
+        final byte[] qos = {-1};
+        protocol.sendToActiveMQ(consumerInfo, new ResponseHandler() {
+            @Override
+            public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                // validate subscription request
+                if (response.isException()) {
+                    final Throwable throwable = ((ExceptionResponse) response).getException();
+                    LOG.warn("Error subscribing to {}", topicName, throwable);
+                    qos[0] = SUBSCRIBE_ERROR;
+                } else {
+                    qos[0] = (byte) qoS.ordinal();
+                }
+            }
+        });
+
+        if (qos[0] == SUBSCRIBE_ERROR) {
+            // remove from local maps if subscribe failed
+            subscriptionsByConsumerId.remove(consumerInfo.getConsumerId());
+            mqttSubscriptionByTopic.remove(topicName);
+        }
+
+        return qos[0];
+    }
+
+    public void doUnSubscribe(MQTTSubscription subscription) {
+        mqttSubscriptionByTopic.remove(subscription.getTopicName());
+        ConsumerInfo info = subscription.getConsumerInfo();
+        if (info != null) {
+            subscriptionsByConsumerId.remove(info.getConsumerId());
+
+            RemoveInfo removeInfo = info.createRemoveCommand();
+            protocol.sendToActiveMQ(removeInfo, new ResponseHandler() {
+                @Override
+                public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                    // ignore failures..
+                }
+            });
+        }
     }
 }
