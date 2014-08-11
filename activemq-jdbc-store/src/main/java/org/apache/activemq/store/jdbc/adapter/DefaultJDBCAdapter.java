@@ -120,7 +120,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     }
                 }
             }
-            c.getConnection().commit();
+
+            // if autoCommit used do not call commit
+            if(!c.getConnection().getAutoCommit()){
+                c.getConnection().commit();
+            }
+
         } finally {
             cleanupExclusiveLock.writeLock().unlock();
             try {
@@ -149,7 +154,10 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     JDBCPersistenceAdapter.log("Failure details: ", e);
                 }
             }
-            c.getConnection().commit();
+            // if autoCommit used do not call commit
+            if(!c.getConnection().getAutoCommit()){
+               c.getConnection().commit();
+            }
         } finally {
             cleanupExclusiveLock.writeLock().unlock();
             try {
