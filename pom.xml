@@ -117,7 +117,7 @@
     <stax2-api-version>3.0.2</stax2-api-version>
     <velocity-version>1.7</velocity-version>
     <woodstox-core-asl-version>4.2.0</woodstox-core-asl-version>
-    <xalan-version>2.7.1</xalan-version>
+    <xalan-version>2.7.2</xalan-version>
     <xmlbeans-version>2.6.0</xmlbeans-version>
     <xmlbeans-bundle-version>2.6.0_2</xmlbeans-bundle-version>
     <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
