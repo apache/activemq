@@ -17,10 +17,12 @@
 package org.apache.activemq.transport.mqtt.strategy;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
 import org.apache.activemq.transport.mqtt.MQTTProtocolException;
 import org.apache.activemq.transport.mqtt.MQTTSubscription;
 import org.fusesource.mqtt.client.QoS;
+import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.codec.CONNECT;
 
 /**
@@ -48,6 +50,19 @@ public interface MQTTSubscriptionStrategy {
      * @throws MQTTProtocolException if an error occurs while processing the connect actions.
      */
     public void onConnect(CONNECT connect) throws MQTTProtocolException;
+
+    /**
+     * Called for each Topic that a client requests to subscribe to.  The strategy needs
+     * check each Topic for duplicate subscription requests and change of QoS state.
+     *
+     * @param topic
+     *        the MQTT Topic instance being subscribed to.
+     *
+     * @return the assigned QoS value given to the new subscription.
+     *
+     * @throws MQTTProtocolException if an error occurs while processing the subscribe actions.
+     */
+    public byte onSubscribe(Topic topic) throws MQTTProtocolException;
 
     /**
      * Called when a new Subscription is being requested.  This method allows the
@@ -80,12 +95,12 @@ public interface MQTTSubscriptionStrategy {
     /**
      * Called when a client requests an un-subscribe a previous subscription.
      *
-     * @param subscription
-     *        the {@link MQTTSubscription} that is being removed.
+     * @param topicName
+     *        the name of the Topic the client wishes to unsubscribe from.
      *
      * @throws MQTTProtocolException if an error occurs during the un-subscribe processing.
      */
-    public void onUnSubscribe(MQTTSubscription subscription) throws MQTTProtocolException;
+    public void onUnSubscribe(String topicName) throws MQTTProtocolException;
 
     /**
      * Intercepts PUBLISH operations from the client and allows the strategy to map the
@@ -135,5 +150,15 @@ public interface MQTTSubscriptionStrategy {
      * @return the {@link MQTTProtocolConverter} that owns this strategy.
      */
     public MQTTProtocolConverter getProtocolConverter();
+
+    /**
+     * Lookup an {@link MQTTSubscription} instance based on known {@link ConsumerId} value.
+     *
+     * @param consumer
+     *        the consumer ID to lookup.
+     *
+     * @return the {@link MQTTSubscription} for the consumer or null if no subscription exists.
+     */
+    public MQTTSubscription getSubscription(ConsumerId consumer);
 
 }
