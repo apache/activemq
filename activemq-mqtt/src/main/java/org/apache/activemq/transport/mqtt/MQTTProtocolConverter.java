@@ -88,7 +88,7 @@ public class MQTTProtocolConverter {
 
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
-    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD= 0.5;
+    private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD = 0.5;
     static final int DEFAULT_CACHE_SIZE = 5000;
 
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
@@ -114,11 +114,12 @@ public class MQTTProtocolConverter {
     private String clientId;
     private long defaultKeepAlive;
     private int activeMQSubscriptionPrefetch = 1;
-    protected static final String QOS_PROPERTY_NAME = "ActiveMQ.MQTT.QoS";
+    private static final String QOS_PROPERTY_NAME = "ActiveMQ.MQTT.QoS";
     private final MQTTPacketIdGenerator packetIdGenerator;
     private boolean publishDollarTopics;
 
     private final FactoryFinder STRATAGY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/strategies/");
+
     /*
      * Subscription strategy configuration element.
      *   > mqtt-default-subscriptions
@@ -146,7 +147,7 @@ public class MQTTProtocolConverter {
         if (command instanceof ActiveMQMessage) {
             ActiveMQMessage msg = (ActiveMQMessage) command;
             try {
-                if (!getPublishDollarTopics() && getSubscriptionStrategy().isControlTopic(msg.getDestination())) {
+                if (!getPublishDollarTopics() && findSubscriptionStrategy().isControlTopic(msg.getDestination())) {
                     // We don't allow users to send to $ prefixed topics to avoid failing MQTT 3.1.1
                     // specification requirements for system assigned destinations.
                     if (handler != null) {
@@ -322,7 +323,7 @@ public class MQTTProtocolConverter {
                             packetIdGenerator.startClientSession(getClientId());
                         }
 
-                        getSubscriptionStrategy().onConnect(connect);
+                        findSubscriptionStrategy().onConnect(connect);
                     }
                 });
             }
@@ -345,7 +346,7 @@ public class MQTTProtocolConverter {
             byte[] qos = new byte[topics.length];
             for (int i = 0; i < topics.length; i++) {
                 try {
-                    qos[i] = getSubscriptionStrategy().onSubscribe(topics[i]);
+                    qos[i] = findSubscriptionStrategy().onSubscribe(topics[i]);
                 } catch (IOException e) {
                     throw new MQTTProtocolException("Failed to process subscription request", true, e);
                 }
@@ -369,7 +370,7 @@ public class MQTTProtocolConverter {
         if (topics != null) {
             for (UTF8Buffer topic : topics) {
                 try {
-                    getSubscriptionStrategy().onUnSubscribe(topic.toString());
+                    findSubscriptionStrategy().onUnSubscribe(topic.toString());
                 } catch (IOException e) {
                     throw new MQTTProtocolException("Failed to process unsubscribe request", true, e);
                 }
@@ -398,7 +399,7 @@ public class MQTTProtocolConverter {
             }
         } else if (command.isMessageDispatch()) {
             MessageDispatch md = (MessageDispatch) command;
-            MQTTSubscription sub = getSubscriptionStrategy().getSubscription(md.getConsumerId());
+            MQTTSubscription sub = findSubscriptionStrategy().getSubscription(md.getConsumerId());
             if (sub != null) {
                 MessageAck ack = sub.createMessageAck(md);
                 PUBLISH publish = sub.createPublish((ActiveMQMessage) md.getMessage());
@@ -502,7 +503,7 @@ public class MQTTProtocolConverter {
                 String topicName = MQTTProtocolSupport.convertMQTTToActiveMQ(command.topicName().toString());
 
                 try {
-                    destination = getSubscriptionStrategy().onSend(topicName);
+                    destination = findSubscriptionStrategy().onSend(topicName);
                 } catch (IOException e) {
                     throw JMSExceptionSupport.create(e);
                 }
@@ -536,7 +537,7 @@ public class MQTTProtocolConverter {
         synchronized (mqttTopicMap) {
             topicName = mqttTopicMap.get(message.getJMSDestination());
             if (topicName == null) {
-                String amqTopicName = getSubscriptionStrategy().onSend(message.getDestination());
+                String amqTopicName = findSubscriptionStrategy().onSend(message.getDestination());
                 topicName = MQTTProtocolSupport.convertActiveMQToMQTT(amqTopicName);
                 mqttTopicMap.put(message.getJMSDestination(), topicName);
             }
@@ -766,11 +767,11 @@ public class MQTTProtocolConverter {
         return this.connect.cleanSession();
     }
 
-    public String getSubscriptionStrategyName() {
+    public String getSubscriptionStrategy() {
         return subscriptionStrategyName;
     }
 
-    public void setSubscriptionStrategyName(String name) {
+    public void setSubscriptionStrategy(String name) {
         this.subscriptionStrategyName = name;
     }
 
@@ -785,7 +786,7 @@ public class MQTTProtocolConverter {
         return clientId;
     }
 
-    protected MQTTSubscriptionStrategy getSubscriptionStrategy() throws IOException {
+    protected MQTTSubscriptionStrategy findSubscriptionStrategy() throws IOException {
         if (subsciptionStrategy == null) {
             synchronized (STRATAGY_FINDER) {
                 if (subsciptionStrategy != null) {

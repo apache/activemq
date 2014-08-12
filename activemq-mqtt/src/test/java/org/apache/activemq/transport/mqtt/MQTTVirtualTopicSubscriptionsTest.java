@@ -28,7 +28,7 @@ public class MQTTVirtualTopicSubscriptionsTest extends MQTTTest {
     @Override
     @Before
     public void setUp() throws Exception {
-        protocolConfig = "transport.subscriptionStrategyName=mqtt-virtual-topic-subscriptions";
+        protocolConfig = "transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
         super.setUp();
     }
 

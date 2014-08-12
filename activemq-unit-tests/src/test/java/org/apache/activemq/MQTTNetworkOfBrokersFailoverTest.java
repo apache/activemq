@@ -16,6 +16,19 @@
  */
 package org.apache.activemq;
 
+import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -26,19 +39,15 @@ import org.apache.activemq.network.NetworkTestSupport;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.commons.lang.ArrayUtils;
 import org.fusesource.hawtdispatch.Dispatch;
-import org.fusesource.mqtt.client.*;
+import org.fusesource.mqtt.client.BlockingConnection;
+import org.fusesource.mqtt.client.MQTT;
+import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
+import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import javax.jms.Message;
-import javax.management.ObjectName;
-import java.net.URI;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ceposta
@@ -50,6 +59,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
     private int localBrokerMQTTPort = -1;
     private int remoteBrokerMQTTPort = -1;
 
+    @Override
     protected void setUp() throws Exception {
         useJmx=true;
         super.setUp();
@@ -65,6 +75,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         assertFalse(remoteBrokerMQTTPort == -1);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         if (remoteBroker.isStarted()) {
             remoteBroker.stop();
@@ -87,7 +98,6 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         // even happens. we do that with advisory messages and a latch:
         CountDownLatch consumerNetworked = listenForConsumersOn(broker);
 
-
         // create a subscription with Clean == 0 (durable sub for QoS==1 && QoS==2)
         // on the remote broker. this sub should still be there after we disconnect
         MQTT remoteMqtt = createMQTTTcpConnection("foo", false, remoteBrokerMQTTPort);
@@ -99,7 +109,6 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         assertQueueExistsOn(remoteBroker, "Consumer.foo_AT_LEAST_ONCE.VirtualTopic.foo.bar");
         assertQueueExistsOn(broker, "Consumer.foo_AT_LEAST_ONCE.VirtualTopic.foo.bar");
         remoteConn.disconnect();
-
 
         // now we reconnect the same sub on the local broker, again with clean==0
         MQTT localMqtt = createMQTTTcpConnection("foo", false, localBrokerMQTTPort);
@@ -126,9 +135,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         // would effectively give us duplicates in a distributed topic scenario:
         remoteConn.subscribe(new Topic[]{new Topic("foo/bar", QoS.AT_LEAST_ONCE)});
         msg = remoteConn.receive(500, TimeUnit.MILLISECONDS);
-        assertNull("We have duplicate messages across the cluster for a distributed topic",
-                msg);
-
+        assertNull("We have duplicate messages across the cluster for a distributed topic", msg);
     }
 
     private CountDownLatch listenForConsumersOn(BrokerService broker) throws Exception {
@@ -161,7 +168,6 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
             }
         });
 
-
         return latch;
     }
 
@@ -173,6 +179,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         assertTrue(queueNames[0].toString().contains(queueName));
     }
 
+    @SuppressWarnings("unused")
     private void assertOneDurableSubOn(BrokerService broker, String subName) throws Exception {
         BrokerViewMBean brokerView = broker.getAdminView();
         ObjectName[] activeDurableSubs = brokerView.getDurableTopicSubscribers();
@@ -186,7 +193,6 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
 
         assertEquals(subName, durableSubView.getClientId());
     }
-
 
     @Override
     protected BrokerService createBroker() throws Exception {
@@ -212,7 +218,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
     }
 
     private String getDefaultMQTTTransportConnectorUri(){
-        return "mqtt://localhost:0?transport.subscriptionStrategyName=mqtt-virtual-topic-subscriptions";
+        return "mqtt://localhost:0?transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
     }
 
     private MQTT createMQTTTcpConnection(String clientId, boolean clean, int port) throws Exception {
@@ -246,5 +252,4 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
             }
         };
     }
-
 }
