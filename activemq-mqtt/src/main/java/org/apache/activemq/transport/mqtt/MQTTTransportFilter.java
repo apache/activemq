@@ -211,12 +211,12 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
         protocolConverter.setPublishDollarTopics(publishDollarTopics);
     }
 
-    public String getSubscriptionStrategyName() {
-        return protocolConverter != null ? protocolConverter.getSubscriptionStrategyName() : "default";
+    public String getSubscriptionStrategy() {
+        return protocolConverter != null ? protocolConverter.getSubscriptionStrategy() : "default";
     }
 
-    public void setSubscriptionStrategyName(String name) {
-        protocolConverter.setSubscriptionStrategyName(name);
+    public void setSubscriptionStrategy(String name) {
+        protocolConverter.setSubscriptionStrategy(name);
     }
 
     public int getActiveMQSubscriptionPrefetch() {
