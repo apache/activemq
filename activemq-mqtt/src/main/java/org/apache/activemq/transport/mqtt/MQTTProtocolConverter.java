@@ -86,6 +86,8 @@ public class MQTTProtocolConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTProtocolConverter.class);
 
+    public static final String QOS_PROPERTY_NAME = "ActiveMQ.MQTT.QoS";
+
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
     private static final double MQTT_KEEP_ALIVE_GRACE_PERIOD = 0.5;
@@ -114,7 +116,6 @@ public class MQTTProtocolConverter {
     private String clientId;
     private long defaultKeepAlive;
     private int activeMQSubscriptionPrefetch = 1;
-    private static final String QOS_PROPERTY_NAME = "ActiveMQ.MQTT.QoS";
     private final MQTTPacketIdGenerator packetIdGenerator;
     private boolean publishDollarTopics;
 
