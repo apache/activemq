@@ -415,6 +415,23 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
     }
 
     /**
+     * @return the currently configured location of the KahaDB index files.
+     */
+    public File getIndexDirectory() {
+        return this.letter.getIndexDirectory();
+    }
+
+    /**
+     * Sets the directory where KahaDB index files should be written.
+     *
+     * @param indexDirectory
+     *        the directory where the KahaDB store index files should be written.
+     */
+    public void setIndexDirectory(File indexDirectory) {
+        this.letter.setIndexDirectory(indexDirectory);
+    }
+
+    /**
      * Get the enableJournalDiskSyncs
      *
      * @return the enableJournalDiskSyncs
