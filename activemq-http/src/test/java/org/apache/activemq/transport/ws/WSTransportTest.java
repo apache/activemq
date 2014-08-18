@@ -17,6 +17,8 @@
 
 package org.apache.activemq.transport.ws;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
@@ -46,8 +48,6 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.assertTrue;
 
 public class WSTransportTest {
 
@@ -137,13 +137,21 @@ public class WSTransportTest {
         } catch(Exception e) {
             // Some tests explicitly disconnect from stomp so can ignore
         } finally {
-            stopBroker();
+            try {
+                stopBroker();
+            } catch (Exception e) {
+                LOG.warn("Error on Broker stop.");
+            }
             if (driver != null) {
-                driver.quit();
+                try {
+                    driver.quit();
+                } catch (Exception e) {}
                 driver = null;
             }
             if (server != null) {
-                server.stop();
+                try {
+                    server.stop();
+                } catch (Exception e) {}
             }
         }
     }
@@ -250,6 +258,7 @@ public class WSTransportTest {
 
             assertTrue("Should have disconnected", Wait.waitFor(new Wait.Condition() {
 
+                @Override
                 public boolean isSatisified() throws Exception {
                     return webStatus.getText().equals("Disconnected");
                 }
