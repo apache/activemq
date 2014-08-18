@@ -16,6 +16,21 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -27,14 +42,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jms.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.Assert.assertTrue;
 
 public class AMQ4368Test {
 
@@ -74,6 +81,8 @@ public class AMQ4368Test {
         kahadb.deleteAllMessages();
         broker.setPersistenceAdapter(kahadb);
         broker.getSystemUsage().getMemoryUsage().setLimit(1024*1024*100);
+        broker.setUseJmx(false);
+
         return broker;
     }
 
