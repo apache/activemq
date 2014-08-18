@@ -30,22 +30,21 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 
 /**
- *
  * Factory for Secure WebSocket (wss) transport
- *
  */
 public class WSSTransportFactory extends TransportFactory {
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSSTransportServer result = new WSSTransportServer(location, SslContext.getCurrentSslContext());
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
+            IntrospectionSupport.setProperties(result, transportOptions);
             result.setTransportOption(transportOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
-
 }

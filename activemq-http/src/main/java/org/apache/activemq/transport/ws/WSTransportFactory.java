@@ -28,23 +28,23 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
+
 /**
- * 
  * Factory for WebSocket (ws) transport
- *
  */
 public class WSTransportFactory extends TransportFactory {
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
             WSTransportServer result = new WSTransportServer(location);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
+            IntrospectionSupport.setProperties(result, transportOptions);
             result.setTransportOption(transportOptions);
             return result;
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
-
 }
