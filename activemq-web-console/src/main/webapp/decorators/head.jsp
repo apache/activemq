@@ -17,7 +17,7 @@
     limitations under the License.
 --%>
 
-    <title>${requestContext.brokerQuery.brokerAdmin.brokerName} : ${pageTitle}</title>
+    <title><c:out value="${requestContext.brokerQuery.brokerAdmin.brokerName} : ${pageTitle}" /></title>
 
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <style type="text/css" media="screen">
