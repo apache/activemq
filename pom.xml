@@ -1093,6 +1093,7 @@
   </dependencyManagement>
 
   <build>
+    <defaultGoal>test</defaultGoal>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -1513,14 +1514,6 @@
           </plugin>
         </plugins>
       </build>
-      <pluginRepositories>
-        <pluginRepository>
-          <id>com.fusesource.m2</id>
-          <url>http://repo.fusesource.com/nexus/content/groups/public/</url>
-          <releases><enabled>true</enabled></releases>
-          <snapshots><enabled>false</enabled></snapshots>
-        </pluginRepository>
-      </pluginRepositories>
     </profile>
 
     <profile>
@@ -1608,24 +1601,4 @@
       </build>
     </profile>
   </profiles>
-
-  <repositories>
-    <!-- for the paho dependency -->
-    <repository>
-      <id>eclipse.m2</id>
-      <url>https://repo.eclipse.org/content/groups/releases/</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-
-    <!-- for the patched proton build: http://is.gd/WjuHvH -->
-    <repository>
-      <id>jboss.org-fs-releases</id>
-      <url>https://repository.jboss.org/nexus/content/repositories/fs-releases/</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-
-  </repositories>
-
 </project>
