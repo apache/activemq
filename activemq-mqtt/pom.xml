@@ -278,5 +278,15 @@
           </build>
       </profile>
   </profiles>
+  
+  <repositories>
+      <!-- for the paho dependency -->
+      <repository>
+          <id>eclipse.m2</id>
+          <url>https://repo.eclipse.org/content/groups/releases/</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+      </repository>
+  </repositories>
 
 </project>
