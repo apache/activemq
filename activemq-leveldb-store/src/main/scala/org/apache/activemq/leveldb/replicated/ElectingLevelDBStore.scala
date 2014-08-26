@@ -78,6 +78,10 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
 
   @BeanProperty
   var hostname: String = _
+
+  @BeanProperty
+  var connectUrl: String = _
+
   @BeanProperty
   var bind = "tcp://0.0.0.0:61619"
 
@@ -371,10 +375,14 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   }
 
   def address(port: Int) = {
-    if (hostname == null) {
-      hostname = machine_hostname
+    if( connectUrl==null ) {
+      if (hostname == null) {
+        hostname = machine_hostname
+      }
+      "tcp://" + hostname + ":" + port
+    } else {
+      connectUrl;
     }
-    "tcp://" + hostname + ":" + port
   }
 
   override def size: Long = {
