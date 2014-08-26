@@ -16,34 +16,33 @@
  */
 package org.apache.activemq.filter;
 
-import java.io.StringReader;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
-import org.apache.activemq.command.Message;
-import org.apache.activemq.util.ByteArrayInputStream;
-
-import org.xml.sax.InputSource;
+import java.io.StringReader;
 
 public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
 
     private static final XPathFactory FACTORY = XPathFactory.newInstance();
-    private final javax.xml.xpath.XPathExpression expression;
     private final String xpathExpression;
+    private final DocumentBuilder builder;
+    private final XPath xpath = FACTORY.newXPath();
 
-    public XalanXPathEvaluator(String xpathExpression) {
+    public XalanXPathEvaluator(String xpathExpression, DocumentBuilder builder) throws Exception {
         this.xpathExpression = xpathExpression;
-        try {
-            XPath xpath = FACTORY.newXPath();
-            expression = xpath.compile(xpathExpression);
-        } catch (XPathExpressionException e) {
-            throw new RuntimeException("Invalid XPath expression: " + xpathExpression);
+        if (builder != null) {
+            this.builder = builder;
+        } else {
+            throw new RuntimeException("No document builder available");
         }
     }
 
@@ -63,8 +62,9 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
     private boolean evaluate(byte[] data) {
         try {
             InputSource inputSource = new InputSource(new ByteArrayInputStream(data));
-            return ((Boolean)expression.evaluate(inputSource, XPathConstants.BOOLEAN)).booleanValue();
-        } catch (XPathExpressionException e) {
+            Document inputDocument = builder.parse(inputSource);
+            return ((Boolean) xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN)).booleanValue();
+        } catch (Exception e) {
             return false;
         }
     }
@@ -72,8 +72,9 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
     private boolean evaluate(String text) {
         try {
             InputSource inputSource = new InputSource(new StringReader(text));
-            return ((Boolean)expression.evaluate(inputSource, XPathConstants.BOOLEAN)).booleanValue();
-        } catch (XPathExpressionException e) {
+            Document inputDocument = builder.parse(inputSource);
+            return ((Boolean) xpath.evaluate(xpathExpression, inputDocument, XPathConstants.BOOLEAN)).booleanValue();
+        } catch (Exception e) {
             return false;
         }
     }
