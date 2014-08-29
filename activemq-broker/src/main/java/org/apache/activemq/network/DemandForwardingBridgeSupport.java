@@ -107,7 +107,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected static final String DURABLE_SUB_PREFIX = "NC-DS_";
     protected final Transport localBroker;
     protected final Transport remoteBroker;
-    protected IdGenerator idGenerator;
+    protected IdGenerator idGenerator = new IdGenerator();
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     protected ConnectionInfo localConnectionInfo;
     protected ConnectionInfo remoteConnectionInfo;
@@ -381,8 +381,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
             if (configuration.isUseBrokerNamesAsIdSeed()) {
                 idGenerator = new IdGenerator(brokerService.getBrokerName() + "->" + remoteBrokerName);
-            } else {
-                idGenerator = new IdGenerator();
             }
         } catch (Throwable e) {
             serviceLocalException(e);
@@ -433,10 +431,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     private void startLocalBridge() throws Throwable {
-        if (localBridgeStarted.compareAndSet(false, true)) {
+        if (!bridgeFailed.get() && localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
                 LOG.trace("{} starting local Bridge, localBroker={}", configuration.getBrokerName(), localBroker);
                 if (!disposed.get()) {
+
+                    if (idGenerator == null) {
+                        throw new IllegalStateException("Id Generator cannot be null");
+                    }
+
                     localConnectionInfo = new ConnectionInfo();
                     localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
                     localClientId = configuration.getName() + "_" + remoteBrokerName + "_inbound_" + configuration.getBrokerName();
@@ -518,7 +521,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected void startRemoteBridge() throws Exception {
-        if (remoteBridgeStarted.compareAndSet(false, true)) {
+        if (!bridgeFailed.get() && remoteBridgeStarted.compareAndSet(false, true)) {
             LOG.trace("{} starting remote Bridge, remoteBroker={}", configuration.getBrokerName(), remoteBroker);
             synchronized (this) {
                 if (!isCreatedByDuplex()) {
@@ -810,8 +813,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         } else if (data.getClass() == RemoveSubscriptionInfo.class) {
             RemoveSubscriptionInfo info = ((RemoveSubscriptionInfo) data);
             SubscriptionInfo subscriptionInfo = new SubscriptionInfo(info.getClientId(), info.getSubscriptionName());
-            for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
-                DemandSubscription ds = (DemandSubscription) i.next();
+            for (Iterator<DemandSubscription> i = subscriptionMapByLocalId.values().iterator(); i.hasNext(); ) {
+                DemandSubscription ds = i.next();
                 boolean removed = ds.getDurableRemoteSubs().remove(subscriptionInfo);
                 if (removed) {
                     if (ds.getDurableRemoteSubs().isEmpty()) {
