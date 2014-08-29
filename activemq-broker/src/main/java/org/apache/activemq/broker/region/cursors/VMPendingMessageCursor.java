@@ -97,15 +97,15 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      * @param node
      */
     
-    public synchronized void addMessageLast(MessageReference node) {
+    public synchronized boolean addMessageLast(MessageReference node) {
         node.incrementReferenceCount();
         list.addMessageLast(node);
+        return true;
     }
 
     /**
      * add message to await dispatch
      * 
-     * @param position
      * @param node
      */
     

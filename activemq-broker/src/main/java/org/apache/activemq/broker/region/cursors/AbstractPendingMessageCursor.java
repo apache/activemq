@@ -82,12 +82,12 @@ public abstract class AbstractPendingMessageCursor implements PendingMessageCurs
     public void addMessageFirst(MessageReference node) throws Exception {
     }
 
-    public void addMessageLast(MessageReference node) throws Exception {
+    public boolean addMessageLast(MessageReference node) throws Exception {
+        return true;
     }
     
     public boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
-        addMessageLast(node);
-        return true;
+        return addMessageLast(node);
     }
 
     public void addRecoveredMessage(MessageReference node) throws Exception {

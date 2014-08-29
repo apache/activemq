@@ -160,4 +160,9 @@ public class ProxyMessageStore implements MessageStore {
     public void updateMessage(Message message) throws IOException {
         delegate.updateMessage(message);
     }
+
+    @Override
+    public void registerIndexListener(IndexListener indexListener) {
+        delegate.registerIndexListener(indexListener);
+    }
 }

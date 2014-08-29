@@ -29,6 +29,7 @@ abstract public class AbstractMessageStore implements MessageStore {
     public static final ListenableFuture<Object> FUTURE;
     protected final ActiveMQDestination destination;
     protected boolean prioritizedMessages;
+    protected IndexListener indexListener;
 
     public AbstractMessageStore(ActiveMQDestination destination) {
         this.destination = destination;
@@ -114,8 +115,14 @@ abstract public class AbstractMessageStore implements MessageStore {
         removeMessage(context, ack);
     }
 
+    @Override
     public void updateMessage(Message message) throws IOException {
         throw new IOException("update is not supported by: " + this);
+    }
+
+    @Override
+    public void registerIndexListener(IndexListener indexListener) {
+        this.indexListener = indexListener;
     }
 
     static {

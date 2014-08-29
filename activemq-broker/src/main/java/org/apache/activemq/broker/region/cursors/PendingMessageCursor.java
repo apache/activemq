@@ -81,10 +81,12 @@ public interface PendingMessageCursor extends Service {
      * add message to await dispatch
      * 
      * @param node
+     * @return boolean true if successful, false if cursor traps a duplicate
      * @throws IOException
      * @throws Exception
      */
-    void addMessageLast(MessageReference node) throws Exception;
+    boolean addMessageLast(MessageReference node) throws Exception;
+
     /**
      * add message to await dispatch - if it can
      * 

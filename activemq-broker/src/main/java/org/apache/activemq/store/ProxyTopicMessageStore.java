@@ -208,4 +208,9 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
     public void updateMessage(Message message) throws IOException {
         delegate.updateMessage(message);
     }
+
+    @Override
+    public void registerIndexListener(IndexListener indexListener) {
+        delegate.registerIndexListener(indexListener);
+    }
 }

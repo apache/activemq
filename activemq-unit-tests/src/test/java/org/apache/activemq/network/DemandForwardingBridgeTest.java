@@ -106,7 +106,6 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         }));
 
         assertEquals("broker dest stat dequeues", 1, destinationStatistics.getDequeues().getCount());
-        assertEquals("remote broker dest stat dequeues", 1, remoteBroker.getDestination(destination).getDestinationStatistics().getDequeues().getCount());
     }
 
     public void initCombosForTestAddConsumerThenSend() {

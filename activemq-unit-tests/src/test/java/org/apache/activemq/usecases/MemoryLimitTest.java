@@ -123,7 +123,7 @@ public class MemoryLimitTest extends TestSupport {
 
         // consume one message
         MessageConsumer consumer = sess.createConsumer(queue);
-        Message msg = consumer.receive();
+        Message msg = consumer.receive(5000);
         msg.acknowledge();
 
         // this should free some space and allow us to get new batch of messages in the memory
@@ -132,12 +132,12 @@ public class MemoryLimitTest extends TestSupport {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("Destination usage: " + dest.getMemoryUsage());
-                return dest.getMemoryUsage().getPercentUsage() >= 478;
+                return dest.getMemoryUsage().getPercentUsage() >= 470;
             }
         }));
 
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
-        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 478);
+        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 470);
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {
