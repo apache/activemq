@@ -195,4 +195,6 @@ public interface MessageStore extends Service {
     public boolean isPrioritizedMessages();
 
     void updateMessage(Message message) throws IOException;
+
+    void registerIndexListener(IndexListener indexListener);
 }

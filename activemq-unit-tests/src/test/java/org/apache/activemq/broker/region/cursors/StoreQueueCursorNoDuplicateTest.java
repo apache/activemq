@@ -78,6 +78,7 @@ public class StoreQueueCursorNoDuplicateTest extends TestCase {
                 queueMessageStore, destinationStatistics, null);
 
         queueMessageStore.start();
+        queueMessageStore.registerIndexListener(null);
 
         QueueStorePrefetch underTest = new QueueStorePrefetch(queue, brokerService.getBroker());
         SystemUsage systemUsage = new SystemUsage();

@@ -42,9 +42,7 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.kahadb.MessageDatabase.AddOpperation;
 import org.apache.activemq.store.kahadb.MessageDatabase.Operation;
-import org.apache.activemq.store.kahadb.MessageDatabase.RemoveOpperation;
 import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
 import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
 import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
@@ -254,7 +252,7 @@ public class KahaDBTransactionStore implements TransactionStore {
         return tx;
     }
 
-    public void commit(TransactionId txid, boolean wasPrepared, Runnable preCommit, Runnable postCommit)
+    public void commit(TransactionId txid, boolean wasPrepared, final Runnable preCommit, Runnable postCommit)
             throws IOException {
         if (txid != null) {
             if (!txid.isXATransaction() && theStore.isConcurrentStoreAndDispatchTransactions()) {
@@ -294,7 +292,10 @@ public class KahaDBTransactionStore implements TransactionStore {
 
             } else {
                 KahaTransactionInfo info = getTransactionInfo(txid);
-                theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), preCommit, postCommit);
+                if (preCommit != null) {
+                    preCommit.run();
+                }
+                theStore.store(new KahaCommitCommand().setTransactionInfo(info), theStore.isEnableJournalDiskSyncs(), null, postCommit);
                 forgetRecoveredAcks(txid, false);
             }
         }else {
@@ -336,13 +337,13 @@ public class KahaDBTransactionStore implements TransactionStore {
             ArrayList<MessageAck> ackList = new ArrayList<MessageAck>();
 
             for (Operation op : entry.getValue()) {
-                if (op.getClass() == AddOpperation.class) {
-                    AddOpperation addOp = (AddOpperation) op;
+                if (op.getClass() == MessageDatabase.AddOperation.class) {
+                    MessageDatabase.AddOperation addOp = (MessageDatabase.AddOperation) op;
                     Message msg = (Message) wireFormat().unmarshal(new DataInputStream(addOp.getCommand().getMessage()
                             .newInput()));
                     messageList.add(msg);
                 } else {
-                    RemoveOpperation rmOp = (RemoveOpperation) op;
+                    MessageDatabase.RemoveOperation rmOp = (MessageDatabase.RemoveOperation) op;
                     Buffer ackb = rmOp.getCommand().getAck();
                     MessageAck ack = (MessageAck) wireFormat().unmarshal(new DataInputStream(ackb.newInput()));
                     ackList.add(ack);

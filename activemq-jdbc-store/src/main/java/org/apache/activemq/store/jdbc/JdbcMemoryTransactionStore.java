@@ -108,7 +108,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
                     jdbcPersistenceAdapter.commitAdd(context, message.getMessageId());
                     ((JDBCMessageStore)addMessageCommand.getMessageStore()).onAdd(
                             message,
-                            (Long)message.getMessageId().getEntryLocator(),
+                            (Long)message.getMessageId().getFutureOrSequenceLong(),
                             message.getPriority());
 
                 }
@@ -170,7 +170,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
     public void recoverAdd(long id, byte[] messageBytes) throws IOException {
         final Message message = (Message) ((JDBCPersistenceAdapter)persistenceAdapter).getWireFormat().unmarshal(new ByteSequence(messageBytes));
-        message.getMessageId().setEntryLocator(id);
+        message.getMessageId().setFutureOrSequenceLong(id);
         Tx tx = getPreparedTx(message.getTransactionId());
         tx.add(new AddMessageCommand() {
             MessageStore messageStore;
@@ -187,7 +187,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             @Override
             public void run(ConnectionContext context) throws IOException {
                 ((JDBCPersistenceAdapter)persistenceAdapter).commitAdd(null, message.getMessageId());
-                ((JDBCMessageStore)messageStore).onAdd(message, ((Long)message.getMessageId().getEntryLocator()).longValue(), message.getPriority());
+                ((JDBCMessageStore)messageStore).onAdd(message, ((Long)message.getMessageId().getFutureOrSequenceLong()).longValue(), message.getPriority());
             }
 
             @Override
@@ -200,7 +200,7 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
 
     public void recoverAck(long id, byte[] xid, byte[] message) throws IOException {
         Message msg = (Message) ((JDBCPersistenceAdapter)persistenceAdapter).getWireFormat().unmarshal(new ByteSequence(message));
-        msg.getMessageId().setEntryLocator(id);
+        msg.getMessageId().setFutureOrSequenceLong(id);
         Tx tx = getPreparedTx(new XATransactionId(xid));
         final MessageAck ack = new MessageAck(msg, MessageAck.STANDARD_ACK_TYPE, 1);
         tx.add(new RemoveMessageCommand() {

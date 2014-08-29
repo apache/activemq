@@ -245,7 +245,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       val (msgs, acks) = db.getXAActions(transaction.xacontainer_id)
       transaction.xarecovery = (msgs, acks.map(_.ack))
       for ( msg <- msgs ) {
-        transaction.add(createMessageStore(msg.getDestination), msg, false);
+        transaction.add(createMessageStore(msg.getDestination), new IndexListener.MessageContext(null, msg, null), false);
       }
       for ( record <- acks ) {
         var ack = record.ack
@@ -348,27 +348,27 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
-    def add(store:LevelDBStore#LevelDBMessageStore, message: Message, delay:Boolean) = {
+  def add(store:LevelDBStore#LevelDBMessageStore, messageContext:IndexListener.MessageContext, delay:Boolean) = {
       commitActions += new TransactionAction() {
         def commit(uow:DelayableUOW) = {
           if( prepared ) {
-            uow.dequeue(xacontainer_id, message.getMessageId)
+            uow.dequeue(xacontainer_id, messageContext.message.getMessageId)
           }
-          var copy = message.getMessageId.copy()
+          var copy = messageContext.message.getMessageId.copy()
           copy.setEntryLocator(null)
-          message.setMessageId(copy)
-          store.doAdd(uow, message, delay)
+          messageContext.message.setMessageId(copy)
+          store.doAdd(uow, messageContext, delay)
         }
 
         def prepare(uow:DelayableUOW) = {
           // add it to the xa container instead of the actual store container.
-          uow.enqueue(xacontainer_id, xaseqcounter.incrementAndGet, message, delay)
-          xarecovery._1 += message
+          uow.enqueue(xacontainer_id, xaseqcounter.incrementAndGet, messageContext.message, delay)
+          xarecovery._1 += messageContext.message
         }
 
         def rollback(uow:DelayableUOW) = {
           if( prepared ) {
-            uow.dequeue(xacontainer_id, message.getMessageId)
+            uow.dequeue(xacontainer_id, messageContext.message.getMessageId)
           }
         }
 
@@ -676,14 +676,19 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def cursorResetPosition = 0L
 
-    def doAdd(uow: DelayableUOW, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
+    def doAdd(uow: DelayableUOW, messageContext:IndexListener.MessageContext, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
       val seq = lastSeq.incrementAndGet()
-      message.incrementReferenceCount()
+      messageContext.message.incrementReferenceCount()
       uow.addCompleteListener({
-        message.decrementReferenceCount()
+        messageContext.message.decrementReferenceCount()
       })
-      uow.enqueue(key, seq, message, delay)
+      val future = uow.enqueue(key, seq, messageContext.message, delay)
+      messageContext.message.getMessageId.setFutureOrSequenceLong(future)
+      if (indexListener != null) {
+        indexListener.onAdd(messageContext)
+      }
+      future
     }
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
@@ -691,11 +696,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       check_running
       message.getMessageId.setEntryLocator(null)
       if(  message.getTransactionId!=null ) {
-        transaction(message.getTransactionId).add(this, message, delay)
+        transaction(message.getTransactionId).add(this, new IndexListener.MessageContext(context, message, null), delay)
         DONE
       } else {
         withUow { uow=>
-          doAdd(uow, message, delay)
+          doAdd(uow, new IndexListener.MessageContext(context, message, null), delay)
         }
       }
     }

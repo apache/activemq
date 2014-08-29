@@ -17,6 +17,7 @@
 
 package org.apache.activemq.bugs;
 
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -31,17 +32,30 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@RunWith(value = Parameterized.class)
 public class AMQ5212Test {
 
     BrokerService brokerService;
+
+    @Parameterized.Parameter(0)
+    public boolean concurrentStoreAndDispatchQ = true;
+
+    @Parameterized.Parameters(name = "concurrentStoreAndDispatch={0}")
+    public static Iterable<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{{Boolean.TRUE}, {Boolean.FALSE}});
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -53,6 +67,7 @@ public class AMQ5212Test {
         if (deleteAllMessages) {
             brokerService.deleteAllMessages();
         }
+        ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatchQ);
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setAdvisorySupport(false);
         brokerService.start();
@@ -118,6 +133,12 @@ public class AMQ5212Test {
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.MINUTES);
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return expectedTotalEnqueue == brokerService.getAdminView().getTotalEnqueueCount();
+            }
+        });
         assertEquals("total enqueue as expected", expectedTotalEnqueue, brokerService.getAdminView().getTotalEnqueueCount());
     }
 

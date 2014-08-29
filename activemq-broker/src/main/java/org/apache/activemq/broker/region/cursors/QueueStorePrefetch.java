@@ -94,6 +94,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
     
     @Override
     protected void setBatch(MessageId messageId) throws Exception {
+        LOG.trace("{}  setBatch {} loc: {}", this, messageId, messageId.getEntryLocator());
         store.setBatch(messageId);
         batchResetNeeded = false;
     }

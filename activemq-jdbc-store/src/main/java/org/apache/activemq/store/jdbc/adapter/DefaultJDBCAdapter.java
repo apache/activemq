@@ -396,7 +396,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             if (this.batchStatements) {
                 s.addBatch();
             } else if (s.executeUpdate() != 1) {
-                throw new SQLException("Failed to remove message");
+                throw new SQLException("Failed to remove message seq: " + seq);
             }
         } finally {
             cleanupExclusiveLock.readLock().unlock();
@@ -935,7 +935,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         this.batchStatements = batchStatements;
         // The next lines are deprecated and should be removed in a future release
         // and is here in case someone created their own
-        this.batchStatments = batchStatements;
+       // this.batchStatments = batchStatements;
     }
 
     // Note - remove batchStatment in future distributions.  Here for backward compatibility
@@ -1168,8 +1168,12 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
       printQuery(s,System.out); }
 
     public static void dumpTables(java.sql.Connection c) throws SQLException {
-        printQuery(c, "Select * from ACTIVEMQ_MSGS ORDER BY ID", System.out);
-        printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
+        printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_MSGS", System.out);
+
+        //printQuery(c, "SELECT COUNT(*) from ACTIVEMQ_ACKS", System.out);
+
+        //printQuery(c, "Select * from ACTIVEMQ_MSGS ORDER BY ID", System.out);
+        //printQuery(c, "Select * from ACTIVEMQ_ACKS", System.out);
     }
 
     public static void printQuery(java.sql.Connection c, String query, java.io.PrintStream out)

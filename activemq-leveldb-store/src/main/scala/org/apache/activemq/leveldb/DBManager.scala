@@ -104,6 +104,7 @@ class CountDownFuture[T <: AnyRef]() extends ListenableFuture[T] {
   var value:T = _
   var error:Throwable = _
   var listener:Runnable = _
+  var id:MessageId = _
 
   def cancel(mayInterruptIfRunning: Boolean) = false
   def isCancelled = false
@@ -115,6 +116,9 @@ class CountDownFuture[T <: AnyRef]() extends ListenableFuture[T] {
 
   def set(v:T) = {
     value = v
+    if (id != null) {
+      id.setFutureOrSequenceLong(id.getEntryLocator.asInstanceOf[EntryLocator].seq)
+    }
     latch.countDown()
     fireListener
   }
@@ -326,6 +330,8 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     val entry = QueueEntryRecord(id, queueKey, queueSeq)
     assert(id.getEntryLocator == null)
     id.setEntryLocator(EntryLocator(queueKey, queueSeq))
+    id.setFutureOrSequenceLong(countDownFuture)
+    countDownFuture.id = id
 
     val a = this.synchronized {
       if( !delay )
