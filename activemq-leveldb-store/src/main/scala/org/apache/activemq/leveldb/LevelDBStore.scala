@@ -684,7 +684,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
         messageContext.message.decrementReferenceCount()
       })
       val future = uow.enqueue(key, seq, messageContext.message, delay)
-      messageContext.message.getMessageId.setFutureOrSequenceLong(future)
       if (indexListener != null) {
         indexListener.onAdd(messageContext)
       }

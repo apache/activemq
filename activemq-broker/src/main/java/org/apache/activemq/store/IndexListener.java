@@ -25,9 +25,9 @@ import org.apache.activemq.command.Message;
 public interface IndexListener {
 
     final class MessageContext {
-        public Message message;
-        public ConnectionContext context;
-        public Runnable onCompletion;
+        public final Message message;
+        public final ConnectionContext context;
+        public final Runnable onCompletion;
         public boolean duplicate;
 
         public MessageContext(ConnectionContext context, Message message, Runnable onCompletion) {

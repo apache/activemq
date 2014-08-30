@@ -797,6 +797,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         CursorAddSync(MessageContext messageContext) {
             this.messageContext = messageContext;
+            this.messageContext.message.incrementReferenceCount();
         }
 
         @Override
