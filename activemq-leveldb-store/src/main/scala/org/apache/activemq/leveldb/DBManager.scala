@@ -330,8 +330,13 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     val entry = QueueEntryRecord(id, queueKey, queueSeq)
     assert(id.getEntryLocator == null)
     id.setEntryLocator(EntryLocator(queueKey, queueSeq))
-    id.setFutureOrSequenceLong(countDownFuture)
-    countDownFuture.id = id
+    if (message.getTransactionId!=null) {
+        // why does future not get set in tx?
+       id.setFutureOrSequenceLong(queueSeq)
+    } else {
+      id.setFutureOrSequenceLong(countDownFuture)
+      countDownFuture.id = id
+    }
 
     val a = this.synchronized {
       if( !delay )
