@@ -58,7 +58,7 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
-import org.apache.qpid.proton.ProtonFactoryLoader;
+import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -82,8 +82,8 @@ import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
-import org.apache.qpid.proton.engine.EngineFactory;
 import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.Event.Type.*;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sasl;
@@ -91,7 +91,6 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.CollectorImpl;
-import org.apache.qpid.proton.engine.impl.EngineFactoryImpl;
 import org.apache.qpid.proton.engine.impl.ProtocolTracer;
 import org.apache.qpid.proton.engine.impl.TransportImpl;
 import org.apache.qpid.proton.framing.TransportFrame;
@@ -103,7 +102,6 @@ import org.apache.qpid.proton.jms.InboundTransformer;
 import org.apache.qpid.proton.jms.JMSMappingInboundTransformer;
 import org.apache.qpid.proton.jms.OutboundTransformer;
 import org.apache.qpid.proton.message.Message;
-import org.apache.qpid.proton.message.MessageFactory;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.ByteArrayOutputStream;
 import org.slf4j.Logger;
@@ -120,13 +118,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
-    private static final ProtonFactoryLoader<MessageFactory> messageFactoryLoader = new ProtonFactoryLoader<MessageFactory>(MessageFactory.class);
-
     protected int prefetch = 100;
-    protected EngineFactory engineFactory = new EngineFactoryImpl();
-    protected Transport protonTransport = engineFactory.createTransport();
-    protected Connection protonConnection = engineFactory.createConnection();
-    protected MessageFactory messageFactory = messageFactoryLoader.loadFactory();
+    protected Transport protonTransport = Proton.transport();
+    protected Connection protonConnection = Proton.connection();
     protected Collector eventCollector = new CollectorImpl();
 
     public AmqpProtocolConverter(AmqpTransport transport) {
@@ -266,13 +260,16 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 Event event = null;
                 while ((event = eventCollector.peek()) != null) {
                     switch (event.getType()) {
-                        case CONNECTION_REMOTE_STATE:
+                        case CONNECTION_REMOTE_OPEN:
+                        case CONNECTION_REMOTE_CLOSE:
                             processConnectionEvent(event.getConnection());
                             break;
-                        case SESSION_REMOTE_STATE:
+                        case SESSION_REMOTE_OPEN:
+                        case SESSION_REMOTE_CLOSE:
                             processSessionEvent(event.getSession());
                             break;
-                        case LINK_REMOTE_STATE:
+                        case LINK_REMOTE_OPEN:
+                        case LINK_REMOTE_CLOSE:
                             processLinkEvent(event.getLink());
                             break;
                         case LINK_FLOW:
@@ -697,7 +694,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         @Override
         protected void onMessage(Receiver receiver, final Delivery delivery, Buffer buffer) throws Exception {
 
-            Message msg = messageFactory.createMessage();
+            Message msg = Proton.message();
             int offset = buffer.offset;
             int len = buffer.length;
             while (len > 0) {
