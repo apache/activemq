@@ -46,11 +46,9 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -284,7 +282,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             assertEquals("hello + 9", ((TextMessage) msg).getText());
         }
     }
-    
+
     abstract class Testable implements Runnable {
         protected String msg;
         synchronized boolean passed() {
@@ -307,8 +305,9 @@ public class JMSClientTest extends JMSClientTestSupport {
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
         final Message m = session.createTextMessage("Sample text");
-        
+
         Testable t = new Testable() {
+            @Override
             public synchronized void run() {
                 try {
                     for (int i = 0; i < 30; ++i) {
@@ -329,7 +328,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             //wait until we know that the producer was able to send a message
             producer.wait(10000);
         }
-            
+
         stopBroker();
         assertTrue(t.passed());
     }
@@ -341,8 +340,9 @@ public class JMSClientTest extends JMSClientTestSupport {
         final Queue queue = session.createQueue(getDestinationName());
         connection.start();
 
-        
+
         Testable t = new Testable() {
+            @Override
             public synchronized void run() {
                 try {
                     for (int i = 0; i < 10; ++i) {
@@ -400,6 +400,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         final MessageConsumer consumer=session.createConsumer(queue);
         Testable t = new Testable() {
+            @Override
             public synchronized void run() {
                 try {
                     for (int i = 0; i < 10; ++i) {
@@ -414,7 +415,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                     LOG.info("Caught exception on receiveNoWait: {}", ex);
                 }
             }
-            
+
         };
         synchronized (consumer) {
             new Thread(t).start();
@@ -433,6 +434,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         final MessageConsumer consumer=session.createConsumer(queue);
         Testable t = new Testable() {
+            @Override
             public synchronized void run() {
                 try {
                     for (int i = 0; i < 10; ++i) {
@@ -464,8 +466,9 @@ public class JMSClientTest extends JMSClientTestSupport {
         connection.start();
 
         final MessageConsumer consumer=session.createConsumer(queue);
-        
+
         Testable t = new Testable() {
+            @Override
             public synchronized void run() {
                 try {
                     Message m = consumer.receive(1);
@@ -747,7 +750,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         s.createTemporaryQueue().delete();
 
         stopBroker();
-        
+
         assertTrue("No exception listener event fired.", called.await(15, TimeUnit.SECONDS));
     }
 
