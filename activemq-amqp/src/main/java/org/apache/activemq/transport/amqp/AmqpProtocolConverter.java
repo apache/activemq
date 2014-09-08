@@ -32,6 +32,7 @@ import javax.jms.InvalidSelectorException;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
@@ -53,7 +54,6 @@ import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionInfo;
-import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
@@ -83,7 +83,6 @@ import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
-import org.apache.qpid.proton.engine.Event.Type.*;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sasl;
@@ -310,6 +309,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         } else if (remoteState == EndpointState.CLOSED) {
             ((AmqpDeliveryListener) link.getContext()).onClose();
             link.close();
+            link.free();
         }
     }
 
@@ -481,6 +481,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             session.setContext(null);
         }
         session.close();
+        session.free();
     }
 
     private void onLinkOpen(Link link) {
