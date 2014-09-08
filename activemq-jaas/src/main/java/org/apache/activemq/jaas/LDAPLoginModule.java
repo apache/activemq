@@ -190,7 +190,7 @@ public class LDAPLoginModule implements LoginModule {
         try {
 
             String filter = userSearchMatchingFormat.format(new String[] {
-                username
+                doRFC2254Encoding(username)
             });
             SearchControls constraints = new SearchControls();
             if (userSearchSubtreeBool) {
@@ -319,7 +319,7 @@ public class LDAPLoginModule implements LoginModule {
             return list;
         }
         String filter = roleSearchMatchingFormat.format(new String[] {
-            doRFC2254Encoding(dn), username
+            doRFC2254Encoding(dn), doRFC2254Encoding(username)
         });
 
         SearchControls constraints = new SearchControls();
@@ -459,9 +459,14 @@ public class LDAPLoginModule implements LoginModule {
             env.put(Context.INITIAL_CONTEXT_FACTORY, getLDAPPropertyValue(INITIAL_CONTEXT_FACTORY));
             if (isLoginPropertySet(CONNECTION_USERNAME)) {
                 env.put(Context.SECURITY_PRINCIPAL, getLDAPPropertyValue(CONNECTION_USERNAME));
+            } else {
+                throw new NamingException("Empty username is not allowed");
             }
+
             if (isLoginPropertySet(CONNECTION_PASSWORD)) {
                 env.put(Context.SECURITY_CREDENTIALS, getLDAPPropertyValue(CONNECTION_PASSWORD));
+            } else {
+                throw new NamingException("Empty password is not allowed");
             }
             env.put(Context.SECURITY_PROTOCOL, getLDAPPropertyValue(CONNECTION_PROTOCOL));
             env.put(Context.PROVIDER_URL, getLDAPPropertyValue(CONNECTION_URL));
@@ -484,7 +489,7 @@ public class LDAPLoginModule implements LoginModule {
     
     private boolean isLoginPropertySet(String propertyName) {
     	for (int i=0; i < config.length; i++ ) {
-    		if (config[i].getPropertyName() == propertyName && config[i].getPropertyValue() != null)
+    		if (config[i].getPropertyName() == propertyName && (config[i].getPropertyValue() != null && !"".equals(config[i].getPropertyValue())))
     				return true;
     	}
     	return false;

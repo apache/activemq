@@ -41,7 +41,9 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @RunWith ( FrameworkRunner.class )
 @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
@@ -120,5 +122,30 @@ public class LDAPLoginModuleTest extends AbstractLdapTestUnit {
         context.login();
         context.logout();
     }
+
+    @Test
+    public void testUnauthenticated() throws LoginException {
+        LoginContext context = new LoginContext("UnAuthenticatedLDAPLogin", new CallbackHandler() {
+            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                for (int i = 0; i < callbacks.length; i++) {
+                    if (callbacks[i] instanceof NameCallback) {
+                        ((NameCallback) callbacks[i]).setName("first");
+                    } else if (callbacks[i] instanceof PasswordCallback) {
+                        ((PasswordCallback) callbacks[i]).setPassword("secret".toCharArray());
+                    } else {
+                        throw new UnsupportedCallbackException(callbacks[i]);
+                    }
+                }
+            }
+        });
+        try {
+            context.login();
+        } catch (LoginException le) {
+            assertEquals(le.getCause().getMessage(), "Empty password is not allowed");
+            return;
+        }
+        fail("Should have failed authenticating");
+    }
+
 
 }
