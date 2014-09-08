@@ -1441,7 +1441,7 @@
           <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
           <linksource>true</linksource>
           <maxmemory>2048m</maxmemory>
-          <source>1.6</source>
+          <source>${source-version}</source>
           <additionalJOption>-J-Xmx2048m</additionalJOption>
         </configuration>
         <executions>
