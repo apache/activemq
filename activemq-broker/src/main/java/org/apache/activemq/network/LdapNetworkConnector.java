@@ -210,8 +210,16 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
             env.put(Context.SECURITY_AUTHENTICATION, "none");
         } else {
             LOG.debug("    login credentials [{}:******]", user);
-            env.put(Context.SECURITY_PRINCIPAL, user);
-            env.put(Context.SECURITY_CREDENTIALS, password);
+            if (user != null && !"".equals(user)) {
+                env.put(Context.SECURITY_PRINCIPAL, user);
+            } else {
+                throw new Exception("Empty username is not allowed");
+            }
+            if (password != null && !"".equals(password)) {
+                env.put(Context.SECURITY_CREDENTIALS, password);
+            } else {
+                throw new Exception("Empty password is not allowed");
+            }
         }
         boolean isConnected = false;
         while (!isConnected) {

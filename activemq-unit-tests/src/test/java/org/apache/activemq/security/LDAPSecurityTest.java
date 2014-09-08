@@ -44,7 +44,7 @@ import org.junit.runner.RunWith;
 
 
 @RunWith( FrameworkRunner.class )
-@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
+@CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP", port=1024)})
 @ApplyLdifFiles(
    "org/apache/activemq/security/activemq.ldif"
 )
