@@ -34,10 +34,12 @@ import org.fusesource.hawtbuf.Buffer;
 
 public class AmqpWireFormat implements WireFormat {
 
-    public static final int DEFAULT_MAX_FRAME_SIZE = 1024 * 1024 * 1;
+    public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
+    public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
 
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
+    private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -115,5 +117,13 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setMaxFrameSize(long maxFrameSize) {
         this.maxFrameSize = maxFrameSize;
+    }
+
+    public int getMaxAmqpFrameSize() {
+        return maxAmqpFrameSize;
+    }
+
+    public void setMaxAmqpFrameSize(int maxAmqpFrameSize) {
+        this.maxAmqpFrameSize = maxAmqpFrameSize;
     }
 }
