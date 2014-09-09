@@ -125,19 +125,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     public AmqpProtocolConverter(AmqpTransport transport) {
         this.amqpTransport = transport;
 
-        int maxFrameSize = AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE;
-
-        // AMQ-4914 - Setting the max frame size to large stalls out the QPid
-        // client on sends or
-        // consume due to no session credit. Once fixed we should set this value
-        // using
         // the configured maxFrameSize on the URI.
-        // int maxFrameSize = transport.getWireFormat().getMaxFrameSize() >
-        // Integer.MAX_VALUE ?
-        // Integer.MAX_VALUE : (int)
-        // transport.getWireFormat().getMaxFrameSize();
+        int maxFrameSize = transport.getWireFormat().getMaxAmqpFrameSize();
+        if (maxFrameSize > AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE) {
+            this.protonTransport.setMaxFrameSize(maxFrameSize);
+        }
 
-        this.protonTransport.setMaxFrameSize(maxFrameSize);
         this.protonTransport.bind(this.protonConnection);
         this.protonConnection.collect(eventCollector);
         updateTracer();
