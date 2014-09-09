@@ -34,10 +34,11 @@
     <activemq.osgi.import.pkg>
        org.springframework.jms*;version="[3,4)",
        org.apache.activemq.pool,
+       org.apache.camel*;version="${camel-version-range}",
        *
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
-      org.apache.activemq.camel*;version=${project.version};-noimport:=true
+        org.apache.activemq.camel*;version:="${project.version}";-noimport:=true
     </activemq.osgi.export>
   </properties>
 

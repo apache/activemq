@@ -42,7 +42,7 @@
       com.thoughtworks.xstream*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.activemq.camel*;resolution:=optional,
-      org.apache.camel*;resolution:=optional,
+      org.apache.camel*;version:="${camel-version-range}";resolution:=optional,
       org.apache.derby.jdbc*;resolution:=optional,
       org.apache.geronimo.transaction.manager*;resolution:=optional,
       org.apache.hadoop*;resolution:=optional,
