@@ -52,14 +52,6 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         final Destination q = (Destination) n.getRegionDestination();
         final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;
-
-        if (n.isExpired()) {
-            // sync with message expiry processing
-            if (!broker.isExpired(n)) {
-                LOG.debug("ignoring ack {}, for already expired message: {}", ack, n);
-                return;
-            }
-        }
         queue.removeMessage(context, this, node, ack);
     }
 

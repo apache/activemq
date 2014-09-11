@@ -1169,7 +1169,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             List<MessageReference> toExpire) throws Exception {
         for (Iterator<? extends MessageReference> i = refs.iterator(); i.hasNext() && l.size() < max;) {
             QueueMessageReference ref = (QueueMessageReference) i.next();
-            if (ref.isExpired()) {
+            if (ref.isExpired() && (ref.getLockOwner() == null)) {
                 toExpire.add(ref);
             } else if (l.contains(ref.getMessage()) == false) {
                 l.add(ref.getMessage());

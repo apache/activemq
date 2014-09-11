@@ -30,6 +30,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
+import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,7 +155,7 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
              received.acknowledge();
          };
 
-         assertEquals("got messages", messageCount + 1, messages.size());
+         assertEquals("got all (normal plus one with ttl) messages", messageCount + 1, messages.size());
 
          Vector<Message> dlqMessages = new Vector<Message>();
          while ((received = dlqConsumer.receive(1000)) != null) {
@@ -159,6 +163,21 @@ public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
          };
 
          assertEquals("got dlq messages", data.length - 1, dlqMessages.size());
+
+         final DestinationStatistics view = getDestinationStatistics(BrokerRegistry.getInstance().findFirst(), ActiveMQDestination.transform(consumerDestination));
+
+         // wait for all to inflight to expire
+         assertTrue("all inflight messages expired ", Wait.waitFor(new Wait.Condition() {
+             @Override
+             public boolean isSatisified() throws Exception {
+                 return view.getInflight().getCount() == 0;
+             }
+         }));
+         assertEquals("Wrong inFlightCount: ", 0, view.getInflight().getCount());
+
+         LOG.info("Stats: received: "  + messages.size() + ", messages: " + view.getMessages().getCount() + ", enqueues: " + view.getEnqueues().getCount() + ", dequeues: " + view.getDequeues().getCount()
+                 + ", dispatched: " + view.getDispatched().getCount() + ", inflight: " + view.getInflight().getCount() + ", expired: " + view.getExpired().getCount());
+
     }
     
     /**
