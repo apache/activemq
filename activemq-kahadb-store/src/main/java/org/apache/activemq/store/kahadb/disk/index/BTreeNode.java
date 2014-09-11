@@ -113,7 +113,6 @@ public final class BTreeNode<Key,Value> {
                         }
                     }  else {
                         if (endKey != null && current.keys[nextIndex].equals(endKey)) {
-                            System.err.println("Stopping iterator on reaching: " + endKey);
                             break;
                         }
                         nextEntry = new KeyValueEntry(current.keys[nextIndex], current.values[nextIndex]);
