@@ -781,11 +781,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             sendLock.unlock();
         }
         for (MessageContext messageContext : orderedUpdates) {
-            if (!messageContext.duplicate) {
-                messageSent(messageContext.context, messageContext.message);
-            }
             if (messageContext.onCompletion != null) {
                 messageContext.onCompletion.run();
+            }
+            if (!messageContext.duplicate) {
+                messageSent(messageContext.context, messageContext.message);
             }
         }
         orderedUpdates.clear();
