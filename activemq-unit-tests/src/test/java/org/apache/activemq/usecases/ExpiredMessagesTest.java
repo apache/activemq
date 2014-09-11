@@ -190,7 +190,7 @@ public class ExpiredMessagesTest extends CombinationTestSupport {
 
         // memory check
         assertEquals("memory usage is back to duck egg", 0, getDestination(broker, destination).getMemoryUsage().getPercentUsage());
-        assertTrue("memory usage is increased ", 0 < getDestination(broker, dlqDestination).getMemoryUsage().getPercentUsage());
+        assertTrue("memory usage is increased ", 0 < getDestination(broker, dlqDestination).getMemoryUsage().getUsage());
 
         // verify DLQ
         MessageConsumer dlqConsumer = createDlqConsumer(connection);
