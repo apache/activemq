@@ -1369,13 +1369,16 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         Long id = sd.messageIdIndex.get(tx, command.getMessageId());
         if (id != null) {
-            sd.orderIndex.put(
+            MessageKeys previousKeys = sd.orderIndex.put(
                     tx,
                     command.getPrioritySupported() ? command.getPriority() : javax.jms.Message.DEFAULT_PRIORITY,
                     id,
                     new MessageKeys(command.getMessageId(), location)
             );
             sd.locationIndex.put(tx, location, id);
+            if(previousKeys != null) {
+                sd.locationIndex.remove(tx, previousKeys.location);
+            }
         } else {
             LOG.warn("Non existent message update attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
         }
