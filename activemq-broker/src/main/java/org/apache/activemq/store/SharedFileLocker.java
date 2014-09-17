@@ -52,7 +52,7 @@ public class SharedFileLocker extends AbstractLocker {
                 while ((!isStopped()) && (!isStopping())) {
                     try {
                         lockFile.lock();
-                        locked = true;
+                        locked = keepAlive();
                         break;
                     } catch (IOException e) {
                         LOG.info("Database "
