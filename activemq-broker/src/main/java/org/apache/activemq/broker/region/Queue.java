@@ -1213,6 +1213,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void purge() throws Exception {
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
+        long originalMessageCount = this.destinationStatistics.getMessages().getCount();
         do {
             doPageIn(true, false);  // signal no expiry processing needed.
             pagedInMessagesLock.readLock().lock();
@@ -1234,7 +1235,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } while (!list.isEmpty() && this.destinationStatistics.getMessages().getCount() > 0);
 
         if (this.destinationStatistics.getMessages().getCount() > 0) {
-            LOG.warn("{} after purge complete, message count stats report: {}", getActiveMQDestination().getQualifiedName(), this.destinationStatistics.getMessages().getCount());
+            LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
+        } else {
+            LOG.info("{} purged of {} messages", getActiveMQDestination().getQualifiedName(), originalMessageCount);
         }
         gc();
         this.destinationStatistics.getMessages().setCount(0);

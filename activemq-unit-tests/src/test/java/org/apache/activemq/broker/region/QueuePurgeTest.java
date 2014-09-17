@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -38,6 +39,10 @@ import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,10 +94,39 @@ public class QueuePurgeTest extends CombinationTestSupport {
         createProducerAndSendMessages(NUM_TO_SEND);
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("purging..");
-        proxy.purge();
+
+        org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.region.Queue.class);
+        final AtomicBoolean gotPurgeLogMessage = new AtomicBoolean(false);
+
+        Appender appender = new DefaultTestAppender() {
+            @Override
+            public void doAppend(LoggingEvent event) {
+                if (event.getMessage() instanceof String) {
+                    String message = (String) event.getMessage();
+                    if (message.contains("purged of " + NUM_TO_SEND +" messages")) {
+                        LOG.info("Received a log message: {} ", event.getMessage());
+                        gotPurgeLogMessage.set(true);
+                    }
+                }
+            }
+        };
+
+        Level level = log4jLogger.getLevel();
+        log4jLogger.setLevel(Level.INFO);
+        log4jLogger.addAppender(appender);
+        try {
+
+            proxy.purge();
+
+        } finally {
+            log4jLogger.setLevel(level);
+            log4jLogger.removeAppender(appender);
+        }
+
         assertEquals("Queue size is not zero, it's " + proxy.getQueueSize(), 0,
                 proxy.getQueueSize());
         assertTrue("cache is disabled, temp store being used", !proxy.isCacheEnabled());
+        assertTrue("got expected info purge log message", gotPurgeLogMessage.get());
     }
 
     public void testRepeatedExpiryProcessingOfLargeQueue() throws Exception {       
