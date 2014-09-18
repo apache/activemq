@@ -67,6 +67,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
         produceMessage(nameAndPayload);
 
         System.err.println(executeCommand("activemq:bstat").trim());
+        assertEquals("JMS_BODY_FIELD:JMSText = " + nameAndPayload, executeCommand("activemq:browse --amqurl tcp://localhost:61616 --user karaf --password karaf -Vbody " + nameAndPayload).trim());
 
         assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
     }
