@@ -347,7 +347,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         try {
             remoteBrokerInfo = futureRemoteBrokerInfo.get();
             if (remoteBrokerInfo == null) {
-                fireBridgeFailed();
+                fireBridgeFailed(new Throwable("remoteBrokerInfo is null"));
                 return;
             }
         } catch (Exception e) {
@@ -358,7 +358,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         try {
             localBrokerInfo = futureLocalBrokerInfo.get();
             if (localBrokerInfo == null) {
-                fireBridgeFailed();
+                fireBridgeFailed(new Throwable("localBrokerInfo is null"));
                 return;
             }
 
@@ -592,7 +592,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ServiceSupport.dispose(getControllingService());
                 }
             });
-            fireBridgeFailed();
+            fireBridgeFailed(error);
         }
     }
 
@@ -871,7 +871,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     ServiceSupport.dispose(getControllingService());
                 }
             });
-            fireBridgeFailed();
+            fireBridgeFailed(error);
         }
     }
 
@@ -1430,7 +1430,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         this.networkBridgeListener = listener;
     }
 
-    private void fireBridgeFailed() {
+    private void fireBridgeFailed(Throwable reason) {
+        LOG.trace("fire bridge failed, listener: {}", this.networkBridgeListener, reason);
         NetworkBridgeListener l = this.networkBridgeListener;
         if (l != null && this.bridgeFailed.compareAndSet(false, true)) {
             l.bridgeFailed();
@@ -1596,7 +1597,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
         private final CountDownLatch slot = new CountDownLatch(1);
         private final AtomicBoolean disposed;
-        private BrokerInfo info = null;
+        private volatile BrokerInfo info = null;
 
         public FutureBrokerInfo(BrokerInfo info, AtomicBoolean disposed) {
             this.info = info;
