@@ -46,7 +46,7 @@
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.0.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.13.2</camel-version>
+    <camel-version>2.14.0</camel-version>
     <camel-version-range>[2.12,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
@@ -585,9 +585,10 @@
         <artifactId>camel-test</artifactId>
         <version>${camel-version}</version>
       </dependency>
+      <!-- when upgrading to Spring 4.x then use camel-test-spring -->
        <dependency>
         <groupId>org.apache.camel</groupId>
-        <artifactId>camel-test-spring</artifactId>
+        <artifactId>camel-test-spring3</artifactId>
         <version>${camel-version}</version>
       </dependency>
 
