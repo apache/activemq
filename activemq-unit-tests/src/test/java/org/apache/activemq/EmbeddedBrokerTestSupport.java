@@ -58,7 +58,10 @@ public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
     protected void tearDown() throws Exception {
         if (broker != null) {
-            broker.stop();
+            try {
+                broker.stop();
+            } catch (Exception e) {
+            }
         }
     }
 
