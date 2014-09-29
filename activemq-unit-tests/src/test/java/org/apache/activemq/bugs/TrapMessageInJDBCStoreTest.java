@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.bugs;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
