@@ -43,10 +43,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SimpleAMQPAuthTest {
-    public static final String SIMPLE_AUTH_AMQP_BROKER_XML = "org/apache/activemq/transport/amqp/simple-auth-amqp-broker.xml";
-    public BrokerService brokerService;
-    protected static final Logger LOG = LoggerFactory.getLogger(SimpleAMQPAuthTest.class);
-    protected int port = 5672;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleAMQPAuthTest.class);
+
+    private final String SIMPLE_AUTH_AMQP_BROKER_XML =
+        "org/apache/activemq/transport/amqp/simple-auth-amqp-broker.xml";
+    private BrokerService brokerService;
+    private int port;
 
     @Before
     public void setUp() throws Exception {
@@ -167,6 +170,7 @@ public class SimpleAMQPAuthTest {
     public void startBroker() throws Exception {
         brokerService = createBroker();
         brokerService.start();
+        port = brokerService.getTransportConnectorByName("amqp").getPublishableConnectURI().getPort();
         brokerService.waitUntilStarted();
     }
 }
