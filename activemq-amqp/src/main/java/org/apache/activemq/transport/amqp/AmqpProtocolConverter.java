@@ -262,6 +262,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             break;
                         case LINK_REMOTE_OPEN:
                         case LINK_REMOTE_CLOSE:
+                        case LINK_REMOTE_DETACH:
                             processLinkEvent(event.getLink());
                             break;
                         case LINK_FLOW:
