@@ -27,134 +27,45 @@
 # Authors:
 # Marc Schoechlin <ms@256bit.org>
 
-# ------------------------------------------------------------------------
-# CONFIGURATION
-ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc"
-
-# Backup invocation parameters
-COMMANDLINE_ARGS="$@"
-EXEC_OPTION=""
-
-# For using instances
-if ( basename $0 | grep "activemq-instance-" > /dev/null);then
-   INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
-   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
-   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
-fi
-
-## START:DEFAULTCONFIG
-# ------------------------------------------------------------------------
-# Configuration file for running Apache Active MQ as standalone provider
-#
-# This file overwrites the predefined settings of the sysv init-script
-#
-# Active MQ installation dir
-if [ -z "$ACTIVEMQ_HOME" ] ; then
-  # try to find ACTIVEMQ
-  if [ -d /opt/activemq ] ; then
-    ACTIVEMQ_HOME=/opt/activemq
-  fi
-
-  if [ -d "${HOME}/opt/activemq" ] ; then
-    ACTIVEMQ_HOME="${HOME}/opt/activemq"
-  fi
-
-  ## resolve links - $0 may be a link to activemq's home
-  PRG="$0"
-  progname=`basename "$0"`
-  saveddir=`pwd`
-
-  # need this for relative symlinks
-  dirname_prg=`dirname "$PRG"`
-  cd "$dirname_prg"
-
-  while [ -h "$PRG" ] ; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '.*-> \(.*\)$'`
-    if expr "$link" : '.*/.*' > /dev/null; then
-    PRG="$link"
-    else
-    PRG=`dirname "$PRG"`"/$link"
-    fi
-  done
-
-  ACTIVEMQ_HOME=`dirname "$PRG"`/..
-
-  cd "$saveddir"
-
-  # make it fully qualified
-  ACTIVEMQ_HOME=`cd "$ACTIVEMQ_HOME" && pwd`
-fi
-
-if [ -z "$ACTIVEMQ_BASE" ] ; then
-  ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
-fi
-
-# Active MQ configuration directory
-if [ -z "$ACTIVEMQ_CONF" ] ; then
-
-    # For backwards compat with old variables we let ACTIVEMQ_CONFIG_DIR set ACTIVEMQ_CONF
-    if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
-        ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
-    else
-        ACTIVEMQ_CONF="$ACTIVEMQ_CONFIG_DIR"
-    fi
-fi
-
-# Configure a user with non root priviledges, if no user is specified do not change user
-if [ -z "$ACTIVEMQ_USER" ] ; then
-    ACTIVEMQ_USER=""
-fi
-
-# Active MQ data directory
-if [ -z "$ACTIVEMQ_DATA" ] ; then
-
-    # For backwards compat with old variables we let ACTIVEMQ_DATA_DIR set ACTIVEMQ_DATA
-    if [ -z "$ACTIVEMQ_DATA_DIR" ] ; then
-        ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
-    else
-        ACTIVEMQ_DATA="$ACTIVEMQ_DATA_DIR"
-    fi
-fi
-
-if [ -z "$ACTIVEMQ_TMP" ] ; then
-  ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
-fi
-
+# a simple helper
 setCurrentUser(){
    CUSER=`whoami 2>/dev/null`
-
    # Solaris fix
    if [ ! $? -eq 0 ]; then
       CUSER=`/usr/ucb/whoami 2>/dev/null`
    fi
 }
 
-if [ ! -d "$ACTIVEMQ_DATA" ]; then
-   setCurrentUser
-   if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
-        mkdir $ACTIVEMQ_DATA
-   elif [ "`id -u`" = "0" ];then
-      su -c "mkdir $ACTIVEMQ_DATA" - $ACTIVEMQ_USER;
-   fi
-fi
+getDefaultConfig(){
+   cat <<'EOF'
+# ------------------------------------------------------------------------
+# Configuration file for running Apache Active MQ as standalone provider
+#
+# This file overwrites the predefined settings of the sysv init-script
+#
+# Active MQ installation dirs
+# ACTIVEMQ_HOME="/home/mschoechlin/myroot/apache-activemq-5.9.0/"
+# ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
+# ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+# ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+# ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
 
-# Location of the pidfile
-if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq-`hostname`.pid"
-fi
+# Configure a user with non root privileges, if no user is specified do not change user
+# (the entire activemq installation should be owned by this user)
+ACTIVEMQ_USER=""
+
+# location of the pidfile
+# ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
 
 # Location of the java installation
 # Specify the location of your java installation using JAVA_HOME, or specify the
 # path to the "java" binary using JAVACMD
-# (set JAVACMD to "auto" for automatic detection)
+# (unset JAVACMD for automatic detection)
 #JAVA_HOME=""
-JAVACMD="auto"
+JAVACMD=""
 
 # Set jvm memory configuration
-if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
-fi
+ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
 
 # Uncomment to enable audit logging
 #ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.audit=true"
@@ -196,26 +107,34 @@ ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 ACTIVEMQ_SUNJMX_CONTROL=""
 
 # Specify the queue manager URL for using "browse" option of sysv initscript
-if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
-    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
-fi
+ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
 
 # Set additional JSE arguments
-ACTIVEMQ_SSL_OPTS="$SSL_OPTS"
-
-# Uncomment to enable YourKit profiling
-#ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
+ACTIVEMQ_SSL_OPTS=""
 
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
 # ActiveMQ tries to shutdown the broker by jmx,
 # after a specified number of seconds send SIGKILL
-if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
-    ACTIVEMQ_KILL_MAXSECONDS=30
+ACTIVEMQ_KILL_MAXSECONDS=90
+EOF
+}
+# ------------------------------------------------------------------------
+# CONFIGURATION
+ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc"
+
+# Backup invocation parameters
+COMMANDLINE_ARGS="$@"
+EXEC_OPTION=""
+
+# For using instances
+if ( basename $0 | grep "activemq-instance-" > /dev/null);then
+   INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
+   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
+   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 fi
 
-## END:DEFAULTCONFIG
 
 # ------------------------------------------------------------------------
 # LOAD CONFIGURATION
@@ -235,6 +154,103 @@ for ACTIVEMQ_CONFIG in $ACTIVEMQ_CONFIGS;do
      fi
    fi
 done
+
+
+# ------------------------------------------------------------------------
+# TRY TO DISCOVER AUTOMATICALLY UNSET VARIABLES
+
+# Active MQ installation dir
+if [ -z "$ACTIVEMQ_HOME" ] ; then
+  # get the real path to the binary
+  REAL_RUN_BIN="`readlink -f $0`"
+  if [ -z "$REAL_RUN_BIN" ];then
+      echo 'ERROR: "readlink -f $0" does not provide the real path to the binary on this system, just define ACTIVEMQ_HOME manually in the config' >&2
+      exit 1
+  fi
+  ACTIVEMQ_HOME="`dirname $REAL_RUN_BIN`/../"
+fi
+
+# Active MQ base dir
+if [ -z "$ACTIVEMQ_BASE" ] ; then
+  ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
+fi
+
+# Active MQ configuration directory
+if [ -z "$ACTIVEMQ_CONF" ] ; then
+    # For backwards compat with old variables we let ACTIVEMQ_CONFIG_DIR set ACTIVEMQ_CONF
+    if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
+        ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
+    else
+        ACTIVEMQ_CONF="$ACTIVEMQ_CONFIG_DIR"
+    fi
+fi
+
+# Configure a user with non root privileges, if no user is specified do not change user
+if [ -z "$ACTIVEMQ_USER" ] ; then
+    ACTIVEMQ_USER=""
+fi
+
+# Active MQ data directory
+if [ -z "$ACTIVEMQ_DATA" ] ; then
+    # For backwards compat with old variables we let ACTIVEMQ_DATA_DIR set ACTIVEMQ_DATA
+    if [ -z "$ACTIVEMQ_DATA_DIR" ] ; then
+        ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
+    else
+        ACTIVEMQ_DATA="$ACTIVEMQ_DATA_DIR"
+    fi
+fi
+
+# create the $ACTIVEMQ_DATA dir
+if [ ! -d "$ACTIVEMQ_DATA" ]; then
+   setCurrentUser
+   if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
+        mkdir $ACTIVEMQ_DATA
+   elif [ "`id -u`" = "0" ];then
+      su -c "mkdir $ACTIVEMQ_DATA" - $ACTIVEMQ_USER;
+   fi
+fi
+
+# Active MQ tmp directory
+if [ -z "$ACTIVEMQ_TMP" ] ; then
+  ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
+fi
+
+# Location of the pidfile
+if [ -z "$ACTIVEMQ_PIDFILE" ]; then
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
+fi
+
+# Location of the java installation
+# Specify the location of your java installation using JAVA_HOME, or specify the
+# path to the "java" binary using JAVACMD
+# (set JAVACMD to "auto" for automatic detection)
+#JAVA_HOME=""
+JAVACMD=""
+
+# Set jvm memory configuration
+if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
+    ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
+fi
+
+# Set jvm jmx configuration
+ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
+
+# Set jvm jmx configuration for controlling the broker process
+ACTIVEMQ_SUNJMX_CONTROL=""
+
+# Specify the queue manager URL for using "browse" option of sysv initscript
+if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
+    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+fi
+
+# Set additional JSE arguments
+ACTIVEMQ_SSL_OPTS=""
+
+# ActiveMQ tries to shutdown the broker by jmx,
+# after a specified number of seconds send SIGKILL
+if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
+    ACTIVEMQ_KILL_MAXSECONDS=90
+fi
 
 # inform user that default configuration is loaded, no suitable configfile found
 if [ "$CONFIG_LOAD" != "yes" ];then
@@ -260,23 +276,8 @@ if [ "$1" = "setup" ];then
       exit 1
    fi
    echo "INFO: Creating configuration file: $2"
-   (
-   P_STATE="0"
-   while read LINE ;do
-      if (echo "$LINE" | grep "START:DEFAULTCONFIG" >/dev/null );then
-         P_STATE="1"
-         continue;
-      fi
-      if (echo "$LINE" | grep "END:DEFAULTCONFIG" >/dev/null);then
-         P_STATE="0"
-         break;
-      fi
-      if [ "$P_STATE" -eq "1" ];then
-         echo $LINE
-      fi
-   done < $0
-   ) > $2
 
+   getDefaultConfig > "$2"
    setCurrentUser
 
    echo "INFO: It's recommend to limit access to '$2' to the priviledged user"
@@ -310,7 +311,7 @@ if [ "$OSTYPE" = "cygwin" ]; then
 fi
 
 # Detect the location of the java binary
-if [ -z "$JAVACMD" ] || [ "$JAVACMD" = "auto" ] ; then
+if [ -z "$JAVACMD" ]; then
   if [ -n "$JAVA_HOME"  ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
       # IBM's JDK on AIX uses strange locations for the executables
@@ -378,7 +379,7 @@ invokeJar(){
    RET="1"
 
    if [ ! -f "${ACTIVEMQ_HOME}/bin/activemq.jar" ];then
-    echo "ERROR: '${ACTIVEMQ_HOME}/bin/activemq.jar' does not exist"
+    echo "ERROR: '${ACTIVEMQ_HOME}/bin/activemq.jar' does not exist, define ACTIVEMQ_HOME in the config"
     exit 1
    fi
 
