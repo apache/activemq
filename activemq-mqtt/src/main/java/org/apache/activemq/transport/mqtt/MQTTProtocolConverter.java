@@ -502,7 +502,6 @@ public class MQTTProtocolConverter {
             destination = activeMQDestinationMap.get(command.topicName());
             if (destination == null) {
                 String topicName = MQTTProtocolSupport.convertMQTTToActiveMQ(command.topicName().toString());
-
                 try {
                     destination = findSubscriptionStrategy().onSend(topicName);
                 } catch (IOException e) {

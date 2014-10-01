@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import static org.fusesource.hawtbuf.UTF8Buffer.utf8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -327,6 +328,25 @@ public class MQTTTest extends MQTTTestSupport {
         BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
         connection.disconnect();
+    }
+
+    @Test(timeout = 2 *  60 * 1000)
+    public void testMQTTWildcard() throws Exception {
+        MQTT mqtt = createMQTTConnection();
+        mqtt.setClientId("");
+        mqtt.setCleanSession(true);
+
+        BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+
+        Topic[] topics = {new Topic(utf8("a/#"), QoS.values()[AT_MOST_ONCE])};
+        connection.subscribe(topics);
+        String payload = "Test Message";
+        String publishedTopic = "a/b/1.2.3*4>";
+        connection.publish(publishedTopic, payload.getBytes(), QoS.values()[AT_MOST_ONCE], false);
+
+        Message msg = connection.receive(1, TimeUnit.SECONDS);
+        assertEquals("Topic changed", publishedTopic, msg.getTopic());
     }
 
     @Test(timeout = 2 *  60 * 1000)
