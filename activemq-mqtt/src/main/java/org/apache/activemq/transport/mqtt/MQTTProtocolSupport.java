@@ -79,7 +79,31 @@ public class MQTTProtocolSupport {
      * @return a destination name formatted for MQTT.
      */
     public static String convertActiveMQToMQTT(String destinationName) {
-        return destinationName.replace('.', '/');
+        char[] chars = destinationName.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            switch(chars[i]) {
+                case '>':
+                    chars[i] = '#';
+                    break;
+                case '#':
+                    chars[i] = '>';
+                    break;
+                case '*':
+                    chars[i] = '+';
+                    break;
+                case '+':
+                    chars[i] = '*';
+                    break;
+                case '.':
+                    chars[i] = '/';
+                    break;
+                case '/':
+                    chars[i] = '.';
+                    break;
+            }
+        }
+        String rc = new String(chars);
+        return rc;
     }
 
     /**
