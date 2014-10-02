@@ -176,4 +176,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public void setProtocolConverter(IAmqpProtocolConverter protocolConverter) {
         this.protocolConverter = protocolConverter;
     }
+
+    public void setPrefetch(int prefetch) {
+        protocolConverter.setPrefetch(prefetch);
+    }
 }

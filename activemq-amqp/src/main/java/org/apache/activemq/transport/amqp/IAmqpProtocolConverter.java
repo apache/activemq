@@ -31,4 +31,6 @@ public interface IAmqpProtocolConverter {
     void onActiveMQCommand(Command command) throws Exception;
 
     void updateTracer();
+
+    void setPrefetch(int prefetch);
 }

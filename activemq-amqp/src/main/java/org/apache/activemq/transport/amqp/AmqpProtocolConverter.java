@@ -117,7 +117,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
-    protected int prefetch = 100;
+    protected int prefetch;
     protected Transport protonTransport = Proton.transport();
     protected Connection protonConnection = Proton.connection();
     protected Collector eventCollector = new CollectorImpl();
@@ -780,11 +780,16 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     void onReceiverOpen(final Receiver receiver, AmqpSessionContext sessionContext) {
         // Client is producing to this receiver object
         org.apache.qpid.proton.amqp.transport.Target remoteTarget = receiver.getRemoteTarget();
+        int flow = prefetch;
+        // use client's preference if set
+        if (receiver.getRemoteCredit() != 0) {
+            flow = receiver.getRemoteCredit();
+        }
         try {
             if (remoteTarget instanceof Coordinator) {
                 pumpProtonToSocket();
                 receiver.setContext(coordinatorContext);
-                receiver.flow(prefetch);
+                receiver.flow(flow);
                 receiver.open();
                 pumpProtonToSocket();
             } else {
@@ -804,7 +809,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 ProducerContext producerContext = new ProducerContext(producerId, dest);
 
                 receiver.setContext(producerContext);
-                receiver.flow(prefetch);
+                receiver.flow(flow);
                 ProducerInfo producerInfo = new ProducerInfo(producerId);
                 producerInfo.setDestination(dest);
                 sendToActiveMQ(producerInfo, new ResponseHandler() {
@@ -1258,7 +1263,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             consumerInfo.setSelector(selector);
             consumerInfo.setNoRangeAcks(true);
             consumerInfo.setDestination(dest);
-            consumerInfo.setPrefetchSize(100);
+            // use client's preference if set
+            if (sender.getRemoteCredit() != 0) {
+                consumerInfo.setPrefetchSize(sender.getRemoteCredit());
+            } else {
+                consumerInfo.setPrefetchSize(prefetch);
+            }
             consumerInfo.setDispatchAsync(true);
             if (source.getDistributionMode() == COPY && dest.isQueue()) {
                 consumerInfo.setBrowser(true);
@@ -1371,5 +1381,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         condition.setCondition(Symbol.valueOf(name));
         condition.setDescription(description);
         return condition;
+    }
+
+    public void setPrefetch(int prefetch) {
+        this.prefetch = prefetch;
     }
 }
