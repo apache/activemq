@@ -27,7 +27,10 @@ import org.apache.activemq.command.Command;
  */
 public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
+    private static final int DEFAULT_PREFETCH = 100;
+
     final private AmqpTransport transport;
+    private int prefetch = DEFAULT_PREFETCH;
 
     interface Discriminator {
         boolean matches(AmqpHeader header);
@@ -81,6 +84,7 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
                 match = DISCRIMINATORS.get(0);
             }
             IAmqpProtocolConverter next = match.create(transport);
+            next.setPrefetch(prefetch);
             transport.setProtocolConverter(next);
             for (Command send : pendingCommands) {
                 next.onActiveMQCommand(send);
@@ -103,5 +107,10 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     @Override
     public void updateTracer() {
+    }
+
+    @Override
+    public void setPrefetch(int prefetch) {
+        this.prefetch = prefetch;
     }
 }
