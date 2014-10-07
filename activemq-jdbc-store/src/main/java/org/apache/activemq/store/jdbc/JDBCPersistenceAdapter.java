@@ -833,9 +833,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
-    long[] getStoreSequenceIdForMessageId(MessageId messageId, ActiveMQDestination destination) throws IOException {
+    long[] getStoreSequenceIdForMessageId(ConnectionContext context, MessageId messageId, ActiveMQDestination destination) throws IOException {
         long[] result = new long[]{-1, Byte.MAX_VALUE -1};
-        TransactionContext c = getTransactionContext();
+        TransactionContext c = getTransactionContext(context);
         try {
             result = adapter.getStoreSequenceId(c, destination, messageId);
         } catch (SQLException e) {
