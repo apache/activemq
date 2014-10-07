@@ -242,7 +242,7 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
                     if (tally.accumulator.get() != expected) {
                         LOG.info("Tally for: " + tally.brokerName + ", dest: " + tally.destination + " - " + tally.accumulator.get() + " != " + expected + ", " + tally.expected);
                         if (tally.accumulator.get() > expected - 50) {
-                            dumpQueueStat(tally.destination);
+                            dumpQueueStat(null);
                         }
                         if (tally.expected.size() == 1) {
                             startConsumer(tally.brokerName, tally.destination);
@@ -260,6 +260,9 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
         LOG.info("done");
         long duration = System.currentTimeMillis() - startTime;
         LOG.info("Duration:" + TimeUtils.printDuration(duration));
+
+        assertEquals("nothing in the dlq's", 0, dumpQueueStat(new ActiveMQQueue("ActiveMQ.DLQ")));
+
     }
 
     private void startConsumer(String brokerName, ActiveMQDestination destination) throws Exception {
@@ -273,17 +276,20 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
         queueConnection.close();
     }
 
-    private void dumpQueueStat(ActiveMQDestination destination) throws Exception {
+    private long dumpQueueStat(ActiveMQDestination destination) throws Exception {
+        long sumTotal = 0;
         Collection<BrokerItem> brokerList = brokers.values();
         for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext(); ) {
             BrokerService brokerService = i.next().broker;
             for (ObjectName objectName : brokerService.getAdminView().getQueues()) {
-                //if (objectName.toString().contains(destination.getQualifiedName())) {
+                if (destination != null && objectName.toString().contains(destination.getPhysicalName())) {
                     QueueViewMBean qViewMBean = (QueueViewMBean) brokerService.getManagementContext().newProxyInstance(objectName, QueueViewMBean.class, false);
-                    LOG.info(brokerService.getBrokerName() + ", " + qViewMBean.getName() + " Size: " + qViewMBean.getEnqueueCount());
-                //}
+                    LOG.info(brokerService.getBrokerName() + ", " + qViewMBean.getName() + ", Enqueue:"  + qViewMBean.getEnqueueCount() + ", Size: " + qViewMBean.getQueueSize());
+                    sumTotal += qViewMBean.getQueueSize();
+                }
             }
         }
+        return sumTotal;
     }
 
     private void startAllGWFanoutConsumers(int nBrokers) throws Exception {
