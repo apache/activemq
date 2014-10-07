@@ -42,6 +42,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -456,6 +457,9 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         BrokerService brokerService = brokers.get(broker2).broker;
         brokerService.setPersistent(true);
         brokerService.setDeleteAllMessagesOnStartup(true);
+        // disable concurrent dispatch otherwise store duplicate suppression will be skipped b/c cursor audit is already
+        // disabled so verification of stats will fail - ie: duplicate will be dispatched
+        ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(false);
         brokerService.setPlugins(new BrokerPlugin[]{
                 new BrokerPluginSupport() {
                     @Override

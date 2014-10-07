@@ -256,11 +256,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean enableIndexPageCaching = true;
     ReentrantReadWriteLock checkpointLock = new ReentrantReadWriteLock();
 
-    interface SerialExecution<V> {
-        public V execute(Callable<V> c) throws Exception;
-    }
-    SerialExecution<Location> serialExecutor;
-
     @Override
     public void doStart() throws Exception {
         load();
@@ -962,20 +957,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return store(data, sync, before, after, null);
     }
 
-    public Location store(final KahaCommitCommand data, final boolean sync, final IndexAware before, final Runnable after) throws IOException {
-        try {
-            return serialExecutor.execute(new Callable<Location>() {
-                @Override
-                public Location call() throws Exception {
-                    return store(data, sync, before, after, null);
-                }
-            });
-        } catch (Exception e) {
-            LOG.error("Failed to execute commit", e);
-            throw new IOException(e);
-        }
-    }
-
     /**
      * All updated are are funneled through this method. The updates are converted
      * to a JournalMessage which is logged to the journal and then the data from
@@ -1259,24 +1240,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         final List<Operation> messagingTx = inflightTx;
+        indexLock.writeLock().lock();
         try {
-            indexLock.writeLock().lock();
-            try {
-                pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                    @Override
-                    public void execute(Transaction tx) throws IOException {
-                        for (Operation op : messagingTx) {
-                            op.execute(tx);
-                        }
+            pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                @Override
+                public void execute(Transaction tx) throws IOException {
+                    for (Operation op : messagingTx) {
+                        op.execute(tx);
                     }
-                });
-                metadata.lastUpdate = location;
-            } finally {
-                indexLock.writeLock().unlock();
-            }
-        } catch (Exception e) {
-            LOG.error("serial execution of commit failed", e);
-            throw new IOException(e);
+                }
+            });
+            metadata.lastUpdate = location;
+        } finally {
+            indexLock.writeLock().unlock();
         }
     }
 
