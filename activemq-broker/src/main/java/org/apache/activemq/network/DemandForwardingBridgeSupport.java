@@ -427,6 +427,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             startRemoteBridge();
         } catch (Throwable e) {
             serviceRemoteException(e);
+            return;
+        }
+
+        try {
+            if (safeWaitUntilStarted()) {
+                setupStaticDestinations();
+            }
+        } catch (Throwable e) {
+            serviceLocalException(e);
         }
     }
 
@@ -508,14 +517,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 }
                 startedLatch.countDown();
                 localStartedLatch.countDown();
-            }
-
-            if (!disposed.get()) {
-                setupStaticDestinations();
-            } else {
-                LOG.warn("Network connection between {} and {} ({}) was interrupted during establishment.", new Object[]{
-                        localBroker, remoteBroker, remoteBrokerName
-                });
             }
         }
     }
@@ -841,7 +842,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     public void serviceLocalException(MessageDispatch messageDispatch, Throwable error) {
-
+        LOG.trace("serviceLocalException: disposed {} ex", disposed.get(), error);
         if (!disposed.get()) {
             if (error instanceof DestinationDoesNotExistException && ((DestinationDoesNotExistException) error).isTemporary()) {
                 // not a reason to terminate the bridge - temps can disappear with
@@ -1398,12 +1399,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
      * Performs a timed wait on the started latch and then checks for disposed
      * before performing another wait each time the the started wait times out.
      */
-    protected void safeWaitUntilStarted() throws InterruptedException {
+    protected boolean safeWaitUntilStarted() throws InterruptedException {
         while (!disposed.get()) {
             if (startedLatch.await(1, TimeUnit.SECONDS)) {
-                return;
+                break;
             }
         }
+        return !disposed.get();
     }
 
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
