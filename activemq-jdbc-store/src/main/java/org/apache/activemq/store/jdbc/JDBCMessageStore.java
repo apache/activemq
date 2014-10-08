@@ -248,7 +248,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     	long seq = ack.getLastMessageId().getFutureOrSequenceLong() != null ?
                 (Long) ack.getLastMessageId().getFutureOrSequenceLong() :
-                persistenceAdapter.getStoreSequenceIdForMessageId(ack.getLastMessageId(), destination)[0];
+                persistenceAdapter.getStoreSequenceIdForMessageId(context, ack.getLastMessageId(), destination)[0];
 
         // Get a connection and remove the message from the DB
         TransactionContext c = persistenceAdapter.getTransactionContext(context);
@@ -260,9 +260,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
         } finally {
             c.close();
         }
-        //if (context != null && context.getXid() != null) {
-        //    ack.getLastMessageId().setEntryLocator(seq);
-        //}
     }
 
     public void recover(final MessageRecoveryListener listener) throws Exception {
@@ -389,7 +386,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     @Override
     public void setBatch(MessageId messageId) {
         try {
-            long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(messageId, destination);
+            long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(null, messageId, destination);
             lastRecoveredSequenceId.set(storedValues[0]);
             lastRecoveredPriority.set(storedValues[1]);
         } catch (IOException ignoredAsAlreadyLogged) {

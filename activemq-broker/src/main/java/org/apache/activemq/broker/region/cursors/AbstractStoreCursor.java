@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -100,13 +99,19 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             clearIterator(true);
             recovered = true;
             storeHasMessages = true;
+        } else if (!cached) {
+            // a duplicate from the store (!cached) - needs to be removed/acked - otherwise it will get re dispatched on restart
+            if (message.isRecievedByDFBridge()) {
+                // expected for messages pending acks with kahadb.concurrentStoreAndDispatchQueues=true
+                LOG.trace("{} store replayed pending message due to concurrentStoreAndDispatchQueues {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
+            } else {
+                LOG.warn("{} - cursor got duplicate from store {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
+                duplicate(message);
+            }
         } else {
-            LOG.warn("{} - cursor got duplicate {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
-
-            // a duplicate from the store - needs to be removed/acked - otherwise it will get redispatched on restart
-            // jdbc store will store duplicates and will set entry locator to sequence long.
-            // REVISIT - this seems too hacky - see use case AMQ4952Test
-            if (!cached || message.getMessageId().getEntryLocator() instanceof Long) {
+            LOG.warn("{} - cursor got duplicate send {} seq: {}", this, message.getMessageId(), message.getMessageId().getFutureOrSequenceLong());
+            if (message.getMessageId().getEntryLocator() instanceof Long) {
+                // JDBC will store a duplicate (with new sequence id) - it needs an ack  (AMQ4952Test)
                 duplicate(message);
             }
         }
@@ -219,10 +224,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             if (!pendingCachedIds.isEmpty() || lastCachedId != null) {
                 LOG.trace("{} - disabling cache. current Id: {} seq: {}, batchList size: {}",
                             new Object[]{this, node.getMessageId(), node.getMessageId().getFutureOrSequenceLong(), batchList.size()});
-                collapseLastCachedIds();
+                pruneLastCached();
                 if (lastCachedId != null) {
                     setBatch(lastCachedId);
                     lastCachedId = null;
+                    pendingCachedIds.clear();
                 }
             }
         }
@@ -240,6 +246,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 Future future = (Future) futureOrLong;
                 if (future.isCancelled()) {
                     it.remove();
+                } else {
+                    break;
                 }
             } else {
                 // store complete - track via lastCachedId
@@ -249,25 +257,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
     }
 
-    private void collapseLastCachedIds() throws Exception {
-        for (MessageId candidate : pendingCachedIds) {
-            final Object futureOrLong = candidate.getFutureOrSequenceLong();
-            if (futureOrLong instanceof Future) {
-                Future future = (Future) futureOrLong;
-                try {
-                    future.get();
-                    // future should be replaced with sequence by this time
-                } catch (CancellationException ignored) {
-                    continue;
-                }
-            }
-            setLastCachedId(candidate);
-        }
-        pendingCachedIds.clear();
-    }
-
     private void setLastCachedId(MessageId candidate) {
-        if (lastCachedId == null) {
+        if (lastCachedId == null || lastCachedId.getFutureOrSequenceLong() == null) {  // possibly null for topics
             lastCachedId = candidate;
         } else if (Long.compare(((Long) candidate.getFutureOrSequenceLong()), ((Long) lastCachedId.getFutureOrSequenceLong())) > 0) {
             lastCachedId = candidate;
@@ -360,7 +351,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public String toString() {
         return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
                     + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled()
-                    + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace() + ",pendingCachedIds.size:" + pendingCachedIds.size() + ",lastCachedId:" + lastCachedId;
+                    + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace() + ",pendingCachedIds.size:" + pendingCachedIds.size() + ",lastCachedId:" + lastCachedId + ",lastCachedId-seq:" + (lastCachedId != null ? lastCachedId.getFutureOrSequenceLong() : "null");
     }
     
     protected abstract void doFillBatch() throws Exception;

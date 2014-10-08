@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -38,12 +37,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -86,7 +84,7 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, MessageDatabase.SerialExecution<Location> {
+public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     static final Logger LOG = LoggerFactory.getLogger(KahaDBStore.class);
     private static final int MAX_ASYNC_JOBS = 10000;
 
@@ -124,7 +122,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 return txid;
             }
         };
-        serialExecutor = this;
     }
 
     @Override
@@ -347,17 +344,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
         this.forceRecoverIndex = forceRecoverIndex;
     }
 
-    @Override
-    public Location execute(Callable<Location> c) throws Exception {
-        if (isConcurrentStoreAndDispatchQueues()) {
-            FutureTask<Location> future = new FutureTask<>(c);
-            this.queueExecutor.execute(future);
-            return future.get();
-        } else {
-            return c.call();
-        }
-    }
-
     public class KahaDBMessageStore extends AbstractMessageStore {
         protected final Map<AsyncJobKey, StoreTask> asyncTaskMap = new HashMap<AsyncJobKey, StoreTask>();
         protected KahaDestination dest;
@@ -383,25 +369,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 throws IOException {
             if (isConcurrentStoreAndDispatchQueues()) {
                 StoreQueueTask result = new StoreQueueTask(this, context, message);
+                ListenableFuture<Object> future = result.getFuture();
+                message.getMessageId().setFutureOrSequenceLong(future);
+                message.setRecievedByDFBridge(true); // flag message as concurrentStoreAndDispatch
                 result.aquireLocks();
                 addQueueTask(this, result);
-                final ListenableFuture<Object> future = result.getFuture();
                 if (indexListener != null) {
                     // allow concurrent dispatch by setting entry locator,
-                    // wait for add completion to remove potential pending addition
-                    message.getMessageId().setFutureOrSequenceLong(future);
-                    indexListener.onAdd(new IndexListener.MessageContext(context, message, new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                future.get();
-                                trackPendingAddComplete(dest, (Long) message.getMessageId().getFutureOrSequenceLong());
-                            } catch (CancellationException okNothingToTrack) {
-                            } catch (Exception e) {
-                                LOG.warn("{} unexpected exception tracking completion of async add of {}", this, message.getMessageId(), e);
-                            }
-                        }
-                    }));
+                    indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
                 }
                 return future;
             } else {
@@ -442,7 +417,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void addMessage(final ConnectionContext context, final Message message) throws IOException {
-            KahaAddMessageCommand command = new KahaAddMessageCommand();
+            final KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
             command.setMessageId(message.getMessageId().toProducerKey());
             command.setTransactionInfo(TransactionIdConversion.convert(transactionIdTransformer.transform(message.getTransactionId())));
@@ -450,25 +425,25 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             command.setPrioritySupported(isPrioritizedMessages());
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-            store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), new IndexAware() {
-                @Override
-                public void sequenceAssignedWithIndexLocked(final long sequence) {
-                    final Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
-                    message.getMessageId().setFutureOrSequenceLong(sequence);
-                    if (indexListener != null) {
-                        trackPendingAdd(dest, sequence);
-                        if (possibleFuture == null) {
-                            // sync add (for async future present from getFutureOrSequenceLong)
-                            indexListener.onAdd(new IndexListener.MessageContext(context, message, new Runnable() {
-                                @Override
-                                public void run() {
-                                    trackPendingAddComplete(dest, sequence);
-                                }
-                            }));
+                store(command, isEnableJournalDiskSyncs() && message.isResponseRequired(), new IndexAware() {
+                    // sync add? (for async, future present from getFutureOrSequenceLong)
+                    Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
+
+                    public void sequenceAssignedWithIndexLocked(final long sequence) {
+                        message.getMessageId().setFutureOrSequenceLong(sequence);
+                        if (indexListener != null) {
+                            if (possibleFuture == null) {
+                                trackPendingAdd(dest, sequence);
+                                indexListener.onAdd(new IndexListener.MessageContext(context, message, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        trackPendingAddComplete(dest, sequence);
+                                    }
+                                }));
+                            }
                         }
                     }
-                }
-            }, null);
+                }, null);
         }
 
         @Override
@@ -680,32 +655,23 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void setBatch(final MessageId identity) throws IOException {
+            final String key = identity.toProducerKey();
+            indexLock.writeLock().lock();
             try {
-                final String key = identity.toProducerKey();
-                lockAsyncJobQueue();
-
-                // Hopefully one day the page file supports concurrent read
-                // operations... but for now we must externally synchronize...
-
-                indexLock.writeLock().lock();
-                try {
-                    pageFile.tx().execute(new Transaction.Closure<IOException>() {
-                        @Override
-                        public void execute(Transaction tx) throws IOException {
-                            StoredDestination sd = getStoredDestination(dest, tx);
-                            Long location = sd.messageIdIndex.get(tx, key);
-                            if (location != null) {
-                                sd.orderIndex.setBatch(tx, location);
-                            } else {
-                                LOG.warn("{} Location {} not found in order index for {}", this, identity.getFutureOrSequenceLong(), identity);
-                            }
+                pageFile.tx().execute(new Transaction.Closure<IOException>() {
+                    @Override
+                    public void execute(Transaction tx) throws IOException {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        Long location = sd.messageIdIndex.get(tx, key);
+                        if (location != null) {
+                            sd.orderIndex.setBatch(tx, location);
+                        } else {
+                            LOG.warn("{} {} setBatch failed, location for {} not found in messageId index for {}", this, dest.getName(), identity.getFutureOrSequenceLong(), identity);
                         }
-                    });
-                } finally {
-                    indexLock.writeLock().unlock();
-                }
+                    }
+                });
             } finally {
-                unlockAsyncJobQueue();
+                indexLock.writeLock().unlock();
             }
         }
 
@@ -723,7 +689,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         protected void lockAsyncJobQueue() {
             try {
-                this.localDestinationSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS);
+                if (!this.localDestinationSemaphore.tryAcquire(this.maxAsyncJobs, 60, TimeUnit.SECONDS)) {
+                    throw new TimeoutException(this +" timeout waiting for localDestSem:" + this.localDestinationSemaphore);
+                }
             } catch (Exception e) {
                 LOG.error("Failed to lock async jobs for " + this.destination, e);
             }

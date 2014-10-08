@@ -43,11 +43,13 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
             Package p = Package.getPackage("org.apache.activemq");
             if (p != null) {
                 version = p.getImplementationVersion();
-                Pattern pattern = Pattern.compile("(\\d+)\\.(\\d+).*");
-                Matcher m = pattern.matcher(version);
-                if (m.matches()) {
-                    major = Integer.parseInt(m.group(1));
-                    minor = Integer.parseInt(m.group(2));
+                if (version != null) {
+                    Pattern pattern = Pattern.compile("(\\d+)\\.(\\d+).*");
+                    Matcher m = pattern.matcher(version);
+                    if (m.matches()) {
+                        major = Integer.parseInt(m.group(1));
+                        minor = Integer.parseInt(m.group(2));
+                    }
                 }
             }
         } catch (Throwable e) {
