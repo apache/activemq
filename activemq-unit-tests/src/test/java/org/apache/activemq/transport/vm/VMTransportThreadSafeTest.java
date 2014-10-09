@@ -298,6 +298,7 @@ public class VMTransportThreadSafeTest {
 
         final VMTestTransportListener remoteListener = new VMTestTransportListener(remoteReceived);
         remote.setTransportListener(remoteListener);
+        remote.start();
 
         final Response[] answer = new Response[1];
         ResponseCorrelator responseCorrelator = new ResponseCorrelator(local);
