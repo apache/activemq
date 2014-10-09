@@ -34,6 +34,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import javax.jms.BytesMessage;
@@ -1225,6 +1226,46 @@ public class MQTTTest extends MQTTTestSupport {
         assertTrue("Old client disconnected", connection2.isConnected());
         connection2.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
         connection2.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testRepeatedLinkStealing() throws Exception {
+        final String clientId = "duplicateClient";
+        final AtomicReference<BlockingConnection> oldConnection = new AtomicReference<BlockingConnection>();
+        final String TOPICA = "TopicA";
+
+        for (int i = 1; i <= 10; ++i) {
+
+            LOG.info("Creating MQTT Connection {}", i);
+
+            MQTT mqtt = createMQTTConnection(clientId, false);
+            mqtt.setKeepAlive((short) 2);
+            final BlockingConnection connection = mqtt.blockingConnection();
+            connection.connect();
+            connection.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
+
+            assertTrue("Client connect failed for attempt: " + i, Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return connection.isConnected();
+                }
+            }));
+
+            if (oldConnection.get() != null) {
+
+                assertTrue("Old client still connected", Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return !oldConnection.get().isConnected();
+                    }
+                }));
+            }
+
+            oldConnection.set(connection);
+        }
+
+        oldConnection.get().publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
+        oldConnection.get().disconnect();
     }
 
     @Test(timeout = 30 * 10000)
