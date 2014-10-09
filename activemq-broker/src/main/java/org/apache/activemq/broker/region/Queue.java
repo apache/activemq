@@ -1104,8 +1104,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void doBrowse(List<Message> browseList, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
+            int maxPageInAttempts = 1;
+            messagesLock.readLock().lock();
+            try {
+                maxPageInAttempts += (messages.size() / getMaxPageSize());
+            } finally {
+                messagesLock.readLock().unlock();
+            }
 
-            while (shouldPageInMoreForBrowse(max)) {
+            while (shouldPageInMoreForBrowse(max) && maxPageInAttempts-- > 0) {
                 pageInMessages(!memoryUsage.isFull(110));
             };
 
