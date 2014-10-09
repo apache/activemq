@@ -101,7 +101,6 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
             addNetworkConnector(broker);
         }
         broker.setSchedulePeriodForDestinationPurge(0);
-        //broker.getSystemUsage().setSendFailIfNoSpace(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(256 * 1024 * 1024l);
 
 
@@ -406,7 +405,6 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
                             int id = numMessages - val - 1;
 
                             ActiveMQQueue compositeQ = new ActiveMQQueue("IN");
-                            //LOG.info("Send to: " + ((ActiveMQConnection) queueConnection).getBrokerName() + ", " + val + ", dest:" + compositeQ);
                             Message textMessage = queueSession.createTextMessage(((ActiveMQConnection) queueConnection).getBrokerName() + "->" + id + " payload:" + payload);
                             textMessage.setIntProperty("NUM", id);
                             producer.send(compositeQ, textMessage);
