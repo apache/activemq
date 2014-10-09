@@ -171,7 +171,7 @@ public class VMTransport implements Transport, Task {
     public void stop() throws Exception {
         // Only need to do this once, all future oneway calls will now
         // fail as will any asnyc jobs in the task runner.
-        if (disposed.compareAndSet(false, true)) {
+        if (disposed.compareAndSet(false, true) && started.get()) {
 
             TaskRunner tr = taskRunner;
             LinkedBlockingQueue<Object> mq = this.messageQueue;
