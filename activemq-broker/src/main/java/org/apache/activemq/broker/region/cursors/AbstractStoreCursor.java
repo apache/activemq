@@ -364,6 +364,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     protected final synchronized void fillBatch() {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("{} fillBatch", this);
+        }
         if (batchResetNeeded) {
             resetSize();
             setMaxBatchSize(Math.min(regionDestination.getMaxPageSize(), size));
