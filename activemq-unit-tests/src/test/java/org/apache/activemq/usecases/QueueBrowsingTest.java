@@ -209,6 +209,6 @@ public class QueueBrowsingTest {
         }
 
         browser.close();
-        assertEquals(maxPageSize + 2, received);
+        assertEquals(maxPageSize + 1, received);
     }
 }
