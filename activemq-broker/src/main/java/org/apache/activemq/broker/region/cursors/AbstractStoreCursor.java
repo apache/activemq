@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.concurrent.Future;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
@@ -41,7 +42,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     private boolean storeHasMessages = false;
     protected int size;
     private LinkedList<MessageId> pendingCachedIds = new LinkedList<>();
-    MessageId lastCachedId = null;
+    private static int SYNC_ADD = 0;
+    private static int ASYNC_ADD = 1;
+    final MessageId[] lastCachedIds = new MessageId[2];
     protected boolean hadSpace = false;
 
     protected AbstractStoreCursor(Destination destination) {
@@ -203,12 +206,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
             if (isCacheEnabled()) {
                 if (recoverMessage(node.getMessage(),true)) {
-                    if (node.getMessageId().getFutureOrSequenceLong() instanceof Future) {
-                        pruneLastCached();
-                        pendingCachedIds.add(node.getMessageId());
-                    } else {
-                        setLastCachedId(node.getMessageId());
-                    }
+                    trackLastCached(node);
                 } else {
                     dealWithDuplicates();
                     return false;
@@ -219,24 +217,78 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
 
         if (disableCache && isCacheEnabled()) {
+            LOG.trace("{} - disabling cache on add {} {}", this, node.getMessageId(), node.getMessageId().getFutureOrSequenceLong());
             setCacheEnabled(false);
-            // sync with store on disabling the cache
-            if (!pendingCachedIds.isEmpty() || lastCachedId != null) {
-                LOG.trace("{} - disabling cache. current Id: {} seq: {}, batchList size: {}",
-                            new Object[]{this, node.getMessageId(), node.getMessageId().getFutureOrSequenceLong(), batchList.size()});
-                pruneLastCached();
-                if (lastCachedId != null) {
-                    setBatch(lastCachedId);
-                    lastCachedId = null;
-                    pendingCachedIds.clear();
-                }
-            }
+            syncWithStore();
         }
         this.storeHasMessages = true;
         size++;
         return true;
     }
 
+    private void syncWithStore() throws Exception {
+        if (lastCachedIds[SYNC_ADD] == null) {
+            // only async adds, lets wait on the potential last add and reset from there
+            for (ListIterator<MessageId> it = pendingCachedIds.listIterator(pendingCachedIds.size()); it.hasPrevious(); ) {
+                MessageId lastStored = it.previous();
+                Object futureOrLong = lastStored.getFutureOrSequenceLong();
+                if (futureOrLong instanceof Future) {
+                    Future future = (Future) futureOrLong;
+                    if (future.isCancelled()) {
+                        continue;
+                    } else {
+                        try {
+                            future.get();
+                            setLastCachedId(ASYNC_ADD, lastStored);
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+            if (lastCachedIds[ASYNC_ADD] != null) {
+                setBatch(lastCachedIds[ASYNC_ADD]);
+            }
+        } else {
+            // mix of async and sync - async can exceed sync only if next in sequence
+            for (Iterator<MessageId> it = pendingCachedIds.iterator(); it.hasNext(); ) {
+                MessageId candidate = it.next();
+                final Object futureOrLong = candidate.getFutureOrSequenceLong();
+                if (futureOrLong instanceof Future) {
+                    Future future = (Future) futureOrLong;
+                    if (future.isCancelled()) {
+                        it.remove();
+                    } else {
+                        try {
+                            future.get();
+                            long next = 1 + (Long)lastCachedIds[SYNC_ADD].getFutureOrSequenceLong();
+                            if (Long.compare(((Long) candidate.getFutureOrSequenceLong()), next) == 0) {
+                                setLastCachedId(SYNC_ADD, candidate);
+                            } else {
+                                // out of sequence, revert to sync state
+                                LOG.trace("{} cursor order out of sync at seq {}, audit must suppress potential replay of {} messages from the store", this, next, pendingCachedIds.size());
+                                break;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+            if (lastCachedIds[SYNC_ADD] != null) {
+                setBatch(lastCachedIds[SYNC_ADD]);
+            }
+
+        }
+        // cleanup
+        lastCachedIds[SYNC_ADD] = lastCachedIds[ASYNC_ADD] = null;
+        pendingCachedIds.clear();
+    }
+
+    private void trackLastCached(MessageReference node) {
+        if (node.getMessageId().getFutureOrSequenceLong() instanceof Future) {
+            pruneLastCached();
+            pendingCachedIds.add(node.getMessageId());
+        } else {
+            setLastCachedId(SYNC_ADD, node.getMessageId());
+        }
+    }
 
     private void pruneLastCached() {
         for (Iterator<MessageId> it = pendingCachedIds.iterator(); it.hasNext(); ) {
@@ -247,21 +299,22 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 if (future.isCancelled()) {
                     it.remove();
                 } else {
+                    // we don't want to wait for work to complete
                     break;
                 }
             } else {
-                // store complete - track via lastCachedId
-                setLastCachedId(candidate);
+                // complete
+                setLastCachedId(ASYNC_ADD, candidate);
                 it.remove();
             }
         }
     }
 
-    private void setLastCachedId(MessageId candidate) {
-        if (lastCachedId == null || lastCachedId.getFutureOrSequenceLong() == null) {  // possibly null for topics
-            lastCachedId = candidate;
-        } else if (Long.compare(((Long) candidate.getFutureOrSequenceLong()), ((Long) lastCachedId.getFutureOrSequenceLong())) > 0) {
-            lastCachedId = candidate;
+    private void setLastCachedId(final int index, MessageId candidate) {
+        if (lastCachedIds[index] == null || lastCachedIds[index].getFutureOrSequenceLong() == null) {  // possibly null for topics
+            lastCachedIds[index] = candidate;
+        } else if (Long.compare(((Long) candidate.getFutureOrSequenceLong()), ((Long) lastCachedIds[index].getFutureOrSequenceLong())) > 0) {
+            lastCachedIds[index] = candidate;
         }
     }
 
@@ -311,6 +364,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     protected final synchronized void fillBatch() {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("{} fillBatch", this);
+        }
         if (batchResetNeeded) {
             resetSize();
             setMaxBatchSize(Math.min(regionDestination.getMaxPageSize(), size));
@@ -351,7 +407,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public String toString() {
         return super.toString() + ":" + regionDestination.getActiveMQDestination().getPhysicalName() + ",batchResetNeeded=" + batchResetNeeded
                     + ",storeHasMessages=" + this.storeHasMessages + ",size=" + this.size + ",cacheEnabled=" + isCacheEnabled()
-                    + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace() + ",pendingCachedIds.size:" + pendingCachedIds.size() + ",lastCachedId:" + lastCachedId + ",lastCachedId-seq:" + (lastCachedId != null ? lastCachedId.getFutureOrSequenceLong() : "null");
+                    + ",maxBatchSize:" + maxBatchSize + ",hasSpace:" + hasSpace() + ",pendingCachedIds.size:" + pendingCachedIds.size()
+                    + ",lastSyncCachedId:" + lastCachedIds[SYNC_ADD] + ",lastSyncCachedId-seq:" + (lastCachedIds[SYNC_ADD] != null ? lastCachedIds[SYNC_ADD].getFutureOrSequenceLong() : "null")
+                    + ",lastAsyncCachedId:" + lastCachedIds[ASYNC_ADD] + ",lastAsyncCachedId-seq:" + (lastCachedIds[ASYNC_ADD] != null ? lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong() : "null");
     }
     
     protected abstract void doFillBatch() throws Exception;
