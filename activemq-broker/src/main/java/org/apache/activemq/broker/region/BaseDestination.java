@@ -57,7 +57,7 @@ public abstract class BaseDestination implements Destination {
     public static final long EXPIRE_MESSAGE_PERIOD = 30 * 1000;
     public static final long DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC = 60 * 1000;
     public static final int MAX_PRODUCERS_TO_AUDIT = 64;
-    public static final int MAX_AUDIT_DEPTH = 2048;
+    public static final int MAX_AUDIT_DEPTH = 10000;
 
     protected final ActiveMQDestination destination;
     protected final Broker broker;

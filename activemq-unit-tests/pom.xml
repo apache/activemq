@@ -557,7 +557,6 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <excludes combine.children="append">
-                <exclude>**/AMQ4485LowLimitTest.*</exclude>
                 <!-- http://jira.activemq.org/jira/browse/AMQ-626 -->
                 <exclude>**/MultipleTestsWithSpringFactoryBeanTest.*</exclude>
                 <exclude>**/MultipleTestsWithXBeanFactoryBeanTest.*</exclude>

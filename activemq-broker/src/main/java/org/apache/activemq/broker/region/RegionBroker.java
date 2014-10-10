@@ -245,23 +245,23 @@ public class RegionBroker extends EmptyBroker {
         synchronized (clientIdSet) {
             ConnectionContext oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
-                if (context.isAllowLinkStealing()){
-                     clientIdSet.remove(clientId);
-                     if (oldContext.getConnection() != null) {
-                         Connection connection = oldContext.getConnection();
-                         LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
-                         if (connection instanceof TransportConnection){
+                if (context.isAllowLinkStealing()) {
+                    clientIdSet.put(clientId, context);
+                    if (oldContext.getConnection() != null) {
+                        Connection connection = oldContext.getConnection();
+                        LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
+                        if (connection instanceof TransportConnection) {
                             TransportConnection transportConnection = (TransportConnection) connection;
-                             transportConnection.stopAsync();
-                         }else{
-                             connection.stop();
-                         }
-                     }else{
-                         LOG.error("Not Connection for {}", oldContext);
-                     }
-                }else{
+                            transportConnection.stopAsync();
+                        } else {
+                            connection.stop();
+                        }
+                    } else {
+                        LOG.error("No Connection found for {}", oldContext);
+                    }
+                } else {
                     throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
-                            + oldContext.getConnection().getRemoteAddress());
+                        + oldContext.getConnection().getRemoteAddress());
                 }
             } else {
                 clientIdSet.put(clientId, context);
