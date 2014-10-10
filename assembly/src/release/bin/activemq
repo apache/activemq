@@ -44,7 +44,7 @@ getDefaultConfig(){
 # This file overwrites the predefined settings of the sysv init-script
 #
 # Active MQ installation dirs
-# ACTIVEMQ_HOME="/home/mschoechlin/myroot/apache-activemq-5.9.0/"
+# ACTIVEMQ_HOME="<Installationdir>/"
 # ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 # ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
 # ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
@@ -174,6 +174,8 @@ fi
 if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
+
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/"
 
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
@@ -360,7 +362,7 @@ fi
 
 # Set default classpath
 # Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};${ACTIVEMQ_CLASSPATH}"
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF}:${ACTIVEMQ_CLASSPATH}"
 
 # Start the ActiveMQ JAR
 #
@@ -633,9 +635,13 @@ invoke_task(){
          COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
       fi
       invokeJar
-      exit $?
+      RET="$?"
+      if [ "$RET" != "0" ];then
+         echo "ERROR: task failed"
+      fi
+      exit $RET
     else
-      invokeJar
+      echo "Activemq is not running."
       exit 1
     fi
 }
@@ -651,12 +657,21 @@ Tasks provided by the sysv init script:
     setup           - create the specified configuration file for this init script
                       (see next usage section)
 
-Configuration of this script:
+Configuration and usage of this script
     The configuration of this script can be placed on /etc/default/activemq or $HOME/.activemqrc.
+    To create a new configuration set use the "setup" parameter.
+
     To use additional configurations for running multiple instances on the same operating system
-    rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
+    instance rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
     \$HOME/.activemqrc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence.
+    <INSTANCENAME> is a placeholder for the instance name (i.e. use a simple string like "prod-01")
+
+    If this script fails to connect to jmx, you should check that the jmx connection is working properly.
+    As a default JMX is performed by PID - stop the process and delete the connection file/dir
+    (i.e. /tmp/hsperfdata_activemq/23129)
+
+# 
 EOF
   exit $RET
 }
