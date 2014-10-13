@@ -171,7 +171,7 @@ public class VMTransport implements Transport, Task {
     public void stop() throws Exception {
         // Only need to do this once, all future oneway calls will now
         // fail as will any asnyc jobs in the task runner.
-        if (disposed.compareAndSet(false, true) && started.get()) {
+        if (disposed.compareAndSet(false, true)) {
 
             TaskRunner tr = taskRunner;
             LinkedBlockingQueue<Object> mq = this.messageQueue;
@@ -193,18 +193,20 @@ public class VMTransport implements Transport, Task {
                 tr = null;
             }
 
-            // let the peer know that we are disconnecting after attempting
-            // to cleanly shutdown the async tasks so that this is the last
-            // command it see's.
-            try {
-                peer.transportListener.onCommand(new ShutdownInfo());
-            } catch (Exception ignore) {
-            }
+            if (peer.transportListener != null) {
+                // let the peer know that we are disconnecting after attempting
+                // to cleanly shutdown the async tasks so that this is the last
+                // command it see's.
+                try {
+                    peer.transportListener.onCommand(new ShutdownInfo());
+                } catch (Exception ignore) {
+                }
 
-            // let any requests pending a response see an exception
-            try {
-                peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
-            } catch (Exception ignore) {
+                // let any requests pending a response see an exception
+                try {
+                    peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
+                } catch (Exception ignore) {
+                }
             }
 
             // shutdown task runner factory
