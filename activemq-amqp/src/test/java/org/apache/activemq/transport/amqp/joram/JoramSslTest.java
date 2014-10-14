@@ -16,21 +16,17 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
-import java.security.SecureRandom;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.transport.amqp.DefaultTrustManager;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;
 import org.objectweb.jtests.jms.conform.message.MessageDefaultTest;
@@ -79,7 +75,7 @@ public class JoramSslTest {
     @Rule
     public Timeout to = new Timeout(10 * 1000);
     static SSLContext def;
-    
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         System.setProperty("joram.jms.test.file", getJmsTestFileName());
@@ -94,7 +90,7 @@ public class JoramSslTest {
         System.clearProperty("joram.jms.test.file");
         SSLContext.setDefault(def);
     }
-    
+
 
     public static String getJmsTestFileName() {
         return "providerSSL.properties";
