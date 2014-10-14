@@ -40,6 +40,7 @@ public class AmqpWireFormat implements WireFormat {
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
+    private String anonymousNodeName = "$relay";
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -125,5 +126,13 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setMaxAmqpFrameSize(int maxAmqpFrameSize) {
         this.maxAmqpFrameSize = maxAmqpFrameSize;
+    }
+
+    public String getAnonymousNodeName() {
+        return anonymousNodeName;
+    }
+
+    public void setAnonymousNodeName(String anonymousNodeName) {
+        this.anonymousNodeName = anonymousNodeName;
     }
 }
