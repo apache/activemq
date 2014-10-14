@@ -47,6 +47,8 @@ public class ActiveMQJMSVendor extends JMSVendor {
 
     final public static ActiveMQJMSVendor INSTANCE = new ActiveMQJMSVendor();
 
+    private static final String PREFIX_MARKER = "://";
+
     private ActiveMQJMSVendor() {
     }
 
@@ -87,7 +89,13 @@ public class ActiveMQJMSVendor extends JMSVendor {
 
     @Override
     public <T extends Destination> T createDestination(String name, Class<T> kind) {
-        String destinationName = name.substring(name.lastIndexOf("://") + 3);
+        String destinationName = name;
+        int prefixEnd = name.lastIndexOf(PREFIX_MARKER);
+
+        if (prefixEnd >= 0) {
+            destinationName = name.substring(prefixEnd + PREFIX_MARKER.length());
+        }
+
         if (kind == Queue.class) {
             return kind.cast(new ActiveMQQueue(destinationName));
         }
@@ -100,6 +108,7 @@ public class ActiveMQJMSVendor extends JMSVendor {
         if (kind == TemporaryTopic.class) {
             return kind.cast(new ActiveMQTempTopic(destinationName));
         }
+
         return kind.cast(ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE));
     }
 
