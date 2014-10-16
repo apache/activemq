@@ -165,4 +165,9 @@ public class ProxyMessageStore implements MessageStore {
     public void registerIndexListener(IndexListener indexListener) {
         delegate.registerIndexListener(indexListener);
     }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
 }

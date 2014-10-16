@@ -1767,7 +1767,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // StoredDestination related implementation methods.
     // /////////////////////////////////////////////////////////////////
 
-    private final HashMap<String, StoredDestination> storedDestinations = new HashMap<String, StoredDestination>();
+    protected final HashMap<String, StoredDestination> storedDestinations = new HashMap<String, StoredDestination>();
 
     static class MessageKeys {
         final String messageId;
@@ -1885,6 +1885,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         public void trackPendingAddComplete(Long seq) {
             orderIndex.trackPendingAddComplete(seq);
+        }
+
+        @Override
+        public String toString() {
+            return "nextSeq:" + orderIndex.nextMessageId + ",lastRet:" + orderIndex.cursor + ",pending:" + orderIndex.pendingAdditions.size();
         }
     }
 
@@ -2337,7 +2342,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return 0;
     }
 
-    private String key(KahaDestination destination) {
+    protected String key(KahaDestination destination) {
         return destination.getType().getNumber() + ":" + destination.getName();
     }
 

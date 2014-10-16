@@ -771,19 +771,24 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     candidate = indexOrderedCursorUpdates.peek();
                 }
             }
-            for (MessageContext messageContext : orderedUpdates) {
-                if (!cursorAdd(messageContext.message)) {
-                    // cursor suppressed a duplicate
-                    messageContext.duplicate = true;
+            messagesLock.writeLock().lock();
+            try {
+                for (MessageContext messageContext : orderedUpdates) {
+                    if (!messages.addMessageLast(messageContext.message)) {
+                        // cursor suppressed a duplicate
+                        messageContext.duplicate = true;
+                    }
+                    if (messageContext.onCompletion != null) {
+                        messageContext.onCompletion.run();
+                    }
                 }
+            } finally {
+                messagesLock.writeLock().unlock();
             }
         } finally {
             sendLock.unlock();
         }
         for (MessageContext messageContext : orderedUpdates) {
-            if (messageContext.onCompletion != null) {
-                messageContext.onCompletion.run();
-            }
             if (!messageContext.duplicate) {
                 messageSent(messageContext.context, messageContext.message);
             }

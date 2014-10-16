@@ -1033,6 +1033,7 @@
                 <exclude>org/apache/activemq/store/kahadb/disk/index/HashIndexTest.*</exclude>
                 <exclude>org/apache/activemq/store/kahadb/disk/index/ListIndexTest.*</exclude>
                 <exclude>org/apache/activemq/store/kahadb/disk/util/DataByteArrayInputStreamTest.*</exclude>
+                <exclude>org/apache/activemq/bugs/AMQ5266StarvedConsumerTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
