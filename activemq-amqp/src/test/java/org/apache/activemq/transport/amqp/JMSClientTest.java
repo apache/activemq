@@ -42,6 +42,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
@@ -626,6 +627,50 @@ public class JMSClientTest extends JMSClientTestSupport {
             assertNotNull("Should have received a message by now.", msg.get());
             assertTrue("Should be an instance of TextMessage", msg.get() instanceof TextMessage);
         }
+    }
+
+    @Test(timeout=30000)
+    public void testDurableConsumerUnsubscribe() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final BrokerViewMBean broker = getProxyToBroker();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic(getDestinationName());
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "DurbaleTopic");
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 1;
+            }
+        }));
+
+        consumer.close();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 1 &&
+                       broker.getDurableTopicSubscribers().length == 0;
+            }
+        }));
+
+        session.unsubscribe("DurbaleTopic");
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 0;
+            }
+        }));
     }
 
     @Test(timeout=30000)
