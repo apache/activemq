@@ -558,26 +558,6 @@
             </build>
         </profile>
         <profile>
-            <id>activemq.tests.mac.excludes</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes combine.children="append">
-                                <exclude>**/*.*</exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
             <id>activemq.tests.hpux.excludes</id>
             <activation>
                 <os>
