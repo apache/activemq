@@ -310,11 +310,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                     long next = 1 + (Long)lastCachedIds[SYNC_ADD].getFutureOrSequenceLong();
                     if (Long.compare((Long)futureOrLong, next) == 0) {
                         setLastCachedId(SYNC_ADD, candidate);
-                    } else {
-                        // out of sequence, revert to sync state
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("{} cursor order out of sync at seq {}, audit must suppress potential replay of {} messages from the store", this, next, pendingCachedIds.size());
-                        }
                     }
                 }
                 it.remove();
