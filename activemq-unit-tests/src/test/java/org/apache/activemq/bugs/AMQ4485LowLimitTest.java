@@ -64,7 +64,7 @@ public class AMQ4485LowLimitTest extends JmsMultipleBrokersTestSupport {
     static final String payload = new String(new byte[10 * 1024]);
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4485LowLimitTest.class);
     final int portBase = 61600;
-    final int numBrokers = 8;
+    int numBrokers = 8;
     final int numProducers = 30;
     final int numMessages = 1000;
     final int consumerSleepTime = 40;
