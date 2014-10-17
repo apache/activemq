@@ -54,7 +54,7 @@ public class AMQ4920Test extends AmqpTestSupport {
         super.setUp();
     }
 
-    @Test(timeout = 5 * 60 * 1000)
+    @Test(timeout = 1 * 60 * 1000)
     public void testSendWithMultipleConsumers() throws Exception {
         ConnectionFactory connectionFactory = new ConnectionFactoryImpl("localhost", port, "admin", "admin");
         Connection connection = connectionFactory.createConnection();

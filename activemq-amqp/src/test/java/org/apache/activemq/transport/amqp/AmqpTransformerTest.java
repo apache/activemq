@@ -52,7 +52,7 @@ public class AmqpTransformerTest {
     private int openwirePort;
     private static final String TEST_QUEUE = "txqueue";
 
-    @Test(timeout=60 * 1000)
+    @Test(timeout = 30 * 1000)
     public void testNativeTransformation() throws Exception {
 
         // default is native
@@ -149,7 +149,7 @@ public class AmqpTransformerTest {
         openwireConn.close();
     }
 
-    @Test(timeout=60 * 1000)
+    @Test(timeout = 30 * 1000)
     public void testJmsTransformation() throws Exception {
 
         // default is native
