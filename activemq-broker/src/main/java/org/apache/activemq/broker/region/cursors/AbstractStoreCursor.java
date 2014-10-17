@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region.cursors;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -249,9 +250,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                     try {
                         future.get(5, TimeUnit.SECONDS);
                         setLastCachedId(ASYNC_ADD, lastPending);
+                    } catch (CancellationException ok) {
+                        continue;
                     } catch (TimeoutException potentialDeadlock) {
-                        LOG.warn("{} timed out waiting for async add", this, potentialDeadlock);
-                    } catch (Exception cancelledOrTimeOutOrErrorWorstCaseWeReplay) {cancelledOrTimeOutOrErrorWorstCaseWeReplay.printStackTrace();}
+                        LOG.debug("{} timed out waiting for async add", this, potentialDeadlock);
+                    } catch (Exception worstCaseWeReplay) {
+                        LOG.debug("{} exception waiting for async add", this, worstCaseWeReplay);
+                    }
                 } else {
                     setLastCachedId(ASYNC_ADD, lastPending);
                 }
@@ -259,7 +264,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
             if (lastCachedIds[ASYNC_ADD] != null) {
                 // ensure we don't skip current possibly sync add b/c we waited on the future
-                if (currentAdd.isRecievedByDFBridge() || Long.compare(((Long) currentAdd.getMessageId().getFutureOrSequenceLong()), ((Long) lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong())) > 0) {
+                if (isAsync(currentAdd) || Long.compare(((Long) currentAdd.getMessageId().getFutureOrSequenceLong()), ((Long) lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong())) > 0) {
                     setBatch(lastCachedIds[ASYNC_ADD]);
                 }
             }
@@ -272,12 +277,16 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     private void trackLastCached(MessageReference node) {
-        if (node.getMessageId().getFutureOrSequenceLong() instanceof Future || node.getMessage().isRecievedByDFBridge()) {
+        if (isAsync(node.getMessage())) {
             pruneLastCached();
             pendingCachedIds.add(node.getMessageId());
         } else {
             setLastCachedId(SYNC_ADD, node.getMessageId());
         }
+    }
+
+    private static final boolean isAsync(Message message) {
+        return message.isRecievedByDFBridge() || message.getMessageId().getFutureOrSequenceLong() instanceof Future;
     }
 
     private void pruneLastCached() {
