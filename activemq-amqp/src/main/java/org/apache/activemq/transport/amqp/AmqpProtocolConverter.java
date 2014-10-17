@@ -1277,8 +1277,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             } else {
                                 sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                             }
+                            sender.close();
+                        } else {
+                            sender.open();
                         }
-                        sender.open();
                         pumpProtonToSocket();
                     }
                 });

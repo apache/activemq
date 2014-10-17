@@ -49,6 +49,7 @@ import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -893,5 +894,62 @@ public class JMSClientTest extends JMSClientTestSupport {
                        broker.getDurableTopicSubscribers().length == 0;
             }
         }));
+    }
+
+    @Test(timeout=30000)
+    public void testDurableConsumerUnsubscribeWhileNoSubscription() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final BrokerViewMBean broker = getProxyToBroker();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 0;
+            }
+        }));
+
+        try {
+            session.unsubscribe("DurbaleTopic");
+            fail("Should have thrown as subscription is in use.");
+        } catch (JMSException ex) {
+        }
+    }
+
+    @Ignore("Requires version 0.30 or higher to work.") // TODO
+    @Test(timeout=30000)
+    public void testDurableConsumerUnsubscribeWhileActive() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final BrokerViewMBean broker = getProxyToBroker();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic(getDestinationName());
+        session.createDurableSubscriber(topic, "DurbaleTopic");
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 1;
+            }
+        }));
+
+        try {
+            session.unsubscribe("DurbaleTopic");
+            fail("Should have thrown as subscription is in use.");
+        } catch (JMSException ex) {
+        }
     }
 }
