@@ -33,7 +33,7 @@ import org.junit.Test;
 
 public class AMQ4696Test extends AmqpTestSupport {
 
-    @Test
+    @Test(timeout=30*1000)
     public void simpleDurableTopicTest() throws Exception {
         String TOPIC_NAME = "topic://AMQ4696Test" + System.currentTimeMillis();
         String durableClientId = "AMQPDurableTopicTestClient";
