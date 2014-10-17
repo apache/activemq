@@ -335,6 +335,7 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
        id.setFutureOrSequenceLong(queueSeq)
     } else {
       id.setFutureOrSequenceLong(countDownFuture)
+      message.setRecievedByDFBridge(true)
       countDownFuture.id = id
     }
 
