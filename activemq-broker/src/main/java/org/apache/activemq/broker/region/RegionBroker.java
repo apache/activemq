@@ -242,29 +242,35 @@ public class RegionBroker extends EmptyBroker {
         if (clientId == null) {
             throw new InvalidClientIDException("No clientID specified for connection request");
         }
+
+        ConnectionContext oldContext = null;
+
         synchronized (clientIdSet) {
-            ConnectionContext oldContext = clientIdSet.get(clientId);
+            oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
                 if (context.isAllowLinkStealing()) {
                     clientIdSet.put(clientId, context);
-                    if (oldContext.getConnection() != null) {
-                        Connection connection = oldContext.getConnection();
-                        LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
-                        if (connection instanceof TransportConnection) {
-                            TransportConnection transportConnection = (TransportConnection) connection;
-                            transportConnection.stopAsync();
-                        } else {
-                            connection.stop();
-                        }
-                    } else {
-                        LOG.error("No Connection found for {}", oldContext);
-                    }
                 } else {
                     throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
                         + oldContext.getConnection().getRemoteAddress());
                 }
             } else {
                 clientIdSet.put(clientId, context);
+            }
+        }
+
+        if (oldContext != null) {
+            if (oldContext.getConnection() != null) {
+                Connection connection = oldContext.getConnection();
+                LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
+                if (connection instanceof TransportConnection) {
+                    TransportConnection transportConnection = (TransportConnection) connection;
+                    transportConnection.stopAsync();
+                } else {
+                    connection.stop();
+                }
+            } else {
+                LOG.error("No Connection found for {}", oldContext);
             }
         }
 
@@ -279,8 +285,7 @@ public class RegionBroker extends EmptyBroker {
         }
         synchronized (clientIdSet) {
             ConnectionContext oldValue = clientIdSet.get(clientId);
-            // we may be removing the duplicate connection, not the first
-            // connection to be created
+            // we may be removing the duplicate connection, not the first connection to be created
             // so lets check that their connection IDs are the same
             if (oldValue == context) {
                 if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
