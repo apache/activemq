@@ -159,11 +159,12 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
     @Override
     public String onSend(ActiveMQDestination destination) {
-        String amqTopicName = destination.getPhysicalName();
-        if (amqTopicName.startsWith(VIRTUALTOPIC_PREFIX)) {
-            amqTopicName = amqTopicName.substring(VIRTUALTOPIC_PREFIX.length());
+        String destinationName = destination.getPhysicalName();
+        int position = destinationName.indexOf(VIRTUALTOPIC_PREFIX);
+        if (position >= 0) {
+            destinationName = destinationName.substring(position+VIRTUALTOPIC_PREFIX.length()).substring(0);
         }
-        return amqTopicName;
+        return destinationName;
     }
 
     @Override
@@ -178,6 +179,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
     private void deleteDurableQueues(List<ActiveMQQueue> queues) {
         try {
             for (ActiveMQQueue queue : queues) {
+                LOG.debug("Removing subscription for {} ",queue.getPhysicalName());
                 DestinationInfo removeAction = new DestinationInfo();
                 removeAction.setConnectionId(protocol.getConnectionId());
                 removeAction.setDestination(queue);
