@@ -41,6 +41,7 @@ public class AmqpWireFormat implements WireFormat {
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
     private String anonymousNodeName = "$relay";
+    private boolean useByteDestinationTypeAnnotation = false;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -134,5 +135,13 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setAnonymousNodeName(String anonymousNodeName) {
         this.anonymousNodeName = anonymousNodeName;
+    }
+
+    public boolean isUseByteDestinationTypeAnnotation() {
+        return useByteDestinationTypeAnnotation;
+    }
+
+    public void setUseByteDestinationTypeAnnotation(boolean useByteDestinationTypeAnnotation) {
+        this.useByteDestinationTypeAnnotation = useByteDestinationTypeAnnotation;
     }
 }
