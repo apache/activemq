@@ -645,19 +645,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     message.setTransactionId(new LocalTransactionId(connectionId, txid));
                 }
 
-                // Lets handle the case where the expiration was set, but the timestamp
-                // was not set by the client. Lets assign the timestamp now, and adjust
-                // the expiration.
-                if (message.getExpiration() != 0) {
-                    if (message.getTimestamp() == 0) {
-                        message.setTimestamp(System.currentTimeMillis());
-                        message.setExpiration(message.getTimestamp() + message.getExpiration());
-                    }
-                }
-
                 message.onSend();
                 if (!delivery.remotelySettled()) {
                     sendToActiveMQ(message, new ResponseHandler() {
+
                         @Override
                         public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                             if (response.isException()) {
