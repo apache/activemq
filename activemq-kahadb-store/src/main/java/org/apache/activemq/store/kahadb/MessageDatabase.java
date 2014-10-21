@@ -2791,7 +2791,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         BTreeIndex<Long, MessageKeys> defaultPriorityIndex;
         BTreeIndex<Long, MessageKeys> lowPriorityIndex;
         BTreeIndex<Long, MessageKeys> highPriorityIndex;
-        MessageOrderCursor cursor = new MessageOrderCursor();
+        final MessageOrderCursor cursor = new MessageOrderCursor();
         Long lastDefaultKey;
         Long lastHighKey;
         Long lastLowKey;
@@ -2892,16 +2892,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (defaultPriorityIndex.containsKey(tx, sequence)) {
                     lastDefaultKey = sequence;
                     cursor.defaultCursorPosition = nextPosition.longValue();
-                } else if (highPriorityIndex != null) {
-                    if (highPriorityIndex.containsKey(tx, sequence)) {
-                        lastHighKey = sequence;
-                        cursor.highPriorityCursorPosition = nextPosition.longValue();
-                    } else if (lowPriorityIndex.containsKey(tx, sequence)) {
-                        lastLowKey = sequence;
-                        cursor.lowPriorityCursorPosition = nextPosition.longValue();
-                    }
+                } else if (highPriorityIndex != null && highPriorityIndex.containsKey(tx, sequence)) {
+                    lastHighKey = sequence;
+                    cursor.highPriorityCursorPosition = nextPosition.longValue();
+                } else if (lowPriorityIndex.containsKey(tx, sequence)) {
+                    lastLowKey = sequence;
+                    cursor.lowPriorityCursorPosition = nextPosition.longValue();
                 } else {
-                    LOG.warn("setBatch: sequence " + sequence + " not found in orderindex:" + this);
                     lastDefaultKey = sequence;
                     cursor.defaultCursorPosition = nextPosition.longValue();
                 }

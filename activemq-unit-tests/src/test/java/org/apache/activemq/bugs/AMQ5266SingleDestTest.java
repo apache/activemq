@@ -35,15 +35,13 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +61,6 @@ public class AMQ5266SingleDestTest {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266SingleDestTest.class);
     String activemqURL;
     BrokerService brokerService;
-    private EmbeddedDataSource dataSource;
 
     public int numDests = 1;
     public int messageSize = 10*1000;
@@ -84,7 +81,7 @@ public class AMQ5266SingleDestTest {
     public boolean useCache = true;
 
     @Parameterized.Parameter(5)
-    public boolean useDefaultStore = false;
+    public TestSupport.PersistenceAdapterChoice persistenceAdapterChoice = TestSupport.PersistenceAdapterChoice.KahaDB;
 
     @Parameterized.Parameter(6)
     public boolean optimizeDispatch = false;
@@ -92,7 +89,7 @@ public class AMQ5266SingleDestTest {
     @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},useDefaultStore:{5},optimizedDispatch:{6}")
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
-                {1000,  80,  80,   1024*1024*5,  true, true, false},
+                {1000,  80,  80,   1024*1024*1,  true, TestSupport.PersistenceAdapterChoice.KahaDB, false},
         });
     }
 
@@ -102,22 +99,10 @@ public class AMQ5266SingleDestTest {
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
 
-        dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("target/derbyDb");
-        dataSource.setCreateDatabase("create");
-
-        JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
-        jdbcPersistenceAdapter.setDataSource(dataSource);
-        jdbcPersistenceAdapter.setUseLock(false);
-
-        if (!useDefaultStore) {
-            brokerService.setPersistenceAdapter(jdbcPersistenceAdapter);
-        } else {
-            KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
-            kahaDBPersistenceAdapter.setConcurrentStoreAndDispatchQueues(true);
-        }
+        TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
 
 
         PolicyMap policyMap = new PolicyMap();
@@ -133,11 +118,12 @@ public class AMQ5266SingleDestTest {
         policyMap.setDefaultEntry(defaultEntry);
         brokerService.setDestinationPolicy(policyMap);
 
-        brokerService.getSystemUsage().getMemoryUsage().setLimit(512 * 1024 * 1024);
+        brokerService.getSystemUsage().getMemoryUsage().setLimit(64 * 1024 * 1024);
 
         TransportConnector transportConnector = brokerService.addConnector("tcp://0.0.0.0:0");
         brokerService.start();
         activemqURL = transportConnector.getPublishableConnectString();
+        activemqURL += "?jms.watchTopicAdvisories=false"; // ensure all messages are queue or dlq messages
     }
 
     @After
@@ -145,10 +131,6 @@ public class AMQ5266SingleDestTest {
         if (brokerService != null) {
             brokerService.stop();
         }
-        try {
-            dataSource.setShutdownDatabase("shutdown");
-            dataSource.getConnection();
-        } catch (Exception ignored) {}
     }
 
     @Test
@@ -202,9 +184,6 @@ public class AMQ5266SingleDestTest {
             try {
                 int secs = (int) (endWait - System.currentTimeMillis()) / 1000;
                 LOG.info("Waiting For Consumer Completion. Time left: " + secs + " secs");
-                if (!useDefaultStore) {
-                    DefaultJDBCAdapter.dumpTables(dataSource.getConnection());
-                }
                 Thread.sleep(1000);
             } catch (Exception e) {
             }
@@ -217,11 +196,6 @@ public class AMQ5266SingleDestTest {
         consumer.shutdown();
 
         TimeUnit.SECONDS.sleep(2);
-        LOG.info("DB Contents START");
-        if (!useDefaultStore) {
-            DefaultJDBCAdapter.dumpTables(dataSource.getConnection());
-        }
-        LOG.info("DB Contents END");
 
         LOG.info("Consumer Stats:");
 
@@ -243,6 +217,9 @@ public class AMQ5266SingleDestTest {
             assertEquals("expect to get all messages!", 0, diff);
 
         }
+
+        // verify empty dlq
+        assertEquals("No pending messages", 0l, ((RegionBroker) brokerService.getRegionBroker()).getDestinationStatistics().getMessages().getCount());
     }
 
     public class ExportQueuePublisher {
