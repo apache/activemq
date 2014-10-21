@@ -19,15 +19,12 @@ package org.apache.activemq.command;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
-import java.util.zip.InflaterInputStream;
 
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
@@ -131,7 +128,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
                 dataOut.close();
                 ByteSequence bs = bytesOut.toByteSequence();
                 setContent(bs);
-                if (compressed) {
+
+                ActiveMQConnection connection = getConnection();
+                if (connection != null && connection.isUseCompression()) {
                     doCompress();
                 }
             } catch (IOException ioe) {
@@ -832,11 +831,6 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
             this.bytesOut = new ByteArrayOutputStream();
             OutputStream os = bytesOut;
             this.dataOut = new DataOutputStream(os);
-        }
-
-        ActiveMQConnection connection = getConnection();
-        if (connection != null && connection.isUseCompression()) {
-            compressed = true;
         }
 
         restoreOldContent();
