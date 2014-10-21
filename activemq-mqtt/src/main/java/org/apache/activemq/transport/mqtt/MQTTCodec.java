@@ -109,8 +109,7 @@ public class MQTTCodec {
 
         @Override
         public void parse(DataByteArrayInputStream data, int readSize) throws IOException {
-            int i = 0;
-            while (i++ < readSize) {
+            while (readSize-- > 0) {
                 byte b = data.readByte();
                 // skip repeating nulls
                 if (b == 0) {
@@ -120,8 +119,8 @@ public class MQTTCodec {
                 header = b;
 
                 currentParser = initializeVariableLengthParser();
-                if (readSize > 1) {
-                    currentParser.parse(data, readSize - 1);
+                if (readSize > 0) {
+                    currentParser.parse(data, readSize);
                 }
                 return;
             }
@@ -194,7 +193,7 @@ public class MQTTCodec {
             if (payLoadRead == contentLength) {
                 processCommand();
                 currentParser = initializeHeaderParser();
-                readSize = readSize - payLoadRead;
+                readSize = readSize - length;
                 if (readSize > 0) {
                     currentParser.parse(data, readSize);
                 }
