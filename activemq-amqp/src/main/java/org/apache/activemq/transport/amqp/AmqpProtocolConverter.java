@@ -30,31 +30,7 @@ import javax.jms.Destination;
 import javax.jms.InvalidClientIDException;
 import javax.jms.InvalidSelectorException;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQTempQueue;
-import org.apache.activemq.command.ActiveMQTempTopic;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionError;
-import org.apache.activemq.command.ConnectionId;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.ExceptionResponse;
-import org.apache.activemq.command.LocalTransactionId;
-import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.command.ProducerId;
-import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionId;
-import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.command.*;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
@@ -122,6 +98,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
     protected int prefetch;
+    protected int producerCredit;
     protected Transport protonTransport = Proton.transport();
     protected Connection protonConnection = Proton.connection();
     protected Collector eventCollector = new CollectorImpl();
@@ -296,8 +273,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             processLinkEvent(event.getLink());
                             break;
                         case LINK_FLOW:
-                            Link link = event.getLink();
-                            ((AmqpDeliveryListener) link.getContext()).drainCheck();
+                            processLinkFlow(event.getLink());
                             break;
                         case DELIVERY:
                             processDelivery(event.getDelivery());
@@ -315,6 +291,25 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
             pumpProtonToSocket();
         }
+    }
+
+    protected void processLinkFlow(Link link) throws Exception {
+        Object context = link.getContext();
+        int credit = link.getRemoteCredit();
+        if (context != null && context instanceof ConsumerContext) {
+            ConsumerContext consumerContext = (ConsumerContext)context;
+            // change ActiveMQ consumer prefetch if needed
+            if (consumerContext.credit == 0 && consumerContext.consumerPrefetch != credit && credit > 0) {
+                ConsumerControl control = new ConsumerControl();
+                control.setConsumerId(consumerContext.consumerId);
+                control.setDestination(consumerContext.destination);
+                control.setPrefetch(credit);
+                consumerContext.consumerPrefetch = credit;
+                sendToActiveMQ(control, null);
+            }
+            consumerContext.credit = credit;
+        }
+        ((AmqpDeliveryListener) link.getContext()).drainCheck();
     }
 
     protected void processConnectionEvent(Connection connection) throws Exception {
@@ -828,7 +823,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     void onReceiverOpen(final Receiver receiver, AmqpSessionContext sessionContext) {
         // Client is producing to this receiver object
         org.apache.qpid.proton.amqp.transport.Target remoteTarget = receiver.getRemoteTarget();
-        int flow = prefetch;
+        int flow = producerCredit;
         // use client's preference if set
         if (receiver.getRemoteCredit() != 0) {
             flow = receiver.getRemoteCredit();
@@ -923,6 +918,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         private boolean closed;
         public ConsumerInfo info;
         private boolean endOfBrowse = false;
+        public ActiveMQDestination destination;
+        public int credit;
+        public int consumerPrefetch;
 
         protected LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
 
@@ -1317,12 +1315,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             consumerInfo.setSelector(selector);
             consumerInfo.setNoRangeAcks(true);
             consumerInfo.setDestination(dest);
-            // use client's preference if set
-            if (sender.getRemoteCredit() != 0) {
-                consumerInfo.setPrefetchSize(sender.getRemoteCredit());
-            } else {
-                consumerInfo.setPrefetchSize(prefetch);
-            }
+            consumerContext.destination = dest;
+            consumerInfo.setPrefetchSize(sender.getRemoteCredit());
+            consumerContext.credit = sender.getRemoteCredit();
+            consumerContext.consumerPrefetch = consumerInfo.getPrefetchSize();
             consumerInfo.setDispatchAsync(true);
             if (source.getDistributionMode() == COPY && dest.isQueue()) {
                 consumerInfo.setBrowser(true);
@@ -1440,5 +1436,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     @Override
     public void setPrefetch(int prefetch) {
         this.prefetch = prefetch;
+    }
+
+    @Override
+    public void setProducerCredit(int producerCredit) {
+        this.producerCredit = producerCredit;
     }
 }

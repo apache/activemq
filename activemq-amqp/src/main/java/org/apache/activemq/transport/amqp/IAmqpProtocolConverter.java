@@ -33,4 +33,6 @@ public interface IAmqpProtocolConverter {
     void updateTracer();
 
     void setPrefetch(int prefetch);
+
+    void setProducerCredit(int producerCredit);
 }
