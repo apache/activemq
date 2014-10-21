@@ -1200,7 +1200,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } finally {
             pagedInMessagesLock.readLock().unlock();
         }
-        messagesLock.readLock().lock();
+        messagesLock.writeLock().lock();
         try{
             try {
                 messages.reset();
@@ -1217,7 +1217,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 messages.release();
             }
         }finally {
-            messagesLock.readLock().unlock();
+            messagesLock.writeLock().unlock();
         }
         return null;
     }

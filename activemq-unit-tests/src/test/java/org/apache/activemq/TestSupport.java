@@ -179,7 +179,7 @@ public abstract class TestSupport extends CombinationTestSupport {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
     }
 
-    public PersistenceAdapter setPersistenceAdapter(BrokerService broker, PersistenceAdapterChoice choice) throws IOException {
+    public static PersistenceAdapter setPersistenceAdapter(BrokerService broker, PersistenceAdapterChoice choice) throws IOException {
         PersistenceAdapter adapter = null;
         switch (choice) {
         case JDBC:
