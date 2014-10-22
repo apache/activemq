@@ -34,6 +34,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.naming.Context;
+
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.broker.region.policy.RedeliveryPolicyMap;
 import org.apache.activemq.jndi.JNDIBaseStorable;
@@ -180,6 +181,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private RejectedExecutionHandler rejectedTaskHandler = null;
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
     private boolean rmIdFromConnectionId = false;
+    private boolean consumerExpiryCheckEnabled = true;
 
     // /////////////////////////////////////////////
     //
@@ -403,6 +405,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setRejectedTaskHandler(getRejectedTaskHandler());
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
         connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
+        connection.setConsumerExpiryCheckEnabled(isConsumerExpiryCheckEnabled());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -824,6 +827,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
         props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
+        props.setProperty("consumerExpiryCheckEnabled", Boolean.toString(isConsumerExpiryCheckEnabled()));
     }
 
     public boolean isUseCompression() {
@@ -1222,4 +1226,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.rmIdFromConnectionId = rmIdFromConnectionId;
     }
 
+    /**
+     * @return true if MessageConsumer instance will check for expired messages before dispatch.
+     */
+    public boolean isConsumerExpiryCheckEnabled() {
+        return consumerExpiryCheckEnabled;
+    }
+
+    /**
+     * Controls whether message expiration checking is done in each MessageConsumer
+     * prior to dispatching a message.  Disabling this check can lead to consumption
+     * of expired messages.
+     *
+     * @param consumerExpiryCheckEnabled
+     *        controls whether expiration checking is done prior to dispatch.
+     */
+    public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
+        this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
+    }
 }
