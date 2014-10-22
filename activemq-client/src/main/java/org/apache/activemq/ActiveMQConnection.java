@@ -159,6 +159,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean sendAcksAsync=true;
     private boolean checkForDuplicates = true;
     private boolean queueOnlyConnection = false;
+    private boolean consumerExpiryCheckEnabled = true;
 
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
@@ -2708,5 +2709,24 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setOptimizedAckScheduledAckInterval(long optimizedAckScheduledAckInterval) {
         this.optimizedAckScheduledAckInterval = optimizedAckScheduledAckInterval;
+    }
+
+    /**
+     * @return true if MessageConsumer instance will check for expired messages before dispatch.
+     */
+    public boolean isConsumerExpiryCheckEnabled() {
+        return consumerExpiryCheckEnabled;
+    }
+
+    /**
+     * Controls whether message expiration checking is done in each MessageConsumer
+     * prior to dispatching a message.  Disabling this check can lead to consumption
+     * of expired messages.
+     *
+     * @param consumerExpiryCheckEnabled
+     *        controls whether expiration checking is done prior to dispatch.
+     */
+    public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
+        this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
     }
 }

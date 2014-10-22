@@ -158,6 +158,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private long failoverRedeliveryWaitPeriod = 0;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
+    private boolean consumerExpiryCheckEnabled = true;
 
     /**
      * Create a MessageConsumer
@@ -267,6 +268,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
         this.nonBlockingRedelivery = session.connection.isNonBlockingRedelivery();
         this.transactedIndividualAck = session.connection.isTransactedIndividualAck() || this.nonBlockingRedelivery;
+        this.consumerExpiryCheckEnabled = session.connection.isConsumerExpiryCheckEnabled();
         if (messageListener != null) {
             setMessageListener(messageListener);
         }
@@ -488,7 +490,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 } else if (md.getMessage() == null) {
                     return null;
-                } else if (md.getMessage().isExpired()) {
+                } else if (isConsumerExpiryCheckEnabled() && md.getMessage().isExpired()) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(getConsumerId() + " received expired message: " + md);
                     }
@@ -1385,7 +1387,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             ActiveMQMessage message = createActiveMQMessage(md);
                             beforeMessageIsConsumed(md);
                             try {
-                                boolean expired = message.isExpired();
+                                boolean expired = isConsumerExpiryCheckEnabled() && message.isExpired();
                                 if (!expired) {
                                     listener.onMessage(message);
                                 }
@@ -1625,5 +1627,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public boolean hasMessageListener() {
         return messageListener.get() != null;
+    }
+
+    public boolean isConsumerExpiryCheckEnabled() {
+        return consumerExpiryCheckEnabled;
+    }
+
+    public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
+        this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
     }
 }
