@@ -50,6 +50,7 @@ public class NIOSSLTransport extends NIOTransport {
     protected boolean needClientAuth;
     protected boolean wantClientAuth;
     protected String[] enabledCipherSuites;
+    protected String[] enabledProtocols;
 
     protected SSLContext sslContext;
     protected SSLEngine sslEngine;
@@ -104,6 +105,10 @@ public class NIOSSLTransport extends NIOTransport {
             sslEngine.setUseClientMode(false);
             if (enabledCipherSuites != null) {
                 sslEngine.setEnabledCipherSuites(enabledCipherSuites);
+            }
+
+            if (enabledProtocols != null) {
+                sslEngine.setEnabledProtocols(enabledProtocols);
             }
 
             if (wantClientAuth) {
@@ -434,5 +439,13 @@ public class NIOSSLTransport extends NIOTransport {
 
     public void setEnabledCipherSuites(String[] enabledCipherSuites) {
         this.enabledCipherSuites = enabledCipherSuites;
+    }
+
+    public String[] getEnabledProtocols() {
+        return enabledProtocols;
+    }
+
+    public void setEnabledProtocols(String[] enabledProtocols) {
+        this.enabledProtocols = enabledProtocols;
     }
 }

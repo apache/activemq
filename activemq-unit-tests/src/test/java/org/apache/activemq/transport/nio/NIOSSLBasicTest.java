@@ -90,6 +90,13 @@ public class NIOSSLBasicTest {
         stopBroker(broker);
     }
 
+    @Test
+    public void enabledProtocols() throws Exception {
+        BrokerService broker = createBroker("nio+ssl", "nio+ssl://localhost:61616?transport.needClientAuth=true&transport.enabledProtocols=TLSv1,TLSv1.1,TLSv1.2");
+        basicSendReceive("ssl://localhost:" + broker.getConnectorByName("nio+ssl").getConnectUri().getPort());
+        stopBroker(broker);
+    }
+
     public void basicSendReceive(String uri) throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(uri);
         Connection connection = factory.createConnection();
