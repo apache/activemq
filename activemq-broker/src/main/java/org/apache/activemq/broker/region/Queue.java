@@ -944,8 +944,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             messagesLock.readLock().unlock();
         }
         return destination.getQualifiedName() + ", subscriptions=" + consumers.size()
-                + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size + ", in flight groups="
-                + messageGroupOwners;
+                + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size + ", pending="
+                + indexOrderedCursorUpdates.size();
     }
 
     @Override
@@ -1877,7 +1877,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}",
                 new Object[]{
-                        destination.getPhysicalName(),
+                        this,
                         toPageIn,
                         destinationStatistics.getInflight().getCount(),
                         pagedInMessages.size(),
