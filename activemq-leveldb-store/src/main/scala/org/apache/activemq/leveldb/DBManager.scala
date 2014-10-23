@@ -104,7 +104,6 @@ class CountDownFuture[T <: AnyRef]() extends ListenableFuture[T] {
   var value:T = _
   var error:Throwable = _
   var listener:Runnable = _
-  var id:MessageId = _
 
   def cancel(mayInterruptIfRunning: Boolean) = false
   def isCancelled = false
@@ -116,9 +115,6 @@ class CountDownFuture[T <: AnyRef]() extends ListenableFuture[T] {
 
   def set(v:T) = {
     value = v
-    if (id != null) {
-      id.setFutureOrSequenceLong(id.getEntryLocator.asInstanceOf[EntryLocator].seq)
-    }
     latch.countDown()
     fireListener
   }
@@ -330,14 +326,6 @@ class DelayableUOW(val manager:DBManager) extends BaseRetained {
     val entry = QueueEntryRecord(id, queueKey, queueSeq)
     assert(id.getEntryLocator == null)
     id.setEntryLocator(EntryLocator(queueKey, queueSeq))
-    if (message.getTransactionId!=null) {
-        // why does future not get set in tx?
-       id.setFutureOrSequenceLong(queueSeq)
-    } else {
-      id.setFutureOrSequenceLong(countDownFuture)
-      message.setRecievedByDFBridge(true)
-      countDownFuture.id = id
-    }
 
     val a = this.synchronized {
       if( !delay )
@@ -741,10 +729,10 @@ class DBManager(val parent:LevelDBStore) {
     client.collectionIsEmpty(key)
   }
 
-  def cursorMessages(preparedAcks:java.util.HashSet[MessageId], key:Long, listener:MessageRecoveryListener, startPos:Long, max:Long=Long.MaxValue) = {
+  def cursorMessages(preparedAcks:java.util.HashSet[MessageId], key:Long, listener:MessageRecoveryListener, startPos:Long, endPos:Long=Long.MaxValue, max:Long=Long.MaxValue) = {
     var lastmsgid:MessageId = null
     var count = 0L
-    client.queueCursor(key, startPos) { msg =>
+    client.queueCursor(key, startPos, endPos) { msg =>
       if( !preparedAcks.contains(msg.getMessageId) && listener.recoverMessage(msg) ) {
         lastmsgid = msg.getMessageId
         count += 1

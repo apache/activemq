@@ -35,15 +35,12 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +62,6 @@ public class AMQ5266Test {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266Test.class);
     String activemqURL = "tcp://localhost:61617";
     BrokerService brokerService;
-    private EmbeddedDataSource dataSource;
 
     public int messageSize = 1000;
 
@@ -85,28 +81,34 @@ public class AMQ5266Test {
     public boolean useCache = true;
 
     @Parameterized.Parameter(5)
-    public boolean useDefaultStore = false;
+    public TestSupport.PersistenceAdapterChoice persistenceAdapterChoice = TestSupport.PersistenceAdapterChoice.KahaDB;
 
     @Parameterized.Parameter(6)
     public boolean optimizeDispatch = false;
 
-    @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},useDefaultStore:{5},optimizedDispatch:{6}")
+    @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},store:{5},optimizedDispatch:{6}")
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
-                // jdbc
-                {1,    1,   1,   50*1024,   false, false, true},
-                {1000, 20,  5,   50*1024,   true,  false, false},
-                {100,  20,  5,   50*1024,   false, false, false},
-                {1000, 5,   20,  50*1024,   true,  false, false},
-                {1000, 20,  20,  1024*1024, true,  false, false},
+                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, true},
+                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
 
-                // default store
-                {1,    1,   1,   50*1024,   false, true, true},
-                {100,  5,   5,   50*1024,   false, true, false},
-                {1000, 20,  5,   50*1024,   true,  true, false},
-                {100,  20,  5,   50*1024,   false, true, false},
-                {1000, 5,   20,  50*1024,   true,  true, false},
-                {1000, 20,  20,  1024*1024, true,  true, false},
+                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
+                {100,  5,   5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
+                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
+
+                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
+                {100,  5,   5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
+                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
+
         });
     }
 
@@ -115,24 +117,9 @@ public class AMQ5266Test {
     @Before
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
-
-        dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("target/derbyDb");
-        dataSource.setCreateDatabase("create");
-
-        JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
-        jdbcPersistenceAdapter.setDataSource(dataSource);
-        jdbcPersistenceAdapter.setUseLock(false);
-
-        if (!useDefaultStore) {
-            brokerService.setPersistenceAdapter(jdbcPersistenceAdapter);
-        } else {
-            KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter) brokerService.getPersistenceAdapter();
-            kahaDBPersistenceAdapter.setConcurrentStoreAndDispatchQueues(true);
-        }
+        TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseJmx(false);
-
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
@@ -159,10 +146,6 @@ public class AMQ5266Test {
         if (brokerService != null) {
             brokerService.stop();
         }
-        try {
-            dataSource.setShutdownDatabase("shutdown");
-            dataSource.getConnection();
-        } catch (Exception ignored) {}
     }
 
     @Test
@@ -211,9 +194,6 @@ public class AMQ5266Test {
             try {
                 int secs = (int) (endWait - System.currentTimeMillis()) / 1000;
                 LOG.info("Waiting For Consumer Completion. Time left: " + secs + " secs");
-                if (!useDefaultStore) {
-                    DefaultJDBCAdapter.dumpTables(dataSource.getConnection());
-                }
                 Thread.sleep(10000);
             } catch (Exception e) {
             }
@@ -222,13 +202,6 @@ public class AMQ5266Test {
         LOG.info("\nConsumer Complete: " + consumer.completed() +", Shutting Down.");
 
         consumer.shutdown();
-
-        TimeUnit.SECONDS.sleep(2);
-        LOG.info("DB Contents START");
-        if (!useDefaultStore) {
-            DefaultJDBCAdapter.dumpTables(dataSource.getConnection());
-        }
-        LOG.info("DB Contents END");
 
         LOG.info("Consumer Stats:");
 
