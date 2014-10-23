@@ -21,7 +21,6 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -73,7 +72,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
     final Set<Long> recoveredAdditions = new LinkedHashSet<Long>();
     protected ActiveMQMessageAudit audit;
-    protected final List<Long> pendingAdditions = new LinkedList<Long>();
+    protected final LinkedList<Long> pendingAdditions = new LinkedList<Long>();
     
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
         super(destination);
@@ -131,7 +130,8 @@ public class JDBCMessageStore extends AbstractMessageStore {
             pendingAdditions.add(sequence);
             c.onCompletion(new Runnable() {
                 public void run() {
-                    // message added to db
+                    // jdbc close or jms commit - while futureOrSequenceLong==null ordered
+                    // work will remain pending on the Queue
                     message.getMessageId().setFutureOrSequenceLong(sequence);
                     message.getMessageId().setEntryLocator(sequence);
                 }
@@ -341,6 +341,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
                     }
                 }
             }
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(this + " recoverNext lastRecovered:" + lastRecoveredSequenceId.get() + ", minPending:" + minPendingSequeunceId());
+            }
             adapter.doRecoverNextMessages(c, destination, minPendingSequeunceId(), lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
@@ -376,7 +379,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
      */
     public void resetBatching() {
         if (LOG.isTraceEnabled()) {
-            LOG.trace(destination.getPhysicalName() + " resetBatching, existing last recovered seqId: " + lastRecoveredSequenceId.get());
+            LOG.trace(this + " resetBatching, existing last recovered seqId: " + lastRecoveredSequenceId.get());
         }
         lastRecoveredSequenceId.set(-1);
         lastRecoveredPriority.set(Byte.MAX_VALUE - 1);
@@ -394,7 +397,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
             lastRecoveredPriority.set(Byte.MAX_VALUE -1);
         }
         if (LOG.isTraceEnabled()) {
-            LOG.trace(destination.getPhysicalName() + " setBatch: new sequenceId: " + lastRecoveredSequenceId.get()
+            LOG.trace(this + " setBatch: new sequenceId: " + lastRecoveredSequenceId.get()
                     + ", priority: " + lastRecoveredPriority.get());
         }
     }
@@ -402,5 +405,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
+    }
+
+    @Override
+    public String toString() {
+        return destination.getPhysicalName() + ",pendingSize:" + pendingAdditions.size();
     }
 }

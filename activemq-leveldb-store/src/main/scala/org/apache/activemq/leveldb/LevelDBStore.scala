@@ -35,7 +35,8 @@ import org.apache.activemq.leveldb.util.Log
 import org.apache.activemq.store.PList.PListIterator
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 import org.fusesource.hawtdispatch;
-import org.apache.activemq.broker.scheduler.JobSchedulerStore;
+import org.apache.activemq.broker.scheduler.JobSchedulerStore
+import org.apache.activemq.store.IndexListener.MessageContext
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -245,7 +246,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       val (msgs, acks) = db.getXAActions(transaction.xacontainer_id)
       transaction.xarecovery = (msgs, acks.map(_.ack))
       for ( msg <- msgs ) {
-        transaction.add(createMessageStore(msg.getDestination), new IndexListener.MessageContext(null, msg, null), false);
+        transaction.add(createMessageStore(msg.getDestination), null, msg, false);
       }
       for ( record <- acks ) {
         var ack = record.ack
@@ -348,27 +349,27 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       }
     }
 
-  def add(store:LevelDBStore#LevelDBMessageStore, messageContext:IndexListener.MessageContext, delay:Boolean) = {
+  def add(store:LevelDBStore#LevelDBMessageStore, context: ConnectionContext, message: Message, delay:Boolean) = {
       commitActions += new TransactionAction() {
         def commit(uow:DelayableUOW) = {
           if( prepared ) {
-            uow.dequeue(xacontainer_id, messageContext.message.getMessageId)
+            uow.dequeue(xacontainer_id, message.getMessageId)
           }
-          var copy = messageContext.message.getMessageId.copy()
+          var copy = message.getMessageId.copy()
           copy.setEntryLocator(null)
-          messageContext.message.setMessageId(copy)
-          store.doAdd(uow, messageContext, delay)
+          message.setMessageId(copy)
+          store.doAdd(uow, context, message, delay)
         }
 
         def prepare(uow:DelayableUOW) = {
           // add it to the xa container instead of the actual store container.
-          uow.enqueue(xacontainer_id, xaseqcounter.incrementAndGet, messageContext.message, delay)
-          xarecovery._1 += messageContext.message
+          uow.enqueue(xacontainer_id, xaseqcounter.incrementAndGet, message, delay)
+          xarecovery._1 += message
         }
 
         def rollback(uow:DelayableUOW) = {
           if( prepared ) {
-            uow.dequeue(xacontainer_id, messageContext.message.getMessageId)
+            uow.dequeue(xacontainer_id, message.getMessageId)
           }
         }
 
@@ -671,23 +672,29 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     val lastSeq: AtomicLong = new AtomicLong(0)
     protected var cursorPosition: Long = 0
     val preparedAcks = new HashSet[MessageId]()
-
+    val pendingCursorAdds = new LinkedList[Long]()
     lastSeq.set(db.getLastQueueEntrySeq(key))
 
     def cursorResetPosition = 0L
 
-    def doAdd(uow: DelayableUOW, messageContext:IndexListener.MessageContext, delay:Boolean): CountDownFuture[AnyRef] = {
+    def doAdd(uow: DelayableUOW, context: ConnectionContext, message: Message, delay:Boolean): CountDownFuture[AnyRef] = {
       check_running
-      val seq = lastSeq.incrementAndGet()
-      messageContext.message.incrementReferenceCount()
+      message.incrementReferenceCount()
       uow.addCompleteListener({
-        messageContext.message.decrementReferenceCount()
+        message.decrementReferenceCount()
       })
-      val future = uow.enqueue(key, seq, messageContext.message, delay)
-      if (indexListener != null) {
-        indexListener.onAdd(messageContext)
+      val sequence = lastSeq.synchronized {
+        val seq = lastSeq.incrementAndGet()
+        message.getMessageId.setFutureOrSequenceLong(seq);
+        if (indexListener != null) {
+          pendingCursorAdds.synchronized { pendingCursorAdds.add(seq) }
+          indexListener.onAdd(new MessageContext(context, message, new Runnable {
+            def run(): Unit = pendingCursorAdds.synchronized { pendingCursorAdds.remove(seq) }
+          }))
+        }
+        seq
       }
-      future
+      uow.enqueue(key, sequence, message, delay)
     }
 
     override def asyncAddQueueMessage(context: ConnectionContext, message: Message) = asyncAddQueueMessage(context, message, false)
@@ -695,11 +702,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       check_running
       message.getMessageId.setEntryLocator(null)
       if(  message.getTransactionId!=null ) {
-        transaction(message.getTransactionId).add(this, new IndexListener.MessageContext(context, message, null), delay)
+        transaction(message.getTransactionId).add(this, context, message, delay)
         DONE
       } else {
         withUow { uow=>
-          doAdd(uow, new IndexListener.MessageContext(context, message, null), delay)
+          doAdd(uow, context, message, delay)
         }
       }
     }
@@ -759,9 +766,13 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       return db.collectionIsEmpty(key)
     }
 
+    def getCursorPendingLimit: Long = {
+      pendingCursorAdds.synchronized { Option(pendingCursorAdds.peek).getOrElse(Long.MaxValue) }
+    }
+
     def recover(listener: MessageRecoveryListener): Unit = {
       check_running
-      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorResetPosition)
+      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorResetPosition, getCursorPendingLimit)
     }
 
     def resetBatching: Unit = {
@@ -770,11 +781,11 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
 
     def recoverNextMessages(maxReturned: Int, listener: MessageRecoveryListener): Unit = {
       check_running
-      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorPosition, maxReturned)
+      cursorPosition = db.cursorMessages(preparedAcks, key, listener, cursorPosition, getCursorPendingLimit, maxReturned)
     }
 
     override def setBatch(id: MessageId): Unit = {
-      cursorPosition = db.queuePosition(id) + 1
+      cursorPosition = Math.min(getCursorPendingLimit, db.queuePosition(id)) + 1
     }
 
   }
