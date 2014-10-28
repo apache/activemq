@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import org.fusesource.hawtbuf.Buffer;
 
 /**
+ *
  */
 public class AmqpSupport {
 
