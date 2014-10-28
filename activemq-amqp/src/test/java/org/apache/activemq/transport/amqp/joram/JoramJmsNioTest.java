@@ -17,7 +17,6 @@
 package org.apache.activemq.transport.amqp.joram;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;

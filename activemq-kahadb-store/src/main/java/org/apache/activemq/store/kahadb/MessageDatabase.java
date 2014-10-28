@@ -1306,6 +1306,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (sd.subscriptions != null && !sd.subscriptions.isEmpty(tx)) {
                     addAckLocationForNewMessage(tx, sd, id);
                 }
+                metadata.lastUpdate = location;
             } else {
                 // If the message ID is indexed, then the broker asked us to store a duplicate before the message was dispatched and acked, we ignore this add attempt
                 LOG.warn("Duplicate message add attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
@@ -1318,10 +1319,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             // added message. We don't want to assign it a new id as the other indexes would
             // be wrong..
             sd.locationIndex.put(tx, location, previous);
+            metadata.lastUpdate = location;
         }
         // record this id in any event, initial send or recovery
         metadata.producerSequenceIdTracker.isDuplicate(command.getMessageId());
-        metadata.lastUpdate = location;
         return id;
     }
 
@@ -1355,10 +1356,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             if(previousKeys != null) {
                 sd.locationIndex.remove(tx, previousKeys.location);
             }
+            metadata.lastUpdate = location;
         } else {
             LOG.warn("Non existent message update attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
         }
-        metadata.lastUpdate = location;
     }
 
     void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
@@ -1372,6 +1373,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (keys != null) {
                     sd.locationIndex.remove(tx, keys.location);
                     recordAckMessageReferenceLocation(ackLocation, keys.location);
+                    metadata.lastUpdate = ackLocation;
                 }  else if (LOG.isDebugEnabled()) {
                     LOG.debug("message not found in order index: " + sequenceId  + " for: " + command.getMessageId());
                 }
@@ -1398,12 +1400,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 // The following method handles deleting un-referenced messages.
                 removeAckLocation(tx, sd, subscriptionKey, sequence);
+                metadata.lastUpdate = ackLocation;
             } else if (LOG.isDebugEnabled()) {
                 LOG.debug("no message sequence exists for id: " + command.getMessageId() + " and sub: " + command.getSubscriptionKey());
             }
 
         }
-        metadata.lastUpdate = ackLocation;
     }
 
     private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
@@ -1767,7 +1769,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     // StoredDestination related implementation methods.
     // /////////////////////////////////////////////////////////////////
 
-    private final HashMap<String, StoredDestination> storedDestinations = new HashMap<String, StoredDestination>();
+    protected final HashMap<String, StoredDestination> storedDestinations = new HashMap<String, StoredDestination>();
 
     static class MessageKeys {
         final String messageId;
@@ -1885,6 +1887,11 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         public void trackPendingAddComplete(Long seq) {
             orderIndex.trackPendingAddComplete(seq);
+        }
+
+        @Override
+        public String toString() {
+            return "nextSeq:" + orderIndex.nextMessageId + ",lastRet:" + orderIndex.cursor + ",pending:" + orderIndex.pendingAdditions.size();
         }
     }
 
@@ -2337,7 +2344,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return 0;
     }
 
-    private String key(KahaDestination destination) {
+    protected String key(KahaDestination destination) {
         return destination.getType().getNumber() + ":" + destination.getName();
     }
 
@@ -2786,7 +2793,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         BTreeIndex<Long, MessageKeys> defaultPriorityIndex;
         BTreeIndex<Long, MessageKeys> lowPriorityIndex;
         BTreeIndex<Long, MessageKeys> highPriorityIndex;
-        MessageOrderCursor cursor = new MessageOrderCursor();
+        final MessageOrderCursor cursor = new MessageOrderCursor();
         Long lastDefaultKey;
         Long lastHighKey;
         Long lastLowKey;
@@ -2887,16 +2894,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (defaultPriorityIndex.containsKey(tx, sequence)) {
                     lastDefaultKey = sequence;
                     cursor.defaultCursorPosition = nextPosition.longValue();
-                } else if (highPriorityIndex != null) {
-                    if (highPriorityIndex.containsKey(tx, sequence)) {
-                        lastHighKey = sequence;
-                        cursor.highPriorityCursorPosition = nextPosition.longValue();
-                    } else if (lowPriorityIndex.containsKey(tx, sequence)) {
-                        lastLowKey = sequence;
-                        cursor.lowPriorityCursorPosition = nextPosition.longValue();
-                    }
+                } else if (highPriorityIndex != null && highPriorityIndex.containsKey(tx, sequence)) {
+                    lastHighKey = sequence;
+                    cursor.highPriorityCursorPosition = nextPosition.longValue();
+                } else if (lowPriorityIndex.containsKey(tx, sequence)) {
+                    lastLowKey = sequence;
+                    cursor.lowPriorityCursorPosition = nextPosition.longValue();
                 } else {
-                    LOG.warn("setBatch: sequence " + sequence + " not found in orderindex:" + this);
                     lastDefaultKey = sequence;
                     cursor.defaultCursorPosition = nextPosition.longValue();
                 }

@@ -24,7 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -38,9 +40,14 @@ import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
+import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,15 +59,13 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Stuck messages test client.
- * <p/>
- * Will kick of publisher and consumer simultaneously, and will usually result in stuck messages on the queue.
+/*
+ * pause producers if consumers stall and verify broker drained before resume
  */
 @RunWith(Parameterized.class)
-public class AMQ5266Test {
-    static Logger LOG = LoggerFactory.getLogger(AMQ5266Test.class);
-    String activemqURL = "tcp://localhost:61617";
+public class AMQ5266StarvedConsumerTest {
+    static Logger LOG = LoggerFactory.getLogger(AMQ5266StarvedConsumerTest.class);
+    String activemqURL;
     BrokerService brokerService;
 
     public int messageSize = 1000;
@@ -85,30 +90,18 @@ public class AMQ5266Test {
 
     @Parameterized.Parameter(6)
     public boolean optimizeDispatch = false;
+    private  AtomicBoolean didNotReceive = new AtomicBoolean(false);
 
     @Parameterized.Parameters(name="#{0},producerThreads:{1},consumerThreads:{2},mL:{3},useCache:{4},store:{5},optimizedDispatch:{6}")
     public static Iterable<Object[]> parameters() {
         return Arrays.asList(new Object[][]{
-                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, true},
-                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
-                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.JDBC, false},
-                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
-                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.JDBC, false},
+                {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
+                {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
+                {1000, 40,  5,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.JDBC, true},
 
-                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
-                {100,  5,   5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, false},
-                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
-                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.KahaDB, false},
-                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
-                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.KahaDB, false},
-
-                {1,    1,   1,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
-                {100,  5,   5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, false},
-                {1000, 20,  5,   50*1024,   true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
-                {100,  20,  5,   50*1024,   false, TestSupport.PersistenceAdapterChoice.LevelDB, false},
-                {1000, 5,   20,  50*1024,   true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
-                {1000, 20,  20,  1024*1024, true,  TestSupport.PersistenceAdapterChoice.LevelDB, false},
-
+                {500, 20,  20,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.KahaDB, true},
+                {500, 20,  20,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.LevelDB, true},
+                {500, 20,  20,   1024*1024,  false, TestSupport.PersistenceAdapterChoice.JDBC, true},
         });
     }
 
@@ -120,6 +113,8 @@ public class AMQ5266Test {
         TestSupport.setPersistenceAdapter(brokerService, persistenceAdapterChoice);
         brokerService.setDeleteAllMessagesOnStartup(true);
         brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
+
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry defaultEntry = new PolicyEntry();
@@ -148,10 +143,25 @@ public class AMQ5266Test {
         }
     }
 
-    @Test
+    CyclicBarrier globalProducerHalt = new CyclicBarrier(publisherThreadCount, new Runnable() {
+        @Override
+        public void run() {
+            // wait for queue size to go to zero
+            try {
+                while (((RegionBroker)brokerService.getRegionBroker()).getDestinationStatistics().getMessages().getCount() > 0) {
+                    LOG.info("Total messageCount: " + ((RegionBroker)brokerService.getRegionBroker()).getDestinationStatistics().getMessages().getCount());
+                    TimeUnit.SECONDS.sleep(5);
+                }
+            } catch (Exception ignored) {
+                ignored.printStackTrace();
+            }
+        }
+    });
+
+    @Test(timeout = 30 * 60 * 1000)
     public void test() throws Exception {
 
-        String activemqQueues = "activemq,activemq2";//,activemq3,activemq4,activemq5,activemq6,activemq7,activemq8,activemq9";
+        String activemqQueues = "activemq,activemq2,activemq3,activemq4";//,activemq5,activemq6,activemq7,activemq8,activemq9";
 
         int consumerWaitForConsumption = 5 * 60 * 1000;
 
@@ -202,6 +212,7 @@ public class AMQ5266Test {
         LOG.info("\nConsumer Complete: " + consumer.completed() +", Shutting Down.");
 
         consumer.shutdown();
+
 
         LOG.info("Consumer Stats:");
 
@@ -282,6 +293,7 @@ public class AMQ5266Test {
 
             if (connectionFactory == null) {
                 connectionFactory = new ActiveMQConnectionFactory(amqUser, amqPassword, activemqURL);
+                connectionFactory.setWatchTopicAdvisories(false);
             }
 
             // Set the redelivery count to -1 (infinite), or else messages will start dropping
@@ -300,6 +312,7 @@ public class AMQ5266Test {
             private QueueConnection qc;
             private Session session;
             private MessageProducer mp;
+            private Queue q;
 
             private PublisherThread(int count) throws Exception {
 
@@ -311,8 +324,8 @@ public class AMQ5266Test {
 
                 // In our code, when publishing to multiple queues,
                 // we're using composite destinations like below
-                Queue q = new ActiveMQQueue(activemqQueues);
-                mp = session.createProducer(q);
+                q = new ActiveMQQueue(activemqQueues);
+                mp = session.createProducer(null);
             }
 
             public void run() {
@@ -327,8 +340,12 @@ public class AMQ5266Test {
                         tm.setStringProperty("KEY", id);
                         ids.add(id);                            // keep track of the key to compare against consumer
 
-                        mp.send(tm);
+                        mp.send(q, tm);
                         session.commit();
+
+                        if (didNotReceive.get()) {
+                            globalProducerHalt.await();
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -467,6 +484,7 @@ public class AMQ5266Test {
 
             if (connectionFactory == null) {
                 connectionFactory = new ActiveMQConnectionFactory(amqUser, amqPassword, activemqURL);
+                connectionFactory.setWatchTopicAdvisories(false);
             }
 
             // Set the redelivery count to -1 (infinite), or else messages will start dropping
@@ -559,6 +577,7 @@ public class AMQ5266Test {
                             try {
                                 if (idList.size() < totalToExpect) {
                                     LOG.info("did not receive on {}, current count: {}", qName, idList.size());
+                                    didNotReceive.set(true);
                                 }
                                 //sleep(3000);
                             } catch (Exception e) {

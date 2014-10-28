@@ -42,12 +42,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -136,7 +138,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Test
+    @Test(timeout=30*1000)
     public void testTransactedConsumer() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
         final int msgCount = 1;
@@ -391,7 +393,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Test(timeout=90000)
+    @Test(timeout=30000)
     public void testConsumerReceiveNoWaitThrowsWhenBrokerStops() throws Exception {
         connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -425,7 +427,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         assertTrue(t.passed());
     }
 
-    @Test(timeout=60000)
+    @Test(timeout=30000)
     public void testConsumerReceiveTimedThrowsWhenBrokerStops() throws Exception {
         connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -520,7 +522,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Test(timeout=120000)
+    @Test(timeout=30 * 1000)
     public void testProduceAndConsumeLargeNumbersOfMessages() throws JMSException {
         int count = 2000;
         connection = createConnection();
@@ -695,7 +697,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Test(timeout=60000)
+    @Test(timeout=30000)
     public void testConnectionsAreClosed() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
@@ -826,7 +828,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         return builder.toString();
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 30 * 1000)
     public void testSendLargeMessage() throws JMSException, InterruptedException {
         connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -848,5 +850,106 @@ public class JMSClientTest extends JMSClientTestSupport {
         LOG.debug(">>>> Received message of length {}", textMessage.getText().length());
         assertEquals(messageSize, textMessage.getText().length());
         assertEquals(messageText, textMessage.getText());
+    }
+
+    @Test(timeout=30000)
+    public void testDurableConsumerUnsubscribe() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final BrokerViewMBean broker = getProxyToBroker();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic(getDestinationName());
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "DurbaleTopic");
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 1;
+            }
+        }));
+
+        consumer.close();
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 1 &&
+                       broker.getDurableTopicSubscribers().length == 0;
+            }
+        }));
+
+        session.unsubscribe("DurbaleTopic");
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 0;
+            }
+        }));
+    }
+
+    @Test(timeout=30000)
+    public void testDurableConsumerUnsubscribeWhileNoSubscription() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final BrokerViewMBean broker = getProxyToBroker();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 0;
+            }
+        }));
+
+        try {
+            session.unsubscribe("DurbaleTopic");
+            fail("Should have thrown as subscription is in use.");
+        } catch (JMSException ex) {
+        }
+    }
+
+    @Ignore("Requires version 0.30 or higher to work.") // TODO
+    @Test(timeout=30000)
+    public void testDurableConsumerUnsubscribeWhileActive() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        final BrokerViewMBean broker = getProxyToBroker();
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = session.createTopic(getDestinationName());
+        session.createDurableSubscriber(topic, "DurbaleTopic");
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getInactiveDurableTopicSubscribers().length == 0 &&
+                       broker.getDurableTopicSubscribers().length == 1;
+            }
+        }));
+
+        try {
+            session.unsubscribe("DurbaleTopic");
+            fail("Should have thrown as subscription is in use.");
+        } catch (JMSException ex) {
+        }
     }
 }

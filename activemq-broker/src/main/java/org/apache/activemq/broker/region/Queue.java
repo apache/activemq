@@ -771,19 +771,24 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     candidate = indexOrderedCursorUpdates.peek();
                 }
             }
-            for (MessageContext messageContext : orderedUpdates) {
-                if (!cursorAdd(messageContext.message)) {
-                    // cursor suppressed a duplicate
-                    messageContext.duplicate = true;
+            messagesLock.writeLock().lock();
+            try {
+                for (MessageContext messageContext : orderedUpdates) {
+                    if (!messages.addMessageLast(messageContext.message)) {
+                        // cursor suppressed a duplicate
+                        messageContext.duplicate = true;
+                    }
+                    if (messageContext.onCompletion != null) {
+                        messageContext.onCompletion.run();
+                    }
                 }
+            } finally {
+                messagesLock.writeLock().unlock();
             }
         } finally {
             sendLock.unlock();
         }
         for (MessageContext messageContext : orderedUpdates) {
-            if (messageContext.onCompletion != null) {
-                messageContext.onCompletion.run();
-            }
             if (!messageContext.duplicate) {
                 messageSent(messageContext.context, messageContext.message);
             }
@@ -939,8 +944,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             messagesLock.readLock().unlock();
         }
         return destination.getQualifiedName() + ", subscriptions=" + consumers.size()
-                + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size + ", in flight groups="
-                + messageGroupOwners;
+                + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size + ", pending="
+                + indexOrderedCursorUpdates.size();
     }
 
     @Override
@@ -1104,8 +1109,15 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void doBrowse(List<Message> browseList, int max) {
         final ConnectionContext connectionContext = createConnectionContext();
         try {
+            int maxPageInAttempts = 1;
+            messagesLock.readLock().lock();
+            try {
+                maxPageInAttempts += (messages.size() / getMaxPageSize());
+            } finally {
+                messagesLock.readLock().unlock();
+            }
 
-            while (shouldPageInMoreForBrowse(max)) {
+            while (shouldPageInMoreForBrowse(max) && maxPageInAttempts-- > 0) {
                 pageInMessages(!memoryUsage.isFull(110));
             };
 
@@ -1188,7 +1200,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         } finally {
             pagedInMessagesLock.readLock().unlock();
         }
-        messagesLock.readLock().lock();
+        messagesLock.writeLock().lock();
         try{
             try {
                 messages.reset();
@@ -1205,7 +1217,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 messages.release();
             }
         }finally {
-            messagesLock.readLock().unlock();
+            messagesLock.writeLock().unlock();
         }
         return null;
     }
@@ -1865,7 +1877,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         LOG.debug("{} toPageIn: {}, Inflight: {}, pagedInMessages.size {}, pagedInPendingDispatch.size {}, enqueueCount: {}, dequeueCount: {}, memUsage:{}",
                 new Object[]{
-                        destination.getPhysicalName(),
+                        this,
                         toPageIn,
                         destinationStatistics.getInflight().getCount(),
                         pagedInMessages.size(),

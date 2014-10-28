@@ -656,19 +656,18 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         @Override
         public void setBatch(final MessageId identity) throws IOException {
-            final String key = identity.toProducerKey();
             indexLock.writeLock().lock();
             try {
                 pageFile.tx().execute(new Transaction.Closure<IOException>() {
                     @Override
                     public void execute(Transaction tx) throws IOException {
                         StoredDestination sd = getStoredDestination(dest, tx);
-                        Long location = sd.messageIdIndex.get(tx, key);
-                        if (location != null) {
-                            sd.orderIndex.setBatch(tx, location);
-                        } else {
-                            LOG.warn("{} {} setBatch failed, location for {} not found in messageId index for {}", this, dest.getName(), identity.getFutureOrSequenceLong(), identity);
+                        Long location = (Long) identity.getFutureOrSequenceLong();
+                        Long pending = sd.orderIndex.minPendingAdd();
+                        if (pending != null) {
+                            location = Math.min(location, pending-1);
                         }
+                        sd.orderIndex.setBatch(tx, location);
                     }
                 });
             } finally {
@@ -714,6 +713,10 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             this.localDestinationSemaphore.release();
         }
 
+        @Override
+        public String toString(){
+            return "permits:" + this.localDestinationSemaphore.availablePermits() + ",sd=" + storedDestinations.get(key(dest));
+        }
     }
 
     class KahaDBTopicMessageStore extends KahaDBMessageStore implements TopicMessageStore {

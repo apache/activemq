@@ -16,21 +16,17 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
-import java.security.SecureRandom;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.transport.amqp.DefaultTrustManager;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
 import org.objectweb.jtests.jms.conform.connection.ConnectionTest;
 import org.objectweb.jtests.jms.conform.connection.TopicConnectionTest;
 import org.objectweb.jtests.jms.conform.message.MessageBodyTest;

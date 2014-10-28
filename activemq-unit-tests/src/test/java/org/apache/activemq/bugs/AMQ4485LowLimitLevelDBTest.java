@@ -14,25 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.bugs;
 
-import java.io.IOException;
+import java.io.File;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.leveldb.LevelDBStore;
 
-import org.apache.activemq.command.Command;
+public class AMQ4485LowLimitLevelDBTest extends AMQ4485LowLimitTest {
 
-/**
- */
-public interface IAmqpProtocolConverter {
+    public AMQ4485LowLimitLevelDBTest() {
+        super();
+        numBrokers = 2;
+    }
 
-    void onAMQPData(Object command) throws Exception;
+    protected BrokerService createBroker(int brokerid, boolean addToNetwork) throws Exception {
+        BrokerService broker = super.createBroker(brokerid, addToNetwork);
 
-    void onAMQPException(IOException error);
-
-    void onActiveMQCommand(Command command) throws Exception;
-
-    void updateTracer();
-
-    void setPrefetch(int prefetch);
-
-    void setProducerCredit(int producerCredit);
+        LevelDBStore levelDBStore = new LevelDBStore();
+        levelDBStore.setDirectory(new File(broker.getBrokerDataDirectory(),"levelDB"));
+        broker.setPersistenceAdapter(levelDBStore);
+        return broker;
+    }
 }

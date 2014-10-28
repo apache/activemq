@@ -23,6 +23,13 @@ import javax.jms.JMSException;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.After;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 public class JMSClientTestSupport extends AmqpTestSupport {
 
     protected Connection connection;
@@ -30,14 +37,29 @@ public class JMSClientTestSupport extends AmqpTestSupport {
     @Override
     @After
     public void tearDown() throws Exception {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (Exception e) {
-            }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = executor.submit(new CloseConnectionTask());
+        try {
+            LOG.debug("tearDown started.");
+            future.get(60, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new Exception("CloseConnection timed out");
         }
+        executor.shutdownNow();
 
         super.tearDown();
+    }
+
+    public class CloseConnectionTask implements Callable<Boolean> {
+        @Override
+        public Boolean call() throws Exception {
+            if (connection != null) {
+                LOG.debug("in CloseConnectionTask.call(), calling connection.close()");
+                connection.close();
+            }
+
+            return Boolean.TRUE;
+        }
     }
 
     /**

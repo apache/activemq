@@ -180,4 +180,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public void setPrefetch(int prefetch) {
         protocolConverter.setPrefetch(prefetch);
     }
+
+    public void setProducerCredit(int producerCredit) {
+        protocolConverter.setProducerCredit(producerCredit);
+    }
 }
