@@ -134,7 +134,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     protected Transport protonTransport = Proton.transport();
     protected Connection protonConnection = Proton.connection();
     protected Collector eventCollector = new CollectorImpl();
-    protected boolean useByteDestinationTypeAnnotation;
 
     public AmqpProtocolConverter(AmqpTransport transport, BrokerService brokerService) {
         this.amqpTransport = transport;
@@ -145,8 +144,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         if (maxFrameSize > AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE) {
             this.protonTransport.setMaxFrameSize(maxFrameSize);
         }
-
-        useByteDestinationTypeAnnotation = transport.getWireFormat().isUseByteDestinationTypeAnnotation();
 
         this.protonTransport.bind(this.protonConnection);
 
@@ -488,17 +485,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             connectionInfo.setClientId(clientId);
         }
 
-        Map<Symbol, Object> props = protonConnection.getRemoteProperties();
-        if (props != null) {
-            if (props.containsKey(JMS_MAPPING_VERSION)) {
-                useByteDestinationTypeAnnotation = true;
-            }
-        }
-
-        if (useByteDestinationTypeAnnotation) {
-            outboundTransformer.setUseByteDestinationTypeAnnotations(true);
-        }
-
         connectionInfo.setTransportContext(amqpTransport.getPeerCertificates());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
@@ -571,10 +557,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             } else {
                 LOG.warn("Unknown transformer type {} using native one instead", transformer);
                 inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
-            }
-
-            if (useByteDestinationTypeAnnotation) {
-                inboundTransformer.setUseByteDestinationTypeAnnotations(true);
             }
         }
         return inboundTransformer;
