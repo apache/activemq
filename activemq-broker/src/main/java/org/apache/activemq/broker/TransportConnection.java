@@ -929,7 +929,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         try {
             if (!stopping.get()) {
                 if (messageDispatch != null) {
-                    broker.preProcessDispatch(messageDispatch);
+                    try {
+                        broker.preProcessDispatch(messageDispatch);
+                    } catch (RuntimeException convertToIO) {
+                        throw new IOException(convertToIO);
+                    }
                 }
                 dispatch(command);
             }
