@@ -731,6 +731,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             LOG.trace("{} failed to dispatch: {} - {}, dispatched: {}, inflight: {}", new Object[]{ info.getConsumerId(), message.getMessageId(), message.getDestination(), dispatchCounter, dispatched.size() });
                         }
                     }
+                    if (node instanceof QueueMessageReference) {
+                        ((QueueMessageReference) node).unlock();
+                    }
                 }
             });
             context.getConnection().dispatchAsync(md);
