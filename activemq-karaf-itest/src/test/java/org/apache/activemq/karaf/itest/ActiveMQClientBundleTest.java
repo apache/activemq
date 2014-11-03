@@ -31,7 +31,7 @@ public class ActiveMQClientBundleTest extends AbstractFeatureTest {
         return configure("activemq-client");
     }
 
-    @Test
+    @Test(timeout = 2 * 60 * 1000)
     public void test() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         factory.getBrokerURL();

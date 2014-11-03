@@ -45,7 +45,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeature
         ), "activemq-camel"), baseOptions));
     }
 
-    @Test
+    @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
 
         System.err.println(executeCommand("features:list").trim());
