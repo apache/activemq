@@ -38,22 +38,22 @@ public class ObrFeatureTest extends AbstractFeatureTest {
                 configure("obr"));
 	}
 
-	@Test
+	@Test(timeout=5 * 60 * 1000)
 	public void testClient() throws Throwable {
 		installAndAssertFeature("activemq-client");
 	}
 
-	@Test
+	@Test(timeout=5 * 60 * 1000)
 	public void testActiveMQ() throws Throwable {
 		installAndAssertFeature("activemq");
 	}
 
-    @Test
+    @Test(timeout=5 * 60 * 1000)
    	public void testBroker() throws Throwable {
    		installAndAssertFeature("activemq-broker");
    	}
 
-    @Test
+    @Test(timeout=5 * 60 * 1000)
    	public void testCamel() throws Throwable {
         System.err.println(executeCommand("features:addurl " + getCamelFeatureUrl()));
    		installAndAssertFeature("activemq-camel");

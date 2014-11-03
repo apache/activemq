@@ -40,7 +40,7 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
         ), "activemq-camel"), baseOptions), "activemq-nd-camel");
     }
 
-    @Test
+    @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
         System.err.println(executeCommand("osgi:list").trim());
 
