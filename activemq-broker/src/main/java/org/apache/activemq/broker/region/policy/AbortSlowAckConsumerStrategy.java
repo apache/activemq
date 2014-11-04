@@ -18,9 +18,10 @@ package org.apache.activemq.broker.region.policy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -40,7 +41,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowAckConsumerStrategy.class);
 
-    private final List<Destination> destinations = new LinkedList<Destination>();
+    private final Map<String, Destination> destinations = new ConcurrentHashMap<String, Destination>();
     private long maxTimeSinceLastAck = 30*1000;
     private boolean ignoreIdleConsumers = true;
     private boolean ignoreNetworkConsumers = true;
@@ -83,7 +84,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
         List<Destination> disposed = new ArrayList<Destination>();
 
-        for (Destination destination : destinations) {
+        for (Destination destination : destinations.values()) {
             if (destination.isDisposed()) {
                 disposed.add(destination);
                 continue;
@@ -96,7 +97,9 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
         }
 
         // Clean up an disposed destinations to save space.
-        destinations.removeAll(disposed);
+        for (Destination destination : disposed) {
+            destinations.remove(destination.getName());
+        }
 
         abortAllQualifiedSlowConsumers();
     }
@@ -164,7 +167,7 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
 
     @Override
     public void addDestination(Destination destination) {
-        this.destinations.add(destination);
+        this.destinations.put(destination.getName(), destination);
     }
 
     /**
