@@ -369,7 +369,7 @@ public class ProtocolConverter {
         boolean nacked = false;
 
         if (ackId != null) {
-            AckEntry pendingAck = this.pedingAcks.get(ackId);
+            AckEntry pendingAck = this.pedingAcks.remove(ackId);
             if (pendingAck != null) {
                 messageId = pendingAck.getMessageId();
                 MessageAck ack = pendingAck.onMessageNack(activemqTx);
@@ -425,8 +425,7 @@ public class ProtocolConverter {
         boolean acked = false;
 
         if (ackId != null) {
-
-            AckEntry pendingAck = this.pedingAcks.get(ackId);
+            AckEntry pendingAck = this.pedingAcks.remove(ackId);
             if (pendingAck != null) {
                 messageId = pendingAck.getMessageId();
                 MessageAck ack = pendingAck.onMessageAck(activemqTx);
@@ -437,7 +436,6 @@ public class ProtocolConverter {
             }
 
         } else if (subscriptionId != null) {
-
             StompSubscription sub = this.subscriptions.get(subscriptionId);
             if (sub != null) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
@@ -446,13 +444,10 @@ public class ProtocolConverter {
                     acked = true;
                 }
             }
-
         } else {
-
             // STOMP v1.0: acking with just a message id is very bogus since the same message id
             // could have been sent to 2 different subscriptions on the same Stomp connection.
             // For example, when 2 subs are created on the same topic.
-
             for (StompSubscription sub : subscriptionsByConsumerId.values()) {
                 MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
                 if (ack != null) {
@@ -513,6 +508,8 @@ public class ProtocolConverter {
             sub.onStompCommit(activemqTx);
         }
 
+        pedingAcks.clear();
+
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
         tx.setTransactionId(activemqTx);
@@ -541,6 +538,8 @@ public class ProtocolConverter {
                 throw new ProtocolException("Transaction abort failed", false, e);
             }
         }
+
+        pedingAcks.clear();
 
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
