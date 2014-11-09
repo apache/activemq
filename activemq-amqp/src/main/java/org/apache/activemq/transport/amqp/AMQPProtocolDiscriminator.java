@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
 
 /**
@@ -29,14 +30,16 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     private static final int DEFAULT_PREFETCH = 100;
 
-    final private AmqpTransport transport;
+    private final AmqpTransport transport;
+    private final BrokerService brokerService;
+
     private int prefetch = DEFAULT_PREFETCH;
     private int producerCredit = DEFAULT_PREFETCH;
 
     interface Discriminator {
         boolean matches(AmqpHeader header);
 
-        IAmqpProtocolConverter create(AmqpTransport transport);
+        IAmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService);
     }
 
     static final private ArrayList<Discriminator> DISCRIMINATORS = new ArrayList<Discriminator>();
@@ -44,8 +47,8 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
         DISCRIMINATORS.add(new Discriminator() {
 
             @Override
-            public IAmqpProtocolConverter create(AmqpTransport transport) {
-                return new AmqpProtocolConverter(transport);
+            public IAmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService) {
+                return new AmqpProtocolConverter(transport, brokerService);
             }
 
             @Override
@@ -60,13 +63,13 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
                 return false;
             }
         });
-
     }
 
     final private ArrayList<Command> pendingCommands = new ArrayList<Command>();
 
-    public AMQPProtocolDiscriminator(AmqpTransport transport) {
+    public AMQPProtocolDiscriminator(AmqpTransport transport, BrokerService brokerService) {
         this.transport = transport;
+        this.brokerService = brokerService;
     }
 
     @Override
@@ -80,11 +83,13 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
                     match = discriminator;
                 }
             }
+
             // Lets use first in the list if none are a good match.
             if (match == null) {
                 match = DISCRIMINATORS.get(0);
             }
-            IAmqpProtocolConverter next = match.create(transport);
+
+            IAmqpProtocolConverter next = match.create(transport, brokerService);
             next.setPrefetch(prefetch);
             next.setProducerCredit(producerCredit);
             transport.setProtocolConverter(next);

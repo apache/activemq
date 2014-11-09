@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.activemq.broker.BrokerContext;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
@@ -49,9 +49,9 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
     private final ReentrantLock lock = new ReentrantLock();
 
-    public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerContext brokerContext) {
+    public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
-        this.protocolConverter = new AMQPProtocolDiscriminator(this);
+        this.protocolConverter = new AMQPProtocolDiscriminator(this, brokerService);
         if (wireFormat instanceof AmqpWireFormat) {
             this.wireFormat = (AmqpWireFormat) wireFormat;
         }

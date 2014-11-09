@@ -53,6 +53,7 @@ public class TaskRunnerFactory implements Executor {
     private final AtomicBoolean initDone = new AtomicBoolean(false);
     private int maxThreadPoolSize = Integer.MAX_VALUE;
     private RejectedExecutionHandler rejectedTaskHandler = null;
+    private ClassLoader threadClassLoader;
 
     public TaskRunnerFactory() {
         this("ActiveMQ Task");
@@ -172,6 +173,9 @@ public class TaskRunnerFactory implements Executor {
                 Thread thread = new Thread(runnable, threadName);
                 thread.setDaemon(daemon);
                 thread.setPriority(priority);
+                if (threadClassLoader != null) {
+                    thread.setContextClassLoader(threadClassLoader);
+                }
 
                 LOG.trace("Created thread[{}]: {}", threadName, thread);
                 return thread;
@@ -237,6 +241,10 @@ public class TaskRunnerFactory implements Executor {
 
     public void setMaxThreadPoolSize(int maxThreadPoolSize) {
         this.maxThreadPoolSize = maxThreadPoolSize;
+    }
+
+    public void setThreadClassLoader(ClassLoader threadClassLoader) {
+        this.threadClassLoader = threadClassLoader;
     }
 
     public RejectedExecutionHandler getRejectedTaskHandler() {

@@ -1968,24 +1968,25 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 // proper order
                 redeliveredWaitingDispatch = doActualDispatch(redeliveredWaitingDispatch);
             }
-            if (!pagedInPendingDispatch.isEmpty()) {
-                // Next dispatch anything that had not been
-                // dispatched before.
-                pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
-            }
-            // and now see if we can dispatch the new stuff.. and append to
-            // the pending
-            // list anything that does not actually get dispatched.
-            if (list != null && !list.isEmpty()) {
-                if (pagedInPendingDispatch.isEmpty()) {
-                    pagedInPendingDispatch.addAll(doActualDispatch(list));
-                } else {
-                    for (MessageReference qmr : list) {
-                        if (!pagedInPendingDispatch.contains(qmr)) {
-                            pagedInPendingDispatch.addMessageLast(qmr);
+            if (redeliveredWaitingDispatch.isEmpty()) {
+                if (!pagedInPendingDispatch.isEmpty()) {
+                    // Next dispatch anything that had not been
+                    // dispatched before.
+                    pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
+                }
+                // and now see if we can dispatch the new stuff.. and append to the pending
+                // list anything that does not actually get dispatched.
+                if (list != null && !list.isEmpty()) {
+                    if (pagedInPendingDispatch.isEmpty()) {
+                        pagedInPendingDispatch.addAll(doActualDispatch(list));
+                    } else {
+                        for (MessageReference qmr : list) {
+                            if (!pagedInPendingDispatch.contains(qmr)) {
+                                pagedInPendingDispatch.addMessageLast(qmr);
+                            }
                         }
+                        doWakeUp = true;
                     }
-                    doWakeUp = true;
                 }
             }
         } finally {

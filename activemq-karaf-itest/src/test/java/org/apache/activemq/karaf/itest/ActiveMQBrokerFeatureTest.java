@@ -42,7 +42,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
         return configureBrokerStart(configure("activemq"));
     }
 
-    @Test
+    @Test(timeout=2 * 60 * 1000)
     public void test() throws Throwable {
 
         withinReason(new Callable<Boolean>() {
@@ -72,7 +72,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
         assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
     }
 
-    @Test
+    @Test(timeout = 5 * 60 * 1000)
     public void testTemporaryDestinations() throws Throwable {
         Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);

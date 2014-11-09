@@ -1202,6 +1202,7 @@ public class BrokerService implements Service {
         if (this.taskRunnerFactory == null) {
             this.taskRunnerFactory = new TaskRunnerFactory("ActiveMQ BrokerService["+getBrokerName()+"] Task", getTaskRunnerPriority(), true, 1000,
                     isDedicatedTaskRunner());
+            this.taskRunnerFactory.setThreadClassLoader(this.getClass().getClassLoader());
         }
         return this.taskRunnerFactory;
     }

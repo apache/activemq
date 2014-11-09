@@ -19,10 +19,12 @@ package org.apache.activemq.transport.amqp;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,6 +32,7 @@ import javax.jms.Destination;
 import javax.jms.InvalidClientIDException;
 import javax.jms.InvalidSelectorException;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempQueue;
@@ -55,8 +58,10 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -114,7 +119,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpProtocolConverter.class);
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int CHANNEL_MAX = 32767;
-    private final AmqpTransport amqpTransport;
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
@@ -122,23 +126,24 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol JMS_MAPPING_VERSION = Symbol.valueOf("x-opt-jms-mapping-version");
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
+    private final AmqpTransport amqpTransport;
+    private final BrokerService brokerService;
+
     protected int prefetch;
     protected int producerCredit;
     protected Transport protonTransport = Proton.transport();
     protected Connection protonConnection = Proton.connection();
     protected Collector eventCollector = new CollectorImpl();
-    protected boolean useByteDestinationTypeAnnotation;
 
-    public AmqpProtocolConverter(AmqpTransport transport) {
+    public AmqpProtocolConverter(AmqpTransport transport, BrokerService brokerService) {
         this.amqpTransport = transport;
+        this.brokerService = brokerService;
 
         // the configured maxFrameSize on the URI.
         int maxFrameSize = transport.getWireFormat().getMaxAmqpFrameSize();
         if (maxFrameSize > AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE) {
             this.protonTransport.setMaxFrameSize(maxFrameSize);
         }
-
-        useByteDestinationTypeAnnotation = transport.getWireFormat().isUseByteDestinationTypeAnnotation();
 
         this.protonTransport.bind(this.protonConnection);
 
@@ -480,17 +485,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             connectionInfo.setClientId(clientId);
         }
 
-        Map<Symbol, Object> props = protonConnection.getRemoteProperties();
-        if (props != null) {
-            if (props.containsKey(JMS_MAPPING_VERSION)) {
-                useByteDestinationTypeAnnotation = true;
-            }
-        }
-
-        if (useByteDestinationTypeAnnotation) {
-            outboundTransformer.setUseByteDestinationTypeAnnotations(true);
-        }
-
         connectionInfo.setTransportContext(amqpTransport.getPeerCertificates());
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
@@ -563,10 +557,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             } else {
                 LOG.warn("Unknown transformer type {} using native one instead", transformer);
                 inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
-            }
-
-            if (useByteDestinationTypeAnnotation) {
-                inboundTransformer.setUseByteDestinationTypeAnnotations(true);
             }
         }
         return inboundTransformer;
@@ -1467,5 +1457,17 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     @Override
     public void setProducerCredit(int producerCredit) {
         this.producerCredit = producerCredit;
+    }
+
+    @SuppressWarnings("unused")
+    private List<SubscriptionInfo> lookupSubscriptions() throws AmqpProtocolException {
+        List<SubscriptionInfo> subscriptions = Collections.emptyList();
+        try {
+            subscriptions = PersistenceAdapterSupport.listSubscriptions(brokerService.getPersistenceAdapter(), connectionInfo.getClientId());
+        } catch (IOException e) {
+            throw new AmqpProtocolException("Error loading store subscriptions", true, e);
+        }
+
+        return subscriptions;
     }
 }

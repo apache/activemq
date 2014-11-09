@@ -45,7 +45,7 @@ public class ActiveMQBrokerRuntimeConfigTest extends AbstractJmsFeatureTest {
                                 configure("activemq")), "activemq-runtime-config"));
     }
 
-    @Test
+    @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
 
         withinReason(new Callable<Boolean>() {

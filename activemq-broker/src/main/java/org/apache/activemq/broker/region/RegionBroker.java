@@ -628,7 +628,9 @@ public class RegionBroker extends EmptyBroker {
                 try {
                     ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
                 } catch (IOException error) {
-                    LOG.error("Failed to persist JMSRedeliveryFlag on {} in {}", message.getMessageId(), message.getDestination(), error);
+                    RuntimeException runtimeException = new RuntimeException("Failed to persist JMSRedeliveryFlag on " + message.getMessageId() + " in " + message.getDestination(), error);
+                    LOG.warn(runtimeException.getLocalizedMessage(), runtimeException);
+                    throw runtimeException;
                 } finally {
                     message.setRedeliveryCounter(originalValue);
                 }

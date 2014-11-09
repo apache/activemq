@@ -191,6 +191,8 @@
                           <excludes combine.children="append">
                               <exclude>**/JoramJmsTest.*</exclude>
                               <exclude>**/JoramJmsNioTest.*</exclude>
+                              <exclude>**/JoramSslTest.*</exclude>
+                              <exclude>**/JoramJmsNioPlusSslTest.*</exclude>
                           </excludes>
                       </configuration>
                   </plugin>
