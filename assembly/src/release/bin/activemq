@@ -27,13 +27,28 @@
 # Authors:
 # Marc Schoechlin <ms@256bit.org>
 
-# a simple helper
+# ------------------------------------------------------------------------
+# HELPERS
+
+# a simple helper to get the current user
 setCurrentUser(){
    CUSER=`whoami 2>/dev/null`
-   # Solaris fix
+   # Solaris hack
    if [ ! $? -eq 0 ]; then
       CUSER=`/usr/ucb/whoami 2>/dev/null`
    fi
+}
+
+# a simple helper to get the activemq installation dir
+getActiveMQHome(){
+  # get the real path to the binary
+  local REAL_DIR="`cd "$(dirname "$0")" && pwd -P`"
+  if [ -z "$REAL_DIR" ];then
+      echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
+      exit 1
+  fi
+  echo "-----------------------------------------------------------$REAL_DIR/../---" >&2
+  echo -n "$REAL_DIR/../"
 }
 
 getDefaultConfig(){
@@ -161,13 +176,7 @@ done
 
 # Active MQ installation dir
 if [ -z "$ACTIVEMQ_HOME" ] ; then
-  # get the real path to the binary
-  REAL_RUN_BIN="`readlink -f $0`"
-  if [ -z "$REAL_RUN_BIN" ];then
-      echo 'ERROR: "readlink -f $0" does not provide the real path to the binary on this system, just define ACTIVEMQ_HOME manually in the config' >&2
-      exit 1
-  fi
-  ACTIVEMQ_HOME="`dirname $REAL_RUN_BIN`/../"
+  ACTIVEMQ_HOME="`getActiveMQHome`"
 fi
 
 # Active MQ base dir
