@@ -29,8 +29,13 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.impl.UriEndpointComponent;
 import org.apache.camel.spi.EndpointCompleter;
+
 import static org.apache.camel.util.ObjectHelper.removeStartingCharacters;
 
+/**
+ * The <a href="http://activemq.apache.org/broker-camel-component.html">Broker Camel component</a> allows to use Camel
+ * routing to move messages through the broker.
+ */
 public class BrokerComponent extends UriEndpointComponent implements EndpointCompleter {
 
     public BrokerComponent() {
