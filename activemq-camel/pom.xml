@@ -55,6 +55,13 @@
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-jms</artifactId>
     </dependency>
+    <!-- use the Camel apt compiler plugin -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>apt</artifactId>
+      <version>${camel-version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
@@ -207,6 +214,21 @@
             <derby.stream.error.file>target/derby.log</derby.stream.error.file>
           </systemPropertyVariables>
         </configuration>
+      </plugin>
+
+      <!-- use Camel plugins to generate component details -->
+      <plugin>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-package-maven-plugin</artifactId>
+        <version>${camel-version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-components-list</goal>
+            </goals>
+            <phase>generate-resources</phase>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
