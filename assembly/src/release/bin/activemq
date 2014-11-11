@@ -47,8 +47,7 @@ getActiveMQHome(){
       echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
       exit 1
   fi
-  echo "-----------------------------------------------------------$REAL_DIR/../---" >&2
-  echo -n "$REAL_DIR/../"
+  echo "$REAL_DIR/../"
 }
 
 getDefaultConfig(){
