@@ -16,37 +16,6 @@
  */
 package org.apache.activemq.tool;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.jms.ConnectionFactory;
-
-import org.apache.activemq.tool.sampler.MeasurableClient;
-
-public abstract class AbstractJmsMeasurableClient extends AbstractJmsClient implements MeasurableClient {
-
-    protected AtomicLong throughput = new AtomicLong(0);
-
-    public AbstractJmsMeasurableClient(ConnectionFactory factory) {
-        super(factory);
-    }
-
-    public void reset() {
-        setThroughput(0);
-    }
-
-    public long getThroughput() {
-        return throughput.get();
-    }
-
-    public void setThroughput(long val) {
-        throughput.set(val);
-    }
-
-    public void incThroughput() {
-        throughput.incrementAndGet();
-    }
-
-    public void incThroughput(long val) {
-        throughput.addAndGet(val);
-    }
+public enum ClientType {
+    Producer, Consumer;
 }

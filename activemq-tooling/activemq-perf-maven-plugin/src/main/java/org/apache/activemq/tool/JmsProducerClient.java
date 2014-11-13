@@ -77,7 +77,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public void sendCountBasedMessages(long messageCount) throws JMSException {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
-        Destination[] dest = createDestinations(destCount);
+        Destination[] dest = createDestinations(ClientType.Producer, destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -165,7 +165,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
 
-        Destination[] dest = createDestinations(destCount);
+        Destination[] dest = createDestinations(ClientType.Producer, destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
