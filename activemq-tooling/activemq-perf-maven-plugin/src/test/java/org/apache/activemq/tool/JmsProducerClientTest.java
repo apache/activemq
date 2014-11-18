@@ -1,5 +1,8 @@
 package org.apache.activemq.tool;
 
+import static org.apache.activemq.command.ActiveMQDestination.*;
+import static org.junit.Assert.*;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -13,9 +16,6 @@ import org.junit.Test;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import java.net.URI;
-
-import static org.apache.activemq.command.ActiveMQDestination.*;
-import static org.junit.Assert.assertEquals;
 
 public class JmsProducerClientTest {
 
@@ -62,7 +62,6 @@ public class JmsProducerClientTest {
         assertEquals(destinationType, destination.getDestinationType());
         assertEquals(physicalName, destination.getPhysicalName());
     }
-
 
     private ActiveMQDestination asAmqDest(Destination destination) {
         return (ActiveMQDestination) destination;
