@@ -20,7 +20,6 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.DestinationSource;
@@ -41,8 +40,6 @@ import javax.jms.Connection;
 
 /**
  * The <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
- *
- * 
  */
 public class ActiveMQComponent extends JmsComponent implements EndpointCompleter {
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList =
@@ -91,9 +88,9 @@ public class ActiveMQComponent extends JmsComponent implements EndpointCompleter
     }
 
     public ActiveMQComponent(ActiveMQConfiguration configuration) {
-        super(configuration);
+        super();
+        setConfiguration(configuration);
     }
-
 
     public void setBrokerURL(String brokerURL) {
         if (getConfiguration() instanceof ActiveMQConfiguration) {
