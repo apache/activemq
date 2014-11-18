@@ -114,7 +114,7 @@ public abstract class AbstractJmsClient {
         return jmsSession;
     }
 
-    public Destination[] createDestinations(ClientType clientType, int destCount) throws JMSException {
+    public Destination[] createDestinations(int destCount) throws JMSException {
         final String destName = getClient().getDestName();
         ArrayList<Destination> destinations = new ArrayList<>();
         if (destName.contains(DESTINATION_SEPARATOR)) {
@@ -132,11 +132,11 @@ public abstract class AbstractJmsClient {
                 // or multiple non-composite destinations
                 String[] destinationNames = destName.split(DESTINATION_SEPARATOR);
                 for (String splitDestName : destinationNames) {
-                    addDestinations(clientType, destinations, splitDestName, destCount);
+                    addDestinations(destinations, splitDestName, destCount);
                 }
             }
         } else {
-            addDestinations(clientType, destinations, destName, destCount);
+            addDestinations(destinations, destName, destCount);
         }
         return destinations.toArray(new Destination[] {});
     }
@@ -152,13 +152,13 @@ public abstract class AbstractJmsClient {
         return sb.toString();
     }
 
-    private void addDestinations(ClientType clientType, List<Destination> destinations, String destName, int destCount) throws JMSException {
+    private void addDestinations(List<Destination> destinations, String destName, int destCount) throws JMSException {
         boolean destComposite = getClient().isDestComposite();
         if ((destComposite) && (destCount > 1)) {
             destinations.add(createCompositeDestination(destName, destCount));
         } else {
             for (int i = 0; i < destCount; i++) {
-                destinations.add(createDestination(clientType, withDestinationSuffix(destName, i, destCount)));
+                destinations.add(createDestination(withDestinationSuffix(destName, i, destCount)));
             }
         }
     }
@@ -206,7 +206,7 @@ public abstract class AbstractJmsClient {
         return simpleNames;
     }
 
-    private String getSimpleName(String destName) {
+    protected String getSimpleName(String destName) {
         String simpleName;
         if (destName.startsWith(QUEUE_SCHEME)) {
             simpleName = destName.substring(QUEUE_SCHEME.length());
@@ -222,7 +222,7 @@ public abstract class AbstractJmsClient {
         return simpleName;
     }
 
-    private byte getDestinationType(String destName) {
+    protected byte getDestinationType(String destName) {
         assert (destName != null);
         if (destName.startsWith(QUEUE_SCHEME)) {
             return ActiveMQDestination.QUEUE_TYPE;
@@ -235,25 +235,25 @@ public abstract class AbstractJmsClient {
         }
     }
 
-    protected Destination createDestination(ClientType clientType, String destName) throws JMSException {
+    protected Destination createDestination(String destName) throws JMSException {
         String simpleName = getSimpleName(destName);
-
         byte destinationType = getDestinationType(destName);
-        if (clientType == ClientType.Producer) {
-            // when we produce to temp destinations, we publish to them as
-            // though they were normal queues or topics
-
-            if (destinationType == ActiveMQDestination.TEMP_QUEUE_TYPE) {
-                destinationType = ActiveMQDestination.QUEUE_TYPE;
-            } else if (destinationType == ActiveMQDestination.TEMP_TOPIC_TYPE) {
-                destinationType = ActiveMQDestination.TOPIC_TYPE;
-            }
-        }
 
         if (destinationType == ActiveMQDestination.QUEUE_TYPE) {
             LOG.info("Creating queue: {}", destName);
             return getSession().createQueue(simpleName);
-        } else if (destinationType == ActiveMQDestination.TEMP_QUEUE_TYPE) {
+        } else if (destinationType == ActiveMQDestination.TOPIC_TYPE) {
+            LOG.info("Creating topic: {}", destName);
+            return getSession().createTopic(simpleName);
+        } else {
+            return createTemporaryDestination(destName);
+        }
+    }
+
+    protected Destination createTemporaryDestination(String destName) throws JMSException {
+        byte destinationType = getDestinationType(destName);
+
+        if (destinationType == ActiveMQDestination.TEMP_QUEUE_TYPE) {
             LOG.warn("Creating temporary queue. Requested name ({}) ignored.", destName);
             TemporaryQueue temporaryQueue = getSession().createTemporaryQueue();
             LOG.info("Temporary queue created: {}", temporaryQueue.getQueueName());
@@ -264,8 +264,7 @@ public abstract class AbstractJmsClient {
             LOG.info("Temporary topic created: {}", temporaryTopic.getTopicName());
             return temporaryTopic;
         } else {
-            LOG.info("Creating topic: {}", destName);
-            return getSession().createTopic(simpleName);
+            throw new IllegalArgumentException("Unrecognized destination type: " + destinationType);
         }
     }
 
@@ -278,7 +277,6 @@ public abstract class AbstractJmsClient {
      * @throws JMSException in case the call to JMS Session.commit() fails.
      */
     public boolean commitTxIfNecessary() throws JMSException {
-
         internalTxCounter++;
         if (getClient().isSessTransacted()) {
             if ((internalTxCounter % getClient().getCommitAfterXMsgs()) == 0) {

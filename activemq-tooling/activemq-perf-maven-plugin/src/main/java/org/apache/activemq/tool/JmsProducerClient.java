@@ -31,6 +31,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.activemq.tool.properties.JmsProducerProperties;
 import org.slf4j.Logger;
@@ -77,7 +78,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public void sendCountBasedMessages(long messageCount) throws JMSException {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
-        Destination[] dest = createDestinations(ClientType.Producer, destCount);
+        Destination[] dest = createDestinations(destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -165,7 +166,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         // Parse through different ways to send messages
         // Avoided putting the condition inside the loop to prevent effect on performance
 
-        Destination[] dest = createDestinations(ClientType.Producer, destCount);
+        Destination[] dest = createDestinations(destCount);
 
         // Create a producer, if none is created.
         if (getJmsProducer() == null) {
@@ -320,6 +321,24 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     @Override
     public void setClient(JmsClientProperties clientProps) {
         client = (JmsProducerProperties)clientProps;
+    }
+
+    @Override
+    protected Destination createTemporaryDestination(String destName) throws JMSException {
+        String simpleName = getSimpleName(destName);
+        byte destinationType = getDestinationType(destName);
+
+        // when we produce to temp destinations, we publish to them as
+        // though they were normal queues or topics
+        if (destinationType == ActiveMQDestination.TEMP_QUEUE_TYPE) {
+            LOG.info("Creating queue: {}", destName);
+            return getSession().createQueue(simpleName);
+        } else if (destinationType == ActiveMQDestination.TEMP_TOPIC_TYPE) {
+            LOG.info("Creating topic: {}", destName);
+            return getSession().createTopic(simpleName);
+        } else {
+            throw new IllegalArgumentException("Unrecognized destination type: " + destinationType);
+        }
     }
 
     protected String buildText(String text, int size) {

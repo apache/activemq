@@ -69,49 +69,37 @@ public class AbstractJmsClientTest {
     @Test
     public void testCreateDestination() throws JMSException {
         assertDestinationNameType("dest", TOPIC_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Producer, "dest")));
+                asAmqDest(jmsClient.createDestination("dest")));
     }
 
     @Test
     public void testCreateDestination_topic() throws JMSException {
         assertDestinationNameType("dest", TOPIC_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Producer, "topic://dest")));
+                asAmqDest(jmsClient.createDestination("topic://dest")));
     }
 
     @Test
     public void testCreateDestination_queue() throws JMSException {
         assertDestinationNameType("dest", QUEUE_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Producer, "queue://dest")));
+                asAmqDest(jmsClient.createDestination("queue://dest")));
     }
 
     @Test
-    public void testCreateDestination_tempQueue_producer() throws JMSException {
-        assertDestinationType(QUEUE_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Producer, "temp-queue://dest")));
-    }
-
-    @Test
-    public void testCreateDestination_tempTopic_producer() throws JMSException {
-        assertDestinationType(TOPIC_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Producer, "temp-topic://dest")));
-    }
-
-    @Test
-    public void testCreateDestination_tempQueue_consumer() throws JMSException {
+    public void testCreateDestination_tempQueue() throws JMSException {
         assertDestinationType(TEMP_QUEUE_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Consumer, "temp-queue://dest")));
+                asAmqDest(jmsClient.createDestination("temp-queue://dest")));
     }
 
     @Test
-    public void testCreateDestination_tempTopic_consumer() throws JMSException {
+    public void testCreateDestination_tempTopic() throws JMSException {
         assertDestinationType(TEMP_TOPIC_TYPE,
-                asAmqDest(jmsClient.createDestination(ClientType.Consumer, "temp-topic://dest")));
+                asAmqDest(jmsClient.createDestination("temp-topic://dest")));
     }
 
     @Test
     public void testCreateDestinations_commaSeparated() throws JMSException {
         clientProperties.setDestName("queue://foo,topic://cheese");
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 1);
+        Destination[] destinations = jmsClient.createDestinations(1);
         assertEquals(2, destinations.length);
         assertDestinationNameType("foo", QUEUE_TYPE, asAmqDest(destinations[0]));
         assertDestinationNameType("cheese", TOPIC_TYPE, asAmqDest(destinations[1]));
@@ -121,7 +109,7 @@ public class AbstractJmsClientTest {
     public void testCreateDestinations_multipleComposite() throws JMSException {
         clientProperties.setDestComposite(true);
         clientProperties.setDestName("queue://foo,queue://cheese");
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 1);
+        Destination[] destinations = jmsClient.createDestinations(1);
         assertEquals(1, destinations.length);
         // suffixes should be added
         assertDestinationNameType("foo,cheese", QUEUE_TYPE, asAmqDest(destinations[0]));
@@ -129,14 +117,14 @@ public class AbstractJmsClientTest {
 
     @Test
     public void testCreateDestinations() throws JMSException {
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 1);
+        Destination[] destinations = jmsClient.createDestinations(1);
         assertEquals(1, destinations.length);
         assertDestinationNameType(DEFAULT_DEST, TOPIC_TYPE, asAmqDest(destinations[0]));
     }
 
     @Test
     public void testCreateDestinations_multiple() throws JMSException {
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 2);
+        Destination[] destinations = jmsClient.createDestinations(2);
         assertEquals(2, destinations.length);
         // suffixes should be added
         assertDestinationNameType(DEFAULT_DEST + ".0", TOPIC_TYPE, asAmqDest(destinations[0]));
@@ -146,7 +134,7 @@ public class AbstractJmsClientTest {
     @Test
     public void testCreateDestinations_multipleCommaSeparated() throws JMSException {
         clientProperties.setDestName("queue://foo,topic://cheese");
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 2);
+        Destination[] destinations = jmsClient.createDestinations(2);
         assertEquals(4, destinations.length);
         // suffixes should be added
         assertDestinationNameType("foo.0", QUEUE_TYPE, asAmqDest(destinations[0]));
@@ -158,7 +146,7 @@ public class AbstractJmsClientTest {
     @Test
     public void testCreateDestinations_composite() throws JMSException {
         clientProperties.setDestComposite(true);
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 2);
+        Destination[] destinations = jmsClient.createDestinations(2);
         assertEquals(1, destinations.length);
         // suffixes should be added
         String expectedDestName = DEFAULT_DEST + ".0," + DEFAULT_DEST + ".1";
@@ -169,7 +157,7 @@ public class AbstractJmsClientTest {
     public void testCreateDestinations_compositeQueue() throws JMSException {
         clientProperties.setDestComposite(true);
         clientProperties.setDestName("queue://" + DEFAULT_DEST);
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 2);
+        Destination[] destinations = jmsClient.createDestinations(2);
         assertEquals(1, destinations.length);
         // suffixes should be added
         String expectedDestName = DEFAULT_DEST + ".0," + DEFAULT_DEST + ".1";
@@ -180,7 +168,7 @@ public class AbstractJmsClientTest {
     public void testCreateDestinations_compositeCommaSeparated() throws JMSException {
         clientProperties.setDestComposite(true);
         clientProperties.setDestName("queue://foo,topic://cheese");
-        Destination[] destinations = jmsClient.createDestinations(ClientType.Producer, 2);
+        Destination[] destinations = jmsClient.createDestinations(2);
         assertEquals(2, destinations.length);
 
         assertDestinationNameType("foo.0,foo.1", QUEUE_TYPE, asAmqDest(destinations[0]));

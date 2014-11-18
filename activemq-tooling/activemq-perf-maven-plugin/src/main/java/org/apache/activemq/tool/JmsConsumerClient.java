@@ -209,7 +209,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
     }
 
     public MessageConsumer createJmsConsumer() throws JMSException {
-        Destination[] dest = createDestinations(ClientType.Consumer, destCount);
+        Destination[] dest = createDestinations(destCount);
 
         Destination consumedDestination = dest[0];
         if (dest.length > 1) {
