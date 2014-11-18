@@ -39,15 +39,39 @@ setCurrentUser(){
    fi
 }
 
+# get a canonical path, macosx and slowlaris does not support radlink -f :-)
+pathCanonical() {
+    local dst="${1}"
+    while [ -h "${dst}" ] ; do
+        ls=`ls -ld "${dst}"`
+        link=`expr "$ls" : '.*-> \(.*\)$'`
+        if expr "$link" : '/.*' > /dev/null; then
+            dst="$link"
+        else
+            dst="`dirname "${dst}"`/$link"
+        fi
+    done
+    local bas=`basename "${dst}"`
+    local dir=`dirname "${dst}"`
+    if [ "$bas" != "$dir" ]; then
+      dst="`pathCanonical "$dir"`/$bas"
+    fi
+    echo "${dst}" | sed -e 's#//#/#g' -e 's#/./#/#g' -e 's#/[^/]*/../#/#g'
+}
+
+
 # a simple helper to get the activemq installation dir
 getActiveMQHome(){
   # get the real path to the binary
-  local REAL_DIR="`cd "$(dirname "$0")" && pwd -P`"
+  local REAL_BIN="`pathCanonical $0`"
+  local REAL_DIR="`dirname $REAL_BIN`/../"
+  REAL_DIR="`cd $REAL_DIR && pwd -P`"
   if [ -z "$REAL_DIR" ];then
       echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
       exit 1
   fi
-  echo "$REAL_DIR/../"
+  echo "$REAL_DIR/"
+
 }
 
 getDefaultConfig(){
@@ -632,30 +656,35 @@ invoke_stop(){
 # - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
 invoke_task(){
+
+    local CHECKRUNNING="$1"
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
-    # call task in java binary
-    if ( checkRunning );then
-      if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
-      elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
-      else
-         COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
-      fi
-      invokeJar
-      RET="$?"
-      if [ "$RET" != "0" ];then
-         echo "ERROR: task failed"
-      fi
-      exit $RET
-    else
-      echo "Activemq is not running."
-      exit 1
+
+    if [ "$CHECKRUNNING" = "checkrunning" ];then
+       if ( ! checkRunning );then
+         echo "Activemq is not running."
+         exit 1
+       fi
     fi
+
+    # call task in java binary
+    if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
+    elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
+    else
+       COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
+    fi
+    invokeJar
+    RET="$?"
+    if [ "$RET" != "0" ];then
+       echo "ERROR: task failed"
+    fi
+    exit $RET
 }
 
 show_help() {
-  invokeJar
+  invokeJar|sed "~s,Usage: Main,Usage: $0,"
   RET="$?"
   cat << EOF
 Tasks provided by the sysv init script:
@@ -713,6 +742,9 @@ case "$1" in
   stop)
     invoke_stop
     ;;
+  decrypt|encrypt|create)
+    invoke_task checknotrunning
+    ;;
   *)
-    invoke_task
+    invoke_task checkrunning
 esac
