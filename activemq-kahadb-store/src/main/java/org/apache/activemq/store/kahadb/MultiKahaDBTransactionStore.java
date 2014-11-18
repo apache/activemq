@@ -445,8 +445,4 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
     }
 
-    public Journal getJournal() {
-        LOG.warn("Fetching journal; this operation is for test support only");
-        return journal;
-    }
 }

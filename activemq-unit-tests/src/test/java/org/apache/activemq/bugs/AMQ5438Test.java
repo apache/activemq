@@ -101,7 +101,7 @@ public class AMQ5438Test {
     }
 
     @Test
-    public void testArchiveDataLogsFailure() throws Exception {
+    public void testArchiveDataLogs() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         Connection connection = factory.createConnection();
         connection.start();
