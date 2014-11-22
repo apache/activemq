@@ -82,7 +82,7 @@ getDefaultConfig(){
 # This file overwrites the predefined settings of the sysv init-script
 #
 # Active MQ installation dirs
-# ACTIVEMQ_HOME="<Installationdir>/"
+# ACTIVEMQ_HOME="<Installation Directory>/"
 # ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 # ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
 # ACTIVEMQ_DATA="$ACTIVEMQ_BASE/data"
@@ -181,6 +181,7 @@ fi
 CONFIG_LOAD="no"
 for ACTIVEMQ_CONFIG in $ACTIVEMQ_CONFIGS;do
    if [ -f "$ACTIVEMQ_CONFIG" ] ; then
+     # Test configuration file
      ( . $ACTIVEMQ_CONFIG >/dev/null 2>&1 )
      if [ "$?" != "0" ];then
       echo "ERROR: There are syntax errors in '$ACTIVEMQ_CONFIG'"
@@ -188,7 +189,8 @@ for ACTIVEMQ_CONFIG in $ACTIVEMQ_CONFIGS;do
      else
        echo "INFO: Loading '$ACTIVEMQ_CONFIG'"
        . $ACTIVEMQ_CONFIG
-      CONFIG_LOAD="yes"
+       CONFIG_LOAD="yes"
+       break
      fi
    fi
 done
