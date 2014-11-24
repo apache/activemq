@@ -122,8 +122,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
-    private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("x-opt-anonymous-relay");
-    private static final Symbol JMS_MAPPING_VERSION = Symbol.valueOf("x-opt-jms-mapping-version");
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
     private final AmqpTransport amqpTransport;
@@ -154,23 +152,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         this.protonTransport.setChannelMax(CHANNEL_MAX);
 
         this.protonConnection.collect(eventCollector);
-        this.protonConnection.setProperties(getConnectionProperties());
 
         updateTracer();
-    }
-
-    /**
-     * Load and return a <code>Map<Symbol, Object></code> that contains the connection
-     * properties which will allow the client to better communicate with this broker.
-     *
-     * @return the properties that are sent to new clients on connect.
-     */
-    protected Map<Symbol, Object> getConnectionProperties() {
-        Map<Symbol, Object> properties = new HashMap<Symbol, Object>();
-
-        properties.put(ANONYMOUS_RELAY, amqpTransport.getWireFormat().getAnonymousNodeName());
-
-        return properties;
     }
 
     @Override
@@ -857,7 +840,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 boolean anonymous = false;
                 String targetNodeName = target.getAddress();
 
-                if (targetNodeName != null && targetNodeName.equals(amqpTransport.getWireFormat().getAnonymousNodeName())) {
+                if ((targetNodeName == null || targetNodeName.length() == 0) && !target.getDynamic()) {
                     anonymous = true;
                 } else if (target.getDynamic()) {
                     dest = createTempQueue();
