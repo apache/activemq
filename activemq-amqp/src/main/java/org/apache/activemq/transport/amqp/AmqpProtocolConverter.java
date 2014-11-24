@@ -119,6 +119,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpProtocolConverter.class);
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int CHANNEL_MAX = 32767;
+    private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
@@ -152,8 +153,19 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         this.protonTransport.setChannelMax(CHANNEL_MAX);
 
         this.protonConnection.collect(eventCollector);
+        this.protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
 
         updateTracer();
+    }
+
+    /**
+     * Load and return a <code>[]Symbol</code> that contains the connection capabilities
+     * offered to new connections
+     *
+     * @return the capabilities that are offered to new clients on connect.
+     */
+    protected Symbol[] getConnectionCapabilitiesOffered() {
+        return new Symbol[]{ ANONYMOUS_RELAY };
     }
 
     @Override
