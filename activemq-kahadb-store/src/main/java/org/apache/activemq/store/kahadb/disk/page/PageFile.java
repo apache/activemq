@@ -1091,7 +1091,7 @@ public class PageFile {
             if (enableDiskSyncs) {
                 // Sync to make sure recovery buffer writes land on disk..
                 if (enableRecoveryFile) {
-                    writeFile.sync();
+                    recoveryFile.sync();
                 }
                 writeFile.sync();
             }
