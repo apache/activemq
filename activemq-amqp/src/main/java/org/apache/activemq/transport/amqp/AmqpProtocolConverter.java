@@ -351,7 +351,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         if (remoteState == EndpointState.ACTIVE) {
             onLinkOpen(link);
         } else if (remoteState == EndpointState.CLOSED) {
-            ((AmqpDeliveryListener) link.getContext()).onClose();
+            AmqpDeliveryListener context = (AmqpDeliveryListener) link.getContext();
+            if (context != null) {
+                context.onClose();
+            }
             link.close();
             link.free();
         }
