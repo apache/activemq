@@ -1121,6 +1121,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 pageInMessages(!memoryUsage.isFull(110));
             };
 
+            doBrowseList(browseList, max, redeliveredWaitingDispatch, pagedInPendingDispatchLock, connectionContext, "redeliveredWaitingDispatch");
             doBrowseList(browseList, max, pagedInPendingDispatch, pagedInPendingDispatchLock, connectionContext, "pagedInPendingDispatch");
             doBrowseList(browseList, max, pagedInMessages, pagedInMessagesLock, connectionContext, "pagedInMessages");
 

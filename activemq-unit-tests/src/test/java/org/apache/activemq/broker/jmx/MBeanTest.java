@@ -44,7 +44,9 @@ import javax.management.openmbean.TabularData;
 
 import junit.textui.TestRunner;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
@@ -1360,6 +1362,61 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
         consumer.close();
         session.close();
+    }
+
+    public void testBrowseOrder() throws Exception {
+        connection = connectionFactory.createConnection();
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(20);
+        ((ActiveMQConnection) connection).setPrefetchPolicy(prefetchPolicy);
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        assertEquals("expected", MESSAGE_COUNT, initialQueueSize);
+
+        int messageCount = initialQueueSize;
+        for (int i = 0; i < messageCount; i++) {
+            CompositeData cdata = compdatalist[i];
+            String messageID = (String) cdata.get("JMSMessageID");
+            assertNotNull("Should have a message ID for message " + i, messageID);
+
+            Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
+            assertTrue("not empty", intProperties.size() > 0);
+            assertEquals("counter in order", i, intProperties.get("counter"));
+        }
+
+        echo("Attempting to consume 5 bytes messages from: " + destination);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        for (int i=0; i<5; i++) {
+            Message message = consumer.receive(5000);
+            assertNotNull(message);
+            assertEquals("ordered", i, message.getIntProperty("counter"));
+            echo("Consumed: " + message.getIntProperty("counter"));
+        }
+        consumer.close();
+        session.close();
+        connection.close();
+
+        // browse again and verify order
+        compdatalist = queue.browse();
+        initialQueueSize = compdatalist.length;
+        assertEquals("5 gone", MESSAGE_COUNT - 5, initialQueueSize);
+
+        messageCount = initialQueueSize;
+        for (int i = 0; i < messageCount - 4; i++) {
+            CompositeData cdata = compdatalist[i];
+
+            Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
+            assertTrue("not empty", intProperties.size() > 0);
+            assertEquals("counter in order", i + 5, intProperties.get("counter"));
+            echo("Got: " + intProperties.get("counter"));
+        }
     }
 
     public void testAddRemoveConnectorBrokerView() throws Exception {
