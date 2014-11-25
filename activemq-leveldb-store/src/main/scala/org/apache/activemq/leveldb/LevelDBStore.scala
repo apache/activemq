@@ -37,6 +37,7 @@ import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 import org.fusesource.hawtdispatch;
 import org.apache.activemq.broker.scheduler.JobSchedulerStore
 import org.apache.activemq.store.IndexListener.MessageContext
+import javax.management.ObjectName
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -80,6 +81,74 @@ case class DurableSubscription(subKey:Long, topicKey:Long, info: SubscriptionInf
   var gcPosition = 0L
   var lastAckPosition = 0L
   var cursorPosition = 0L
+}
+
+class LevelDBStoreTest(val store:LevelDBStore) extends LevelDBStoreTestMBean {
+
+  import store._
+  var suspendForce = false;
+  
+  override def setSuspendForce(value: Boolean): Unit = this.synchronized {
+    if( suspendForce!=value ) {
+      suspendForce = value;
+      if( suspendForce ) {
+        db.client.log.recordLogTestSupport.forceCall.suspend
+      } else {
+        db.client.log.recordLogTestSupport.forceCall.resume
+      }
+    }
+  }
+
+  override def getSuspendForce: Boolean = this.synchronized {
+    suspendForce
+  }
+
+  override def getForceCalls = this.synchronized {
+    db.client.log.recordLogTestSupport.forceCall.threads.get()
+  }
+
+  var suspendWrite = false;
+
+  override def setSuspendWrite(value: Boolean): Unit = this.synchronized {
+    if( suspendWrite!=value ) {
+      suspendWrite = value;
+      if( suspendWrite ) {
+        db.client.log.recordLogTestSupport.writeCall.suspend
+      } else {
+        db.client.log.recordLogTestSupport.writeCall.resume
+      }
+    }
+  }
+
+  override def getSuspendWrite: Boolean = this.synchronized {
+    suspendWrite
+  }
+
+  override def getWriteCalls = this.synchronized {
+    db.client.log.recordLogTestSupport.writeCall.threads.get()
+  }
+
+  var suspendDelete = false;
+  
+  override def setSuspendDelete(value: Boolean): Unit = this.synchronized {
+    if( suspendDelete!=value ) {
+      suspendDelete = value;
+      if( suspendDelete ) {
+        db.client.log.recordLogTestSupport.deleteCall.suspend
+      } else {
+        db.client.log.recordLogTestSupport.deleteCall.resume
+      }
+    }
+  }
+
+  override def getSuspendDelete: Boolean = this.synchronized {
+    suspendDelete
+  }
+
+  override def getDeleteCalls = this.synchronized {
+    db.client.log.recordLogTestSupport.deleteCall.threads.get()
+  }  
+  
 }
 
 class LevelDBStoreView(val store:LevelDBStore) extends LevelDBStoreViewMBean {
@@ -223,6 +292,10 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     if(brokerService!=null && brokerService.isUseJmx){
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreView(this), objectName)
+        if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") ) {
+          val name = new ObjectName(objectName.toString + ",test=test")
+          AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreTest(this), name)
+        }
       } catch {
         case e: Throwable => {
           warn(e, "LevelDB Store could not be registered in JMX: " + e.getMessage)
@@ -279,6 +352,8 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     db.stop
     if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
+      if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") )
+        brokerService.getManagementContext().unregisterMBean(new ObjectName(objectName.toString+",test=test"));
     }
     info("Stopped "+this)
   }
