@@ -192,7 +192,8 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
             trace("%s, Slave WAL update: (file:%s, offset: %d, length: %d)".format(directory, value.file.toHexString, value.offset, value.length))
             val file = client.log.next_log(value.file)
             val buffer = map(file, value.offset, value.length, false)
-            session.codec.readData(buffer, ^{
+
+            def readData = session.codec.readData(buffer, ^{
               if( value.sync ) {
                 buffer.force()
               }
@@ -208,6 +209,15 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
                 send_wal_ack
               }
             })
+
+            if( client.log.recordLogTestSupport!=null ) {
+              client.log.recordLogTestSupport.writeCall.call {
+                readData
+              }
+            } else {
+              readData
+            }
+
           case LOG_DELETE_ACTION =>
 
             val value = JsonCodec.decode(command.body, classOf[LogDelete])
