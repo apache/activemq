@@ -293,7 +293,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       try {
         AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreView(this), objectName)
         if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") ) {
-          val name = new ObjectName(objectName.toString + ",test=test")
+          val name = new ObjectName(objectName.toString + ",view=Test")
           AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreTest(this), name)
         }
       } catch {
@@ -353,7 +353,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
     if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
       if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") )
-        brokerService.getManagementContext().unregisterMBean(new ObjectName(objectName.toString+",test=test"));
+        brokerService.getManagementContext().unregisterMBean(new ObjectName(objectName.toString+",view=Test"));
     }
     info("Stopped "+this)
   }
