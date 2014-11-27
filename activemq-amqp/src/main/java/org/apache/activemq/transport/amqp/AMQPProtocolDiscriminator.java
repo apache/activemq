@@ -28,12 +28,12 @@ import org.apache.activemq.command.Command;
  */
 public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
-    private static final int DEFAULT_PREFETCH = 100;
+    public static final int DEFAULT_PREFETCH = 1000;
 
     private final AmqpTransport transport;
     private final BrokerService brokerService;
 
-    private int prefetch = DEFAULT_PREFETCH;
+    private int prefetch = 0;
     private int producerCredit = DEFAULT_PREFETCH;
 
     interface Discriminator {
