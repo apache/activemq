@@ -69,14 +69,7 @@ import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Modified;
-import org.apache.qpid.proton.amqp.messaging.Outcome;
-import org.apache.qpid.proton.amqp.messaging.Rejected;
-import org.apache.qpid.proton.amqp.messaging.Released;
-import org.apache.qpid.proton.amqp.messaging.Target;
-import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
+import org.apache.qpid.proton.amqp.messaging.*;
 import org.apache.qpid.proton.amqp.transaction.Coordinator;
 import org.apache.qpid.proton.amqp.transaction.Declare;
 import org.apache.qpid.proton.amqp.transaction.Declared;
@@ -322,10 +315,11 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     protected void processLinkFlow(Link link) throws Exception {
         Object context = link.getContext();
         int credit = link.getRemoteCredit();
-        if (context != null && context instanceof ConsumerContext) {
+        if (context instanceof ConsumerContext) {
             ConsumerContext consumerContext = (ConsumerContext)context;
-            // change ActiveMQ consumer prefetch if needed
-            if (consumerContext.credit == 0 && consumerContext.consumerPrefetch != credit && credit > 0) {
+            // change consumer prefetch if it's not been already set using
+            // transport connector property or consumer preference
+            if (consumerContext.consumerPrefetch == 0 && credit > 0) {
                 ConsumerControl control = new ConsumerControl();
                 control.setConsumerId(consumerContext.consumerId);
                 control.setDestination(consumerContext.destination);
@@ -612,6 +606,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         private final ActiveMQDestination destination;
         private boolean closed;
         private final boolean anonymous;
+        private MessageId lastDispatched;
 
         public ProducerContext(ProducerId producerId, ActiveMQDestination destination, boolean anonymous) {
             this.producerId = producerId;
@@ -688,9 +683,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                                 rejected.setError(condition);
                                 delivery.disposition(rejected);
                             } else {
-                                if (receiver.getCredit() <= (prefetch * .2)) {
-                                    LOG.trace("Sending more credit ({}) to producer: {}", prefetch - receiver.getCredit(), producerId);
-                                    receiver.flow(prefetch - receiver.getCredit());
+                                if (receiver.getCredit() <= (producerCredit * .2)) {
+                                    LOG.trace("Sending more credit ({}) to producer: {}", producerCredit - receiver.getCredit(), producerId);
+                                    receiver.flow(producerCredit - receiver.getCredit());
                                 }
 
                                 if (remoteState != null && remoteState instanceof TransactionalState) {
@@ -710,9 +705,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         }
                     });
                 } else {
-                    if (receiver.getCredit() <= (prefetch * .2)) {
-                        LOG.trace("Sending more credit ({}) to producer: {}", prefetch - receiver.getCredit(), producerId);
-                        receiver.flow(prefetch - receiver.getCredit());
+                    if (receiver.getCredit() <= (producerCredit * .2)) {
+                        LOG.trace("Sending more credit ({}) to producer: {}", producerCredit - receiver.getCredit(), producerId);
+                        receiver.flow(producerCredit - receiver.getCredit());
                         pumpProtonToSocket();
                     }
                     sendToActiveMQ(message, null);
@@ -838,10 +833,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         // Client is producing to this receiver object
         org.apache.qpid.proton.amqp.transport.Target remoteTarget = receiver.getRemoteTarget();
         int flow = producerCredit;
-        // use client's preference if set
-        if (receiver.getRemoteCredit() != 0) {
-            flow = receiver.getRemoteCredit();
-        }
         try {
             if (remoteTarget instanceof Coordinator) {
                 pumpProtonToSocket();
@@ -934,7 +925,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         private boolean endOfBrowse = false;
         public ActiveMQDestination destination;
         public int credit;
-        public int consumerPrefetch;
+        public int consumerPrefetch = 0;
+        private long lastDeliveredSequenceId;
 
         protected LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
 
@@ -978,8 +970,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 if (session != null) {
                     session.consumers.remove(info.getConsumerId());
                 }
-
-                sendToActiveMQ(new RemoveInfo(consumerId), null);
+                RemoveInfo removeCommand = new RemoveInfo(consumerId);
+                removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
+                sendToActiveMQ(removeCommand, null);
             }
         }
 
@@ -1003,7 +996,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         public void pumpOutbound() throws Exception {
             while (!closed) {
-
                 while (currentBuffer != null) {
                     int sent = sender.send(currentBuffer.data, currentBuffer.offset, currentBuffer.length);
                     if (sent > 0) {
@@ -1089,6 +1081,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 onMessageDispatch((MessageDispatch) delivery.getContext());
             } else {
                 MessageDispatch md = (MessageDispatch) delivery.getContext();
+                lastDeliveredSequenceId = md.getMessage().getMessageId().getBrokerSequenceId();
                 MessageAck ack = new MessageAck();
                 ack.setConsumerId(consumerId);
                 ack.setFirstMessageId(md.getMessage().getMessageId());
@@ -1109,6 +1102,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     md.getMessage().setTransactionId(localTxId);
                     dispatchedInTx.addFirst(md);
                 }
+
 
                 LOG.trace("Sending Ack to ActiveMQ: {}", ack);
 
@@ -1335,9 +1329,25 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             consumerInfo.setNoRangeAcks(true);
             consumerInfo.setDestination(dest);
             consumerContext.destination = dest;
-            consumerInfo.setPrefetchSize(sender.getRemoteCredit());
-            consumerContext.credit = sender.getRemoteCredit();
-            consumerContext.consumerPrefetch = consumerInfo.getPrefetchSize();
+            int senderCredit = sender.getRemoteCredit();
+            if (prefetch != 0) {
+                // use the value configured on the transport connector
+                // this value will not be changed to the consumer's preference
+                consumerInfo.setPrefetchSize(prefetch);
+                consumerContext.consumerPrefetch = prefetch;
+            } else {
+                if (senderCredit != 0) {
+                    // set the prefetch to the value of the remote credit
+                    // and ignore the later changes
+                    consumerInfo.setPrefetchSize(senderCredit);
+                    consumerContext.consumerPrefetch = senderCredit;
+                } else {
+                    // set default value for now and change to the consumer's preference
+                    // on the first flow packet
+                    consumerInfo.setPrefetchSize(AMQPProtocolDiscriminator.DEFAULT_PREFETCH);
+                }
+            }
+            consumerContext.credit = senderCredit;
             consumerInfo.setDispatchAsync(true);
             if (source.getDistributionMode() == COPY && dest.isQueue()) {
                 consumerInfo.setBrowser(true);

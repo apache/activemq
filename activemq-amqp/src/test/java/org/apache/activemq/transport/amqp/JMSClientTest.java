@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.concurrent.CountDownLatch;
@@ -54,6 +48,8 @@ import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 public class JMSClientTest extends JMSClientTestSupport {
 
@@ -950,6 +946,38 @@ public class JMSClientTest extends JMSClientTestSupport {
             session.unsubscribe("DurbaleTopic");
             fail("Should have thrown as subscription is in use.");
         } catch (JMSException ex) {
+        }
+    }
+
+    @Test(timeout=30000)
+    public void testRedeliveredHeader() throws Exception {
+        connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName());
+        connection.start();
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+        for (int i = 1; i < 100; i++) {
+            Message m = session.createTextMessage(i + ". Sample text");
+            producer.send(m);
+        }
+
+        MessageConsumer consumer = session.createConsumer(queue);
+        receiveMessages(consumer);
+        consumer.close();
+
+        consumer = session.createConsumer(queue);
+        receiveMessages(consumer);
+        consumer.close();
+    }
+
+    protected void receiveMessages(MessageConsumer consumer) throws Exception {
+        for (int i = 0; i < 10; i++) {
+            Message message = consumer.receive(1000);
+            assertNotNull(message);
+            assertFalse(message.getJMSRedelivered());
         }
     }
 }
