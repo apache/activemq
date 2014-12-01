@@ -1203,29 +1203,29 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         @Override
         void doCommit() throws Exception {
             if (!dispatchedInTx.isEmpty()) {
+                for (MessageDispatch md : dispatchedInTx) {
+                    MessageAck pendingTxAck = new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1);
+                    pendingTxAck.setFirstMessageId(md.getMessage().getMessageId());
+                    pendingTxAck.setTransactionId(md.getMessage().getTransactionId());
 
-                MessageDispatch md = dispatchedInTx.getFirst();
-                MessageAck pendingTxAck = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, dispatchedInTx.size());
-                pendingTxAck.setTransactionId(md.getMessage().getTransactionId());
-                pendingTxAck.setFirstMessageId(dispatchedInTx.getLast().getMessage().getMessageId());
+                    LOG.trace("Sending commit Ack to ActiveMQ: {}", pendingTxAck);
 
-                LOG.trace("Sending commit Ack to ActiveMQ: {}", pendingTxAck);
+                    sendToActiveMQ(pendingTxAck, new ResponseHandler() {
+                        @Override
+                        public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
+                            if (response.isException()) {
+                                if (response.isException()) {
+                                    Throwable exception = ((ExceptionResponse) response).getException();
+                                    exception.printStackTrace();
+                                    sender.close();
+                                }
+                            }
+                            pumpProtonToSocket();
+                        }
+                    });
+                }
 
                 dispatchedInTx.clear();
-
-                sendToActiveMQ(pendingTxAck, new ResponseHandler() {
-                    @Override
-                    public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
-                        if (response.isException()) {
-                            if (response.isException()) {
-                                Throwable exception = ((ExceptionResponse) response).getException();
-                                exception.printStackTrace();
-                                sender.close();
-                            }
-                        }
-                        pumpProtonToSocket();
-                    }
-                });
             }
         }
 
