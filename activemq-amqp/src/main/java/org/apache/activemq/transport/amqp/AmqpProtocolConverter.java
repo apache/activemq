@@ -69,7 +69,14 @@ import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.*;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Outcome;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Released;
+import org.apache.qpid.proton.amqp.messaging.Target;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.transaction.Coordinator;
 import org.apache.qpid.proton.amqp.transaction.Declare;
 import org.apache.qpid.proton.amqp.transaction.Declared;
@@ -1352,7 +1359,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if (source.getDistributionMode() == COPY && dest.isQueue()) {
                 consumerInfo.setBrowser(true);
             }
-            if (TerminusDurability.UNSETTLED_STATE.equals(source.getDurable()) && dest.isTopic()) {
+            if ((TerminusDurability.UNSETTLED_STATE.equals(source.getDurable()) ||
+                 TerminusDurability.CONFIGURATION.equals(source.getDurable())) && dest.isTopic()) {
                 consumerInfo.setSubscriptionName(sender.getName());
             }
 
