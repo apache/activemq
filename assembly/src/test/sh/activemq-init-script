@@ -1,0 +1,134 @@
+#!/bin/sh
+
+# ------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------
+#
+# This script tests the activemq init script
+#
+# Authors:
+# Marc Schoechlin <ms@256bit.org>  
+
+STATUS_OVERVIEW=""
+IDX=0
+
+assert(){
+ local STRATEGY="$1"
+ local SHOULD="$2"
+ local CMD="$3"
+ local RESULT="fail"
+ echo "****************************************************************************"
+ echo "** Expected execution result ==> $SHOULD : $CMD";
+ eval "$CMD 2>&1"
+ local RET="$?"
+ echo "**"
+
+ if [ "$SHOULD" == "failed" ];then
+   SHOULD="failed    "
+   if [ "$RET" != "0" ];then
+      RESULT="ok"
+   fi
+ elif [ "$SHOULD" == "successful" ];then
+   if [ "$RET" == "0" ];then
+      RESULT="ok"
+   fi
+ else
+   echo '$2 should be "success" or "fail"'
+   exit 1
+ fi
+
+ if [ "$RESULT" != "ok" ];then
+   echo "** ERROR: not $SHOULD (returncode $RET)"
+   STATUS_OVERVIEW="$STATUS_OVERVIEW#  FAIL : not $SHOULD => $CMD"
+   echo "****************************************************************************"
+   if [ "$STRATEGY" = "stop" ];then
+      exit 100
+   else
+      return 100
+   fi
+ else
+   STATUS_OVERVIEW="$STATUS_OVERVIEW#    OK : $SHOULD     => $CMD"
+ fi
+ echo "****************************************************************************"
+ return 0
+}
+
+STRATEGY="stop"
+
+# Setup a chain of symlinks to test realpath evaluation
+TESTDIR="/tmp/activemq/initscript-testing-$$-$USER"
+mkdir -p $TESTDIR
+ln -snf $PWD/activemq $TESTDIR/activemq-test1
+ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq-test2
+cd $TESTDIR/
+SCRIPT="$TESTDIR/activemq-test2"
+
+trap "rm -rf $TESTDIR" INT TERM EXIT
+
+# ActiveMQ is stopped
+assert ${STRATEGY} successful "${SCRIPT} stop"
+assert ${STRATEGY} successful "${SCRIPT}"
+assert ${STRATEGY}     failed "${SCRIPT} status"
+assert ${STRATEGY}     failed "${SCRIPT} browse"
+assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR"
+assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd"
+assert ${STRATEGY} successful "${SCRIPT} browse 2>&1|grep -C 1000 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -C 1000 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -C 1000 'Activemq is not running.'"
+assert ${STRATEGY} failed     "${SCRIPT} query"
+assert ${STRATEGY} successful "${SCRIPT} restart"
+assert ${STRATEGY}     failed "${SCRIPT} stop"
+
+# ActiveMQ is started
+assert ${STRATEGY} successful "${SCRIPT} start"
+assert ${STRATEGY} successful "${SCRIPT}"
+assert ${STRATEGY} successful "${SCRIPT} status"
+echo "Sleeping 30 seconds to get activemq really started"; sleep 30
+assert ${STRATEGY} successful "${SCRIPT} status"
+assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR"
+assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd"
+
+assert ${STRATEGY} successful "${SCRIPT} browse 2>&1|grep -C 1000 'No JMS destination specified'"
+assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:61616 FOO.BAR"
+
+assert ${STRATEGY} successful "${SCRIPT} bstat"
+assert ${STRATEGY} successful "${SCRIPT} bstat |grep -C 1000 TotalConsumerCount"
+
+assert ${STRATEGY} successful "${SCRIPT} dstat"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1| grep -C 1000 ActiveMQ.Advisory.MasterBroker"
+
+assert ${STRATEGY} successful "${SCRIPT} list"
+assert ${STRATEGY} successful "${SCRIPT} list 2>&1| grep -C 1000 brokerName"
+
+assert ${STRATEGY} successful "${SCRIPT} purge FOO.BAR"
+
+assert ${STRATEGY} successful "${SCRIPT} status"
+
+assert ${STRATEGY} successful "${SCRIPT} query"
+assert ${STRATEGY} successful "${SCRIPT} query|grep brokerName"
+
+#assert ${STRATEGY} failed     "${SCRIPT} console"
+
+# assert ${STRATEGY} successful "${SCRIPT} create"
+# assert ${STRATEGY} successful "${SCRIPT} export"
+# assert ${STRATEGY} failed "${SCRIPT} console"
+# assert ${STRATEGY} failed "${SCRIPT} setup" 
+
+echo
+echo
+echo "*** SUMMARY"
+echo "$STATUS_OVERVIEW"|tr '#' '\n'|sed '~s,^, ,'
+
