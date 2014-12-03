@@ -253,7 +253,11 @@ fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
+  #if [ "$OSTYPE" = "cygwin" ]; then
+  #    ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA\\activemq.pid"
+  #else
+      ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
+  #fi
 fi
 
 # Location of the java installation
@@ -342,8 +346,8 @@ if [ "$OSTYPE" = "cygwin" ]; then
     ACTIVEMQ_HOME="`cygpath --unix "$ACTIVEMQ_HOME"`"
   [ -n "$JAVA_HOME" ] &&
     JAVA_HOME="`cygpath --unix "$JAVA_HOME"`"
-  [ -n "$CLASSPATH" ] &&
-    CLASSPATH="`cygpath --path --unix "$CLASSPATH"`"
+  [ -n "$ACTIVEMQ_CLASSPATH" ] &&
+    ACTIVEMQ_CLASSPATH="`cygpath --path --unix "$ACTIVEMQ_CLASSPATH"`"
 fi
 
 # Detect the location of the java binary
@@ -385,8 +389,8 @@ if [ "$OSTYPE" = "cygwin" ];then
   ACTIVEMQ_CONF=`cygpath --windows "$ACTIVEMQ_CONF"`
   ACTIVEMQ_DATA=`cygpath --windows "$ACTIVEMQ_DATA"`
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
-  JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
-  CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
+  [ -n "$JAVA_HOME" ] &&
+  	JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CYGHOME=`cygpath --windows "$HOME"`
   ACTIVEMQ_TMP=`cygpath --windows "$ACTIVEMQ_TMP"`
   if [ -n "$CYGHOME" ]; then
@@ -397,6 +401,17 @@ fi
 # Set default classpath
 # Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
 ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF}:${ACTIVEMQ_CLASSPATH}"
+
+
+if [ "$OSTYPE" = "cygwin" ];then
+  # remove training backslashes to prevent quoting problems
+  ACTIVEMQ_CLASSPATH="`echo ${ACTIVEMQ_CLASSPATH}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_HOME="`echo ${ACTIVEMQ_HOME}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_BASE="`echo ${ACTIVEMQ_BASE}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_CONF="`echo ${ACTIVEMQ_CONF}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_DATA="`echo ${ACTIVEMQ_DATA}|sed '~s,[\\]*$,,g'`"
+fi
+
 
 # Start the ActiveMQ JAR
 #
@@ -440,11 +455,11 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > $PIDFILE;
+              echo \$APID > "$PIDFILE";
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
    elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
-          PID=`cat $ACTIVEMQ_PIDFILE`
+          PID="`cat "${ACTIVEMQ_PIDFILE}"`"
           $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -454,7 +469,8 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > $ACTIVEMQ_DATA/stop.pid; exit \$RET" $DOIT_POSTFIX
+              echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
+set +x
       RET="$?"
    else
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
@@ -499,7 +515,7 @@ checkRunning(){
 }
 
 checkStopRunning(){
-    PID=$ACTIVEMQ_DATA/stop.pid
+    PID="${PIDFILE}.stop"
     if [ -f "$PID" ]; then
        if  [ -z "`cat $PID`" ];then
         echo "ERROR: Pidfile '$PID' exists but contains no pid"
@@ -608,7 +624,7 @@ invoke_stop(){
        echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$PID' : "
        FOUND="0"
        i=1
-       while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
+       while [ "$i" != "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
 
          if [ ! checkStopRunning ];then
             if [ ! checkRunning ]; then
@@ -626,7 +642,7 @@ invoke_stop(){
             FOUND="1"
             break
          fi
-         i="`expr $i + 1`"
+         i=`expr $i + 1`
        done
        if [ "$FOUND" -ne "1" ];then
          echo
@@ -642,8 +658,8 @@ invoke_stop(){
        echo "ActiveMQ not running"
        exit 0
     fi
-    rm -f $ACTIVEMQ_PIDFILE >/dev/null 2>&1
-    rm -f $ACTIVEMQ_DATA/stop.pid >/dev/null 2>&1
+    rm -f "$ACTIVEMQ_PIDFILE" >/dev/null 2>&1
+    rm -f "$ACTIVEMQ_DATA/stop.pid" >/dev/null 2>&1
     exit $RET
 }
 
