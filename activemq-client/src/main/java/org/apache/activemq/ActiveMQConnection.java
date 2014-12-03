@@ -1378,10 +1378,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 }
                                 // dispose of transport for security exceptions on connection initiation
                                 if (exception instanceof SecurityException && command instanceof ConnectionInfo){
-                                    Transport t = transport;
-                                    if (null != t){
-                                        ServiceSupport.dispose(t);
-                                    }
+                                    forceCloseOnSecurityException(exception);
                                 }
                                 if (jmsEx !=null) {
                                     onComplete.onException(jmsEx);
@@ -1396,6 +1393,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 throw JMSExceptionSupport.create(e);
             }
         }
+    }
+
+    private void forceCloseOnSecurityException(Throwable exception) {
+        LOG.trace("force close on security exception:" + this + ", transport=" + transport, exception);
+        onException(new IOException("Force close due to SecurityException on connect", exception));
     }
 
     public Response syncSendPacket(Command command) throws JMSException {
@@ -1419,12 +1421,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         } catch(Throwable e) {
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
                         }
-                        //dispose of transport for security exceptions
                         if (er.getException() instanceof SecurityException && command instanceof ConnectionInfo){
-                            Transport t = this.transport;
-                            if (null != t){
-                                ServiceSupport.dispose(t);
-                            }
+                            forceCloseOnSecurityException(er.getException());
                         }
                         if (jmsEx !=null) {
                             throw jmsEx;

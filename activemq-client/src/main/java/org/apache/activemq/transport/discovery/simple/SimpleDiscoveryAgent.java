@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple DiscoveryAgent that allows static configuration of the discovered
  * services.
- * 
- * 
+ *
+ *
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
@@ -53,33 +53,36 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         private int connectFailures;
         private long reconnectDelay = initialReconnectDelay;
         private long connectTime = System.currentTimeMillis();
-        private AtomicBoolean failed = new AtomicBoolean(false);
+        private final AtomicBoolean failed = new AtomicBoolean(false);
 
         public SimpleDiscoveryEvent(String service) {
             super(service);
         }
 
-		public SimpleDiscoveryEvent(SimpleDiscoveryEvent copy) {
-			super(copy);
-			connectFailures = copy.connectFailures;
-			reconnectDelay = copy.reconnectDelay;
-			connectTime = copy.connectTime;
-			failed.set(copy.failed.get());
-		}
-        
+        public SimpleDiscoveryEvent(SimpleDiscoveryEvent copy) {
+            super(copy);
+            connectFailures = copy.connectFailures;
+            reconnectDelay = copy.reconnectDelay;
+            connectTime = copy.connectTime;
+            failed.set(copy.failed.get());
+        }
+
         @Override
         public String toString() {
             return "[" + serviceName + ", failed:" + failed + ", connectionFailures:" + connectFailures + "]";
         }
     }
 
+    @Override
     public void setDiscoveryListener(DiscoveryListener listener) {
         this.listener = listener;
     }
 
+    @Override
     public void registerService(String name) throws IOException {
     }
 
+    @Override
     public void start() throws Exception {
         taskRunner = new TaskRunnerFactory();
         taskRunner.init();
@@ -90,10 +93,13 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         running.set(false);
 
-        taskRunner.shutdown();
+        if (taskRunner != null) {
+            taskRunner.shutdown();
+        }
 
         // TODO: Should we not remove the services on the listener?
 
@@ -121,6 +127,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         }
     }
 
+    @Override
     public void serviceFailed(DiscoveryEvent devent) throws IOException {
 
         final SimpleDiscoveryEvent sevent = (SimpleDiscoveryEvent)devent;
@@ -128,9 +135,10 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
             listener.onServiceRemove(sevent);
             taskRunner.execute(new Runnable() {
+                @Override
                 public void run() {
                     SimpleDiscoveryEvent event = new SimpleDiscoveryEvent(sevent);
-                	
+
                     // We detect a failed connection attempt because the service
                     // fails right away.
                     if (event.connectTime + minConnectTime > System.currentTimeMillis()) {

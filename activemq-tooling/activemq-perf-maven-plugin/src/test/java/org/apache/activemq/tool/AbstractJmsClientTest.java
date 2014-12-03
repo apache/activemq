@@ -1,7 +1,6 @@
 package org.apache.activemq.tool;
 
-import static org.apache.activemq.command.ActiveMQDestination.QUEUE_TYPE;
-import static org.apache.activemq.command.ActiveMQDestination.TOPIC_TYPE;
+import static org.apache.activemq.command.ActiveMQDestination.*;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
@@ -86,6 +85,18 @@ public class AbstractJmsClientTest {
     }
 
     @Test
+    public void testCreateDestination_tempQueue() throws JMSException {
+        assertDestinationType(TEMP_QUEUE_TYPE,
+                asAmqDest(jmsClient.createDestination("temp-queue://dest")));
+    }
+
+    @Test
+    public void testCreateDestination_tempTopic() throws JMSException {
+        assertDestinationType(TEMP_TOPIC_TYPE,
+                asAmqDest(jmsClient.createDestination("temp-topic://dest")));
+    }
+
+    @Test
     public void testCreateDestinations_commaSeparated() throws JMSException {
         clientProperties.setDestName("queue://foo,topic://cheese");
         Destination[] destinations = jmsClient.createDestinations(1);
@@ -167,6 +178,10 @@ public class AbstractJmsClientTest {
     private void assertDestinationNameType(String physicalName, byte destinationType, ActiveMQDestination destination) {
         assertEquals(destinationType, destination.getDestinationType());
         assertEquals(physicalName, destination.getPhysicalName());
+    }
+
+    private void assertDestinationType(byte destinationType, ActiveMQDestination destination) {
+        assertEquals(destinationType, destination.getDestinationType());
     }
 
     private ActiveMQDestination asAmqDest(Destination destination) {

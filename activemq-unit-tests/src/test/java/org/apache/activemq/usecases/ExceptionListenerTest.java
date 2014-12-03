@@ -16,48 +16,103 @@
  */
 package org.apache.activemq.usecases;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import javax.jms.Connection;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
+import javax.jms.JMSSecurityException;
+import javax.jms.Session;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ConnectionFailedException;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
+import org.apache.activemq.util.Wait;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import junit.framework.TestCase;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Oliver Belikan
- * 
  */
-public class ExceptionListenerTest extends TestCase implements ExceptionListener {
-    boolean isException;
+public class ExceptionListenerTest implements ExceptionListener {
+    private static final Logger LOG = LoggerFactory.getLogger(ExceptionListenerTest.class);
+    BrokerService brokerService;
+    URI brokerUri;
+    LinkedList<Throwable> exceptionsViaListener = new LinkedList<Throwable>();
 
-    public ExceptionListenerTest(String arg) {
-        super(arg);
+    @Before
+    public void startBroker() throws Exception {
+        brokerService = new BrokerService();
+        brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(false);
+        brokerService.setPersistent(false);
+        brokerService.setPlugins(new BrokerPlugin[]{new SimpleAuthenticationPlugin(new ArrayList())});
+        brokerUri = brokerService.addConnector("tcp://0.0.0.0:0").getConnectUri();
+        brokerService.start();
     }
 
-    public void testOnException() throws Exception {
-        /*
-         * TODO not sure yet if this is a valid test
-         * System.setProperty("activemq.persistenceAdapter",
-         * "org.apache.activemq.store.vm.VMPersistenceAdapter"); //
-         * configuration of container and all protocolls BrokerContainerImpl
-         * container = new BrokerContainerImpl("DefaultBroker");
-         * BrokerConnectorImpl connector = new BrokerConnectorImpl(container,
-         * "vm://localhost", new DefaultWireFormat()); container.start();
-         * ActiveMQConnectionFactory factory = new
-         * ActiveMQConnectionFactory("vm://localhost"); factory.start();
-         * Connection connection = factory.createConnection();
-         * connection.setExceptionListener(this); connection.start(); Session
-         * session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-         * Destination destination = session.createTopic(getClass().getName());
-         * MessageProducer producer = session.createProducer(destination); try {
-         * Thread.currentThread().sleep(1000); } catch (Exception e) { }
-         * container.stop(); // now lets try send try {
-         * producer.send(session.createTextMessage("This will never get
-         * anywhere")); } catch (JMSException e) { log.info("Caught: " + e); }
-         * try { Thread.currentThread().sleep(1000); } catch (Exception e) { }
-         * assertTrue("Should have received an exception", isException);
-         */
+    @After
+    public void stopBroker() throws Exception {
+        exceptionsViaListener.clear();
+        if (brokerService != null) {
+            brokerService.stop();
+        }
+    }
+
+    @Test
+    public void fireOnSecurityException() throws Exception {
+        doFireOnSecurityException(new ActiveMQConnectionFactory(brokerUri));
+    }
+
+    @Test
+    public void fireOnSecurityExceptionFailover() throws Exception {
+        doFireOnSecurityException(new ActiveMQConnectionFactory("failover://" + brokerUri));
+    }
+
+    public void doFireOnSecurityException(ActiveMQConnectionFactory factory) throws Exception {
+        factory.setWatchTopicAdvisories(false);
+        Connection connection = factory.createConnection();
+        connection.setExceptionListener(this);
+
+        try {
+            connection.start();
+            fail("Expect securityException");
+        } catch (JMSSecurityException expected) {
+            expected.printStackTrace();
+            assertTrue("nested security exception: " + expected, expected.getCause() instanceof SecurityException);
+        }
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !exceptionsViaListener.isEmpty();
+            }
+        });
+        Throwable expected = exceptionsViaListener.getFirst();
+        assertNotNull(expected);
+        assertNotNull(expected.getCause());
+
+        assertTrue("expected exception: " + expected, expected.getCause().getCause() instanceof SecurityException);
+
+        try {
+            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            fail("Expect error b/c connection is auto closed on security exception above");
+        } catch (ConnectionFailedException e) {
+        }
     }
 
     public void onException(JMSException e) {
-        isException = true;
+        LOG.info("onException:" + e, new Throwable("FromHere"));
+        exceptionsViaListener.add(e);
     }
 }

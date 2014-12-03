@@ -55,6 +55,7 @@ import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -336,6 +337,8 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             cleanupTicket.cancel(true);
             cleanupTicket = null;
         }
+        
+        ThreadPoolUtils.shutdown(clockDaemon);        
     }
 
     public void cleanup() {

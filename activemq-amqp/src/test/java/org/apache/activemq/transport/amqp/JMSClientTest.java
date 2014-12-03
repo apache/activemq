@@ -16,14 +16,11 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,6 +51,8 @@ import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.Assert.*;
 
 public class JMSClientTest extends JMSClientTestSupport {
 
@@ -144,7 +143,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         final int msgCount = 1;
 
         connection = createConnection();
-        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
         sendMessages(connection, queue, msgCount);
 
@@ -174,7 +173,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         final int msgCount = 1;
 
         connection = createConnection();
-        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
         sendMessages(connection, queue, msgCount);
 
@@ -210,6 +209,50 @@ public class JMSClientTest extends JMSClientTestSupport {
         session.close();
     }
 
+    @Test(timeout = 60000)
+    public void testRollbackSomeThenReceiveAndCommit() throws Exception {
+        int totalCount = 5;
+        int consumeBeforeRollback = 2;
+
+        connection = createConnection();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        Queue queue = session.createQueue(getDestinationName());
+        sendMessages(connection, queue, totalCount);
+
+        QueueViewMBean proxy = getProxyToQueue(name.getMethodName());
+        assertEquals(totalCount, proxy.getQueueSize());
+
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        for(int i = 1; i <= consumeBeforeRollback; i++) {
+            Message message = consumer.receive(1000);
+            assertNotNull(message);
+            assertEquals("Unexpected message number", i, message.getIntProperty(AmqpTestSupport.MESSAGE_NUMBER));
+        }
+
+        session.rollback();
+
+        assertEquals(totalCount, proxy.getQueueSize());
+
+        // Consume again..check we receive all the messages.
+        Set<Integer> messageNumbers = new HashSet<Integer>();
+        for(int i = 1; i <= totalCount; i++) {
+            messageNumbers.add(i);
+        }
+
+        for(int i = 1; i <= totalCount; i++) {
+            Message message = consumer.receive(1000);
+            assertNotNull(message);
+            int msgNum = message.getIntProperty(AmqpTestSupport.MESSAGE_NUMBER);
+            messageNumbers.remove(msgNum);
+        }
+
+        session.commit();
+
+        assertTrue("Did not consume all expected messages, missing messages: " + messageNumbers, messageNumbers.isEmpty());
+        assertEquals("Queue should have no messages left after commit", 0, proxy.getQueueSize());
+    }
+
     @Test(timeout=60000)
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
@@ -217,7 +260,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         final int msgCount = 500;
 
         connection = createConnection();
-        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
         sendMessages(connection, queue, msgCount);
 
@@ -761,7 +804,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         connection = createConnection();
-        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Queue queue = session.createQueue(getDestinationName());
 
         connection.start();
@@ -950,6 +993,38 @@ public class JMSClientTest extends JMSClientTestSupport {
             session.unsubscribe("DurbaleTopic");
             fail("Should have thrown as subscription is in use.");
         } catch (JMSException ex) {
+        }
+    }
+
+    @Test(timeout=30000)
+    public void testRedeliveredHeader() throws Exception {
+        connection = createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = session.createQueue(getDestinationName());
+        connection.start();
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+        for (int i = 1; i < 100; i++) {
+            Message m = session.createTextMessage(i + ". Sample text");
+            producer.send(m);
+        }
+
+        MessageConsumer consumer = session.createConsumer(queue);
+        receiveMessages(consumer);
+        consumer.close();
+
+        consumer = session.createConsumer(queue);
+        receiveMessages(consumer);
+        consumer.close();
+    }
+
+    protected void receiveMessages(MessageConsumer consumer) throws Exception {
+        for (int i = 0; i < 10; i++) {
+            Message message = consumer.receive(1000);
+            assertNotNull(message);
+            assertFalse(message.getJMSRedelivered());
         }
     }
 }

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.leveldb.replicated
 
-import org.apache.activemq.leveldb.{LevelDBClient, LevelDBStore}
+import org.apache.activemq.leveldb.{LevelDBStoreTest, LevelDBClient, LevelDBStore}
 import org.apache.activemq.util.ServiceStopper
 import java.util
 import org.fusesource.hawtdispatch._
@@ -30,6 +30,8 @@ import FileSupport._
 import java.io.{IOException, RandomAccessFile, File}
 import scala.beans.BeanProperty
 import java.util.concurrent.{CountDownLatch, TimeUnit}
+import javax.management.ObjectName
+import org.apache.activemq.broker.jmx.AnnotatedMBean
 
 object SlaveLevelDBStore extends Log
 
@@ -79,10 +81,18 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
     db.client.dirtyIndexFile.recursiveDelete
     db.client.plistIndexFile.recursiveDelete
     start_slave_connections
+
+    if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") ) {
+      val name = new ObjectName(objectName.toString + ",view=Test")
+      AnnotatedMBean.registerMBean(brokerService.getManagementContext, new LevelDBStoreTest(this), name)
+    }
   }
 
   var stopped = false
   override def doStop(stopper: ServiceStopper) = {
+    if( java.lang.Boolean.getBoolean("org.apache.activemq.leveldb.test") )
+      brokerService.getManagementContext().unregisterMBean(new ObjectName(objectName.toString+",view=Test"));
+
     val latch = new CountDownLatch(1)
     stop_connections(^{
       latch.countDown
@@ -192,7 +202,8 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
             trace("%s, Slave WAL update: (file:%s, offset: %d, length: %d)".format(directory, value.file.toHexString, value.offset, value.length))
             val file = client.log.next_log(value.file)
             val buffer = map(file, value.offset, value.length, false)
-            session.codec.readData(buffer, ^{
+
+            def readData = session.codec.readData(buffer, ^{
               if( value.sync ) {
                 buffer.force()
               }
@@ -208,6 +219,15 @@ class SlaveLevelDBStore extends LevelDBStore with ReplicatedLevelDBStoreTrait {
                 send_wal_ack
               }
             })
+
+            if( client.log.recordLogTestSupport!=null ) {
+              client.log.recordLogTestSupport.writeCall.call {
+                readData
+              }
+            } else {
+              readData
+            }
+
           case LOG_DELETE_ACTION =>
 
             val value = JsonCodec.decode(command.body, classOf[LogDelete])
