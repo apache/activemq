@@ -626,7 +626,7 @@ invoke_stop(){
             FOUND="1"
             break
          fi
-         i=`expr $i + 1`
+         i="`expr $i + 1`"
        done
        if [ "$FOUND" -ne "1" ];then
          echo
