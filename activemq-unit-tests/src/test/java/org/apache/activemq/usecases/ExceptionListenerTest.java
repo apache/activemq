@@ -56,7 +56,7 @@ public class ExceptionListenerTest implements ExceptionListener {
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(false);
         brokerService.setPersistent(false);
-        brokerService.setPlugins(new BrokerPlugin[]{new SimpleAuthenticationPlugin(new ArrayList<>())});
+        brokerService.setPlugins(new BrokerPlugin[]{new SimpleAuthenticationPlugin(new ArrayList())});
         brokerUri = brokerService.addConnector("tcp://0.0.0.0:0").getConnectUri();
         brokerService.start();
     }
