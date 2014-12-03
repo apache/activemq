@@ -265,7 +265,7 @@ JAVACMD=""
 
 # Set jvm memory configuration
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
+    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 fi
 
 # Set jvm jmx configuration
