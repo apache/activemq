@@ -29,6 +29,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.amqp.AmqpTestSupport;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
@@ -75,6 +76,15 @@ public class AMQ4753Test extends AmqpTestSupport {
     private Connection createAMQPConnection(int testPort, boolean useSSL) throws JMSException {
         LOG.debug("In createConnection using port {} ssl? {}", testPort, useSSL);
         final ConnectionFactoryImpl connectionFactory = new ConnectionFactoryImpl("localhost", testPort, "admin", "password", null, useSSL);
+
+        if (useSSL) {
+            SpringSslContext sslContext = (SpringSslContext) brokerService.getSslContext();
+            connectionFactory.setKeyStorePath(sslContext.getKeyStore());
+            connectionFactory.setKeyStorePassword("password");
+            connectionFactory.setTrustStorePath(sslContext.getTrustStore());
+            connectionFactory.setTrustStorePassword("password");
+        }
+
         final Connection connection = connectionFactory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override

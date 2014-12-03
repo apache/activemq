@@ -16,20 +16,21 @@
  */
 package org.apache.activemq.transport.amqp.joram;
 
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.spring.SpringSslContext;
-import org.apache.activemq.transport.amqp.DefaultTrustManager;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.security.SecureRandom;
 
 import javax.jms.ConnectionFactory;
 import javax.naming.NamingException;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import java.io.File;
-import java.security.SecureRandom;
+
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.spring.SpringSslContext;
+import org.apache.activemq.transport.amqp.DefaultTrustManager;
+import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActiveMQNIOPlusSSLAdmin extends ActiveMQAdmin {
 
@@ -80,6 +81,15 @@ public class ActiveMQNIOPlusSSLAdmin extends ActiveMQAdmin {
         try {
             LOG.debug("Creating a connection factory using port {}", port);
             final ConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, null, null, null, true);
+
+            ConnectionFactoryImpl implFactory = (ConnectionFactoryImpl) factory;
+
+            SpringSslContext sslContext = (SpringSslContext) broker.getSslContext();
+            implFactory.setKeyStorePath(sslContext.getKeyStore());
+            implFactory.setKeyStorePassword("password");
+            implFactory.setTrustStorePath(sslContext.getTrustStore());
+            implFactory.setTrustStorePassword("password");
+
             context.bind(name, factory);
         } catch (NamingException e) {
             throw new RuntimeException(e);
