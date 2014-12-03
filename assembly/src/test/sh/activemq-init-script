@@ -23,30 +23,30 @@
 # Marc Schoechlin <ms@256bit.org>  
 
 STATUS_OVERVIEW=""
-IDX=0
 
 assert(){
  local STRATEGY="$1"
  local SHOULD="$2"
  local CMD="$3"
  local RESULT="fail"
+
  echo "****************************************************************************"
  echo "** Expected execution result ==> $SHOULD : $CMD";
  eval "$CMD 2>&1"
  local RET="$?"
  echo "**"
 
- if [ "$SHOULD" == "failed" ];then
+ if [ "$SHOULD" = "failed" ];then
    SHOULD="failed    "
    if [ "$RET" != "0" ];then
       RESULT="ok"
    fi
- elif [ "$SHOULD" == "successful" ];then
-   if [ "$RET" == "0" ];then
+ elif [ "$SHOULD" = "successful" ];then
+   if [ "$RET" = "0" ];then
       RESULT="ok"
    fi
  else
-   echo '$2 should be "success" or "fail"'
+   echo '$2 should be "successful" or "failed"'
    exit 1
  fi
 
@@ -68,17 +68,44 @@ assert(){
 
 STRATEGY="stop"
 
-# Setup a chain of symlinks to test realpath evaluation
+
+echo "****************************************************************************"
+echo "** Test Setup"
+echo
+
+if ( ! [ -x "activemq" ] );then
+   echo "'activemq' is not part of the current working directory"
+   exit 1
+fi
+
+echo "Setup a testdir"
 TESTDIR="/tmp/activemq/initscript-testing-$$-$USER"
 mkdir -p $TESTDIR
-ln -snf $PWD/activemq $TESTDIR/activemq-test1
-ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq-test2
-cd $TESTDIR/
-SCRIPT="$TESTDIR/activemq-test2"
 
+echo "Setting HOME to $TESTDIR"
+export HOME="$TESTDIR"
+
+echo "Setup a chain of symlinks to test realpath evaluation"
+# Setup a chain of symlinks to test realpath evaluation
+ln -snf $PWD/activemq $TESTDIR/activemq-test1
+ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq2
+export INSTANCE_NAME="test3"
+ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq-instance-${INSTANCE_NAME}
+cd $TESTDIR/
+SCRIPT="$TESTDIR/activemq2"
 trap "rm -rf $TESTDIR" INT TERM EXIT
+echo
+echo "Setup instance configuration files"
+
+
+echo "****************************************************************************"
+STRATEGY="stop"
 
 # ActiveMQ is stopped
+assert ${STRATEGY} successful "${SCRIPT} setup $HOME/.activemqrc-instance-${INSTANCE_NAME}"
+assert ${STRATEGY} successful "sed -i '~s,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=30,;~s,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' $HOME/.activemqrc-instance-${INSTANCE_NAME}"
+cat "$HOME/.activemqrc-instance-${INSTANCE_NAME}"
+
 assert ${STRATEGY} successful "${SCRIPT} stop"
 assert ${STRATEGY} successful "${SCRIPT}"
 assert ${STRATEGY}     failed "${SCRIPT} status"
