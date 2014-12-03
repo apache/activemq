@@ -101,7 +101,7 @@
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.5</zookeeper-version>
     <qpid-proton-version>0.8</qpid-proton-version>
-    <qpid-jms-version>0.26</qpid-jms-version>
+    <qpid-jms-version>0.30</qpid-jms-version>
     <regexp-version>1.3</regexp-version>
     <rome-version>1.0</rome-version>
     <saxon-version>9.5.1-2</saxon-version>
