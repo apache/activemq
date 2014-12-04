@@ -321,7 +321,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     protected void processLinkFlow(Link link) throws Exception {
         Object context = link.getContext();
-        int credit = link.getRemoteCredit();
+        int credit = link.getCredit();
         if (context instanceof ConsumerContext) {
             ConsumerContext consumerContext = (ConsumerContext)context;
             // change consumer prefetch if it's not been already set using
@@ -1349,9 +1349,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     consumerInfo.setPrefetchSize(senderCredit);
                     consumerContext.consumerPrefetch = senderCredit;
                 } else {
-                    // set default value for now and change to the consumer's preference
+                    // set zero value for now and change to the consumer's preference
                     // on the first flow packet
-                    consumerInfo.setPrefetchSize(AMQPProtocolDiscriminator.DEFAULT_PREFETCH);
+                    consumerInfo.setPrefetchSize(0);
                 }
             }
             consumerContext.credit = senderCredit;
