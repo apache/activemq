@@ -81,7 +81,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     }
 
     public synchronized void move(File targetDirectory) throws IOException{
-        IOHelper.moveFile(file,targetDirectory);
+        IOHelper.moveFile(file, targetDirectory);
     }
 
     public SequenceSet getCorruptedBlocks() {

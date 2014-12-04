@@ -444,4 +444,5 @@ public class MultiKahaDBTransactionStore implements TransactionStore {
         }
         destination.acknowledge(context, clientId, subscriptionName, messageId, ack);
     }
+
 }
