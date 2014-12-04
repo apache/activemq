@@ -20,12 +20,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.transaction.xa.Xid;
 
@@ -516,6 +511,10 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
 
     public int getJournalWriteBatchSize() {
         return transactionStore.getJournalMaxWriteBatchSize();
+    }
+
+    public List<PersistenceAdapter> getAdapters() {
+        return Collections.unmodifiableList(adapters);
     }
 
     @Override
