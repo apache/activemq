@@ -17,13 +17,7 @@
 package org.apache.activemq.usecases;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -57,13 +51,13 @@ import static org.junit.Assert.assertTrue;
 @RunWith(BlockJUnit4ClassRunner.class)
 public class MessageGroupReconnectDistributionTest {
     public static final Logger LOG = LoggerFactory.getLogger(MessageGroupReconnectDistributionTest.class);
+    final Random random = new Random();
     protected Connection connection;
     protected Session session;
     protected MessageProducer producer;
     protected Destination destination;
-
-    BrokerService broker;
     protected TransportConnector connector;
+    BrokerService broker;
 
     @Before
     public void setUp() throws Exception {
@@ -101,12 +95,11 @@ public class MessageGroupReconnectDistributionTest {
         broker.stop();
     }
 
-    final Random random = new Random();
     public int getBatchSize(int bound) throws Exception {
         return bound + random.nextInt(bound);
     }
 
-    @Test(timeout = 20 * 60 * 1000)
+    @Test(timeout = 5 * 60 * 1000)
     public void testReconnect() throws Exception {
 
         final int numMessages = 50000;
@@ -117,7 +110,7 @@ public class MessageGroupReconnectDistributionTest {
 
         ExecutorService executorService = Executors.newCachedThreadPool();
         final ArrayList<AtomicLong> consumedCounters = new ArrayList<AtomicLong>(numConsumers);
-        for (int i=0;i<numConsumers; i++) {
+        for (int i = 0; i < numConsumers; i++) {
             consumedCounters.add(new AtomicLong(0l));
             final int id = i;
             executorService.submit(new Runnable() {
@@ -185,7 +178,7 @@ public class MessageGroupReconnectDistributionTest {
 
     private void produceMessages(int numMessages) throws JMSException {
         for (int i = 0; i < numMessages; i++) {
-            TextMessage msga = session.createTextMessage("hello " +i);
+            TextMessage msga = session.createTextMessage("hello " + i);
             msga.setStringProperty("JMSXGroupID", msga.getText());
             producer.send(msga);
         }
