@@ -204,7 +204,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected AtomicInteger transportInterruptionProcessingComplete = new AtomicInteger(0);
     private long consumerFailoverRedeliveryWaitPeriod;
     private Scheduler scheduler;
-    private boolean messagePrioritySupported = true;
+    private boolean messagePrioritySupported = false;
     private boolean transactedIndividualAck = false;
     private boolean nonBlockingRedelivery = false;
     private boolean rmIdFromConnectionId = false;
