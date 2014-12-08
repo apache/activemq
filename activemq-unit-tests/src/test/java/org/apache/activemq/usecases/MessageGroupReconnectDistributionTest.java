@@ -177,9 +177,14 @@ public class MessageGroupReconnectDistributionTest {
     }
 
     private void produceMessages(int numMessages) throws JMSException {
+        int groupID=0;
         for (int i = 0; i < numMessages; i++) {
+            // groups of 10
+            if (i>0 && i%10==0) {
+                groupID++;
+            }
             TextMessage msga = session.createTextMessage("hello " + i);
-            msga.setStringProperty("JMSXGroupID", msga.getText());
+            msga.setStringProperty("JMSXGroupID", "Group-"+groupID);
             producer.send(msga);
         }
     }
