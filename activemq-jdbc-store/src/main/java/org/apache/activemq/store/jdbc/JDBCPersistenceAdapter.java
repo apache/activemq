@@ -85,7 +85,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
     private Statements statements;
     private JDBCAdapter adapter;
     private MemoryTransactionStore transactionStore;
-    private ScheduledThreadPoolExecutor clockDaemon;
     private ScheduledFuture<?> cleanupTicket;
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
@@ -337,8 +336,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             cleanupTicket.cancel(true);
             cleanupTicket = null;
         }
-        
-        ThreadPoolUtils.shutdown(clockDaemon);        
     }
 
     public void cleanup() {
@@ -361,10 +358,6 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             }
             LOG.debug("Cleanup done.");
         }
-    }
-
-    public void setScheduledThreadPoolExecutor(ScheduledThreadPoolExecutor clockDaemon) {
-        this.clockDaemon = clockDaemon;
     }
 
     @Override
