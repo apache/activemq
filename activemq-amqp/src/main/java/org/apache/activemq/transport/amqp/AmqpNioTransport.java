@@ -47,16 +47,20 @@ public class AmqpNioTransport extends TcpTransport {
 
     private SocketChannel channel;
     private SelectorSelection selection;
-    private final AmqpNioTransportHelper amqpNioTransportHelper = new AmqpNioTransportHelper(this);
+    private final AmqpFrameParser frameReader = new AmqpFrameParser(this);
 
     private ByteBuffer inputBuffer;
 
     public AmqpNioTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
+
+        frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
 
     public AmqpNioTransport(WireFormat wireFormat, Socket socket) throws IOException {
         super(wireFormat, socket);
+
+        frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
 
     @Override
@@ -111,9 +115,7 @@ public class AmqpNioTransport extends TcpTransport {
                 receiveCounter += readSize;
 
                 inputBuffer.flip();
-                amqpNioTransportHelper.processCommand(inputBuffer);
-
-                // clear the buffer
+                frameReader.parse(inputBuffer);
                 inputBuffer.clear();
             }
         } catch (IOException e) {
