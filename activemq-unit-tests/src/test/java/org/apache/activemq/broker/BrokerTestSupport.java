@@ -63,12 +63,12 @@ public class BrokerTestSupport extends CombinationTestSupport {
     public static final boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
 
     protected RegionBroker regionBroker;
-    protected BrokerService broker;
+    public BrokerService broker;
     protected long idGenerator;
     protected int msgIdGenerator;
     protected int txGenerator;
     protected int tempDestGenerator;
-    protected PersistenceAdapter persistenceAdapter;
+    public PersistenceAdapter persistenceAdapter;
 
     protected String queueName = "TEST";
 

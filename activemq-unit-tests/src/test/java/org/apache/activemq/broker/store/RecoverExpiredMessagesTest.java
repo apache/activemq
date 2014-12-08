@@ -34,15 +34,16 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 
 public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
     final ArrayList<String> expected = new ArrayList<String>();
     final ActiveMQDestination destination = new ActiveMQQueue("TEST");
     public PendingQueueMessageStoragePolicy queuePendingPolicy;
-    public PersistenceAdapter persistenceAdapter;
 
     @Override
     protected void setUp() throws Exception {
@@ -52,13 +53,16 @@ public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
 
     public void initCombosForTestRecovery() throws Exception {
         addCombinationValues("queuePendingPolicy", new PendingQueueMessageStoragePolicy[] {new FilePendingQueueMessageStoragePolicy(), new VMPendingQueueMessageStoragePolicy()});
-        addCombinationValues("persistenceAdapter", new PersistenceAdapter[] {new KahaDBPersistenceAdapter(), new JDBCPersistenceAdapter()});
+        addCombinationValues("persistenceAdapter", new PersistenceAdapter[] {new KahaDBPersistenceAdapter(),
+                // need to supply the dataSource as it is used in parameter matching via the toString
+                new JDBCPersistenceAdapter(JDBCPersistenceAdapter.createDataSource(IOHelper.getDefaultDataDirectory()), new OpenWireFormat())});
     }
 
     public void testRecovery() throws Exception {
         sendSomeMessagesThatWillExpireIn5AndThenOne();
 
         broker.stop();
+        broker.waitUntilStopped();
         TimeUnit.SECONDS.sleep(6);
         broker = createRestartedBroker();
         broker.start();
