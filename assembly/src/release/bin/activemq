@@ -40,48 +40,56 @@ if ( basename $0 | grep "activemq-instance-" > /dev/null);then
    echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 fi
 
-## START:DEFAULTCONFIG
 # ------------------------------------------------------------------------
-# Configuration file for running Apache Active MQ as standalone provider
-#
-# This file overwrites the predefined settings of the sysv init-script
-#
+# HELPERS
+
+# a simple helper to get the current user
+setCurrentUser(){
+   CUSER=`whoami 2>/dev/null`
+   # Solaris hack
+   if [ ! $? -eq 0 ]; then
+      CUSER=`/usr/ucb/whoami 2>/dev/null`
+   fi
+}
+
+# get a canonical path, macosx and slowlaris does not support radlink -f :-)
+pathCanonical() {
+    local dst="${1}"
+    while [ -h "${dst}" ] ; do
+        ls=`ls -ld "${dst}"`
+        link=`expr "$ls" : '.*-> \(.*\)$'`
+        if expr "$link" : '/.*' > /dev/null; then
+            dst="$link"
+        else
+            dst="`dirname "${dst}"`/$link"
+        fi
+    done
+    local bas=`basename "${dst}"`
+    local dir=`dirname "${dst}"`
+    if [ "$bas" != "$dir" ]; then
+      dst="`pathCanonical "$dir"`/$bas"
+    fi
+    echo "${dst}" | sed -e 's#//#/#g' -e 's#/./#/#g' -e 's#/[^/]*/../#/#g'
+}
+
+
+# a simple helper to get the activemq installation dir
+getActiveMQHome(){
+  # get the real path to the binary
+  local REAL_BIN="`pathCanonical $0`"
+  local REAL_DIR="`dirname $REAL_BIN`/../"
+  REAL_DIR="`cd $REAL_DIR && pwd -P`"
+  if [ -z "$REAL_DIR" ];then
+      echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
+      exit 1
+  fi
+  echo "$REAL_DIR"
+
+}
+
 # Active MQ installation dir
 if [ -z "$ACTIVEMQ_HOME" ] ; then
-  # try to find ACTIVEMQ
-  if [ -d /opt/activemq ] ; then
-    ACTIVEMQ_HOME=/opt/activemq
-  fi
-
-  if [ -d "${HOME}/opt/activemq" ] ; then
-    ACTIVEMQ_HOME="${HOME}/opt/activemq"
-  fi
-
-  ## resolve links - $0 may be a link to activemq's home
-  PRG="$0"
-  progname=`basename "$0"`
-  saveddir=`pwd`
-
-  # need this for relative symlinks
-  dirname_prg=`dirname "$PRG"`
-  cd "$dirname_prg"
-
-  while [ -h "$PRG" ] ; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '.*-> \(.*\)$'`
-    if expr "$link" : '.*/.*' > /dev/null; then
-    PRG="$link"
-    else
-    PRG=`dirname "$PRG"`"/$link"
-    fi
-  done
-
-  ACTIVEMQ_HOME=`dirname "$PRG"`/..
-
-  cd "$saveddir"
-
-  # make it fully qualified
-  ACTIVEMQ_HOME=`cd "$ACTIVEMQ_HOME" && pwd`
+  ACTIVEMQ_HOME="`getActiveMQHome`"
 fi
 
 if [ -z "$ACTIVEMQ_BASE" ] ; then
@@ -99,7 +107,7 @@ if [ -z "$ACTIVEMQ_CONF" ] ; then
     fi
 fi
 
-# Configure a user with non root priviledges, if no user is specified do not change user
+# Configure a user with non root privileges, if no user is specified do not change user
 if [ -z "$ACTIVEMQ_USER" ] ; then
     ACTIVEMQ_USER=""
 fi
@@ -119,15 +127,6 @@ if [ -z "$ACTIVEMQ_TMP" ] ; then
   ACTIVEMQ_TMP="$ACTIVEMQ_BASE/tmp"
 fi
 
-setCurrentUser(){
-   CUSER=`whoami 2>/dev/null`
-
-   # Solaris fix
-   if [ ! $? -eq 0 ]; then
-      CUSER=`/usr/ucb/whoami 2>/dev/null`
-   fi
-}
-
 if [ ! -d "$ACTIVEMQ_DATA" ]; then
    setCurrentUser
    if ( [ -z "$ACTIVEMQ_USER" ] || [ "$ACTIVEMQ_USER" = "$CUSER" ] );then
@@ -142,7 +141,6 @@ if [ -z "$ACTIVEMQ_PIDFILE" ]; then
   ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq-`hostname`.pid"
 fi
 
-## END:DEFAULTCONFIG
 
 # ------------------------------------------------------------------------
 # LOAD CONFIGURATION
@@ -179,37 +177,6 @@ if [ "$CONFIG_LOAD" != "yes" ];then
    fi
 fi
 
-# create configuration if requested
-if [ "$1" = "setup" ];then
-   if [ -z "$2" ];then
-      echo "ERROR: Specify configuration file"
-      exit 1
-   fi
-   echo "INFO: Creating configuration file: $2"
-   (
-   P_STATE="0"
-   while read LINE ;do
-      if (echo "$LINE" | grep "START:DEFAULTCONFIG" >/dev/null );then
-         P_STATE="1"
-         continue;
-      fi
-      if (echo "$LINE" | grep "END:DEFAULTCONFIG" >/dev/null);then
-         P_STATE="0"
-         break;
-      fi
-      if [ "$P_STATE" -eq "1" ];then
-         echo $LINE
-      fi
-   done < $0
-   ) > $2
-
-   setCurrentUser
-
-   echo "INFO: It's recommend to limit access to '$2' to the priviledged user"
-   echo "INFO: (recommended: chown '$CUSER':nogroup '$2'; chmod 600 '$2')"
-   exit $?
-fi
-
 # ------------------------------------------------------------------------
 # OS SPECIFIC SUPPORT
 
@@ -232,7 +199,7 @@ if [ "$OSTYPE" = "cygwin" ]; then
   [ -n "$JAVA_HOME" ] &&
     JAVA_HOME="`cygpath --unix "$JAVA_HOME"`"
   [ -n "$CLASSPATH" ] &&
-    CLASSPATH="`cygpath --path --unix "$CLASSPATH"`"
+    ACTIVEMQ_CLASSPATH="`cygpath --path --unix "$ACTIVEMQ_CLASSPATH"`"
 fi
 
 # Detect the location of the java binary
@@ -274,8 +241,8 @@ if [ "$OSTYPE" = "cygwin" ];then
   ACTIVEMQ_CONF=`cygpath --windows "$ACTIVEMQ_CONF"`
   ACTIVEMQ_DATA=`cygpath --windows "$ACTIVEMQ_DATA"`
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
-  JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
-  CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
+  [ -n "$JAVA_HOME" ] &&
+    JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
   CYGHOME=`cygpath --windows "$HOME"`
   ACTIVEMQ_TMP=`cygpath --windows "$ACTIVEMQ_TMP"`
   if [ -n "$CYGHOME" ]; then
@@ -285,7 +252,16 @@ fi
 
 # Set default classpath
 # Add instance conf dir before AMQ install conf dir to pick up instance-specific classpath entries first
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF};${ACTIVEMQ_CLASSPATH}"
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_CONF}:${ACTIVEMQ_CLASSPATH}"
+
+if [ "$OSTYPE" = "cygwin" ];then
+  # remove training backslashes to prevent quoting problems
+  ACTIVEMQ_CLASSPATH="`echo ${ACTIVEMQ_CLASSPATH}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_HOME="`echo ${ACTIVEMQ_HOME}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_BASE="`echo ${ACTIVEMQ_BASE}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_CONF="`echo ${ACTIVEMQ_CONF}|sed '~s,[\\]*$,,g'`"
+  ACTIVEMQ_DATA="`echo ${ACTIVEMQ_DATA}|sed '~s,[\\]*$,,g'`"
+fi
 
 # Start the ActiveMQ JAR
 #
@@ -304,7 +280,7 @@ invokeJar(){
    RET="1"
 
    if [ ! -f "${ACTIVEMQ_HOME}/bin/activemq.jar" ];then
-    echo "ERROR: '${ACTIVEMQ_HOME}/bin/activemq.jar' does not exist"
+    echo "ERROR: '${ACTIVEMQ_HOME}/bin/activemq.jar' does not exist, define ACTIVEMQ_HOME in the config"
     exit 1
    fi
 
@@ -320,7 +296,7 @@ invokeJar(){
    fi
    # Execute java binary
    if [ -n "$PIDFILE" ] && [ "$PIDFILE" != "stop" ];then
-      $EXEC_OPTION $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+      $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
@@ -329,12 +305,12 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > $PIDFILE;
+              echo \$APID > "$PIDFILE";
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
    elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
-          PID=`cat $ACTIVEMQ_PIDFILE`
-          $EXEC_OPTION $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+          PID=`cat ${ACTIVEMQ_PIDFILE}`
+          $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
@@ -346,7 +322,7 @@ invokeJar(){
               echo \$APID > $ACTIVEMQ_DATA/stop.pid; exit \$RET" $DOIT_POSTFIX
       RET="$?"
    else
-      $EXEC_OPTION $DOIT_PREFIX "$JAVACMD $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+      $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
               -Dactivemq.base=\"${ACTIVEMQ_BASE}\" \
@@ -497,7 +473,7 @@ invoke_stop(){
        echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$PID' : "
        FOUND="0"
        i=1
-       while [ $i != $ACTIVEMQ_KILL_MAXSECONDS ]; do
+       while [ "$i" != "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
 
          if [ ! checkStopRunning ];then
             if [ ! checkRunning ]; then
@@ -531,8 +507,8 @@ invoke_stop(){
        echo "ActiveMQ not running"
        exit 0
     fi
-    rm -f $ACTIVEMQ_PIDFILE >/dev/null 2>&1
-    rm -f $ACTIVEMQ_DATA/stop.pid >/dev/null 2>&1
+    rm -f "$ACTIVEMQ_PIDFILE" >/dev/null 2>&1
+    rm -f "$ACTIVEMQ_DATA/stop.pid" >/dev/null 2>&1
     exit $RET
 }
 
@@ -573,11 +549,9 @@ Tasks provided by the sysv init script:
     restart         - stop running instance (if there is one), start new instance
     console         - start broker in foreground, useful for debugging purposes
     status          - check if activemq process is running
-    setup           - create the specified configuration file for this init script
-                      (see next usage section)
 
 Configuration of this script:
-    The configuration of this script can be placed on /etc/default/activemq or $HOME/.activemqrc.
+    Default configuration of this scriptThe configuration of this script can be placed on /etc/default/activemq or $HOME/.activemqrc.
     To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and

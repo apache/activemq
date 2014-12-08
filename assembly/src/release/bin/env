@@ -1,3 +1,4 @@
+#!/bin/sh
 # ------------------------------------------------------------------------
 # Configuration file for running Apache Active MQ as standalone provider
 #
