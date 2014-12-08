@@ -36,10 +36,20 @@ public class AmqpWireFormat implements WireFormat {
 
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
+    private static final int SASL_PROTOCOL = 3;
 
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
+
+    private boolean magicRead = false;
+    private ResetListener resetListener;
+
+    public interface ResetListener {
+        void onProtocolReset();
+    }
+
+    private boolean allowNonSaslConnections = true;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -76,15 +86,13 @@ public class AmqpWireFormat implements WireFormat {
         }
     }
 
-    boolean magicRead = false;
-
     @Override
     public Object unmarshal(DataInput dataIn) throws IOException {
         if (!magicRead) {
             Buffer magic = new Buffer(8);
             magic.readFrom(dataIn);
             magicRead = true;
-            return new AmqpHeader(magic);
+            return new AmqpHeader(magic, false);
         } else {
             int size = dataIn.readInt();
             if (size > maxFrameSize) {
@@ -98,17 +106,71 @@ public class AmqpWireFormat implements WireFormat {
         }
     }
 
+    /**
+     * Given an AMQP header validate that the AMQP magic is present and
+     * if so that the version and protocol values align with what we support.
+     *
+     * @param header
+     *        the header instance received from the client.
+     *
+     * @return true if the header is valid against the current WireFormat.
+     */
+    public boolean isHeaderValid(AmqpHeader header) {
+        if (!header.hasValidPrefix()) {
+            return false;
+        }
+
+        if (!isAllowNonSaslConnections() && header.getProtocolId() != SASL_PROTOCOL) {
+            return false;
+        }
+
+        if (header.getMajor() != 1 || header.getMinor() != 0 || header.getRevision() != 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns an AMQP Header object that represents the minimally protocol
+     * versions supported by this transport.  A client that attempts to
+     * connect with an AMQP version that doesn't at least meat this value
+     * will receive this prior to the connection being closed.
+     *
+     * @return the minimal AMQP version needed from the client.
+     */
+    public AmqpHeader getMinimallySupportedHeader() {
+        AmqpHeader header = new AmqpHeader();
+        if (!isAllowNonSaslConnections()) {
+            header.setProtocolId(3);
+        }
+
+        return header;
+    }
+
     @Override
     public void setVersion(int version) {
         this.version = version;
     }
 
-    /**
-     * @return the version of the wire format
-     */
     @Override
     public int getVersion() {
         return this.version;
+    }
+
+    public void resetMagicRead() {
+        this.magicRead = false;
+        if (resetListener != null) {
+            resetListener.onProtocolReset();
+        }
+    }
+
+    public void setProtocolResetListener(ResetListener listener) {
+        this.resetListener = listener;
+    }
+
+    public boolean isMagicRead() {
+        return this.magicRead;
     }
 
     public long getMaxFrameSize() {
@@ -125,5 +187,13 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setMaxAmqpFrameSize(int maxAmqpFrameSize) {
         this.maxAmqpFrameSize = maxAmqpFrameSize;
+    }
+
+    public boolean isAllowNonSaslConnections() {
+        return allowNonSaslConnections;
+    }
+
+    public void setAllowNonSaslConnections(boolean allowNonSaslConnections) {
+        this.allowNonSaslConnections = allowNonSaslConnections;
     }
 }

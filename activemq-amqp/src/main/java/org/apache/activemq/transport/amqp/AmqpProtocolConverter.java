@@ -127,6 +127,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol DURABLE_SUBSCRIPTION_ENDED = Symbol.getSymbol("DURABLE_SUBSCRIPTION_ENDED");
 
     private final AmqpTransport amqpTransport;
+    private final AmqpWireFormat amqpWireFormat;
     private final BrokerService brokerService;
 
     protected int prefetch;
@@ -137,6 +138,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     public AmqpProtocolConverter(AmqpTransport transport, BrokerService brokerService) {
         this.amqpTransport = transport;
+        this.amqpWireFormat = transport.getWireFormat();
         this.brokerService = brokerService;
 
         // the configured maxFrameSize on the URI.
@@ -226,6 +228,17 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         Buffer frame;
         if (command.getClass() == AmqpHeader.class) {
             AmqpHeader header = (AmqpHeader) command;
+
+            if (amqpWireFormat.isHeaderValid(header)) {
+                LOG.trace("Connection from an AMQP v1.0 client initiated. {}", header);
+            } else {
+                LOG.warn("Connection attempt from non AMQP v1.0 client. {}", header);
+                AmqpHeader reply = amqpWireFormat.getMinimallySupportedHeader();
+                amqpTransport.sendToAmqp(reply.getBuffer());
+                handleException(new AmqpProtocolException(
+                    "Connection from client using unsupported AMQP attempted", true));
+            }
+
             switch (header.getProtocolId()) {
                 case 0:
                     break; // nothing to do..
@@ -270,12 +283,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             // We can't really auth at this point since we don't
                             // know the client id yet.. :(
                             sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
-                            amqpTransport.getWireFormat().magicRead = false;
+                            amqpTransport.getWireFormat().resetMagicRead();
                             sasl = null;
                             LOG.debug("SASL [PLAIN] Handshake complete.");
                         } else if ("ANONYMOUS".equals(sasl.getRemoteMechanisms()[0])) {
                             sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
-                            amqpTransport.getWireFormat().magicRead = false;
+                            amqpTransport.getWireFormat().resetMagicRead();
                             sasl = null;
                             LOG.debug("SASL [ANONYMOUS] Handshake complete.");
                         }

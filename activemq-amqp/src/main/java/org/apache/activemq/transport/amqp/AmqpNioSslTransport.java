@@ -26,17 +26,25 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AmqpNioSslTransport extends NIOSSLTransport {
 
-    private final AmqpNioTransportHelper amqpNioTransportHelper = new AmqpNioTransportHelper(this);
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpNioSslTransport.class);
+
+    private final AmqpFrameParser frameReader = new AmqpFrameParser(this);
 
     public AmqpNioSslTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
+
+        frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
 
     public AmqpNioSslTransport(WireFormat wireFormat, Socket socket) throws IOException {
         super(wireFormat, socket);
+
+        frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
 
     @Override
@@ -49,6 +57,6 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
 
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
-        amqpNioTransportHelper.processCommand(plain);
+        frameReader.parse(plain);
     }
 }
