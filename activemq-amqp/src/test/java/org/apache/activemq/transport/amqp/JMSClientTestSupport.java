@@ -45,10 +45,10 @@ public class JMSClientTestSupport extends AmqpTestSupport {
             future.get(60, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             throw new Exception("CloseConnection timed out");
+        } finally {
+            executor.shutdownNow();
+            super.tearDown();
         }
-        executor.shutdownNow();
-
-        super.tearDown();
     }
 
     public class CloseConnectionTask implements Callable<Boolean> {

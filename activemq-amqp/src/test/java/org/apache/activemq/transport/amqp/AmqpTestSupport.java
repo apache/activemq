@@ -217,12 +217,13 @@ public class AmqpTestSupport {
             LOG.debug("tearDown started.");
             future.get(60, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
-            throw new Exception("startBroker timed out");
-        }
-        executor.shutdownNow();
+            throw new Exception("stopBroker timed out");
+        } finally {
+            executor.shutdownNow();
 
-        if (killHungThreads("tearDown")) {
-            LOG.warn("HUNG THREADS in setUp");
+            if (killHungThreads("tearDown")) {
+                LOG.warn("HUNG THREADS in tearDown");
+            }
         }
     }
 
