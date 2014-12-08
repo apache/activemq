@@ -36,7 +36,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public class ManagedConnectionTest extends TestCase {
 
-    private static final String DEFAULT_HOST = "vm://localhost";
+    private static final String DEFAULT_HOST = "vm://localhost?broker.persistent=false";
 
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private ActiveMQManagedConnectionFactory managedConnectionFactory;

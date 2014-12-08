@@ -267,7 +267,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         this.failoverRedeliveryWaitPeriod = session.connection.getConsumerFailoverRedeliveryWaitPeriod();
         this.nonBlockingRedelivery = session.connection.isNonBlockingRedelivery();
-        this.transactedIndividualAck = session.connection.isTransactedIndividualAck() || this.nonBlockingRedelivery;
+        this.transactedIndividualAck = session.connection.isTransactedIndividualAck()
+                        || this.nonBlockingRedelivery
+                        || session.connection.isMessagePrioritySupported();
         this.consumerExpiryCheckEnabled = session.connection.isConsumerExpiryCheckEnabled();
         if (messageListener != null) {
             setMessageListener(messageListener);

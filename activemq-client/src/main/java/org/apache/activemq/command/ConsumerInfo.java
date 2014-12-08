@@ -62,9 +62,8 @@ public class ConsumerInfo extends BaseCommand {
 
     // not marshalled, populated from RemoveInfo, the last message delivered, used
     // to suppress redelivery on prefetched messages after close
-    // overload; also used at runtime to track assignment of message groups
     private transient long lastDeliveredSequenceId;
-
+    private transient long assignedGroupCount;
     // originated from a
     // network connection
 
@@ -493,6 +492,18 @@ public class ConsumerInfo extends BaseCommand {
 
     public long getLastDeliveredSequenceId() {
         return lastDeliveredSequenceId;
+    }
+
+    public void incrementAssignedGroupCount() {
+        this.assignedGroupCount++;
+    }
+
+    public void decrementAssignedGroupCount() {
+        this.assignedGroupCount--;
+    }
+
+    public long getAssignedGroupCount() {
+        return assignedGroupCount;
     }
 
 }

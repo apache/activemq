@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
+import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -46,7 +47,6 @@ import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -791,8 +791,11 @@ public class JMSClientTest extends JMSClientTestSupport {
                 called.countDown();
             }
         });
-        //This makes sure the connection is completely up and connected
-        s.createTemporaryQueue().delete();
+
+        // This makes sure the connection is completely up and connected
+        Destination destination = s.createTemporaryQueue();
+        MessageProducer producer = s.createProducer(destination);
+        assertNotNull(producer);
 
         stopBroker();
 
@@ -966,7 +969,6 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Ignore("Requires version 0.30 or higher to work.") // TODO
     @Test(timeout=30000)
     public void testDurableConsumerUnsubscribeWhileActive() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();

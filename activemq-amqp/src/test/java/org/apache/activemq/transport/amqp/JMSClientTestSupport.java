@@ -16,19 +16,20 @@
  */
 package org.apache.activemq.transport.amqp;
 
-import javax.jms.Connection;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.junit.After;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.jms.Connection;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+
+import org.apache.activemq.spring.SpringSslContext;
+import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.junit.After;
 
 public class JMSClientTestSupport extends AmqpTestSupport {
 
@@ -95,6 +96,14 @@ public class JMSClientTestSupport extends AmqpTestSupport {
         int brokerPort = getBrokerPort();
         LOG.debug("Creating connection on port {}", brokerPort);
         final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", brokerPort, "admin", "password", null, useSsl);
+
+        if (useSsl) {
+            SpringSslContext context = (SpringSslContext) brokerService.getSslContext();
+            factory.setKeyStorePath(context.getKeyStore());
+            factory.setKeyStorePassword("password");
+            factory.setTrustStorePath(context.getTrustStore());
+            factory.setTrustStorePassword("password");
+        }
 
         factory.setSyncPublish(syncPublish);
         factory.setTopicPrefix("topic://");

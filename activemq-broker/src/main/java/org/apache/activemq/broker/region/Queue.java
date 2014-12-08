@@ -224,8 +224,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if (val == 0 && messageGroupOwners != null) {
                 // then ascending order of assigned message groups to favour less loaded consumers
                 // Long.compare in jdk7
-                long x = s1.getConsumerInfo().getLastDeliveredSequenceId();
-                long y = s2.getConsumerInfo().getLastDeliveredSequenceId();
+                long x = s1.getConsumerInfo().getAssignedGroupCount();
+                long y = s2.getConsumerInfo().getAssignedGroupCount();
                 val = (x < y) ? -1 : ((x == y) ? 0 : 1);
             }
             return val;
@@ -429,7 +429,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
-        LOG.debug("{} add sub: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), getDestinationStatistics().getDequeues().getCount(), getDestinationStatistics().getDispatched().getCount(), getDestinationStatistics().getInflight().getCount() });
+        LOG.debug("{} add sub: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{ getActiveMQDestination().getQualifiedName(), sub, getDestinationStatistics().getDequeues().getCount(), getDestinationStatistics().getDispatched().getCount(), getDestinationStatistics().getInflight().getCount() });
 
         super.addSubscription(context, sub);
         // synchronize with dispatch method so that no new messages are sent
@@ -500,13 +500,14 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // while removing up a subscription.
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            LOG.debug("{} remove sub: {}, lastDeliveredSeqId: {}, dequeues: {}, dispatched: {}, inflight: {}", new Object[]{
+            LOG.debug("{} remove sub: {}, lastDeliveredSeqId: {}, dequeues: {}, dispatched: {}, inflight: {}, groups: {}", new Object[]{
                     getActiveMQDestination().getQualifiedName(),
                     sub,
                     lastDeiveredSequenceId,
                     getDestinationStatistics().getDequeues().getCount(),
                     getDestinationStatistics().getDispatched().getCount(),
-                    getDestinationStatistics().getInflight().getCount()
+                    getDestinationStatistics().getInflight().getCount(),
+                    sub.getConsumerInfo().getAssignedGroupCount()
             });
             consumersLock.writeLock().lock();
             try {
@@ -1975,19 +1976,19 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     // dispatched before.
                     pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
                 }
-                // and now see if we can dispatch the new stuff.. and append to the pending
-                // list anything that does not actually get dispatched.
-                if (list != null && !list.isEmpty()) {
-                    if (pagedInPendingDispatch.isEmpty()) {
-                        pagedInPendingDispatch.addAll(doActualDispatch(list));
-                    } else {
-                        for (MessageReference qmr : list) {
-                            if (!pagedInPendingDispatch.contains(qmr)) {
-                                pagedInPendingDispatch.addMessageLast(qmr);
-                            }
+            }
+            // and now see if we can dispatch the new stuff.. and append to the pending
+            // list anything that does not actually get dispatched.
+            if (list != null && !list.isEmpty()) {
+                if (redeliveredWaitingDispatch.isEmpty() && pagedInPendingDispatch.isEmpty()) {
+                    pagedInPendingDispatch.addAll(doActualDispatch(list));
+                } else {
+                    for (MessageReference qmr : list) {
+                        if (!pagedInPendingDispatch.contains(qmr)) {
+                            pagedInPendingDispatch.addMessageLast(qmr);
                         }
-                        doWakeUp = true;
                     }
+                    doWakeUp = true;
                 }
             }
         } finally {
@@ -2006,7 +2007,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      */
     private PendingList doActualDispatch(PendingList list) throws Exception {
         List<Subscription> consumers;
-        consumersLock.writeLock().lock();
+        consumersLock.readLock().lock();
 
         try {
             if (this.consumers.isEmpty()) {
@@ -2015,7 +2016,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             }
             consumers = new ArrayList<Subscription>(this.consumers);
         } finally {
-            consumersLock.writeLock().unlock();
+            consumersLock.readLock().unlock();
         }
 
         Set<Subscription> fullConsumers = new HashSet<Subscription>(this.consumers.size());
@@ -2101,7 +2102,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         // A group sequence < 1 is an end of group signal.
                         if (sequence < 0) {
                             messageGroupOwners.removeGroup(groupId);
-                            subscription.getConsumerInfo().setLastDeliveredSequenceId(subscription.getConsumerInfo().getLastDeliveredSequenceId() - 1);
+                            subscription.getConsumerInfo().decrementAssignedGroupCount();
                         }
                     } else {
                         result = false;
@@ -2117,7 +2118,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         messageGroupOwners.put(groupId, subs.getConsumerInfo().getConsumerId());
         Message message = n.getMessage();
         message.setJMSXGroupFirstForConsumer(true);
-        subs.getConsumerInfo().setLastDeliveredSequenceId(subs.getConsumerInfo().getLastDeliveredSequenceId() + 1);
+        subs.getConsumerInfo().incrementAssignedGroupCount();
     }
 
     protected void pageInMessages(boolean force) throws Exception {
