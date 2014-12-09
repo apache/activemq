@@ -85,29 +85,37 @@ mkdir -p $TESTDIR
 echo "Setting HOME to $TESTDIR"
 export HOME="$TESTDIR"
 
-echo "Setup a chain of symlinks to test realpath evaluation"
-# Setup a chain of symlinks to test realpath evaluation
-ln -snf $PWD/activemq $TESTDIR/activemq-test1
-ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq2
-export INSTANCE_NAME="test3"
-ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq-instance-${INSTANCE_NAME}
-cd $TESTDIR/
-SCRIPT="$TESTDIR/activemq2"
-trap "rm -rf $TESTDIR" INT TERM EXIT
-echo
-echo "Setup instance configuration files"
+case "`uname`" in
+  CYGWIN*) 
+    echo "Set init script"
+    SCRIPT="$PWD/activemq"
+    CONFIG="$HOME/.activemqrc"
+   ;;
+  *)
+    echo "Setup a chain of symlinks to test realpath evaluation"
+    ln -snf $PWD/activemq $TESTDIR/activemq-test1
+    ln -snf $TESTDIR/activemq-test1 $TESTDIR/activemq-instance-test3
+    SCRIPT="$TESTDIR/activemq-instance-test3"
+    CONFIG="$HOME/.activemqrc-instance-test3"
+  ;;
+esac
 
+#trap "rm -rvf $TESTDIR" INT TERM EXIT
 
 echo "****************************************************************************"
 STRATEGY="stop"
 
 # ActiveMQ is stopped
-assert ${STRATEGY} successful "${SCRIPT} setup $HOME/.activemqrc-instance-${INSTANCE_NAME}"
-assert ${STRATEGY} successful "sed -i '~s,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=30,;~s,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' $HOME/.activemqrc-instance-${INSTANCE_NAME}"
-cat "$HOME/.activemqrc-instance-${INSTANCE_NAME}"
+assert ${STRATEGY} successful "${SCRIPT} setup $CONFIG"
+
+set -x
+sed 's,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=30,' $CONFIG | \
+sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' $CONFIG > $CONFIG.new $CONFIG 
+mv $CONFIG.new $CONFIG
+set +x
 
 assert ${STRATEGY} successful "${SCRIPT} stop"
-assert ${STRATEGY} successful "${SCRIPT}"
+assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY}     failed "${SCRIPT} status"
 assert ${STRATEGY}     failed "${SCRIPT} browse"
 assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR"
@@ -121,7 +129,7 @@ assert ${STRATEGY}     failed "${SCRIPT} stop"
 
 # ActiveMQ is started
 assert ${STRATEGY} successful "${SCRIPT} start"
-assert ${STRATEGY} successful "${SCRIPT}"
+assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY} successful "${SCRIPT} status"
 echo "Sleeping 30 seconds to get activemq really started"; sleep 30
 assert ${STRATEGY} successful "${SCRIPT} status"
@@ -147,15 +155,12 @@ assert ${STRATEGY} successful "${SCRIPT} status"
 assert ${STRATEGY} successful "${SCRIPT} query"
 assert ${STRATEGY} successful "${SCRIPT} query|grep brokerName"
 
-#assert ${STRATEGY} failed     "${SCRIPT} console"
-
+# assert ${STRATEGY} failed     "${SCRIPT} console"
 # assert ${STRATEGY} successful "${SCRIPT} create"
 # assert ${STRATEGY} successful "${SCRIPT} export"
-# assert ${STRATEGY} failed "${SCRIPT} console"
-# assert ${STRATEGY} failed "${SCRIPT} setup" 
 
 echo
 echo
 echo "*** SUMMARY"
-echo "$STATUS_OVERVIEW"|tr '#' '\n'|sed '~s,^, ,'
+echo "$STATUS_OVERVIEW"|tr '#' '\n'|sed 's,^, ,'
 

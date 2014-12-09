@@ -253,11 +253,7 @@ fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  #if [ "$OSTYPE" = "cygwin" ]; then
-  #    ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA\\activemq.pid"
-  #else
       ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
-  #fi
 fi
 
 # Location of the java installation
@@ -440,7 +436,7 @@ invokeJar(){
       DOIT_PREFIX="sh -c "
       DOIT_POSTFIX=";"
    elif [ "`id -u`" = "0" ];then
-      DOIT_PREFIX="su -c "
+      DOIT_PREFIX="su -s /bin/sh -c "
       DOIT_POSTFIX=" - $ACTIVEMQ_USER"
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
@@ -470,7 +466,6 @@ invokeJar(){
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
-set +x
       RET="$?"
    else
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
@@ -502,8 +497,8 @@ checkRunning(){
         echo "ERROR: Pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
         return 2
        fi
-       PID=`cat $ACTIVEMQ_PIDFILE`
-       RET=`ps -p $PID|grep java`
+       PID="`cat $ACTIVEMQ_PIDFILE`"
+       RET="`ps -p "$PID"|grep java`"
        if [ -n "$RET" ];then
          return 0;
        else
@@ -579,8 +574,9 @@ invoke_start(){
 
 # Start ActiveMQ in foreground (for debugging)
 #
-# @RET  : 0 => is now started, is already started
-#         !0 => something went wrong
+# @RET  : 0 => was started
+#         1 => was already started
+#         !0 => somthing went wrong
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE      : the name of the pid file
@@ -595,12 +591,15 @@ invoke_console(){
     fi
 
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS -Djava.awt.headless=true -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\""
-
     COMMANDLINE_ARGS="start `echo $COMMANDLINE_ARGS|sed 's,^console,,'`"
     EXEC_OPTION="exec"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
+    echo "INFO: Creating pidfile $ACTIVEMQ_PIDFILE"
+    echo "$$" > $ACTIVEMQ_PIDFILE
     invokeJar
-    exit "$?"
+    RET="$?"
+    echo "INFO: removing pidfile $ACTIVEMQ_PIDFILE"
+    exit "$RET"
 }
 
 # Stop ActiveMQ
@@ -702,8 +701,7 @@ invoke_task(){
 }
 
 show_help() {
-  invokeJar|sed "~s,Usage: Main,Usage: $0,"
-  RET="$?"
+  invokeJar|sed "s,Usage: Main,Usage: $0,"
   cat << EOF
 Tasks provided by the sysv init script:
     restart         - stop running instance (if there is one), start new instance
@@ -728,7 +726,7 @@ Configuration and usage of this script
 
 # 
 EOF
-  exit $RET
+  exit 1
 }
 
 # ------------------------------------------------------------------------
