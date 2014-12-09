@@ -224,7 +224,7 @@ fi
 # Stop here if no java installation is defined/found
 if [ ! -x "$JAVACMD" ] ; then
   echo "ERROR: Configuration variable JAVA_HOME or JAVACMD is not defined correctly."
-  echo "       (JAVA_HOME='$JAVAHOME', JAVACMD='$JAVACMD')"
+  echo "       (JAVA_HOME='$JAVA_HOME', JAVACMD='$JAVACMD')"
   exit 1
 fi
 
