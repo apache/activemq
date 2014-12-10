@@ -539,8 +539,7 @@ invoke_task(){
 }
 
 show_help() {
-  invokeJar
-  RET="$?"
+  invokeJar|sed "s,Usage: Main,Usage: $0,"
   cat << EOF
 Tasks provided by the sysv init script:
     restart         - stop running instance (if there is one), start new instance
@@ -557,7 +556,7 @@ Configuration of this script:
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
     \$HOME/.activemqrc-instance-<INSTANCENAME>. 
 EOF
-  exit $RET
+  exit 1
 }
 
 # ------------------------------------------------------------------------
@@ -570,7 +569,7 @@ fi
 
 case "$1" in
   status)
-      invoke_status
+    invoke_status
     ;;
   restart)
     if ( checkRunning );then
