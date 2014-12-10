@@ -86,7 +86,7 @@ getActiveMQHome(){
       echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
       exit 1
   fi
-  echo "$REAL_DIR"
+  echo "$REAL_DIR/"
 
 }
 
@@ -95,13 +95,14 @@ if [ -z "$ACTIVEMQ_HOME" ] ; then
   ACTIVEMQ_HOME="`getActiveMQHome`"
 fi
 
+# Active MQ base dir
 if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/"
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
-
     # For backwards compat with old variables we let ACTIVEMQ_CONFIG_DIR set ACTIVEMQ_CONF
     if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
         ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
@@ -141,7 +142,7 @@ fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq-`hostname`.pid"
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
 fi
 
 
