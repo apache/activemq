@@ -195,7 +195,7 @@ if [ "$OSTYPE" = "cygwin" ]; then
     ACTIVEMQ_HOME="`cygpath --unix "$ACTIVEMQ_HOME"`"
   [ -n "$JAVA_HOME" ] &&
     JAVA_HOME="`cygpath --unix "$JAVA_HOME"`"
-  [ -n "$CLASSPATH" ] &&
+  [ -n "$ACTIVEMQ_CLASSPATH" ] &&
     ACTIVEMQ_CLASSPATH="`cygpath --path --unix "$ACTIVEMQ_CLASSPATH"`"
 fi
 
