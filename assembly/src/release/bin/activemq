@@ -361,7 +361,7 @@ checkRunning(){
 }
 
 checkStopRunning(){
-    PID=$ACTIVEMQ_DATA/stop.pid
+    PID="${PIDFILE}.stop"
     if [ -f "$PID" ]; then
        if  [ -z "`cat $PID`" ];then
         echo "ERROR: Pidfile '$PID' exists but contains no pid"
