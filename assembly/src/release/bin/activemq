@@ -38,6 +38,9 @@ if ( basename $0 | grep "activemq-instance-" > /dev/null);then
    INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
    ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
    echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
+else
+   # CONFIGURATION
+   ACTIVEMQ_CONFIGS="$HOME/.activemqrc /etc/default/activemq $ACTIVEMQ_HOME/bin/env"
 fi
 
 # ------------------------------------------------------------------------
@@ -145,8 +148,6 @@ fi
 # ------------------------------------------------------------------------
 # LOAD CONFIGURATION
 
-# CONFIGURATION
-ACTIVEMQ_CONFIGS="$ACTIVEMQ_HOME/bin/env /etc/default/activemq $HOME/.activemqrc"
 
 # load activemq configuration
 CONFIG_LOAD="no"
@@ -160,6 +161,7 @@ for ACTIVEMQ_CONFIG in $ACTIVEMQ_CONFIGS;do
        echo "INFO: Loading '$ACTIVEMQ_CONFIG'"
        . $ACTIVEMQ_CONFIG
       CONFIG_LOAD="yes"
+      break
      fi
    fi
 done
@@ -545,11 +547,14 @@ Tasks provided by the sysv init script:
     status          - check if activemq process is running
 
 Configuration of this script:
-    Default configuration of this scriptThe configuration of this script can be placed on /etc/default/activemq or $HOME/.activemqrc.
+    The configuration of this script is read from the following files:
+    $ACTIVEMQ_CONFIGS
+    This script searches for the files in the listed order and reads the first available file.
+    Modify $ACTIVEMQ_BASE/bin/env or create a copy of that file on a suitable location.
     To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
-    \$HOME/.activemqrc-instance-<INSTANCENAME>. Configuration files in /etc have higher precedence.
+    \$HOME/.activemqrc-instance-<INSTANCENAME>. 
 EOF
   exit $RET
 }
