@@ -287,7 +287,7 @@ invokeJar(){
       DOIT_PREFIX="sh -c "
       DOIT_POSTFIX=";"
    elif [ "`id -u`" = "0" ];then
-      DOIT_PREFIX="su -c "
+      DOIT_PREFIX="su -s /bin/sh -c "
       DOIT_POSTFIX=" - $ACTIVEMQ_USER"
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
