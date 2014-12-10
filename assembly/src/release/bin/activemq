@@ -166,15 +166,9 @@ done
 
 # inform user that default configuration is loaded, no suitable configfile found
 if [ "$CONFIG_LOAD" != "yes" ];then
-   if [ "$1" != "setup" ];then
       echo "INFO: Using default configuration";
-      echo "(you can configure options in one of these file: $ACTIVEMQ_CONFIGS)"
+      echo "      Configurations are loaded in the following order: $ACTIVEMQ_CONFIGS"
       echo
-      echo "INFO: Invoke the following command to create a configuration file"
-      CONFIGS=`echo $ACTIVEMQ_CONFIGS|sed 's/[ ][ ]*/ | /'`
-      echo "$0 setup [ $CONFIGS ]"
-      echo
-   fi
 fi
 
 # ------------------------------------------------------------------------
