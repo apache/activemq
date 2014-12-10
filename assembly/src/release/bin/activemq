@@ -33,15 +33,6 @@
 COMMANDLINE_ARGS="$@"
 EXEC_OPTION=""
 
-# For using instances
-if ( basename $0 | grep "activemq-instance-" > /dev/null);then
-   INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
-   ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
-   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
-else
-   # CONFIGURATION
-   ACTIVEMQ_CONFIGS="$HOME/.activemqrc /etc/default/activemq $ACTIVEMQ_HOME/bin/env"
-fi
 
 # ------------------------------------------------------------------------
 # HELPERS
@@ -149,6 +140,15 @@ fi
 # ------------------------------------------------------------------------
 # LOAD CONFIGURATION
 
+# For using instances
+if ( basename $0 | grep "activemq-instance-" > /dev/null);then
+   INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
+   ACTIVEMQ_CONFIGS="$HOME/.activemqrc-instance-${INST} /etc/default/activemq-instance-${INST} $ACTIVEMQ_HOME/bin/env"
+   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
+else
+   # CONFIGURATION
+   ACTIVEMQ_CONFIGS="$HOME/.activemqrc /etc/default/activemq $ACTIVEMQ_HOME/bin/env"
+fi
 
 # load activemq configuration
 CONFIG_LOAD="no"
@@ -173,6 +173,54 @@ if [ "$CONFIG_LOAD" != "yes" ];then
       echo "      Configurations are loaded in the following order: $ACTIVEMQ_CONFIGS"
       echo
 fi
+
+# Location of the java installation
+# Specify the location of your java installation using JAVA_HOME, or specify the
+# path to the "java" binary using JAVACMD
+# (set JAVACMD to "auto" for automatic detection)
+#JAVA_HOME=""
+JAVACMD=""
+
+# Set jvm memory configuration
+if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
+    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
+fi
+
+# Set jvm jmx configuration
+ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
+
+# Set jvm jmx configuration for controlling the broker process
+ACTIVEMQ_SUNJMX_CONTROL=""
+
+# Specify the queue manager URL for using "browse" option of sysv initscript
+if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
+    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
+fi
+
+# Set additional JSE arguments
+ACTIVEMQ_SSL_OPTS=""
+
+# ActiveMQ tries to shutdown the broker by jmx,
+# after a specified number of seconds send SIGKILL
+if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
+    ACTIVEMQ_KILL_MAXSECONDS=90
+fi
+
+# inform user that default configuration is loaded, no suitable configfile found
+if [ "$CONFIG_LOAD" != "yes" ];then
+   if [ "$1" != "setup" ];then
+      echo "INFO: Using default configuration";
+      echo "(you can configure options in one of these file: $ACTIVEMQ_CONFIGS)"
+      echo
+   fi
+fi
+
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+fi
+
+
+
 
 # ------------------------------------------------------------------------
 # OS SPECIFIC SUPPORT
