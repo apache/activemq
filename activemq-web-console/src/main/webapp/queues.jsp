@@ -68,14 +68,8 @@
 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Consumers</a><br/>
 	<a href="<c:url value="queueProducers.jsp">
 	                <c:param name="JMSDestination" value="${row.name}" /></c:url>">Active Producers</a><br/>
-    <a href="<c:url value="queueBrowse/${row.name}">
-                    <c:param name="view" value="rss" />
-                    <c:param name="feedType" value="atom_1.0" />
-                     </c:url>" title="Atom 1.0"><img src="<c:url value="images/feed_atom.png" />" /></a>
-    <a href="<c:url value="queueBrowse/${row.name}">
-                    <c:param name="view" value="rss" />
-                    <c:param name="feedType" value="rss_2.0" />
-                    </c:url>" title="RSS 2.0"><img src="<c:url value="images/feed_rss.png" />" /></a>
+    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=atom_1.0" title="Atom 1.0"><img src="images/feed_atom.png"/></a>
+    <a href="queueBrowse/<form:escape text="${row.name}" />?view=rss&feedType=rss_2.0" title="RSS 2.0"><img src="images/feed_rss.png"/></a>
 </td>
 <td>
     <a href="<c:url value="send.jsp">
