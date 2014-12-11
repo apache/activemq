@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.group;
 
 import java.util.Map;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.memory.LRUMap;
 
@@ -92,6 +93,8 @@ public class MessageGroupHashBucket implements MessageGroupMap {
     public String getType() {
         return "bucket";
     }
+
+    public void setDestination(Destination destination) {}
 
     public int getBucketCount(){
         return bucketCount;
