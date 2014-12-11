@@ -473,8 +473,9 @@ invoke_start(){
 
 # Start ActiveMQ in foreground (for debugging)
 #
-# @RET  : 0 => is now started, is already started
-#         !0 => something went wrong
+# @RET  : 0 => was started
+#         1 => was already started
+#         !0 => somthing went wrong
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE      : the name of the pid file
@@ -493,8 +494,12 @@ invoke_console(){
     COMMANDLINE_ARGS="start `echo $COMMANDLINE_ARGS|sed 's,^console,,'`"
     EXEC_OPTION="exec"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
+    echo "INFO: Creating pidfile $ACTIVEMQ_PIDFILE"
+    echo "$$" > $ACTIVEMQ_PIDFILE
     invokeJar
-    exit "$?"
+    RET="$?"
+    echo "INFO: removing pidfile $ACTIVEMQ_PIDFILE"
+    exit "$RET"
 }
 
 # Stop ActiveMQ
@@ -559,6 +564,9 @@ invoke_stop(){
 
 # Invoke a task on a running ActiveMQ instance
 #
+# $1    : "checkforrunning", do not invoke the task if activemq is not
+#         active
+#         <other>, invoke task always
 # @RET  : 0 => successful
 #         !0 => something went wrong
 #
@@ -568,22 +576,31 @@ invoke_stop(){
 # - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
 invoke_task(){
+
+    local CHECKRUNNING="$1"
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
-    # call task in java binary
-    if ( checkRunning );then
-      if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
-      elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
-      else
-         COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
-      fi
-      invokeJar
-      exit $?
-    else
-      invokeJar
-      exit 1
+
+    if [ "$CHECKRUNNING" = "checkforrunning" ];then
+       if ( ! checkRunning );then
+         echo "Activemq is not running."
+         exit 1
+       fi
     fi
+
+    # call task in java binary
+    if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
+    elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
+    else
+       COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
+    fi
+    invokeJar
+    RET="$?"
+    if [ "$RET" != "0" ];then
+       echo "ERROR: task failed"
+    fi
+    exit $RET
 }
 
 show_help() {
@@ -632,10 +649,40 @@ case "$1" in
     ;;
   console)
     invoke_console
+    exit $?
     ;;
   stop)
     invoke_stop
+    exit $?
+    ;;
+  decrypt|encrypt|create)
+    invoke_task checknotforrunning
+    exit $?
+    ;;
+  query|bstat|dstat|purge)
+    # Only check for a running broker if "--jmxurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--jmxurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
+    ;;
+  browse)
+    # Only check for a running broker if "--amqurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--amqurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
     ;;
   *)
-    invoke_task
+    invoke_task checkforrunning
+    exit $?
 esac
+

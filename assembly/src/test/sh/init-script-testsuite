@@ -56,6 +56,7 @@ assert(){
    echo "****************************************************************************"
    OVERALL_STATUS="1"
    if [ "$STRATEGY" = "stop" ];then
+      finalize
       exit 100
    else
       return 100
@@ -123,12 +124,17 @@ set +x
 assert ${STRATEGY} successful "${SCRIPT} stop"
 assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY}     failed "${SCRIPT} status"
-assert ${STRATEGY} successful "${SCRIPT} browse|grep -C 1000 'No JMS destination specified'"
-assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep 'Encrypted text: '"
-assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -C 1000 'Decrypted text:'"
-assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -C 1000 'javax.naming.ServiceUnavailableException'"
-assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -C 1000 'javax.naming.ServiceUnavailableException'"
-assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -C 1000 'javax.naming.ServiceUnavailableException'"
+assert ${STRATEGY} successful "${SCRIPT} browse|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} browse FOOBAR111111111 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:11111 FOOOOO 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep -q 'Encrypted text: '"
+assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -q 'Decrypted text:'"
+assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} bstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} dstat --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
+assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -q 'Activemq is not running.'"
+assert ${STRATEGY} successful "${SCRIPT} query --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
 assert ${STRATEGY} successful "${SCRIPT} restart"
 assert ${STRATEGY}     failed "${SCRIPT} stop"
 
@@ -138,26 +144,25 @@ assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY} successful "${SCRIPT} status"
 echo "Sleeping 30 seconds to get activemq really started"; sleep 30
 assert ${STRATEGY} successful "${SCRIPT} status"
-assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep 'Encrypted text: '"
-assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -C 1000 'Decrypted text:'"
+assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep -q 'Encrypted text: '"
+assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -q 'Decrypted text:'"
 
-assert ${STRATEGY} successful "${SCRIPT} browse 2>&1|grep -C 1000 'No JMS destination specified'"
+assert ${STRATEGY} successful "${SCRIPT} browse 2>&1|grep 'No JMS destination specified'"
 assert ${STRATEGY} successful "${SCRIPT} browse --amqurl tcp://localhost:61616 FOO.BAR"
 
 assert ${STRATEGY} successful "${SCRIPT} bstat"
-assert ${STRATEGY} successful "${SCRIPT} bstat |grep -C 1000 TotalConsumerCount"
+assert ${STRATEGY} successful "${SCRIPT} bstat |grep TotalConsumerCount"
 
 assert ${STRATEGY} successful "${SCRIPT} dstat"
-assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1| grep -C 1000 ActiveMQ.Advisory.MasterBroker"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1| grep ActiveMQ.Advisory.MasterBroker"
 
 assert ${STRATEGY} successful "${SCRIPT} list"
-assert ${STRATEGY} successful "${SCRIPT} list 2>&1| grep -C 1000 brokerName"
+assert ${STRATEGY} successful "${SCRIPT} list 2>&1| grep brokerName"
 
 assert ${STRATEGY} successful "${SCRIPT} purge FOO.BAR"
 
 assert ${STRATEGY} successful "${SCRIPT} status"
 
-assert ${STRATEGY} successful "${SCRIPT} query"
 assert ${STRATEGY} successful "${SCRIPT} query|grep brokerName"
 
 # assert ${STRATEGY} failed     "${SCRIPT} console"
