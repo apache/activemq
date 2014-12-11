@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.group;
 
 import java.util.Map;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ConsumerId;
 
 /**
@@ -43,5 +44,7 @@ public interface MessageGroupMap {
     Map<String,String> getGroups();
 
     String getType();
+
+    void setDestination(Destination destination);
 
 }
