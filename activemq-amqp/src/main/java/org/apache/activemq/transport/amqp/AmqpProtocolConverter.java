@@ -985,11 +985,14 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         public void onClose() throws Exception {
             if (!closed) {
                 closed = true;
+                sender.setContext(null);
+                subscriptionsByConsumerId.remove(consumerId);
 
                 AmqpSessionContext session = (AmqpSessionContext) sender.getSession().getContext();
                 if (session != null) {
                     session.consumers.remove(info.getConsumerId());
                 }
+
                 RemoveInfo removeCommand = new RemoveInfo(consumerId);
                 removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
                 sendToActiveMQ(removeCommand, null);
