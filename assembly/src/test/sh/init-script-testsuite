@@ -22,6 +22,7 @@
 # Marc Schoechlin <ms@256bit.org>  
 
 STATUS_OVERVIEW=""
+OVERALL_STATUS="0"
 
 assert(){
  local STRATEGY="$1"
@@ -53,6 +54,7 @@ assert(){
    echo "** ERROR: not $SHOULD (returncode $RET)"
    STATUS_OVERVIEW="$STATUS_OVERVIEW#  FAIL : not $SHOULD => $CMD"
    echo "****************************************************************************"
+   OVERALL_STATUS="1"
    if [ "$STRATEGY" = "stop" ];then
       exit 100
    else
@@ -63,6 +65,15 @@ assert(){
  fi
  echo "****************************************************************************"
  return 0
+}
+
+finalize(){
+   echo
+   echo
+   echo "*** SUMMARY"
+   echo
+   echo -n "<RESULT>:<CHECKED FOR>   => <COMMAND>"
+   echo "$STATUS_OVERVIEW"|tr '#' '\n'|sed 's,^, ,'
 }
 
 STRATEGY="stop"
@@ -99,26 +110,25 @@ case "`uname`" in
   ;;
 esac
 
-#trap "rm -rvf $TESTDIR" INT TERM EXIT
+trap "finalize;exit 1" INT TERM
 
 echo "****************************************************************************"
 STRATEGY="stop"
 
 set -x
-sed 's,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=30,' env | \
+sed 's,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=15,' env | \
 sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' > $CONFIG
 set +x
 
 assert ${STRATEGY} successful "${SCRIPT} stop"
 assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY}     failed "${SCRIPT} status"
-assert ${STRATEGY}     failed "${SCRIPT} browse"
+assert ${STRATEGY} successful "${SCRIPT} browse|grep -C 1000 'No JMS destination specified'"
 assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep 'Encrypted text: '"
 assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -C 1000 'Decrypted text:'"
-assert ${STRATEGY} successful "${SCRIPT} browse 2>&1|grep -C 1000 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -C 1000 'Activemq is not running.'"
-assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -C 1000 'Activemq is not running.'"
-assert ${STRATEGY} failed     "${SCRIPT} query"
+assert ${STRATEGY} successful "${SCRIPT} bstat 2>&1|grep -C 1000 'javax.naming.ServiceUnavailableException'"
+assert ${STRATEGY} successful "${SCRIPT} dstat 2>&1|grep -C 1000 'javax.naming.ServiceUnavailableException'"
+assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -C 1000 'javax.naming.ServiceUnavailableException'"
 assert ${STRATEGY} successful "${SCRIPT} restart"
 assert ${STRATEGY}     failed "${SCRIPT} stop"
 
@@ -154,8 +164,14 @@ assert ${STRATEGY} successful "${SCRIPT} query|grep brokerName"
 # assert ${STRATEGY} successful "${SCRIPT} create"
 # assert ${STRATEGY} successful "${SCRIPT} export"
 
-echo
-echo
-echo "*** SUMMARY"
-echo "$STATUS_OVERVIEW"|tr '#' '\n'|sed 's,^, ,'
+echo 
+echo 
 
+trap "" INT TERM
+finalize
+
+echo
+echo
+
+rm -rvf $TESTDIR
+exit $OVERALL_STATUS
