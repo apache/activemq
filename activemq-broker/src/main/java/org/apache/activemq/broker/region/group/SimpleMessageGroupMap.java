@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ConsumerId;
 
 /**
@@ -77,6 +78,8 @@ public class SimpleMessageGroupMap implements MessageGroupMap {
     public String getType() {
         return "simple";
     }
+
+    public void setDestination(Destination destination) {}
 
     public String toString() {
         return "message groups: " + map.size();

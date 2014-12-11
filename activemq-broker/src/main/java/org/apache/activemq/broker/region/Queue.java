@@ -1013,6 +1013,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public MessageGroupMap getMessageGroupOwners() {
         if (messageGroupOwners == null) {
             messageGroupOwners = getMessageGroupMapFactory().createMessageGroupMap();
+            messageGroupOwners.setDestination(this);
         }
         return messageGroupOwners;
     }
