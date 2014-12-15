@@ -234,26 +234,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         index++;
                         acknowledge(context, ack, node);
                         if (ack.getLastMessageId().equals(messageId)) {
-                            // contract prefetch if dispatch required a pull
-                            if (getPrefetchSize() == 0) {
-                                // Protect extension update against parallel updates.
-                                while (true) {
-                                    int currentExtension = prefetchExtension.get();
-                                    int newExtension = Math.max(0, currentExtension - index);
-                                    if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                                        break;
-                                    }
-                                }
-                            } else if (usePrefetchExtension && context.isInTransaction()) {
-                                // extend prefetch window only if not a pulling consumer
-                                while (true) {
-                                    int currentExtension = prefetchExtension.get();
-                                    int newExtension = Math.max(currentExtension, index);
-                                    if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                                        break;
-                                    }
-                                }
-                            }
                             destination = (Destination) node.getRegionDestination();
                             callDispatchMatched = true;
                             break;
@@ -283,14 +263,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             registerRemoveSync(context, node);
                         }
 
-                        // Protect extension update against parallel updates.
-                        while (true) {
-                            int currentExtension = prefetchExtension.get();
-                            int newExtension = Math.max(0, currentExtension - 1);
-                            if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
-                                break;
+                        if (usePrefetchExtension && getPrefetchSize() != 0 && ack.isInTransaction()) {
+                            // allow transaction batch to exceed prefetch
+                            while (true) {
+                                int currentExtension = prefetchExtension.get();
+                                int newExtension = Math.max(currentExtension, currentExtension + 1);
+                                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                                    break;
+                                }
                             }
                         }
+
                         acknowledge(context, ack, node);
                         destination = (Destination) node.getRegionDestination();
                         callDispatchMatched = true;
@@ -313,7 +296,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         nodeDest.getDestinationStatistics().getInflight().decrement();
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
-                        if (usePrefetchExtension) {
+                        if (usePrefetchExtension && getPrefetchSize() != 0) {
+                            // allow  batch to exceed prefetch
                             while (true) {
                                 int currentExtension = prefetchExtension.get();
                                 int newExtension = Math.max(currentExtension, index + 1);
@@ -426,6 +410,19 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 new Synchronization() {
 
                     @Override
+                    public void beforeEnd() {
+                        if (usePrefetchExtension && getPrefetchSize() != 0) {
+                            while (true) {
+                                int currentExtension = prefetchExtension.get();
+                                int newExtension = Math.max(0, currentExtension - 1);
+                                if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
                     public void afterCommit()
                             throws Exception {
                         Destination nodeDest = (Destination) node.getRegionDestination();
@@ -516,7 +513,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      */
     @Override
     public boolean isFull() {
-        return dispatched.size() - prefetchExtension.get() >= info.getPrefetchSize();
+        return getPrefetchSize() == 0 ? prefetchExtension.get() == 0 : dispatched.size() - prefetchExtension.get() >= info.getPrefetchSize();
     }
 
     /**
@@ -537,7 +534,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     @Override
     public int countBeforeFull() {
-        return info.getPrefetchSize() + prefetchExtension.get() - dispatched.size();
+        return getPrefetchSize() == 0 ? prefetchExtension.get() : info.getPrefetchSize() + prefetchExtension.get() - dispatched.size();
     }
 
     @Override
@@ -696,13 +693,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
         okForAckAsDispatchDone.countDown();
 
-        // No reentrant lock - Patch needed to IndirectMessageReference on method lock
         MessageDispatch md = createMessageDispatch(node, message);
-        // NULL messages don't count... they don't get Acked.
         if (node != QueueMessageReference.NULL_MESSAGE) {
             dispatchCounter++;
             dispatched.add(node);
-        } else {
+        }
+        if (getPrefetchSize() == 0) {
             while (true) {
                 int currentExtension = prefetchExtension.get();
                 int newExtension = Math.max(0, currentExtension - 1);
