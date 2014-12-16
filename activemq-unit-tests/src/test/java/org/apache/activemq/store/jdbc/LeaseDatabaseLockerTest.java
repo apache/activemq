@@ -108,7 +108,7 @@ public class LeaseDatabaseLockerTest {
             }
         });
 
-        TimeUnit.MILLISECONDS.sleep(lockerB.getLockAcquireSleepInterval());
+        TimeUnit.MILLISECONDS.sleep(lockerB.getLockAcquireSleepInterval() / 2);
         assertTrue("B is blocked", blocked.get());
 
         assertTrue("A is good", lockerA.keepAlive());
@@ -129,6 +129,7 @@ public class LeaseDatabaseLockerTest {
         // build a fake lock
         final String fakeId = "Anon";
         final Connection connection = dataSource.getConnection();
+        printLockTable(connection);
         PreparedStatement statement = connection.prepareStatement(jdbc.getStatements().getLeaseObtainStatement());
 
         final long now = System.currentTimeMillis();

@@ -105,7 +105,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
             throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
         }
 
-        LOG.info(getLeaseHolderId() + ", becoming master with lease expiry " + new Date(now) + " on dataSource: " + dataSource);
+        LOG.info(getLeaseHolderId() + ", becoming master with lease expiry " + new Date(now + lockAcquireSleepInterval) + " on dataSource: " + dataSource);
     }
 
     private void reportLeasOwnerShipAndDuration(Connection connection) throws SQLException {
