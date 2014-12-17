@@ -476,9 +476,9 @@ public class PListTest {
         // with overlapping seeks from the iterators so that we are likely to
         // seek into
         // some bad area in the page file.
-        executor = Executors.newFixedThreadPool(400);
-        final int numProducer = 300;
-        final int numConsumer = 100;
+        executor = Executors.newFixedThreadPool(100);
+        final int numProducer = 30;
+        final int numConsumer = 10;
         for (int i = 0; i < numLists; i++) {
             for (int j = 0; j < numProducer; j++) {
                 executor.execute(new Job(i, PListTest.TaskType.ADD, iterations));
@@ -490,7 +490,7 @@ public class PListTest {
 
         executor.shutdown();
         LOG.info("wait for parallel work to complete");
-        boolean shutdown = executor.awaitTermination(60 * 60, TimeUnit.SECONDS);
+        boolean shutdown = executor.awaitTermination(5 * 60, TimeUnit.SECONDS);
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
         assertTrue("test did not  timeout ", shutdown);
         LOG.info("Num dataFiles:" + store.getJournal().getFiles().size());
