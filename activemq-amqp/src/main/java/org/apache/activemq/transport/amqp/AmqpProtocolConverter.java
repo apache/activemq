@@ -121,6 +121,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int CHANNEL_MAX = 32767;
     private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
+    private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
+    private static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
@@ -157,6 +159,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         this.protonConnection.collect(eventCollector);
         this.protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
+        this.protonConnection.setProperties(getConnetionProperties());
 
         updateTracer();
     }
@@ -169,6 +172,21 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
      */
     protected Symbol[] getConnectionCapabilitiesOffered() {
         return new Symbol[]{ ANONYMOUS_RELAY };
+    }
+
+    /**
+     * Load and return a <code>Map<Symbol, Object></code> that contains the properties
+     * that this connection supplies to incoming connections.
+     *
+     * @return the properties that are offered to the incoming connection.
+     */
+    protected Map<Symbol, Object> getConnetionProperties() {
+        Map<Symbol, Object> properties = new HashMap<Symbol, Object>();
+
+        properties.put(QUEUE_PREFIX, "queue://");
+        properties.put(TOPIC_PREFIX, "topic://");
+
+        return properties;
     }
 
     @Override
