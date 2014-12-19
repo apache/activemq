@@ -28,3 +28,5 @@ dependency-reduced-pom.xml
 velocity.log
 
 /.metadata
+activemq-unit-tests/targetactivemq-data/
+activemq-leveldb-store/LevelDB

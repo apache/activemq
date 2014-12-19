@@ -16,34 +16,28 @@
  */
 package org.apache.activemq.bugs;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.concurrent.CountDownLatch;
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
-import org.apache.activemq.store.jdbc.JDBCIOExceptionHandler;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
 import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.*;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.concurrent.CountDownLatch;
+
 import static org.junit.Assert.fail;
 
 /**
@@ -114,7 +108,7 @@ public class AMQ4636Test {
         broker.setDestinationPolicy(policyMap);
         broker.setPersistenceAdapter(jdbc);
 
-        broker.setIoExceptionHandler(new JDBCIOExceptionHandler());
+        broker.setIoExceptionHandler(new LeaseLockerIOExceptionHandler());
 
         transportUrl = broker.addConnector(transportUrl).getPublishableConnectString();
         return broker;
