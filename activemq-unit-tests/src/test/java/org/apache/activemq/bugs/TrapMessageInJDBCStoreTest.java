@@ -19,23 +19,23 @@ package org.apache.activemq.bugs;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.*;
-import org.apache.activemq.store.jdbc.*;
-import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
+import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
+import org.apache.activemq.store.jdbc.TransactionContext;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
-import javax.jms.Message;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +82,7 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
 
         broker.setPersistenceAdapter(jdbc);
 
-        broker.setIoExceptionHandler(new JDBCIOExceptionHandler());
+        broker.setIoExceptionHandler(new LeaseLockerIOExceptionHandler());
 
         transportUrl = broker.addConnector(transportUrl).getPublishableConnectString();
         return broker;

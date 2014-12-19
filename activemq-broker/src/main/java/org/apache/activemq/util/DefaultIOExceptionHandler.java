@@ -35,9 +35,8 @@ import org.slf4j.LoggerFactory;
  * @org.apache.xbean.XBean
  */
  public class DefaultIOExceptionHandler implements IOExceptionHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultIOExceptionHandler.class);
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(DefaultIOExceptionHandler.class);
     protected BrokerService broker;
     private boolean ignoreAllErrors = false;
     private boolean ignoreNoSpaceErrors = true;

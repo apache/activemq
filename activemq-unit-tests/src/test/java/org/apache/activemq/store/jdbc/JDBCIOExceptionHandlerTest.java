@@ -16,22 +16,21 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
+import org.apache.activemq.util.Wait;
+import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jms.Connection;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.jms.Connection;
-
-import junit.framework.TestCase;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.Wait;
-import org.apache.derby.jdbc.EmbeddedDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test to see if the JDBCExceptionIOHandler will restart the transport connectors correctly after
@@ -78,10 +77,10 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
         }
 
         broker.setPersistenceAdapter(jdbc);
-        JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
-        jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
-        jdbcioExceptionHandler.setStopStartConnectors(startStopConnectors);
-        broker.setIoExceptionHandler(jdbcioExceptionHandler);
+        LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+        ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+        ioExceptionHandler.setStopStartConnectors(startStopConnectors);
+        broker.setIoExceptionHandler(ioExceptionHandler);
         String connectionUri = broker.addConnector(TRANSPORT_URL).getPublishableConnectString();
 
         factory = new ActiveMQConnectionFactory(connectionUri);
@@ -137,10 +136,10 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
                     }
 
                     broker.setPersistenceAdapter(jdbc);
-                    JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
-                    jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
-                    jdbcioExceptionHandler.setStopStartConnectors(false);
-                    broker.setIoExceptionHandler(jdbcioExceptionHandler);
+                    LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+                    ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+                    ioExceptionHandler.setStopStartConnectors(false);
+                    broker.setIoExceptionHandler(ioExceptionHandler);
                     slave.set(broker);
                     broker.start();
                 } catch (Exception e) {

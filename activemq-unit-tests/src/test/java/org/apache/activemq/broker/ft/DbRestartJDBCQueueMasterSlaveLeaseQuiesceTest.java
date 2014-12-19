@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.broker.ft;
 
-import java.util.concurrent.TimeUnit;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.jdbc.JDBCIOExceptionHandler;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBCQueueMasterSlaveLeaseTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest.class);
@@ -31,7 +32,7 @@ public class DbRestartJDBCQueueMasterSlaveLeaseQuiesceTest extends DbRestartJDBC
     @Override
     protected void configureBroker(BrokerService brokerService) {
         // master and slave survive db restart and retain master/slave status
-        JDBCIOExceptionHandler stopConnectors = new JDBCIOExceptionHandler();
+        LeaseLockerIOExceptionHandler stopConnectors = new LeaseLockerIOExceptionHandler();
         brokerService.setIoExceptionHandler(stopConnectors);
     }
 

@@ -16,11 +16,10 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import java.io.IOException;
-import java.util.HashMap;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.SuppressReplyException;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.Wait;
 import org.jmock.Expectations;
@@ -31,6 +30,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.HashMap;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -85,7 +86,7 @@ public class JDBCIOExceptionHandlerMockeryTest {
 
         }});
 
-        JDBCIOExceptionHandler underTest = new JDBCIOExceptionHandler();
+        LeaseLockerIOExceptionHandler underTest = new LeaseLockerIOExceptionHandler();
         underTest.setBrokerService(brokerService);
 
         try {
