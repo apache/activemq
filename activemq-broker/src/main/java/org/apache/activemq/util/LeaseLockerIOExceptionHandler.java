@@ -14,27 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store.jdbc;
+package org.apache.activemq.util;
 
-import java.io.IOException;
-
+import org.apache.activemq.broker.LockableServiceSupport;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.SuppressReplyException;
-import org.apache.activemq.util.DefaultIOExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * @org.apache.xbean.XBean
  */
-/*
- * @deprecated Use more general {@link org.apache.activemq.util.LeaseLockerIOExceptionHandler} instead
- */
-@Deprecated
-public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandler.class);
+public class LeaseLockerIOExceptionHandler extends DefaultIOExceptionHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(LeaseLockerIOExceptionHandler.class);
 
-    public JDBCIOExceptionHandler() {
+    public LeaseLockerIOExceptionHandler() {
         setIgnoreSQLExceptions(false);
         setStopStartConnectors(true);
     }
@@ -43,16 +39,19 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
     @Override
     protected boolean hasLockOwnership() throws IOException {
         boolean hasLock = true;
-        if (broker.getPersistenceAdapter() instanceof JDBCPersistenceAdapter) {
-            JDBCPersistenceAdapter jdbcPersistenceAdapter = (JDBCPersistenceAdapter) broker.getPersistenceAdapter();
-            Locker locker = jdbcPersistenceAdapter.getLocker();
+
+        if (broker.getPersistenceAdapter() instanceof LockableServiceSupport) {
+            Locker locker = ((LockableServiceSupport) broker.getPersistenceAdapter()).getLocker();
+
             if (locker != null) {
                 try {
                     if (!locker.keepAlive()) {
                         hasLock = false;
                     }
-                } catch (SuppressReplyException ignoreWhileHandlingInProgress) {
-                } catch (IOException ignored) {
+                }
+                catch (SuppressReplyException ignoreWhileHandlingInProgress) {
+                }
+                catch (IOException ignored) {
                 }
 
                 if (!hasLock) {
@@ -61,7 +60,7 @@ public class JDBCIOExceptionHandler extends DefaultIOExceptionHandler {
                 }
             }
         }
+
         return hasLock;
     }
-
 }

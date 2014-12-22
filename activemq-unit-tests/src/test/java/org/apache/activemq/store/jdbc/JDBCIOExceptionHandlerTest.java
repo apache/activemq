@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
@@ -78,10 +79,10 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
         }
 
         broker.setPersistenceAdapter(jdbc);
-        JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
-        jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
-        jdbcioExceptionHandler.setStopStartConnectors(startStopConnectors);
-        broker.setIoExceptionHandler(jdbcioExceptionHandler);
+        LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+        ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+        ioExceptionHandler.setStopStartConnectors(startStopConnectors);
+        broker.setIoExceptionHandler(ioExceptionHandler);
         String connectionUri = broker.addConnector(TRANSPORT_URL).getPublishableConnectString();
 
         factory = new ActiveMQConnectionFactory(connectionUri);
@@ -137,10 +138,10 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
                     }
 
                     broker.setPersistenceAdapter(jdbc);
-                    JDBCIOExceptionHandler jdbcioExceptionHandler = new JDBCIOExceptionHandler();
-                    jdbcioExceptionHandler.setResumeCheckSleepPeriod(1000l);
-                    jdbcioExceptionHandler.setStopStartConnectors(false);
-                    broker.setIoExceptionHandler(jdbcioExceptionHandler);
+                    LeaseLockerIOExceptionHandler ioExceptionHandler = new LeaseLockerIOExceptionHandler();
+                    ioExceptionHandler.setResumeCheckSleepPeriod(1000l);
+                    ioExceptionHandler.setStopStartConnectors(false);
+                    broker.setIoExceptionHandler(ioExceptionHandler);
                     slave.set(broker);
                     broker.start();
                 } catch (Exception e) {
