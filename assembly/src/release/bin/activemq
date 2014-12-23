@@ -131,7 +131,7 @@ fi
 
 # Location of the pidfile
 if [ -z "$ACTIVEMQ_PIDFILE" ]; then
-  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq-`hostname`.pid"
+  ACTIVEMQ_PIDFILE="$ACTIVEMQ_DATA/activemq.pid"
 fi
 
 
