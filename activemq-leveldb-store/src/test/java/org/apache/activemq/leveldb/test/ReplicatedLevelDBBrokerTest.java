@@ -83,13 +83,6 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
         deleteDirectory("node-3");
     }
 
-    protected void deleteDirectory(String s) throws IOException {
-        try {
-            FileUtils.deleteDirectory(new File(data_dir(), s));
-        } catch (IOException e) {
-        }
-    }
-
     public interface Client{
         public void execute(Connection connection) throws Exception;
     }
@@ -284,6 +277,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
             System.out.println("======================================");
             System.out.println("5.	Restart the stopped node & 6. stop current master");
             System.out.println("======================================");
+            brokers.remove(prevMaster);
             prevMaster = createBrokerNode(prevMaster.getBrokerName());
             startBrokerAsync(prevMaster);
             stop(master);
@@ -411,6 +405,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
             }
         }
         brokers.clear();
+        resetDataDirs();
     }
 
     private BrokerService createBrokerNode(String id) throws Exception {

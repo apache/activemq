@@ -18,13 +18,12 @@ package org.apache.activemq.leveldb.test;
 
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.util.FileSupport;
+import org.apache.commons.io.FileUtils;
 import org.apache.zookeeper.server.NIOServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.junit.After;
 import org.junit.Before;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -62,6 +61,8 @@ public class ZooKeeperTestSupport {
           connector.shutdown();
           connector = null;
         }
+        deleteDirectory("zk-log");
+        deleteDirectory("zk-data");
     }
 
 
@@ -106,6 +107,13 @@ public class ZooKeeperTestSupport {
             } else {
                 Thread.sleep(Math.min(remaining / 10, 100L));
             }
+        }
+    }
+
+    protected void deleteDirectory(String s) throws java.io.IOException {
+        try {
+            FileUtils.deleteDirectory(new File(data_dir(), s));
+        } catch (java.io.IOException e) {
         }
     }
 }
