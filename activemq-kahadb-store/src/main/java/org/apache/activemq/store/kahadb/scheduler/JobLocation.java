@@ -36,8 +36,6 @@ class JobLocation {
     private long period;
     private String cronEntry;
     private final Location location;
-    private int rescheduledCount;
-    private Location lastUpdate;
 
     public JobLocation(Location location) {
         this.location = location;
@@ -54,12 +52,8 @@ class JobLocation {
         this.delay = in.readLong();
         this.nextTime = in.readLong();
         this.period = in.readLong();
-        this.cronEntry = in.readUTF();
+        this.cronEntry=in.readUTF();
         this.location.readExternal(in);
-        if (in.readBoolean()) {
-            this.lastUpdate = new Location();
-            this.lastUpdate.readExternal(in);
-        }
     }
 
     public void writeExternal(DataOutput out) throws IOException {
@@ -69,17 +63,11 @@ class JobLocation {
         out.writeLong(this.delay);
         out.writeLong(this.nextTime);
         out.writeLong(this.period);
-        if (this.cronEntry == null) {
-            this.cronEntry = "";
+        if (this.cronEntry==null) {
+            this.cronEntry="";
         }
         out.writeUTF(this.cronEntry);
         this.location.writeExternal(out);
-        if (lastUpdate != null) {
-            out.writeBoolean(true);
-            this.lastUpdate.writeExternal(out);
-        } else {
-            out.writeBoolean(false);
-        }
     }
 
     /**
@@ -135,8 +123,7 @@ class JobLocation {
     }
 
     /**
-     * @param nextTime
-     *            the nextTime to set
+     * @param nextTime the nextTime to set
      */
     public synchronized void setNextTime(long nextTime) {
         this.nextTime = nextTime;
@@ -165,8 +152,7 @@ class JobLocation {
     }
 
     /**
-     * @param cronEntry
-     *            the cronEntry to set
+     * @param cronEntry the cronEntry to set
      */
     public synchronized void setCronEntry(String cronEntry) {
         this.cronEntry = cronEntry;
@@ -187,8 +173,7 @@ class JobLocation {
     }
 
     /**
-     * @param delay
-     *            the delay to set
+     * @param delay the delay to set
      */
     public void setDelay(long delay) {
         this.delay = delay;
@@ -201,55 +186,15 @@ class JobLocation {
         return this.location;
     }
 
-    /**
-     * @returns the location in the journal of the last update issued for this
-     *          Job.
-     */
-    public Location getLastUpdate() {
-        return this.lastUpdate;
-    }
-
-    /**
-     * Sets the location of the last update command written to the journal for
-     * this Job. The update commands set the next execution time for this job.
-     * We need to keep track of only the latest update as it's the only one we
-     * really need to recover the correct state from the journal.
-     *
-     * @param location
-     *            The location in the journal of the last update command.
-     */
-    public void setLastUpdate(Location location) {
-        this.lastUpdate = location;
-    }
-
-    /**
-     * @return the number of time this job has been rescheduled.
-     */
-    public int getRescheduledCount() {
-        return rescheduledCount;
-    }
-
-    /**
-     * Sets the number of time this job has been rescheduled.  A newly added job will return
-     * zero and increment this value each time a scheduled message is dispatched to its
-     * target destination and the job is rescheduled for another cycle.
-     *
-     * @param executionCount
-     *        the new execution count to assign the JobLocation.
-     */
-    public void setRescheduledCount(int rescheduledCount) {
-        this.rescheduledCount = rescheduledCount;
-    }
-
     @Override
     public String toString() {
-        return "Job [id=" + jobId + ", startTime=" + new Date(startTime) + ", delay=" + delay + ", period=" + period + ", repeat=" + repeat + ", nextTime="
-            + new Date(nextTime) + ", executionCount = " + (rescheduledCount + 1) + "]";
+        return "Job [id=" + jobId + ", startTime=" + new Date(startTime)
+                + ", delay=" + delay + ", period=" + period + ", repeat="
+                + repeat + ", nextTime=" + new Date(nextTime) + "]";
     }
 
     static class JobLocationMarshaller extends VariableMarshaller<List<JobLocation>> {
         static final JobLocationMarshaller INSTANCE = new JobLocationMarshaller();
-
         @Override
         public List<JobLocation> readPayload(DataInput dataIn) throws IOException {
             List<JobLocation> result = new ArrayList<JobLocation>();
@@ -283,7 +228,6 @@ class JobLocation {
         result = prime * result + (int) (period ^ (period >>> 32));
         result = prime * result + repeat;
         result = prime * result + (int) (startTime ^ (startTime >>> 32));
-        result = prime * result + (rescheduledCount ^ (rescheduledCount >>> 32));
         return result;
     }
 
@@ -340,9 +284,6 @@ class JobLocation {
             return false;
         }
         if (startTime != other.startTime) {
-            return false;
-        }
-        if (rescheduledCount != other.rescheduledCount) {
             return false;
         }
 

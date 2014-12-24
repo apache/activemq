@@ -31,7 +31,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.activeio.journal.InvalidRecordLocationException;
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.JournalEventListener;
@@ -41,7 +40,6 @@ import org.apache.activeio.packet.Packet;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -80,14 +78,14 @@ import org.slf4j.LoggerFactory;
  * An implementation of {@link PersistenceAdapter} designed for use with a
  * {@link Journal} and then check pointing asynchronously on a timeout with some
  * other long term persistent storage.
- *
+ * 
  * @org.apache.xbean.XBean
- *
+ * 
  */
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
 
     private BrokerService brokerService;
-
+	
     protected Scheduler scheduler;
     private static final Logger LOG = LoggerFactory.getLogger(JournalPersistenceAdapter.class);
 
@@ -120,9 +118,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private TaskRunnerFactory taskRunnerFactory;
     private File directory;
 
-    public JournalPersistenceAdapter() {
+    public JournalPersistenceAdapter() {        
     }
-
+    
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
         setJournal(journal);
         setTaskRunnerFactory(taskRunnerFactory);
@@ -137,14 +135,13 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         this.journal = journal;
         journal.setJournalEventListener(this);
     }
-
+    
     public void setPersistenceAdapter(PersistenceAdapter longTermPersistence) {
         this.longTermPersistence = longTermPersistence;
     }
-
+    
     final Runnable createPeriodicCheckpointTask() {
         return new Runnable() {
-            @Override
             public void run() {
                 long lastTime = 0;
                 synchronized (this) {
@@ -161,13 +158,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      * @param usageManager The UsageManager that is controlling the
      *                destination's memory usage.
      */
-    @Override
     public void setUsageManager(SystemUsage usageManager) {
         this.usageManager = usageManager;
         longTermPersistence.setUsageManager(usageManager);
     }
 
-    @Override
     public Set<ActiveMQDestination> getDestinations() {
         Set<ActiveMQDestination> destinations = new HashSet<ActiveMQDestination>(longTermPersistence.getDestinations());
         destinations.addAll(queues.keySet());
@@ -183,7 +178,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         }
     }
 
-    @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         JournalMessageStore store = queues.get(destination);
         if (store == null) {
@@ -194,7 +188,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return store;
     }
 
-    @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destinationName) throws IOException {
         JournalTopicMessageStore store = topics.get(destinationName);
         if (store == null) {
@@ -210,7 +203,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      *
      * @param destination Destination to forget
      */
-    @Override
     public void removeQueueMessageStore(ActiveMQQueue destination) {
         queues.remove(destination);
     }
@@ -220,37 +212,30 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      *
      * @param destination Destination to forget
      */
-    @Override
     public void removeTopicMessageStore(ActiveMQTopic destination) {
         topics.remove(destination);
     }
 
-    @Override
     public TransactionStore createTransactionStore() throws IOException {
         return transactionStore;
     }
 
-    @Override
     public long getLastMessageBrokerSequenceId() throws IOException {
         return longTermPersistence.getLastMessageBrokerSequenceId();
     }
 
-    @Override
     public void beginTransaction(ConnectionContext context) throws IOException {
         longTermPersistence.beginTransaction(context);
     }
 
-    @Override
     public void commitTransaction(ConnectionContext context) throws IOException {
         longTermPersistence.commitTransaction(context);
     }
 
-    @Override
     public void rollbackTransaction(ConnectionContext context) throws IOException {
         longTermPersistence.rollbackTransaction(context);
     }
 
-    @Override
     public synchronized void start() throws Exception {
         if (!started.compareAndSet(false, true)) {
             return;
@@ -261,14 +246,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         }
 
         checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
-            @Override
             public boolean iterate() {
                 return doCheckpoint();
             }
         }, "ActiveMQ Journal Checkpoint Worker");
 
         checkpointExecutor = new ThreadPoolExecutor(maxCheckpointWorkers, maxCheckpointWorkers, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-            @Override
             public Thread newThread(Runnable runable) {
                 Thread t = new Thread(runable, "Journal checkpoint worker");
                 t.setPriority(7);
@@ -296,7 +279,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     }
 
-    @Override
     public void stop() throws Exception {
 
         this.usageManager.getMemoryUsage().removeUsageListener(this);
@@ -348,17 +330,16 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     /**
      * The Journal give us a call back so that we can move old data out of the
      * journal. Taking a checkpoint does this for us.
-     *
+     * 
      * @see org.apache.activemq.journal.JournalEventListener#overflowNotification(org.apache.activemq.journal.RecordLocation)
      */
-    @Override
     public void overflowNotification(RecordLocation safeLocation) {
         checkpoint(false, true);
     }
 
     /**
      * When we checkpoint we move all the journalled data to long term storage.
-     *
+     * 
      */
     public void checkpoint(boolean sync, boolean fullCheckpoint) {
         try {
@@ -388,14 +369,13 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         }
     }
 
-    @Override
     public void checkpoint(boolean sync) {
         checkpoint(sync, sync);
     }
 
     /**
      * This does the actual checkpoint.
-     *
+     * 
      * @return
      */
     public boolean doCheckpoint() {
@@ -418,7 +398,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             // We do many partial checkpoints (fullCheckpoint==false) to move
             // topic messages
             // to long term store as soon as possible.
-            //
+            // 
             // We want to avoid doing that for queue messages since removes the
             // come in the same
             // checkpoint cycle will nullify the previous message add.
@@ -431,7 +411,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                     try {
                         final JournalMessageStore ms = iterator.next();
                         FutureTask<RecordLocation> task = new FutureTask<RecordLocation>(new Callable<RecordLocation>() {
-                            @Override
                             public RecordLocation call() throws Exception {
                                 return ms.checkpoint();
                             }
@@ -449,7 +428,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                 try {
                     final JournalTopicMessageStore ms = iterator.next();
                     FutureTask<RecordLocation> task = new FutureTask<RecordLocation>(new Callable<RecordLocation>() {
-                        @Override
                         public RecordLocation call() throws Exception {
                             return ms.checkpoint();
                         }
@@ -527,7 +505,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     /**
      * Move all the messages that were in the journal into long term storage. We
      * just replay and do a checkpoint.
-     *
+     * 
      * @throws IOException
      * @throws IOException
      * @throws InvalidRecordLocationException
@@ -666,11 +644,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
         if (started.get()) {
             try {
-                return journal.write(toPacket(wireFormat.marshal(command)), sync);
+        	    return journal.write(toPacket(wireFormat.marshal(command)), sync);
             } catch (IOException ioe) {
-                LOG.error("Cannot write to the journal", ioe);
-                brokerService.handleIOException(ioe);
-                throw ioe;
+        	    LOG.error("Cannot write to the journal", ioe);
+        	    brokerService.handleIOException(ioe);
+        	    throw ioe;
             }
         }
         throw new IOException("closed");
@@ -682,7 +660,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return writeCommand(trace, sync);
     }
 
-    @Override
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         newPercentUsage = (newPercentUsage / 10) * 10;
         oldPercentUsage = (oldPercentUsage / 10) * 10;
@@ -696,7 +673,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return transactionStore;
     }
 
-    @Override
     public void deleteAllMessages() throws IOException {
         try {
             JournalTrace trace = new JournalTrace();
@@ -759,7 +735,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
 
-    @Override
     public void setBrokerName(String brokerName) {
         longTermPersistence.setBrokerName(brokerName);
     }
@@ -769,22 +744,18 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return "JournalPersistenceAdapter(" + longTermPersistence + ")";
     }
 
-    @Override
     public void setDirectory(File dir) {
         this.directory=dir;
     }
-
-    @Override
+    
     public File getDirectory(){
         return directory;
     }
-
-    @Override
+    
     public long size(){
         return 0;
     }
 
-    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
         PersistenceAdapter pa = getLongTermPersistence();
@@ -793,14 +764,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         }
     }
 
-    @Override
     public long getLastProducerSequenceId(ProducerId id) {
         return -1;
-    }
-
-    @Override
-    public JobSchedulerStore createJobSchedulerStore() throws IOException, UnsupportedOperationException {
-        return longTermPersistence.createJobSchedulerStore();
     }
 
 }

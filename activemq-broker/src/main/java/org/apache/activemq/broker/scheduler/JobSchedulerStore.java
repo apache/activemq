@@ -26,56 +26,13 @@ import org.apache.activemq.Service;
  */
 public interface JobSchedulerStore extends Service {
 
-    /**
-     * Gets the location where the Job Scheduler will write the persistent data used
-     * to preserve and recover scheduled Jobs.
-     *
-     * If the scheduler implementation does not utilize a file system based store this
-     * method returns null.
-     *
-     * @return the directory where persistent store data is written.
-     */
     File getDirectory();
 
-    /**
-     * Sets the directory where persistent store data will be written.  This method
-     * must be called before the scheduler store is started to have any effect.
-     *
-     * @param directory
-     *      The directory where the job scheduler store is to be located.
-     */
     void setDirectory(File directory);
 
-    /**
-     * The size of the current store on disk if the store utilizes a disk based store
-     * mechanism.
-     *
-     * @return the current store size on disk.
-     */
     long size();
 
-    /**
-     * Returns the JobScheduler instance identified by the given name.
-     *
-     * @param name
-     *        the name of the JobScheduler instance to lookup.
-     *
-     * @return the named JobScheduler or null if none exists with the given name.
-     *
-     * @throws Exception if an error occurs while loading the named scheduler.
-     */
     JobScheduler getJobScheduler(String name) throws Exception;
 
-    /**
-     * Removes the named JobScheduler if it exists, purging all scheduled messages
-     * assigned to it.
-     *
-     * @param name
-     *        the name of the scheduler instance to remove.
-     *
-     * @return true if there was a scheduler with the given name to remove.
-     *
-     * @throws Exception if an error occurs while removing the scheduler.
-     */
     boolean removeJobScheduler(String name) throws Exception;
 }

@@ -61,9 +61,8 @@ public final class IOHelper {
     }
 
     /**
-     * Converts any string into a string that is safe to use as a file name. The
-     * result will only include ascii characters and numbers, and the "-","_",
-     * and "." characters.
+     * Converts any string into a string that is safe to use as a file name.
+     * The result will only include ascii characters and numbers, and the "-","_", and "." characters.
      *
      * @param name
      * @return
@@ -77,16 +76,15 @@ public final class IOHelper {
     }
 
     /**
-     * Converts any string into a string that is safe to use as a file name. The
-     * result will only include ascii characters and numbers, and the "-","_",
-     * and "." characters.
+     * Converts any string into a string that is safe to use as a file name.
+     * The result will only include ascii characters and numbers, and the "-","_", and "." characters.
      *
      * @param name
      * @param dirSeparators
      * @param maxFileLength
      * @return
      */
-    public static String toFileSystemSafeName(String name, boolean dirSeparators, int maxFileLength) {
+    public static String toFileSystemSafeName(String name,boolean dirSeparators,int maxFileLength) {
         int size = name.length();
         StringBuffer rc = new StringBuffer(size * 2);
         for (int i = 0; i < size; i++) {
@@ -94,7 +92,8 @@ public final class IOHelper {
             boolean valid = c >= 'a' && c <= 'z';
             valid = valid || (c >= 'A' && c <= 'Z');
             valid = valid || (c >= '0' && c <= '9');
-            valid = valid || (c == '_') || (c == '-') || (c == '.') || (c == '#') || (dirSeparators && ((c == '/') || (c == '\\')));
+            valid = valid || (c == '_') || (c == '-') || (c == '.') || (c=='#')
+                    ||(dirSeparators && ( (c == '/') || (c == '\\')));
 
             if (valid) {
                 rc.append(c);
@@ -106,7 +105,7 @@ public final class IOHelper {
         }
         String result = rc.toString();
         if (result.length() > maxFileLength) {
-            result = result.substring(result.length() - maxFileLength, result.length());
+            result = result.substring(result.length()-maxFileLength,result.length());
         }
         return result;
     }
@@ -169,7 +168,8 @@ public final class IOHelper {
             } else {
                 for (int i = 0; i < files.length; i++) {
                     File file = files[i];
-                    if (file.getName().equals(".") || file.getName().equals("..")) {
+                    if (file.getName().equals(".")
+                            || file.getName().equals("..")) {
                         continue;
                     }
                     if (file.isDirectory()) {
@@ -187,27 +187,6 @@ public final class IOHelper {
     public static void moveFile(File src, File targetDirectory) throws IOException {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
             throw new IOException("Failed to move " + src + " to " + targetDirectory);
-        }
-    }
-
-    public static void moveFiles(File srcDirectory, File targetDirectory, FilenameFilter filter) throws IOException {
-        if (!srcDirectory.isDirectory()) {
-            throw new IOException("source is not a directory");
-        }
-
-        if (targetDirectory.exists() && !targetDirectory.isDirectory()) {
-            throw new IOException("target exists and is not a directory");
-        } else {
-            mkdirs(targetDirectory);
-        }
-
-        List<File> filesToMove = new ArrayList<File>();
-        getFiles(srcDirectory, filesToMove, filter);
-
-        for (File file : filesToMove) {
-            if (!file.isDirectory()) {
-                moveFile(file, targetDirectory);
-            }
         }
     }
 
@@ -243,32 +222,32 @@ public final class IOHelper {
         File parent = src.getParentFile();
         String fromPath = from.getAbsolutePath();
         if (parent.getAbsolutePath().equals(fromPath)) {
-            // one level down
+            //one level down
             result = to;
-        } else {
+        }else {
             String parentPath = parent.getAbsolutePath();
             String path = parentPath.substring(fromPath.length());
-            result = new File(to.getAbsolutePath() + File.separator + path);
+            result = new File(to.getAbsolutePath()+File.separator+path);
         }
         return result;
     }
 
-    static List<File> getFiles(File dir, FilenameFilter filter) {
+    static List<File> getFiles(File dir,FilenameFilter filter){
         List<File> result = new ArrayList<File>();
-        getFiles(dir, result, filter);
+        getFiles(dir,result,filter);
         return result;
     }
 
-    static void getFiles(File dir, List<File> list, FilenameFilter filter) {
+    static void getFiles(File dir,List<File> list,FilenameFilter filter) {
         if (!list.contains(dir)) {
             list.add(dir);
-            String[] fileNames = dir.list(filter);
-            for (int i = 0; i < fileNames.length; i++) {
-                File f = new File(dir, fileNames[i]);
+            String[] fileNames=dir.list(filter);
+            for (int i =0; i < fileNames.length;i++) {
+                File f = new File(dir,fileNames[i]);
                 if (f.isFile()) {
                     list.add(f);
-                } else {
-                    getFiles(dir, list, filter);
+                }else {
+                    getFiles(dir,list,filter);
                 }
             }
         }
@@ -307,13 +286,12 @@ public final class IOHelper {
     public static void mkdirs(File dir) throws IOException {
         if (dir.exists()) {
             if (!dir.isDirectory()) {
-                throw new IOException("Failed to create directory '" + dir +
-                                      "', regular file already existed with that name");
+                throw new IOException("Failed to create directory '" + dir +"', regular file already existed with that name");
             }
 
         } else {
             if (!dir.mkdirs()) {
-                throw new IOException("Failed to create directory '" + dir + "'");
+                throw new IOException("Failed to create directory '" + dir+"'");
             }
         }
     }

@@ -35,7 +35,6 @@ import org.apache.activemq.leveldb.util.Log
 import org.apache.activemq.store.PList.PListIterator
 import org.fusesource.hawtbuf.{UTF8Buffer, DataByteArrayOutputStream}
 import org.fusesource.hawtdispatch;
-import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 
 object LevelDBStore extends Log {
   val DEFAULT_DIRECTORY = new File("LevelDB");
@@ -603,10 +602,6 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       topicsById.put(key, rc)
     }
     rc
-  }
-
-  def createJobSchedulerStore():JobSchedulerStore = {
-    throw new UnsupportedOperationException();
   }
 
   def removeTopicMessageStore(destination: ActiveMQTopic): Unit = {

@@ -39,7 +39,6 @@ public class JobSchedulerBrokerShutdownTest extends EmbeddedBrokerTestSupport {
 
         BrokerService broker = super.createBroker();
         broker.setSchedulerSupport(true);
-        broker.setDataDirectory("target");
         broker.setSchedulerDirectoryFile(schedulerDirectory);
         broker.getSystemUsage().getStoreUsage().setLimit(1 * 512);
         broker.deleteAllMessages();
