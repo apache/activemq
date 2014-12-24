@@ -277,9 +277,14 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
-    zk_group.close
-    zk_client.close()
-    zk_client = null
+    if (zk_group != null) {
+      zk_group.close
+      zk_group = null
+    }
+    if (zk_client != null) {
+      zk_client.close()
+      zk_client = null
+    }
 
     if( master!=null ) {
       val latch = new CountDownLatch(1)
