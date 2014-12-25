@@ -22,6 +22,8 @@ import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
 import org.apache.activemq.store.MessageStore;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +40,16 @@ import static org.junit.Assert.*;
 public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(ElectingLevelDBStoreTest.class);
+    ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+    ElectingLevelDBStore master = null;
 
     @Test(timeout = 1000*60*10)
     public void testElection() throws Exception {
+        deleteDirectory("leveldb-node1");
+        deleteDirectory("leveldb-node2");
+        deleteDirectory("leveldb-node3");
 
-        ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
+
         ArrayList<CountDownFuture> pending_starts = new ArrayList<CountDownFuture>();
 
         for(String dir: new String[]{"leveldb-node1", "leveldb-node2", "leveldb-node3"}) {
@@ -65,7 +72,6 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
 
         // Make sure only of the stores is reporting to be the master.
-        ElectingLevelDBStore master = null;
         for(ElectingLevelDBStore store: stores) {
             if( store.isMaster() ) {
                 assertNull(master);
@@ -124,11 +130,6 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
 
         LOG.info("Checking master state");
         assertEquals(expected_list, getMessages(ms));
-
-        master.stop();
-        for(ElectingLevelDBStore store: stores) {
-            store.stop();
-        }
     }
 
     @Test(timeout = 1000 * 60 * 10)
@@ -168,10 +169,19 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
                 }
             }
         });
+    }
 
-        for (ElectingLevelDBStore store : stores) {
-            store.stop();
+    @After
+    public void stop() throws Exception {
+        if (master != null) {
+            master.stop();
+            FileUtils.deleteDirectory(master.directory());
         }
+        for(ElectingLevelDBStore store: stores) {
+            store.stop();
+            FileUtils.deleteDirectory(store.directory());
+        }
+        stores.clear();
     }
 
     private CountDownFuture asyncStart(final Service service) {

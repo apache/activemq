@@ -23,6 +23,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.leveldb.LevelDBStore;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.tools.ant.util.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,6 +62,7 @@ public class PListTest {
         if (brokerService != null && brokerService.isStopped()) {
             brokerService.stop();
         }
+        FileUtils.delete(new File("target/activemq-data/haleveldb"));
     }
 
     @Test
