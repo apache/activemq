@@ -498,6 +498,10 @@ public class ConsumerInfo extends BaseCommand {
         this.assignedGroupCount++;
     }
 
+    public void clearAssignedGroupCount() {
+        this.assignedGroupCount=0;
+    }
+
     public void decrementAssignedGroupCount() {
         this.assignedGroupCount--;
     }

@@ -80,7 +80,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         super.tearDown();
         master.stop();
         master.waitUntilStopped();
-        slaveStarted.await(5, TimeUnit.SECONDS);
+        slaveStarted.await(60, TimeUnit.SECONDS);
         BrokerService brokerService = slave.get();
         if( brokerService!=null ) {
             brokerService.stop();
@@ -129,7 +129,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         qConsumer.close();
         assertTrue(!master.isSlave());
         master.stop();
-        assertTrue("slave started", slaveStarted.await(15, TimeUnit.SECONDS));
+        assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
         assertTrue(!slave.get().isSlave());
 
         final String text = "ForUWhenSlaveKicksIn";
@@ -146,7 +146,7 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         MessageConsumer advConsumer = session.createConsumer(AdvisorySupport.getMasterBrokerAdvisoryTopic());
 
         master.stop();
-        assertTrue("slave started", slaveStarted.await(15, TimeUnit.SECONDS));
+        assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
         LOG.info("slave started");
         Message advisoryMessage = advConsumer.receive(5000);
         LOG.info("received " + advisoryMessage);

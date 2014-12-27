@@ -108,36 +108,36 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Test // (timeout=30000)
+    @Test(timeout=30000)
     public void testAnonymousProducerConsume() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         connection = createConnection();
         {
-//            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-//            Queue queue1 = session.createQueue(getDestinationName() + "1");
-//            Queue queue2 = session.createQueue(getDestinationName() + "2");
-//            MessageProducer p = session.createProducer(null);
-//
-//            TextMessage message = session.createTextMessage();
-//            message.setText("hello");
-//            p.send(queue1, message);
-//            p.send(queue2, message);
-//
-//            {
-//                MessageConsumer consumer = session.createConsumer(queue1);
-//                Message msg = consumer.receive(TestConfig.TIMEOUT);
-//                assertNotNull(msg);
-//                assertTrue(msg instanceof TextMessage);
-//                consumer.close();
-//            }
-//            {
-//                MessageConsumer consumer = session.createConsumer(queue2);
-//                Message msg = consumer.receive(TestConfig.TIMEOUT);
-//                assertNotNull(msg);
-//                assertTrue(msg instanceof TextMessage);
-//                consumer.close();
-//            }
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue1 = session.createQueue(getDestinationName() + "1");
+            Queue queue2 = session.createQueue(getDestinationName() + "2");
+            MessageProducer p = session.createProducer(null);
+
+            TextMessage message = session.createTextMessage();
+            message.setText("hello");
+            p.send(queue1, message);
+            p.send(queue2, message);
+
+            {
+                MessageConsumer consumer = session.createConsumer(queue1);
+                Message msg = consumer.receive(TestConfig.TIMEOUT);
+                assertNotNull(msg);
+                assertTrue(msg instanceof TextMessage);
+                consumer.close();
+            }
+            {
+                MessageConsumer consumer = session.createConsumer(queue2);
+                Message msg = consumer.receive(TestConfig.TIMEOUT);
+                assertNotNull(msg);
+                assertTrue(msg instanceof TextMessage);
+                consumer.close();
+            }
         }
     }
 

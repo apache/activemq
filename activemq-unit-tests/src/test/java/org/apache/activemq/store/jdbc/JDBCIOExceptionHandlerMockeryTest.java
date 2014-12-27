@@ -21,6 +21,7 @@ import java.util.HashMap;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Locker;
 import org.apache.activemq.broker.SuppressReplyException;
+import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.Wait;
 import org.jmock.Expectations;
@@ -85,7 +86,7 @@ public class JDBCIOExceptionHandlerMockeryTest {
 
         }});
 
-        JDBCIOExceptionHandler underTest = new JDBCIOExceptionHandler();
+        LeaseLockerIOExceptionHandler underTest = new LeaseLockerIOExceptionHandler();
         underTest.setBrokerService(brokerService);
 
         try {
