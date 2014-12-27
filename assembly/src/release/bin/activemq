@@ -76,7 +76,7 @@ getActiveMQHome(){
       echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
       exit 1
   fi
-  echo "$REAL_DIR"
+  echo "$REAL_DIR/"
 
 }
 
@@ -85,13 +85,14 @@ if [ -z "$ACTIVEMQ_HOME" ] ; then
   ACTIVEMQ_HOME="`getActiveMQHome`"
 fi
 
+# Active MQ base dir
 if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/"
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
-
     # For backwards compat with old variables we let ACTIVEMQ_CONFIG_DIR set ACTIVEMQ_CONF
     if [ -z "$ACTIVEMQ_CONFIG_DIR" ] ; then
         ACTIVEMQ_CONF="$ACTIVEMQ_BASE/conf"
@@ -138,14 +139,14 @@ fi
 # ------------------------------------------------------------------------
 # LOAD CONFIGURATION
 
-# CONFIGURATION
 # For using instances
 if ( basename $0 | grep "activemq-instance-" > /dev/null);then
-  INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
-  ACTIVEMQ_CONFIGS="/etc/default/activemq-instance-${INST} $HOME/.activemqrc-instance-${INST}"
-  echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
+   INST="`basename $0|sed 's/^activemq-instance-//;s/\.sh$//'`"
+   ACTIVEMQ_CONFIGS="$HOME/.activemqrc-instance-${INST} /etc/default/activemq-instance-${INST} $ACTIVEMQ_HOME/bin/env"
+   echo "INFO: Using alternative activemq configuration files: $ACTIVEMQ_CONFIGS"
 else
-  ACTIVEMQ_CONFIGS="/etc/default/activemq $HOME/.activemqrc $ACTIVEMQ_HOME/bin/env"
+   # CONFIGURATION
+   ACTIVEMQ_CONFIGS="$HOME/.activemqrc /etc/default/activemq $ACTIVEMQ_HOME/bin/env"
 fi
 
 # load activemq configuration
@@ -171,6 +172,13 @@ if [ "$CONFIG_LOAD" != "yes" ];then
       echo "      Configurations are loaded in the following order: $ACTIVEMQ_CONFIGS"
       echo
 fi
+
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+fi
+
+
+
 
 # ------------------------------------------------------------------------
 # OS SPECIFIC SUPPORT
@@ -304,7 +312,7 @@ invokeJar(){
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
    elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
-          PID="`cat ${ACTIVEMQ_PIDFILE}`"
+          PID="`cat "${ACTIVEMQ_PIDFILE}"`"
           $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -314,7 +322,7 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > "$ACTIVEMQ_DATA/stop.pid"; exit \$RET" $DOIT_POSTFIX
+              echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
       RET="$?"
    else
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
@@ -347,7 +355,7 @@ checkRunning(){
         return 2
        fi
        PID="`cat $ACTIVEMQ_PIDFILE`"
-       RET="`ps -p $PID|grep java`"
+       RET="`ps -p "$PID"|grep java`"
        if [ -n "$RET" ];then
          return 0;
        else
@@ -423,8 +431,9 @@ invoke_start(){
 
 # Start ActiveMQ in foreground (for debugging)
 #
-# @RET  : 0 => is now started, is already started
-#         !0 => something went wrong
+# @RET  : 0 => was started
+#         1 => was already started
+#         !0 => somthing went wrong
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE      : the name of the pid file
@@ -443,8 +452,12 @@ invoke_console(){
     COMMANDLINE_ARGS="start `echo $COMMANDLINE_ARGS|sed 's,^console,,'`"
     EXEC_OPTION="exec"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
+    echo "INFO: Creating pidfile $ACTIVEMQ_PIDFILE"
+    echo "$$" > $ACTIVEMQ_PIDFILE
     invokeJar
-    exit "$?"
+    RET="$?"
+    echo "INFO: removing pidfile $ACTIVEMQ_PIDFILE"
+    exit "$RET"
 }
 
 # Stop ActiveMQ
@@ -509,6 +522,9 @@ invoke_stop(){
 
 # Invoke a task on a running ActiveMQ instance
 #
+# $1    : "checkforrunning", do not invoke the task if activemq is not
+#         active
+#         <other>, invoke task always
 # @RET  : 0 => successful
 #         !0 => something went wrong
 #
@@ -518,22 +534,31 @@ invoke_stop(){
 # - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
 invoke_task(){
+
+    local CHECKRUNNING="$1"
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
-    # call task in java binary
-    if ( checkRunning );then
-      if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
-      elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
-      else
-         COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
-      fi
-      invokeJar
-      exit $?
-    else
-      invokeJar
-      exit 1
+
+    if [ "$CHECKRUNNING" = "checkforrunning" ];then
+       if ( ! checkRunning );then
+         echo "Activemq is not running."
+         exit 1
+       fi
     fi
+
+    # call task in java binary
+    if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
+    elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
+    else
+       COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
+    fi
+    invokeJar
+    RET="$?"
+    if [ "$RET" != "0" ];then
+       echo "ERROR: task failed"
+    fi
+    exit $RET
 }
 
 show_help() {
@@ -545,15 +570,14 @@ Tasks provided by the sysv init script:
     status          - check if activemq process is running
 
 Configuration of this script:
-The configuration of this script is read from the following files:
-	$ACTIVEMQ_CONFIGS
+    The configuration of this script is read from the following files:
+    $ACTIVEMQ_CONFIGS
     This script searches for the files in the listed order and reads the first available file.
     Modify $ACTIVEMQ_BASE/bin/env or create a copy of that file on a suitable location.
-
     To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
-    \$HOME/.activemqrc-instance-<INSTANCENAME>.
+    \$HOME/.activemqrc-instance-<INSTANCENAME>. 
 EOF
   exit 1
 }
@@ -583,10 +607,40 @@ case "$1" in
     ;;
   console)
     invoke_console
+    exit $?
     ;;
   stop)
     invoke_stop
+    exit $?
+    ;;
+  decrypt|encrypt|create)
+    invoke_task checknotforrunning
+    exit $?
+    ;;
+  query|bstat|dstat|purge)
+    # Only check for a running broker if "--jmxurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--jmxurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
+    ;;
+  browse)
+    # Only check for a running broker if "--amqurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--amqurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
     ;;
   *)
-    invoke_task
+    invoke_task checkforrunning
+    exit $?
 esac
+
