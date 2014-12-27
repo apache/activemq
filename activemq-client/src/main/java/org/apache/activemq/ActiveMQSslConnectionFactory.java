@@ -66,6 +66,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     protected String trustStorePassword;
     protected String keyStore;
     protected String keyStorePassword;
+    protected String keyStoreKeyPassword;
 
     public ActiveMQSslConnectionFactory() {
         super();
@@ -148,7 +149,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
             if (sslCert != null && sslCert.length > 0) {
                 ByteArrayInputStream bin = new ByteArrayInputStream(sslCert);
                 ks.load(bin, keyStorePassword.toCharArray());
-                kmf.init(ks, keyStorePassword.toCharArray());
+                kmf.init(ks, keyStoreKeyPassword !=null ? keyStoreKeyPassword.toCharArray() : keyStorePassword.toCharArray());
                 keystoreManagers = kmf.getKeyManagers();
             }
         }
@@ -266,6 +267,22 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      */
     public void setKeyStorePassword(String keyStorePassword) {
         this.keyStorePassword = keyStorePassword;
+    }
+
+
+    public String getKeyStoreKeyPassword() {
+        return keyStoreKeyPassword;
+    }
+
+    /**
+     * The password to match the key from the keyStore.
+     *
+     * @param keyStoreKeyPassword
+     *            The password for the private key stored in the
+     *            keyStore if different from keyStorePassword.
+     */
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        this.keyStoreKeyPassword = keyStoreKeyPassword;
     }
 
 }

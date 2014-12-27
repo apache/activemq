@@ -33,7 +33,6 @@
 COMMANDLINE_ARGS="$@"
 EXEC_OPTION=""
 
-
 # ------------------------------------------------------------------------
 # HELPERS
 
@@ -172,47 +171,6 @@ if [ "$CONFIG_LOAD" != "yes" ];then
       echo "INFO: Using default configuration";
       echo "      Configurations are loaded in the following order: $ACTIVEMQ_CONFIGS"
       echo
-fi
-
-# Location of the java installation
-# Specify the location of your java installation using JAVA_HOME, or specify the
-# path to the "java" binary using JAVACMD
-# (set JAVACMD to "auto" for automatic detection)
-#JAVA_HOME=""
-JAVACMD=""
-
-# Set jvm memory configuration
-if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
-fi
-
-# Set jvm jmx configuration
-ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
-
-# Set jvm jmx configuration for controlling the broker process
-ACTIVEMQ_SUNJMX_CONTROL=""
-
-# Specify the queue manager URL for using "browse" option of sysv initscript
-if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
-    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
-fi
-
-# Set additional JSE arguments
-ACTIVEMQ_SSL_OPTS=""
-
-# ActiveMQ tries to shutdown the broker by jmx,
-# after a specified number of seconds send SIGKILL
-if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
-    ACTIVEMQ_KILL_MAXSECONDS=90
-fi
-
-# inform user that default configuration is loaded, no suitable configfile found
-if [ "$CONFIG_LOAD" != "yes" ];then
-   if [ "$1" != "setup" ];then
-      echo "INFO: Using default configuration";
-      echo "(you can configure options in one of these file: $ACTIVEMQ_CONFIGS)"
-      echo
-   fi
 fi
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then

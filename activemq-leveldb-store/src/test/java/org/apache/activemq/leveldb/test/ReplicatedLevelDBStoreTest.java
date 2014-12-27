@@ -20,11 +20,14 @@ import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.leveldb.CountDownFuture;
 import org.apache.activemq.leveldb.LevelDBStore;
+import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
 import org.apache.activemq.leveldb.replicated.MasterLevelDBStore;
 import org.apache.activemq.leveldb.replicated.SlaveLevelDBStore;
 import org.apache.activemq.leveldb.util.FileSupport;
 import org.apache.activemq.store.MessageStore;
+import org.apache.commons.io.FileUtils;
 import org.fusesource.hawtdispatch.transport.TcpTransport;
+import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +47,8 @@ import static org.junit.Assert.*;
 public class ReplicatedLevelDBStoreTest {
     protected static final Logger LOG = LoggerFactory.getLogger(ReplicatedLevelDBStoreTest.class);
 
+    ArrayList<LevelDBStore> stores = new ArrayList<LevelDBStore>();
+
     @Test(timeout = 1000*60*10)
     public void testMinReplicaEnforced() throws Exception {
 
@@ -55,6 +60,7 @@ public class ReplicatedLevelDBStoreTest {
         final MasterLevelDBStore master = createMaster(masterDir);
         master.setReplicas(2);
         CountDownFuture masterStartLatch = asyncStart(master);
+        stores.add(master);
 
         // Start the store should not complete since we don't have enough
         // replicas.
@@ -63,6 +69,7 @@ public class ReplicatedLevelDBStoreTest {
         // Adding a slave should allow the master startup to complete.
         SlaveLevelDBStore slave = createSlave(master, slaveDir);
         slave.start();
+        stores.add(slave);
 
         assertTrue(masterStartLatch.await(2, TimeUnit.SECONDS));
 
@@ -142,6 +149,12 @@ public class ReplicatedLevelDBStoreTest {
             asyncStart(slave2);
             masterStart.await();
 
+            if (j == 0) {
+                stores.add(master);
+                stores.add(slave1);
+                stores.add(slave2);
+            }
+
             MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
 
             LOG.info("Checking: "+master.getDirectory());
@@ -205,6 +218,7 @@ public class ReplicatedLevelDBStoreTest {
         ArrayList<String> expected_list = new ArrayList<String>();
 
         MasterLevelDBStore node1 = createMaster(node1Dir);
+        stores.add(node1);
         CountDownFuture masterStart = asyncStart(node1);
 
         // Lets create a 1 slow slave...
@@ -221,8 +235,10 @@ public class ReplicatedLevelDBStoreTest {
                 return transport;
             }
         };
+        stores.add(node2);
         configureSlave(node2, node1, node2Dir);
         SlaveLevelDBStore node3 = createSlave(node1, node3Dir);
+        stores.add(node3);
 
         asyncStart(node2);
         asyncStart(node3);
@@ -251,6 +267,17 @@ public class ReplicatedLevelDBStoreTest {
         node1.stop();
         LOG.info("Stopping slave: " + node2.node_id());
         node2.stop();
+    }
+
+    @After
+    public void stop() throws Exception {
+        for(LevelDBStore store: stores) {
+            if (store.isStarted()) {
+                store.stop();
+            }
+            FileUtils.deleteDirectory(store.directory());
+        }
+        stores.clear();
     }
 
 
