@@ -49,7 +49,7 @@ public class StopBrokerMojo extends AbstractMojo {
             return;
         }
 
-        this.brokerManager.stop();
+        this.useBrokerManager().stop();
 
         getLog().info("Stopped the ActiveMQ Broker");
     }
