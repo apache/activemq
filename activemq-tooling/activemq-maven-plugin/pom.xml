@@ -67,6 +67,13 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-management_1.1_spec</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito-version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -74,7 +81,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skip>true</skip>
+          <systemPropertyVariables>
+            <testOutputDirectory>${project.build.testOutputDirectory}</testOutputDirectory>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>

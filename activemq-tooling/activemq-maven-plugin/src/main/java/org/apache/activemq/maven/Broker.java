@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.maven;
 
-import java.util.Properties;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.maven.plugin.MojoExecutionException;
 
+/**
+ * Singleton facade between Maven and one ActiveMQ broker.
+ */
 public class Broker {
 
     private static BrokerService broker;
@@ -116,5 +117,21 @@ public class Broker {
         if (broker != null) {
             broker.stop();
         }
+    }
+
+    /**
+     * Return the broker service created.
+     */
+    public static BrokerService getBroker() {
+        return broker;
+    }
+
+    /**
+     * Override the default creation of the broker service.  Primarily added for testing purposes.
+     *
+     * @param broker
+     */
+    public static void setBroker(BrokerService broker) {
+        Broker.broker = broker;
     }
 }
