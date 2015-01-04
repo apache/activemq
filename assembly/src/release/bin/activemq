@@ -82,7 +82,7 @@ getActiveMQHome(){
       echo 'ERROR: unable to find real installtion path fo activemq, you have to define ACTIVEMQ_HOME manually in the config' >&2
       exit 1
   fi
-  echo "$REAL_DIR"
+  echo "$REAL_DIR/"
 
 }
 
@@ -91,10 +91,12 @@ if [ -z "$ACTIVEMQ_HOME" ] ; then
   ACTIVEMQ_HOME="`getActiveMQHome`"
 fi
 
+# Active MQ base dir
 if [ -z "$ACTIVEMQ_BASE" ] ; then
   ACTIVEMQ_BASE="$ACTIVEMQ_HOME"
 fi
 
+ACTIVEMQ_CLASSPATH="$ACTIVEMQ_BASE/../lib/"
 # Active MQ configuration directory
 if [ -z "$ACTIVEMQ_CONF" ] ; then
 
@@ -177,6 +179,13 @@ if [ "$CONFIG_LOAD" != "yes" ];then
       echo "      Configurations are loaded in the following order: $ACTIVEMQ_CONFIGS"
       echo
 fi
+
+if [ -z "$ACTIVEMQ_OPTS" ] ; then
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+fi
+
+
+
 
 # ------------------------------------------------------------------------
 # OS SPECIFIC SUPPORT
@@ -310,7 +319,7 @@ invokeJar(){
               echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
    elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
-          PID="`cat ${ACTIVEMQ_PIDFILE}`"
+          PID="`cat "${ACTIVEMQ_PIDFILE}"`"
           $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -353,7 +362,7 @@ checkRunning(){
         return 2
        fi
        PID="`cat $ACTIVEMQ_PIDFILE`"
-       RET="`ps -p $PID|grep java`"
+       RET="`ps -p "$PID"|grep java`"
        if [ -n "$RET" ];then
          return 0;
        else
@@ -429,8 +438,9 @@ invoke_start(){
 
 # Start ActiveMQ in foreground (for debugging)
 #
-# @RET  : 0 => is now started, is already started
-#         !0 => something went wrong
+# @RET  : 0 => was started
+#         1 => was already started
+#         !0 => somthing went wrong
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE      : the name of the pid file
@@ -567,11 +577,10 @@ Tasks provided by the sysv init script:
     status          - check if activemq process is running
 
 Configuration of this script:
-The configuration of this script is read from the following files:
-	$ACTIVEMQ_CONFIGS
+    The configuration of this script is read from the following files:
+    $ACTIVEMQ_CONFIGS
     This script searches for the files in the listed order and reads the first available file.
     Modify $ACTIVEMQ_BASE/bin/env or create a copy of that file on a suitable location.
-
     To use additional configurations for running multiple instances on the same operating system
     rename or symlink script to a name matching to activemq-instance-<INSTANCENAME>.
     This changes the configuration location to /etc/default/activemq-instance-<INSTANCENAME> and
