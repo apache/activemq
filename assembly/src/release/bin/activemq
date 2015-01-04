@@ -449,8 +449,12 @@ invoke_console(){
     COMMANDLINE_ARGS="start `echo $COMMANDLINE_ARGS|sed 's,^console,,'`"
     EXEC_OPTION="exec"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
+    echo "INFO: Creating pidfile $ACTIVEMQ_PIDFILE"
+    echo "$$" > $ACTIVEMQ_PIDFILE
     invokeJar
-    exit "$?"
+    RET="$?"
+    echo "INFO: removing pidfile $ACTIVEMQ_PIDFILE"
+    exit "$RET"
 }
 
 # Stop ActiveMQ
