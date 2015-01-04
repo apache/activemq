@@ -23,10 +23,8 @@
 # invoke the init-script without a argument an review help section "Configuration of this script"
 # /etc/default/activemq <activemq user home>/.activemqrc <activemq installation dir>/bin/env
 
-# Set jvm memory configuration
-if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
-fi
+# Set jvm memory configuration (minimal/maximum amount of memory)
+ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
