@@ -21,7 +21,7 @@
 
 
 # Set jvm memory configuration
-ACTIVEMQ_OPTS_MEMORY="-Xms1G -Xmx1G"
+ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 
 ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 
