@@ -515,6 +515,9 @@ invoke_stop(){
 
 # Invoke a task on a running ActiveMQ instance
 #
+# $1    : "checkforrunning", do not invoke the task if activemq is not
+#         active
+#         <other>, invoke task always
 # @RET  : 0 => successful
 #         !0 => something went wrong
 #
@@ -524,22 +527,31 @@ invoke_stop(){
 # - $ACTIVEMQ_SUNJMX_START    : options for JMX settings
 # - $ACTIVEMQ_SSL_OPTS        : options for SSL encryption
 invoke_task(){
+
+    local CHECKRUNNING="$1"
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
-    # call task in java binary
-    if ( checkRunning );then
-      if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
-      elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
-         COMMANDLINE_ARGS="$1 $ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
-      else
-         COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
-      fi
-      invokeJar
-      exit $?
-    else
-      invokeJar
-      exit 1
+
+    if [ "$CHECKRUNNING" = "checkforrunning" ];then
+       if ( ! checkRunning );then
+         echo "Activemq is not running."
+         exit 1
+       fi
     fi
+
+    # call task in java binary
+    if [ "$1" = "browse" ] && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$ACTIVEMQ_QUEUEMANAGERURL `echo $COMMANDLINE_ARGS|sed 's,^browse,,'`"
+    elif [ "$1" = "query" ]  && [ -n "$ACTIVEMQ_QUEUEMANAGERURL" ];then
+       COMMANDLINE_ARGS="$ACTIVEMQ_SUNJMX_CONTROL `echo $COMMANDLINE_ARGS|sed 's,^query,,'`"
+    else
+       COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
+    fi
+    invokeJar
+    RET="$?"
+    if [ "$RET" != "0" ];then
+       echo "ERROR: task failed"
+    fi
+    exit $RET
 }
 
 show_help() {
@@ -593,6 +605,33 @@ case "$1" in
     ;;
   stop)
     invoke_stop
+    exit $?
+    ;;
+  decrypt|encrypt|create)
+    invoke_task checknotforrunning
+    exit $?
+    ;;
+  query|bstat|dstat|purge)
+    # Only check for a running broker if "--jmxurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--jmxurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
+    ;;
+  browse)
+    # Only check for a running broker if "--amqurl" is part of the COMMANDLINE_ARGS
+    if (echo "$COMMANDLINE_ARGS"|grep -q -- "--amqurl");then
+      invoke_task checknotforrunning
+      RET="$?"
+    else
+      invoke_task checkforrunning
+      RET="$?"
+    fi
+    exit $RET
     ;;
   *)
     invoke_task checkforrunning
