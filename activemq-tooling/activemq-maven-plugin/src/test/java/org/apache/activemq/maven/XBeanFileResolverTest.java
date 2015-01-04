@@ -31,13 +31,15 @@ public class XBeanFileResolverTest {
 
     @Test
     public void urlToXBeanFileShouldBeResolvedToAbsolutePath() throws IOException {
+        XBeanFileResolver xBeanFileResolver = new XBeanFileResolver();
+
         String currentDirectory = getCurrentDirectoryLinuxStyle();
         String relativeXBeanFilePath = "src/main/resources/activemq.xml";
 
         // e.g. xbean:file:C:/dev/src/active-mq/activemq-tooling/activemq-maven-plugin/src/main/resources/activemq.xml
         String expectedUrl = XBEAN_FILE + currentDirectory + "/" + relativeXBeanFilePath;
 
-        String actualUrl = XBeanFileResolver.toUrlCompliantAbsolutePath(XBEAN_FILE + relativeXBeanFilePath);
+        String actualUrl = xBeanFileResolver.toUrlCompliantAbsolutePath(XBEAN_FILE + relativeXBeanFilePath);
 
         assertEquals(expectedUrl, actualUrl);
     }
