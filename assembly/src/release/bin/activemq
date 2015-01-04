@@ -589,10 +589,12 @@ case "$1" in
     ;;
   console)
     invoke_console
+    exit $?
     ;;
   stop)
     invoke_stop
     ;;
   *)
-    invoke_task
+    invoke_task checkforrunning
+    exit $?
 esac
