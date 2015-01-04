@@ -320,7 +320,7 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > "$ACTIVEMQ_DATA/stop.pid"; exit \$RET" $DOIT_POSTFIX
+              echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
       RET="$?"
    else
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
@@ -513,7 +513,7 @@ invoke_stop(){
        exit 0
     fi
     rm -f "$ACTIVEMQ_PIDFILE" >/dev/null 2>&1
-    rm -f "$ACTIVEMQ_DATA/stop.pid" >/dev/null 2>&1
+    rm -f "${PIDFILE}.stop" >/dev/null 2>&1
     exit $RET
 }
 
