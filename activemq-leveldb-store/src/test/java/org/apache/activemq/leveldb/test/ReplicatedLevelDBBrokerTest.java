@@ -43,6 +43,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import static org.junit.Assert.*;
 
@@ -51,6 +54,7 @@ import static org.junit.Assert.*;
  */
 public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
 
+    protected static final Logger LOG = LoggerFactory.getLogger(ReplicatedLevelDBBrokerTest.class);
     final SynchronousQueue<BrokerService> masterQueue = new SynchronousQueue<BrokerService>();
     ArrayList<BrokerService> brokers = new ArrayList<BrokerService>();
 
@@ -70,6 +74,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
     @Test(timeout = 1000*60*10)
     public void testAMQ4837viaJMX() throws Throwable {
         for (int i = 0; i < 2; i++) {
+            LOG.info("testAMQ4837viaJMX - Iteration: " + i);
             resetDataDirs();
             testAMQ4837(true);
             stopBrokers();
@@ -442,6 +447,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
         store.setContainer(id);
         store.setReplicas(3);
         store.setZkAddress("localhost:" + connector.getLocalPort());
+        store.setZkSessionTmeout("15s");
         store.setHostname("localhost");
         store.setBind("tcp://0.0.0.0:0");
         return store;
