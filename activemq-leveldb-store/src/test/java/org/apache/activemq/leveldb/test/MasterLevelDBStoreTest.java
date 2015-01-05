@@ -95,7 +95,7 @@ public class MasterLevelDBStoreTest {
     public void stop() throws Exception {
         if (store.isStarted()) {
             store.stop();
+            FileUtils.deleteDirectory(store.directory());
         }
-        FileUtils.deleteDirectory(store.directory());
     }
 }
