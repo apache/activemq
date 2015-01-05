@@ -204,3 +204,32 @@ div.design_attribution, div.design_attribution a {
   text-align:center;
   color: #a0a0a0;
 }
+
+
+div#loginForm {
+	display: table;
+	width: 22em;
+}
+div#loginForm div {
+	display: table-row;
+	margin-bottom: 5px;
+}
+
+div#loginForm label {
+	display: table-cell;
+	width: 9em;
+	margin: 5px;
+
+	text-align: right;
+} 
+
+div#loginForm input {
+	display: table-cell;
+	width: 12em;
+	margin: 5px;
+}
+
+div#loginForm input[type=submit] {
+	width: 9em;
+	margin-left: 2em;
+}
