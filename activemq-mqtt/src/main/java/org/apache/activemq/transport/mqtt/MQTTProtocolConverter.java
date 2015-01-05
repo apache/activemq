@@ -625,6 +625,9 @@ public class MQTTProtocolConverter {
             return;
         }
 
+        // Client has sent a valid CONNECT frame, we can stop the connect checker.
+        monitor.stopConnectChecker();
+
         long keepAliveMS = keepAliveSeconds * 1000;
 
         LOG.debug("MQTT Client {} requests heart beat of {} ms", getClientId(), keepAliveMS);
@@ -642,7 +645,7 @@ public class MQTTProtocolConverter {
             monitor.setProtocolConverter(this);
             monitor.setReadKeepAliveTime(keepAliveMS);
             monitor.setReadGraceTime(readGracePeriod);
-            monitor.startMonitorThread();
+            monitor.startReadChecker();
 
             LOG.debug("MQTT Client {} established heart beat of  {} ms ({} ms + {} ms grace period)",
                       new Object[] { getClientId(), keepAliveMS, keepAliveMS, readGracePeriod });

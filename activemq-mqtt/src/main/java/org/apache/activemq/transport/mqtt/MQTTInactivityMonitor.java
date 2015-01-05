@@ -47,7 +47,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
     private static int CHECKER_COUNTER;
     private static Timer READ_CHECK_TIMER;
 
-    private final AtomicBoolean monitorStarted = new AtomicBoolean(false);
     private final AtomicBoolean failed = new AtomicBoolean(false);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
     private final AtomicInteger lastReceiveCounter = new AtomicInteger(0);
@@ -57,8 +56,33 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
     private long readGraceTime = DEFAULT_CHECK_TIME_MILLS;
     private long readKeepAliveTime = DEFAULT_CHECK_TIME_MILLS;
-    private boolean keepAliveResponseRequired;
     private MQTTProtocolConverter protocolConverter;
+
+    private long connectionTimeout = MQTTWireFormat.DEFAULT_CONNECTION_TIMEOUT;
+    private SchedulerTimerTask connectCheckerTask;
+    private final Runnable connectChecker = new Runnable() {
+
+        private final long startTime = System.currentTimeMillis();
+
+        @Override
+        public void run() {
+
+            long now = System.currentTimeMillis();
+
+            if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isTerminating()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("No CONNECT frame received in time for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
+                }
+                ASYNC_TASKS.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime + readGraceTime) + ") long: "
+                            + next.getRemoteAddress()));
+                    }
+                });
+            }
+        }
+    };
 
     private final Runnable readChecker = new Runnable() {
         long lastReceiveTime = System.currentTimeMillis();
@@ -85,15 +109,15 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 return;
             }
 
-            if ((now - lastReceiveTime) >= readKeepAliveTime + readGraceTime && monitorStarted.get() && !ASYNC_TASKS.isTerminating()) {
+            if ((now - lastReceiveTime) >= readKeepAliveTime + readGraceTime && readCheckerTask != null && !ASYNC_TASKS.isTerminating()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
                 }
                 ASYNC_TASKS.execute(new Runnable() {
                     @Override
                     public void run() {
-                        onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime + readGraceTime) + ") long: "
-                            + next.getRemoteAddress()));
+                        onException(new InactivityIOException("Channel was inactive for too (>" +
+                                    (connectionTimeout) + ") long: " + next.getRemoteAddress()));
                     }
                 });
             }
@@ -107,12 +131,12 @@ public class MQTTInactivityMonitor extends TransportFilter {
     @Override
     public void start() throws Exception {
         next.start();
-        startMonitorThread();
     }
 
     @Override
     public void stop() throws Exception {
-        stopMonitorThread();
+        stopReadChecker();
+        stopConnectChecker();
         next.stop();
     }
 
@@ -149,7 +173,8 @@ public class MQTTInactivityMonitor extends TransportFilter {
     @Override
     public void onException(IOException error) {
         if (failed.compareAndSet(false, true)) {
-            stopMonitorThread();
+            stopConnectChecker();
+            stopReadChecker();
             if (protocolConverter != null) {
                 protocolConverter.onTransportError();
             }
@@ -173,18 +198,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
         this.readKeepAliveTime = readKeepAliveTime;
     }
 
-    public boolean isKeepAliveResponseRequired() {
-        return this.keepAliveResponseRequired;
-    }
-
-    public void setKeepAliveResponseRequired(boolean value) {
-        this.keepAliveResponseRequired = value;
-    }
-
-    public boolean isMonitorStarted() {
-        return this.monitorStarted.get();
-    }
-
     public void setProtocolConverter(MQTTProtocolConverter protocolConverter) {
         this.protocolConverter = protocolConverter;
     }
@@ -193,41 +206,61 @@ public class MQTTInactivityMonitor extends TransportFilter {
         return protocolConverter;
     }
 
-    synchronized void startMonitorThread() {
+    synchronized void startConnectChecker(long connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+        if (connectionTimeout > 0 && connectCheckerTask == null) {
+            connectCheckerTask = new SchedulerTimerTask(connectChecker);
 
-        // Not yet configured if this isn't set yet.
-        if (protocolConverter == null) {
-            return;
-        }
+            long connectionCheckInterval = Math.min(connectionTimeout, 1000);
 
-        if (monitorStarted.get()) {
-            return;
-        }
-
-        if (readKeepAliveTime > 0) {
-            readCheckerTask = new SchedulerTimerTask(readChecker);
-        }
-
-        if (readKeepAliveTime > 0) {
-            monitorStarted.set(true);
             synchronized (AbstractInactivityMonitor.class) {
                 if (CHECKER_COUNTER == 0) {
                     ASYNC_TASKS = createExecutor();
                     READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck", true);
                 }
                 CHECKER_COUNTER++;
-                if (readKeepAliveTime > 0) {
-                    READ_CHECK_TIMER.schedule(readCheckerTask, readKeepAliveTime, readGraceTime);
+                READ_CHECK_TIMER.schedule(connectCheckerTask, connectionCheckInterval, connectionCheckInterval);
+            }
+        }
+    }
+
+    synchronized void startReadChecker() {
+        if (readKeepAliveTime > 0 && readCheckerTask == null) {
+            readCheckerTask = new SchedulerTimerTask(readChecker);
+
+            synchronized (AbstractInactivityMonitor.class) {
+                if (CHECKER_COUNTER == 0) {
+                    ASYNC_TASKS = createExecutor();
+                    READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck", true);
+                }
+                CHECKER_COUNTER++;
+                READ_CHECK_TIMER.schedule(readCheckerTask, readKeepAliveTime, readGraceTime);
+            }
+        }
+    }
+
+    synchronized void stopConnectChecker() {
+        if (connectCheckerTask != null) {
+            connectCheckerTask.cancel();
+            connectCheckerTask = null;
+
+            synchronized (AbstractInactivityMonitor.class) {
+                READ_CHECK_TIMER.purge();
+                CHECKER_COUNTER--;
+                if (CHECKER_COUNTER == 0) {
+                    READ_CHECK_TIMER.cancel();
+                    READ_CHECK_TIMER = null;
+                    ThreadPoolUtils.shutdown(ASYNC_TASKS);
+                    ASYNC_TASKS = null;
                 }
             }
         }
     }
 
-    synchronized void stopMonitorThread() {
-        if (monitorStarted.compareAndSet(true, false)) {
-            if (readCheckerTask != null) {
-                readCheckerTask.cancel();
-            }
+    synchronized void stopReadChecker() {
+        if (readCheckerTask != null) {
+            readCheckerTask.cancel();
+            readCheckerTask = null;
 
             synchronized (AbstractInactivityMonitor.class) {
                 READ_CHECK_TIMER.purge();
