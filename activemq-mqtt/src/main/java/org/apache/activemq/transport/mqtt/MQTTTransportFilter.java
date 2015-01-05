@@ -60,6 +60,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     private MQTTInactivityMonitor monitor;
     private MQTTWireFormat wireFormat;
     private final AtomicBoolean stopped = new AtomicBoolean();
+    private long connectAttemptTimeout = MQTTWireFormat.DEFAULT_CONNECTION_TIMEOUT;
 
     private boolean trace;
     private final Object sendLock = new Object();
@@ -149,8 +150,16 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     }
 
     @Override
+    public void start() throws Exception {
+        if (monitor != null) {
+            monitor.startConnectChecker(getConnectAttemptTimeout());
+        }
+        super.start();
+    }
+
+    @Override
     public void stop() throws Exception {
-        if( stopped.compareAndSet(false, true) ) {
+        if (stopped.compareAndSet(false, true)) {
             super.stop();
         }
     }
@@ -201,6 +210,24 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
 
     public void setDefaultKeepAlive(long defaultHeartBeat) {
         protocolConverter.setDefaultKeepAlive(defaultHeartBeat);
+    }
+
+    /**
+     * @return the timeout value used to fail a connection if no CONNECT frame read.
+     */
+    public long getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    /**
+     * Sets the timeout value used to fail a connection if no CONNECT frame is read
+     * in the given interval.
+     *
+     * @param connectTimeout
+     *        the connection frame received timeout value.
+     */
+    public void setConnectAttemptTimeout(long connectTimeout) {
+        this.connectAttemptTimeout = connectTimeout;
     }
 
     public boolean getPublishDollarTopics() {
