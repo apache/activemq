@@ -447,6 +447,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
         store.setContainer(id);
         store.setReplicas(3);
         store.setZkAddress("localhost:" + connector.getLocalPort());
+        store.setZkSessionTimeout("15s");
         store.setHostname("localhost");
         store.setBind("tcp://0.0.0.0:0");
         return store;
