@@ -54,6 +54,12 @@ public interface BrokerViewMBean extends Service {
     String getUptime();
 
     /**
+     * @return Uptime of the broker in milliseconds.
+     */
+    @MBeanInfo("Uptime of the broker in milliseconds.")
+    long getUptimeMillis();
+
+    /**
      * @return The current number of active connections on this Broker.
      */
     int getCurrentConnectionsCount();

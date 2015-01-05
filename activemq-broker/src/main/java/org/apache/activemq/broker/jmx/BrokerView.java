@@ -85,6 +85,11 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
+    public long getUptimeMillis() {
+        return brokerService.getUptimeMillis();
+    }
+
+    @Override
     public int getCurrentConnectionsCount() {
         return brokerService.getCurrentConnections();
     }
