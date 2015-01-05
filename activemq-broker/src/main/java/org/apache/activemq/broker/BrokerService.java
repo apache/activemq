@@ -489,12 +489,21 @@ public class BrokerService implements Service {
     }
 
     public String getUptime() {
-        // compute and log uptime
-        if (startDate == null) {
+        long delta = getUptimeMillis();
+
+        if (delta == 0) {
             return "not started";
         }
-        long delta = new Date().getTime() - startDate.getTime();
+
         return TimeUtils.printDuration(delta);
+    }
+
+    public long getUptimeMillis() {
+        if (startDate == null) {
+            return 0;
+        }
+
+        return new Date().getTime() - startDate.getTime();
     }
 
     public boolean isStarted() {
