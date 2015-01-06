@@ -37,6 +37,8 @@ public class RestTest extends JettyTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testConsume() throws Exception {
+        int port = getPort();
+
         producer.send(session.createTextMessage("test"));
         LOG.info("message sent");
 
@@ -44,7 +46,7 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue");
+        contentExchange.setURL("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         assertEquals("test", contentExchange.getResponseContent());
@@ -52,11 +54,13 @@ public class RestTest extends JettyTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSubscribeFirst() throws Exception {
+        int port = getPort();
+
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=5000&type=queue");
+        contentExchange.setURL("http://localhost:" + port + "/message/test?readTimeout=5000&type=queue");
         httpClient.send(contentExchange);
 
         Thread.sleep(1000);
@@ -70,6 +74,8 @@ public class RestTest extends JettyTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSelector() throws Exception {
+        int port = getPort();
+
         TextMessage msg1 = session.createTextMessage("test1");
         msg1.setIntProperty("test", 1);
         producer.send(msg1);
@@ -84,7 +90,7 @@ public class RestTest extends JettyTestSupport {
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue");
+        contentExchange.setURL("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue");
         contentExchange.setRequestHeader("selector", "test=2");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
@@ -94,6 +100,8 @@ public class RestTest extends JettyTestSupport {
     // test for https://issues.apache.org/activemq/browse/AMQ-2827
     @Test(timeout = 15 * 1000)
     public void testCorrelation() throws Exception {
+        int port = getPort();
+
         HttpClient httpClient = new HttpClient();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
         httpClient.start();
@@ -109,32 +117,33 @@ public class RestTest extends JettyTestSupport {
             producer.send(message);
 
             ContentExchange contentExchange = new ContentExchange();
-            contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue&clientId=test");
+            contentExchange.setURL("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test");
             httpClient.send(contentExchange);
             contentExchange.waitForDone();
             LOG.info("Received: [" + contentExchange.getResponseStatus() + "] " + contentExchange.getResponseContent());
             assertEquals(200, contentExchange.getResponseStatus());
             assertEquals(correlId, contentExchange.getResponseContent());
         }
-    	httpClient.stop();
+        httpClient.stop();
     }
 
     @Test(timeout = 15 * 1000)
     public void testDisconnect() throws Exception {
+        int port = getPort();
 
         producer.send(session.createTextMessage("test"));
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-        contentExchange.setURL("http://localhost:8080/message/test?readTimeout=1000&type=queue&clientId=test");
+        contentExchange.setURL("http://localhost:" + port + "/message/test?readTimeout=1000&type=queue&clientId=test");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
         LOG.info("Received: [" + contentExchange.getResponseStatus() + "] " + contentExchange.getResponseContent());
 
         contentExchange = new ContentExchange();
         contentExchange.setMethod("POST");
-        contentExchange.setURL("http://localhost:8080/message/test?clientId=test&action=unsubscribe");
+        contentExchange.setURL("http://localhost:" + port + "/message/test?clientId=test&action=unsubscribe");
         httpClient.send(contentExchange);
         contentExchange.waitForDone();
 
@@ -147,19 +156,21 @@ public class RestTest extends JettyTestSupport {
 
     @Test(timeout = 15 * 1000)
     public void testPost() throws Exception {
+        int port = getPort();
+
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
         contentExchange.setMethod("POST");
-        contentExchange.setURL("http://localhost:8080/message/testPost?type=queue");
+        contentExchange.setURL("http://localhost:" + port + "/message/testPost?type=queue");
         httpClient.send(contentExchange);
 
         contentExchange.waitForDone();
         assertTrue("success status", HttpStatus.isSuccess(contentExchange.getResponseStatus()));
 
         ContentExchange contentExchange2 = new ContentExchange();
-        contentExchange2.setURL("http://localhost:8080/message/testPost?readTimeout=1000&type=Queue");
+        contentExchange2.setURL("http://localhost:" + port + "/message/testPost?readTimeout=1000&type=Queue");
         httpClient.send(contentExchange2);
         contentExchange2.waitForDone();
         assertTrue("success status", HttpStatus.isSuccess(contentExchange2.getResponseStatus()));
@@ -168,19 +179,21 @@ public class RestTest extends JettyTestSupport {
     // test for https://issues.apache.org/activemq/browse/AMQ-3857
     @Test(timeout = 15 * 1000)
     public void testProperties() throws Exception {
+        int port = getPort();
+
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
         contentExchange.setMethod("POST");
-        contentExchange.setURL("http://localhost:8080/message/testPost?type=queue&property=value");
+        contentExchange.setURL("http://localhost:" + port + "/message/testPost?type=queue&property=value");
         httpClient.send(contentExchange);
 
         contentExchange.waitForDone();
         assertTrue("success status", HttpStatus.isSuccess(contentExchange.getResponseStatus()));
 
         ContentExchange contentExchange2 = new ContentExchange(true);
-        contentExchange2.setURL("http://localhost:8080/message/testPost?readTimeout=1000&type=Queue");
+        contentExchange2.setURL("http://localhost:" + port + "/message/testPost?readTimeout=1000&type=Queue");
         httpClient.send(contentExchange2);
         contentExchange2.waitForDone();
         assertTrue("success status", HttpStatus.isSuccess(contentExchange2.getResponseStatus()));
@@ -193,12 +206,14 @@ public class RestTest extends JettyTestSupport {
 
     @Test(timeout = 15 * 1000)
     public void testAuth() throws Exception {
+        int port = getPort();
+
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         ContentExchange contentExchange = new ContentExchange();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
         contentExchange.setMethod("POST");
-        contentExchange.setURL("http://localhost:8080/message/testPost?type=queue");
+        contentExchange.setURL("http://localhost:" + port + "/message/testPost?type=queue");
         contentExchange.setRequestHeader("Authorization", "Basic YWRtaW46YWRtaW4=");
         httpClient.send(contentExchange);
 
