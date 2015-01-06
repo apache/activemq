@@ -221,6 +221,7 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         store.setSecurityToken("foo");
         store.setLogSize(1024 * 200);
         store.setReplicas(2);
+        store.setSync("quorum_disk");
         store.setZkSessionTimeout("15s");
         store.setZkAddress("localhost:" + connector.getLocalPort());
         store.setZkPath("/broker-stores");
