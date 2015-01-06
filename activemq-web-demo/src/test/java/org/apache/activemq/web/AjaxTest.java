@@ -76,6 +76,7 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreSentToQueueWhileClientIsPolling() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreSentToQueueWhileClientIsPolling ***" );
+        int port = getPort();
 
         HttpClient httpClient = new HttpClient();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
@@ -85,7 +86,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=queue://test&type=listen&message=handler") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         httpClient.send(contentExchange);
@@ -96,7 +97,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING POLL" );
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
 
@@ -104,7 +105,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING MESSAGES" );
         contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer(
             "destination=queue://test&type=send&message=msg1&"+
             "d1=queue://test&t1=send&m1=msg2&"+
@@ -122,7 +123,7 @@ public class AjaxTest extends JettyTestSupport {
         // messages might not all be delivered during the 1st poll.  We need to check again.
         poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
@@ -140,6 +141,7 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreSentToTopicWhileClientIsPolling() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreSentToTopicWhileClientIsPolling ***" );
+        int port = getPort();
 
         HttpClient httpClient = new HttpClient();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
@@ -149,7 +151,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=topic://test&type=listen&message=handler") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         httpClient.send(contentExchange);
@@ -160,7 +162,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING POLL" );
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
 
@@ -168,7 +170,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING MESSAGES" );
         contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer(
             "destination=topic://test&type=send&message=msg1&"+
             "d1=topic://test&t1=send&m1=msg2&"+
@@ -186,7 +188,7 @@ public class AjaxTest extends JettyTestSupport {
         // not all messages might be delivered during the 1st poll.  We need to check again.
         poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
@@ -205,6 +207,8 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesWhichAreQueuedBeforeClientSubscribes() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesWhichAreQueuedBeforeClientSubscribes ***" );
+        int port = getPort();
+
         // send messages to queue://test
         producer.send( session.createTextMessage("test one") );
         producer.send( session.createTextMessage("test two") );
@@ -218,7 +222,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=queue://test&type=listen&message=handler") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         httpClient.send(contentExchange);
@@ -229,7 +233,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING POLL" );
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
 
@@ -248,6 +252,7 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testStompMessagesAreReceivedByAjaxClient() throws Exception {
         LOG.debug( "*** testStompMessagesAreRecievedByAjaxClient ***" );
+        int port = getPort();
 
         HttpClient httpClient = new HttpClient();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
@@ -257,7 +262,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=queue://test&type=listen&message=handler") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         httpClient.send(contentExchange);
@@ -268,7 +273,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING POLL" );
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
 
@@ -299,7 +304,7 @@ public class AjaxTest extends JettyTestSupport {
         // not all messages might be delivered during the 1st poll.  We need to check again.
         poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
@@ -319,6 +324,7 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testAjaxMessagesAreReceivedByStompClient() throws Exception {
         LOG.debug( "*** testAjaxMessagesAreReceivedByStompClient ***" );
+        int port = getPort();
 
         HttpClient httpClient = new HttpClient();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
@@ -326,7 +332,7 @@ public class AjaxTest extends JettyTestSupport {
 
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer(
             "destination=queue://test&type=send&message=msg1&"+
             "d1=queue://test&t1=send&m1=msg2&"+
@@ -363,6 +369,7 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testAjaxClientMayUseSelectors() throws Exception {
         LOG.debug( "*** testAjaxClientMayUseSelectors ***" );
+        int port = getPort();
 
         // send 2 messages to the same queue w/ different 'filter' values.
         Message msg = session.createTextMessage("test one");
@@ -380,7 +387,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=queue://test&type=listen&message=handler") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         // SELECTOR
@@ -393,7 +400,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING POLL" );
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
@@ -409,6 +416,7 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testMultipleAjaxClientsMayExistInTheSameSession() throws Exception {
         LOG.debug( "*** testMultipleAjaxClientsMayExistInTheSameSession ***" );
+        int port = getPort();
 
         // send messages to queues testA and testB.
         MessageProducer producerA = session.createProducer(session.createQueue("testA"));
@@ -426,7 +434,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer(
             "destination=queue://testA&"+
             "type=listen&"+
@@ -441,7 +449,7 @@ public class AjaxTest extends JettyTestSupport {
         // clientB subscribes to /queue/testB using the same JSESSIONID.
         contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestHeader( "Cookie", jsessionid );
         contentExchange.setRequestContent( new ByteArrayBuffer(
             "destination=queue://testB&"+
@@ -456,7 +464,7 @@ public class AjaxTest extends JettyTestSupport {
         // clientA polls for messages
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000&clientId=clientA");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000&clientId=clientA");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
@@ -471,7 +479,7 @@ public class AjaxTest extends JettyTestSupport {
         // clientB polls for messages
         poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000&clientId=clientB");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000&clientId=clientB");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
@@ -488,6 +496,8 @@ public class AjaxTest extends JettyTestSupport {
     @Test(timeout = 15 * 1000)
     public void testAjaxClientReceivesMessagesForMultipleTopics() throws Exception {
         LOG.debug( "*** testAjaxClientReceivesMessagesForMultipleTopics ***" );
+        int port = getPort();
+
         HttpClient httpClient = new HttpClient();
         httpClient.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
         httpClient.start();
@@ -495,7 +505,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN FOR /topic/topicA" );
         AjaxTestContentExchange contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=topic://topicA&type=listen&message=handlerA") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         httpClient.send(contentExchange);
@@ -505,7 +515,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING LISTEN FOR /topic/topicB" );
         contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer("destination=topic://topicB&type=listen&message=handlerB") );
         contentExchange.setRequestContentType( "application/x-www-form-urlencoded; charset=UTF-8" );
         contentExchange.setRequestHeader( "Cookie", jsessionid );
@@ -516,7 +526,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING POLL" );
         AjaxTestContentExchange poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
 
@@ -524,7 +534,7 @@ public class AjaxTest extends JettyTestSupport {
         LOG.debug( "SENDING MESSAGES" );
         contentExchange = new AjaxTestContentExchange();
         contentExchange.setMethod( "POST" );
-        contentExchange.setURL("http://localhost:8080/amq");
+        contentExchange.setURL("http://localhost:" + port + "/amq");
         contentExchange.setRequestContent( new ByteArrayBuffer(
             "destination=topic://topicA&type=send&message=A1&"+
             "d1=topic://topicB&t1=send&m1=B1&"+
@@ -543,7 +553,7 @@ public class AjaxTest extends JettyTestSupport {
         // not all messages might be delivered during the 1st poll.  We need to check again.
         poll = new AjaxTestContentExchange();
         poll.setMethod( "GET" );
-        poll.setURL("http://localhost:8080/amq?timeout=5000");
+        poll.setURL("http://localhost:" + port + "/amq?timeout=5000");
         poll.setRequestHeader( "Cookie", jsessionid );
         httpClient.send( poll );
         poll.waitForDone();
