@@ -21,10 +21,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+
+import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -60,6 +63,7 @@ public class WSTransportTest {
     private File profileDir;
 
     private String stompUri;
+    private int proxyPort = 0;
     protected String wsUri;
 
     private StompConnection stompConnection = new StompConnection();
@@ -101,16 +105,33 @@ public class WSTransportTest {
         context.setServer(server);
 
         server.setHandler(context);
-        server.setConnectors(new Connector[] {
-                connector
-        });
+        server.setConnectors(new Connector[] { connector });
         server.start();
         return server;
     }
 
-    protected Connector createJettyConnector() {
+    protected int getProxyPort() {
+        if (proxyPort == 0) {
+            ServerSocket ss = null;
+            try {
+                ss = ServerSocketFactory.getDefault().createServerSocket(0);
+                proxyPort = ss.getLocalPort();
+            } catch (IOException e) { // ignore
+            } finally {
+                try {
+                    if (ss != null ) {
+                        ss.close();
+                    }
+                } catch (IOException e) { // ignore
+                }
+            }
+        }
+        return proxyPort;
+    }
+
+protected Connector createJettyConnector() {
         SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(8080);
+        connector.setPort(getProxyPort());
         return connector;
     }
 
@@ -208,7 +229,8 @@ public class WSTransportTest {
     }
 
     protected String getTestURI() {
-        return "http://localhost:8080/websocket.html#" + wsUri;
+        int port = getProxyPort();
+        return "http://localhost:" + port + "/websocket.html#" + wsUri;
     }
 
     public void doTestWebSockets(WebDriver driver) throws Exception {
