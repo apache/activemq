@@ -129,7 +129,16 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
 
         LOG.info("Checking master state");
-        assertEquals(expected_list, getMessages(ms));
+        ArrayList<String> messagesInStore = getMessages(ms);
+        int index=0;
+        for (String id: expected_list) {
+            if (!id.equals(messagesInStore.get(index))) {
+                LOG.info("Mismatch for expected:" + id + ", got:" + messagesInStore.get(index));
+                break;
+            }
+            index++;
+        }
+        assertEquals(expected_list, messagesInStore);
     }
 
     @Test(timeout = 1000 * 60 * 10)
