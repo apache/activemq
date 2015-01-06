@@ -30,7 +30,7 @@ public class WSSTransportTest extends WSTransportTest {
         contextFactory.setKeyStorePassword("password");
         contextFactory.setTrustStore("src/test/resources/client.keystore");
         contextFactory.setTrustStorePassword("password");
-        sslConnector.setPort(8080);
+        sslConnector.setPort(getProxyPort());
         return sslConnector;
     }
 
@@ -41,6 +41,7 @@ public class WSSTransportTest extends WSTransportTest {
 
     @Override
     protected String getTestURI() {
-        return "https://localhost:8080/websocket.html#wss://localhost:61623";
+        int port = getProxyPort();
+        return "https://localhost:" + port + "/websocket.html#wss://localhost:61623";
     }
 }
