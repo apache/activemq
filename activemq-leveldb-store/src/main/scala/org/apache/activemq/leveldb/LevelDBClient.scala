@@ -559,7 +559,17 @@ class LevelDBClient(store: LevelDBStore) {
     might_fail {
       log.open()
     }
-    replay_from(lastIndexSnapshotPos, log.appender_limit)
+
+    var startPosition = lastIndexSnapshotPos;
+    // if we cannot locate a log for a snapshot, replay from
+    // first entry of first available log
+    if (log.log_info(startPosition).isEmpty) {
+        if (!log.log_infos.isEmpty) {
+          startPosition = log.log_infos.firstKey();
+        }
+    }
+
+    replay_from(startPosition, log.appender_limit)
     replay_write_batch = null;
   }
 
