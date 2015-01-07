@@ -129,7 +129,16 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         }
 
         LOG.info("Checking master state");
-        assertEquals(expected_list, getMessages(ms));
+        ArrayList<String> messagesInStore = getMessages(ms);
+        int index=0;
+        for (String id: expected_list) {
+            if (!id.equals(messagesInStore.get(index))) {
+                LOG.info("Mismatch for expected:" + id + ", got:" + messagesInStore.get(index));
+                break;
+            }
+            index++;
+        }
+        assertEquals(expected_list, messagesInStore);
     }
 
     @Test(timeout = 1000 * 60 * 10)
@@ -221,6 +230,8 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         store.setSecurityToken("foo");
         store.setLogSize(1024 * 200);
         store.setReplicas(2);
+        store.setSync("quorum_disk");
+        store.setZkSessionTimeout("15s");
         store.setZkAddress("localhost:" + connector.getLocalPort());
         store.setZkPath("/broker-stores");
         store.setBrokerName("foo");

@@ -342,6 +342,8 @@ public class MQTTProtocolConverter {
 
     void onSubscribe(SUBSCRIBE command) throws MQTTProtocolException {
         checkConnected();
+        LOG.trace("MQTT SUBSCRIBE message:{} client:{} connection:{}",
+                  command.messageId(), clientId, connectionInfo.getConnectionId());
         Topic[] topics = command.topics();
         if (topics != null) {
             byte[] qos = new byte[topics.length];
@@ -415,6 +417,8 @@ public class MQTTProtocolConverter {
                         consumerAcks.put(publish.messageId(), ack);
                     }
                 }
+                LOG.trace("MQTT Snd PUBLISH message:{} client:{} connection:{}",
+                          publish.messageId(), clientId, connectionInfo.getConnectionId());
                 getMQTTTransport().sendToMQTT(publish.encode());
                 if (ack != null && !sub.expectAck(publish)) {
                     getMQTTTransport().sendToActiveMQ(ack);
@@ -433,6 +437,8 @@ public class MQTTProtocolConverter {
 
     void onMQTTPublish(PUBLISH command) throws IOException, JMSException {
         checkConnected();
+        LOG.trace("MQTT Rcv PUBLISH message:{} client:{} connection:{}",
+                  command.messageId(), clientId, connectionInfo.getConnectionId());
         ActiveMQMessage message = convertMessage(command);
         message.setProducerId(producerId);
         message.onSend();
@@ -441,6 +447,8 @@ public class MQTTProtocolConverter {
 
     void onMQTTPubAck(PUBACK command) {
         short messageId = command.messageId();
+        LOG.trace("MQTT Rcv PUBACK message:{} client:{} connection:{}",
+                  messageId, clientId, connectionInfo.getConnectionId());
         packetIdGenerator.ackPacketId(getClientId(), messageId);
         MessageAck ack;
         synchronized (consumerAcks) {
@@ -489,6 +497,8 @@ public class MQTTProtocolConverter {
         msg.setProducerId(producerId);
         MessageId id = new MessageId(producerId, publisherIdGenerator.getNextSequenceId());
         msg.setMessageId(id);
+        LOG.trace("MQTT-->ActiveMQ: MQTT_MSGID:{} client:{} connection:{} ActiveMQ_MSGID:{}",
+                command.messageId(), clientId, connectionInfo.getConnectionId(), msg.getMessageId());
         msg.setTimestamp(System.currentTimeMillis());
         msg.setPriority((byte) Message.DEFAULT_PRIORITY);
         msg.setPersistent(command.qos() != QoS.AT_MOST_ONCE && !command.retain());
@@ -582,6 +592,8 @@ public class MQTTProtocolConverter {
                 result.payload(new Buffer(byteSequence.data, byteSequence.offset, byteSequence.length));
             }
         }
+        LOG.trace("ActiveMQ-->MQTT:MQTT_MSGID:{} client:{} connection:{} ActiveMQ_MSGID:{}",
+                result.messageId(), clientId, connectionInfo.getConnectionId(), message.getMessageId());
         return result;
     }
 
@@ -625,6 +637,9 @@ public class MQTTProtocolConverter {
             return;
         }
 
+        // Client has sent a valid CONNECT frame, we can stop the connect checker.
+        monitor.stopConnectChecker();
+
         long keepAliveMS = keepAliveSeconds * 1000;
 
         LOG.debug("MQTT Client {} requests heart beat of {} ms", getClientId(), keepAliveMS);
@@ -642,7 +657,7 @@ public class MQTTProtocolConverter {
             monitor.setProtocolConverter(this);
             monitor.setReadKeepAliveTime(keepAliveMS);
             monitor.setReadGraceTime(readGracePeriod);
-            monitor.startMonitorThread();
+            monitor.startReadChecker();
 
             LOG.debug("MQTT Client {} established heart beat of  {} ms ({} ms + {} ms grace period)",
                       new Object[] { getClientId(), keepAliveMS, keepAliveMS, readGracePeriod });
@@ -688,6 +703,8 @@ public class MQTTProtocolConverter {
                             } else {
                                 PUBACK ack = new PUBACK();
                                 ack.messageId(command.messageId());
+                                LOG.trace("MQTT Snd PUBACK message:{} client:{} connection:{}",
+                                          command.messageId(), clientId, connectionInfo.getConnectionId());
                                 converter.getMQTTTransport().sendToMQTT(ack.encode());
                             }
                         }
@@ -704,6 +721,8 @@ public class MQTTProtocolConverter {
                                 synchronized (publisherRecs) {
                                     publisherRecs.put(command.messageId(), ack);
                                 }
+                                LOG.trace("MQTT Snd PUBACK message:{} client:{} connection:{}",
+                                          command.messageId(), clientId, connectionInfo.getConnectionId());
                                 converter.getMQTTTransport().sendToMQTT(ack.encode());
                             }
                         }

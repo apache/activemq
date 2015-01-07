@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.12-SNAPSHOT</version>
+  <version>5.11-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -100,7 +100,7 @@
     <p2psockets-version>1.1.2</p2psockets-version>
     <paho-version>0.4.0</paho-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
-    <zookeeper-version>3.4.5</zookeeper-version>
+    <zookeeper-version>3.4.6</zookeeper-version>
     <qpid-proton-version>0.8</qpid-proton-version>
     <qpid-jms-version>0.30</qpid-jms-version>
     <regexp-version>1.3</regexp-version>

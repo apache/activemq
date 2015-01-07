@@ -212,6 +212,7 @@ public class MQTTTestSupport {
         StringBuilder connectorURI = new StringBuilder();
         connectorURI.append(getProtocolScheme());
         connectorURI.append("://0.0.0.0:").append(port);
+        String protocolConfig = getProtocolConfig();
         if (protocolConfig != null && !protocolConfig.isEmpty()) {
             connectorURI.append("?").append(protocolConfig);
         }
@@ -289,6 +290,14 @@ public class MQTTTestSupport {
 
     public void setProtocolScheme(String scheme) {
         this.protocolScheme = scheme;
+    }
+
+    public String getProtocolConfig() {
+        return protocolConfig;
+    }
+
+    public void setProtocolConfig(String config) {
+        this.protocolConfig = config;
     }
 
     public boolean isUseSSL() {
