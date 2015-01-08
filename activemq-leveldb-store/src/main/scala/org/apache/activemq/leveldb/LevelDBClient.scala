@@ -1014,10 +1014,12 @@ class LevelDBClient(store: LevelDBStore) {
           debug("Gracefuly closed the index")
           copyDirtyIndexToSnapshot
         }
-        if (log!=null && log.isOpen) {
-          log.close
-          stored_wal_append_position = log.appender_limit
-          log = null
+        this synchronized {
+          if (log!=null && log.isOpen) {
+            log.close
+            stored_wal_append_position = log.appender_limit
+            log = null
+          }
         }
         if( plist!=null ) {
           plist.close
