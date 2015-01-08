@@ -87,16 +87,16 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         // Start sending messages to the master.
         ArrayList<String> expected_list = new ArrayList<String>();
         MessageStore ms = master.createQueueMessageStore(new ActiveMQQueue("TEST"));
-        final int TOTAL = 2;
+        final int TOTAL = 500;
         for (int i = 0; i < TOTAL; i++) {
-            //if (i % ((int) (TOTAL * 0.10)) == 0) {
+            if (i % ((int) (TOTAL * 0.10)) == 0) {
                 LOG.info("" + (100 * i / TOTAL) + "% done");
-            //}
+            }
 
-            if( i == 1 ) {
+            if( i == 250 ) {
 
-                //LOG.info("Checking master state");
-                //assertEquals(expected_list, getMessages(ms));
+                LOG.info("Checking master state");
+                assertEquals(expected_list, getMessages(ms));
 
                 // mid way, lets kill the master..
                 LOG.info("Killing Master.");
@@ -141,7 +141,7 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
         assertEquals(expected_list, messagesInStore);
     }
 
-    //@Test(timeout = 1000 * 60 * 10)
+    @Test(timeout = 1000 * 60 * 10)
     public void testZooKeeperServerFailure() throws Exception {
 
         final ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
