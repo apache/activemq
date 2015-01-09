@@ -16,6 +16,7 @@
  */
 package org.apache.activemq;
 
+import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -397,6 +398,52 @@ public class JmsRedeliveredTest extends TestCase {
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
 
         session.commit();
+        session.close();
+    }
+
+    public void testNoReceiveConsumerDoesNotIncrementRedelivery() throws Exception {
+        connection.setClientID(getName());
+        connection.start();
+
+        Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        Queue queue = session.createQueue("queue-" + getName());
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        MessageProducer producer = createProducer(session, queue);
+        producer.send(createTextMessage(session));
+        session.commit();
+
+        TimeUnit.SECONDS.sleep(1);
+        consumer.close();
+
+        consumer = session.createConsumer(queue);
+        Message msg = consumer.receive(1000);
+        assertNotNull(msg);
+
+        assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
+        session.close();
+    }
+
+    public void testNoReceiveDurableConsumerDoesNotIncrementRedelivery() throws Exception {
+        connection.setClientID(getName());
+        connection.start();
+
+        Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        Topic topic = session.createTopic("topic-" + getName());
+        MessageConsumer consumer = session.createDurableSubscriber(topic, "sub");
+
+        MessageProducer producer = createProducer(session, topic);
+        producer.send(createTextMessage(session));
+        session.commit();
+
+        TimeUnit.SECONDS.sleep(1);
+        consumer.close();
+
+        consumer = session.createDurableSubscriber(topic, "sub");
+        Message msg = consumer.receive(1000);
+        assertNotNull(msg);
+
+        assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
         session.close();
     }
 

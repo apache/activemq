@@ -147,7 +147,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     AtomicInteger inProgressClearRequiredFlag = new AtomicInteger(0);
 
     private MessageAck pendingAck;
-    private long lastDeliveredSequenceId;
+    private long lastDeliveredSequenceId = -1;
 
     private IOException failureError;
 

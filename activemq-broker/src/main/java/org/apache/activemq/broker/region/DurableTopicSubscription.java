@@ -184,7 +184,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
     }
 
-    public void deactivate(boolean keepDurableSubsActive) throws Exception {
+    public void deactivate(boolean keepDurableSubsActive, long lastDeliveredSequenceId) throws Exception {
         LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
         active.set(false);
         offlineTimestamp.set(System.currentTimeMillis());
@@ -214,11 +214,13 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
                 for (final MessageReference node : dispatched) {
                     // Mark the dispatched messages as redelivered for next time.
-                    Integer count = redeliveredMessages.get(node.getMessageId());
-                    if (count != null) {
-                        redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
-                    } else {
-                        redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
+                    if (lastDeliveredSequenceId == 0 || (lastDeliveredSequenceId > 0 && node.getMessageId().getBrokerSequenceId() <= lastDeliveredSequenceId)) {
+                        Integer count = redeliveredMessages.get(node.getMessageId());
+                        if (count != null) {
+                            redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
+                        } else {
+                            redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
+                        }
                     }
                     if (keepDurableSubsActive && pending.isTransient()) {
                         pending.addMessageFirst(node);
