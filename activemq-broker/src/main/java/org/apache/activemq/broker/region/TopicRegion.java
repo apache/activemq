@@ -155,7 +155,7 @@ public class TopicRegion extends AbstractRegion {
                     if ((sub.context != context) || (sub.info != info)) {
                         sub.info = info;
                         sub.context = context;
-                        sub.deactivate(keepDurableSubsActive);
+                        sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
                     }
                     subscriptions.put(info.getConsumerId(), sub);
                 }
@@ -185,7 +185,7 @@ public class TopicRegion extends AbstractRegion {
                 // as what is in the sub. otherwise, during linksteal
                 // sub will get new context, but will be removed here
                 if (sub.getContext() == context)
-                    sub.deactivate(keepDurableSubsActive);
+                    sub.deactivate(keepDurableSubsActive, info.getLastDeliveredSequenceId());
             }
         } else {
             super.removeConsumer(context, info);
