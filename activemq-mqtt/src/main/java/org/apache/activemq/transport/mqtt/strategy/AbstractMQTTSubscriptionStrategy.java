@@ -129,7 +129,11 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
 
         // use actual client id used to create connection to lookup connection
         // context
-        final String connectionInfoClientId = protocol.getClientId();
+        String connectionInfoClientId = protocol.getClientId();
+        // for zero-byte client ids we used connection id
+        if (connectionInfoClientId == null || connectionInfoClientId.isEmpty()) {
+            connectionInfoClientId = protocol.getConnectionId().toString();
+        }
         final ConnectionContext connectionContext = regionBroker.getConnectionContext(connectionInfoClientId);
 
         // get all matching Topics
