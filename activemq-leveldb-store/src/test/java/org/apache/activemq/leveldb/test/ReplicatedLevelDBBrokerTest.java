@@ -62,6 +62,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
      * Tries to replicate the problem reported at:
      * https://issues.apache.org/jira/browse/AMQ-4837
      */
+    @Ignore("https://issues.apache.org/jira/browse/AMQ-5512")
     @Test(timeout = 1000*60*10)
     public void testAMQ4837viaJMS() throws Throwable {
         testAMQ4837(false);
@@ -71,6 +72,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
      * Tries to replicate the problem reported at:
      * https://issues.apache.org/jira/browse/AMQ-4837
      */
+   @Ignore("https://issues.apache.org/jira/browse/AMQ-5512")
     @Test(timeout = 1000*60*10)
     public void testAMQ4837viaJMX() throws Throwable {
         for (int i = 0; i < 2; i++) {
