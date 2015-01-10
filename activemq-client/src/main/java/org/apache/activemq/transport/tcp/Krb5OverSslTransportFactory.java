@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Krb5OverSslTransportFactory extends SslTransportFactory {
     public static final String KRB5_CONFIG_NAME = "krb5ConfigName";
+    public static final String KRB5_USE_CURRENT_SUBJECT = "krb5UseCurrentSubject";
     private static final Logger LOG = LoggerFactory.getLogger(Krb5OverSslTransportFactory.class);
 
     protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
@@ -61,38 +61,17 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
         final URI localLocation = getLocalLocation(location, path);
         final SocketFactory socketFactory = createSocketFactory();
 
+        Subject subject = getSecuritySubject(location);
 
-        if (AccessController.getContext() == null || Subject.getSubject(AccessController.getContext()) == null) {
-            String krb5ConfigName = null;
-            try {
-                Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-                krb5ConfigName = options.get(KRB5_CONFIG_NAME);
-                if (krb5ConfigName == null) {
-                    throw new IllegalStateException("No security context established and no '" + KRB5_CONFIG_NAME + "' URL parameter is set!");
+        return Subject.doAs(subject, new PrivilegedAction<Transport>() {
+            public Transport run() {
+                try {
+                    return new Krb5OverSslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-
-                LoginContext loginCtx = new LoginContext(krb5ConfigName);
-                loginCtx.login();
-
-                Subject subject = loginCtx.getSubject();
-
-                return Subject.doAs(subject, new PrivilegedAction<Transport>() {
-                    public Transport run() {
-                        try {
-                            return new Krb5OverSslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-            } catch (LoginException e) {
-                throw new RuntimeException("Cannot authenticate using Login configuration: " + krb5ConfigName, e);
-            } catch (URISyntaxException e1) {
-                throw new RuntimeException(e1);
             }
-        }
-
-        return new Krb5OverSslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation);
+        });
     }
 
     private URI getLocalLocation(final URI location, String path) {
@@ -107,5 +86,26 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
             }
         }
         return null;
+    }
+
+    public static Subject getSecuritySubject(URI location) {
+        String krb5ConfigName = null;
+
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            krb5ConfigName = options.get(KRB5_CONFIG_NAME);
+            if (krb5ConfigName == null) {
+                throw new IllegalStateException("No security context established and no '" + KRB5_CONFIG_NAME + "' URL parameter is set!");
+            }
+
+            LoginContext loginCtx = new LoginContext(krb5ConfigName);
+            loginCtx.login();
+
+            return loginCtx.getSubject();
+        } catch (LoginException e) {
+            throw new RuntimeException("Cannot authenticate using Login configuration: " + krb5ConfigName, e);
+        } catch (URISyntaxException e1) {
+            throw new RuntimeException(e1);
+        }
     }
 }

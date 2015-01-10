@@ -21,19 +21,13 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
 
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
@@ -64,38 +58,18 @@ public class Krb5OverSslTransportServer extends SslTransportServer {
 
     @Override
     public void run() {
-        if (AccessController.getContext() == null || Subject.getSubject(AccessController.getContext()) == null) {
-            String krb5ConfigName = null;
-            try {
-                Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-                krb5ConfigName = options.get(Krb5OverSslTransportFactory.KRB5_CONFIG_NAME);
-                if (krb5ConfigName == null) {
-                    throw new IllegalStateException("No security context established and no '" + Krb5OverSslTransportFactory.KRB5_CONFIG_NAME + "' URL parameter is set!");
+        Subject subject = Krb5OverSslTransportFactory.getSecuritySubject(location);
+
+        Subject.doAs(subject, new PrivilegedAction<Void>() {
+            public Void run() {
+                try {
+                    Krb5OverSslTransportServer.super.run();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-        
-                LoginContext loginCtx = new LoginContext(krb5ConfigName);
-                loginCtx.login();
-    
-                Subject subject = loginCtx.getSubject();
-    
-                Subject.doAs(subject, new PrivilegedAction<Void>() {
-                    public Void run() {
-                        try {
-                            Krb5OverSslTransportServer.super.run();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                        return null;
-                    }
-                });
-            } catch (LoginException e) {
-                throw new RuntimeException("Cannot authenticate using Login configuration: " + krb5ConfigName, e);
-            } catch (URISyntaxException e1) {
-                throw new RuntimeException(e1);
+                return null;
             }
-        } else {
-            super.run();
-        }
+        });
     }
 
     /**
