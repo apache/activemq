@@ -44,7 +44,7 @@ import org.apache.directory.server.ldap.LdapServer;
 import org.apache.directory.shared.kerberos.KerberosTime;
 import org.apache.directory.shared.kerberos.codec.types.EncryptionType;
 import org.apache.directory.shared.kerberos.components.EncryptionKey;
-import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +52,8 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     private static final String KERBEROS_PRINCIPAL_USER1 = "user1@EXAMPLE.COM";
     private static final String KERBEROS_PRINCIPAL_USER2 = "user2@EXAMPLE.COM";
     private static final String KERBEROS_PRINCIPAL_PASSWORD = "Piotr Klimczak";
+
+    private static final Logger LOG = LoggerFactory.getLogger(Krb5BrokerTestSupport.class);
 
     /** The used DirectoryService instance */
     public static DirectoryService service;
@@ -61,6 +63,17 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
 
     /** The used KdcServer instance */
     public static KdcServer kdcServer;
+
+    private DirContext ctx;
+
+    /** the context root for the schema */
+    protected LdapContext schemaRoot;
+
+    /** the context root for the system partition */
+    protected LdapContext sysRoot;
+
+    /** the context root for the rootDSE */
+    protected CoreSession rootDse;
 
     private static boolean initialized = false;
     private static String hostname;
@@ -78,7 +91,9 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
         try {
             hostname = InetAddress.getLocalHost().getHostName();
             configureSystemProperties();
-            new FrameworkRunner(this.getClass());
+            createServer();
+            DirContext server = setupServer();
+            setPrincipals(server);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,7 +118,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     protected void setPrincipals(DirContext users) throws UnknownHostException, NamingException, IOException {
         Attributes attrs;
         String hostPrincipal = "host/" + hostname + "@EXAMPLE.COM";
-        
+
         attrs = getPrincipalAttributes("Service", "KDC Service", "krbtgt", KERBEROS_PRINCIPAL_PASSWORD, "krbtgt/EXAMPLE.COM@EXAMPLE.COM");
         users.createSubcontext("uid=krbtgt", attrs);
 
@@ -166,175 +181,146 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
         return attrs;
     }
 
-    /*
-     *
-     * Copied and changed class from directory-server project
-     * Class to set up directory environment basing on annotations
-     *
+    private DirContext setupServer() throws Exception, NamingException, UnknownHostException, IOException {
+        Attributes attrs;
+
+        setContexts("uid=admin,ou=system", "secret");
+
+        // check if krb5kdc is disabled
+        Attributes krb5kdcAttrs = schemaRoot.getAttributes("cn=Krb5kdc");
+        boolean isKrb5KdcDisabled = false;
+
+        if (krb5kdcAttrs.get("m-disabled") != null) {
+            isKrb5KdcDisabled = ((String) krb5kdcAttrs.get("m-disabled").get()).equalsIgnoreCase("TRUE");
+        }
+
+        // if krb5kdc is disabled then enable it
+        if (isKrb5KdcDisabled) {
+            Attribute disabled = new BasicAttribute("m-disabled");
+            ModificationItem[] mods = new ModificationItem[] { new ModificationItem(DirContext.REMOVE_ATTRIBUTE, disabled) };
+            schemaRoot.modifyAttributes("cn=Krb5kdc", mods);
+        }
+
+        // Get a context, create the ou=users subcontext, then create the 3
+        // principals.
+        Hashtable<String, Object> env = new Hashtable<String, Object>();
+        env.put(DirectoryService.JNDI_KEY, getService());
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.directory.server.core.jndi.CoreContextFactory");
+        env.put(Context.PROVIDER_URL, "dc=example,dc=com");
+        env.put(Context.SECURITY_PRINCIPAL, "uid=admin,ou=system");
+        env.put(Context.SECURITY_CREDENTIALS, "secret");
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+
+        ctx = new InitialDirContext(env);
+
+        attrs = getOrgUnitAttributes("users");
+        DirContext users = ctx.createSubcontext("ou=users", attrs);
+        return users;
+    }
+
+    private Description getDescription() {
+        return Description.createSuiteDescription(this.getClass().getName(), this.getClass().getAnnotations());
+    }
+
+    private void createServer() {
+        try {
+            CreateLdapServer classLdapServerBuilder = getDescription().getAnnotation(CreateLdapServer.class);
+            service = DSAnnotationProcessor.getDirectoryService(getDescription());
+
+            DirectoryService directoryService = null;
+
+            if (service != null) {
+                // We have a class DS defined, update it
+                directoryService = service;
+
+                DSAnnotationProcessor.applyLdifs(getDescription(), service);
+            } else {
+                // No : define a default class DS then
+                DirectoryServiceFactory dsf = DefaultDirectoryServiceFactory.class.newInstance();
+
+                directoryService = dsf.getDirectoryService();
+                // enable CL explicitly cause we are not using
+                // DSAnnotationProcessor
+                directoryService.getChangeLog().setEnabled(true);
+
+                dsf.init("default" + UUID.randomUUID().toString());
+
+                // Stores the defaultDS in the classDS
+                service = directoryService;
+
+                // Load the schemas
+                DSAnnotationProcessor.loadSchemas(getDescription(), directoryService);
+
+                // Apply the class LDIFs
+                DSAnnotationProcessor.applyLdifs(getDescription(), directoryService);
+            }
+
+            // check if it has a LdapServerBuilder
+            // then use the DS created above
+            if (classLdapServerBuilder != null) {
+                ldapServer = ServerAnnotationProcessor.createLdapServer(getDescription(), directoryService);
+            }
+
+            if (kdcServer == null) {
+                int minPort = getMinPort();
+
+                kdcServer = ServerAnnotationProcessor.getKdcServer(getDescription(), directoryService, minPort + 1);
+            }
+
+            // print out information which partition factory we use
+            DirectoryServiceFactory dsFactory = DefaultDirectoryServiceFactory.class.newInstance();
+            PartitionFactory partitionFactory = dsFactory.getPartitionFactory();
+            LOG.debug("Using partition factory {}", partitionFactory.getClass().getSimpleName());
+        } catch (Exception e) {
+            LOG.error(I18n.err(I18n.ERR_181, this.getClass().getName()));
+            LOG.error(e.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * Convenience method for creating an organizational unit.
+     * 
+     * @param ou
+     *            the ou of the organizationalUnit
+     * @return the attributes of the organizationalUnit
      */
-    public class FrameworkRunner extends BlockJUnit4ClassRunner {
-        /** A logger for this class */
-        private final Logger LOG = LoggerFactory.getLogger(FrameworkRunner.class);
+    protected Attributes getOrgUnitAttributes(String ou) {
+        Attributes attrs = new BasicAttributes(true);
+        Attribute ocls = new BasicAttribute("objectClass");
+        ocls.add("top");
+        ocls.add("organizationalUnit");
+        attrs.put(ocls);
+        attrs.put("ou", ou);
 
-        private DirContext ctx;
+        return attrs;
+    }
 
-        /** the context root for the schema */
-        protected LdapContext schemaRoot;
+    protected void setContexts(String user, String passwd) throws Exception {
+        Hashtable<String, Object> env = new Hashtable<String, Object>();
+        env.put(DirectoryService.JNDI_KEY, getService());
+        env.put(Context.SECURITY_PRINCIPAL, user);
+        env.put(Context.SECURITY_CREDENTIALS, passwd);
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.INITIAL_CONTEXT_FACTORY, CoreContextFactory.class.getName());
 
-        /** the context root for the system partition */
-        protected LdapContext sysRoot;
+        Hashtable<String, Object> envFinal = new Hashtable<String, Object>(env);
+        envFinal.put(Context.PROVIDER_URL, ServerDNConstants.SYSTEM_DN);
+        sysRoot = new InitialLdapContext(envFinal, null);
 
-        /** the context root for the rootDSE */
-        protected CoreSession rootDse;
+        envFinal.put(Context.PROVIDER_URL, "");
+        rootDse = getService().getAdminSession();
 
-        /**
-         * Creates a new instance of FrameworkRunner.
-         * @throws Exception 
-         */
-        public FrameworkRunner(Class<?> clazz) throws Exception {
-            super(clazz);
-            createServer();
-            DirContext server = setupServer();
-            setPrincipals(server);
-        }
+        envFinal.put(Context.PROVIDER_URL, SchemaConstants.OU_SCHEMA);
+        schemaRoot = new InitialLdapContext(envFinal, null);
+    }
 
-        private DirContext setupServer() throws Exception, NamingException, UnknownHostException, IOException {
-            Attributes attrs;
+    /**
+     * Get the lower port out of all the transports
+     */
+    private int getMinPort() {
+        int minPort = 0;
 
-            setContexts("uid=admin,ou=system", "secret");
-
-            // check if krb5kdc is disabled
-            Attributes krb5kdcAttrs = schemaRoot.getAttributes("cn=Krb5kdc");
-            boolean isKrb5KdcDisabled = false;
-
-            if (krb5kdcAttrs.get("m-disabled") != null) {
-                isKrb5KdcDisabled = ((String) krb5kdcAttrs.get("m-disabled").get()).equalsIgnoreCase("TRUE");
-            }
-
-            // if krb5kdc is disabled then enable it
-            if (isKrb5KdcDisabled) {
-                Attribute disabled = new BasicAttribute("m-disabled");
-                ModificationItem[] mods = new ModificationItem[] { new ModificationItem(DirContext.REMOVE_ATTRIBUTE, disabled) };
-                schemaRoot.modifyAttributes("cn=Krb5kdc", mods);
-            }
-
-            // Get a context, create the ou=users subcontext, then create the 3
-            // principals.
-            Hashtable<String, Object> env = new Hashtable<String, Object>();
-            env.put(DirectoryService.JNDI_KEY, getService());
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.directory.server.core.jndi.CoreContextFactory");
-            env.put(Context.PROVIDER_URL, "dc=example,dc=com");
-            env.put(Context.SECURITY_PRINCIPAL, "uid=admin,ou=system");
-            env.put(Context.SECURITY_CREDENTIALS, "secret");
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-
-            ctx = new InitialDirContext(env);
-            
-            attrs = getOrgUnitAttributes("users");
-            DirContext users = ctx.createSubcontext("ou=users", attrs);
-            return users;
-        }
-
-        private void createServer() {
-            try {
-                CreateLdapServer classLdapServerBuilder = getDescription().getAnnotation(CreateLdapServer.class);
-                service = DSAnnotationProcessor.getDirectoryService(getDescription());
-
-                DirectoryService directoryService = null;
-    
-                if (service != null) {
-                    // We have a class DS defined, update it
-                    directoryService = service;
-    
-                    DSAnnotationProcessor.applyLdifs(getDescription(), service);
-                } else {
-                    // No : define a default class DS then
-                    DirectoryServiceFactory dsf = DefaultDirectoryServiceFactory.class.newInstance();
-    
-                    directoryService = dsf.getDirectoryService();
-                    // enable CL explicitly cause we are not using
-                    // DSAnnotationProcessor
-                    directoryService.getChangeLog().setEnabled(true);
-    
-                    dsf.init("default" + UUID.randomUUID().toString());
-    
-                    // Stores the defaultDS in the classDS
-                    service = directoryService;
-    
-                    // Load the schemas
-                    DSAnnotationProcessor.loadSchemas(getDescription(), directoryService);
-    
-                    // Apply the class LDIFs
-                    DSAnnotationProcessor.applyLdifs(getDescription(), directoryService);
-                }
-    
-                // check if it has a LdapServerBuilder
-                // then use the DS created above
-                if (classLdapServerBuilder != null) {
-                    ldapServer = ServerAnnotationProcessor.createLdapServer(getDescription(), directoryService);
-                }
-    
-                if (kdcServer == null) {
-                    int minPort = getMinPort();
-    
-                    kdcServer = ServerAnnotationProcessor.getKdcServer(getDescription(), directoryService, minPort + 1);
-                }
-    
-                // print out information which partition factory we use
-                DirectoryServiceFactory dsFactory = DefaultDirectoryServiceFactory.class.newInstance();
-                PartitionFactory partitionFactory = dsFactory.getPartitionFactory();
-                LOG.debug("Using partition factory {}", partitionFactory.getClass().getSimpleName());
-            } catch (Exception e) {
-                LOG.error(I18n.err(I18n.ERR_181, getTestClass().getName()));
-                LOG.error(e.getLocalizedMessage());
-            }
-        }
-
-        /**
-         * Convenience method for creating an organizational unit.
-         * 
-         * @param ou
-         *            the ou of the organizationalUnit
-         * @return the attributes of the organizationalUnit
-         */
-        protected Attributes getOrgUnitAttributes(String ou) {
-            Attributes attrs = new BasicAttributes(true);
-            Attribute ocls = new BasicAttribute("objectClass");
-            ocls.add("top");
-            ocls.add("organizationalUnit");
-            attrs.put(ocls);
-            attrs.put("ou", ou);
-
-            return attrs;
-        }
-
-        protected void setContexts(String user, String passwd) throws Exception {
-            Hashtable<String, Object> env = new Hashtable<String, Object>();
-            env.put(DirectoryService.JNDI_KEY, getService());
-            env.put(Context.SECURITY_PRINCIPAL, user);
-            env.put(Context.SECURITY_CREDENTIALS, passwd);
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            env.put(Context.INITIAL_CONTEXT_FACTORY, CoreContextFactory.class.getName());
-
-            Hashtable<String, Object> envFinal = new Hashtable<String, Object>(env);
-            envFinal.put(Context.PROVIDER_URL, ServerDNConstants.SYSTEM_DN);
-            sysRoot = new InitialLdapContext(envFinal, null);
-
-            envFinal.put(Context.PROVIDER_URL, "");
-            rootDse = getService().getAdminSession();
-
-            envFinal.put(Context.PROVIDER_URL, SchemaConstants.OU_SCHEMA);
-            schemaRoot = new InitialLdapContext(envFinal, null);
-        }
-
-        /**
-         * Get the lower port out of all the transports
-         */
-        private int getMinPort() {
-            int minPort = 0;
-
-            return minPort;
-        }
+        return minPort;
     }
 
     public static DirectoryService getService() {
@@ -360,7 +346,6 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     public static void setKdcServer(KdcServer kdcServer) {
         Krb5BrokerTestSupport.kdcServer = kdcServer;
     }
-    
 
     protected String getLoginModuleFileContent(String hostname) {
         return 

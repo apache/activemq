@@ -102,7 +102,7 @@ public class Krb5TransportBrokerTest extends Krb5BrokerTestSupport {
 
     @Override
     protected URI getBindURI() throws URISyntaxException {
-        return new URI("krb5://localhost:0?soWriteTimeout=20000&krb5ConfigName=Broker");
+        return new URI("krb5://localhost:0?soWriteTimeout=20000&krb5ConfigName=User1");
     }
 
     public static junit.framework.Test suite() {
