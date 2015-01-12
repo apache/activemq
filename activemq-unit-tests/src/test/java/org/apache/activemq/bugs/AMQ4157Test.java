@@ -36,15 +36,17 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionControl;
 import org.junit.After;
 import org.junit.Test;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class AMQ4157Test {
+    static final Logger LOG = LoggerFactory.getLogger(AMQ4157Test.class);
     private BrokerService broker;
     private ActiveMQConnectionFactory connectionFactory;
     private final Destination destination = new ActiveMQQueue("Test");
@@ -97,7 +99,7 @@ public class AMQ4157Test {
 
         restartBroker(500);
 
-        Log.info("Attempting consume of {} messages", toSend);
+        LOG.info("Attempting consume of {} messages", toSend);
 
         consumeMessages(toSend);
     }

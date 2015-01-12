@@ -2125,7 +2125,7 @@ public class BrokerService implements Service {
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
             return connector;
         } catch (Throwable e) {
-            throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
+            throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e, e);
         }
     }
 

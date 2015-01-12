@@ -199,7 +199,6 @@
         <include>org.jasypt:jasypt</include>
         <include>org.jasypt:jasypt-spring3</include>
         <include>javax.jmdns:jmdns</include>
-        <include>org.apache.qpid:proton</include>
         <include>org.apache.qpid:proton-jms</include>
         <include>org.apache.qpid:proton-j</include>
         <include>${pom.groupId}:activemq-runtime-config</include>
@@ -247,8 +246,7 @@
       <includes>
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
-        <include>org.eclipse.jetty.aggregate:jetty-all-server</include>
-        <include>org.eclipse.jetty:jetty-websocket</include>
+        <include>org.eclipse.jetty.aggregate:jetty-all</include>
         <include>org.apache.geronimo.specs:geronimo-servlet_2.5_spec</include>
 
         <!-- JSP support -->

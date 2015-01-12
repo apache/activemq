@@ -222,14 +222,6 @@
         <artifactId>activemq-spring</artifactId>
     </dependency>
 
-    <!-- XMPP support -->
-    <!--
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-xmpp</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
@@ -249,7 +241,7 @@
     <!-- web container -->
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <artifactId>jetty-all</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
