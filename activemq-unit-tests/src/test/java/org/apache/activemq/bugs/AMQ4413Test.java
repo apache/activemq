@@ -38,7 +38,6 @@ import javax.jms.TopicSubscriber;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.Test;
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,7 +173,7 @@ public class AMQ4413Test {
                         LOG.info("sub received msg: " + seq);
 
                         if (seqExpected != seq) {
-                            Log.info("expected: " + seqExpected + ", actual: " + seq);
+                            LOG.info("expected: " + seqExpected + ", actual: " + seq);
                             return Boolean.FALSE;
                         }
 
