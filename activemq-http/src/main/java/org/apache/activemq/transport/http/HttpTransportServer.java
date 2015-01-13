@@ -79,7 +79,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
     protected void doStart() throws Exception {
         server = new Server();
         if (connector == null) {
-            connector = socketConnectorFactory.createConnector();
+            connector = socketConnectorFactory.createConnector(server);
         }
 
         URI boundTo = bind();

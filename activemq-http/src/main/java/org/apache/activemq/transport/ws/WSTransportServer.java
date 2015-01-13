@@ -52,7 +52,7 @@ public class WSTransportServer extends WebTransportServerSupport {
         server = new Server();
 
         if (connector == null) {
-            connector = socketConnectorFactory.createConnector();
+            connector = socketConnectorFactory.createConnector(server);
         }
 
         URI boundTo = bind();
