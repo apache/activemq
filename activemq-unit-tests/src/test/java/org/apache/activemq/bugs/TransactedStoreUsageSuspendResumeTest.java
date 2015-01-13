@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertTrue;
 
+// https://issues.apache.org/jira/browse/AMQ-4262
 public class TransactedStoreUsageSuspendResumeTest {
     private static final Logger LOG = LoggerFactory.getLogger(TransactedStoreUsageSuspendResumeTest.class);
 
