@@ -132,6 +132,7 @@
               org.xml.sax,
               org.xml.sax.helpers,
               javax.xml.parsers,
+              javax.xml.stream,
               javax.xml.transform,
               javax.xml.transform.dom,
               javax.xml.transform.sax,
@@ -156,7 +157,7 @@
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
               org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
               org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
-              org.eclipse.jetty.continuation;version="7";resolution:=optional
+              org.eclipse.jetty*;resolution:=optional;version="[8.1,10)"
             </Import-Package>
           </instructions>
         </configuration>
