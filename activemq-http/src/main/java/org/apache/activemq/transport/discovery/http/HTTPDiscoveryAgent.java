@@ -142,6 +142,7 @@ public class HTTPDiscoveryAgent implements DiscoveryAgent, Suspendable {
                     rc.add(service);
                 }
             }
+            scanner.close();
             return rc;
         } catch (Exception e) {
             LOG.debug("GET to " + url + " failed with: " + e);
