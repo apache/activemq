@@ -388,6 +388,7 @@
           <failIfNoTests>false</failIfNoTests>
           <excludes>
             <exclude>**/EnqueueRateScenariosTest.*</exclude>
+            <exclude>**/ElectingLevelDBStoreTest.*</exclude>
             <exclude>**/DFSLevelDB*.*</exclude>
           </excludes>
         </configuration>
