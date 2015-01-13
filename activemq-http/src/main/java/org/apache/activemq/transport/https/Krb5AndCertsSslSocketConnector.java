@@ -68,6 +68,14 @@ public class Krb5AndCertsSslSocketConnector extends SslSocketConnector {
         useCerts = true;
         setPasswords();
     }
+    public Krb5AndCertsSslSocketConnector(SslContextFactory f, String auth) {
+        // By default, stick to cert based authentication
+        super(f);
+        useKrb = false;
+        useCerts = true;
+        setPasswords();
+        setMode(auth);
+    }
 
     public static boolean isKrb(String mode) {
         return mode == MODE.KRB.toString() || mode == MODE.BOTH.toString();
