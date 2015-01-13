@@ -74,7 +74,7 @@
     <jasypt-version>1.9.2</jasypt-version>
     <jaxb-bundle-version>2.2.1.1_2</jaxb-bundle-version>
     <jdom-version>1.0</jdom-version>
-    <jetty-version>7.6.9.v20130131</jetty-version>
+    <jetty-version>8.1.15.v20140411</jetty-version>
     <jmdns-version>3.4.1</jmdns-version>
     <jsp-version>2.1.v20100127</jsp-version>
     <jstl-version>1.1.2</jstl-version>
@@ -551,8 +551,8 @@
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-servlet_2.5_spec</artifactId>
-        <version>1.2</version>
+        <artifactId>geronimo-servlet_3.0_spec</artifactId>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
