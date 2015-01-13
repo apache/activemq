@@ -21,6 +21,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
+import javax.servlet.Servlet;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
@@ -69,11 +71,7 @@ public class WSTransportServer extends WebTransportServerSupport {
             }
         }
 
-        if (Server.getVersion().startsWith("8")) {
-            holder.setServlet(new org.apache.activemq.transport.ws.jetty8.WSServlet());
-        } else {
-            holder.setServlet(new org.apache.activemq.transport.ws.jetty9.WSServlet());
-        }
+        holder.setServlet(createWSServlet());
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
@@ -97,6 +95,15 @@ public class WSTransportServer extends WebTransportServerSupport {
                               boundTo.getFragment()));
 
         LOG.info("Listening for connections at {}", getConnectURI());
+    }
+
+    private Servlet createWSServlet() throws Exception {
+        if (Server.getVersion().startsWith("9")) {
+            return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty9.WSServlet", true,
+                                          getClass().getClassLoader()).newInstance();
+        }
+        return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty8.WSServlet", true,
+                                      getClass().getClassLoader()).newInstance();
     }
 
     private int getConnectorLocalPort() throws Exception {
