@@ -247,7 +247,7 @@
         <include>org.springframework:spring-web</include>
         <include>org.springframework:spring-webmvc</include>
         <include>org.eclipse.jetty.aggregate:jetty-all</include>
-        <include>org.apache.geronimo.specs:geronimo-servlet_2.5_spec</include>
+        <include>org.apache.geronimo.specs:geronimo-servlet_3.0_spec</include>
 
         <!-- JSP support -->
         <include>org.mortbay.jetty:jsp-2.1-glassfish</include>
