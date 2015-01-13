@@ -49,7 +49,7 @@ public class WSTransportServer extends WebTransportServerSupport {
 
     @Override
     protected void doStart() throws Exception {
-        server = new Server();
+        createServer();
 
         if (connector == null) {
             connector = socketConnectorFactory.createConnector(server);
@@ -69,7 +69,11 @@ public class WSTransportServer extends WebTransportServerSupport {
             }
         }
 
-        holder.setServlet(new WSServlet());
+        if (Server.getVersion().startsWith("8")) {
+            holder.setServlet(new org.apache.activemq.transport.ws.jetty8.WSServlet());
+        } else {
+            holder.setServlet(new org.apache.activemq.transport.ws.jetty9.WSServlet());
+        }
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
@@ -79,9 +83,9 @@ public class WSTransportServer extends WebTransportServerSupport {
         // Update the Connect To URI with our actual location in case the configured port
         // was set to zero so that we report the actual port we are listening on.
 
-        int port = boundTo.getPort();
-        if (connector.getLocalPort() != -1) {
-            port = connector.getLocalPort();
+        int port = getConnectorLocalPort(); 
+        if (port == -1) {
+            port = boundTo.getPort();
         }
 
         setConnectURI(new URI(boundTo.getScheme(),
@@ -95,6 +99,10 @@ public class WSTransportServer extends WebTransportServerSupport {
         LOG.info("Listening for connections at {}", getConnectURI());
     }
 
+    private int getConnectorLocalPort() throws Exception {
+        return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
+    }
+    
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;

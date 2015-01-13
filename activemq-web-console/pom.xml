@@ -32,6 +32,7 @@
 
   <properties>
     <jetty.port>8080</jetty.port>
+    <jetty.maven.groupid>org.mortbay.jetty</jetty.maven.groupid>
   </properties>
 
   <build>
@@ -51,7 +52,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.mortbay.jetty</groupId>
+          <groupId>${jetty.maven.groupid}</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <version>${jetty-version}</version>
         <configuration>
