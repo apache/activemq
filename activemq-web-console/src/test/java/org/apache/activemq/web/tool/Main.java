@@ -19,7 +19,6 @@ package org.apache.activemq.web.tool;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
@@ -48,10 +47,7 @@ public final class Main {
         }
         System.out.println("Starting Web Server on port: " + port);
         System.setProperty("jetty.port", "" + port);
-        Server server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(port);
-        connector.setServer(server);
+        Server server = new Server(port);
 
         //System.setProperty("webconsole.type","properties");
         //System.setProperty("webconsole.jms.url","tcp://localhost:61616");
@@ -63,9 +59,6 @@ public final class Main {
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
         server.setHandler(context);
-        server.setConnectors(new Connector[] {
-            connector
-        });
         server.start();
 
         System.out.println();

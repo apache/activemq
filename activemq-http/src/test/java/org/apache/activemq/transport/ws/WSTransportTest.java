@@ -96,7 +96,7 @@ public class WSTransportTest {
     protected Server createWebServer() throws Exception {
         Server server = new Server();
 
-        Connector connector = createJettyConnector();
+        Connector connector = createJettyConnector(server);
         connector.setServer(server);
 
         WebAppContext context = new WebAppContext();
@@ -129,7 +129,7 @@ public class WSTransportTest {
         return proxyPort;
     }
 
-protected Connector createJettyConnector() {
+    protected Connector createJettyConnector(Server server) {
         SelectChannelConnector connector = new SelectChannelConnector();
         connector.setPort(getProxyPort());
         return connector;

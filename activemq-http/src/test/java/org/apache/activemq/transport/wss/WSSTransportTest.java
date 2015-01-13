@@ -18,12 +18,13 @@ package org.apache.activemq.transport.wss;
 
 import org.apache.activemq.transport.ws.WSTransportTest;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 public class WSSTransportTest extends WSTransportTest {
     @Override
-    protected Connector createJettyConnector() {
+    protected Connector createJettyConnector(Server server) {
         SslSocketConnector sslConnector = new SslSocketConnector();
         SslContextFactory contextFactory = sslConnector.getSslContextFactory();
         contextFactory.setKeyStorePath("src/test/resources/server.keystore");

@@ -22,6 +22,7 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.https.Krb5AndCertsSslSocketConnector;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ssl.SslConnector;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -49,7 +50,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     }
 
     @Override
-    public Connector createConnector() throws Exception {
+    public Connector createConnector(Server server) throws Exception {
         IntrospectionSupport.setProperties(this, getTransportOptions());
         SslConnector sslConnector;
         if (Krb5AndCertsSslSocketConnector.isKrb(auth)) {

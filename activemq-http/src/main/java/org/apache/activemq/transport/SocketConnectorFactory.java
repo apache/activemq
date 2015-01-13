@@ -20,13 +20,14 @@ import java.util.Map;
 
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
 public class SocketConnectorFactory {
 
     private Map<String, Object> transportOptions;
 
-    public Connector createConnector() throws Exception {
+    public Connector createConnector(Server server) throws Exception {
         SelectChannelConnector connector = new SelectChannelConnector();
         IntrospectionSupport.setProperties(connector, transportOptions, "");
         return connector;
