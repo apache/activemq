@@ -1618,5 +1618,11 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+        <id>jetty9</id>
+        <properties>
+            <jetty-version>${jetty9-version}</jetty-version>
+        </properties>
+    </profile>
   </profiles>
 </project>
