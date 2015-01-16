@@ -161,8 +161,9 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * @return the average size of a message (bytes)
      */
-    public double getAverageMessageSize() {
-        return destination.getDestinationStatistics().getMessageSize().getAverageSize();
+    public long getAverageMessageSize() {
+        // we are okay with the size without decimals so cast to long
+        return (long) destination.getDestinationStatistics().getMessageSize().getAverageSize();
     }
 
     /**
