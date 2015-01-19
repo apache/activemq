@@ -129,6 +129,25 @@ public class ActiveMQCommand extends AbstractCommand implements CompletableFunct
                 }
             }
 
+            if (argumentValues.size() == 1 && arguments.size() == 1) {
+                Object val = argumentValues.values().iterator().next();
+                // short circut convert via blueprint... cause all our commands match this
+                // bluepring was failing to convert the last long param to a string for browse
+                // where dest is a numeric value - activemq-karaf-itests
+                // see: org.apache.activemq.karaf.itest.ActiveMQBrokerFeatureTest.test()
+                if (val instanceof List) {
+                    Field field = arguments.values().iterator().next();
+                    List<Object> values = (List<Object>) val;
+                    ArrayList<String> convertedValues = new ArrayList<String>(values.size());
+                    for (Object o : values) {
+                        convertedValues.add(String.valueOf(o));
+                    }
+                    field.setAccessible(true);
+                    field.set(action, convertedValues);
+                    return true;
+                }
+            }
+
             for (Map.Entry<Argument, Object> entry : argumentValues.entrySet()) {
                 Field field = arguments.get(entry.getKey());
                 Object value = convert(action, session, entry.getValue(), field.getGenericType());
