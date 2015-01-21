@@ -18,7 +18,6 @@ package org.apache.activemq.karaf.itest;
 
 import java.util.concurrent.Callable;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -42,7 +41,7 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
         return configureBrokerStart(configure("activemq"));
     }
 
-    @Test(timeout=2 * 60 * 1000)
+    @Test(timeout=5 * 60 * 1000)
     public void test() throws Throwable {
 
         withinReason(new Callable<Boolean>() {
@@ -66,8 +65,15 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
         final String nameAndPayload = String.valueOf(System.currentTimeMillis());
         produceMessage(nameAndPayload);
 
-        System.err.println(executeCommand("activemq:bstat").trim());
-        assertEquals("JMS_BODY_FIELD:JMSText = " + nameAndPayload, executeCommand("activemq:browse --amqurl tcp://localhost:61616 --user karaf --password karaf -Vbody " + nameAndPayload).trim());
+        executeCommand("activemq:bstat", COMMAND_TIMEOUT, false).trim();
+
+        withinReason(new Callable<Boolean>(){
+            @Override
+            public Boolean call() throws Exception {
+                assertEquals("JMS_BODY_FIELD:JMSText = " + nameAndPayload, executeCommand("activemq:browse --amqurl tcp://localhost:61616 --user karaf --password karaf -Vbody " + nameAndPayload).trim());
+                return true;
+            }
+        });
 
         assertEquals("got our message", nameAndPayload, consumeMessage(nameAndPayload));
     }
