@@ -39,7 +39,7 @@ public class ObrFeatureTest extends AbstractFeatureTest {
         Option[] options = append(
                 editConfigurationFilePut("etc/system.properties", "camel.version", MavenUtils.getArtifactVersion("org.apache.camel.karaf", "apache-camel")),
                 configure("obr"));
-        // can't see where these deps die in a pax-web container - vanilla distro unpack can install war feature ok
+        // can't see where these deps die in a paxexam container - vanilla distro unpack can install war feature ok
         options = append(CoreOptions.mavenBundle("org.apache.xbean", "xbean-bundleutils").versionAsInProject(), options);
         options = append(CoreOptions.mavenBundle("org.apache.xbean", "xbean-asm-util").versionAsInProject(), options);
         return append(CoreOptions.mavenBundle("org.apache.xbean", "xbean-finder").versionAsInProject(), options);
@@ -49,6 +49,13 @@ public class ObrFeatureTest extends AbstractFeatureTest {
     @Test(timeout=5 * 60 * 1000)
     public void testWar() throws Throwable {
         // note xbean deps manually installed above, should not be needed
+        withinReason(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                assertTrue("xbean finder bundle installed", verifyBundleInstalled("org.apache.xbean.finder"));
+                return true;
+            }
+        });
         installAndAssertFeature("war");
     }
 
