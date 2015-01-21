@@ -89,7 +89,7 @@
     <junit-version>4.11</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <jxta-version>2.0</jxta-version>
-    <karaf-version>2.3.3</karaf-version>
+    <karaf-version>2.4.1</karaf-version>
     <leveldb-api-version>0.6</leveldb-api-version>
     <leveldb-version>0.6</leveldb-version>
     <leveldbjni-version>1.8</leveldbjni-version>
@@ -126,18 +126,17 @@
     <xmlresolver-bundle-version>1.2_5</xmlresolver-bundle-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.7</xstream-version>
-    <xbean-version>3.16</xbean-version>
+    <xbean-version>3.18</xbean-version>
     <xerces-version>2.11.0</xerces-version>
     <jaxb-basics-version>0.6.4</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
 
-    <pax-exam-version>3.4.0</pax-exam-version>
+    <pax-exam-version>4.3.0</pax-exam-version>
     <paxexam-karaf-container-version>1.0.0</paxexam-karaf-container-version>
     <pax-runner-version>1.6.1</pax-runner-version>
-    <pax-tiny-bundle-version>1.3.1</pax-tiny-bundle-version>
-    <pax-url-version>1.5.2</pax-url-version>
-    <felix-configadmin-version>1.4.0</felix-configadmin-version>
-    <felix-framework-version>4.0.3</felix-framework-version>
+    <pax-url-version>2.3.0</pax-url-version>
+    <felix-configadmin-version>1.8.0</felix-configadmin-version>
+    <felix-framework-version>4.4.1</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
     <source-version>1.7</source-version>
