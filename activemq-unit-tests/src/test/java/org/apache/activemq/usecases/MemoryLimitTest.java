@@ -17,6 +17,7 @@
 package org.apache.activemq.usecases;
 
 import java.util.Arrays;
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -44,7 +45,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(value = Parameterized.class)
 public class MemoryLimitTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(MemoryLimitTest.class);
-    final String payload = new String(new byte[10 * 1024]); //10KB
+    final byte[] payload = new byte[10 * 1024]; //10KB
     protected BrokerService broker;
 
     @Parameterized.Parameter
@@ -104,7 +105,9 @@ public class MemoryLimitTest extends TestSupport {
         final ProducerThread producer = new ProducerThread(sess, queue) {
             @Override
             protected Message createMessage(int i) throws Exception {
-                return sess.createTextMessage(payload + "::" + i);
+                BytesMessage bytesMessage = sess.createBytesMessage();
+                bytesMessage.writeBytes(payload);
+                return bytesMessage;
             }
         };
         producer.setMessageCount(2000);
@@ -132,12 +135,12 @@ public class MemoryLimitTest extends TestSupport {
             @Override
             public boolean isSatisified() throws Exception {
                 LOG.info("Destination usage: " + dest.getMemoryUsage());
-                return dest.getMemoryUsage().getPercentUsage() >= 470;
+                return dest.getMemoryUsage().getPercentUsage() >= 200;
             }
         }));
 
         LOG.info("Broker usage: " + broker.getSystemUsage().getMemoryUsage());
-        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 470);
+        assertTrue(broker.getSystemUsage().getMemoryUsage().getPercentUsage() >= 200);
 
         // let's make sure we can consume all messages
         for (int i = 1; i < 2000; i++) {
