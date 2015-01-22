@@ -1979,7 +1979,7 @@ public class BrokerService implements Service {
 
         if (memLimit > jvmLimit) {
             usage.getMemoryUsage().setPercentOfJvmHeap(70);
-            LOG.error("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
+            LOG.warn("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
                     " mb) is more than the maximum available for the JVM: " +
                     jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
         }
@@ -2041,7 +2041,7 @@ public class BrokerService implements Service {
             }
             long dirFreeSpace = tmpDir.getUsableSpace();
             if (storeLimit > dirFreeSpace) {
-                LOG.error("Temporary Store limit is " + storeLimit / (1024 * 1024) +
+                LOG.warn("Temporary Store limit is " + storeLimit / (1024 * 1024) +
                         " mb, whilst the temporary data directory: " + tmpDirPath +
                         " only has " + dirFreeSpace / (1024 * 1024) + " mb of usable space - resetting to maximum available " +
                         dirFreeSpace / (1024 * 1024) + " mb.");
