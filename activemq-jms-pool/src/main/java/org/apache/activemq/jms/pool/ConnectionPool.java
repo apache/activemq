@@ -21,16 +21,14 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.Connection;
+import javax.jms.*;
 import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.Session;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
 
 import org.apache.commons.pool.KeyedPoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.
@@ -40,7 +38,8 @@ import org.apache.commons.pool.impl.GenericObjectPool;
  * that the temporary destinations of the managed Connection are purged when all references
  * to this ConnectionPool are released.
  */
-public class ConnectionPool {
+public class ConnectionPool implements ExceptionListener {
+    private static final transient Logger LOG = LoggerFactory.getLogger(ConnectionPool.class);
 
     protected Connection connection;
     private int referenceCount;
@@ -54,6 +53,8 @@ public class ConnectionPool {
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final GenericKeyedObjectPool<SessionKey, Session> sessionPool;
     private final List<PooledSession> loanedSessions = new CopyOnWriteArrayList<PooledSession>();
+    private boolean reconnectOnException;
+    private ExceptionListener parentExceptionListener;
 
     public ConnectionPool(Connection connection) {
 
@@ -332,6 +333,46 @@ public class ConnectionPool {
      */
     public void setBlockIfSessionPoolIsFullTimeout(long blockIfSessionPoolIsFullTimeout) {
         this.sessionPool.setMaxWait(blockIfSessionPoolIsFullTimeout);
+    }
+
+    /**
+     * @return true if the underlying connection will be renewed on JMSException, false otherwise
+     */
+    public boolean isReconnectOnException() {
+        return reconnectOnException;
+    }
+
+    /**
+     * Controls weather the underlying connection should be reset (and renewed) on JMSException
+     *
+     * @param reconnectOnException
+     *          Boolean value that configures whether reconnect on exception should happen
+     */
+    public void setReconnectOnException(boolean reconnectOnException) {
+        this.reconnectOnException = reconnectOnException;
+        try {
+            if (isReconnectOnException()) {
+                if (connection.getExceptionListener() != null) {
+                    parentExceptionListener = connection.getExceptionListener();
+                }
+                connection.setExceptionListener(this);
+            } else {
+                if (parentExceptionListener != null) {
+                    connection.setExceptionListener(parentExceptionListener);
+                }
+                parentExceptionListener = null;
+            }
+        } catch (JMSException jmse) {
+            LOG.warn("Cannot set reconnect exception listener", jmse);
+        }
+    }
+
+    @Override
+    public void onException(JMSException exception) {
+        close();
+        if (parentExceptionListener != null) {
+            parentExceptionListener.onException(exception);
+        }
     }
 
     @Override
