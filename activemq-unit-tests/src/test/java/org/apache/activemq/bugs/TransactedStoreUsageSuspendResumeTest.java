@@ -30,6 +30,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.junit.After;
@@ -81,7 +82,7 @@ public class TransactedStoreUsageSuspendResumeTest {
                 MessageConsumer consumer = session.createConsumer(session.createQueue(QUEUE_NAME));
 
                 do {
-                    Message message = consumer.receive(1000);
+                    Message message = consumer.receive(5000);
                     if (message != null) {
                         session.commit();
                         messagesReceivedCountDown.countDown();
@@ -140,7 +141,10 @@ public class TransactedStoreUsageSuspendResumeTest {
         sendExecutor.shutdown();
         sendExecutor.awaitTermination(5, TimeUnit.MINUTES);
 
-        boolean allMessagesReceived = messagesReceivedCountDown.await(120, TimeUnit.SECONDS);
+        boolean allMessagesReceived = messagesReceivedCountDown.await(10, TimeUnit.MINUTES);
+        if (!allMessagesReceived) {
+            TestSupport.dumpAllThreads("StuckConsumer!");
+        }
         assertTrue("Got all messages: " + messagesReceivedCountDown, allMessagesReceived);
 
         // give consumers a chance to exit gracefully
