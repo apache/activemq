@@ -21,23 +21,12 @@ import java.net.URI;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.SecureSocketConnectorFactory;
 import org.apache.activemq.transport.http.HttpTransportServer;
-import org.eclipse.jetty.server.Connector;
 
 public class HttpsTransportServer extends HttpTransportServer {
-    private SslContext context;
 
     public HttpsTransportServer(URI uri, HttpsTransportFactory factory, SslContext context) {
         super(uri, factory);
-        this.context = context;
         this.socketConnectorFactory = new SecureSocketConnectorFactory(context);
-    }
-
-    public void doStart() throws Exception {
-        Connector sslConnector = socketConnectorFactory.createConnector();
-        
-        setConnector(sslConnector);
-
-        super.doStart();
     }
 
 }

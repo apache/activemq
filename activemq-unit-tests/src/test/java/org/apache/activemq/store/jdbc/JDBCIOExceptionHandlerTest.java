@@ -45,6 +45,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerTest.class);
     private static final String TRANSPORT_URL = "tcp://0.0.0.0:0";
 
+    private static final String DATABASE_NAME = "DERBY_OVERRIDE";
     private ActiveMQConnectionFactory factory;
     private ReconnectingEmbeddedDataSource dataSource;
     private BrokerService broker;
@@ -60,7 +61,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
         broker.setUseJmx(withJMX);
 
         EmbeddedDataSource embeddedDataSource = new EmbeddedDataSource();
-        embeddedDataSource.setDatabaseName("derbydb_15");
+        embeddedDataSource.setDatabaseName(DATABASE_NAME);
         embeddedDataSource.setCreateDatabase("create");
 
         // create a wrapper to EmbeddedDataSource to allow the connection be
@@ -190,13 +191,20 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
             // restart db underneath
             dataSource.restartDB();
 
-            // give the transport connector a moment to start
-            LOG.debug("*** Waiting for connector to start...");
-            TimeUnit.SECONDS.sleep(3);
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    LOG.debug("*** checking connector to start...");
+                    try {
+                        checkTransportConnectorStarted();
+                        return true;
+                    } catch (Throwable t) {
+                        LOG.debug(t.toString());
+                    }
+                    return false;
+                }
+            });
 
-            LOG.debug("*** checking connector to start...");
-            // check the connector has restarted
-            checkTransportConnectorStarted();
 
         } finally {
             LOG.debug("*** broker is stopping...");
@@ -289,7 +297,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
          */
         public void restartDB() throws SQLException {
             EmbeddedDataSource newDatasource = new EmbeddedDataSource();
-            newDatasource.setDatabaseName(this.realDatasource.getDatabaseName());
+            newDatasource.setDatabaseName(DATABASE_NAME);
             newDatasource.getConnection();
             LOG.info("*** DB restarted now...");
             this.realDatasource = newDatasource;

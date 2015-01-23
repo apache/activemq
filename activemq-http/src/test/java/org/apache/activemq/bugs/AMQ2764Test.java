@@ -142,7 +142,7 @@ public class AMQ2764Test extends TestCase {
     protected int doSendMessage(int expectedMessagesReceived, MessageConsumer consumer, ActiveMQConnectionFactory connectionFactory) throws Exception {
         int messagesReceived = 0;
         for (int i=0; i<expectedMessagesReceived; i++) {
-            String messageId = sendMessage(connectionFactory);
+            sendMessage(connectionFactory);
             Message message = consumer.receive(5000);
             if ( message!=null ) {
                 messagesReceived++;

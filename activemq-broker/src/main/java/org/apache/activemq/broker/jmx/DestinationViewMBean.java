@@ -264,12 +264,11 @@ public interface DestinationViewMBean {
     @MBeanInfo("The shortest time a message has been held this destination.")
     long getMinEnqueueTime();
 
-
     @MBeanInfo("Average time a message has been held this destination.")
     double getAverageEnqueueTime();
 
     @MBeanInfo("Average message size on this destination")
-    double getAverageMessageSize();
+    long getAverageMessageSize();
 
     @MBeanInfo("Max message size on this destination")
     public long getMaxMessageSize();

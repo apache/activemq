@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -60,6 +61,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -735,13 +737,20 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("broker Topic Producer count", 0, broker.getTopicProducers().length);
     }
 
-    protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, NullPointerException {
-        ObjectName objectName = new ObjectName(name);
-        if (mbeanServer.isRegistered(objectName)) {
-            echo("Bean Registered: " + objectName);
-        } else {
-            fail("Could not find MBean!: " + objectName);
-        }
+    protected ObjectName assertRegisteredObjectName(String name) throws MalformedObjectNameException, Exception {
+        final ObjectName objectName = new ObjectName(name);
+        final AtomicBoolean result = new AtomicBoolean(false);
+        assertTrue("Bean registered: " + objectName, Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                try {
+                    result.set(mbeanServer.isRegistered(objectName));
+                } catch (Exception ignored) {
+                    LOG.debug(ignored.toString());
+                }
+                return result.get();
+            }
+        }));
         return objectName;
     }
 

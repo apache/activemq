@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.Destination;
 import javax.jms.InvalidClientIDException;
+import javax.jms.InvalidDestinationException;
 import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.broker.BrokerService;
@@ -1335,6 +1336,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             Throwable exception = ((ExceptionResponse) response).getException();
                             if (exception instanceof SecurityException) {
                                 sender.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                            } else if (exception instanceof InvalidDestinationException){
+                                sender.setCondition(new ErrorCondition(AmqpError.NOT_FOUND, exception.getMessage()));
                             } else {
                                 sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                             }

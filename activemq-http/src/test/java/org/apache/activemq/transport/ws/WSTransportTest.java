@@ -32,16 +32,18 @@ import javax.net.ServerSocketFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringSslContext;
+import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -96,8 +98,10 @@ public class WSTransportTest {
     protected Server createWebServer() throws Exception {
         Server server = new Server();
 
-        Connector connector = createJettyConnector();
-        connector.setServer(server);
+        Connector connector = createJettyConnector(server);
+        if (Server.getVersion().startsWith("8")) {
+            connector.setServer(server);
+        }
 
         WebAppContext context = new WebAppContext();
         context.setResourceBase("src/test/webapp");
@@ -129,10 +133,10 @@ public class WSTransportTest {
         return proxyPort;
     }
 
-protected Connector createJettyConnector() {
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(getProxyPort());
-        return connector;
+    protected Connector createJettyConnector(Server server) throws Exception {
+        Connector c = new SocketConnectorFactory().createConnector(server);
+        c.getClass().getMethod("setPort", Integer.TYPE).invoke(c, getProxyPort());
+        return c;
     }
 
     protected void stopBroker() throws Exception {

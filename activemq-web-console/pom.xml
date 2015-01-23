@@ -32,6 +32,7 @@
 
   <properties>
     <jetty.port>8080</jetty.port>
+    <jetty.maven.groupid>org.mortbay.jetty</jetty.maven.groupid>
   </properties>
 
   <build>
@@ -51,7 +52,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.mortbay.jetty</groupId>
+          <groupId>${jetty.maven.groupid}</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <version>${jetty-version}</version>
         <configuration>
@@ -131,6 +132,7 @@
               org.xml.sax,
               org.xml.sax.helpers,
               javax.xml.parsers,
+              javax.xml.stream,
               javax.xml.transform,
               javax.xml.transform.dom,
               javax.xml.transform.sax,
@@ -138,9 +140,9 @@
               javax.management.remote,
               javax.naming,
               org.w3c.dom,
-              javax.servlet,
-              javax.servlet.http,
-              javax.servlet.resources,
+              javax.servlet;version="[2.5,4)",
+              javax.servlet.http;version="[2.5,4)",
+              javax.servlet.resources;version="[2.5,4)",
               javax.servlet.jsp,
               javax.servlet.jsp.tagext,
               javax.servlet.jsp.el,
@@ -155,7 +157,7 @@
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
               org.apache.log4j;version="[1.2.14,2)";resolution:=optional,
               org.apache.log4j.spi;version="[1.2.14,2)";resolution:=optional,
-              org.eclipse.jetty.continuation;version="7";resolution:=optional
+              org.eclipse.jetty*;resolution:=optional;version="[8.1,10)"
             </Import-Package>
           </instructions>
         </configuration>
@@ -167,7 +169,7 @@
 
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-servlet_2.5_spec</artifactId>
+      <artifactId>geronimo-servlet_3.0_spec</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -222,14 +224,6 @@
         <artifactId>activemq-spring</artifactId>
     </dependency>
 
-    <!-- XMPP support -->
-    <!--
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>activemq-xmpp</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
@@ -249,7 +243,7 @@
     <!-- web container -->
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <artifactId>jetty-all</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

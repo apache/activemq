@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 public class QueuePurgeTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(QueuePurgeTest.class);
-    private static final int NUM_TO_SEND = 40000;
+    private static final int NUM_TO_SEND = 20000;
     private final String MESSAGE_TEXT = new String(new byte[1024]);
     BrokerService broker;
     ConnectionFactory factory;
@@ -131,12 +131,12 @@ public class QueuePurgeTest extends CombinationTestSupport {
 
     public void testRepeatedExpiryProcessingOfLargeQueue() throws Exception {       
         applyBrokerSpoolingPolicy();
-        final int exprityPeriod = 1000;
-        applyExpiryDuration(exprityPeriod);
+        final int expiryPeriod = 500;
+        applyExpiryDuration(expiryPeriod);
         createProducerAndSendMessages(NUM_TO_SEND);
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("waiting for expiry to kick in a bunch of times to verify it does not blow mem");
-        Thread.sleep(10000);
+        Thread.sleep(5000);
         assertEquals("Queue size is has not changed " + proxy.getQueueSize(), NUM_TO_SEND,
                 proxy.getQueueSize());
     }

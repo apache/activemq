@@ -31,7 +31,7 @@ public class HTTPDiscoveryAgentFactory extends DiscoveryAgentFactory {
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
             
-            Map options = URISupport.parseParameters(uri);
+            Map<String, String> options = URISupport.parseParameters(uri);
             uri = URISupport.removeQuery(uri);
             
             HTTPDiscoveryAgent rc = new HTTPDiscoveryAgent();

@@ -552,7 +552,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
-                            LOG.error("found lastDeliveredSeqID: {}, message reference: {}", lastDeiveredSequenceId, ref.getMessageId());
+                            LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeiveredSequenceId, ref.getMessageId());
                             break;
                         }
                     }
