@@ -32,6 +32,8 @@ import javax.jms.Topic;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.activemq.transport.vm.VMTransport;
+import org.apache.activemq.util.Wait;
 
 /**
  * 
@@ -399,6 +401,42 @@ public class JmsRedeliveredTest extends TestCase {
 
         session.commit();
         session.close();
+    }
+
+    public void testNoReceiveConsumerDisconnectDoesNotIncrementRedelivery() throws Exception {
+        connection.setClientID(getName());
+        connection.start();
+
+        Connection keepBrokerAliveConnection = createConnection();
+        keepBrokerAliveConnection.start();
+
+        Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        Queue queue = session.createQueue("queue-" + getName());
+        final MessageConsumer consumer = session.createConsumer(queue);
+
+        MessageProducer producer = createProducer(session, queue);
+        producer.send(createTextMessage(session));
+        session.commit();
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return ((ActiveMQMessageConsumer)consumer).getMessageSize() == 1;
+            }
+        });
+
+        // whack the connection - like a rebalance or tcp drop
+        ((ActiveMQConnection)connection).getTransport().narrow(VMTransport.class).stop();
+
+        session = keepBrokerAliveConnection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer messageConsumer = session.createConsumer(queue);
+        Message msg = messageConsumer.receive(1000);
+        assertNotNull(msg);
+        msg.acknowledge();
+
+        assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
+        session.close();
+        keepBrokerAliveConnection.close();
     }
 
     public void testNoReceiveConsumerDoesNotIncrementRedelivery() throws Exception {
