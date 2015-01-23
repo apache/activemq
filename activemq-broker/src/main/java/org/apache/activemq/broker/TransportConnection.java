@@ -1184,7 +1184,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
                 try {
                     LOG.debug("Cleaning up connection resources: {}", getRemoteAddress());
-                    processRemoveConnection(cs.getInfo().getConnectionId(), 0l);
+                    processRemoveConnection(cs.getInfo().getConnectionId(), -1);
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }
