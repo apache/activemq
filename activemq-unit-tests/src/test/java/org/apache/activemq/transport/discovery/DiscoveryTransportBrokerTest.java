@@ -144,7 +144,7 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     }
 
     protected StubConnection createFailoverConnection() throws Exception {
-        URI failoverURI = new URI("discovery:" + getDiscoveryUri());
+        URI failoverURI = new URI("discovery:(" + getDiscoveryUri() + ")?startupMaxReconnectAttempts=5");
         Transport transport = TransportFactory.connect(failoverURI);
         StubConnection connection = new StubConnection(transport);
         connections.add(connection);
