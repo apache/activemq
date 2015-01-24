@@ -20,15 +20,27 @@ import java.util.Map;
 
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.server.Server;
 
 public class SocketConnectorFactory {
 
     private Map<String, Object> transportOptions;
 
-    public Connector createConnector() throws Exception {
-        SelectChannelConnector connector = new SelectChannelConnector();
-        IntrospectionSupport.setProperties(connector, transportOptions, "");
+    public Connector createConnector(Server server) throws Exception {
+        Connector connector = null;
+        
+        try {
+            connector = (Connector)Class.forName("org.eclipse.jetty.server.nio.SelectChannelConnector", true, Server.class.getClassLoader()).newInstance();
+        } catch (Throwable t) {
+            Class<?> c = Class.forName("org.eclipse.jetty.server.ServerConnector", true, Server.class.getClassLoader());
+            connector = (Connector)c.getConstructor(Server.class).newInstance(server);
+            Server.class.getMethod("setStopTimeout", Long.TYPE).invoke(server, 500);
+            connector.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(connector, 500);
+        }
+        System.out.println(transportOptions);
+        if (transportOptions != null) {
+            IntrospectionSupport.setProperties(connector, transportOptions, "");
+        }
         return connector;
     }
 

@@ -43,6 +43,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import static org.junit.Assert.*;
 
@@ -51,6 +54,7 @@ import static org.junit.Assert.*;
  */
 public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
 
+    protected static final Logger LOG = LoggerFactory.getLogger(ReplicatedLevelDBBrokerTest.class);
     final SynchronousQueue<BrokerService> masterQueue = new SynchronousQueue<BrokerService>();
     ArrayList<BrokerService> brokers = new ArrayList<BrokerService>();
 
@@ -58,6 +62,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
      * Tries to replicate the problem reported at:
      * https://issues.apache.org/jira/browse/AMQ-4837
      */
+    @Ignore("https://issues.apache.org/jira/browse/AMQ-5512")
     @Test(timeout = 1000*60*10)
     public void testAMQ4837viaJMS() throws Throwable {
         testAMQ4837(false);
@@ -67,9 +72,11 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
      * Tries to replicate the problem reported at:
      * https://issues.apache.org/jira/browse/AMQ-4837
      */
+   @Ignore("https://issues.apache.org/jira/browse/AMQ-5512")
     @Test(timeout = 1000*60*10)
     public void testAMQ4837viaJMX() throws Throwable {
         for (int i = 0; i < 2; i++) {
+            LOG.info("testAMQ4837viaJMX - Iteration: " + i);
             resetDataDirs();
             testAMQ4837(true);
             stopBrokers();
@@ -81,13 +88,6 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
         deleteDirectory("node-1");
         deleteDirectory("node-2");
         deleteDirectory("node-3");
-    }
-
-    protected void deleteDirectory(String s) throws IOException {
-        try {
-            FileUtils.deleteDirectory(new File(data_dir(), s));
-        } catch (IOException e) {
-        }
     }
 
     public interface Client{
@@ -284,6 +284,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
             System.out.println("======================================");
             System.out.println("5.	Restart the stopped node & 6. stop current master");
             System.out.println("======================================");
+            brokers.remove(prevMaster);
             prevMaster = createBrokerNode(prevMaster.getBrokerName());
             startBrokerAsync(prevMaster);
             stop(master);
@@ -411,6 +412,7 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
             }
         }
         brokers.clear();
+        resetDataDirs();
     }
 
     private BrokerService createBrokerNode(String id) throws Exception {
@@ -446,7 +448,9 @@ public class ReplicatedLevelDBBrokerTest extends ZooKeeperTestSupport {
         store.setDirectory(new File(data_dir(), id));
         store.setContainer(id);
         store.setReplicas(3);
+        store.setSync("quorum_disk");
         store.setZkAddress("localhost:" + connector.getLocalPort());
+        store.setZkSessionTimeout("15s");
         store.setHostname("localhost");
         store.setBind("tcp://0.0.0.0:0");
         return store;

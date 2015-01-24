@@ -21,7 +21,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
- * 
+ *  reproduced: https://issues.apache.org/jira/browse/AMQ-4107
  */
 public class TwoMulticastDiscoveryBrokerTopicSendReceiveTest extends TwoBrokerTopicSendReceiveTest {
 

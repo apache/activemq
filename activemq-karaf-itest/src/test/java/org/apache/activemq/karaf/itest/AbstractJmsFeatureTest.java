@@ -22,7 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import javax.jms.Connection;
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -31,6 +30,10 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
 
     public static void copyFile(File from, File to) throws IOException {
+        if (!to.exists()) {
+            System.err.println("Creating new file for: "+ to);
+            to.createNewFile();
+        }
         FileChannel in = new FileInputStream(from).getChannel();
         FileChannel out = new FileOutputStream(to).getChannel();
         try {
@@ -50,7 +53,7 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
         }
     }
 
-    protected String consumeMessage(String nameAndPayload) throws Exception {
+    protected String consumeMessage(String nameAndPayload) throws Throwable {
         Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(session.createQueue(nameAndPayload));
@@ -60,14 +63,14 @@ public abstract class AbstractJmsFeatureTest extends AbstractFeatureTest {
         return message.getText();
     }
 
-    protected void produceMessage(String nameAndPayload) throws Exception {
+    protected void produceMessage(String nameAndPayload) throws Throwable{
         Connection connection = getConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createProducer(session.createQueue(nameAndPayload)).send(session.createTextMessage(nameAndPayload));
         connection.close();
     }
 
-    protected Connection getConnection() throws JMSException {
+    protected Connection getConnection() throws Throwable {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
         Connection connection = factory.createConnection(AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
         connection.start();

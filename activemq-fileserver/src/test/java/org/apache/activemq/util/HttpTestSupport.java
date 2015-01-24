@@ -52,25 +52,23 @@ public abstract class HttpTestSupport extends TestCase {
 
     final File homeDir = new File("src/main/webapp/uploads/");
 
+    
+    private int getPort(Object o) throws Exception {
+        return (Integer)o.getClass().getMethod("getLocalPort").invoke(o);
+    }
     @Override
     protected void setUp() throws Exception {
 
-        server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(0);
-        connector.setServer(server);
+        server = new Server(0);
         WebAppContext context = new WebAppContext();
 
         context.setResourceBase("src/main/webapp");
         context.setContextPath("/");
         context.setServer(server);
         server.setHandler(context);
-        server.setConnectors(new Connector[] {
-            connector
-        });
         server.start();
 
-        int port = connector.getLocalPort();
+        int port = getPort(server.getConnectors()[0]);
 
         waitForJettySocketToAccept("http://localhost:" + port);
 

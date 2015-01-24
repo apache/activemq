@@ -24,8 +24,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.MavenUtils;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
 
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ActiveMQBrokerRuntimeConfigTest extends AbstractJmsFeatureTest {
 
     @Configuration

@@ -26,6 +26,15 @@ import org.apache.maven.plugin.MojoExecutionException;
  * @phase process-sources
  */
 public class StopBrokerMojo extends AbstractMojo {
+    private MavenBrokerManager  brokerManager;
+
+    public MavenBrokerManager getBrokerManager() {
+        return brokerManager;
+    }
+
+    public void setBrokerManager(MavenBrokerManager brokerManager) {
+        this.brokerManager = brokerManager;
+    }
 
     /**
      * Skip execution of the ActiveMQ Broker plugin if set to true
@@ -40,8 +49,16 @@ public class StopBrokerMojo extends AbstractMojo {
             return;
         }
 
-        Broker.stop();
+        this.useBrokerManager().stop();
 
         getLog().info("Stopped the ActiveMQ Broker");
+    }
+
+    protected MavenBrokerManager    useBrokerManager () {
+        if ( this.brokerManager == null ) {
+            this.brokerManager = new MavenBrokerSingletonManager();
+        }
+
+        return  this.brokerManager;
     }
 }

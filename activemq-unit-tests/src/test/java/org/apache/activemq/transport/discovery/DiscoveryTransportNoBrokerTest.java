@@ -64,7 +64,7 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
        final int noConnectionToCreate = 10;
         for (int i=0; i<10;i++) {
             ActiveMQConnectionFactory factory =
-                new ActiveMQConnectionFactory("discovery:(multicast://239.255.2.3:6155?group=" + group +")?closeAsync=false");
+                new ActiveMQConnectionFactory("discovery:(multicast://239.255.2.3:6155?group=" + group +")?closeAsync=false&startupMaxReconnectAttempts=10&initialReconnectDelay=1000");
             LOG.info("Connecting.");
             Connection connection = factory.createConnection();
             connection.setClientID("test");

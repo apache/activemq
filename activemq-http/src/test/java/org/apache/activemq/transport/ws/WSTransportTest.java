@@ -21,24 +21,29 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
+import javax.net.ServerSocketFactory;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringSslContext;
+import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -60,6 +65,7 @@ public class WSTransportTest {
     private File profileDir;
 
     private String stompUri;
+    private int proxyPort = 0;
     protected String wsUri;
 
     private StompConnection stompConnection = new StompConnection();
@@ -92,8 +98,10 @@ public class WSTransportTest {
     protected Server createWebServer() throws Exception {
         Server server = new Server();
 
-        Connector connector = createJettyConnector();
-        connector.setServer(server);
+        Connector connector = createJettyConnector(server);
+        if (Server.getVersion().startsWith("8")) {
+            connector.setServer(server);
+        }
 
         WebAppContext context = new WebAppContext();
         context.setResourceBase("src/test/webapp");
@@ -101,17 +109,34 @@ public class WSTransportTest {
         context.setServer(server);
 
         server.setHandler(context);
-        server.setConnectors(new Connector[] {
-                connector
-        });
+        server.setConnectors(new Connector[] { connector });
         server.start();
         return server;
     }
 
-    protected Connector createJettyConnector() {
-        SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(8080);
-        return connector;
+    protected int getProxyPort() {
+        if (proxyPort == 0) {
+            ServerSocket ss = null;
+            try {
+                ss = ServerSocketFactory.getDefault().createServerSocket(0);
+                proxyPort = ss.getLocalPort();
+            } catch (IOException e) { // ignore
+            } finally {
+                try {
+                    if (ss != null ) {
+                        ss.close();
+                    }
+                } catch (IOException e) { // ignore
+                }
+            }
+        }
+        return proxyPort;
+    }
+
+    protected Connector createJettyConnector(Server server) throws Exception {
+        Connector c = new SocketConnectorFactory().createConnector(server);
+        c.getClass().getMethod("setPort", Integer.TYPE).invoke(c, getProxyPort());
+        return c;
     }
 
     protected void stopBroker() throws Exception {
@@ -208,7 +233,8 @@ public class WSTransportTest {
     }
 
     protected String getTestURI() {
-        return "http://localhost:8080/websocket.html#" + wsUri;
+        int port = getProxyPort();
+        return "http://localhost:" + port + "/websocket.html#" + wsUri;
     }
 
     public void doTestWebSockets(WebDriver driver) throws Exception {

@@ -547,7 +547,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 List<MessageReference> unAckedMessages = sub.remove(context, this);
 
                 // locate last redelivered in unconsumed list (list in delivery rather than seq order)
-                if (lastDeiveredSequenceId != 0) {
+                if (lastDeiveredSequenceId > 0) {
                     for (MessageReference ref : unAckedMessages) {
                         if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
                             lastDeliveredRef = ref;
@@ -937,15 +937,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     @Override
     public String toString() {
-        int size = 0;
-        messagesLock.readLock().lock();
-        try {
-            size = messages.size();
-        } finally {
-            messagesLock.readLock().unlock();
-        }
         return destination.getQualifiedName() + ", subscriptions=" + consumers.size()
-                + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size + ", pending="
+                + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + destinationStatistics.getMessages().getCount() + ", pending="
                 + indexOrderedCursorUpdates.size();
     }
 
@@ -1720,7 +1713,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     protected void removeMessage(ConnectionContext context, Subscription sub, final QueueMessageReference reference,
             MessageAck ack) throws IOException {
         LOG.trace("ack of {} with {}", reference.getMessageId(), ack);
-        reference.setAcked(true);
         // This sends the ack the the journal..
         if (!ack.isInTransaction()) {
             acknowledge(context, sub, ack, reference);
@@ -1759,7 +1751,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 getDestinationStatistics().getForwards().increment();
             }
         }
-
+        // after successful store update
+        reference.setAcked(true);
     }
 
     private void dropMessage(QueueMessageReference reference) {

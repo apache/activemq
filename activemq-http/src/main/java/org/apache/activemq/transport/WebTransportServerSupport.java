@@ -35,6 +35,18 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         super(location);
     }
 
+    private <T> void setConnectorProperty(String name, Class<T> type, T value) throws Exception {
+        connector.getClass().getMethod("set" + name, type).invoke(connector, value);
+    }
+    
+    protected void createServer() {
+        server = new Server();
+        try {
+            server.getClass().getMethod("setStopTimeout", Long.TYPE).invoke(server, 500l);
+        } catch (Throwable t) {
+            //ignore, jetty 8.  
+        }
+    }
     public URI bind() throws Exception {
 
         URI bind = getBindLocation();
@@ -44,9 +56,11 @@ abstract public class WebTransportServerSupport extends TransportServerSupport {
         InetAddress addr = InetAddress.getByName(bindHost);
         host = addr.getCanonicalHostName();
 
-        connector.setHost(host);
-        connector.setPort(bindAddress.getPort());
-        connector.setServer(server);
+        setConnectorProperty("Host", String.class, host);
+        setConnectorProperty("Port", Integer.TYPE, bindAddress.getPort());
+        if (Server.getVersion().startsWith("8")) {
+            connector.setServer(server);
+        }
         server.addConnector(connector);
         if (addr.isAnyLocalAddress()) {
             host = InetAddressUtil.getLocalHostName();

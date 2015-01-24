@@ -47,9 +47,10 @@ public class RestPersistentTest extends JettyTestSupport {
     }
 
     public void postAndGet(String destinationType) throws Exception {
+        int port = getPort();
 
-        final String urlGET="http://localhost:8080/message/upcTest?clientId=consumer1&readTimeout=5000&type="+destinationType;
-        final String urlPOST="http://localhost:8080/message/upcTest?type="+destinationType;
+        final String urlGET="http://localhost:" + port + "/message/upcTest?clientId=consumer1&readTimeout=5000&type="+destinationType;
+        final String urlPOST="http://localhost:" + port + "/message/upcTest?type="+destinationType;
 
         final String message1="<itemPolicy><upc>1001</upc></itemPolicy>";
         final String property1="terminalNumber=lane1";

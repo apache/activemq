@@ -2550,6 +2550,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected Scheduler getScheduler() throws JMSException {
         Scheduler result = scheduler;
         if (result == null) {
+            if (isClosing() || isClosed()) {
+                // without lock contention report the closing state
+                throw new ConnectionClosedException();
+            }
             synchronized (this) {
                 result = scheduler;
                 if (result == null) {

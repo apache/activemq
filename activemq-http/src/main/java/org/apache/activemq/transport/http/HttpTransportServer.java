@@ -27,16 +27,12 @@ import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HttpTransportServer extends WebTransportServerSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(HttpTransportServer.class);
 
     private TextWireFormat wireFormat;
     private final HttpTransportFactory transportFactory;
@@ -77,9 +73,9 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
     @Override
     protected void doStart() throws Exception {
-        server = new Server();
+        createServer();
         if (connector == null) {
-            connector = socketConnectorFactory.createConnector();
+            connector = socketConnectorFactory.createConnector(server);
         }
 
         URI boundTo = bind();
@@ -96,8 +92,7 @@ public class HttpTransportServer extends WebTransportServerSupport {
         contextHandler.setAttribute("transportFactory", transportFactory);
         contextHandler.setAttribute("transportOptions", transportOptions);
 
-        GzipHandler gzipHandler = new GzipHandler();
-        contextHandler.setHandler(gzipHandler);
+        addGzipHandler(contextHandler);
 
         server.start();
 
@@ -105,8 +100,9 @@ public class HttpTransportServer extends WebTransportServerSupport {
         // was set to zero so that we report the actual port we are listening on.
 
         int port = boundTo.getPort();
-        if (connector.getLocalPort() != -1) {
-            port = connector.getLocalPort();
+        int p2 = getConnectorLocalPort();
+        if (p2 != -1) {
+            port = p2;
         }
 
         setConnectURI(new URI(boundTo.getScheme(),
@@ -116,6 +112,19 @@ public class HttpTransportServer extends WebTransportServerSupport {
                               boundTo.getPath(),
                               boundTo.getQuery(),
                               boundTo.getFragment()));
+    }
+
+    private int getConnectorLocalPort() throws Exception {
+        return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
+    }
+    private void addGzipHandler(ServletContextHandler contextHandler) throws Exception {
+        Handler handler = null;
+        try {
+            handler = (Handler)Class.forName("org.eclipse.jetty.server.handler.GzipHandler", true, Handler.class.getClassLoader()).newInstance();
+        } catch (Throwable t) {
+            handler = (Handler)Class.forName("org.eclipse.jetty.servlets.gzip.GzipHandler", true, Handler.class.getClassLoader()).newInstance();
+        }
+        contextHandler.setHandler(handler);
     }
 
     @Override

@@ -69,7 +69,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
   @BeanProperty
   var zkPath = "/default"
   @BeanProperty
-  var zkSessionTmeout = "2s"
+  var zkSessionTimeout = "2s"
 
   var brokerName: String = _
 
@@ -181,7 +181,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
       log.close
     }
 
-    zk_client = new ZKClient(zkAddress, Timespan.parse(zkSessionTmeout), null)
+    zk_client = new ZKClient(zkAddress, Timespan.parse(zkSessionTimeout), null)
     if( zkPassword!=null ) {
       zk_client.setPassword(zkPassword)
     }
@@ -277,9 +277,14 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     if(brokerService!=null && brokerService.isUseJmx){
       brokerService.getManagementContext().unregisterMBean(objectName);
     }
-    zk_group.close
-    zk_client.close()
-    zk_client = null
+    if (zk_group != null) {
+      zk_group.close
+      zk_group = null
+    }
+    if (zk_client != null) {
+      zk_client.close()
+      zk_client = null
+    }
 
     if( master!=null ) {
       val latch = new CountDownLatch(1)
@@ -410,7 +415,7 @@ class ReplicatedLevelDBStoreView(val store:ElectingLevelDBStore) extends Replica
 
   def getZkAddress = zkAddress
   def getZkPath = zkPath
-  def getZkSessionTmeout = zkSessionTmeout
+  def getZkSessionTimeout = zkSessionTimeout
   def getBind = bind
   def getReplicas = replicas
 

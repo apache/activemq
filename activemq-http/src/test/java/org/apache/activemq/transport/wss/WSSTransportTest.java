@@ -16,22 +16,23 @@
  */
 package org.apache.activemq.transport.wss;
 
+import org.apache.activemq.transport.SecureSocketConnectorFactory;
 import org.apache.activemq.transport.ws.WSTransportTest;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.server.Server;
 
 public class WSSTransportTest extends WSTransportTest {
     @Override
-    protected Connector createJettyConnector() {
-        SslSocketConnector sslConnector = new SslSocketConnector();
-        SslContextFactory contextFactory = sslConnector.getSslContextFactory();
-        contextFactory.setKeyStorePath("src/test/resources/server.keystore");
-        contextFactory.setKeyStorePassword("password");
-        contextFactory.setTrustStore("src/test/resources/client.keystore");
-        contextFactory.setTrustStorePassword("password");
-        sslConnector.setPort(8080);
-        return sslConnector;
+    protected Connector createJettyConnector(Server server) throws Exception {
+        SecureSocketConnectorFactory sscf = new SecureSocketConnectorFactory();
+        sscf.setKeyStore("src/test/resources/server.keystore");
+        sscf.setKeyStorePassword("password");
+        sscf.setTrustStore("src/test/resources/client.keystore");
+        sscf.setTrustStorePassword("password");
+        
+        Connector c = sscf.createConnector(server);
+        c.getClass().getMethod("setPort", Integer.TYPE).invoke(c, getProxyPort());
+        return c;
     }
 
     @Override
@@ -41,6 +42,7 @@ public class WSSTransportTest extends WSTransportTest {
 
     @Override
     protected String getTestURI() {
-        return "https://localhost:8080/websocket.html#wss://localhost:61623";
+        int port = getProxyPort();
+        return "https://localhost:" + port + "/websocket.html#wss://localhost:61623";
     }
 }

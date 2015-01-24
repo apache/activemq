@@ -36,9 +36,11 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 public class MQTTWireFormat implements WireFormat {
 
     static final int MAX_MESSAGE_LENGTH = 1024 * 1024 * 256;
+    static final long DEFAULT_CONNECTION_TIMEOUT = 30000L;
 
     private int version = 1;
 
+    @Override
     public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -47,12 +49,14 @@ public class MQTTWireFormat implements WireFormat {
         return baos.toByteSequence();
     }
 
+    @Override
     public Object unmarshal(ByteSequence packet) throws IOException {
         ByteArrayInputStream stream = new ByteArrayInputStream(packet);
         DataInputStream dis = new DataInputStream(stream);
         return unmarshal(dis);
     }
 
+    @Override
     public void marshal(Object command, DataOutput dataOut) throws IOException {
         MQTTFrame frame = (MQTTFrame) command;
         dataOut.write(frame.header());
@@ -74,6 +78,7 @@ public class MQTTWireFormat implements WireFormat {
         }
     }
 
+    @Override
     public Object unmarshal(DataInput dataIn) throws IOException {
         byte header = dataIn.readByte();
 
@@ -107,6 +112,7 @@ public class MQTTWireFormat implements WireFormat {
     /**
      * @param the version of the wire format
      */
+    @Override
     public void setVersion(int version) {
         this.version = version;
     }
@@ -114,6 +120,7 @@ public class MQTTWireFormat implements WireFormat {
     /**
      * @return the version of the wire format
      */
+    @Override
     public int getVersion() {
         return this.version;
     }
