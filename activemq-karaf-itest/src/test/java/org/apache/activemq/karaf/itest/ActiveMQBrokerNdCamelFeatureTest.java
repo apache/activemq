@@ -44,7 +44,6 @@ public class ActiveMQBrokerNdCamelFeatureTest extends AbstractJmsFeatureTest {
                 configure("activemq"));
     }
 
-    @Ignore("java.lang.IllegalArgumentException: BundleContext must be specified - needs investigation")
     @Test(timeout = 2 * 60 * 1000)
     public void test() throws Throwable {
         System.err.println(executeCommand("osgi:list").trim());

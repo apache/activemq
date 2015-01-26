@@ -62,6 +62,7 @@
       org.xmlpull*;resolution:=optional,
       scala*;resolution:=optional,
       org.springframework*;version="[3,4]";resolution:=optional,
+      org.springframework.osgi*;version="[1,4]";resolution:=optional,
       org.apache.xbean.spring*;resolution:=optional,
       javax.annotation*,
       javax.jms*,
@@ -165,6 +166,29 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.osgi</groupId>
+      <artifactId>spring-osgi-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.aop</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.beans</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.context</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
