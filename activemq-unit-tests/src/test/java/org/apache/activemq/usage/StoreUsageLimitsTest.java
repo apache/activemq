@@ -29,7 +29,7 @@ import org.apache.activemq.broker.BrokerService;
 public class StoreUsageLimitsTest extends EmbeddedBrokerTestSupport {
 
     final int WAIT_TIME_MILLS = 20 * 1000;
-    private static final String limitsLogLevel = "error";
+    private static final String limitsLogLevel = "warn";
 
     @Override
     protected BrokerService createBroker() throws Exception {
