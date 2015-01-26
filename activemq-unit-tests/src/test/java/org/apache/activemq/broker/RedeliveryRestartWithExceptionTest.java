@@ -200,8 +200,8 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
             msg = (TextMessage) consumer.receive(4000);
             LOG.info("redelivered? got: " + msg);
             assertNotNull("got the message again", msg);
-            assertEquals("re delivery flag", true, msg.getJMSRedelivered());
-            assertTrue("redelivery count survives reconnect", msg.getLongProperty("JMSXDeliveryCount") > 1);
+            assertEquals("re delivery flag on:" + i, true, msg.getJMSRedelivered());
+            assertTrue("redelivery count survives reconnect for:" + i, msg.getLongProperty("JMSXDeliveryCount") > 1);
             msg.acknowledge();
         }
 
