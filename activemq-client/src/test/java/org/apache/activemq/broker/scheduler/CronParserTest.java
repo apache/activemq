@@ -216,13 +216,19 @@ public class CronParserTest {
         long current = 20*60*1000;
         Calendar calender = Calendar.getInstance();
         calender.setTimeInMillis(current);
+        int startHours = calender.get(Calendar.HOUR_OF_DAY);
+        int startMinutes = calender.get(Calendar.MINUTE);
         LOG.debug("start:" + calender.getTime());
         long next = CronParser.getNextScheduledTime(test, current);
 
         calender.setTimeInMillis(next);
         LOG.debug("next:" + calender.getTime());
         long result = next - current;
-        assertEquals(60*10*1000,result);
+        if (startHours == 8 && startMinutes == 50) {
+            assertEquals(60*40*1000,result);
+        } else {
+            assertEquals(60*10*1000,result);
+        }
     }
 
     @Test
