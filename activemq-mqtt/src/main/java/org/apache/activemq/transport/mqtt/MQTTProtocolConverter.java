@@ -115,7 +115,7 @@ public class MQTTProtocolConverter {
     private CONNECT connect;
     private String clientId;
     private long defaultKeepAlive;
-    private int activeMQSubscriptionPrefetch = 1;
+    private int activeMQSubscriptionPrefetch = -1;
     private final MQTTPacketIdGenerator packetIdGenerator;
     private boolean publishDollarTopics;
 

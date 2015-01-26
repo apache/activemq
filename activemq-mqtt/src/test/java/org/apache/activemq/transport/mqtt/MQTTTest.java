@@ -151,6 +151,7 @@ public class MQTTTest extends MQTTTestSupport {
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Message " + i;
             if (i == NUM_MESSAGES / 2) {
+                latch.await(20, TimeUnit.SECONDS);
                 subscriptionProvider.unsubscribe(topic);
             }
             publishProvider.publish(topic, payload.getBytes(), AT_LEAST_ONCE);

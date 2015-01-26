@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
@@ -70,12 +71,17 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
 
         ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         consumerInfo.setDestination(destination);
-        consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
+        consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH);
         consumerInfo.setRetroactive(true);
         consumerInfo.setDispatchAsync(true);
         // create durable subscriptions only when clean session is false
         if (!protocol.isCleanSession() && protocol.getClientId() != null && requestedQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal()) {
             consumerInfo.setSubscriptionName(requestedQoS + ":" + topicName);
+            consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH);
+        }
+
+        if (protocol.getActiveMQSubscriptionPrefetch() > 0) {
+            consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
         }
 
         return doSubscribe(consumerInfo, topicName, requestedQoS);
