@@ -50,6 +50,7 @@ public class ActiveMQBrokerNdExternalCamelFeatureTest extends AbstractJmsFeature
 
         assertFeatureInstalled("activemq");
         executeCommand("features:addurl " + getCamelFeatureUrl());
+        installAndAssertFeature("camel");
         installAndAssertFeature("activemq-camel");
 
         withinReason(new Callable<Boolean>() {
