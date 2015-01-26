@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.11.0</version>
   </parent>
 
   <artifactId>activemq-leveldb-store</artifactId>
@@ -463,7 +463,7 @@
                   </pluginExecutionFilter>
                   <action>
                     <execute><runOnIncremental>true</runOnIncremental></execute>
-                    <!--<ignore/>-->
+                    <!--<ignore />-->
                   </action>
                 </pluginExecution>
               </pluginExecutions>
