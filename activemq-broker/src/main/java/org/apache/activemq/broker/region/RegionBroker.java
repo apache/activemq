@@ -623,11 +623,13 @@ public class RegionBroker extends EmptyBroker {
                 long totalTime = endTime - message.getBrokerInTime();
                 ((Destination) message.getRegionDestination()).getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
-            if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered() && message.isPersistent()) {
+            if (((BaseDestination) message.getRegionDestination()).isPersistJMSRedelivered() && !message.isRedelivered()) {
                 final int originalValue = message.getRedeliveryCounter();
                 message.incrementRedeliveryCounter();
                 try {
-                    ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
+                    if (message.isPersistent()) {
+                        ((BaseDestination) message.getRegionDestination()).getMessageStore().updateMessage(message);
+                    }
                     messageDispatch.setTransmitCallback(new TransmitCallback() {
                         // dispatch is considered a delivery, so update sub state post dispatch otherwise
                         // on a disconnect/reconnect cached messages will not reflect initial delivery attempt
