@@ -22,6 +22,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ServerSocketFactory;
 
@@ -93,6 +95,7 @@ public class ConnectTest {
         brokerService.addConnector("stomp://0.0.0.0:0?transport.closeAsync=false");
         brokerService.start();
 
+        final CountDownLatch doneConnect = new CountDownLatch(1);
         final int listenPort = brokerService.getTransportConnectors().get(0).getConnectUri().getPort();
         Thread t1 = new Thread() {
             StompConnection connection = new StompConnection();
@@ -102,6 +105,7 @@ public class ConnectTest {
                 try {
                     connection.open("localhost", listenPort);
                     connection.connect("system", "manager");
+                    doneConnect.countDown();
                 } catch (Exception ex) {
                     LOG.error("unexpected exception on connect/disconnect", ex);
                     exceptions.add(ex);
@@ -118,6 +122,7 @@ public class ConnectTest {
             }
         }));
 
+        assertTrue("connected on time", doneConnect.await(5, TimeUnit.SECONDS));
         brokerService.stop();
 
         // server socket should be available after stop
