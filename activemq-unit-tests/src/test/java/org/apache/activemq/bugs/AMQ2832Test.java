@@ -17,6 +17,7 @@
 package org.apache.activemq.bugs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -117,7 +118,57 @@ public class AMQ2832Test {
         }
     }
 
+   /**
+    * Scenario:
+    * db-1.log has an unacknowledged message,
+    * db-2.log contains acks for the messages from db-1.log,
+    * db-3.log contains acks for the messages from db-2.log
+    *
+    * Expected behavior: since db-1.log is blocked, db-2.log and db-3.log should not be removed during the cleanup.
+    * Current situation on 5.10.0, 5.10.1 is that db-3.log is removed causing all messages from db-2.log, whose acks were in db-3.log, to be replayed.
+    *
+    * @throws Exception
+    */
     @Test
+    public void testAckChain() throws Exception {
+       startBroker();
+
+       StagedConsumer consumer = new StagedConsumer();
+       // file #1
+       produceMessagesToConsumeMultipleDataFiles(5);
+       // acknowledge first 2 messages and leave the 3rd one unacknowledged blocking db-1.log
+       consumer.receive(3);
+
+       // send messages by consuming and acknowledging every message right after sent in order to get KahadbAdd and Remove command to be saved together
+       // this is necessary in order to get KahaAddMessageCommand to be saved in one db file and the corresponding KahaRemoveMessageCommand in the next one
+       produceAndConsumeImmediately(20, consumer);
+       consumer.receive(2).acknowledge(); // consume and ack the last 2 unconsumed
+
+       // now we have 3 files written and started with #4
+       consumer.close();
+
+       broker.stop();
+       broker.waitUntilStopped();
+
+       recoverBroker();
+
+       consumer = new StagedConsumer();
+       Message message = consumer.receive(1);
+       assertNotNull("One message stays unacked from db-1.log", message);
+       message.acknowledge();
+       message = consumer.receive(1);
+       assertNull("There should not be any unconsumed messages any more", message);
+       consumer.close();
+   }
+
+   private void produceAndConsumeImmediately(int numOfMsgs, StagedConsumer consumer) throws Exception {
+      for (int i = 0; i < numOfMsgs; i++) {
+         produceMessagesToConsumeMultipleDataFiles(1);
+         consumer.receive(1).acknowledge();
+      }
+   }
+
+   @Test
     public void testAckRemovedMessageReplayedAfterRecovery() throws Exception {
 
         startBroker();
