@@ -127,7 +127,7 @@ public class AMQ4323Test {
         ProducerThread producer = new ProducerThread(producerSess, destination) {
             @Override
             protected Message createMessage(int i) throws Exception {
-                return sess.createTextMessage(payload + "::" + i);
+                return session.createTextMessage(payload + "::" + i);
             }
         };
         producer.setMessageCount(messageCount);
