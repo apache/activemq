@@ -766,11 +766,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
-    public void commitAdd(ConnectionContext context, MessageId messageId) throws IOException {
+    public void commitAdd(ConnectionContext context, MessageId messageId, long preparedSequenceId) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            long sequence = (Long)messageId.getFutureOrSequenceLong();
-            getAdapter().doCommitAddOp(c, sequence);
+            long sequence = (Long)messageId.getEntryLocator();
+            getAdapter().doCommitAddOp(c, preparedSequenceId, sequence);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit add: " + messageId + ". Reason: " + e, e);
