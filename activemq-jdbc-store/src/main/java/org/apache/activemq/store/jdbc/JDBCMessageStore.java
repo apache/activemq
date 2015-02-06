@@ -30,6 +30,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -70,7 +71,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final JDBCPersistenceAdapter persistenceAdapter;
     protected AtomicLong lastRecoveredSequenceId = new AtomicLong(-1);
     protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
-    final Set<Long> recoveredAdditions = new LinkedHashSet<Long>();
     protected ActiveMQMessageAudit audit;
     protected final LinkedList<Long> pendingAdditions = new LinkedList<Long>();
     
@@ -112,6 +112,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
             return;
         }
 
+        // if xaXid present - this is a prepare - so we don't yet have an outcome
+        final XATransactionId xaXid =  context != null ? context.getXid() : null;
+
         // Serialize the Message..
         byte data[];
         try {
@@ -127,38 +130,44 @@ public class JDBCMessageStore extends AbstractMessageStore {
         synchronized (pendingAdditions) {
             sequenceId = persistenceAdapter.getNextSequenceId();
             final long sequence = sequenceId;
-            pendingAdditions.add(sequence);
-            c.onCompletion(new Runnable() {
-                public void run() {
-                    // jdbc close or jms commit - while futureOrSequenceLong==null ordered
-                    // work will remain pending on the Queue
-                    message.getMessageId().setFutureOrSequenceLong(sequence);
-                    message.getMessageId().setEntryLocator(sequence);
-                }
-            });
+            message.getMessageId().setEntryLocator(sequence);
 
-            if (indexListener != null) {
-                indexListener.onAdd(new IndexListener.MessageContext(context, message, new Runnable() {
-                    @Override
+            if (xaXid == null) {
+                pendingAdditions.add(sequence);
+
+                c.onCompletion(new Runnable() {
                     public void run() {
-                        // cursor add complete
-                        synchronized (pendingAdditions) { pendingAdditions.remove(sequence); }
+                        // jdbc close or jms commit - while futureOrSequenceLong==null ordered
+                        // work will remain pending on the Queue
+                        message.getMessageId().setFutureOrSequenceLong(sequence);
                     }
-                }));
-            } else {
-                pendingAdditions.remove(sequence);
+                });
+
+                if (indexListener != null) {
+                    indexListener.onAdd(new IndexListener.MessageContext(context, message, new Runnable() {
+                        @Override
+                        public void run() {
+                            // cursor add complete
+                            synchronized (pendingAdditions) { pendingAdditions.remove(sequence); }
+                        }
+                    }));
+                } else {
+                    pendingAdditions.remove(sequence);
+                }
             }
         }
         try {
             adapter.doAddMessage(c, sequenceId, messageId, destination, data, message.getExpiration(),
-                    this.isPrioritizedMessages() ? message.getPriority() : 0, context != null ? context.getXid() : null);
+                    this.isPrioritizedMessages() ? message.getPriority() : 0, xaXid);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
         }
-        onAdd(message, sequenceId, message.getPriority());
+        if (xaXid == null) {
+            onAdd(message, sequenceId, message.getPriority());
+        }
     }
 
     // jdbc commit order is random with concurrent connections - limit scan to lowest pending
@@ -186,12 +195,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
-    protected void onAdd(Message message, long sequenceId, byte priority) {
-        if (message.getTransactionId() != null && message.getTransactionId().isXATransaction()
-                && lastRecoveredSequenceId.get() > 0 && sequenceId < lastRecoveredSequenceId.get()) {
-            recoveredAdditions.add(sequenceId);
-        }
-    }
+    protected void onAdd(Message message, long sequenceId, byte priority) {}
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
         // Get a connection and insert the message into the DB.
@@ -329,18 +333,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
     public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            if (!recoveredAdditions.isEmpty()) {
-                for (Iterator<Long> iterator = recoveredAdditions.iterator(); iterator.hasNext(); )  {
-                    Long sequenceId = iterator.next();
-                    iterator.remove();
-                    maxReturned--;
-                    if (sequenceId <= lastRecoveredSequenceId.get()) {
-                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(adapter.doGetMessageById(c, sequenceId)));
-                        LOG.trace("recovered add {} {}", this, msg.getMessageId());
-                        listener.recoverMessage(msg);
-                    }
-                }
-            }
             if (LOG.isTraceEnabled()) {
                 LOG.trace(this + " recoverNext lastRecovered:" + lastRecoveredSequenceId.get() + ", minPending:" + minPendingSequeunceId());
             }

@@ -125,6 +125,10 @@ abstract public class AbstractMessageStore implements MessageStore {
         this.indexListener = indexListener;
     }
 
+    public IndexListener getIndexListener() {
+        return indexListener;
+    }
+
     static {
        FUTURE = new InlineListenableFuture();
     }

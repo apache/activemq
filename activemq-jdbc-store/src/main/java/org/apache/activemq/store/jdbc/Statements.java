@@ -617,7 +617,7 @@ public class Statements {
     public String getClearXidFlagStatement() {
         if (clearXidFlagStatement == null) {
             clearXidFlagStatement = "UPDATE "  + getFullMessageTableName()
-                    + " SET XID = NULL WHERE ID = ?";
+                    + " SET XID = NULL, ID = ? WHERE ID = ?";
         }
         return clearXidFlagStatement;
     }
