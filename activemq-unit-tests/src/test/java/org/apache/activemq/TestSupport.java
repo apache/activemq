@@ -196,6 +196,7 @@ public abstract class TestSupport extends CombinationTestSupport {
             break;
         }
         broker.setPersistenceAdapter(adapter);
+        adapter.setDirectory(broker.getBrokerDataDirectory());
         return adapter;
     }
 

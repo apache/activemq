@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -24,15 +25,20 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 /**
  * Test to see if the JDBCExceptionIOHandler will restart the transport connectors correctly after
@@ -40,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  * see AMQ-4575
  */
-public class JDBCIOExceptionHandlerTest extends TestCase {
+public class JDBCIOExceptionHandlerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerTest.class);
     private static final String TRANSPORT_URL = "tcp://0.0.0.0:0";
@@ -49,6 +55,11 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     private ActiveMQConnectionFactory factory;
     private ReconnectingEmbeddedDataSource dataSource;
     private BrokerService broker;
+
+    @Before
+    public void dbHomeSysProp() throws Exception {
+        System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
+    }
 
     protected BrokerService createBroker(boolean withJMX) throws Exception {
         return createBroker("localhost", withJMX, true, true);
@@ -94,6 +105,7 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     /*
      * run test without JMX enabled
      */
+    @Test
     public void testRecoverWithOutJMX() throws Exception {
         recoverFromDisconnectDB(false);
     }
@@ -101,14 +113,17 @@ public class JDBCIOExceptionHandlerTest extends TestCase {
     /*
      * run test with JMX enabled
      */
+    @Test
     public void testRecoverWithJMX() throws Exception {
         recoverFromDisconnectDB(true);
     }
 
+    @Test
     public void testSlaveStoppedLease() throws Exception {
         testSlaveStopped(true);
     }
 
+    @Test
     public void testSlaveStoppedDefault() throws Exception {
         testSlaveStopped(false);
     }
