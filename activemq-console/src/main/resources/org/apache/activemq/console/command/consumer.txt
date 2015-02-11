@@ -1,10 +1,10 @@
 Usage: consumer [OPTIONS]
 Description: Demo consumer that can be used to receive messages to the broker
 Options :
-    [--brokerUrl                                   URL] - connection factory url; default " + ActiveMQConnectionFactory.DEFAULT_BROKER_URL
+    [--brokerUrl                                   URL] - connection factory url; default ActiveMQConnectionFactory.DEFAULT_BROKER_URL
     [--user                                         ..] - connection user name
     [--password                                     ..] - connection password
-    [--destination               queue://..|topic://..] - ; default TEST
+    [--destination               queue://..|topic://..] - consumer destination; default queue://TEST
     [--messageCount                                  N] - number of messages to send; default 1000
     [--sleep                                         N] - millisecond sleep period between sends or receives; default 0
     [--transactionBatchSize                          N] - use send transaction batches of size N; default 0, no jms transactions

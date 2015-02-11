@@ -152,4 +152,47 @@
     </property>
   </bean>
 
+    <!-- ActiveMQ Producer Command -->
+    <bean id="producercommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="produceraction"/>
+    </bean>
+
+    <service ref="producercommand" auto-export="interfaces" activation="lazy">
+      <service-properties>
+        <entry key="osgi.command.scope" value="activemq"/>
+        <entry key="osgi.command.function" value="producer"/>
+      </service-properties>
+    </service>
+
+    <bean id="produceraction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+      <property name="command">
+        <bean class="org.apache.activemq.console.command.ProducerCommand"/>
+      </property>
+    </bean>
+
+    <!-- ActiveMQ Consumer Command -->
+    <bean id="consumercommand" class="org.apache.activemq.karaf.commands.ActiveMQCommand">
+      <property name="blueprintContainer" ref="blueprintContainer"/>
+      <property name="blueprintConverter" ref="blueprintConverter"/>
+      <property name="actionId" value="consumeraction"/>
+    </bean>
+
+    <service ref="consumercommand" auto-export="interfaces" activation="lazy">
+      <service-properties>
+        <entry key="osgi.command.scope" value="activemq"/>
+        <entry key="osgi.command.function" value="consumer"/>
+      </service-properties>
+    </service>
+
+    <bean id="consumeraction" class="org.apache.activemq.karaf.commands.ActiveMQCommandSupport"
+          activation="lazy"
+          scope="prototype">
+      <property name="command">
+        <bean class="org.apache.activemq.console.command.ConsumerCommand"/>
+      </property>
+    </bean>
 </blueprint>
