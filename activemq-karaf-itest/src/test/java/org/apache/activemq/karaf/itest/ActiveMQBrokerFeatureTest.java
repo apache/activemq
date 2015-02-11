@@ -43,11 +43,10 @@ public class ActiveMQBrokerFeatureTest extends AbstractJmsFeatureTest {
 
     @Test(timeout=5 * 60 * 1000)
     public void test() throws Throwable {
-
-        withinReason(new Callable<Boolean>() {
+          withinReason(new Callable<Boolean>() {
             @Override
-            public Boolean call() throws Exception {
-                assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
+            public Boolean call() throws Exception { 
+                assertEquals("BrokerName = amq-broker", executeCommand("activemq:list").trim().split("\n")[0]);
                 return true;
             }
         });
