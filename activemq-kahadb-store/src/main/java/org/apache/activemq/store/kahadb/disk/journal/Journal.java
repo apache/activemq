@@ -94,7 +94,6 @@ public class Journal {
     protected boolean started;
 
     protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
-    protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
     protected int writeBatchSize = DEFAULT_MAX_WRITE_BATCH_SIZE;
 
     protected FileAppender appender;
@@ -128,7 +127,6 @@ public class Journal {
         long start = System.currentTimeMillis();
         accessorPool = new DataFileAccessorPool(this);
         started = true;
-        preferedFileLength = Math.max(PREFERED_DIFF, getMaxFileLength() - PREFERED_DIFF);
 
         appender = callerBufferAppender ? new CallerBufferingDataFileAppender(this) : new DataFileAppender(this);
 
@@ -144,7 +142,7 @@ public class Journal {
                     String n = file.getName();
                     String numStr = n.substring(filePrefix.length(), n.length()-fileSuffix.length());
                     int num = Integer.parseInt(numStr);
-                    DataFile dataFile = new DataFile(file, num, preferedFileLength);
+                    DataFile dataFile = new DataFile(file, num);
                     fileMap.put(dataFile.getDataFileId(), dataFile);
                     totalLength.addAndGet(dataFile.getLength());
                 } catch (NumberFormatException e) {
@@ -176,6 +174,11 @@ public class Journal {
         if( lastAppendLocation.get()==null ) {
             DataFile df = dataFiles.getTail();
             lastAppendLocation.set(recoveryCheck(df));
+        }
+
+        // ensure we don't report unused space of last journal file in size metric
+        if (totalLength.get() > maxFileLength && lastAppendLocation.get().getOffset() > 0) {
+            totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
         }
 
         cleanupTask = new Runnable() {
@@ -330,8 +333,7 @@ public class Journal {
     synchronized DataFile rotateWriteFile() {
         int nextNum = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
         File file = getFile(nextNum);
-        DataFile nextWriteFile = new DataFile(file, nextNum, preferedFileLength);
-        // actually allocate the disk space
+        DataFile nextWriteFile = new DataFile(file, nextNum);
         fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
         fileByFileMap.put(file, nextWriteFile);
         dataFiles.addLast(nextWriteFile);
@@ -399,9 +401,9 @@ public class Journal {
         boolean result = true;
         for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
             DataFile dataFile = i.next();
-            totalLength.addAndGet(-dataFile.getLength());
             result &= dataFile.delete();
         }
+        totalLength.set(0);
         fileMap.clear();
         fileByFileMap.clear();
         lastAppendLocation.set(null);
@@ -479,26 +481,6 @@ public class Journal {
         return directory.toString();
     }
 
-    public synchronized void appendedExternally(Location loc, int length) throws IOException {
-        DataFile dataFile = null;
-        if( dataFiles.getTail().getDataFileId() == loc.getDataFileId() ) {
-            // It's an update to the current log file..
-            dataFile = dataFiles.getTail();
-            dataFile.incrementLength(length);
-        } else if( dataFiles.getTail().getDataFileId()+1 == loc.getDataFileId() ) {
-            // It's an update to the next log file.
-            int nextNum = loc.getDataFileId();
-            File file = getFile(nextNum);
-            dataFile = new DataFile(file, nextNum, preferedFileLength);
-            // actually allocate the disk space
-            fileMap.put(dataFile.getDataFileId(), dataFile);
-            fileByFileMap.put(file, dataFile);
-            dataFiles.addLast(dataFile);
-        } else {
-            throw new IOException("Invalid external append.");
-        }
-    }
-
     public synchronized Location getNextLocation(Location location) throws IOException, IllegalStateException {
 
         Location cur = null;
@@ -547,64 +529,9 @@ public class Journal {
             }
 
             if (cur.getType() == 0) {
-                return null;
+                // invalid offset - jump to next datafile
+                cur.setOffset(maxFileLength);
             } else if (cur.getType() == USER_RECORD_TYPE) {
-                // Only return user records.
-                return cur;
-            }
-        }
-    }
-
-    public synchronized Location getNextLocation(File file, Location lastLocation, boolean thisFileOnly) throws IllegalStateException, IOException {
-        DataFile df = fileByFileMap.get(file);
-        return getNextLocation(df, lastLocation, thisFileOnly);
-    }
-
-    public synchronized Location getNextLocation(DataFile dataFile, Location lastLocation, boolean thisFileOnly) throws IOException, IllegalStateException {
-
-        Location cur = null;
-        while (true) {
-            if (cur == null) {
-                if (lastLocation == null) {
-                    DataFile head = dataFile.getHeadNode();
-                    cur = new Location();
-                    cur.setDataFileId(head.getDataFileId());
-                    cur.setOffset(0);
-                } else {
-                    // Set to the next offset..
-                    cur = new Location(lastLocation);
-                    cur.setOffset(cur.getOffset() + cur.getSize());
-                }
-            } else {
-                cur.setOffset(cur.getOffset() + cur.getSize());
-            }
-
-            // Did it go into the next file??
-            if (dataFile.getLength() <= cur.getOffset()) {
-                if (thisFileOnly) {
-                    return null;
-                } else {
-                    dataFile = getNextDataFile(dataFile);
-                    if (dataFile == null) {
-                        return null;
-                    } else {
-                        cur.setDataFileId(dataFile.getDataFileId().intValue());
-                        cur.setOffset(0);
-                    }
-                }
-            }
-
-            // Load in location size and type.
-            DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
-            try {
-                reader.readLocationDetails(cur);
-            } finally {
-                accessorPool.closeDataFileAccessor(reader);
-            }
-
-            if (cur.getType() == 0) {
-                return null;
-            } else if (cur.getType() > 0) {
                 // Only return user records.
                 return cur;
             }
@@ -713,21 +640,7 @@ public class Journal {
     }
 
     public long getDiskSize() {
-        long tailLength=0;
-        synchronized( this ) {
-            if( !dataFiles.isEmpty() ) {
-                tailLength = dataFiles.getTail().getLength();
-            }
-        }
-
-        long rc = totalLength.get();
-
-        // The last file is actually at a minimum preferedFileLength big.
-        if( tailLength < preferedFileLength ) {
-            rc -= tailLength;
-            rc += preferedFileLength;
-        }
-        return rc;
+        return totalLength.get();
     }
 
     public void setReplicationTarget(ReplicationTarget replicationTarget) {

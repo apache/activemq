@@ -18,7 +18,6 @@ package org.apache.activemq.store.kahadb.disk.journal;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
@@ -37,7 +36,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     protected volatile int length;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
 
-    DataFile(File file, int number, int preferedSize) {
+    DataFile(File file, int number) {
         this.file = file;
         this.dataFileId = Integer.valueOf(number);
         length = (int)(file.exists() ? file.length() : 0);
