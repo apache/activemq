@@ -183,7 +183,9 @@ public abstract class TestSupport extends CombinationTestSupport {
         PersistenceAdapter adapter = null;
         switch (choice) {
         case JDBC:
-            adapter = new JDBCPersistenceAdapter();
+            JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
+            jdbcPersistenceAdapter.setUseLock(false); // rollback (at shutdown) on derby can take a long time with file io etc
+            adapter = jdbcPersistenceAdapter;
             break;
         case KahaDB:
             adapter = new KahaDBPersistenceAdapter();
@@ -196,6 +198,7 @@ public abstract class TestSupport extends CombinationTestSupport {
             break;
         }
         broker.setPersistenceAdapter(adapter);
+        adapter.setDirectory(new File(broker.getBrokerDataDirectory(), choice.name()));
         return adapter;
     }
 
