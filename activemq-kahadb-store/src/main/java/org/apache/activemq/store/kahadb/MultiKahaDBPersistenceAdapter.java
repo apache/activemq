@@ -20,7 +20,13 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.transaction.xa.Xid;
 
@@ -78,7 +84,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     final DelegateDestinationMap destinationMap = new DelegateDestinationMap();
 
     BrokerService brokerService;
-    List<PersistenceAdapter> adapters = new LinkedList<PersistenceAdapter>();
+    List<PersistenceAdapter> adapters = new CopyOnWriteArrayList<PersistenceAdapter>();
     private File directory = new File(IOHelper.getDefaultDataDirectory() + File.separator + "mKahaDB");
 
     MultiKahaDBTransactionStore transactionStore = new MultiKahaDBTransactionStore(this);
