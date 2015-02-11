@@ -263,31 +263,6 @@ public class VMTransportThreadSafeTest {
     }
 
     @Test(timeout=60000)
-    public void testStopSendsShutdownToPeer() throws Exception {
-
-        final VMTransport local = new VMTransport(new URI(location1));
-        final VMTransport remote = new VMTransport(new URI(location2));
-
-        local.setPeer(remote);
-        remote.setPeer(local);
-
-        final VMTestTransportListener remoteListener = new VMTestTransportListener(remoteReceived);
-
-        local.setTransportListener(new VMTestTransportListener(localReceived));
-        remote.setTransportListener(remoteListener);
-
-        local.start();
-        local.stop();
-
-        assertTrue(Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return remoteListener.shutdownReceived;
-            }
-        }));
-    }
-
-    @Test(timeout=60000)
     public void testRemoteStopSendsExceptionToPendingRequests() throws Exception {
 
         final VMTransport local = new VMTransport(new URI(location1));
