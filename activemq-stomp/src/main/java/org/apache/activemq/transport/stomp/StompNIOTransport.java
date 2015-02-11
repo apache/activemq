@@ -40,8 +40,6 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * An implementation of the {@link Transport} interface for using Stomp over NIO
- *
- *
  */
 public class StompNIOTransport extends TcpTransport {
 
@@ -59,16 +57,19 @@ public class StompNIOTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
         channel.configureBlocking(false);
 
         // listen for events telling us when the socket is readable.
         selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+            @Override
             public void onSelect(SelectorSelection selection) {
                 serviceRead();
             }
 
+            @Override
             public void onError(SelectorSelection selection, Throwable error) {
                 if (error instanceof IOException) {
                     onException((IOException)error);
@@ -120,12 +121,14 @@ public class StompNIOTransport extends TcpTransport {
         }
     }
 
+    @Override
     protected void doStart() throws Exception {
         connect();
         selection.setInterestOps(SelectionKey.OP_READ);
         selection.enable();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         try {
             if (selection != null) {

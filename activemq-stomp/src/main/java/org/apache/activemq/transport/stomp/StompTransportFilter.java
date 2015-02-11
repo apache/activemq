@@ -153,4 +153,19 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         }
     }
 
+    /**
+     * Sets the maximum number of bytes that the data portion of a STOMP frame is allowed to
+     * be, any incoming STOMP frame with a data section larger than this value will receive
+     * an error response.
+     *
+     * @param maxDataLength
+     *        size in bytes of the maximum data portion of a STOMP frame.
+     */
+    public void setMaxDataLength(int maxDataLength) {
+        wireFormat.setMaxDataLength(maxDataLength);
+    }
+
+    public int getMaxDataLength() {
+        return wireFormat.getMaxDataLength();
+    }
 }

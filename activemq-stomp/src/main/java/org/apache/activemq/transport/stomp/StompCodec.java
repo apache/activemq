@@ -31,6 +31,7 @@ public class StompCodec {
 
     final static byte[] crlfcrlf = new byte[]{'\r','\n','\r','\n'};
     TcpTransport transport;
+    StompWireFormat wireFormat;
 
     ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
     boolean processedHeaders = false;
@@ -44,6 +45,7 @@ public class StompCodec {
 
     public StompCodec(TcpTransport transport) {
         this.transport = transport;
+        this.wireFormat = (StompWireFormat) transport.getWireFormat();
     }
 
     public void parse(ByteArrayInputStream input, int readSize) throws Exception {
@@ -68,18 +70,20 @@ public class StompCodec {
                currentCommand.write(b);
                // end of headers section, parse action and header
                if (b == '\n' && (previousByte == '\n' || currentCommand.endsWith(crlfcrlf))) {
-                   StompWireFormat wf = (StompWireFormat) transport.getWireFormat();
                    DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
-                   action = wf.parseAction(data);
-                   headers = wf.parseHeaders(data);
+                   action = wireFormat.parseAction(data);
+                   headers = wireFormat.parseHeaders(data);
                    try {
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
                        if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
-                           contentLength = wf.parseContentLength(contentLengthHeader);
+                           contentLength = wireFormat.parseContentLength(contentLengthHeader);
                        } else {
                            contentLength = -1;
                        }
-                   } catch (ProtocolException ignore) {}
+                   } catch (ProtocolException e) {
+                       transport.doConsume(new StompFrameError(e));
+                       return;
+                   }
                    processedHeaders = true;
                    currentCommand.reset();
                }
@@ -92,6 +96,10 @@ public class StompCodec {
                        processCommand();
                    } else {
                        currentCommand.write(b);
+                       if (currentCommand.size() > wireFormat.getMaxDataLength()) {
+                           transport.doConsume(new StompFrameError(new ProtocolException("The maximum data length was exceeded", true)));
+                           return;
+                       }
                    }
                } else {
                    // read desired content length
