@@ -1770,13 +1770,7 @@ public class BrokerService implements Service {
         return this.supportFailOver;
     }
 
-    /**
-     * @param supportFailOver
-     *            the supportFailOver to set
-     */
-    public void setSupportFailOver(boolean supportFailOver) {
-        this.supportFailOver = supportFailOver;
-    }
+  
 
     /**
      * Looks up and lazily creates if necessary the destination for the given
