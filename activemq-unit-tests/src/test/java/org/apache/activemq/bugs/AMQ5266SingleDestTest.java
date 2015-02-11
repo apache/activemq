@@ -44,6 +44,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -96,6 +97,11 @@ public class AMQ5266SingleDestTest {
     }
 
     public int consumerBatchSize = 25;
+
+    @BeforeClass
+    public static void derbyTestMode() throws Exception {
+        System.setProperty("derby.system.durability","test");
+    }
 
     @Before
     public void startBroker() throws Exception {
