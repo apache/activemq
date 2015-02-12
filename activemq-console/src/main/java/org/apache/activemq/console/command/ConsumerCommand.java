@@ -48,31 +48,38 @@ public class ConsumerCommand extends AbstractCommand {
         LOG.info("Running " + parallelThreads + " parallel threads");
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-        Connection conn = factory.createConnection(user, password);
-        conn.start();
+        Connection conn = null;
+        try {
+            conn = factory.createConnection(user, password);
+            conn.start();
 
-        Session sess;
-        if (transactionBatchSize != 0) {
-            sess = conn.createSession(true, Session.SESSION_TRANSACTED);
-        } else {
-            sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session sess;
+            if (transactionBatchSize != 0) {
+                sess = conn.createSession(true, Session.SESSION_TRANSACTED);
+            } else {
+                sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            }
+
+
+            CountDownLatch active = new CountDownLatch(parallelThreads);
+
+            for (int i = 1; i <= parallelThreads; i++) {
+                ConsumerThread consumer = new ConsumerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
+                consumer.setName("consumer-" + i);
+                consumer.setBreakOnNull(false);
+                consumer.setMessageCount(messageCount);
+                consumer.setSleep(sleep);
+                consumer.setTransactionBatchSize(transactionBatchSize);
+                consumer.setFinished(active);
+                consumer.start();
+            }
+
+            active.await();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
-
-
-        CountDownLatch active = new CountDownLatch(parallelThreads);
-
-        for (int i = 1; i <= parallelThreads; i++) {
-            ConsumerThread consumer = new ConsumerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
-            consumer.setName("consumer-" + i);
-            consumer.setBreakOnNull(false);
-            consumer.setMessageCount(messageCount);
-            consumer.setSleep(sleep);
-            consumer.setTransactionBatchSize(transactionBatchSize);
-            consumer.setFinished(active);
-            consumer.start();
-        }
-
-        active.await();
     }
 
     public String getBrokerUrl() {

@@ -55,34 +55,41 @@ public class ProducerCommand extends AbstractCommand {
         LOG.info("Running " + parallelThreads + " parallel threads");
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-        Connection conn = factory.createConnection(user, password);
-        conn.start();
+        Connection conn = null;
+        try {
+            conn = factory.createConnection(user, password);
+            conn.start();
 
-        Session sess;
-        if (transactionBatchSize != 0) {
-            sess = conn.createSession(true, Session.SESSION_TRANSACTED);
-        } else {
-            sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session sess;
+            if (transactionBatchSize != 0) {
+                sess = conn.createSession(true, Session.SESSION_TRANSACTED);
+            } else {
+                sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            }
+
+            CountDownLatch active = new CountDownLatch(parallelThreads);
+
+            for (int i = 1; i <= parallelThreads; i++) {
+                ProducerThread producer = new ProducerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
+                producer.setName("producer-" + i);
+                producer.setMessageCount(messageCount);
+                producer.setSleep(sleep);
+                producer.setMsgTTL(msgTTL);
+                producer.setPersistent(persistent);
+                producer.setTransactionBatchSize(transactionBatchSize);
+                producer.setMessageSize(messageSize);
+                producer.setMsgGroupID(msgGroupID);
+                producer.setTextMessageSize(textMessageSize);
+                producer.setFinished(active);
+                producer.start();
+            }
+
+            active.await();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
-
-        CountDownLatch active = new CountDownLatch(parallelThreads);
-
-        for (int i = 1; i <= parallelThreads; i++) {
-            ProducerThread producer = new ProducerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
-            producer.setName("producer-" + i);
-            producer.setMessageCount(messageCount);
-            producer.setSleep(sleep);
-            producer.setMsgTTL(msgTTL);
-            producer.setPersistent(persistent);
-            producer.setTransactionBatchSize(transactionBatchSize);
-            producer.setMessageSize(messageSize);
-            producer.setMsgGroupID(msgGroupID);
-            producer.setTextMessageSize(textMessageSize);
-            producer.setFinished(active);
-            producer.start();
-        }
-
-        active.await();
     }
 
     public String getBrokerUrl() {
