@@ -75,7 +75,7 @@ public class AMQ2902Test extends TestCase {
 
     public void testNoExceptionOnClose() throws JMSException {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
-                "vm://localhostTwo?broker.persistent=false");
+                "vm://localhost?broker.persistent=false");
         Connection connection = connectionFactory.createConnection();
         connection.close();
     }

@@ -194,7 +194,15 @@ public class VMTransport implements Transport, Task {
             }
 
             if (peer.transportListener != null) {
-                // let any requests pending a response see an exception and shutdown
+                // let the peer know that we are disconnecting after attempting
+                // to cleanly shutdown the async tasks so that this is the last
+                // command it see's.
+                try {
+                    peer.transportListener.onCommand(new ShutdownInfo());
+                } catch (Exception ignore) {
+                }
+
+                // let any requests pending a response see an exception
                 try {
                     peer.transportListener.onException(new TransportDisposedIOException("peer (" + this + ") stopped."));
                 } catch (Exception ignore) {

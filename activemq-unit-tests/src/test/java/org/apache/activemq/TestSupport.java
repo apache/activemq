@@ -173,7 +173,7 @@ public abstract class TestSupport extends CombinationTestSupport {
                         regionBroker.getTopicRegion().getDestinationMap();
     }
 
-    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, JDBC, MEM };
+    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, AMQ, JDBC, MEM };
 
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
