@@ -141,6 +141,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     public AmqpProtocolConverter(AmqpTransport transport, BrokerService brokerService) {
         this.amqpTransport = transport;
+        AmqpInactivityMonitor monitor = transport.getInactivityMonitor();
+        if (monitor != null) {
+            monitor.setProtocolConverter(this);
+        }
         this.amqpWireFormat = transport.getWireFormat();
         this.brokerService = brokerService;
 
@@ -513,7 +517,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         connectionInfo.setResponseRequired(true);
         connectionInfo.setConnectionId(connectionId);
-        // configureInactivityMonitor(connect.keepAlive());
+
+        configureInactivityMonitor();
 
         String clientId = protonConnection.getRemoteContainer();
         if (clientId != null && !clientId.isEmpty()) {
@@ -576,6 +581,15 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         } else {
             onSenderOpen((Sender) link, sessionContext);
         }
+    }
+
+    private void configureInactivityMonitor() {
+        AmqpInactivityMonitor monitor = amqpTransport.getInactivityMonitor();
+        if (monitor == null) {
+            return;
+        }
+
+        monitor.stopConnectChecker();
     }
 
     InboundTransformer inboundTransformer;
@@ -648,7 +662,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         private final ActiveMQDestination destination;
         private boolean closed;
         private final boolean anonymous;
-        private MessageId lastDispatched;
 
         public ProducerContext(ProducerId producerId, ActiveMQDestination destination, boolean anonymous) {
             this.producerId = producerId;

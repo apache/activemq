@@ -50,4 +50,7 @@ public interface AmqpTransport {
 
     public void setProtocolConverter(IAmqpProtocolConverter protocolConverter);
 
+    public void setInactivityMonitor(AmqpInactivityMonitor monitor);
+
+    public AmqpInactivityMonitor getInactivityMonitor();
 }

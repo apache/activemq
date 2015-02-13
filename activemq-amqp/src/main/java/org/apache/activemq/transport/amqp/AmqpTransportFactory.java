@@ -66,7 +66,10 @@ public class AmqpTransportFactory extends TcpTransportFactory implements BrokerS
     }
 
     @Override
-    protected boolean isUseInactivityMonitor(Transport transport) {
-        return false;
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
+        AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
+        filter.setInactivityMonitor(monitor);
+        return monitor;
     }
 }

@@ -36,11 +36,14 @@ public class AmqpWireFormat implements WireFormat {
 
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 30000L;
+
     private static final int SASL_PROTOCOL = 3;
 
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
+    private long connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
 
     private boolean magicRead = false;
     private ResetListener resetListener;
@@ -195,5 +198,13 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setAllowNonSaslConnections(boolean allowNonSaslConnections) {
         this.allowNonSaslConnections = allowNonSaslConnections;
+    }
+
+    public long getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    public void setConnectAttemptTimeout(long connectAttemptTimeout) {
+        this.connectAttemptTimeout = connectAttemptTimeout;
     }
 }

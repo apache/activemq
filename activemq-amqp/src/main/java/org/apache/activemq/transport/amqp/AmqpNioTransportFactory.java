@@ -86,13 +86,16 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
     }
 
     @Override
-    public void setBrokerService(BrokerService brokerService) {
-        this.brokerService = brokerService;
+    protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
+        AmqpInactivityMonitor monitor = new AmqpInactivityMonitor(transport, format);
+        AmqpTransportFilter filter = transport.narrow(AmqpTransportFilter.class);
+        filter.setInactivityMonitor(monitor);
+        return monitor;
     }
 
     @Override
-    protected boolean isUseInactivityMonitor(Transport transport) {
-        return false;
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
     }
 }
 
