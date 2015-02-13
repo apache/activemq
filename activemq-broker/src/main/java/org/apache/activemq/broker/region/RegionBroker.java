@@ -777,7 +777,6 @@ public class RegionBroker extends EmptyBroker {
                         if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
                             // message may be inflight to other subscriptions so do not modify
                             message = message.copy();
-                            message.getMessageId().setFutureOrSequenceLong(null);
                             stampAsExpired(message);
                             message.setExpiration(0);
                             if (!message.isPersistent()) {

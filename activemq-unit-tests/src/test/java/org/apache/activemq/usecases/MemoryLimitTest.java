@@ -17,15 +17,16 @@
 package org.apache.activemq.usecases;
 
 import java.util.Arrays;
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Queue;
-import javax.jms.Session;
+import javax.jms.*;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueView;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -153,6 +154,58 @@ public class MemoryLimitTest extends TestSupport {
         }
     }
 
+    @Test(timeout = 120000)
+    public void testMoveMessages() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?jms.prefetchPolicy.all=10");
+        factory.setOptimizeAcknowledge(true);
+        Connection conn = factory.createConnection();
+        conn.start();
+        Session sess = conn.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        Queue queue = sess.createQueue("IN");
+        final byte[] payload = new byte[200 * 1024]; //200KB
+        final int count = 4;
+        final ProducerThread producer = new ProducerThread(sess, queue) {
+            @Override
+            protected Message createMessage(int i) throws Exception {
+                BytesMessage bytesMessage = session.createBytesMessage();
+                bytesMessage.writeBytes(payload);
+                return bytesMessage;
+            }
+        };
+        producer.setMessageCount(count);
+        producer.start();
+        producer.join();
+
+        Thread.sleep(1000);
+
+        final QueueViewMBean in = getProxyToQueue("IN");
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return in.getQueueSize() == count;
+            }
+        });
+
+        assertEquals("Messages not sent" , count, in.getQueueSize());
+
+        int moved = in.moveMatchingMessagesTo("", "OUT");
+
+        assertEquals("Didn't move all messages", count, moved);
+
+
+        final QueueViewMBean out = getProxyToQueue("OUT");
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return out.getQueueSize() == count;
+            }
+        });
+
+        assertEquals("Messages not moved" , count, out.getQueueSize());
+
+    }
+
     /**
      * Handy test for manually checking what's going on
      */
@@ -198,5 +251,13 @@ public class MemoryLimitTest extends TestSupport {
         producer2.join();
 
         assertEquals("consumer got all produced messages", producer.getMessageCount(), consumer.getReceived());
+    }
+
+    protected QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
+        BrokerService brokerService = BrokerRegistry.getInstance().lookup("localhost");
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
+        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        return proxy;
     }
 }
