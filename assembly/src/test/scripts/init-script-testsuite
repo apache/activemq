@@ -118,7 +118,7 @@ STRATEGY="stop"
 
 set -x
 sed 's,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=15,' env | \
-sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' > $CONFIG
+sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' |tee $CONFIG
 set +x
 
 assert ${STRATEGY} successful "${SCRIPT} stop"
