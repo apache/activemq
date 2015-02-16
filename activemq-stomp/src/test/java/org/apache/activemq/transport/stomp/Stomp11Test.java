@@ -38,6 +38,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class Stomp11Test extends StompTestSupport {
         port = connector.getConnectUri().getPort();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnect() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -93,7 +94,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectedNeverEncoded() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -123,7 +124,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectWithVersionOptions() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -145,7 +146,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectWithValidFallback() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -167,7 +168,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectWithInvalidFallback() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -186,7 +187,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.indexOf("message:") >= 0);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testHeartbeats() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -230,7 +231,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testHeartbeatsDropsIdleConnection() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -262,7 +263,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue("Broker did close idle connection in time.", (endTime - startTime) >= 1000);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testHeartbeatsKeepsConnectionOpen() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -312,7 +313,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSendAfterMissingHeartbeat() throws Exception {
 
         String connectFrame = "STOMP\n" + "login:system\n" +
@@ -330,7 +331,13 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.indexOf("session:") >= 0);
         LOG.debug("Broker sent: " + f);
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() == 0;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
 
         try {
             String message = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
@@ -343,7 +350,7 @@ public class Stomp11Test extends StompTestSupport {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testRejectInvalidHeartbeats1() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -363,7 +370,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.indexOf("message:") >= 0);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testRejectInvalidHeartbeats2() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -383,7 +390,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.indexOf("message:") >= 0);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testRejectInvalidHeartbeats3() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -403,7 +410,7 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.indexOf("message:") >= 0);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSubscribeAndUnsubscribe() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -431,15 +438,16 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(stompFrame.getAction().equals("MESSAGE"));
 
         frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
-                "id:12345\n\n" + Stomp.NULL;
+                "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        Thread.sleep(4000);
+        stompFrame = stompConnection.receive();
+        assertTrue(stompFrame.getAction().equals("RECEIPT"));
 
         stompConnection.sendFrame(message);
 
         try {
-            frame = stompConnection.receiveFrame();
+            frame = stompConnection.receiveFrame(2000);
             LOG.info("Received frame: " + frame);
             fail("No message should have been received since subscription was removed");
         } catch (SocketTimeoutException e) {
@@ -449,7 +457,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSubscribeWithNoId() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -476,7 +484,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testUnsubscribeWithNoId() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -493,10 +501,11 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.startsWith("CONNECTED"));
 
         String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
-                       "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
+                       "receipt:1\n" + "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        Thread.sleep(2000);
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("RECEIPT"));
 
         frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -508,7 +517,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testAckMessageWithId() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -547,7 +556,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testAckMessageWithNoId() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -592,7 +601,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSubscribeWithWildcardSubscription() throws Exception {
         String connectFrame = "STOMP\n" +
                 "login:system\n" +
@@ -630,7 +639,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueBrowerSubscription() throws Exception {
 
         final int MSG_COUNT = 10;
@@ -677,10 +686,11 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(browseDone.getHeaders().get(Stomp.Headers.Message.DESTINATION) != null);
 
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
-                       "id:12345\n\n" + Stomp.NULL;
+                       "receipt:1\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
 
-        Thread.sleep(2000);
+        String receipt = stompConnection.receiveFrame();
+        assertTrue(receipt.contains("RECEIPT"));
 
         subscribe = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(subscribe);
@@ -697,7 +707,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSendMessageWithStandardHeadersEncoded() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
@@ -731,7 +741,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSendMessageWithRepeatedEntries() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
@@ -761,7 +771,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testSubscribeWithMessageSentWithEncodedProperties() throws Exception {
 
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n" +  "accept-version:1.1" + "\n\n" + Stomp.NULL;
@@ -790,7 +800,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testNackMessage() throws Exception {
 
         String connectFrame = "STOMP\n" +
@@ -846,7 +856,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testHeaderValuesAreNotWSTrimmed() throws Exception {
         stompConnection.setVersion(Stomp.V1_1);
         String connectFrame = "STOMP\n" +
@@ -889,7 +899,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testDurableSubAndUnSubOnTwoTopics() throws Exception {
         stompConnection.setVersion(Stomp.V1_1);
 
@@ -937,9 +947,13 @@ public class Stomp11Test extends StompTestSupport {
 
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+        Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() == 0;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
 
         // reconnect and send some messages to the offline subscribers and then try to get
         // them after subscribing again.
@@ -979,7 +993,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testDurableSubAndUnSubFlow() throws Exception {
         stompConnection.setVersion(Stomp.V1_1);
 
@@ -1055,14 +1069,11 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(frame);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testMultipleDurableSubsWithOfflineMessages() throws Exception {
         stompConnection.setVersion(Stomp.V1_1);
 
-        String domain = "org.apache.activemq";
-        ObjectName brokerName = new ObjectName(domain + ":type=Broker,brokerName=localhost");
-
-        BrokerViewMBean view = (BrokerViewMBean)brokerService.getManagementContext().newProxyInstance(brokerName, BrokerViewMBean.class, true);
+        final BrokerViewMBean view = getProxyToBroker();
 
         String connectFrame = "STOMP\n" + "login:system\n" + "passcode:manager\n" +
                 "accept-version:1.1\n" + "host:localhost\n" + "client-id:test\n" + "\n" + Stomp.NULL;
@@ -1102,9 +1113,13 @@ public class Stomp11Test extends StompTestSupport {
 
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return view.getCurrentConnectionsCount() == 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // reconnect and send some messages to the offline subscribers and then try to get
         // them after subscribing again.
@@ -1112,7 +1127,7 @@ public class Stomp11Test extends StompTestSupport {
         stompConnection.sendFrame(connectFrame);
         frame = stompConnection.receiveFrame();
         LOG.debug("Broker sent: " + frame);
-        assertTrue(frame.startsWith("CONNECTED"));
+        assertTrue(frame.contains("CONNECTED"));
         assertEquals(view.getDurableTopicSubscribers().length, 0);
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 2);
 

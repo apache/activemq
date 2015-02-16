@@ -21,10 +21,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,9 +220,14 @@ public class Stomp12Test extends StompTestSupport {
 
         frame = "DISCONNECT\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(400);
-        } catch (InterruptedException e){}
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() == 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25)));
 
         // reconnect and send some messages to the offline subscribers and then try to get
         // them after subscribing again.
@@ -404,10 +411,11 @@ public class Stomp12Test extends StompTestSupport {
         assertTrue(browseDone.getHeaders().get(Stomp.Headers.Message.DESTINATION) != null);
 
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
-                       "id:12345\n\n" + Stomp.NULL;
+                       "receipt:1" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
 
-        Thread.sleep(2000);
+        StompFrame stompFrame = stompConnection.receive();
+        assertTrue(stompFrame.getAction().equals("RECEIPT"));
 
         subscribe = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(subscribe);
