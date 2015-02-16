@@ -39,10 +39,10 @@ public class JmsMessageGroupsTest extends JMSClientTestSupport {
     private static final int ITERATIONS = 10;
     private static final int MESSAGE_COUNT = 10;
     private static final int MESSAGE_SIZE = 200 * 1024;
-    private static final int RECEIVE_TIMEOUT = 5000;
+    private static final int RECEIVE_TIMEOUT = 3000;
     private static final String JMSX_GROUP_ID = "JmsGroupsTest";
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 60000)
     public void testGroupSeqIsNeverLost() throws Exception {
         AtomicInteger sequenceCounter = new AtomicInteger();
 
@@ -64,11 +64,11 @@ public class JmsMessageGroupsTest extends JMSClientTestSupport {
         for (int i = 0; i < MESSAGE_COUNT; ++i) {
             Message message = consumer.receive(RECEIVE_TIMEOUT);
             assertNotNull(message);
-            LOG.info("Read message #{}: type = {}", i, message.getClass().getSimpleName());
+            LOG.debug("Read message #{}: type = {}", i, message.getClass().getSimpleName());
             String gid = message.getStringProperty("JMSXGroupID");
             String seq = message.getStringProperty("JMSXGroupSeq");
-            LOG.info("Message assigned JMSXGroupID := {}", gid);
-            LOG.info("Message assigned JMSXGroupSeq := {}", seq);
+            LOG.debug("Message assigned JMSXGroupID := {}", gid);
+            LOG.debug("Message assigned JMSXGroupSeq := {}", seq);
         }
 
         consumer.close();

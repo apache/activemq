@@ -35,28 +35,24 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AMQ4920Test extends AmqpTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4920Test.class);
-    private static final Integer ITERATIONS = 1 * 1000;
-    private static final Integer CONSUMER_COUNT = 4;  // At least 2 consumers are required to reproduce the original issue
+    private static final Integer ITERATIONS = 500;
+    private static final Integer CONSUMER_COUNT = 4; // At least 2 consumers are
+                                                     // required to reproduce
+                                                     // the original issue
     public static final String TEXT_MESSAGE = "TextMessage: ";
     private final CountDownLatch latch = new CountDownLatch(CONSUMER_COUNT * ITERATIONS);
     private final CountDownLatch initLatch = new CountDownLatch(CONSUMER_COUNT);
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Test(timeout = 1 * 60 * 1000)
+    @Test(timeout = 60000)
     public void testSendWithMultipleConsumers() throws Exception {
-        ConnectionFactory connectionFactory = new ConnectionFactoryImpl("localhost", port, "admin", "admin");
+        ConnectionFactoryImpl connectionFactory = new ConnectionFactoryImpl("localhost", port, "admin", "admin");
+        connectionFactory.setSyncPublish(false);
         Connection connection = connectionFactory.createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         String destinationName = "topic://AMQ4920Test" + System.currentTimeMillis();
@@ -64,9 +60,8 @@ public class AMQ4920Test extends AmqpTestSupport {
         connection.start();
 
         ExecutorService executor = Executors.newCachedThreadPool();
-        for (int i=0; i < CONSUMER_COUNT; i++) {
-            AMQ4930ConsumerTask consumerTask =
-                new AMQ4930ConsumerTask(initLatch, destinationName, port, "Consumer-" + i, latch, ITERATIONS);
+        for (int i = 0; i < CONSUMER_COUNT; i++) {
+            AMQ4930ConsumerTask consumerTask = new AMQ4930ConsumerTask(initLatch, destinationName, port, "Consumer-" + i, latch, ITERATIONS);
             executor.submit(consumerTask);
         }
         connection.start();
@@ -92,7 +87,7 @@ public class AMQ4920Test extends AmqpTestSupport {
         for (int i = 0; i < count; i++) {
             TextMessage message = session.createTextMessage();
             message.setText(TEXT_MESSAGE + i);
-            LOG.debug("Sending message [" + i + "]");
+            LOG.trace("Sending message [" + i + "]");
             producer.send(message);
             if (sleepInterval > 0) {
                 Thread.sleep(sleepInterval);
@@ -112,7 +107,7 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
     private final int expectedMessageCount;
     private final CountDownLatch started;
 
-    public AMQ4930ConsumerTask (CountDownLatch started, String destinationName, int port, String consumerName, CountDownLatch latch, int expectedMessageCount) {
+    public AMQ4930ConsumerTask(CountDownLatch started, String destinationName, int port, String consumerName, CountDownLatch latch, int expectedMessageCount) {
         this.started = started;
         this.destinationName = destinationName;
         this.port = port;
@@ -124,7 +119,7 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
     @Override
     public Boolean call() throws Exception {
         LOG.debug(consumerName + " starting");
-        Connection connection=null;
+        Connection connection = null;
         try {
             ConnectionFactory connectionFactory = new ConnectionFactoryImpl("localhost", port, "admin", "admin");
             connection = connectionFactory.createConnection();
@@ -136,8 +131,8 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
             started.countDown();
 
             int receivedCount = 0;
-            while(receivedCount < expectedMessageCount) {
-                Message message = consumer.receive(5 * 1000);
+            while (receivedCount < expectedMessageCount) {
+                Message message = consumer.receive(2000);
                 if (message == null) {
                     LOG.error("consumer {} got null message on iteration {}", consumerName, receivedCount);
                     return false;
@@ -151,8 +146,7 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
                     LOG.error("consumer {} expected {} got message [{}]", consumerName, receivedCount, tm.getText());
                     return false;
                 }
-                LOG.debug("consumer {} expected {} got message [{}]", consumerName, receivedCount, tm.getText());  // TODO make debug
-
+                LOG.trace("consumer {} expected {} got message [{}]", consumerName, receivedCount, tm.getText());
                 messagesReceived.countDown();
                 receivedCount++;
             }
@@ -168,4 +162,3 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
         return true;
     }
 }
-

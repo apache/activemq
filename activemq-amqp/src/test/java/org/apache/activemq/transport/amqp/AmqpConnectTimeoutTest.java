@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -99,10 +100,10 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
 
     @Override
     public String getAdditionalConfig() {
-        return "&transport.connectAttemptTimeout=2000";
+        return "&transport.connectAttemptTimeout=1200";
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 30000)
     public void testInactivityMonitor() throws Exception {
 
         Thread t1 = new Thread() {
@@ -127,7 +128,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
              public boolean isSatisified() throws Exception {
                  return 1 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
              }
-         }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
 
         // and it should be closed due to inactivity
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
@@ -135,7 +136,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
             public boolean isSatisified() throws Exception {
                 return 0 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
 
         assertTrue("no exceptions", exceptions.isEmpty());
     }

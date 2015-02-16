@@ -51,8 +51,6 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -63,21 +61,6 @@ public class JMSClientTest extends JMSClientTestSupport {
     protected static final Logger LOG = LoggerFactory.getLogger(JMSClientTest.class);
 
     protected java.util.logging.Logger frameLoggger = java.util.logging.Logger.getLogger("FRM");
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        LOG.debug("in setUp of {}", name.getMethodName());
-        super.setUp();
-    }
-
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        LOG.debug("in tearDown of {}", name.getMethodName());
-        super.tearDown();
-        Thread.sleep(500);
-    }
 
     @SuppressWarnings("rawtypes")
     @Test(timeout=30000)
@@ -228,7 +211,7 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        for(int i = 1; i <= consumeBeforeRollback; i++) {
+        for (int i = 1; i <= consumeBeforeRollback; i++) {
             Message message = consumer.receive(1000);
             assertNotNull(message);
             assertEquals("Unexpected message number", i, message.getIntProperty(AmqpTestSupport.MESSAGE_NUMBER));
@@ -240,11 +223,11 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         // Consume again..check we receive all the messages.
         Set<Integer> messageNumbers = new HashSet<Integer>();
-        for(int i = 1; i <= totalCount; i++) {
+        for (int i = 1; i <= totalCount; i++) {
             messageNumbers.add(i);
         }
 
-        for(int i = 1; i <= totalCount; i++) {
+        for (int i = 1; i <= totalCount; i++) {
             Message message = consumer.receive(1000);
             assertNotNull(message);
             int msgNum = message.getIntProperty(AmqpTestSupport.MESSAGE_NUMBER);
@@ -261,7 +244,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     public void testTXConsumerAndLargeNumberOfMessages() throws Exception {
 
         ActiveMQAdmin.enableJMSFrameTracing();
-        final int msgCount = 500;
+        final int msgCount = 300;
 
         connection = createConnection();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -374,7 +357,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         };
         synchronized(producer) {
             new Thread(t).start();
-            //wait until we know that the producer was able to send a message
+            // wait until we know that the producer was able to send a message
             producer.wait(10000);
         }
 
@@ -388,7 +371,6 @@ public class JMSClientTest extends JMSClientTestSupport {
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final Queue queue = session.createQueue(getDestinationName());
         connection.start();
-
 
         Testable t = new Testable() {
             @Override
@@ -570,8 +552,8 @@ public class JMSClientTest extends JMSClientTestSupport {
     }
 
     @Test(timeout=30 * 1000)
-    public void testProduceAndConsumeLargeNumbersOfMessages() throws JMSException {
-        int count = 2000;
+    public void testProduceAndConsumeLargeNumbersOfMessages() throws Exception {
+        int count = 1000;
         connection = createConnection();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(getDestinationName());
@@ -583,16 +565,14 @@ public class JMSClientTest extends JMSClientTestSupport {
             producer.send(m);
         }
 
-        MessageConsumer  consumer=session.createConsumer(queue);
+        MessageConsumer consumer=session.createConsumer(queue);
         for(int i = 0; i < count; i++) {
             Message message = consumer.receive(5000);
             assertNotNull(message);
-            System.out.println(((TextMessage) message).getText());
             assertEquals("Test-Message:" + i,((TextMessage) message).getText());
         }
 
-        Message message = consumer.receive(500);
-        assertNull(message);
+        assertNull(consumer.receiveNoWait());
     }
 
     @Test(timeout=30000)
@@ -670,7 +650,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                     msg.set(consumer.receiveNoWait());
                     return msg.get() != null;
                 }
-            }));
+            }, TimeUnit.SECONDS.toMillis(25), TimeUnit.MILLISECONDS.toMillis(200)));
 
             assertNotNull("Should have received a message by now.", msg.get());
             assertTrue("Should be an instance of TextMessage", msg.get() instanceof TextMessage);
@@ -807,7 +787,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     }
 
     @Test(timeout=30000)
-    public void testSessionTransactedCommit() throws JMSException, InterruptedException {
+    public void testSessionTransactedCommit() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         connection = createConnection();
@@ -824,24 +804,19 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
 
         // No commit in place, so no message should be dispatched.
-        MessageConsumer consumer = session.createConsumer(queue);
-        TextMessage m = (TextMessage) consumer.receive(500);
-
-        assertNull(m);
+        QueueViewMBean queueView = getProxyToQueue(getDestinationName());
+        assertEquals(0, queueView.getQueueSize());
 
         session.commit();
 
-        // Messages should be available now.
-        for (int i = 0; i < 10; i++) {
-            Message msg = consumer.receive(5000);
-            assertNotNull(msg);
-        }
+        // No commit in place, so no message should be dispatched.
+        assertEquals(10, queueView.getQueueSize());
 
         session.close();
     }
 
     @Test(timeout=30000)
-    public void testSessionTransactedRollback() throws JMSException, InterruptedException {
+    public void testSessionTransactedRollback() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         connection = createConnection();
@@ -859,10 +834,14 @@ public class JMSClientTest extends JMSClientTestSupport {
 
         session.rollback();
 
-        // No commit in place, so no message should be dispatched.
         MessageConsumer consumer = session.createConsumer(queue);
-        TextMessage m = (TextMessage) consumer.receive(500);
-        assertNull(m);
+
+        // No commit in place, so no message should be dispatched.
+        QueueViewMBean queueView = getProxyToQueue(getDestinationName());
+        assertEquals(0, queueView.getQueueSize());
+
+        assertNull(consumer.receive(100));
+        consumer.close();
 
         session.close();
     }
@@ -922,7 +901,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                 return broker.getInactiveDurableTopicSubscribers().length == 0 &&
                        broker.getDurableTopicSubscribers().length == 1;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
 
         consumer.close();
 
@@ -933,7 +912,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                 return broker.getInactiveDurableTopicSubscribers().length == 1 &&
                        broker.getDurableTopicSubscribers().length == 0;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
 
         session.unsubscribe("DurbaleTopic");
         assertTrue(Wait.waitFor(new Wait.Condition() {
@@ -943,7 +922,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                 return broker.getInactiveDurableTopicSubscribers().length == 0 &&
                        broker.getDurableTopicSubscribers().length == 0;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
     }
 
     @Test(timeout=30000)
@@ -964,7 +943,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                 return broker.getInactiveDurableTopicSubscribers().length == 0 &&
                        broker.getDurableTopicSubscribers().length == 0;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
 
         try {
             session.unsubscribe("DurbaleTopic");
@@ -993,7 +972,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                 return broker.getInactiveDurableTopicSubscribers().length == 0 &&
                        broker.getDurableTopicSubscribers().length == 1;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(20), TimeUnit.MILLISECONDS.toMillis(250)));
 
         try {
             session.unsubscribe("DurbaleTopic");

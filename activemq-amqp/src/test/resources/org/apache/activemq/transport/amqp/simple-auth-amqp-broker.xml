@@ -25,8 +25,7 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
-
-  <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true" schedulePeriodForDestinationPurge="2000">
+  <broker useJmx="false" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true">
 
     <destinations>
       <queue physicalName="TEST.Q" />
@@ -43,42 +42,13 @@
     </transportConnectors>
 
     <plugins>
-
-        <simpleAuthenticationPlugin>
-            <users>
-                <authenticationUser username="system" password="systemPassword" groups="users,admins"/>
-                <authenticationUser username="user" password="userPassword" groups="users"/>
-                <authenticationUser username="guest" password="guestPassword" groups="guests"/>
-            </users>
-        </simpleAuthenticationPlugin>
-
-
-
-      <!--  lets configure a destination based authorization mechanism -->
-        <!--
-      <authorizationPlugin>
-        <map>
-          <authorizationMap>
-            <authorizationEntries>
-              <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
-              <authorizationEntry queue="USERS.>" read="users" write="users" admin="users" />
-              <authorizationEntry queue="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
-
-              <authorizationEntry queue="TEST.Q" read="guests" write="guests" />
-
-              <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
-              <authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />
-              <authorizationEntry topic="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
-
-              <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
-            </authorizationEntries>
-            <tempDestinationAuthorizationEntry>
-                <tempDestinationAuthorizationEntry read="admins" write="admins" admin="admins"/>
-            </tempDestinationAuthorizationEntry>
-          </authorizationMap>
-        </map>
-      </authorizationPlugin>
-      -->
+      <simpleAuthenticationPlugin>
+        <users>
+          <authenticationUser username="system" password="systemPassword" groups="users,admins"/>
+          <authenticationUser username="user" password="userPassword" groups="users"/>
+          <authenticationUser username="guest" password="guestPassword" groups="guests"/>
+        </users>
+      </simpleAuthenticationPlugin>
     </plugins>
   </broker>
 

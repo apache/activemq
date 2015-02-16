@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -185,7 +186,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
                     return true;
                 }
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
     }
 
     private ClientConnection createClientConnection(boolean ssl) {

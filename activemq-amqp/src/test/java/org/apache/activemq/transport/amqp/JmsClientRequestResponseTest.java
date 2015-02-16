@@ -67,8 +67,16 @@ public class JmsClientRequestResponseTest extends AmqpTestSupport implements Mes
     @Override
     @After
     public void tearDown() throws Exception {
-        requestorConnection.close();
-        responderConnection.close();
+        if (requestorConnection != null) {
+            try {
+                requestorConnection.close();
+            } catch (Exception e) {}
+        }
+        if (responderConnection != null) {
+            try {
+                responderConnection.close();
+            } catch (Exception e) {}
+        }
 
         if (syncThread != null) {
             syncThread.join(5000);

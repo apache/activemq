@@ -210,6 +210,7 @@ public class AmqpTransformerTest {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
         brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(false);
         brokerService.setDeleteAllMessagesOnStartup(true);
 
         TransportConnector connector = brokerService.addConnector(amqpUrl);

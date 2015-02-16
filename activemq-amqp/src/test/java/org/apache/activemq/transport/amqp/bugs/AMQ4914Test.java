@@ -58,7 +58,7 @@ public class AMQ4914Test extends AmqpTestSupport {
 
     @Test(timeout = 60 * 1000)
     public void testSendSmallerMessages() throws JMSException {
-        for (int i = 512; i <= (16 * 1024); i += 512) {
+        for (int i = 512; i <= (8 * 1024); i += 512) {
             doTestSendLargeMessage(i);
         }
     }

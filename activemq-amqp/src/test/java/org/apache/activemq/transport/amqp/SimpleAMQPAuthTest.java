@@ -77,7 +77,7 @@ public class SimpleAMQPAuthTest {
                 }
             });
             connection.start();
-            Thread.sleep(1000);
+            Thread.sleep(500);
             connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSException e) {

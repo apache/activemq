@@ -80,6 +80,7 @@ public class AmqpTestSupport {
 
     @Before
     public void setUp() throws Exception {
+        LOG.info("========== start " + getTestName() + " ==========");
         exceptions.clear();
         if (killHungThreads("setUp")) {
             LOG.warn("HUNG THREADS in setUp");
@@ -101,9 +102,11 @@ public class AmqpTestSupport {
     protected void createBroker(boolean deleteAllMessages) throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
+        brokerService.setSchedulerSupport(false);
         brokerService.setAdvisorySupport(false);
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
         brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateMBeanServer(false);
 
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
@@ -215,6 +218,7 @@ public class AmqpTestSupport {
 
     @After
     public void tearDown() throws Exception {
+        LOG.info("========== tearDown " + getTestName() + " ==========");
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Boolean> future = executor.submit(new TearDownTask());
         try {
@@ -264,6 +268,10 @@ public class AmqpTestSupport {
         }
 
         session.close();
+    }
+
+    public String getTestName() {
+        return name.getMethodName();
     }
 
     protected BrokerViewMBean getProxyToBroker() throws MalformedObjectNameException, JMSException {
