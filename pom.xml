@@ -637,7 +637,6 @@
         <scope>test</scope>
       </dependency>
 
-
       <!--  for custom XML parsing -->
       <dependency>
         <groupId>org.apache.xbean</groupId>
@@ -974,6 +973,12 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito-version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.jmock</groupId>
         <artifactId>jmock-junit4</artifactId>
         <version>${jmock-version}</version>
@@ -1283,17 +1288,17 @@
                   </action>
                 </pluginExecution>
                 <pluginExecution>
-                	<pluginExecutionFilter>
-                		<groupId>org.apache.maven.plugins</groupId>
-                		<artifactId>maven-plugin-plugin</artifactId>
-                		<versionRange>[3.1,)</versionRange>
-                		<goals>
-                			<goal>descriptor</goal>
-                		</goals>
-                	</pluginExecutionFilter>
-                	<action>
-                		<ignore />
-                	</action>
+                    <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-plugin-plugin</artifactId>
+                        <versionRange>[3.1,)</versionRange>
+                        <goals>
+                            <goal>descriptor</goal>
+                        </goals>
+                    </pluginExecutionFilter>
+                    <action>
+                        <ignore />
+                    </action>
                 </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>

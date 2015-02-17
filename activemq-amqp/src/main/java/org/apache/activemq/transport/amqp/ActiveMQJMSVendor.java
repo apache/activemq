@@ -39,10 +39,8 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.qpid.proton.jms.JMSVendor;
+import org.apache.activemq.transport.amqp.message.JMSVendor;
 
-/**
- */
 public class ActiveMQJMSVendor extends JMSVendor {
 
     final public static ActiveMQJMSVendor INSTANCE = new ActiveMQJMSVendor();
