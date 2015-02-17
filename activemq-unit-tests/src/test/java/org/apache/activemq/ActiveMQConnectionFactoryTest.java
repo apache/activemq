@@ -41,7 +41,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 
     public void testUseURIToSetUseClientIDPrefixOnConnectionFactory() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
-                                                                     "vm://localhost?jms.clientIDPrefix=Cheese");
+            "vm://localhost?jms.clientIDPrefix=Cheese&broker.persistent=false");
         assertEquals("Cheese", cf.getClientIDPrefix());
 
         connection = (ActiveMQConnection)cf.createConnection();
@@ -51,6 +51,12 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         LOG.info("Got client ID: " + clientID);
 
         assertTrue("should start with Cheese! but was: " + clientID, clientID.startsWith("Cheese"));
+    }
+
+    @Override
+    public void setUp() throws Exception {
+        LOG.info("=========== Start test " + getName());
+        super.setUp();
     }
 
     @Override
@@ -65,6 +71,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
             broker.stop();
         } catch (Throwable ignore) {
         }
+
+        LOG.info("=========== Finished test " + getName());
     }
 
     public void testUseURIToSetOptionsOnConnectionFactory() throws URISyntaxException, JMSException {
@@ -89,7 +97,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 
     public void testUseURIToConfigureRedeliveryPolicy() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
-                                                                     "vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=2");
+            "vm://localhost?broker.persistent=false&broker.useJmx=false&jms.redeliveryPolicy.maximumRedeliveries=2");
         assertEquals("connection redeliveries", 2, cf.getRedeliveryPolicy().getMaximumRedeliveries());
 
         ActiveMQConnection connection = (ActiveMQConnection)cf.createConnection();
@@ -103,7 +111,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testCreateVMConnectionWithEmbdeddBroker() throws URISyntaxException, JMSException {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://myBroker2?broker.persistent=false");
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
+            "vm://myBroker2?broker.persistent=false&broker.useJmx=false");
         // Make sure the broker is not created until the connection is
         // instantiated.
         assertNull(BrokerRegistry.getInstance().lookup("myBroker2"));
@@ -120,7 +129,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     }
 
     public void testGetBrokerName() throws URISyntaxException, JMSException {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
+            "vm://localhost?broker.persistent=false&broker.useJmx=false");
         connection = (ActiveMQConnection)cf.createConnection();
         connection.start();
 
@@ -141,6 +151,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     public void testCreateTcpConnectionUsingKnownLocalPort() throws Exception {
         broker = new BrokerService();
         broker.setPersistent(false);
+        broker.setUseJmx(false);
         broker.addConnector("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
         broker.start();
 
@@ -236,6 +247,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
+        broker.setAdvisorySupport(false);
+        broker.setSchedulerSupport(false);
         TransportConnector connector = broker.addConnector(uri);
         broker.start();
 
