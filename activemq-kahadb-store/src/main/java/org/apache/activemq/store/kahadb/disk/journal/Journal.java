@@ -16,10 +16,9 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,12 +26,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
-import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.DataByteArrayInputStream;
-import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
 import org.apache.activemq.store.kahadb.disk.util.SchedulerTimerTask;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
@@ -58,6 +54,17 @@ public class Journal {
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
     public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
 
+    public enum PreallocationStrategy {
+        SPARSE_FILE,
+        OS_KERNEL_COPY,
+        ZEROS;
+    }
+
+    public enum PreallocationScope {
+        BATCH,
+        ENTIRE_JOURNAL;
+    }
+
     private static byte[] createBatchControlRecordHeader() {
         try {
             DataByteArrayOutputStream os = new DataByteArrayOutputStream();
@@ -80,6 +87,7 @@ public class Journal {
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
     public static final int PREFERED_DIFF = 1024 * 512;
     public static final int DEFAULT_MAX_WRITE_BATCH_SIZE = 1024 * 1024 * 4;
+    public static final int DEFAULT_PREALLOCATION_BATCH_SIZE = 1024 * 1024 * 1;
 
     private static final Logger LOG = LoggerFactory.getLogger(Journal.class);
 
@@ -112,6 +120,10 @@ public class Journal {
     protected boolean checkForCorruptionOnStartup;
     protected boolean enableAsyncDiskSync = true;
     private Timer timer;
+
+    protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
+    protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
+    protected int preallocationBatchSize = DEFAULT_PREALLOCATION_BATCH_SIZE;
 
     public interface DataFileRemovedListener {
         void fileRemoved(DataFile datafile);
@@ -181,6 +193,7 @@ public class Journal {
             totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
         }
 
+
         cleanupTask = new Runnable() {
             public void run() {
                 cleanup();
@@ -191,6 +204,85 @@ public class Journal {
         this.timer.scheduleAtFixedRate(task, DEFAULT_CLEANUP_INTERVAL,DEFAULT_CLEANUP_INTERVAL);
         long end = System.currentTimeMillis();
         LOG.trace("Startup took: "+(end-start)+" ms");
+    }
+
+
+    public void preallocateEntireJournalDataFile(RecoverableRandomAccessFile file) {
+
+        if (PreallocationScope.ENTIRE_JOURNAL == preallocationScope) {
+
+            if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
+                doPreallocationKernelCopy(file);
+
+            }else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
+                doPreallocationZeros(file);
+            }
+            else {
+                doPreallocationSparseFile(file);
+            }
+        }else {
+            LOG.info("Using journal preallocation scope of batch allocation");
+        }
+    }
+
+    private void doPreallocationSparseFile(RecoverableRandomAccessFile file) {
+        LOG.info("Preallocate journal file with sparse file");
+        try {
+            file.seek(maxFileLength - 1);
+            file.write((byte)0x00);
+        } catch (IOException e) {
+            LOG.error("Could not preallocate journal file with sparse file! Will continue without preallocation", e);
+        }
+    }
+
+    private void doPreallocationZeros(RecoverableRandomAccessFile file) {
+        LOG.info("Preallocate journal file with zeros");
+        ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
+        for (int i = 0; i < maxFileLength; i++) {
+            buffer.put((byte) 0x00);
+        }
+        buffer.flip();
+
+        try {
+            FileChannel channel = file.getChannel();
+            channel.write(buffer);
+            channel.force(false);
+            channel.position(0);
+        } catch (IOException e) {
+            LOG.error("Could not preallocate journal file with zeros! Will continue without preallocation", e);
+        }
+    }
+
+    private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
+        LOG.info("Preallocate journal file with kernel file copying");
+
+        // create a template file that will be used to pre-allocate the journal files
+        File templateFile = createJournalTemplateFile();
+
+        RandomAccessFile templateRaf = null;
+        try {
+            templateRaf = new RandomAccessFile(templateFile, "rw");
+            templateRaf.setLength(maxFileLength);
+            templateRaf.getChannel().force(true);
+            templateRaf.getChannel().transferTo(0, getMaxFileLength(), file.getChannel());
+            templateRaf.close();
+            templateFile.delete();
+        } catch (FileNotFoundException e) {
+            LOG.error("Could not find the template file on disk at " + templateFile.getAbsolutePath(), e);
+        } catch (IOException e) {
+            LOG.error("Could not transfer the template file to journal, transferFile=" + templateFile.getAbsolutePath(), e);
+        }
+    }
+
+    private File createJournalTemplateFile() {
+        String fileName = "db-log.template";
+        File rc  = new File(directory, fileName);
+        if (rc.exists()) {
+            System.out.println("deleting file because it already exists...");
+            rc.delete();
+
+        }
+        return rc;
     }
 
     private static byte[] bytes(String string) {
@@ -568,6 +660,30 @@ public class Journal {
         } finally {
             accessorPool.closeDataFileAccessor(updater);
         }
+    }
+
+    public PreallocationStrategy getPreallocationStrategy() {
+        return preallocationStrategy;
+    }
+
+    public void setPreallocationStrategy(PreallocationStrategy preallocationStrategy) {
+        this.preallocationStrategy = preallocationStrategy;
+    }
+
+    public PreallocationScope getPreallocationScope() {
+        return preallocationScope;
+    }
+
+    public void setPreallocationScope(PreallocationScope preallocationScope) {
+        this.preallocationScope = preallocationScope;
+    }
+
+    public int getPreallocationBatchSize() {
+        return preallocationBatchSize;
+    }
+
+    public void setPreallocationBatchSize(int preallocationBatchSize) {
+        this.preallocationBatchSize = preallocationBatchSize;
     }
 
     public File getDirectory() {
