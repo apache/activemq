@@ -33,38 +33,35 @@ import javax.jms.TopicSession;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PooledSessionTest {
+public class PooledSessionTest extends JmsPoolTestSupport {
 
-    private BrokerService broker;
     private ActiveMQConnectionFactory factory;
     private PooledConnectionFactory pooledFactory;
     private String connectionUri;
 
+    @Override
     @Before
     public void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(true);
-        broker.getManagementContext().setCreateMBeanServer(false);
-        TransportConnector connector = broker.addConnector("tcp://localhost:0");
-        broker.start();
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.setAdvisorySupport(false);
+        brokerService.setSchedulerSupport(false);
+        TransportConnector connector = brokerService.addConnector("tcp://localhost:0");
+        brokerService.start();
+
         connectionUri = connector.getPublishableConnectString();
         factory = new ActiveMQConnectionFactory(connectionUri);
         pooledFactory = new PooledConnectionFactory();
         pooledFactory.setConnectionFactory(factory);
         pooledFactory.setMaxConnections(1);
         pooledFactory.setBlockIfSessionPoolIsFull(false);
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-        broker = null;
     }
 
     @Test(timeout = 60000)
@@ -166,7 +163,7 @@ public class PooledSessionTest {
         assertNotNull(original);
         session.close();
 
-        assertEquals(1, broker.getAdminView().getDynamicDestinationProducers().length);
+        assertEquals(1, brokerService.getAdminView().getDynamicDestinationProducers().length);
 
         for (int i = 0; i < 20; ++i) {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -175,7 +172,7 @@ public class PooledSessionTest {
             session.close();
         }
 
-        assertEquals(1, broker.getAdminView().getDynamicDestinationProducers().length);
+        assertEquals(1, brokerService.getAdminView().getDynamicDestinationProducers().length);
 
         connection.close();
         pooledFactory.clear();
