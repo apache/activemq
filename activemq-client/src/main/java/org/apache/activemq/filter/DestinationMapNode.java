@@ -112,10 +112,15 @@ public class DestinationMapNode implements DestinationNode {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void removeDesendentValues(Set answer) {
+        ArrayList<DestinationNode> candidates = new ArrayList<>();
         for (Map.Entry<String, DestinationNode> child : childNodes.entrySet()) {
+            candidates.add(child.getValue());
+        }
+
+        for (DestinationNode node : candidates) {
             // remove all the values from the child
-            answer.addAll(child.getValue().removeValues());
-            answer.addAll(child.getValue().removeDesendentValues());
+            answer.addAll(node.removeValues());
+            answer.addAll(node.removeDesendentValues());
         }
     }
 

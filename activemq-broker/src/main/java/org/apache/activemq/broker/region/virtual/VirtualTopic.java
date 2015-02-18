@@ -91,10 +91,11 @@ public class VirtualTopic implements VirtualDestination {
 
     @Override
     public void create(Broker broker, ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        if (destination.isQueue() && destination.isPattern() && broker.getDestinations(destination).isEmpty()) {
+        if (destination.isQueue() && destination.isPattern()) {
             DestinationFilter filter = DestinationFilter.parseFilter(new ActiveMQQueue(prefix + DestinationFilter.ANY_DESCENDENT));
             if (filter.matches(destination)) {
                 broker.addDestination(context, destination, false);
+
             }
         }
     }
