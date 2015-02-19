@@ -211,10 +211,6 @@ class DataFileAppender implements FileAppender {
                         file = journal.rotateWriteFile();
                     }
 
-                    // will do batch preallocation on the journal if configured
-                    if (journal.preallocationScope == Journal.PreallocationScope.BATCH) {
-                        file.preallocateJournalBatch(journal, write.location.getSize());
-                    }
 
                     nextWriteBatch = newWriteBatch(write, file);
                     enqueueMutex.notifyAll();

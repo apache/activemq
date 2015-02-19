@@ -42,7 +42,6 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     protected final Integer dataFileId;
     protected volatile int length;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
-    protected long preallocationBatchWindow = 0L;
 
     DataFile(File file, int number) {
         this.file = file;
@@ -68,7 +67,6 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
 
     public synchronized void incrementLength(int size) {
         length += size;
-        preallocationBatchWindow -= size;
     }
 
     @Override
@@ -115,38 +113,4 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
         return dataFileId;
     }
 
-    public void preallocateJournalBatch(Journal journal, long newMessageSize) {
-
-        if (preallocationBatchWindow - newMessageSize <= 0) {
-            int preallocationBatchSize = Math.min(journal.getPreallocationBatchSize(),
-                    journal.maxFileLength - length);
-            doPreallocation(preallocationBatchSize);
-            preallocationBatchWindow = preallocationBatchSize;
-        }
-    }
-
-    private void doPreallocation(int size) {
-        try {
-            RecoverableRandomAccessFile file = openRandomAccessFile();
-            FileChannel channel = file.getChannel();
-
-            channel.position(length+1);
-            ByteBuffer buffer = generateAllocation(size);
-            channel.write(buffer);
-            channel.force(false);
-            file.close();
-        } catch (IOException e) {
-            LOG.debug("Cannot allocate batch for journal, continue without preallocation of batch...");
-        }
-
-    }
-
-    private ByteBuffer generateAllocation(int size) {
-        ByteBuffer rc = ByteBuffer.allocate(size);
-        for (int i = 0; i < size; i++) {
-            rc.put((byte) 0x00);
-        }
-        rc.flip();
-        return rc;
-    }
 }

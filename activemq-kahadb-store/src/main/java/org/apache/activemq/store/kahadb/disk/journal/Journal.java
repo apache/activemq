@@ -61,7 +61,6 @@ public class Journal {
     }
 
     public enum PreallocationScope {
-        BATCH,
         ENTIRE_JOURNAL;
     }
 
@@ -87,7 +86,6 @@ public class Journal {
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
     public static final int PREFERED_DIFF = 1024 * 512;
     public static final int DEFAULT_MAX_WRITE_BATCH_SIZE = 1024 * 1024 * 4;
-    public static final int DEFAULT_PREALLOCATION_BATCH_SIZE = 1024 * 1024 * 1;
 
     private static final Logger LOG = LoggerFactory.getLogger(Journal.class);
 
@@ -123,7 +121,6 @@ public class Journal {
 
     protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
     protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
-    protected int preallocationBatchSize = DEFAULT_PREALLOCATION_BATCH_SIZE;
 
     public interface DataFileRemovedListener {
         void fileRemoved(DataFile datafile);
@@ -182,6 +179,10 @@ public class Journal {
         }
 
         getCurrentWriteFile();
+
+        if (preallocationStrategy != PreallocationStrategy.SPARSE_FILE && maxFileLength != DEFAULT_MAX_FILE_LENGTH) {
+            LOG.warn("You are using a preallocation strategy and journal maxFileLength which should be benchmarked accordingly to not introduce unexpected latencies.");
+        }
 
         if( lastAppendLocation.get()==null ) {
             DataFile df = dataFiles.getTail();
@@ -676,14 +677,6 @@ public class Journal {
 
     public void setPreallocationScope(PreallocationScope preallocationScope) {
         this.preallocationScope = preallocationScope;
-    }
-
-    public int getPreallocationBatchSize() {
-        return preallocationBatchSize;
-    }
-
-    public void setPreallocationBatchSize(int preallocationBatchSize) {
-        this.preallocationBatchSize = preallocationBatchSize;
     }
 
     public File getDirectory() {

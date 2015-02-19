@@ -237,7 +237,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     long cleanupInterval = 30*1000;
     int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
     int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
-    int preallocationBatchSize = Journal.DEFAULT_PREALLOCATION_BATCH_SIZE;
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
     private String preallocationScope = Journal.PreallocationScope.ENTIRE_JOURNAL.name();
@@ -2493,7 +2492,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
         manager.setPreallocationStrategy(
                 Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
-        manager.setPreallocationBatchSize(preallocationBatchSize);
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());
@@ -3199,11 +3197,4 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         this.preallocationStrategy = preallocationStrategy;
     }
 
-    public int getPreallocationBatchSize() {
-        return preallocationBatchSize;
-    }
-
-    public void setPreallocationBatchSize(int preallocationBatchSize) {
-        this.preallocationBatchSize = preallocationBatchSize;
-    }
 }
