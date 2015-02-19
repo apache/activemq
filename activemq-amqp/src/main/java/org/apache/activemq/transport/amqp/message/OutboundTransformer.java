@@ -38,24 +38,12 @@ public abstract class OutboundTransformer {
     String replyToGroupIDKey;
     String prefixFooterKey;
 
-    private boolean useByteDestinationTypeAnnotations;
-
-   public OutboundTransformer(JMSVendor vendor) {
+    public OutboundTransformer(JMSVendor vendor) {
         this.vendor = vendor;
         this.setPrefixVendor("JMS_AMQP_");
     }
 
     public abstract EncodedMessage transform(Message jms) throws Exception;
-
-    public boolean isUseByteDestinationTypeAnnotations()
-    {
-        return useByteDestinationTypeAnnotations;
-    }
-
-    public void setUseByteDestinationTypeAnnotations(boolean useByteDestinationTypeAnnotations)
-    {
-        this.useByteDestinationTypeAnnotations = useByteDestinationTypeAnnotations;
-    }
 
     public String getPrefixVendor() {
         return prefixVendor;

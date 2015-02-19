@@ -59,67 +59,35 @@ public class JMSMappingInboundTransformerTest {
 
     // ======= JMSDestination Handling =========
 
-    // --- String type annotation ---
     @Test
     public void testTransformWithNoToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl(null, Destination.class, false);
+        doTransformWithToTypeDestinationTypeAnnotationTestImpl(null, Destination.class);
     }
 
     @Test
     public void testTransformWithQueueStringToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl("queue", Queue.class, false);
+        doTransformWithToTypeDestinationTypeAnnotationTestImpl("queue", Queue.class);
     }
 
     @Test
     public void testTransformWithTemporaryQueueStringToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl("queue,temporary", TemporaryQueue.class, false);
+        doTransformWithToTypeDestinationTypeAnnotationTestImpl("queue,temporary", TemporaryQueue.class);
     }
 
     @Test
     public void testTransformWithTopicStringToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl("topic", Topic.class, false);
+        doTransformWithToTypeDestinationTypeAnnotationTestImpl("topic", Topic.class);
     }
 
     @Test
     public void testTransformWithTemporaryTopicStringToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl("topic,temporary", TemporaryTopic.class, false);
+        doTransformWithToTypeDestinationTypeAnnotationTestImpl("topic,temporary", TemporaryTopic.class);
     }
 
-    // --- byte type annotation ---
-
-    @Test
-    public void testTransformWithNoToTypeDestinationTypeAnnotationUsingByteAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl(null, Queue.class, true);
-    }
-
-    @Test
-    public void testTransformWithQueueByteToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl(JMSVendor.QUEUE_TYPE, Queue.class, true);
-    }
-
-    @Test
-    public void testTransformWithTemporaryQueueByteToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl(JMSVendor.TEMP_QUEUE_TYPE, TemporaryQueue.class, true);
-    }
-
-    @Test
-    public void testTransformWithTopicByteToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl(JMSVendor.TOPIC_TYPE, Topic.class, true);
-    }
-
-    @Test
-    public void testTransformWithTemporaryTopicByteToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithToTypeDestinationTypeAnnotationTestImpl(JMSVendor.TEMP_TOPIC_TYPE, TemporaryTopic.class, true);
-    }
-
-    private void doTransformWithToTypeDestinationTypeAnnotationTestImpl(Object toTypeAnnotationValue, Class<? extends Destination> expectedClass,
-        boolean byteType) throws Exception {
+    private void doTransformWithToTypeDestinationTypeAnnotationTestImpl(Object toTypeAnnotationValue, Class<? extends Destination> expectedClass) throws Exception {
         TextMessage mockTextMessage = createMockTextMessage();
         JMSVendor mockVendor = createMockVendor(mockTextMessage);
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(mockVendor);
-        if (byteType) {
-            transformer.setUseByteDestinationTypeAnnotations(true);
-        }
 
         String toAddress = "toAddress";
         Message amqp = Message.Factory.create();
@@ -144,66 +112,35 @@ public class JMSMappingInboundTransformerTest {
 
     // ======= JMSReplyTo Handling =========
 
-    // --- String type annotation ---
     @Test
     public void testTransformWithNoReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(null, Destination.class, false);
+        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(null, Destination.class);
     }
 
     @Test
     public void testTransformWithQueueStringReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("queue", Queue.class, false);
+        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("queue", Queue.class);
     }
 
     @Test
     public void testTransformWithTemporaryQueueStringReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("queue,temporary", TemporaryQueue.class, false);
+        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("queue,temporary", TemporaryQueue.class);
     }
 
     @Test
     public void testTransformWithTopicStringReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("topic", Topic.class, false);
+        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("topic", Topic.class);
     }
 
     @Test
     public void testTransformWithTemporaryTopicStringReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("topic,temporary", TemporaryTopic.class, false);
+        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl("topic,temporary", TemporaryTopic.class);
     }
 
-    // --- byte type annotation ---
-    @Test
-    public void testTransformWithNoReplyToTypeDestinationTypeAnnotationUsingByteAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(null, Queue.class, true);
-    }
-
-    @Test
-    public void testTransformWithQueueByteReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(JMSVendor.QUEUE_TYPE, Queue.class, true);
-    }
-
-    @Test
-    public void testTransformWithTemporaryQueueByteReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(JMSVendor.TEMP_QUEUE_TYPE, TemporaryQueue.class, true);
-    }
-
-    @Test
-    public void testTransformWithTopicByteReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(JMSVendor.TOPIC_TYPE, Topic.class, true);
-    }
-
-    @Test
-    public void testTransformWithTemporaryTopicByteReplyToTypeDestinationTypeAnnotation() throws Exception {
-        doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(JMSVendor.TEMP_TOPIC_TYPE, TemporaryTopic.class, true);
-    }
-
-    private void doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(Object replyToTypeAnnotationValue, Class<? extends Destination> expectedClass,
-        boolean byteType) throws Exception {
+    private void doTransformWithReplyToTypeDestinationTypeAnnotationTestImpl(Object replyToTypeAnnotationValue, Class<? extends Destination> expectedClass) throws Exception {
         TextMessage mockTextMessage = createMockTextMessage();
         JMSVendor mockVendor = createMockVendor(mockTextMessage);
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer(mockVendor);
-        if (byteType) {
-            transformer.setUseByteDestinationTypeAnnotations(true);
-        }
 
         String replyToAddress = "replyToAddress";
         Message amqp = Message.Factory.create();

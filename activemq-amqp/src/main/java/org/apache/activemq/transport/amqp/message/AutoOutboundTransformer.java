@@ -42,11 +42,4 @@ public class AutoOutboundTransformer extends JMSMappingOutboundTransformer {
             return transformer.transform(msg);
         }
     }
-
-    @Override
-    public void setUseByteDestinationTypeAnnotations(boolean useByteDestinationTypeAnnotations)
-    {
-        super.setUseByteDestinationTypeAnnotations(useByteDestinationTypeAnnotations);
-        transformer.setUseByteDestinationTypeAnnotations(useByteDestinationTypeAnnotations);
-    }
 }

@@ -276,39 +276,21 @@ public class JMSMappingOutboundTransformer extends OutboundTransformer {
         return (ProtonJMessage) org.apache.qpid.proton.message.Message.Factory.create(header, da, ma, props, ap, body, footer);
     }
 
-    private Object destinationAttributes(Destination destination) {
-        if (isUseByteDestinationTypeAnnotations()) {
-            if (destination instanceof Queue) {
-                if (destination instanceof TemporaryQueue) {
-                    return JMSVendor.TEMP_QUEUE_TYPE;
-                } else {
-                    return JMSVendor.QUEUE_TYPE;
-                }
+    private static String destinationAttributes(Destination destination) {
+        if (destination instanceof Queue) {
+            if (destination instanceof TemporaryQueue) {
+                return "temporary,queue";
+            } else {
+                return "queue";
             }
-            if (destination instanceof Topic) {
-                if (destination instanceof TemporaryTopic) {
-                    return JMSVendor.TEMP_TOPIC_TYPE;
-                } else {
-                    return JMSVendor.TOPIC_TYPE;
-                }
-            }
-            return JMSVendor.QUEUE_TYPE;
-        } else {
-            if (destination instanceof Queue) {
-                if (destination instanceof TemporaryQueue) {
-                    return "temporary,queue";
-                } else {
-                    return "queue";
-                }
-            }
-            if (destination instanceof Topic) {
-                if (destination instanceof TemporaryTopic) {
-                    return "temporary,topic";
-                } else {
-                    return "topic";
-                }
-            }
-            return "";
         }
+        if (destination instanceof Topic) {
+            if (destination instanceof TemporaryTopic) {
+                return "temporary,topic";
+            } else {
+                return "topic";
+            }
+        }
+        return "";
     }
 }

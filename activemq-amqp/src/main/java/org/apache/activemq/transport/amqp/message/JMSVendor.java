@@ -26,11 +26,6 @@ import javax.jms.TextMessage;
 
 abstract public class JMSVendor {
 
-    public static final byte QUEUE_TYPE = 0x00;
-    public static final byte TOPIC_TYPE = 0x01;
-    public static final byte TEMP_QUEUE_TYPE = 0x02;
-    public static final byte TEMP_TOPIC_TYPE = 0x03;
-
     public abstract BytesMessage createBytesMessage();
 
     public abstract StreamMessage createStreamMessage();
