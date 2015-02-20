@@ -17,6 +17,7 @@
 package org.apache.activemq.store.kahadb.disk.journal;
 
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
 import java.io.File;
@@ -61,16 +62,23 @@ public class PreallocationJournalTest  {
         store.setPreallocationStrategy(preallocationStrategy);
         store.start();
 
-        // time for files to get there.. i know this is a brittle test! need to find
-        // a better way (callbacks?) to notify when the journal is completely up
-        TimeUnit.MILLISECONDS.sleep(500);
-        File journalLog = new File(dataDirectory, "db-1.log");
-        assertTrue(journalLog.exists());
+        final File journalLog = new File(dataDirectory, "db-1.log");
+        assertTrue("file exists", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return journalLog.exists();
+            }
+        }));
 
 
         FileInputStream is = new FileInputStream(journalLog);
-        FileChannel channel = is.getChannel();
-        assertEquals(Journal.DEFAULT_MAX_FILE_LENGTH, channel.size());
+        final FileChannel channel = is.getChannel();
+        assertTrue("file size as expected", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return Journal.DEFAULT_MAX_FILE_LENGTH == channel.size();
+            }
+        }));
 
         channel.position(1 * 1024 * 1024 + 1);
         ByteBuffer buff = ByteBuffer.allocate(1);
