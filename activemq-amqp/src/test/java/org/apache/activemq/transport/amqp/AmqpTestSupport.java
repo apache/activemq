@@ -20,12 +20,8 @@ import java.io.File;
 import java.security.SecureRandom;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -59,6 +55,9 @@ public class AmqpTestSupport {
     @Rule public TestName name = new TestName();
 
     protected static final Logger LOG = LoggerFactory.getLogger(AmqpTestSupport.class);
+
+    protected ExecutorService testService = Executors.newSingleThreadExecutor();
+
     protected BrokerService brokerService;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
     protected int numberOfMessages;
@@ -82,19 +81,8 @@ public class AmqpTestSupport {
     public void setUp() throws Exception {
         LOG.info("========== start " + getTestName() + " ==========");
         exceptions.clear();
-        if (killHungThreads("setUp")) {
-            LOG.warn("HUNG THREADS in setUp");
-        }
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = executor.submit(new SetUpTask());
-        try {
-            LOG.debug("SetUpTask started.");
-            future.get(60, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new Exception("startBroker timed out");
-        }
-        executor.shutdownNow();
+        startBroker();
 
         this.numberOfMessages = 2000;
     }
@@ -218,42 +206,8 @@ public class AmqpTestSupport {
 
     @After
     public void tearDown() throws Exception {
+        stopBroker();
         LOG.info("========== tearDown " + getTestName() + " ==========");
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = executor.submit(new TearDownTask());
-        try {
-            LOG.debug("tearDown started.");
-            future.get(60, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new Exception("stopBroker timed out");
-        } finally {
-            executor.shutdownNow();
-
-            if (killHungThreads("tearDown")) {
-                LOG.warn("HUNG THREADS in tearDown");
-            }
-        }
-    }
-
-    private boolean killHungThreads(String stage) throws Exception{
-        Thread.sleep(500);
-        if (Thread.activeCount() == 1) {
-            return false;
-        }
-        LOG.warn("Hung Thread(s) on {} entry threadCount {} ", stage, Thread.activeCount());
-
-        Thread[] threads = new Thread[Thread.activeCount()];
-        Thread.enumerate(threads);
-        for (int i=0; i < threads.length; i++) {
-            Thread t = threads[i];
-            if (!t.getName().equals("main")) {
-                LOG.warn("KillHungThreads: Interrupting thread {}", t.getName());
-                t.interrupt();
-            }
-        }
-
-        LOG.warn("Hung Thread on {} exit threadCount {} ", stage, Thread.activeCount());
-        return true;
     }
 
     public void sendMessages(Connection connection, Destination destination, int count) throws Exception {
@@ -309,31 +263,5 @@ public class AmqpTestSupport {
         QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;
-    }
-
-    public class SetUpTask implements Callable<Boolean> {
-        @SuppressWarnings("unused")
-        private String testName;
-
-        @Override
-        public Boolean call() throws Exception {
-            LOG.debug("in SetUpTask.call, calling startBroker");
-            startBroker();
-
-            return Boolean.TRUE;
-        }
-    }
-
-    public class TearDownTask implements Callable<Boolean> {
-        @SuppressWarnings("unused")
-        private String testName;
-
-        @Override
-        public Boolean call() throws Exception {
-            LOG.debug("in TearDownTask.call(), calling stopBroker");
-            stopBroker();
-
-            return Boolean.TRUE;
-        }
     }
 }
