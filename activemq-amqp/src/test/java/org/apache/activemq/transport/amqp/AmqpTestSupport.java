@@ -106,7 +106,7 @@ public class AmqpTestSupport {
         brokerService.setAdvisorySupport(false);
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
         brokerService.setUseJmx(true);
-        brokerService.getManagementContext().setCreateMBeanServer(false);
+        brokerService.getManagementContext().setCreateConnector(false);
 
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
