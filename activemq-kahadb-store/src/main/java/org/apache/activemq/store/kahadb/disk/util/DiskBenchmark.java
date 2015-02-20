@@ -54,7 +54,7 @@ public class DiskBenchmark {
             try {
                 File file = new File(f);
                 if (file.exists()) {
-                    System.out.println("File " + file + " allready exists, will not benchmark.");
+                    System.out.println("File " + file + " already exists, will not benchmark.");
                 } else {
                     System.out.println("Benchmarking: " + file.getCanonicalPath());
                     Report report = benchmark.benchmark(file);
@@ -206,7 +206,6 @@ public class DiskBenchmark {
 
         rc.size = data.length;
         RecoverableRandomAccessFile raf = new RecoverableRandomAccessFile(file, "rw");
-//        RandomAccessFile raf = new RandomAccessFile(file, "rw");
         preallocateDataFile(raf, file.getParentFile());
 
         // Figure out how many writes we can do in the sample interval.
@@ -249,7 +248,7 @@ public class DiskBenchmark {
             for (long i = 0; i + data.length < size; i += data.length) {
                 raf.seek(i);
                 raf.write(data);
-                raf.getChannel().force(false);
+                raf.getChannel().force(!SKIP_METADATA_UPDATE);
                 ioCount++;
                 now = System.currentTimeMillis();
                 if ((now - start) > sampleInterval) {
@@ -298,7 +297,6 @@ public class DiskBenchmark {
         if (tmpFile.exists()) {
             tmpFile.delete();
         }
-        System.out.println("Using a template file: " + tmpFile.getAbsolutePath());
         RandomAccessFile templateFile = new RandomAccessFile(tmpFile, "rw");
         templateFile.setLength(size);
         templateFile.getChannel().force(true);
