@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -73,7 +74,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
 
     @Override
     public String getProtocolConfig() {
-        return "transport.connectAttemptTimeout=2000";
+        return "transport.connectAttemptTimeout=1000";
     }
 
     @Test(timeout = 60 * 1000)
@@ -101,7 +102,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
              public boolean isSatisified() throws Exception {
                  return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
              }
-         }));
+         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         // and it should be closed due to inactivity
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
@@ -109,7 +110,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         assertTrue("no exceptions", exceptions.isEmpty());
     }

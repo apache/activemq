@@ -61,6 +61,7 @@ public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
         brokerService.setPopulateJMSXUserID(true);
+        brokerService.setUseJmx(false);
 
         final CompositeTopic compositeTopic = new CompositeTopic();
         compositeTopic.setName(COMPOSITE_TOPIC);
