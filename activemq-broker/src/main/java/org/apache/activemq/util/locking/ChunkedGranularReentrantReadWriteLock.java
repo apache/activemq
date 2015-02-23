@@ -38,7 +38,7 @@ public class ChunkedGranularReentrantReadWriteLock<T> implements GranularReentra
     }
 
     protected int computeId( T key ) {
-        return key.hashCode() % chunks;
+        return Math.abs( key.hashCode() ) % chunks;
     }
 
     protected ReentrantReadWriteLock fetch( T key ) {
