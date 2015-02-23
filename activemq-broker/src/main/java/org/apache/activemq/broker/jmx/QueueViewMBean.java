@@ -209,4 +209,15 @@ public interface QueueViewMBean extends DestinationViewMBean {
      */
     @MBeanInfo("emove all the message groups - will rebalance all message groups across consumers")
     void removeAllMessageGroups();
+
+    @MBeanInfo("pause dispatch to consumers")
+    void pause();
+
+    @MBeanInfo("resume dispatch to consumers if paused")
+    void resume();
+
+    @MBeanInfo("Dispatch to consumers is paused")
+    boolean isPaused();
+
+
 }

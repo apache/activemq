@@ -226,4 +226,22 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         Queue queue = (Queue) destination;
         queue.getMessageGroupOwners().removeAll();
     }
+
+    @Override
+    public void pause() {
+        Queue queue = (Queue) destination;
+        queue.pauseDispatch();
+    }
+
+    @Override
+    public void resume() {
+        Queue queue = (Queue) destination;
+        queue.resumeDispatch();
+    }
+
+    @Override
+    public boolean isPaused() {
+        Queue queue = (Queue) destination;
+        return queue.isDispatchPaused();
+    }
 }

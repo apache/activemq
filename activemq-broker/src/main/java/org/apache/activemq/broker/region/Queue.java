@@ -147,6 +147,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     private final Object iteratingMutex = new Object();
 
+
+
     class TimeoutMessage implements Delayed {
 
         Message message;
@@ -1647,6 +1649,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
             return pendingWakeups.get() > 0;
         }
+    }
+
+    public void pauseDispatch() {
+        dispatchSelector.pause();
+    }
+
+    public void resumeDispatch() {
+        dispatchSelector.resume();
+    }
+
+    public boolean isDispatchPaused() {
+        return dispatchSelector.isPaused();
     }
 
     protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
