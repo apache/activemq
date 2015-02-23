@@ -875,6 +875,7 @@ public class RegionBroker extends EmptyBroker {
         Logger log = LOG;
         StopWatch purgeStopWatch = new StopWatch();
         subscriptionPurgeLock.writeLock().lock();
+        int nrDestinationsPurged = 0;
         try {
             List<Destination> list = new ArrayList<>();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
@@ -910,6 +911,7 @@ public class RegionBroker extends EmptyBroker {
                             StopWatch purgeDestinationStopWatch = new StopWatch();
                             getRoot().removeDestination( context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0 );
                             log.info( "{} Inactive for longer than {} ms - removed in {} ms ...done", dest.getName(), dest.getInactiveTimeoutBeforeGC(), purgeDestinationStopWatch.stop() );
+                            ++nrDestinationsPurged;
                         }
                     } catch (Exception e) {
                         LOG.error( "Failed to remove inactive destination {}", dest, e );
@@ -920,7 +922,8 @@ public class RegionBroker extends EmptyBroker {
             }
         } finally {
             subscriptionPurgeLock.writeLock().unlock();
-            log.info( "Inactive destination purge took {} ms", purgeStopWatch.stop() );
+            if ( nrDestinationsPurged > 0 )
+                log.info( "Inactive destination purge took {} ms and purged {} destinations", purgeStopWatch.stop(), nrDestinationsPurged );
         }
     }
 
