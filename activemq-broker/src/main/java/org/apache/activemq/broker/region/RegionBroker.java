@@ -73,6 +73,8 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.locking.ChunkedGranularReentrantReadWriteLock;
+import org.apache.activemq.util.locking.GranularReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +113,8 @@ public class RegionBroker extends EmptyBroker {
     private final ThreadPoolExecutor executor;
     private boolean allowTempAutoCreationOnSend;
 
-    private final ReentrantReadWriteLock inactiveDestinationsPurgeLock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock subscriptionPurgeLock = new ReentrantReadWriteLock();
+    private final GranularReentrantReadWriteLock<ActiveMQDestination> inactiveDestinationsPurgeLock = new ChunkedGranularReentrantReadWriteLock<>();
     private final Runnable purgeInactiveDestinationsTask = new Runnable() {
         @Override
         public void run() {
@@ -391,14 +394,14 @@ public class RegionBroker extends EmptyBroker {
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         if (destination != null) {
-            inactiveDestinationsPurgeLock.readLock().lock();
+            inactiveDestinationsPurgeLock.readLock(destination).lock();
             try {
                 // This seems to cause the destination to be added but without
                 // advisories firing...
                 context.getBroker().addDestination(context, destination, isAllowTempAutoCreationOnSend());
                 getRegion(destination).addProducer(context, info);
             } finally {
-                inactiveDestinationsPurgeLock.readLock().unlock();
+                inactiveDestinationsPurgeLock.readLock(destination).unlock();
             }
         }
     }
@@ -407,11 +410,11 @@ public class RegionBroker extends EmptyBroker {
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
         if (destination != null) {
-            inactiveDestinationsPurgeLock.readLock().lock();
+            inactiveDestinationsPurgeLock.readLock(destination).lock();
             try {
                 getRegion(destination).removeProducer(context, info);
             } finally {
-                inactiveDestinationsPurgeLock.readLock().unlock();
+                inactiveDestinationsPurgeLock.readLock(destination).unlock();
             }
         }
     }
@@ -422,33 +425,32 @@ public class RegionBroker extends EmptyBroker {
         if (destinationInterceptor != null) {
             destinationInterceptor.create(this, context, destination);
         }
-        inactiveDestinationsPurgeLock.readLock().lock();
+        inactiveDestinationsPurgeLock.readLock(destination).lock();
         try {
             return getRegion(destination).addConsumer(context, info);
         } finally {
-            inactiveDestinationsPurgeLock.readLock().unlock();
+            inactiveDestinationsPurgeLock.readLock(destination).unlock();
         }
     }
 
     @Override
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        inactiveDestinationsPurgeLock.readLock().lock();
+        inactiveDestinationsPurgeLock.readLock(destination).lock();
         try {
             getRegion(destination).removeConsumer(context, info);
         } finally {
-            inactiveDestinationsPurgeLock.readLock().unlock();
+            inactiveDestinationsPurgeLock.readLock(destination).unlock();
         }
     }
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-        inactiveDestinationsPurgeLock.readLock().lock();
+        subscriptionPurgeLock.readLock().lock();
         try {
             topicRegion.removeSubscription(context, info);
         } finally {
-            inactiveDestinationsPurgeLock.readLock().unlock();
-
+            subscriptionPurgeLock.readLock().unlock();
         }
     }
 
@@ -873,20 +875,22 @@ public class RegionBroker extends EmptyBroker {
     }
 
     protected void purgeInactiveDestinations() {
-        inactiveDestinationsPurgeLock.writeLock().lock();
+
+        subscriptionPurgeLock.writeLock().lock();
+
         try {
-            List<Destination> list = new ArrayList<Destination>();
+            List<Destination> list = new ArrayList<>();
             Map<ActiveMQDestination, Destination> map = getDestinationMap();
             if (isAllowTempAutoCreationOnSend()) {
-                map.putAll(tempQueueRegion.getDestinationMap());
-                map.putAll(tempTopicRegion.getDestinationMap());
+                map.putAll( tempQueueRegion.getDestinationMap() );
+                map.putAll( tempTopicRegion.getDestinationMap() );
             }
             long maxPurgedDests = this.brokerService.getMaxPurgedDestinationsPerSweep();
             long timeStamp = System.currentTimeMillis();
             for (Destination d : map.values()) {
-                d.markForGC(timeStamp);
+                d.markForGC( timeStamp );
                 if (d.canGC()) {
-                    list.add(d);
+                    list.add( d );
                     if (maxPurgedDests > 0 && list.size() == maxPurgedDests) {
                         break;
                     }
@@ -894,24 +898,30 @@ public class RegionBroker extends EmptyBroker {
             }
 
             if (!list.isEmpty()) {
-                ConnectionContext context = BrokerSupport.getConnectionContext(this);
-                context.setBroker(this);
+                ConnectionContext context = BrokerSupport.getConnectionContext( this );
+                context.setBroker( this );
 
                 for (Destination dest : list) {
                     Logger log = LOG;
                     if (dest instanceof BaseDestination) {
-                        log = ((BaseDestination) dest).getLog();
+                        log = ( (BaseDestination) dest ).getLog();
                     }
-                    log.info("{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC());
                     try {
-                        getRoot().removeDestination(context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0);
+                        inactiveDestinationsPurgeLock.writeLock( dest.getActiveMQDestination() ).lock();
+                        //(double check idiom) check that the destination can still be GCd
+                        if (dest.canGC()) {
+                            log.info( "{} Inactive for longer than {} ms - removing ...", dest.getName(), dest.getInactiveTimeoutBeforeGC() );
+                            getRoot().removeDestination( context, dest.getActiveMQDestination(), isAllowTempAutoCreationOnSend() ? 1 : 0 );
+                        }
                     } catch (Exception e) {
-                        LOG.error("Failed to remove inactive destination {}", dest, e);
+                        LOG.error( "Failed to remove inactive destination {}", dest, e );
+                    } finally {
+                        inactiveDestinationsPurgeLock.writeLock( dest.getActiveMQDestination() ).unlock();
                     }
                 }
             }
         } finally {
-            inactiveDestinationsPurgeLock.writeLock().unlock();
+            subscriptionPurgeLock.writeLock().unlock();
         }
     }
 
