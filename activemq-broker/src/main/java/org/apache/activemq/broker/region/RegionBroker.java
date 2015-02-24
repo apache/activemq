@@ -796,6 +796,7 @@ public class RegionBroker extends EmptyBroker {
                             if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
                                 adminContext = BrokerSupport.getConnectionContext(this);
                             }
+                            addDestination(adminContext, deadLetterDestination, false).getActiveMQDestination().setDLQ();
                             BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
                             return true;
                         }

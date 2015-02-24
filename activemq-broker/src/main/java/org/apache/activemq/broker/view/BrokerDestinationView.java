@@ -169,7 +169,7 @@ public class BrokerDestinationView {
      * @return true if the destination is a Dead Letter Queue
      */
     public boolean isDLQ() {
-        return destination.isDLQ();
+        return destination.getActiveMQDestination().isDLQ();
     }
 
 

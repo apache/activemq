@@ -26,7 +26,11 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -171,6 +175,14 @@ public abstract class TestSupport extends CombinationTestSupport {
         return destination.isQueue() ?
                     regionBroker.getQueueRegion().getDestinationMap() :
                         regionBroker.getTopicRegion().getDestinationMap();
+    }
+
+    protected QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
+        BrokerService brokerService = BrokerRegistry.getInstance().lookup("localhost");
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
+        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        return proxy;
     }
 
     public static enum PersistenceAdapterChoice {LevelDB, KahaDB, AMQ, JDBC, MEM };

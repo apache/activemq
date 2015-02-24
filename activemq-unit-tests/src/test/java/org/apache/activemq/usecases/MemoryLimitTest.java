@@ -253,11 +253,4 @@ public class MemoryLimitTest extends TestSupport {
         assertEquals("consumer got all produced messages", producer.getMessageCount(), consumer.getReceived());
     }
 
-    protected QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
-        BrokerService brokerService = BrokerRegistry.getInstance().lookup("localhost");
-        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
-        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
-        return proxy;
-    }
 }
