@@ -24,7 +24,7 @@ if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
 fi
 
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+    ACTIVEMQ_OPTS="-Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 fi
 
 # Uncomment to enable audit logging
