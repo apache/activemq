@@ -593,7 +593,15 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
+    @Deprecated
     public double getBackOffMultiplier() {
+        if (redeliveryPolicy == null) {
+            return 0;
+        }
+        return redeliveryPolicy.getBackOffMultiplier();
+    }
+
+    public double getRedeliveryBackOffMultiplier() {
         if (redeliveryPolicy == null) {
             return 0;
         }
@@ -614,6 +622,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return redeliveryPolicy.getMaximumRedeliveries();
     }
 
+    @Deprecated
     public boolean isUseExponentialBackOff() {
         if (redeliveryPolicy == null) {
             return false;
@@ -621,11 +630,20 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return redeliveryPolicy.isUseExponentialBackOff();
     }
 
-    /**
-     * 
-     */
+    public boolean isRedeliveryUseExponentialBackOff() {
+        if (redeliveryPolicy == null) {
+            return false;
+        }
+        return redeliveryPolicy.isUseExponentialBackOff();
+    }
+
+    @Deprecated
     public void setBackOffMultiplier(double backOffMultiplier) {
         lazyCreateRedeliveryPolicy().setBackOffMultiplier(backOffMultiplier);
+    }
+
+    public void setRedeliveryBackOffMultiplier(double redeliveryBackOffMultiplier) {
+        lazyCreateRedeliveryPolicy().setBackOffMultiplier(redeliveryBackOffMultiplier);
     }
     
     public long getMaximumRedeliveryDelay() {
@@ -654,11 +672,13 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         lazyCreateRedeliveryPolicy().setMaximumRedeliveries(maximumRedeliveries);
     }
 
-    /**
-     * 
-     */
+
     public void setUseExponentialBackOff(boolean useExponentialBackOff) {
         lazyCreateRedeliveryPolicy().setUseExponentialBackOff(useExponentialBackOff);
+    }
+
+    public void setRedeliveryUseExponentialBackOff(boolean redeliveryUseExponentialBackOff) {
+        lazyCreateRedeliveryPolicy().setUseExponentialBackOff(redeliveryUseExponentialBackOff);
     }
 
     // don't use getter to avoid causing introspection errors in containers
