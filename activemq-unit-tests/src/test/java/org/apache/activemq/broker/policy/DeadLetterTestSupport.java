@@ -60,7 +60,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected BrokerService broker;
     protected boolean transactedMode;
     protected int acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
-    private Destination destination;
+    protected Destination destination;
 
     protected void setUp() throws Exception {
         super.setUp();

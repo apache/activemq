@@ -69,4 +69,12 @@ public interface DeadLetterStrategy {
      */
     public void rollback(Message message);
 
+    /**
+     * The expiration value to use on messages sent to the DLQ, default 0
+     * @return expiration in milli seconds
+     */
+    public void setExpiration(long expiration);
+
+    public long getExpiration();
+
 }
