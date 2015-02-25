@@ -530,24 +530,28 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             @Override
             public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
-                protonConnection.open();
-                pumpProtonToSocket();
+                Throwable exception = null;
+                try {
+                    protonConnection.open();
 
-                if (response.isException()) {
-                    Throwable exception = ((ExceptionResponse) response).getException();
-                    if (exception instanceof SecurityException) {
-                        protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
-                    } else if (exception instanceof InvalidClientIDException) {
-                        protonConnection.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage()));
-                    } else {
-                        protonConnection.setCondition(new ErrorCondition(AmqpError.ILLEGAL_STATE, exception.getMessage()));
+                    if (response.isException()) {
+                        exception = ((ExceptionResponse) response).getException();
+                        if (exception instanceof SecurityException) {
+                            protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                        } else if (exception instanceof InvalidClientIDException) {
+                            protonConnection.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage()));
+                        } else {
+                            protonConnection.setCondition(new ErrorCondition(AmqpError.ILLEGAL_STATE, exception.getMessage()));
+                        }
+                        protonConnection.close();
                     }
-                    protonConnection.close();
+                } finally {
                     pumpProtonToSocket();
-                    amqpTransport.onException(IOExceptionSupport.create(exception));
-                    return;
-                }
 
+                    if (response.isException()) {
+                        amqpTransport.onException(IOExceptionSupport.create(exception));
+                    }
+                }
             }
         });
     }
