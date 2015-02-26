@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -26,7 +27,6 @@ import javax.jms.Connection;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 
-import org.apache.activemq.spring.SpringSslContext;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.After;
 
@@ -84,7 +84,16 @@ public class JMSClientTestSupport extends AmqpTestSupport {
      * @return the port to connect to on the Broker.
      */
     protected int getBrokerPort() {
-        return port;
+        return amqpPort;
+    }
+
+    /**
+     * Can be overridden in subclasses to test against a different transport suchs as NIO.
+     *
+     * @return the URI to connect to on the Broker for AMQP.
+     */
+    protected URI getBrokerURI() {
+        return amqpURI;
     }
 
     protected Connection createConnection() throws JMSException {
@@ -106,10 +115,9 @@ public class JMSClientTestSupport extends AmqpTestSupport {
         final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", brokerPort, "admin", "password", null, useSsl);
 
         if (useSsl) {
-            SpringSslContext context = (SpringSslContext) brokerService.getSslContext();
-            factory.setKeyStorePath(context.getKeyStore());
+            factory.setKeyStorePath(System.getProperty("javax.net.ssl.trustStore"));
             factory.setKeyStorePassword("password");
-            factory.setTrustStorePath(context.getTrustStore());
+            factory.setTrustStorePath(System.getProperty("javax.net.ssl.keyStore"));
             factory.setTrustStorePassword("password");
         }
 

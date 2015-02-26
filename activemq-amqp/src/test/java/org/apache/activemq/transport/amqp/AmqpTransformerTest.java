@@ -21,10 +21,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URI;
+
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -35,8 +35,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,8 +46,8 @@ public class AmqpTransformerTest {
 
     private static final String AMQP_URL = "amqp://0.0.0.0:0%s";
     private BrokerService brokerService;
-    private int amqpPort;
-    private int openwirePort;
+    private URI amqpConnectionURI;
+    private URI openwireConnectionURI;
     private static final String TEST_QUEUE = "txqueue";
 
     @Test(timeout = 30 * 1000)
@@ -59,10 +57,11 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=native"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = createAmqpConnection();
-        QueueImpl queue = new QueueImpl("queue://" + TEST_QUEUE);
+        Connection amqpConnection = JmsClientContext.INSTANCE.createConnection(amqpConnectionURI);
+        amqpConnection.start();
 
         Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = amqpSession.createQueue(TEST_QUEUE);
         MessageProducer p = amqpSession.createProducer(queue);
         p.setPriority(7);
 
@@ -75,7 +74,7 @@ public class AmqpTransformerTest {
         amqpConnection.close();
 
         // receive with openwire JMS
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://0.0.0.0:" + openwirePort);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
         Connection openwireConn = factory.createConnection();
         openwireConn.start();
         Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -105,10 +104,11 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=raw"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = createAmqpConnection();
-        QueueImpl queue = new QueueImpl("queue://" + TEST_QUEUE);
+        Connection amqpConnection = JmsClientContext.INSTANCE.createConnection(amqpConnectionURI);
+        amqpConnection.start();
 
         Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = amqpSession.createQueue(TEST_QUEUE);
         MessageProducer p = amqpSession.createProducer(queue);
         p.setPriority(7);
 
@@ -121,7 +121,7 @@ public class AmqpTransformerTest {
         amqpConnection.close();
 
         // receive with openwire JMS
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://0.0.0.0:" + openwirePort);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
         Connection openwireConn = factory.createConnection();
         openwireConn.start();
         Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -156,10 +156,11 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=jms"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = createAmqpConnection();
-        QueueImpl queue = new QueueImpl("queue://" + TEST_QUEUE);
+        Connection amqpConnection = JmsClientContext.INSTANCE.createConnection(amqpConnectionURI);
+        amqpConnection.start();
 
         Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Queue queue = amqpSession.createQueue(TEST_QUEUE);
         MessageProducer p = amqpSession.createProducer(queue);
 
         TextMessage amqpMessage = amqpSession.createTextMessage();
@@ -171,7 +172,7 @@ public class AmqpTransformerTest {
         amqpConnection.close();
 
         // receive with openwire JMS
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://0.0.0.0:" + openwirePort);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireConnectionURI);
         Connection openwireConn = factory.createConnection();
         openwireConn.start();
         Session session = openwireConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -193,19 +194,6 @@ public class AmqpTransformerTest {
         openwireConn.close();
     }
 
-    public Connection createAmqpConnection() throws JMSException {
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", amqpPort, "admin", "password");
-        final Connection connection = factory.createConnection();
-        connection.setExceptionListener(new ExceptionListener() {
-            @Override
-            public void onException(JMSException exception) {
-                exception.printStackTrace();
-            }
-        });
-        connection.start();
-        return connection;
-    }
-
     public void startBrokerWithAmqpTransport(String amqpUrl) throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
@@ -214,9 +202,9 @@ public class AmqpTransformerTest {
         brokerService.setDeleteAllMessagesOnStartup(true);
 
         TransportConnector connector = brokerService.addConnector(amqpUrl);
-        amqpPort = connector.getConnectUri().getPort();
+        amqpConnectionURI = connector.getPublishableConnectURI();
         connector = brokerService.addConnector("tcp://0.0.0.0:0");
-        openwirePort = connector.getConnectUri().getPort();
+        openwireConnectionURI = connector.getPublishableConnectURI();
 
         brokerService.start();
         brokerService.waitUntilStarted();

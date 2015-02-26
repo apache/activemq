@@ -22,20 +22,17 @@ import static org.junit.Assert.assertNotNull;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 
 import org.apache.activemq.broker.jmx.BrokerView;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
 import org.junit.Test;
 
 public class AMQ4696Test extends AmqpTestSupport {
 
     @Test(timeout=30*1000)
     public void simpleDurableTopicTest() throws Exception {
-        String TOPIC_NAME = "topic://AMQ4696Test" + System.currentTimeMillis();
+        String TOPIC_NAME = "AMQ4696Test" + System.currentTimeMillis();
         String durableClientId = "AMQPDurableTopicTestClient";
         String durableSubscriberName = "durableSubscriberName";
 
@@ -44,11 +41,11 @@ public class AMQ4696Test extends AmqpTestSupport {
         int inactiveSubscribersAtStart = adminView.getInactiveDurableTopicSubscribers().length;
         LOG.debug(">>>> At Start, durable Subscribers {} inactiveDurableSubscribers {}", durableSubscribersAtStart, inactiveSubscribersAtStart);
 
-        TopicConnectionFactory factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
-        Topic topic = new TopicImpl("topic://" + TOPIC_NAME);
-        TopicConnection subscriberConnection = factory.createTopicConnection();
+        TopicConnection subscriberConnection =
+            JmsClientContext.INSTANCE.createTopicConnection(amqpURI, "admin", "password");
         subscriberConnection.setClientID(durableClientId);
         TopicSession subscriberSession = subscriberConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = subscriberSession.createTopic(TOPIC_NAME);
         TopicSubscriber messageConsumer = subscriberSession.createDurableSubscriber(topic, durableSubscriberName);
 
         assertNotNull(messageConsumer);

@@ -1,4 +1,3 @@
-package org.apache.activemq.transport.amqp;
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -15,6 +14,8 @@ package org.apache.activemq.transport.amqp;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.activemq.transport.amqp;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +29,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
@@ -35,7 +37,6 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.qpid.amqp_1_0.client.ConnectionClosedException;
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,9 @@ public class SimpleAMQPAuthTest {
     public void testNoUserOrPassword() throws Exception {
         try {
             ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "", "");
+            factory.setQueuePrefix("queue://");
+            factory.setTopicPrefix("topic://");
+
             Connection connection = factory.createConnection();
             connection.setExceptionListener(new ExceptionListener() {
                 @Override
@@ -96,6 +100,9 @@ public class SimpleAMQPAuthTest {
     public void testUnknownUser() throws Exception {
         try {
             ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
+            factory.setQueuePrefix("queue://");
+            factory.setTopicPrefix("topic://");
+
             Connection connection = factory.createConnection("nosuchuser", "blah");
             connection.start();
             Thread.sleep(500);
@@ -117,6 +124,9 @@ public class SimpleAMQPAuthTest {
     public void testKnownUserWrongPassword() throws Exception {
         try {
             ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
+            factory.setQueuePrefix("queue://");
+            factory.setTopicPrefix("topic://");
+
             Connection connection = factory.createConnection("user", "wrongPassword");
             connection.start();
             Thread.sleep(500);
@@ -137,9 +147,12 @@ public class SimpleAMQPAuthTest {
     @Test(timeout = 30000)
     public void testSendReceive() throws Exception {
         ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
+        factory.setQueuePrefix("queue://");
+        factory.setTopicPrefix("topic://");
+
         Connection connection = factory.createConnection("user", "userPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueImpl queue = new QueueImpl("queue://txqueue");
+        Queue queue = session.createQueue("txQueue");
         MessageProducer p = session.createProducer(queue);
         TextMessage message = null;
         message = session.createTextMessage();

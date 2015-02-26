@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -35,18 +33,13 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.Test;
 
 public class AMQ4563Test extends AmqpTestSupport {
 
     public static final String KAHADB_DIRECTORY = "target/activemq-data/kahadb-amq4563";
-
-    private String openwireUri;
 
     @Test(timeout = 60000)
     public void testMessagesAreAckedAMQProducer() throws Exception {
@@ -83,7 +76,8 @@ public class AMQ4563Test extends AmqpTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         assertTrue(brokerService.isPersistent());
 
-        Connection connection = createAMQPConnection();
+        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(name.getMethodName());
         MessageProducer p = session.createProducer(queue);
@@ -128,7 +122,8 @@ public class AMQ4563Test extends AmqpTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         assertTrue(brokerService.isPersistent());
 
-        Connection connection = createAMQPConnection();
+        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(name.getMethodName());
         MessageProducer p = session.createProducer(queue);
@@ -157,7 +152,9 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     private int readAllMessages(String queueName, String selector) throws JMSException {
-        Connection connection = createAMQPConnection();
+        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        connection.start();
+
         try {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Queue queue = session.createQueue(queueName);
@@ -199,28 +196,12 @@ public class AMQ4563Test extends AmqpTestSupport {
     private void restartBroker(Connection connection, Session session) throws Exception {
         session.close();
         connection.close();
-
-        stopBroker();
-        createBroker(false);
-    }
-
-    private Connection createAMQPConnection() throws JMSException {
-        LOG.debug(">>> In createConnection using port {}", port);
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", port, "admin", "password");
-        final Connection connection = factory.createConnection();
-        connection.setExceptionListener(new ExceptionListener() {
-            @Override
-            public void onException(JMSException exception) {
-                exception.printStackTrace();
-            }
-        });
-        connection.start();
-        return connection;
+        restartBroker();
     }
 
     private Connection createAMQConnection() throws JMSException {
-        LOG.debug(">>> In createConnection using port {}", port);
-        final ConnectionFactory factory = new ActiveMQConnectionFactory("admin", "password", openwireUri);
+        LOG.debug(">>> In createConnection using port {}", openwirePort);
+        final ConnectionFactory factory = new ActiveMQConnectionFactory("admin", "password", openwireURI);
         final Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override
@@ -233,42 +214,17 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     @Override
-    public void startBroker() throws Exception {
-        createBroker(true);
+    protected boolean isUseOpenWireConnector() {
+        return true;
     }
 
-    /**
-     * Copied from AmqpTestSupport, modified to use persistence
-     */
     @Override
-    public void createBroker(boolean deleteAllMessages) throws Exception {
-        KahaDBStore kaha = new KahaDBStore();
-        kaha.setDirectory(new File(KAHADB_DIRECTORY));
+    protected boolean isPersistent() {
+        return true;
+    }
 
-        brokerService = new BrokerService();
-        brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
-        brokerService.setPersistent(true);
-        brokerService.setPersistenceAdapter(kaha);
-        brokerService.setAdvisorySupport(false);
-        brokerService.setUseJmx(true);
-        brokerService.getManagementContext().setCreateMBeanServer(false);
-        brokerService.setStoreOpenWireVersion(10);
-        openwireUri = brokerService.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
-
-        // Setup SSL context...
-//        final File classesDir = new File(AmqpProtocolConverter.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-//        File keystore = new File(classesDir, "../../src/test/resources/keystore");
-//        final SpringSslContext sslContext = new SpringSslContext();
-//        sslContext.setKeyStore(keystore.getCanonicalPath());
-//        sslContext.setKeyStorePassword("password");
-//        sslContext.setTrustStore(keystore.getCanonicalPath());
-//        sslContext.setTrustStorePassword("password");
-//        sslContext.afterPropertiesSet();
-//        brokerService.setSslContext(sslContext);
-
-        addAMQPConnector();
-        brokerService.start();
-        brokerService.waitUntilStarted();
-        this.numberOfMessages = 2000;
+    @Override
+    protected int getstoreOpenWireVersion() {
+        return 10;
     }
 }

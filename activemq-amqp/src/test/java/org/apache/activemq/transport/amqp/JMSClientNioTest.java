@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.net.URI;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +29,13 @@ public class JMSClientNioTest extends JMSClientTest {
 
     @Override
     protected int getBrokerPort() {
-        LOG.debug("JMSClientNioTest.getBrokerPort returning nioPort {}", nioPort);
-        return nioPort;
+        LOG.debug("JMSClientNioTest.getBrokerPort returning nioPort {}", amqpNioPort);
+        return amqpNioPort;
+    }
+
+    @Override
+    protected URI getBrokerURI() {
+        return amqpNioURI;
     }
 
     @Override

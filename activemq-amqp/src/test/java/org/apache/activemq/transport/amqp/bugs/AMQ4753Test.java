@@ -21,18 +21,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import javax.jms.Connection;
-import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.amqp.AmqpTestSupport;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
+import org.apache.activemq.transport.amqp.JmsClientContext;
 import org.junit.Test;
 
 public class AMQ4753Test extends AmqpTestSupport {
@@ -48,14 +46,14 @@ public class AMQ4753Test extends AmqpTestSupport {
     }
 
     @Test(timeout = 120 * 1000)
-    public void testAmqpNioPlusSslSendReceive() throws JMSException{
-        Connection connection = createAMQPConnection(nioPlusSslPort, true);
+    public void testAmqpNioPlusSslSendReceive() throws JMSException {
+        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpNioPlusSslURI);
         runSimpleSendReceiveTest(connection);
     }
 
     public void runSimpleSendReceiveTest(Connection connection) throws JMSException{
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueImpl queue = new QueueImpl("queue://txqueue");
+        Queue queue =session.createQueue("txqueue");
         MessageProducer producer = session.createProducer(queue);
         TextMessage message = session.createTextMessage();
         String messageText = "hello  sent at " + new java.util.Date().toString();
@@ -71,28 +69,5 @@ public class AMQ4753Test extends AmqpTestSupport {
         TextMessage textMessage = (TextMessage) receivedMessage;
         assertEquals(messageText, textMessage.getText());
         connection.close();
-    }
-
-    private Connection createAMQPConnection(int testPort, boolean useSSL) throws JMSException {
-        LOG.debug("In createConnection using port {} ssl? {}", testPort, useSSL);
-        final ConnectionFactoryImpl connectionFactory = new ConnectionFactoryImpl("localhost", testPort, "admin", "password", null, useSSL);
-
-        if (useSSL) {
-            SpringSslContext sslContext = (SpringSslContext) brokerService.getSslContext();
-            connectionFactory.setKeyStorePath(sslContext.getKeyStore());
-            connectionFactory.setKeyStorePassword("password");
-            connectionFactory.setTrustStorePath(sslContext.getTrustStore());
-            connectionFactory.setTrustStorePassword("password");
-        }
-
-        final Connection connection = connectionFactory.createConnection();
-        connection.setExceptionListener(new ExceptionListener() {
-            @Override
-            public void onException(JMSException exception) {
-                exception.printStackTrace();
-            }
-        });
-        connection.start();
-        return connection;
     }
 }

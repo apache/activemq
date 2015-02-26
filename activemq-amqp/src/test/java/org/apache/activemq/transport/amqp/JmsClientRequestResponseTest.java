@@ -25,7 +25,6 @@ import java.util.Vector;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
-import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -36,7 +35,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -157,41 +155,8 @@ public class JmsClientRequestResponseTest extends AmqpTestSupport implements Mes
         assertEquals("Should not have had any failures: " + failures, 0, failures.size());
     }
 
-    /**
-     * Can be overridden in subclasses to test against a different transport suchs as NIO.
-     *
-     * @return the port to connect to on the Broker.
-     */
-    protected int getBrokerPort() {
-        return port;
-    }
-
     private Connection createConnection(String clientId) throws JMSException {
-        return createConnection(clientId, false, false);
-    }
-
-    protected Connection createConnection(String clientId, boolean syncPublish, boolean useSsl) throws JMSException {
-
-        int brokerPort = getBrokerPort();
-        LOG.debug("Creating connection on port {}", brokerPort);
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", brokerPort, "admin", "password", null, useSsl);
-
-        factory.setSyncPublish(syncPublish);
-        factory.setTopicPrefix("topic://");
-        factory.setQueuePrefix("queue://");
-
-        final Connection connection = factory.createConnection();
-        if (clientId != null && !clientId.isEmpty()) {
-            connection.setClientID(clientId);
-        }
-        connection.setExceptionListener(new ExceptionListener() {
-            @Override
-            public void onException(JMSException exception) {
-                exception.printStackTrace();
-            }
-        });
-        connection.start();
-        return connection;
+        return JmsClientContext.INSTANCE.createConnection(amqpURI, "admin", "password", clientId);
     }
 
     protected void syncConsumeLoop(MessageConsumer requestConsumer) {

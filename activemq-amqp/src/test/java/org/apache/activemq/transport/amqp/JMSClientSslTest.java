@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.net.URI;
 import java.security.SecureRandom;
 
 import javax.jms.Connection;
@@ -49,8 +50,13 @@ public class JMSClientSslTest extends JMSClientTest {
 
     @Override
     protected int getBrokerPort() {
-        LOG.debug("JMSClientSslTest.getBrokerPort returning sslPort {}", sslPort);
-        return sslPort;
+        LOG.debug("JMSClientSslTest.getBrokerPort returning sslPort {}", amqpSslPort);
+        return amqpSslPort;
+    }
+
+    @Override
+    protected URI getBrokerURI() {
+        return amqpSslURI;
     }
 
     @Override

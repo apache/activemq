@@ -146,16 +146,16 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
         int port = 0;
         switch (connectorScheme) {
             case "amqp":
-                port = this.port;
+                port = this.amqpPort;
                 break;
             case "amqp+ssl":
-                port = this.sslPort;
+                port = this.amqpSslPort;
                 break;
             case "amqp+nio":
-                port = this.nioPort;
+                port = this.amqpNioPort;
                 break;
             case "amqp+nio+ssl":
-                port = this.nioPlusSslPort;
+                port = this.amqpNioPlusSslPort;
                 break;
             default:
                 throw new IOException("Invalid AMQP connector scheme passed to test.");

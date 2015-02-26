@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -34,7 +34,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,17 +50,16 @@ public class AMQ4920Test extends AmqpTestSupport {
 
     @Test(timeout = 60000)
     public void testSendWithMultipleConsumers() throws Exception {
-        ConnectionFactoryImpl connectionFactory = new ConnectionFactoryImpl("localhost", port, "admin", "admin");
-        connectionFactory.setSyncPublish(false);
-        Connection connection = connectionFactory.createConnection();
+        Connection connection =
+            JmsClientContext.INSTANCE.createConnection(amqpURI, "admin", "password", false);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        String destinationName = "topic://AMQ4920Test" + System.currentTimeMillis();
+        String destinationName = "AMQ4920Test" + System.currentTimeMillis();
         Destination destination = session.createTopic(destinationName);
         connection.start();
 
         ExecutorService executor = Executors.newCachedThreadPool();
         for (int i = 0; i < CONSUMER_COUNT; i++) {
-            AMQ4930ConsumerTask consumerTask = new AMQ4930ConsumerTask(initLatch, destinationName, port, "Consumer-" + i, latch, ITERATIONS);
+            AMQ4930ConsumerTask consumerTask = new AMQ4930ConsumerTask(initLatch, destinationName, amqpURI, "Consumer-" + i, latch, ITERATIONS);
             executor.submit(consumerTask);
         }
         connection.start();
@@ -103,14 +101,14 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
     private final String destinationName;
     private final String consumerName;
     private final CountDownLatch messagesReceived;
-    private final int port;
+    private final URI amqpURI;
     private final int expectedMessageCount;
     private final CountDownLatch started;
 
-    public AMQ4930ConsumerTask(CountDownLatch started, String destinationName, int port, String consumerName, CountDownLatch latch, int expectedMessageCount) {
+    public AMQ4930ConsumerTask(CountDownLatch started, String destinationName, URI amqpURI, String consumerName, CountDownLatch latch, int expectedMessageCount) {
         this.started = started;
         this.destinationName = destinationName;
-        this.port = port;
+        this.amqpURI = amqpURI;
         this.consumerName = consumerName;
         this.messagesReceived = latch;
         this.expectedMessageCount = expectedMessageCount;
@@ -121,8 +119,7 @@ class AMQ4930ConsumerTask implements Callable<Boolean> {
         LOG.debug(consumerName + " starting");
         Connection connection = null;
         try {
-            ConnectionFactory connectionFactory = new ConnectionFactoryImpl("localhost", port, "admin", "admin");
-            connection = connectionFactory.createConnection();
+            connection = JmsClientContext.INSTANCE.createConnection(amqpURI, "admin", "admin", false);
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Destination destination = session.createTopic(destinationName);
             MessageConsumer consumer = session.createConsumer(destination);
