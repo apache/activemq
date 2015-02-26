@@ -25,9 +25,9 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
-
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -186,7 +186,7 @@ public abstract class TestSupport extends CombinationTestSupport {
         return proxy;
     }
 
-    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, AMQ, JDBC, MEM };
+    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, JDBC, MEM };
 
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
