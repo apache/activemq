@@ -32,9 +32,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JmsMessageGroupsTest extends JMSClientTestSupport {
+public class JMSMessageGroupsTest extends JMSClientTestSupport {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(JmsMessageGroupsTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(JMSMessageGroupsTest.class);
 
     private static final int ITERATIONS = 10;
     private static final int MESSAGE_COUNT = 10;

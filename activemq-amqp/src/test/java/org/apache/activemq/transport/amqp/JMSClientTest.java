@@ -896,7 +896,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         LOG.debug(">>>> At Start, durable Subscribers {} inactiveDurableSubscribers {}", durableSubscribersAtStart, inactiveSubscribersAtStart);
 
         TopicConnection subscriberConnection =
-            JmsClientContext.INSTANCE.createTopicConnection(amqpURI, "admin", "password");
+            JMSClientContext.INSTANCE.createTopicConnection(amqpURI, "admin", "password");
         subscriberConnection.setClientID(durableClientId);
         TopicSession subscriberSession = subscriberConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = subscriberSession.createTopic(getDestinationName());

@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp;
 import java.net.URI;
 
 import javax.jms.Connection;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.TopicConnection;
@@ -30,11 +31,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Context used for AMQP JMS Clients to create connection instances.
  */
-public class JmsClientContext {
+public class JMSClientContext {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JmsClientContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMSClientContext.class);
 
-    public static final JmsClientContext INSTANCE = new JmsClientContext();
+    public static final JMSClientContext INSTANCE = new JMSClientContext();
 
     //----- Plain JMS Connection Create methods ------------------------------//
 
@@ -57,7 +58,16 @@ public class JmsClientContext {
     public Connection createConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
         ConnectionFactoryImpl factory = createConnectionFactory(remoteURI, username, password, clientId, syncPublish);
 
-        return factory.createConnection();
+        Connection connection = factory.createConnection();
+        connection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                LOG.error("Unexpected exception ", exception);
+                exception.printStackTrace();
+            }
+        });
+
+        return connection;
     }
 
     //----- JMS TopicConnection Create methods -------------------------------//
@@ -81,7 +91,16 @@ public class JmsClientContext {
     public TopicConnection createTopicConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
         ConnectionFactoryImpl factory = createConnectionFactory(remoteURI, username, password, clientId, syncPublish);
 
-        return factory.createTopicConnection();
+        TopicConnection connection = factory.createTopicConnection();
+        connection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                LOG.error("Unexpected exception ", exception);
+                exception.printStackTrace();
+            }
+        });
+
+        return connection;
     }
 
     //----- JMS QueueConnection Create methods -------------------------------//
@@ -105,7 +124,16 @@ public class JmsClientContext {
     public QueueConnection createQueueConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
         ConnectionFactoryImpl factory = createConnectionFactory(remoteURI, username, password, clientId, syncPublish);
 
-        return factory.createQueueConnection();
+        QueueConnection connection = factory.createQueueConnection();
+        connection.setExceptionListener(new ExceptionListener() {
+            @Override
+            public void onException(JMSException exception) {
+                LOG.error("Unexpected exception ", exception);
+                exception.printStackTrace();
+            }
+        });
+
+        return connection;
     }
 
     //------ Internal Implementation bits ------------------------------------//

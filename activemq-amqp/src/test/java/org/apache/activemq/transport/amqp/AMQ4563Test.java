@@ -76,7 +76,7 @@ public class AMQ4563Test extends AmqpTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         assertTrue(brokerService.isPersistent());
 
-        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(name.getMethodName());
@@ -122,7 +122,7 @@ public class AMQ4563Test extends AmqpTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         assertTrue(brokerService.isPersistent());
 
-        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(name.getMethodName());
@@ -152,7 +152,7 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     private int readAllMessages(String queueName, String selector) throws JMSException {
-        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         connection.start();
 
         try {

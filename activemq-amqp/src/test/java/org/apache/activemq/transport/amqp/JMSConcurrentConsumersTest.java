@@ -101,7 +101,7 @@ public class JMSConcurrentConsumersTest extends AmqpTestSupport {
 
     public void doTestSendWithMultipleConsumers(URI remoteURI) throws Exception {
 
-        Connection connection = JmsClientContext.INSTANCE.createConnection(remoteURI, "admin", "password", false);
+        Connection connection = JMSClientContext.INSTANCE.createConnection(remoteURI, "admin", "password", false);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         String destinationName = "AMQ4920Test" + System.currentTimeMillis();
         Destination destination = session.createTopic(destinationName);
@@ -170,7 +170,7 @@ public class JMSConcurrentConsumersTest extends AmqpTestSupport {
             LOG.debug(consumerName + " starting");
             Connection connection = null;
             try {
-                connection = JmsClientContext.INSTANCE.createConnection(amqpURI, "admin", "admin", false);
+                connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "admin", "admin", false);
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 Destination destination = session.createTopic(destinationName);
                 MessageConsumer consumer = session.createConsumer(destination);

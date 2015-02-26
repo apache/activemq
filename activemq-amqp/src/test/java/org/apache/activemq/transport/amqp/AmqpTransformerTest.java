@@ -57,7 +57,7 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=native"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = JmsClientContext.INSTANCE.createConnection(amqpConnectionURI);
+        Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
         amqpConnection.start();
 
         Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -104,7 +104,7 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=raw"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = JmsClientContext.INSTANCE.createConnection(amqpConnectionURI);
+        Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
         amqpConnection.start();
 
         Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -156,7 +156,7 @@ public class AmqpTransformerTest {
         startBrokerWithAmqpTransport(String.format(AMQP_URL, "?transport.transformer=jms"));
 
         // send "text message" with AMQP JMS API
-        Connection amqpConnection = JmsClientContext.INSTANCE.createConnection(amqpConnectionURI);
+        Connection amqpConnection = JMSClientContext.INSTANCE.createConnection(amqpConnectionURI);
         amqpConnection.start();
 
         Session amqpSession = amqpConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);

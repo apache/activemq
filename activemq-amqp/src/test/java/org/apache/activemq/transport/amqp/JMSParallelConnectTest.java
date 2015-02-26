@@ -59,7 +59,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
-                        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI, "admin", "password");
+                        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "admin", "password");
                         connection.start();
                         connection.close();
                     } catch (JMSException e) {
@@ -83,7 +83,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
-                        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpNioURI, "admin", "password");
+                        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpNioURI, "admin", "password");
                         connection.start();
                         connection.close();
                     } catch (JMSException e) {
@@ -107,7 +107,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
-                        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpSslURI, "admin", "password");
+                        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpSslURI, "admin", "password");
                         connection.start();
                         connection.close();
                     } catch (JMSException e) {
@@ -131,7 +131,7 @@ public class JMSParallelConnectTest extends AmqpTestSupport {
                 public void run() {
 
                     try {
-                        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpNioPlusSslURI, "admin", "password");
+                        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpNioPlusSslURI, "admin", "password");
                         connection.start();
                         connection.close();
                     } catch (JMSException e) {

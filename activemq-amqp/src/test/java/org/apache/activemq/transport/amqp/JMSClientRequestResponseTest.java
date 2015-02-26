@@ -42,9 +42,9 @@ import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JmsClientRequestResponseTest extends AmqpTestSupport implements MessageListener {
+public class JMSClientRequestResponseTest extends AmqpTestSupport implements MessageListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JmsClientRequestResponseTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMSClientRequestResponseTest.class);
 
     @Rule public TestName name = new TestName();
 
@@ -156,7 +156,7 @@ public class JmsClientRequestResponseTest extends AmqpTestSupport implements Mes
     }
 
     private Connection createConnection(String clientId) throws JMSException {
-        return JmsClientContext.INSTANCE.createConnection(amqpURI, "admin", "password", clientId);
+        return JMSClientContext.INSTANCE.createConnection(amqpURI, "admin", "password", clientId);
     }
 
     protected void syncConsumeLoop(MessageConsumer requestConsumer) {

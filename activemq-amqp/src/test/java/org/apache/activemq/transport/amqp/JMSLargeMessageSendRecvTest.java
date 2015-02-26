@@ -77,7 +77,7 @@ public class JMSLargeMessageSendRecvTest extends AmqpTestSupport {
         String payload = createLargeString(expectedSize);
         assertEquals(expectedSize, payload.getBytes().length);
 
-        Connection connection = JmsClientContext.INSTANCE.createConnection(amqpURI);
+        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI);
         long startTime = System.currentTimeMillis();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createQueue(testName.getMethodName());
