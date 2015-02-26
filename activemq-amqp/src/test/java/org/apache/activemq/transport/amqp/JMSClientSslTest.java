@@ -19,8 +19,6 @@ package org.apache.activemq.transport.amqp;
 import java.net.URI;
 import java.security.SecureRandom;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -40,18 +38,6 @@ public class JMSClientSslTest extends JMSClientTest {
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
         SSLContext.setDefault(ctx);
-    }
-
-    @Override
-    protected Connection createConnection(String clientId, boolean syncPublish, boolean useSsl) throws JMSException {
-        LOG.debug("JMSClientSslTest.createConnection called with clientId {} syncPublish {} useSsl {}", clientId, syncPublish, useSsl);
-        return super.createConnection(clientId, syncPublish, true);
-    }
-
-    @Override
-    protected int getBrokerPort() {
-        LOG.debug("JMSClientSslTest.getBrokerPort returning sslPort {}", amqpSslPort);
-        return amqpSslPort;
     }
 
     @Override

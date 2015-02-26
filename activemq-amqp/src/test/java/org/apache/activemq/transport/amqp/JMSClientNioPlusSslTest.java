@@ -28,12 +28,6 @@ public class JMSClientNioPlusSslTest extends JMSClientSslTest {
     protected static final Logger LOG = LoggerFactory.getLogger(JMSClientNioPlusSslTest.class);
 
     @Override
-    protected int getBrokerPort() {
-        LOG.debug("JMSClientNioPlusSslTest.getBrokerPort returning nioPlusSslPort {}", amqpNioPlusSslPort);
-        return amqpNioPlusSslPort;
-    }
-
-    @Override
     protected URI getBrokerURI() {
         return amqpNioPlusSslURI;
     }
