@@ -886,7 +886,7 @@ public class JMSClientTest extends JMSClientTestSupport {
     }
 
     @Test(timeout=30*1000)
-    public void simpleDurableTopicTest() throws Exception {
+    public void testDurableTopicStateAfterSubscriberClosed() throws Exception {
         String durableClientId = getDestinationName() + "-ClientId";
         String durableSubscriberName = getDestinationName() + "-SubscriptionName";
 
@@ -896,7 +896,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         LOG.debug(">>>> At Start, durable Subscribers {} inactiveDurableSubscribers {}", durableSubscribersAtStart, inactiveSubscribersAtStart);
 
         TopicConnection subscriberConnection =
-            JMSClientContext.INSTANCE.createTopicConnection(amqpURI, "admin", "password");
+            JMSClientContext.INSTANCE.createTopicConnection(getBrokerURI(), "admin", "password");
         subscriberConnection.setClientID(durableClientId);
         TopicSession subscriberSession = subscriberConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = subscriberSession.createTopic(getDestinationName());
