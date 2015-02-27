@@ -17,14 +17,19 @@
 
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageProducer;
@@ -39,10 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 @RunWith(value = Parameterized.class)
 public class AMQ5212Test {
@@ -70,6 +71,7 @@ public class AMQ5212Test {
         ((KahaDBPersistenceAdapter)brokerService.getPersistenceAdapter()).setConcurrentStoreAndDispatchQueues(concurrentStoreAndDispatchQ);
         brokerService.addConnector("tcp://localhost:0");
         brokerService.setAdvisorySupport(false);
+        brokerService.getManagementContext().setCreateConnector(false);
         brokerService.start();
     }
 
