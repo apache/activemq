@@ -445,6 +445,7 @@
             <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
             <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
             <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+            <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
           </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>

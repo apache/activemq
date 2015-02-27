@@ -60,13 +60,25 @@ public class ManagementContext implements Service {
      */
     public static final String DEFAULT_DOMAIN = "org.apache.activemq";
 
+    static {
+        String option = Boolean.TRUE.toString();
+        try {
+            option = System.getProperty("org.apache.activemq.broker.jmx.createConnector", "true");
+        } catch (Exception ex) {
+        }
+
+        DEFAULT_CREATE_CONNECTOR = Boolean.valueOf(option);
+    }
+
+    public static final boolean DEFAULT_CREATE_CONNECTOR;
+
     private static final Logger LOG = LoggerFactory.getLogger(ManagementContext.class);
     private MBeanServer beanServer;
     private String jmxDomainName = DEFAULT_DOMAIN;
     private boolean useMBeanServer = true;
     private boolean createMBeanServer = true;
     private boolean locallyCreateMBeanServer;
-    private boolean createConnector = true;
+    private boolean createConnector = DEFAULT_CREATE_CONNECTOR;
     private boolean findTigerMbeanServer = true;
     private String connectorHost = "localhost";
     private int connectorPort = 1099;
