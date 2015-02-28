@@ -600,8 +600,9 @@ public class JMSClientTest extends JMSClientTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Message> received = new AtomicReference<Message>();
+        String durableClientId = getDestinationName() + "-ClientId";
 
-        connection = createConnection();
+        connection = createConnection(durableClientId);
         {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic topic = session.createTopic(getDestinationName());
@@ -632,8 +633,9 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30000)
     public void testDurableConsumerSync() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
+        String durableClientId = getDestinationName() + "-ClientId";
 
-        connection = createConnection();
+        connection = createConnection(durableClientId);
         {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic topic = session.createTopic(getDestinationName());
@@ -923,9 +925,11 @@ public class JMSClientTest extends JMSClientTestSupport {
     public void testDurableConsumerUnsubscribe() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
 
+        String durableClientId = getDestinationName() + "-ClientId";
+
         final BrokerViewMBean broker = getProxyToBroker();
 
-        connection = createConnection();
+        connection = createConnection(durableClientId);
         connection.start();
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -993,10 +997,11 @@ public class JMSClientTest extends JMSClientTestSupport {
     @Test(timeout=30000)
     public void testDurableConsumerUnsubscribeWhileActive() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
+        String durableClientId = getDestinationName() + "-ClientId";
 
         final BrokerViewMBean broker = getProxyToBroker();
 
-        connection = createConnection();
+        connection = createConnection(durableClientId);
         connection.start();
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
