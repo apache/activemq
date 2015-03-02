@@ -463,20 +463,25 @@ public class Journal {
         return dataFile.getNext();
     }
 
-    public synchronized void close() throws IOException {
-        if (!started) {
-            return;
+    public void close() throws IOException {
+        synchronized (this) {
+            if (!started) {
+                return;
+            }
+            if (this.timer != null) {
+                this.timer.cancel();
+            }
+            accessorPool.close();
         }
-        if (this.timer != null) {
-            this.timer.cancel();
-        }
-        accessorPool.close();
+        // the appender can be calling back to to the journal blocking a close AMQ-5620
         appender.close();
-        fileMap.clear();
-        fileByFileMap.clear();
-        dataFiles.clear();
-        lastAppendLocation.set(null);
-        started = false;
+        synchronized (this) {
+            fileMap.clear();
+            fileByFileMap.clear();
+            dataFiles.clear();
+            lastAppendLocation.set(null);
+            started = false;
+        }
     }
 
     protected synchronized void cleanup() {
