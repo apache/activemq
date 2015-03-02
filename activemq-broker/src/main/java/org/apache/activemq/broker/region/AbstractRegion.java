@@ -218,7 +218,7 @@ public abstract class AbstractRegion implements Region {
                         dest.removeSubscription(context, sub, 0l);
                     }
                 }
-                destinationMap.removeAll(destination);
+                destinationMap.remove(destination, dest);
                 dispose(context, dest);
                 DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
                 if (destinationInterceptor != null) {

@@ -16,33 +16,25 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.Wait;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.util.Wait;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.junit.Assert.*;
 
 public class PahoMQTTTest extends MQTTTestSupport {
 
@@ -162,10 +154,39 @@ public class PahoMQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return listener.result != null;
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200));
+
 
         assertTrue(client.getPendingDeliveryTokens().length == 0);
         assertEquals(expectedResult, listener.result);
+
+        expectedResult = "should get everything";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "a/1/2", expectedResult.getBytes(), 0, false);
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        client.unsubscribe(ACCOUNT_PREFIX + "a/+/#");
+        client.unsubscribe(ACCOUNT_PREFIX + "#");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "should still get 1/2/3";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "1/2/3", expectedResult.getBytes(), 0, false);
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
     }
 
     @Test(timeout = 300000)
