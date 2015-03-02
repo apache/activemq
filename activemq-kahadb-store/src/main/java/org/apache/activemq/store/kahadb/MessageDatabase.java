@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -2837,25 +2836,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void configureLast(Transaction tx) throws IOException {
             // Figure out the next key using the last entry in the destination.
-            if (highPriorityIndex != null) {
-                Entry<Long, MessageKeys> lastEntry = highPriorityIndex.getLast(tx);
+            TreeSet<Long> orderedSet = new TreeSet<Long>();
+
+            addLast(orderedSet, highPriorityIndex, tx);
+            addLast(orderedSet, defaultPriorityIndex, tx);
+            addLast(orderedSet, lowPriorityIndex, tx);
+
+            if (!orderedSet.isEmpty()) {
+                nextMessageId = orderedSet.last() + 1;
+            }
+        }
+
+        private void addLast(TreeSet<Long> orderedSet, BTreeIndex<Long, MessageKeys> index, Transaction tx) throws IOException {
+            if (index != null) {
+                Entry<Long, MessageKeys> lastEntry = index.getLast(tx);
                 if (lastEntry != null) {
-                    nextMessageId = lastEntry.getKey() + 1;
-                } else {
-                    lastEntry = defaultPriorityIndex.getLast(tx);
-                    if (lastEntry != null) {
-                        nextMessageId = lastEntry.getKey() + 1;
-                    } else {
-                        lastEntry = lowPriorityIndex.getLast(tx);
-                        if (lastEntry != null) {
-                            nextMessageId = lastEntry.getKey() + 1;
-                        }
-                    }
-                }
-            } else {
-                Entry<Long, MessageKeys> lastEntry = defaultPriorityIndex.getLast(tx);
-                if (lastEntry != null) {
-                    nextMessageId = lastEntry.getKey() + 1;
+                    orderedSet.add(lastEntry.getKey());
                 }
             }
         }
