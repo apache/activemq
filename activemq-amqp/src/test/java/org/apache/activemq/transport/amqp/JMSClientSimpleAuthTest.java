@@ -25,6 +25,7 @@ import java.net.URI;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.JMSSecurityException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -71,6 +72,8 @@ public class JMSClientSimpleAuthTest {
             Thread.sleep(500);
             connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
+        } catch (JMSSecurityException ex) {
+            LOG.debug("Failed to authenticate connection with no user / password.");
         } catch (JMSException e) {
             Exception linkedException = e.getLinkedException();
             if (linkedException != null && linkedException instanceof ConnectionClosedException) {
@@ -91,6 +94,8 @@ public class JMSClientSimpleAuthTest {
             Thread.sleep(500);
             connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
+        } catch (JMSSecurityException ex) {
+            LOG.debug("Failed to authenticate connection with no user / password.");
         } catch (JMSException e)  {
             Exception linkedException = e.getLinkedException();
             if (linkedException != null && linkedException instanceof ConnectionClosedException) {
@@ -111,6 +116,8 @@ public class JMSClientSimpleAuthTest {
             Thread.sleep(500);
             connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
+        } catch (JMSSecurityException ex) {
+            LOG.debug("Failed to authenticate connection with no user / password.");
         } catch (JMSException e) {
             Exception linkedException = e.getLinkedException();
             if (linkedException != null && linkedException instanceof ConnectionClosedException) {
