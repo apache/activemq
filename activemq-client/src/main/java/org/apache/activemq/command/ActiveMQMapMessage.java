@@ -494,6 +494,10 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     public byte[] getBytes(String name) throws JMSException {
         initializeReading();
         Object value = map.get(name);
+        if (value == null) {
+            return null;
+        }
+
         if (value instanceof byte[]) {
             return (byte[])value;
         } else {
