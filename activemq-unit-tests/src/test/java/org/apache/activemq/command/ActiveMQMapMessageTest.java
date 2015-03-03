@@ -157,6 +157,22 @@ public class ActiveMQMapMessageTest {
     }
 
     @Test(timeout = 10000)
+    public void testGetDoubleWithMaxValue() throws JMSException {
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        msg.setDouble(this.name, Double.MAX_VALUE);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertEquals(Double.MAX_VALUE, msg.getDouble(this.name), 1.0);
+    }
+
+    @Test(timeout = 10000)
+    public void testGetDoubleWithMaxValueAsString() throws JMSException {
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        msg.setString(this.name, String.valueOf(Double.MAX_VALUE));
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertEquals(Double.MAX_VALUE, msg.getDouble(this.name), 1.0);
+    }
+
+    @Test(timeout = 10000)
     public void testGetString() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         String str = "test";
