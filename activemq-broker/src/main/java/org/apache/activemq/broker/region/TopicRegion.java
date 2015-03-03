@@ -109,6 +109,9 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
+            if (broker.getBrokerService().isRejectDurableConsumers()) {
+                throw new JMSException("Durable Consumers are not allowed");
+            }
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
