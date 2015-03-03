@@ -1067,7 +1067,6 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Ignore("Broker cannot currently tell if it should delete a temp destination")
     @Test(timeout=30000)
     public void testDeleteTemporaryQueue() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
@@ -1112,7 +1111,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
-    @Ignore("Broker cannot currently tell if it should delete a temp destination")
+    @Ignore("Legacy QPid client does not support creation of TemporaryTopics correctly")
     @Test(timeout=30000)
     public void testDeleteTemporaryTopic() throws Exception {
         ActiveMQAdmin.enableJMSFrameTracing();
