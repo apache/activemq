@@ -24,7 +24,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
-abstract public class JMSVendor {
+public interface JMSVendor {
 
     public abstract BytesMessage createBytesMessage();
 
@@ -40,14 +40,7 @@ abstract public class JMSVendor {
 
     public abstract void setJMSXUserID(Message message, String value);
 
-    @Deprecated
-    public Destination createDestination(String name) {
-        return null;
-    }
-
-    public <T extends Destination> T createDestination(String name, Class<T> kind) {
-        return kind.cast(createDestination(name));
-    }
+    public Destination createDestination(String name);
 
     public abstract void setJMSXGroupID(Message message, String groupId);
 

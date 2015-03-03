@@ -16,19 +16,12 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.jms.DeliveryMode;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.Queue;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
-import javax.jms.Topic;
 
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Decimal128;
@@ -141,19 +134,12 @@ public abstract class InboundTransformer {
             }
         }
 
-        Class<? extends Destination> toAttributes = Destination.class;
-        Class<? extends Destination> replyToAttributes = Destination.class;
-
         final MessageAnnotations ma = amqp.getMessageAnnotations();
         if (ma != null) {
             for (Map.Entry<?, ?> entry : ma.getValue().entrySet()) {
                 String key = entry.getKey().toString();
                 if ("x-opt-jms-type".equals(key.toString()) && entry.getValue() != null) {
                     jms.setJMSType(entry.getValue().toString());
-                } else if ("x-opt-to-type".equals(key.toString())) {
-                    toAttributes = toClassFromAttributes(entry.getValue().toString());
-                } else if ("x-opt-reply-type".equals(key.toString())) {
-                    replyToAttributes = toClassFromAttributes(entry.getValue().toString());
                 } else {
                     setProperty(jms, prefixVendor + prefixMessageAnnotations + key, entry.getValue());
                 }
@@ -186,13 +172,13 @@ public abstract class InboundTransformer {
                 vendor.setJMSXUserID(jms, new String(userId.getArray(), userId.getArrayOffset(), userId.getLength(), "UTF-8"));
             }
             if (properties.getTo() != null) {
-                jms.setJMSDestination(vendor.createDestination(properties.getTo(), toAttributes));
+                jms.setJMSDestination(vendor.createDestination(properties.getTo()));
             }
             if (properties.getSubject() != null) {
                 jms.setStringProperty(prefixVendor + "Subject", properties.getSubject());
             }
             if (properties.getReplyTo() != null) {
-                jms.setJMSReplyTo(vendor.createDestination(properties.getReplyTo(), replyToAttributes));
+                jms.setJMSReplyTo(vendor.createDestination(properties.getReplyTo()));
             }
             if (properties.getCorrelationId() != null) {
                 jms.setJMSCorrelationID(properties.getCorrelationId().toString());
@@ -241,42 +227,6 @@ public abstract class InboundTransformer {
                 setProperty(jms, prefixVendor + prefixFooter + key, entry.getValue());
             }
         }
-    }
-
-    private static final Set<String> QUEUE_ATTRIBUTES = createSet("queue");
-    private static final Set<String> TOPIC_ATTRIBUTES = createSet("topic");
-    private static final Set<String> TEMP_QUEUE_ATTRIBUTES = createSet("queue", "temporary");
-    private static final Set<String> TEMP_TOPIC_ATTRIBUTES = createSet("topic", "temporary");
-
-    private static Set<String> createSet(String... args) {
-        HashSet<String> s = new HashSet<String>();
-        for (String arg : args) {
-            s.add(arg);
-        }
-        return Collections.unmodifiableSet(s);
-    }
-
-    Class<? extends Destination> toClassFromAttributes(String value) {
-        if( value ==null ) {
-            return null;
-        }
-        HashSet<String> attributes = new HashSet<String>();
-        for( String x: value.split("\\s*,\\s*") ) {
-            attributes.add(x);
-        }
-         if( QUEUE_ATTRIBUTES.equals(attributes) ) {
-            return Queue.class;
-        }
-        if( TOPIC_ATTRIBUTES.equals(attributes) ) {
-            return Topic.class;
-        }
-        if( TEMP_QUEUE_ATTRIBUTES.equals(attributes) ) {
-            return TemporaryQueue.class;
-        }
-        if( TEMP_TOPIC_ATTRIBUTES.equals(attributes) ) {
-            return TemporaryTopic.class;
-        }
-        return Destination.class;
     }
 
     private void setProperty(Message msg, String key, Object value) throws JMSException {

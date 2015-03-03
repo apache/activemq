@@ -43,6 +43,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicConnection;
@@ -55,6 +57,7 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.transport.amqp.joram.ActiveMQAdmin;
 import org.apache.activemq.util.Wait;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.objectweb.jtests.jms.framework.TestConfig;
 import org.slf4j.Logger;
@@ -1046,6 +1049,95 @@ public class JMSClientTest extends JMSClientTestSupport {
         consumer = session.createConsumer(queue);
         receiveMessages(consumer);
         consumer.close();
+    }
+
+    @Test(timeout=30000)
+    public void testCreateTemporaryQueue() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = session.createTemporaryQueue();
+            assertNotNull(queue);
+            assertTrue(queue instanceof TemporaryQueue);
+
+            final BrokerViewMBean broker = getProxyToBroker();
+            assertEquals(1, broker.getTemporaryQueues().length);
+        }
+    }
+
+    @Ignore("Broker cannot currently tell if it should delete a temp destination")
+    @Test(timeout=30000)
+    public void testDeleteTemporaryQueue() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = session.createTemporaryQueue();
+            assertNotNull(queue);
+            assertTrue(queue instanceof TemporaryQueue);
+
+            final BrokerViewMBean broker = getProxyToBroker();
+            assertEquals(1, broker.getTemporaryQueues().length);
+
+            TemporaryQueue tempQueue = (TemporaryQueue) queue;
+            tempQueue.delete();
+
+            assertTrue("Temp Queue should be deleted.", Wait.waitFor(new Wait.Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return broker.getTemporaryQueues().length == 0;
+                }
+            }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(50)));
+        }
+    }
+
+    @Ignore("Legacy QPid client does not support creation of TemporaryTopics correctly")
+    @Test(timeout=30000)
+    public void testCreateTemporaryTopic() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTemporaryTopic();
+            assertNotNull(topic);
+            assertTrue(topic instanceof TemporaryTopic);
+
+            final BrokerViewMBean broker = getProxyToBroker();
+            assertEquals(1, broker.getTemporaryTopics().length);
+        }
+    }
+
+    @Ignore("Broker cannot currently tell if it should delete a temp destination")
+    @Test(timeout=30000)
+    public void testDeleteTemporaryTopic() throws Exception {
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTemporaryTopic();
+            assertNotNull(topic);
+            assertTrue(topic instanceof TemporaryTopic);
+
+            final BrokerViewMBean broker = getProxyToBroker();
+            assertEquals(1, broker.getTemporaryTopics().length);
+
+            TemporaryTopic tempTopic = (TemporaryTopic) topic;
+            tempTopic.delete();
+
+            assertTrue("Temp Topic should be deleted.", Wait.waitFor(new Wait.Condition() {
+
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return broker.getTemporaryTopics().length == 0;
+                }
+            }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(50)));
+        }
     }
 
     protected void receiveMessages(MessageConsumer consumer) throws Exception {

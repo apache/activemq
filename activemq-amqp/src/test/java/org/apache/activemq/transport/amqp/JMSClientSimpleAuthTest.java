@@ -134,7 +134,7 @@ public class JMSClientSimpleAuthTest {
     public void testSendReceive() throws Exception {
         Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue("txQueue");
+        Queue queue = session.createQueue("USERS.txQueue");
         MessageProducer p = session.createProducer(queue);
         TextMessage message = null;
         message = session.createTextMessage();
@@ -151,6 +151,42 @@ public class JMSClientSimpleAuthTest {
         TextMessage textMessage = (TextMessage) msg;
         assertEquals(messageText, textMessage.getText());
         connection.close();
+    }
+
+    @Test(timeout = 30000)
+    public void testCreateTemporaryQueueNotAuthorized() throws JMSException {
+        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        try {
+            session.createTemporaryQueue();
+        } catch (JMSSecurityException jmsse) {
+        } catch (JMSException jmse) {
+            LOG.info("Client should have thrown a JMSSecurityException but only threw JMSException");
+        }
+
+        // Should not be fatal
+        assertNotNull(connection.createSession(false, Session.AUTO_ACKNOWLEDGE));
+
+        session.close();
+    }
+
+    @Test(timeout = 30000)
+    public void testCreateTemporaryTopicNotAuthorized() throws JMSException {
+        Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "userPassword");
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        try {
+            session.createTemporaryTopic();
+        } catch (JMSSecurityException jmsse) {
+        } catch (JMSException jmse) {
+            LOG.info("Client should have thrown a JMSSecurityException but only threw JMSException");
+        }
+
+        // Should not be fatal
+        assertNotNull(connection.createSession(false, Session.AUTO_ACKNOWLEDGE));
+
+        session.close();
     }
 
     protected BrokerService createBroker() throws Exception {

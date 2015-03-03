@@ -14,38 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.message;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
-import javax.jms.Queue;
 import javax.jms.StreamMessage;
-import javax.jms.TemporaryQueue;
-import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
-import javax.jms.Topic;
 
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQStreamMessage;
-import org.apache.activemq.command.ActiveMQTempQueue;
-import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.transport.amqp.message.JMSVendor;
 
-public class ActiveMQJMSVendor extends JMSVendor {
+public class ActiveMQJMSVendor implements JMSVendor {
 
     final public static ActiveMQJMSVendor INSTANCE = new ActiveMQJMSVendor();
-
-    private static final String PREFIX_MARKER = "://";
 
     private ActiveMQJMSVendor() {
     }
@@ -82,32 +71,7 @@ public class ActiveMQJMSVendor extends JMSVendor {
 
     @Override
     public Destination createDestination(String name) {
-        return super.createDestination(name, Destination.class);
-    }
-
-    @Override
-    public <T extends Destination> T createDestination(String name, Class<T> kind) {
-        String destinationName = name;
-        int prefixEnd = name.lastIndexOf(PREFIX_MARKER);
-
-        if (prefixEnd >= 0) {
-            destinationName = name.substring(prefixEnd + PREFIX_MARKER.length());
-        }
-
-        if (kind == Queue.class) {
-            return kind.cast(new ActiveMQQueue(destinationName));
-        }
-        if (kind == Topic.class) {
-            return kind.cast(new ActiveMQTopic(destinationName));
-        }
-        if (kind == TemporaryQueue.class) {
-            return kind.cast(new ActiveMQTempQueue(destinationName));
-        }
-        if (kind == TemporaryTopic.class) {
-            return kind.cast(new ActiveMQTempTopic(destinationName));
-        }
-
-        return kind.cast(ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE));
+        return ActiveMQDestination.createDestination(name, ActiveMQDestination.QUEUE_TYPE);
     }
 
     @Override

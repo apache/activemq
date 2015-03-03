@@ -31,11 +31,6 @@
       <queue physicalName="TEST.Q" />
     </destinations>
 
-    <!-- Use a non-default port in case the default port is in use -->
-    <managementContext>
-      <managementContext connectorPort="1199"/>
-    </managementContext>
-
     <transportConnectors>
       <transportConnector name="openwire" uri="vm://localhost" />
       <transportConnector name="amqp" uri="amqp://0.0.0.0:0"/>
@@ -49,6 +44,27 @@
           <authenticationUser username="guest" password="guestPassword" groups="guests"/>
         </users>
       </simpleAuthenticationPlugin>
+
+      <authorizationPlugin>
+        <map>
+          <authorizationMap>
+            <authorizationEntries>
+              <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+              <authorizationEntry queue="USERS.>" read="users" write="users" admin="users" />
+              <authorizationEntry queue="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+
+              <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
+              <authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />
+              <authorizationEntry topic="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="guests,users" write="guests,users" admin="guests,users"/>
+            </authorizationEntries>
+            <tempDestinationAuthorizationEntry>
+                <tempDestinationAuthorizationEntry read="admins" write="admins" admin="admins"/>
+            </tempDestinationAuthorizationEntry>
+          </authorizationMap>
+        </map>
+      </authorizationPlugin>
     </plugins>
   </broker>
 

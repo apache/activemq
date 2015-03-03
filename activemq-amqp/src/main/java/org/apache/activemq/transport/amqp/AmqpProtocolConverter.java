@@ -67,6 +67,7 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.transport.amqp.message.AMQPNativeInboundTransformer;
 import org.apache.activemq.transport.amqp.message.AMQPRawInboundTransformer;
+import org.apache.activemq.transport.amqp.message.ActiveMQJMSVendor;
 import org.apache.activemq.transport.amqp.message.AutoOutboundTransformer;
 import org.apache.activemq.transport.amqp.message.EncodedMessage;
 import org.apache.activemq.transport.amqp.message.InboundTransformer;
@@ -130,6 +131,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Symbol COPY = Symbol.getSymbol("copy");
     private static final Symbol JMS_SELECTOR = Symbol.valueOf("jms-selector");
     private static final Symbol NO_LOCAL = Symbol.valueOf("no-local");
+    private static final Symbol TEMP_QUEUE_CAPABILITY = Symbol.valueOf("temporary-queue");
+    private static final Symbol TEMP_TOPIC_CAPABILITY = Symbol.valueOf("temporary-topic");
 
     private final AmqpTransport amqpTransport;
     private final AmqpWireFormat amqpWireFormat;
@@ -700,13 +703,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if (!closed) {
                 EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), buffer.data, buffer.offset, buffer.length);
                 final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
-
-                // TODO - we need to cast TempTopic to TempQueue as we internally are using temp queues for all dynamic destinations
-                // we need to figure out how to support both queues and topics
-                if (message.getJMSReplyTo() != null && message.getJMSReplyTo() instanceof ActiveMQTempTopic) {
-                    ActiveMQTempTopic tempTopic = (ActiveMQTempTopic)message.getJMSReplyTo();
-                    message.setJMSReplyTo(new ActiveMQTempQueue(tempTopic.getPhysicalName()));
-                }
                 current = null;
 
                 if (destination != null) {
@@ -928,29 +924,29 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             } else {
                 Target target = (Target) remoteTarget;
                 ProducerId producerId = new ProducerId(sessionContext.sessionId, sessionContext.nextProducerId++);
-                ActiveMQDestination dest = null;
+                ActiveMQDestination destination = null;
                 boolean anonymous = false;
                 String targetNodeName = target.getAddress();
 
                 if ((targetNodeName == null || targetNodeName.length() == 0) && !target.getDynamic()) {
                     anonymous = true;
                 } else if (target.getDynamic()) {
-                    dest = createTempQueue();
+                    destination = createTemporaryDestination(receiver, target.getCapabilities());
                     Target actualTarget = new Target();
-                    actualTarget.setAddress(dest.getQualifiedName());
+                    actualTarget.setAddress(destination.getQualifiedName());
                     actualTarget.setDynamic(true);
                     receiver.setTarget(actualTarget);
                 } else {
-                    dest = createDestination(remoteTarget);
+                    destination = createDestination(remoteTarget);
                 }
 
-                final ProducerContext producerContext = new ProducerContext(producerId, dest, anonymous);
+                final ProducerContext producerContext = new ProducerContext(producerId, destination, anonymous);
 
                 receiver.setContext(producerContext);
                 receiver.flow(flow);
 
                 ProducerInfo producerInfo = new ProducerInfo(producerId);
-                producerInfo.setDestination(dest);
+                producerInfo.setDestination(destination);
                 sendToActiveMQ(producerInfo, new ResponseHandler() {
                     @Override
                     public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
@@ -979,25 +975,24 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         }
     }
 
-    private ActiveMQDestination createDestination(Object terminus) throws AmqpProtocolException {
-        if (terminus == null) {
+    private ActiveMQDestination createDestination(Object endpoint) throws AmqpProtocolException {
+        if (endpoint == null) {
             return null;
-        } else if (terminus instanceof org.apache.qpid.proton.amqp.messaging.Source) {
-            org.apache.qpid.proton.amqp.messaging.Source source = (org.apache.qpid.proton.amqp.messaging.Source) terminus;
-            if (source.getAddress() == null || source.getAddress().length() == 0) {
-                throw new AmqpProtocolException("amqp:invalid-field", "source address not set");
-            }
-            return ActiveMQDestination.createDestination(source.getAddress(), ActiveMQDestination.QUEUE_TYPE);
-        } else if (terminus instanceof org.apache.qpid.proton.amqp.messaging.Target) {
-            org.apache.qpid.proton.amqp.messaging.Target target = (org.apache.qpid.proton.amqp.messaging.Target) terminus;
-            if (target.getAddress() == null || target.getAddress().length() == 0) {
-                throw new AmqpProtocolException("amqp:invalid-field", "target address not set");
-            }
-            return ActiveMQDestination.createDestination(target.getAddress(), ActiveMQDestination.QUEUE_TYPE);
-        } else if (terminus instanceof Coordinator) {
+        } else if (endpoint instanceof Coordinator) {
             return null;
+        } else if (endpoint instanceof org.apache.qpid.proton.amqp.messaging.Terminus) {
+            org.apache.qpid.proton.amqp.messaging.Terminus terminus = (org.apache.qpid.proton.amqp.messaging.Terminus) endpoint;
+            if (terminus.getAddress() == null || terminus.getAddress().length() == 0) {
+                if (terminus instanceof org.apache.qpid.proton.amqp.messaging.Source) {
+                    throw new AmqpProtocolException("amqp:invalid-field", "source address not set");
+                } else {
+                    throw new AmqpProtocolException("amqp:invalid-field", "target address not set");
+                }
+            }
+
+            return ActiveMQDestination.createDestination(terminus.getAddress(), ActiveMQDestination.QUEUE_TYPE);
         } else {
-            throw new RuntimeException("Unexpected terminus type: " + terminus);
+            throw new RuntimeException("Unexpected terminus type: " + endpoint);
         }
     }
 
@@ -1415,7 +1410,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 }
             } else if (source.getDynamic()) {
                 // lets create a temp dest.
-                destination = createTempQueue();
+                destination = createTemporaryDestination(sender, source.getCapabilities());
                 source = new org.apache.qpid.proton.amqp.messaging.Source();
                 source.setAddress(destination.getQualifiedName());
                 source.setDynamic(true);
@@ -1517,15 +1512,57 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         return result;
     }
 
-    private ActiveMQDestination createTempQueue() {
-        ActiveMQDestination rc;
-        rc = new ActiveMQTempQueue(connectionId, nextTempDestinationId++);
+    private ActiveMQDestination createTemporaryDestination(final Link link, Symbol[] capabilities) {
+        ActiveMQDestination rc = null;
+        if (contains(capabilities, TEMP_TOPIC_CAPABILITY)) {
+            rc = new ActiveMQTempTopic(connectionId, nextTempDestinationId++);
+        } else if (contains(capabilities, TEMP_QUEUE_CAPABILITY)) {
+            rc = new ActiveMQTempQueue(connectionId, nextTempDestinationId++);
+        } else {
+            LOG.debug("Dynamic link request with no type capability, defaults to Temporary Queue");
+            rc = new ActiveMQTempQueue(connectionId, nextTempDestinationId++);
+        }
+
         DestinationInfo info = new DestinationInfo();
         info.setConnectionId(connectionId);
         info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
         info.setDestination(rc);
-        sendToActiveMQ(info, null);
+
+        sendToActiveMQ(info, new ResponseHandler() {
+
+            @Override
+            public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
+                if (response.isException()) {
+                    link.setSource(null);
+
+                    Throwable exception = ((ExceptionResponse) response).getException();
+                    if (exception instanceof SecurityException) {
+                        link.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                    } else {
+                        link.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
+                    }
+
+                    link.close();
+                    link.free();
+                }
+            }
+        });
+
         return rc;
+    }
+
+    private boolean contains(Symbol[] symbols, Symbol key) {
+        if (symbols == null) {
+            return false;
+        }
+
+        for (Symbol symbol : symbols) {
+            if (symbol.equals(key)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // //////////////////////////////////////////////////////////////////////////

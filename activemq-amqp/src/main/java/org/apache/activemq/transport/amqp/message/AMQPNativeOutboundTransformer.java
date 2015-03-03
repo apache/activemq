@@ -37,17 +37,21 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
 
     @Override
     public EncodedMessage transform(Message msg) throws Exception {
-        if( msg == null )
+        if (msg == null) {
             return null;
-        if( !(msg instanceof BytesMessage) )
+        }
+        if (!(msg instanceof BytesMessage)) {
             return null;
+        }
+
         try {
-            if( !msg.getBooleanProperty(prefixVendor + "NATIVE") ) {
+            if (!msg.getBooleanProperty(prefixVendor + "NATIVE")) {
                 return null;
             }
         } catch (MessageFormatException e) {
             return null;
         }
+
         return transform(this, (BytesMessage) msg);
     }
 
@@ -65,15 +69,15 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
 
         try {
             int count = msg.getIntProperty("JMSXDeliveryCount");
-            if( count > 1 ) {
+            if (count > 1) {
 
                 // decode...
                 ProtonJMessage amqp = (ProtonJMessage) org.apache.qpid.proton.message.Message.Factory.create();
                 int offset = 0;
                 int len = data.length;
-                while( len > 0 ) {
+                while (len > 0) {
                     final int decoded = amqp.decode(data, offset, len);
-                    assert decoded > 0: "Make progress decoding the message";
+                    assert decoded > 0 : "Make progress decoding the message";
                     offset += decoded;
                     len -= decoded;
                 }
@@ -84,11 +88,11 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
                 amqp.getHeader().setDeliveryCount(new UnsignedInteger(count - 1));
 
                 // Re-encode...
-                ByteBuffer buffer = ByteBuffer.wrap(new byte[1024*4]);
+                ByteBuffer buffer = ByteBuffer.wrap(new byte[1024 * 4]);
                 final DroppingWritableBuffer overflow = new DroppingWritableBuffer();
                 int c = amqp.encode(new CompositeWritableBuffer(new WritableBuffer.ByteBufferWrapper(buffer), overflow));
-                if( overflow.position() > 0 ) {
-                    buffer = ByteBuffer.wrap(new byte[1024*4+overflow.position()]);
+                if (overflow.position() > 0) {
+                    buffer = ByteBuffer.wrap(new byte[1024 * 4 + overflow.position()]);
                     c = amqp.encode(new WritableBuffer.ByteBufferWrapper(buffer));
                 }
                 data = buffer.array();
@@ -99,5 +103,4 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
 
         return new EncodedMessage(messageFormat, data, 0, dataSize);
     }
-
 }

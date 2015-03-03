@@ -35,7 +35,7 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
 
         final long now = System.currentTimeMillis();
         rc.setJMSTimestamp(now);
-        if( defaultTtl > 0 ) {
+        if (defaultTtl > 0) {
             rc.setJMSExpiration(now + defaultTtl);
         }
 
