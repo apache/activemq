@@ -19,6 +19,8 @@ package org.apache.activemq.transport.amqp;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.security.Principal;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.Destination;
@@ -65,6 +68,8 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionInfo;
+import org.apache.activemq.security.AuthenticationBroker;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.transport.amqp.message.AMQPNativeInboundTransformer;
@@ -139,6 +144,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private final AmqpTransport amqpTransport;
     private final AmqpWireFormat amqpWireFormat;
     private final BrokerService brokerService;
+    private AuthenticationBroker authenticator;
 
     protected int prefetch;
     protected int producerCredit;
@@ -310,14 +316,22 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             if (parts.length > 1) {
                                 connectionInfo.setPassword(parts[1].utf8().toString());
                             }
-                            // We can't really auth at this point since we don't
-                            // know the client id yet.. :(
-                            sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+
+                            if (tryAuthenticate(connectionInfo, amqpTransport.getPeerCertificates())) {
+                                sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+                            } else {
+                                sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
+                            }
+
                             amqpTransport.getWireFormat().resetMagicRead();
                             sasl = null;
                             LOG.debug("SASL [PLAIN] Handshake complete.");
                         } else if ("ANONYMOUS".equals(sasl.getRemoteMechanisms()[0])) {
-                            sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+                            if (tryAuthenticate(connectionInfo, amqpTransport.getPeerCertificates())) {
+                                sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+                            } else {
+                                sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
+                            }
                             amqpTransport.getWireFormat().resetMagicRead();
                             sasl = null;
                             LOG.debug("SASL [ANONYMOUS] Handshake complete.");
@@ -1689,5 +1703,47 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         }
 
         return subscriptions;
+    }
+
+    public boolean tryAuthenticate(ConnectionInfo info, X509Certificate[] peerCertificates) {
+        try {
+            if (getAuthenticator().authenticate(info.getUserName(), info.getPassword(), peerCertificates) != null) {
+                return true;
+            }
+
+            return false;
+        } catch (Throwable error) {
+            return false;
+        }
+    }
+
+    private AuthenticationBroker getAuthenticator() {
+        if (authenticator == null) {
+            try {
+                authenticator = (AuthenticationBroker) brokerService.getBroker().getAdaptor(AuthenticationBroker.class);
+            } catch (Exception e) {
+                LOG.debug("Failed to lookup AuthenticationBroker from Broker, will use a default Noop version.");
+            }
+
+            if (authenticator == null) {
+                authenticator = new DefaultAuthenticationBroker();
+            }
+        }
+
+        return authenticator;
+    }
+
+    private class DefaultAuthenticationBroker implements AuthenticationBroker {
+
+        @Override
+        public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+            return new SecurityContext(username) {
+
+                @Override
+                public Set<Principal> getPrincipals() {
+                    return null;
+                }
+            };
+        }
     }
 }

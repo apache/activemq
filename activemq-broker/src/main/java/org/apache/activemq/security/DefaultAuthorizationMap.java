@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.filter.DestinationMap;
-import org.apache.activemq.filter.DestinationMapEntry;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.security.Principal;
@@ -28,6 +24,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.filter.DestinationMapEntry;
 
 /**
  * Represents a destination based configuration of policies so that individual
@@ -64,6 +64,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return this.tempDestinationAuthorizationEntry;
     }
 
+    @Override
     public Set<Object> getTempDestinationAdminACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             Set<Object> answer = new WildcardAwareSet<Object>();
@@ -74,6 +75,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         }
     }
 
+    @Override
     public Set<Object> getTempDestinationReadACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             Set<Object> answer = new WildcardAwareSet<Object>();
@@ -84,6 +86,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         }
     }
 
+    @Override
     public Set<Object> getTempDestinationWriteACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             Set<Object> answer = new WildcardAwareSet<Object>();
@@ -94,6 +97,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         }
     }
 
+    @Override
     public Set<Object> getAdminACLs(ActiveMQDestination destination) {
         Set<AuthorizationEntry> entries = getAllEntries(destination);
         Set<Object> answer = new WildcardAwareSet<Object>();
@@ -106,6 +110,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return answer;
     }
 
+    @Override
     public Set<Object> getReadACLs(ActiveMQDestination destination) {
         Set<AuthorizationEntry> entries = getAllEntries(destination);
         Set<Object> answer = new WildcardAwareSet<Object>();
@@ -118,6 +123,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return answer;
     }
 
+    @Override
     public Set<Object> getWriteACLs(ActiveMQDestination destination) {
         Set<AuthorizationEntry> entries = getAllEntries(destination);
         Set<Object> answer = new WildcardAwareSet<Object>();
@@ -150,7 +156,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
      *         matching values.
      */
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("rawtypes")
     public synchronized Set get(ActiveMQDestination key) {
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
@@ -184,6 +190,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         this.defaultEntry = defaultEntry;
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     protected Class<? extends DestinationMapEntry> getEntryClass() {
         return AuthorizationEntry.class;

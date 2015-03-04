@@ -69,8 +69,6 @@ public class JMSClientSimpleAuthTest {
         try {
             Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "", "");
             connection.start();
-            Thread.sleep(500);
-            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
@@ -91,8 +89,6 @@ public class JMSClientSimpleAuthTest {
         try {
             Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "nosuchuser", "blah");
             connection.start();
-            Thread.sleep(500);
-            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
@@ -113,8 +109,6 @@ public class JMSClientSimpleAuthTest {
         try {
             Connection connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "wrongPassword");
             connection.start();
-            Thread.sleep(500);
-            connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             fail("Expected JMSException");
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
@@ -126,6 +120,33 @@ public class JMSClientSimpleAuthTest {
             } else {
                 LOG.error("Unexpected Exception", e);
                 fail("Unexpected exception: " + e.getMessage());
+            }
+        }
+    }
+
+    @Test(timeout = 30000)
+    public void testRepeatedWrongPasswordAttempts() throws Exception {
+        for (int i = 0; i < 25; ++i) {
+            Connection connection = null;
+            try {
+                connection = JMSClientContext.INSTANCE.createConnection(amqpURI, "user", "wrongPassword");
+                connection.start();
+                fail("Expected JMSException");
+            } catch (JMSSecurityException ex) {
+                LOG.debug("Failed to authenticate connection with no user / password.");
+            } catch (JMSException e) {
+                Exception linkedException = e.getLinkedException();
+                if (linkedException != null && linkedException instanceof ConnectionClosedException) {
+                    ConnectionClosedException cce = (ConnectionClosedException) linkedException;
+                    assertEquals("Error{condition=unauthorized-access,description=User name [user] or password is invalid.}", cce.getRemoteError().toString());
+                } else {
+                    LOG.error("Unexpected Exception", e);
+                    fail("Unexpected exception: " + e.getMessage());
+                }
+            } finally {
+                if (connection != null) {
+                    connection.close();
+                }
             }
         }
     }
@@ -205,4 +226,3 @@ public class JMSClientSimpleAuthTest {
         brokerService.waitUntilStarted();
     }
 }
-
