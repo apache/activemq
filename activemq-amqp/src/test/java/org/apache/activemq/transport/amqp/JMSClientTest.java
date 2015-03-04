@@ -322,6 +322,47 @@ public class JMSClientTest extends JMSClientTestSupport {
         }
     }
 
+    @SuppressWarnings("rawtypes")
+    @Test(timeout=30000)
+    public void testSelectorsWithJMSType() throws Exception{
+        ActiveMQAdmin.enableJMSFrameTracing();
+
+        connection = createConnection();
+        {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Queue queue = session.createQueue(getDestinationName());
+            MessageProducer p = session.createProducer(queue);
+
+            TextMessage message = session.createTextMessage();
+            message.setText("text");
+            p.send(message, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+
+            TextMessage message2 = session.createTextMessage();
+            String type = "myJMSType";
+            message2.setJMSType(type);
+            message2.setText("text + type");
+            p.send(message2, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+
+            QueueBrowser browser = session.createBrowser(queue);
+            Enumeration enumeration = browser.getEnumeration();
+            int count = 0;
+            while (enumeration.hasMoreElements()) {
+                Message m = (Message) enumeration.nextElement();
+                assertTrue(m instanceof TextMessage);
+                count ++;
+            }
+
+            assertEquals(2, count);
+
+            MessageConsumer consumer = session.createConsumer(queue, "JMSType = '"+ type +"'");
+            Message msg = consumer.receive(TestConfig.TIMEOUT);
+            assertNotNull(msg);
+            assertTrue(msg instanceof TextMessage);
+            assertEquals("Unexpected JMSType value", type, msg.getJMSType());
+            assertEquals("Unexpected message content", "text + type", ((TextMessage) msg).getText());
+        }
+    }
+
     abstract class Testable implements Runnable {
         protected String msg;
         synchronized boolean passed() {

@@ -153,10 +153,7 @@ public class JMSMappingOutboundTransformer extends OutboundTransformer {
         header.setDurable(msg.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? true : false);
         header.setPriority(new UnsignedByte((byte) msg.getJMSPriority()));
         if (msg.getJMSType() != null) {
-            if (maMap == null) {
-                maMap = new HashMap<Symbol, Object>();
-            }
-            maMap.put(Symbol.valueOf("x-opt-jms-type"), msg.getJMSType());
+            props.setSubject(msg.getJMSType());
         }
         if (msg.getJMSMessageID() != null) {
             props.setMessageId(msg.getJMSMessageID());
@@ -234,8 +231,6 @@ public class JMSMappingOutboundTransformer extends OutboundTransformer {
                 }
                 String name = key.substring(prefixMessageAnnotationsKey.length());
                 maMap.put(Symbol.valueOf(name), msg.getObjectProperty(key));
-            } else if (key.equals(subjectKey)) {
-                props.setSubject(msg.getStringProperty(key));
             } else if (key.equals(contentTypeKey)) {
                 props.setContentType(Symbol.getSymbol(msg.getStringProperty(key)));
             } else if (key.equals(contentEncodingKey)) {
