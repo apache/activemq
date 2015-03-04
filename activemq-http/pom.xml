@@ -142,6 +142,7 @@
               !org.apache.activemq.transport.ws*;version=${project.version},
               !org.apache.activemq.transport.xstream;version=${project.version},
               !org.apache.activemq.transport.util;version=${project.version},
+              org.apache.xbean*;version="[3.13,5)",
               org.apache.activemq*;version=${project.version};resolution:=optional
             </Import-Package>
           </instructions>

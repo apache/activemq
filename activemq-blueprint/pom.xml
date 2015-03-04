@@ -32,7 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-        org.apache.xbean*;version="[3.13,4)",
+        org.apache.xbean*;version="[3.13,5)",
         org.apache.aries.blueprint.*;version="[1.0,2)",
           *
     </activemq.osgi.import.pkg>
