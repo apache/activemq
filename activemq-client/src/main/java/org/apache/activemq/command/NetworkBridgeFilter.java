@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -96,7 +97,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
 
         if (message.isAdvisory()) {
-            if (consumerInfo != null && consumerInfo.isNetworkSubscription()) {
+            if (consumerInfo != null && consumerInfo.isNetworkSubscription() && advisoryIsInterpretedByNetworkBridge(message)) {
                 // they will be interpreted by the bridge leading to dup commands
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
@@ -121,6 +122,10 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             }
         }
         return true;
+    }
+
+    private boolean advisoryIsInterpretedByNetworkBridge(Message message) {
+        return AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) || AdvisorySupport.isTempDestinationAdvisoryTopic(message.getDestination());
     }
 
     public static boolean contains(BrokerId[] brokerPath, BrokerId brokerId) {
