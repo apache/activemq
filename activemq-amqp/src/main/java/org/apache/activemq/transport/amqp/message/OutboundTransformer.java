@@ -32,7 +32,6 @@ public abstract class OutboundTransformer {
     String firstAcquirerKey;
     String prefixDeliveryAnnotationsKey;
     String prefixMessageAnnotationsKey;
-    String subjectKey;
     String contentTypeKey;
     String contentEncodingKey;
     String replyToGroupIDKey;
@@ -57,7 +56,6 @@ public abstract class OutboundTransformer {
         firstAcquirerKey = prefixVendor + "FirstAcquirer";
         prefixDeliveryAnnotationsKey = prefixVendor + prefixDeliveryAnnotations;
         prefixMessageAnnotationsKey = prefixVendor + prefixMessageAnnotations;
-        subjectKey =  prefixVendor +"Subject";
         contentTypeKey = prefixVendor +"ContentType";
         contentEncodingKey = prefixVendor +"ContentEncoding";
         replyToGroupIDKey = prefixVendor +"ReplyToGroupID";

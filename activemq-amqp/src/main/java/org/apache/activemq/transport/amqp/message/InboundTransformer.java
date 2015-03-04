@@ -138,11 +138,12 @@ public abstract class InboundTransformer {
         if (ma != null) {
             for (Map.Entry<?, ?> entry : ma.getValue().entrySet()) {
                 String key = entry.getKey().toString();
-                if ("x-opt-jms-type".equals(key.toString()) && entry.getValue() != null) {
+                if ("x-opt-jms-type".equals(key) && entry.getValue() != null) {
+                    // Legacy annotation, JMSType value will be replaced by Subject further down if also present.
                     jms.setJMSType(entry.getValue().toString());
-                } else {
-                    setProperty(jms, prefixVendor + prefixMessageAnnotations + key, entry.getValue());
                 }
+
+                setProperty(jms, prefixVendor + prefixMessageAnnotations + key, entry.getValue());
             }
         }
 
@@ -175,7 +176,7 @@ public abstract class InboundTransformer {
                 jms.setJMSDestination(vendor.createDestination(properties.getTo()));
             }
             if (properties.getSubject() != null) {
-                jms.setStringProperty(prefixVendor + "Subject", properties.getSubject());
+                jms.setJMSType(properties.getSubject());
             }
             if (properties.getReplyTo() != null) {
                 jms.setJMSReplyTo(vendor.createDestination(properties.getReplyTo()));
