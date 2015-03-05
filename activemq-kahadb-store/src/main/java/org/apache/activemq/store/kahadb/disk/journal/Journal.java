@@ -227,7 +227,6 @@ public class Journal {
     }
 
     private void doPreallocationSparseFile(RecoverableRandomAccessFile file) {
-        LOG.info("Preallocate journal file with sparse file");
         try {
             file.seek(maxFileLength - 1);
             file.write((byte)0x00);
@@ -237,7 +236,6 @@ public class Journal {
     }
 
     private void doPreallocationZeros(RecoverableRandomAccessFile file) {
-        LOG.info("Preallocate journal file with zeros");
         ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
         for (int i = 0; i < maxFileLength; i++) {
             buffer.put((byte) 0x00);
@@ -255,7 +253,6 @@ public class Journal {
     }
 
     private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
-        LOG.info("Preallocate journal file with kernel file copying");
 
         // create a template file that will be used to pre-allocate the journal files
         File templateFile = createJournalTemplateFile();
