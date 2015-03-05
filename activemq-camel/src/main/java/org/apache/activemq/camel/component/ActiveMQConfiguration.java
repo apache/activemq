@@ -23,13 +23,13 @@ import javax.jms.ConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.camel.component.jms.JmsConfiguration;
-import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.connection.JmsTransactionManager;
+import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * 
+ *
  */
 public class ActiveMQConfiguration extends JmsConfiguration {
     private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
@@ -91,7 +91,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
      * for each message then close them all down again.
      * <p/>
-     * The default value is true so that a single connection is used by default.
+     * The default value is false and a pooled connection is used by default.
      *
      * @param useSingleConnection
      */
@@ -109,7 +109,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
      * for each message then close them all down again.
      * <p/>
-     * The default value is false by default as it requires an extra dependency on commons-pool.
+     * The default value is true. Note that this requires an extra dependency on commons-pool.
      */
     public void setUsePooledConnection(boolean usePooledConnection) {
         this.usePooledConnection = usePooledConnection;
@@ -118,6 +118,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     /**
      * Factory method to create a default transaction manager if one is not specified
      */
+    @Override
     protected PlatformTransactionManager createTransactionManager() {
         JmsTransactionManager answer = new JmsTransactionManager(getConnectionFactory());
         answer.afterPropertiesSet();
