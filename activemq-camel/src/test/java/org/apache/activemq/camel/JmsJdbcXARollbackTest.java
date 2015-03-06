@@ -33,7 +33,7 @@ import org.apache.activemq.util.Wait;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.test.spring.CamelSpringTestSupport;
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
