@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
 
@@ -171,19 +170,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
             }
             return answer;
         }
-
-        Set answer = findWildcardMatches(key);
-
-        if (key.isPattern()) {
-            for (Iterator<Object> iterator = answer.iterator(); iterator.hasNext(); ) {
-                AuthorizationEntry entry = (AuthorizationEntry)iterator.next();
-                DestinationFilter filter = DestinationFilter.parseFilter(entry.getDestination());
-                if (!filter.matches(key)) {
-                    iterator.remove();
-                }
-            }
-        }
-        return answer;
+        return findWildcardMatches(key);
     }
 
 
