@@ -186,6 +186,14 @@
             <config-property-type>java.lang.Boolean</config-property-type>
           </config-property>
       </adminobject>
+      <adminobject>
+          <adminobject-interface>javax.jms.XAConnectionFactory</adminobject-interface>
+          <adminobject-class>org.apache.activemq.ActiveMQXAConnectionFactory</adminobject-class>
+          <config-property>
+            <config-property-name>brokerURL</config-property-name>
+            <config-property-type>java.lang.String</config-property-type>
+          </config-property>
+       </adminobject>
 
 
     </resourceadapter>
