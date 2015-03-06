@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.transport.amqp.message;
 
+import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.JMS_DEST_TYPE_MSG_ANNOTATION;
+import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.JMS_REPLY_TO_TYPE_MSG_ANNOTATION;
+import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.QUEUE_TYPE;
+import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.TEMP_QUEUE_TYPE;
+import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.TEMP_TOPIC_TYPE;
+import static org.apache.activemq.transport.amqp.message.JMSMappingOutboundTransformer.TOPIC_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -67,28 +73,28 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertMessageWithJMSDestinationQueue() throws Exception {
         Queue mockDest = Mockito.mock(Queue.class);
 
-        doTestConvertMessageWithJMSDestination(mockDest, "queue");
+        doTestConvertMessageWithJMSDestination(mockDest, QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSDestinationTemporaryQueue() throws Exception {
         TemporaryQueue mockDest = Mockito.mock(TemporaryQueue.class);
 
-        doTestConvertMessageWithJMSDestination(mockDest, "temporary,queue");
+        doTestConvertMessageWithJMSDestination(mockDest, TEMP_QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSDestinationTopic() throws Exception {
         Topic mockDest = Mockito.mock(Topic.class);
 
-        doTestConvertMessageWithJMSDestination(mockDest, "topic");
+        doTestConvertMessageWithJMSDestination(mockDest, TOPIC_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSDestinationTemporaryTopic() throws Exception {
         TemporaryTopic mockDest = Mockito.mock(TemporaryTopic.class);
 
-        doTestConvertMessageWithJMSDestination(mockDest, "temporary,topic");
+        doTestConvertMessageWithJMSDestination(mockDest, TEMP_TOPIC_TYPE);
     }
 
     private void doTestConvertMessageWithJMSDestination(Destination jmsDestination, Object expectedAnnotationValue) throws Exception {
@@ -108,7 +114,7 @@ public class JMSMappingOutboundTransformerTest {
         MessageAnnotations ma = amqp.getMessageAnnotations();
         Map<Symbol, Object> maMap = ma == null ? null : ma.getValue();
         if (maMap != null) {
-            Object actualValue = maMap.get(Symbol.valueOf("x-opt-to-type"));
+            Object actualValue = maMap.get(JMS_DEST_TYPE_MSG_ANNOTATION);
             assertEquals("Unexpected annotation value", expectedAnnotationValue, actualValue);
         } else if (expectedAnnotationValue != null) {
             fail("Expected annotation value, but there were no annotations");
@@ -130,28 +136,28 @@ public class JMSMappingOutboundTransformerTest {
     public void testConvertMessageWithJMSReplyToQueue() throws Exception {
         Queue mockDest = Mockito.mock(Queue.class);
 
-        doTestConvertMessageWithJMSReplyTo(mockDest, "queue");
+        doTestConvertMessageWithJMSReplyTo(mockDest, QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSReplyToTemporaryQueue() throws Exception {
         TemporaryQueue mockDest = Mockito.mock(TemporaryQueue.class);
 
-        doTestConvertMessageWithJMSReplyTo(mockDest, "temporary,queue");
+        doTestConvertMessageWithJMSReplyTo(mockDest, TEMP_QUEUE_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSReplyToTopic() throws Exception {
         Topic mockDest = Mockito.mock(Topic.class);
 
-        doTestConvertMessageWithJMSReplyTo(mockDest, "topic");
+        doTestConvertMessageWithJMSReplyTo(mockDest, TOPIC_TYPE);
     }
 
     @Test
     public void testConvertMessageWithJMSReplyToTemporaryTopic() throws Exception {
         TemporaryTopic mockDest = Mockito.mock(TemporaryTopic.class);
 
-        doTestConvertMessageWithJMSReplyTo(mockDest, "temporary,topic");
+        doTestConvertMessageWithJMSReplyTo(mockDest, TEMP_TOPIC_TYPE);
     }
 
     private void doTestConvertMessageWithJMSReplyTo(Destination jmsReplyTo, Object expectedAnnotationValue) throws Exception {
@@ -171,7 +177,7 @@ public class JMSMappingOutboundTransformerTest {
         MessageAnnotations ma = amqp.getMessageAnnotations();
         Map<Symbol, Object> maMap = ma == null ? null : ma.getValue();
         if (maMap != null) {
-            Object actualValue = maMap.get(Symbol.valueOf("x-opt-reply-type"));
+            Object actualValue = maMap.get(JMS_REPLY_TO_TYPE_MSG_ANNOTATION);
             assertEquals("Unexpected annotation value", expectedAnnotationValue, actualValue);
         } else if (expectedAnnotationValue != null) {
             fail("Expected annotation value, but there were no annotations");
