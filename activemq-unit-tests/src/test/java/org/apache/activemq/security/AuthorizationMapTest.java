@@ -89,6 +89,24 @@ public class AuthorizationMapTest extends TestCase {
         assertTrue("Contains users group", tempAdminACLs.contains(TEMP_DESTINATION_ADMINS));
     }
 
+    public void testWildcardSubscriptions() {
+        AuthorizationMap map = createAuthorizationMap();
+        Set<?> readACLs = map.getReadACLs(new ActiveMQQueue(">"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+        assertFalse("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.>"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.>"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+        assertTrue("Contains users group", readACLs.contains(USERS));
+    }
+
     protected AuthorizationMap createWildcardAuthorizationMap() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
