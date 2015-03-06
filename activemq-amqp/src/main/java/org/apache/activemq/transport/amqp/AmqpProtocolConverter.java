@@ -1636,7 +1636,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private DescribedType findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
 
         if (filterIds == null || filterIds.length == 0) {
-            throw new IllegalArgumentException("Invliad Filter Ids array passed: " + filterIds);
+            throw new IllegalArgumentException("Invalid Filter Ids array passed: " + filterIds);
         }
 
         if (filters == null || filters.isEmpty()) {
@@ -1646,7 +1646,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         for (Object value : filters.values()) {
             if (value instanceof DescribedType) {
                 DescribedType describedType = ((DescribedType) value);
-                Object descriptor = ((DescribedType) value).getDescriptor();
+                Object descriptor = describedType.getDescriptor();
 
                 for (Object filterId : filterIds) {
                     if (descriptor.equals(filterId)) {
