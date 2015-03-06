@@ -1513,10 +1513,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     public void testQueuePauseResume() throws Exception {
         connection = connectionFactory.createConnection();
         final int numToSend = 20;
+        final int numToConsume = 5;
         useConnection(connection, numToSend);
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
 
-        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        final QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         CompositeData[] compdatalist = queue.browse();
         int initialQueueSize = compdatalist.length;
@@ -1526,14 +1527,20 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         echo("Attempting to consume 5 bytes messages from: " + destination);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(destination);
-        for (int i=0; i<5; i++) {
+        for (int i=0; i<numToConsume; i++) {
             assertNotNull("Message: " + i, consumer.receive(5000));
         }
         consumer.close();
         session.close();
 
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return  numToSend - numToConsume == queue.browse().length;
+            }
+        });
         compdatalist = queue.browse();
-        assertEquals("expected", numToSend -5, compdatalist.length);
+        assertEquals("expected", numToSend - numToConsume, compdatalist.length);
 
         echo("pause");
         queue.pause();
@@ -1554,7 +1561,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         // verify browse
         compdatalist = queue.browse();
-        assertEquals("expected browse", (2*numToSend)-5, compdatalist.length);
+        assertEquals("expected browse", (2*numToSend)-numToConsume, compdatalist.length);
         assertEquals("expected message count", compdatalist.length, queue.getQueueSize());
 
         echo("resume");
