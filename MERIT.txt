@@ -1,0 +1,15 @@
+OVERVIEW
+========
+
+This file contains thanks to contributors.  Not all contributions are here, but
+this file acts as a place to give thanks to those whose contributions are not
+otherwise reflected in source code commits.
+
+
+MERIT
+=====
+
+Commit: 3ef8f492a7cb9c056ac1883ccb069e9559fc6b22
+	Author: Mark Frazier
+	Message: Thank you for the patch provided here:
+	https://issues.apache.org/jira/browse/AMQ-5563
