@@ -59,7 +59,7 @@ public class IdGenerator {
             int idGeneratorPort = 0;
             ServerSocket ss = null;
             try {
-                if( hostName!=null ) {
+                if( hostName==null ) {
                     hostName = InetAddressUtil.getLocalHostName();
                 }
                 if( localPort==0 ) {
