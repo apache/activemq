@@ -19,15 +19,13 @@ package org.apache.activemq.security;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.security.Principal;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.filter.DestinationMapNode;
+import org.apache.activemq.filter.DestinationNode;
 
 /**
  * Represents a destination based configuration of policies so that individual
@@ -170,7 +168,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
             }
             return answer;
         }
-        return findWildcardMatches(key);
+
+        return findWildcardMatches(key, false);
     }
 
 
