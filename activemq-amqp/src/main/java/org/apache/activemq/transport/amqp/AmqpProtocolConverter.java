@@ -148,6 +148,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Object[] NO_LOCAL_FILTER_IDS = new Object[] { NO_LOCAL_CODE, NO_LOCAL_NAME };
     private static final Symbol TEMP_QUEUE_CAPABILITY = Symbol.valueOf("temporary-queue");
     private static final Symbol TEMP_TOPIC_CAPABILITY = Symbol.valueOf("temporary-topic");
+    private static final Symbol CONNECTION_OPEN_FAILED = Symbol.valueOf("amqp:connection-establishment-failed");
 
     private final AmqpTransport amqpTransport;
     private final AmqpWireFormat amqpWireFormat;
@@ -184,8 +185,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         this.protonTransport.setChannelMax(CHANNEL_MAX);
 
         this.protonConnection.collect(eventCollector);
-        this.protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
-        this.protonConnection.setProperties(getConnetionProperties());
 
         updateTracer();
     }
@@ -211,6 +210,21 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         properties.put(QUEUE_PREFIX, "queue://");
         properties.put(TOPIC_PREFIX, "topic://");
+
+        return properties;
+    }
+
+    /**
+     * Load and return a <code>Map<Symbol, Object></code> that contains the properties
+     * that this connection supplies to incoming connections when the open has failed
+     * and the remote should expect a close to follow.
+     *
+     * @return the properties that are offered to the incoming connection.
+     */
+    protected Map<Symbol, Object> getFailedConnetionProperties() {
+        Map<Symbol, Object> properties = new HashMap<Symbol, Object>();
+
+        properties.put(CONNECTION_OPEN_FAILED, true);
 
         return properties;
     }
@@ -597,9 +611,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                 Throwable exception = null;
                 try {
-                    protonConnection.open();
-
                     if (response.isException()) {
+                        protonConnection.setProperties(getFailedConnetionProperties());
+                        protonConnection.open();
+
                         exception = ((ExceptionResponse) response).getException();
                         if (exception instanceof SecurityException) {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
@@ -608,7 +623,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         } else {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.ILLEGAL_STATE, exception.getMessage()));
                         }
+
                         protonConnection.close();
+                    } else {
+                        protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
+                        protonConnection.setProperties(getConnetionProperties());
+                        protonConnection.open();
                     }
                 } finally {
                     pumpProtonToSocket();
