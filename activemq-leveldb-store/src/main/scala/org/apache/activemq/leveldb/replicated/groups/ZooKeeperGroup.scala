@@ -72,7 +72,9 @@ object ZooKeeperGroup {
  */
 class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListener with ChangeListenerSupport {
 
-  val tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
+  var tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
+  var reconnected = -1
+
   val joins = HashMap[String, Int]()
 
   var members = new LinkedHashMap[String, Array[Byte]]
@@ -82,12 +84,13 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListen
   zk.registerListener(this)
 
   create(root)
-  tree.track(new NodeEventsListener[Array[Byte]]() {
+  var treeEventHandler = new NodeEventsListener[Array[Byte]]() {
     def onEvents(events: Collection[NodeEvent[Array[Byte]]]): Unit = {
       if( !closed )
-        fire_cluster_change
+        fire_cluster_change;
     }
-  })
+  }
+  tree.track(treeEventHandler)
   fire_cluster_change
 
   @volatile
@@ -110,7 +113,17 @@ class ZooKeeperGroup(val zk: ZKClient, val root: String) extends LifecycleListen
   }
 
   def connected = zk.isConnected
-  def onConnected() = fireConnected()
+  def onConnected() = {
+    reconnected += 1
+    if ( reconnected > 0 ) {
+      this.synchronized {
+        tree.destroy
+        tree = new ZooKeeperTreeTracker[Array[Byte]](zk, new ZKByteArrayDataReader, root, 1)
+        tree.track(treeEventHandler)
+      }
+    }
+    fireConnected()
+  }
   def onDisconnected() = {
     this.members = new LinkedHashMap()
     fireDisconnected()
