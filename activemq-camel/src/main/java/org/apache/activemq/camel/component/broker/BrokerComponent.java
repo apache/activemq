@@ -63,7 +63,7 @@ public class BrokerComponent extends UriEndpointComponent implements EndpointCom
         }
 
         ActiveMQDestination destination = ActiveMQDestination.createDestination(remaining, destinationType);
-        BrokerEndpoint brokerEndpoint = new BrokerEndpoint(uri, this, destination, brokerConfiguration);
+        BrokerEndpoint brokerEndpoint = new BrokerEndpoint(uri, this, remaining, destination, brokerConfiguration);
         setProperties(brokerEndpoint, parameters);
         return brokerEndpoint;
     }
