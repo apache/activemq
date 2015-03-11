@@ -46,8 +46,8 @@
     <aopalliance-version>1.0</aopalliance-version>
     <aries-version>1.0.0</aries-version>
     <axion-version>1.0-M3-dev</axion-version>
-    <camel-version>2.14.1</camel-version>
-    <camel-version-range>[2.14,3)</camel-version-range>
+    <camel-version>2.15.0</camel-version>
+    <camel-version-range>[2.15,3)</camel-version-range>
     <cglib-version>2.2</cglib-version>
     <commons-beanutils-version>1.8.3</commons-beanutils-version>
     <commons-collections-version>3.2.1</commons-collections-version>

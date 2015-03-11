@@ -32,7 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-       org.springframework.jms*;version="[3,4)",
+       org.springframework.jms*;version="[3,5)",
        org.apache.activemq.pool,
        org.apache.camel*;version="${camel-version-range}",
        *
@@ -40,6 +40,10 @@
     <activemq.osgi.export>
         org.apache.activemq.camel*;version:="${project.version}";-noimport:=true
     </activemq.osgi.export>
+    <camel.osgi.export.service>
+      org.apache.camel.spi.ComponentResolver;component=activemq,
+      org.apache.camel.spi.ComponentResolver;component=broker
+    </camel.osgi.export.service>
   </properties>
 
   <dependencies>
