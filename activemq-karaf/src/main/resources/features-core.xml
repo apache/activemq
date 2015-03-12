@@ -18,7 +18,7 @@
 
 -->
 
-<features name="activemq-core-${project.version}">
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.0.0" name="activemq-core-${project.version}">
 
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}" resolver="(obr)" start-level="50">
