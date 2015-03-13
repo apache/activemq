@@ -1224,7 +1224,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         ConnectionContext c = createConnectionContext();
         List<MessageReference> list = null;
         long previousDequeueCount = -1;
-        long previousDequeueCountRepeated = 0L;
+        long previousDequeueCountRepeated = 1L;
         long originalMessageCount = this.destinationStatistics.getMessages().getCount();
         do {
             doPageIn(true, false);  // signal no expiry processing needed.
@@ -1239,7 +1239,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 long currentDequeueCount = this.destinationStatistics.getDequeues().getCount();
                 if (previousDequeueCount == currentDequeueCount) {
                     previousDequeueCountRepeated++;
-                    if (previousDequeueCountRepeated > 3) {
+                    if (previousDequeueCountRepeated >= 3) {
                         // Break the infinite loop in case the removal fails
                         // 3 times in a row -> error is fatal and not transient.
                         LOG.error("Aborted purge operation after attempting to delete messages");
