@@ -23,12 +23,14 @@ import javax.jms.*;
 import java.io.*;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProducerThread extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProducerThread.class);
 
     int messageCount = 1000;
+    boolean runIndefinitely = false;
     Destination destination;
     protected Session session;
     int sleep = 0;
@@ -40,13 +42,14 @@ public class ProducerThread extends Thread {
     int transactionBatchSize;
 
     int transactions = 0;
-    int sentCount = 0;
+    AtomicInteger sentCount = new AtomicInteger(0);
     String message;
     String messageText = null;
     String payloadUrl = null;
     byte[] payload = null;
     boolean running = false;
     CountDownLatch finished;
+    CountDownLatch paused = new CountDownLatch(0);
 
 
     public ProducerThread(Session session, Destination destination) {
@@ -67,18 +70,20 @@ public class ProducerThread extends Thread {
             LOG.info(threadName +  " Started to calculate elapsed time ...\n");
             long tStart = System.currentTimeMillis();
 
-            for (sentCount = 0; sentCount < messageCount && running; sentCount++) {
-                Message message = createMessage(sentCount);
-                producer.send(message);
-                LOG.info(threadName + " Sent: " + (message instanceof TextMessage ? ((TextMessage) message).getText() : message.getJMSMessageID()));
-
-                if (transactionBatchSize > 0 && sentCount > 0 && sentCount % transactionBatchSize == 0) {
-                    LOG.info(threadName + " Committing transaction: " + transactions++);
-                    session.commit();
+            if (runIndefinitely) {
+                while (running) {
+                    synchronized (this) {
+                        paused.await();
+                    }
+                    sendMessage(producer, threadName);
+                    sentCount.incrementAndGet();
                 }
-
-                if (sleep > 0) {
-                    Thread.sleep(sleep);
+            }else{
+                for (sentCount.set(0); sentCount.get() < messageCount && running; sentCount.incrementAndGet()) {
+                    synchronized (this) {
+                        paused.await();
+                    }
+                    sendMessage(producer, threadName);
                 }
             }
 
@@ -101,6 +106,23 @@ public class ProducerThread extends Thread {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private void sendMessage(MessageProducer producer, String threadName) throws Exception {
+        Message message = createMessage(sentCount.get());
+        producer.send(message);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(threadName + " Sent: " + (message instanceof TextMessage ? ((TextMessage) message).getText() : message.getJMSMessageID()));
+        }
+
+        if (transactionBatchSize > 0 && sentCount.get() > 0 && sentCount.get() % transactionBatchSize == 0) {
+            LOG.info(threadName + " Committing transaction: " + transactions++);
+            session.commit();
+        }
+
+        if (sleep > 0) {
+            Thread.sleep(sleep);
         }
     }
 
@@ -182,7 +204,7 @@ public class ProducerThread extends Thread {
     }
 
     public int getSentCount() {
-        return sentCount;
+        return sentCount.get();
     }
 
     public boolean isPersistent() {
@@ -263,5 +285,25 @@ public class ProducerThread extends Thread {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public boolean isRunIndefinitely() {
+        return runIndefinitely;
+    }
+
+    public void setRunIndefinitely(boolean runIndefinitely) {
+        this.runIndefinitely = runIndefinitely;
+    }
+
+    public synchronized void pauseProducer(){
+        this.paused = new CountDownLatch(1);
+    }
+
+    public synchronized void resumeProducer(){
+        this.paused.countDown();
+    }
+
+    public void resetCounters(){
+        this.sentCount.set(0);
     }
 }
