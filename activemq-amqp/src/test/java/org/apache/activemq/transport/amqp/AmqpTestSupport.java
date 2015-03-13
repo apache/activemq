@@ -36,6 +36,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -242,18 +243,47 @@ public class AmqpTestSupport {
         LOG.info("========== tearDown " + getTestName() + " ==========");
     }
 
-    public void sendMessages(Connection connection, Destination destination, int count) throws Exception {
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer p = session.createProducer(destination);
-
-        for (int i = 1; i <= count; i++) {
-            TextMessage message = session.createTextMessage();
-            message.setText("TextMessage: " + i);
-            message.setIntProperty(MESSAGE_NUMBER, i);
-            p.send(message);
+    public Connection createJMSConnection() throws JMSException {
+        if (!isUseOpenWireConnector()) {
+            throw new javax.jms.IllegalStateException("OpenWire TransportConnector was not configured.");
         }
 
-        session.close();
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(openwireURI);
+
+        return factory.createConnection();
+    }
+
+    public void sendMessages(String destinationName, int count, boolean topic) throws Exception {
+        Connection connection = createJMSConnection();
+        try {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Destination destination = null;
+            if (topic) {
+                destination = session.createTopic(destinationName);
+            } else {
+                destination = session.createQueue(destinationName);
+            }
+
+            sendMessages(connection, destination, count);
+        } finally {
+            connection.close();
+        }
+    }
+
+    public void sendMessages(Connection connection, Destination destination, int count) throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        try {
+            MessageProducer p = session.createProducer(destination);
+
+            for (int i = 1; i <= count; i++) {
+                TextMessage message = session.createTextMessage();
+                message.setText("TextMessage: " + i);
+                message.setIntProperty(MESSAGE_NUMBER, i);
+                p.send(message);
+            }
+        } finally {
+            session.close();
+        }
     }
 
     public String getTestName() {

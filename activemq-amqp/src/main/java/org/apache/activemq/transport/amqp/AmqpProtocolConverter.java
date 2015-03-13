@@ -16,6 +16,20 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
+import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.QUEUE_PREFIX;
+import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILITY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.TOPIC_PREFIX;
+import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
+import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
+import static org.apache.activemq.transport.amqp.AmqpSupport.toBytes;
+import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -90,7 +104,6 @@ import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Modified;
@@ -136,19 +149,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpProtocolConverter.class);
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int CHANNEL_MAX = 32767;
-    private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
-    private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
-    private static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
-    private static final Symbol COPY = Symbol.getSymbol("copy");
-    private static final UnsignedLong JMS_SELECTOR_CODE = UnsignedLong.valueOf(0x0000468C00000004L);
-    private static final Symbol JMS_SELECTOR_NAME = Symbol.valueOf("apache.org:selector-filter:string");
-    private static final Object[] JMS_SELECTOR_FILTER_IDS = new Object[] { JMS_SELECTOR_CODE, JMS_SELECTOR_NAME };
-    private static final UnsignedLong NO_LOCAL_CODE = UnsignedLong.valueOf(0x0000468C00000003L);
-    private static final Symbol NO_LOCAL_NAME = Symbol.valueOf("apache.org:selector-filter:string");
-    private static final Object[] NO_LOCAL_FILTER_IDS = new Object[] { NO_LOCAL_CODE, NO_LOCAL_NAME };
-    private static final Symbol TEMP_QUEUE_CAPABILITY = Symbol.valueOf("temporary-queue");
-    private static final Symbol TEMP_TOPIC_CAPABILITY = Symbol.valueOf("temporary-topic");
-    private static final Symbol CONNECTION_OPEN_FAILED = Symbol.valueOf("amqp:connection-establishment-failed");
 
     private final AmqpTransport amqpTransport;
     private final AmqpWireFormat amqpWireFormat;
@@ -874,17 +874,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     private final AtomicLong nextTransactionId = new AtomicLong();
 
-    public byte[] toBytes(long value) {
-        Buffer buffer = new Buffer(8);
-        buffer.bigEndianEditor().writeLong(value);
-        return buffer.data;
-    }
-
-    private long toLong(Binary value) {
-        Buffer buffer = new Buffer(value.getArray(), value.getArrayOffset(), value.getLength());
-        return buffer.bigEndianEditor().readLong();
-    }
-
     AmqpDeliveryListener coordinatorContext = new BaseProducerContext() {
 
         @Override
@@ -946,7 +935,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             ExceptionResponse er = (ExceptionResponse) response;
                             Rejected rejected = new Rejected();
-                            rejected.setError(createErrorCondition("failed", er.getException().getMessage()));
+                            rejected.setError(new ErrorCondition(Symbol.valueOf("failed"), er.getException().getMessage()));
                             delivery.disposition(rejected);
                         } else {
                             delivery.disposition(Accepted.getInstance());
@@ -1639,46 +1628,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         });
     }
 
-    private boolean contains(Symbol[] symbols, Symbol key) {
-        if (symbols == null || symbols.length == 0) {
-            return false;
-        }
-
-        for (Symbol symbol : symbols) {
-            if (symbol.equals(key)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private DescribedType findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
-
-        if (filterIds == null || filterIds.length == 0) {
-            throw new IllegalArgumentException("Invalid Filter Ids array passed: " + filterIds);
-        }
-
-        if (filters == null || filters.isEmpty()) {
-            return null;
-        }
-
-        for (Object value : filters.values()) {
-            if (value instanceof DescribedType) {
-                DescribedType describedType = ((DescribedType) value);
-                Object descriptor = describedType.getDescriptor();
-
-                for (Object filterId : filterIds) {
-                    if (descriptor.equals(filterId)) {
-                        return describedType;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
     // //////////////////////////////////////////////////////////////////////////
     //
     // Implementation methods
@@ -1705,17 +1654,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         } catch (Throwable e) {
             LOG.error("Failed to stop AMQP Transport ", e);
         }
-    }
-
-    ErrorCondition createErrorCondition(String name) {
-        return createErrorCondition(name, "");
-    }
-
-    ErrorCondition createErrorCondition(String name, String description) {
-        ErrorCondition condition = new ErrorCondition();
-        condition.setCondition(Symbol.valueOf(name));
-        condition.setDescription(description);
-        return condition;
     }
 
     @Override
