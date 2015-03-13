@@ -33,7 +33,6 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
     private final AmqpTransport transport;
     private final BrokerService brokerService;
 
-    private int prefetch = 0;
     private int producerCredit = DEFAULT_PREFETCH;
 
     interface Discriminator {
@@ -90,7 +89,6 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
             }
 
             IAmqpProtocolConverter next = match.create(transport, brokerService);
-            next.setPrefetch(prefetch);
             next.setProducerCredit(producerCredit);
             transport.setProtocolConverter(next);
             for (Command send : pendingCommands) {
@@ -114,11 +112,6 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     @Override
     public void updateTracer() {
-    }
-
-    @Override
-    public void setPrefetch(int prefetch) {
-        this.prefetch = prefetch;
     }
 
     @Override

@@ -155,7 +155,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private final BrokerService brokerService;
     private AuthenticationBroker authenticator;
 
-    protected int prefetch;
     protected int producerCredit;
     protected Transport protonTransport = Proton.transport();
     protected Connection protonConnection = Proton.connection();
@@ -410,17 +409,15 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         int credit = link.getCredit();
         if (context instanceof ConsumerContext) {
             ConsumerContext consumerContext = (ConsumerContext)context;
-            // change consumer prefetch if it's not been already set using
-            // transport connector property or consumer preference
-            if (consumerContext.consumerPrefetch == 0 && credit > 0) {
+
+            if (credit != consumerContext.credit) {
+                consumerContext.credit = credit >= 0 ? credit : 0;
                 ConsumerControl control = new ConsumerControl();
                 control.setConsumerId(consumerContext.consumerId);
                 control.setDestination(consumerContext.destination);
-                control.setPrefetch(credit);
-                consumerContext.consumerPrefetch = credit;
+                control.setPrefetch(consumerContext.credit);
                 sendToActiveMQ(control, null);
             }
-            consumerContext.credit = credit;
         }
         ((AmqpDeliveryListener) link.getContext()).drainCheck();
     }
@@ -1061,7 +1058,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         public ConsumerInfo info;
         private boolean endOfBrowse = false;
         public int credit;
-        public int consumerPrefetch = 0;
         private long lastDeliveredSequenceId;
 
         protected LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
@@ -1481,33 +1477,16 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 destination = createDestination(source);
             }
 
+            int senderCredit = sender.getRemoteCredit();
+
             subscriptionsByConsumerId.put(id, consumerContext);
             ConsumerInfo consumerInfo = new ConsumerInfo(id);
-            consumerContext.info = consumerInfo;
             consumerInfo.setSelector(selector);
             consumerInfo.setNoRangeAcks(true);
             consumerInfo.setDestination(destination);
-            consumerContext.setDestination(destination);
-            int senderCredit = sender.getRemoteCredit();
-            if (prefetch != 0) {
-                // use the value configured on the transport connector
-                // this value will not be changed to the consumer's preference
-                consumerInfo.setPrefetchSize(prefetch);
-                consumerContext.consumerPrefetch = prefetch;
-            } else {
-                if (senderCredit != 0) {
-                    // set the prefetch to the value of the remote credit
-                    // and ignore the later changes
-                    consumerInfo.setPrefetchSize(senderCredit);
-                    consumerContext.consumerPrefetch = senderCredit;
-                } else {
-                    // set zero value for now and change to the consumer's preference
-                    // on the first flow packet
-                    consumerInfo.setPrefetchSize(0);
-                }
-            }
-            consumerContext.credit = senderCredit;
+            consumerInfo.setPrefetchSize(senderCredit >= 0 ? senderCredit : 0);
             consumerInfo.setDispatchAsync(true);
+
             if (source.getDistributionMode() == COPY && destination.isQueue()) {
                 consumerInfo.setBrowser(true);
             }
@@ -1520,6 +1499,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if (filter != null) {
                 consumerInfo.setNoLocal(true);
             }
+
+            consumerContext.info = consumerInfo;
+            consumerContext.setDestination(destination);
+            consumerContext.credit = senderCredit;
 
             sendToActiveMQ(consumerInfo, new ResponseHandler() {
                 @Override
@@ -1654,11 +1637,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         } catch (Throwable e) {
             LOG.error("Failed to stop AMQP Transport ", e);
         }
-    }
-
-    @Override
-    public void setPrefetch(int prefetch) {
-        this.prefetch = prefetch;
     }
 
     @Override

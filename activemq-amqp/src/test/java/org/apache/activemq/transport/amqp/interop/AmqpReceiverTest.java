@@ -141,7 +141,6 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-    @Ignore("Fails due to issues with accept and no credit")
     @Test(timeout = 60000)
     public void testTwoQueueReceiversOnSameConnectionReadMessagesAcceptOnEach() throws Exception {
         int MSG_COUNT = 4;

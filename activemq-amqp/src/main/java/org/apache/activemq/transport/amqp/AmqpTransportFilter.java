@@ -187,8 +187,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         this.protocolConverter = protocolConverter;
     }
 
+    /**
+     * @deprecated AMQP receiver configures it's prefetch via flow, remove on next release.
+     */
+    @Deprecated
     public void setPrefetch(int prefetch) {
-        protocolConverter.setPrefetch(prefetch);
     }
 
     public void setProducerCredit(int producerCredit) {
