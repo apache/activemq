@@ -94,10 +94,10 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
-     * Close the sender, a closed sender will throw exceptions if any further send
+     * Close the receiver, a closed receiver will throw exceptions if any further send
      * calls are made.
      *
-     * @throws IOException if an error occurs while closing the sender.
+     * @throws IOException if an error occurs while closing the receiver.
      */
     public void close() throws IOException {
         if (closed.compareAndSet(false, true)) {
@@ -108,6 +108,29 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 public void run() {
                     checkClosed();
                     close(request);
+                    session.pumpToProtonTransport();
+                }
+            });
+
+            request.sync();
+        }
+    }
+
+    /**
+     * Detach the receiver, a closed receiver will throw exceptions if any further send
+     * calls are made.
+     *
+     * @throws IOException if an error occurs while closing the receiver.
+     */
+    public void detach() throws IOException {
+        if (closed.compareAndSet(false, true)) {
+            final ClientFuture request = new ClientFuture();
+            session.getScheduler().execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    checkClosed();
+                    detach(request);
                     session.pumpToProtonTransport();
                 }
             });
@@ -442,11 +465,12 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     @Override
     protected void doClose() {
-        if (isDurable()) {
-            getEndpoint().detach();
-        } else {
-            getEndpoint().close();
-        }
+        getEndpoint().close();
+    }
+
+    @Override
+    protected void doDetach() {
+        getEndpoint().detach();
     }
 
     @Override

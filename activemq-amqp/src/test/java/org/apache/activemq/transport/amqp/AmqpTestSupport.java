@@ -42,6 +42,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.store.kahadb.KahaDBStore;
@@ -320,10 +321,10 @@ public class AmqpTestSupport {
         return proxy;
     }
 
-    protected QueueViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
+    protected TopicViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
         ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Topic,destinationName="+name);
-        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        TopicViewMBean proxy = (TopicViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, TopicViewMBean.class, true);
         return proxy;
     }
 }

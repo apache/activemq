@@ -66,25 +66,57 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
     }
 
     @Override
+    public void detach(AsyncResult request) {
+        // If already closed signal success or else the caller might never get notified.
+        if (getEndpoint().getLocalState() == EndpointState.CLOSED ||
+            getEndpoint().getRemoteState() == EndpointState.CLOSED) {
+
+            if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
+                doDetach();
+                getEndpoint().free();
+            }
+
+            request.onSuccess();
+        } else {
+            this.closeRequest = request;
+            doDetach();
+        }
+    }
+
+    @Override
     public void close(AsyncResult request) {
         // If already closed signal success or else the caller might never get notified.
         if (getEndpoint().getLocalState() == EndpointState.CLOSED ||
             getEndpoint().getRemoteState() == EndpointState.CLOSED) {
 
             if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
-                // Remote already closed this resource, close locally and free.
-                if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
-                    doClose();
-                    getEndpoint().free();
-                }
+                doClose();
+                getEndpoint().free();
             }
 
             request.onSuccess();
-            return;
+        } else {
+            this.closeRequest = request;
+            doClose();
         }
-
-        this.closeRequest = request;
-        doClose();
+//        // If already closed signal success or else the caller might never get notified.
+//        if (getEndpoint().getLocalState() == EndpointState.CLOSED ||
+//            getEndpoint().getRemoteState() == EndpointState.CLOSED) {
+//
+//            if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
+//                // Remote already closed this resource, close locally and free.
+//                if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
+//                    doClose();
+//                    getEndpoint().free();
+//                }
+//            }
+//
+//            request.onSuccess();
+//            return;
+//        }
+//
+//        this.closeRequest = request;
+//        doClose();
     }
 
     @Override
@@ -275,6 +307,16 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
      */
     protected void doClose() {
         getEndpoint().close();
+    }
+
+    /**
+     * Perform the detach operation on the managed endpoint.
+     *
+     * By default this method throws an UnsupportedOperationException, a subclass
+     * must implement this and do a detach if its resource supports that.
+     */
+    protected void doDetach() {
+        throw new UnsupportedOperationException("Endpoint cannot be detached.");
     }
 
     /**

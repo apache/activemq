@@ -58,6 +58,15 @@ public interface AmqpResource {
     void close(AsyncResult request);
 
     /**
+     * Perform all work needed to detach this resource and store the request
+     * until such time as the remote peer indicates the resource has been detached.
+     *
+     * @param request
+     *        The initiating request that triggered this detach call.
+     */
+    void detach(AsyncResult request);
+
+    /**
      * @return if the resource has moved to the closed state on the remote.
      */
     boolean isClosed();
