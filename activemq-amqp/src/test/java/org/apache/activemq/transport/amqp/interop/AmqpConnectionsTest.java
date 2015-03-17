@@ -62,7 +62,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        client.setStateInspector(new AmqpValidator() {
+        client.setValidator(new AmqpValidator() {
 
             @Override
             public void inspectOpenedResource(Connection connection) {

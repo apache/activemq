@@ -76,6 +76,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     private String selector;
     private boolean presettle;
     private boolean noLocal;
+    private Source userSpecifiedSource;
 
     /**
      * Create a new receiver instance.
@@ -90,6 +91,28 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     public AmqpReceiver(AmqpSession session, String address, String receiverId) {
         this.session = session;
         this.address = address;
+        this.receiverId = receiverId;
+    }
+
+    /**
+     * Create a new receiver instance.
+     *
+     * @param session
+     *        The parent session that created the receiver.
+     * @param source
+     *        The Source instance to use instead of creating and configuring one.
+     * @param receiverId
+     *        The unique ID assigned to this receiver.
+     */
+    public AmqpReceiver(AmqpSession session, Source source, String receiverId) {
+
+        if (source == null) {
+            throw new IllegalArgumentException("User specified Source cannot be null");
+        }
+
+        this.session = session;
+        this.userSpecifiedSource = source;
+        this.address = source.getAddress();
         this.receiverId = receiverId;
     }
 
@@ -423,11 +446,14 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     @Override
     protected void doOpen() {
 
-        Source source = new Source();
-        source.setAddress(address);
+        Source source = userSpecifiedSource;
         Target target = new Target();
 
-        configureSource(source);
+        if (userSpecifiedSource == null) {
+            source = new Source();
+            source.setAddress(address);
+            configureSource(source);
+        }
 
         String receiverName = receiverId + ":" + address;
 
@@ -523,11 +549,11 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         source.setDefaultOutcome(modified);
 
         if (isNoLocal()) {
-            filters.put(NO_LOCAL_NAME, AmqpNoLocalType.NO_LOCAL);
+            filters.put(NO_LOCAL_NAME, AmqpNoLocalFilter.NO_LOCAL);
         }
 
         if (getSelector() != null && !getSelector().trim().equals("")) {
-            filters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorType(getSelector()));
+            filters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorFilter(getSelector()));
         }
 
         if (!filters.isEmpty()) {

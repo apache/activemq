@@ -16,23 +16,24 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_CODE;
+
 import org.apache.qpid.proton.amqp.DescribedType;
-import org.apache.qpid.proton.amqp.UnsignedLong;
 
 /**
  * A Described Type wrapper for JMS selector values.
  */
-public class AmqpJmsSelectorType implements DescribedType {
+public class AmqpJmsSelectorFilter implements DescribedType {
 
     private final String selector;
 
-    public AmqpJmsSelectorType(String selector) {
+    public AmqpJmsSelectorFilter(String selector) {
         this.selector = selector;
     }
 
     @Override
     public Object getDescriptor() {
-        return UnsignedLong.valueOf(0x0000468C00000004L);
+        return JMS_SELECTOR_CODE;
     }
 
     @Override

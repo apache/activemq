@@ -187,7 +187,7 @@ public class AmqpClient {
      * @param stateInspector
      *        the new state inspector to use.
      */
-    public void setStateInspector(AmqpValidator stateInspector) {
+    public void setValidator(AmqpValidator stateInspector) {
         if (stateInspector == null) {
             stateInspector = new AmqpValidator();
         }

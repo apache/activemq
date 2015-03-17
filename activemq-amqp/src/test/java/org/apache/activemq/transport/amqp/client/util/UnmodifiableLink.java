@@ -147,13 +147,13 @@ public class UnmodifiableLink implements Link {
     @Override
     public Source getRemoteSource() {
         // TODO Figure out a simple way to wrap the odd Source types in Proton-J
-        return link.getSource();
+        return link.getRemoteSource();
     }
 
     @Override
     public Target getRemoteTarget() {
         // TODO Figure out a simple way to wrap the odd Target types in Proton-J
-        return link.getTarget();
+        return link.getRemoteTarget();
     }
 
     @Override

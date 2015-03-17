@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.client;
 
 import org.apache.qpid.proton.amqp.DescribedType;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 
 /**
@@ -26,6 +27,10 @@ public class AmqpUnknownFilterType implements DescribedType {
 
     public static final AmqpUnknownFilterType UNKOWN_FILTER = new AmqpUnknownFilterType();
 
+    public static final UnsignedLong UNKNOWN_FILTER_CODE = UnsignedLong.valueOf(0x0000468C00000099L);
+    public static final Symbol UNKNOWN_FILTER_NAME = Symbol.valueOf("apache.org:unkown-filter:string");
+    public static final Object[] UNKNOWN_FILTER_IDS = new Object[] { UNKNOWN_FILTER_CODE, UNKNOWN_FILTER_NAME };
+
     private final String payload;
 
     public AmqpUnknownFilterType() {
@@ -34,7 +39,7 @@ public class AmqpUnknownFilterType implements DescribedType {
 
     @Override
     public Object getDescriptor() {
-        return UnsignedLong.valueOf(0x0000468C00000099L);
+        return UNKNOWN_FILTER_CODE;
     }
 
     @Override

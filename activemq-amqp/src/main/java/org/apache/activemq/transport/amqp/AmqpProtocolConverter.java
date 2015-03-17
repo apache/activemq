@@ -1417,15 +1417,18 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         org.apache.qpid.proton.amqp.messaging.Source source = (org.apache.qpid.proton.amqp.messaging.Source) sender.getRemoteSource();
 
         try {
+            final Map<Symbol, Object> supportedFilters = new HashMap<Symbol, Object>();
             final ConsumerId id = new ConsumerId(sessionContext.sessionId, sessionContext.nextConsumerId++);
             final ConsumerContext consumerContext = new ConsumerContext(id, sender);
             sender.setContext(consumerContext);
 
+            boolean noLocal = false;
             String selector = null;
+
             if (source != null) {
-                DescribedType filter = findFilter(source.getFilter(), JMS_SELECTOR_FILTER_IDS);
+                Map.Entry<Symbol, DescribedType> filter = findFilter(source.getFilter(), JMS_SELECTOR_FILTER_IDS);
                 if (filter != null) {
-                    selector = filter.getDescribed().toString();
+                    selector = filter.getValue().getDescribed().toString();
                     // Validate the Selector.
                     try {
                         SelectorParser.parse(selector);
@@ -1436,6 +1439,14 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         consumerContext.closed = true;
                         return;
                     }
+
+                    supportedFilters.put(filter.getKey(), filter.getValue());
+                }
+
+                filter = findFilter(source.getFilter(), NO_LOCAL_FILTER_IDS);
+                if (filter != null) {
+                    noLocal = true;
+                    supportedFilters.put(filter.getKey(), filter.getValue());
                 }
             }
 
@@ -1449,7 +1460,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     source.setAddress(destination.getQualifiedName());
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
                     source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
-                    sender.setSource(source);
                 } else {
                     consumerContext.closed = true;
                     sender.setSource(null);
@@ -1465,7 +1475,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 source = new org.apache.qpid.proton.amqp.messaging.Source();
                 source.setAddress(destination.getQualifiedName());
                 source.setDynamic(true);
-                sender.setSource(source);
                 consumerContext.addCloseAction(new Runnable() {
 
                     @Override
@@ -1477,6 +1486,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 destination = createDestination(source);
             }
 
+            source.setFilter(supportedFilters.isEmpty() ? null : supportedFilters);
+            sender.setSource(source);
+
             int senderCredit = sender.getRemoteCredit();
 
             subscriptionsByConsumerId.put(id, consumerContext);
@@ -1486,6 +1498,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             consumerInfo.setDestination(destination);
             consumerInfo.setPrefetchSize(senderCredit >= 0 ? senderCredit : 0);
             consumerInfo.setDispatchAsync(true);
+            consumerInfo.setNoLocal(noLocal);
 
             if (source.getDistributionMode() == COPY && destination.isQueue()) {
                 consumerInfo.setBrowser(true);
@@ -1493,11 +1506,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             if ((TerminusDurability.UNSETTLED_STATE.equals(source.getDurable()) ||
                  TerminusDurability.CONFIGURATION.equals(source.getDurable())) && destination.isTopic()) {
                 consumerInfo.setSubscriptionName(sender.getName());
-            }
-
-            DescribedType filter = findFilter(source.getFilter(), NO_LOCAL_FILTER_IDS);
-            if (filter != null) {
-                consumerInfo.setNoLocal(true);
             }
 
             consumerContext.info = consumerInfo;

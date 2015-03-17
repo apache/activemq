@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp;
 
 import java.nio.ByteBuffer;
+import java.util.AbstractMap;
 import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Binary;
@@ -86,7 +87,7 @@ public class AmqpSupport {
      *
      * @return the filter if found in the mapping or null if not found.
      */
-    public static DescribedType findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
+    public static Map.Entry<Symbol, DescribedType> findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
 
         if (filterIds == null || filterIds.length == 0) {
             throw new IllegalArgumentException("Invalid Filter Ids array passed: " + filterIds);
@@ -96,14 +97,14 @@ public class AmqpSupport {
             return null;
         }
 
-        for (Object value : filters.values()) {
-            if (value instanceof DescribedType) {
-                DescribedType describedType = ((DescribedType) value);
+        for (Map.Entry<Symbol, Object> filter : filters.entrySet()) {
+            if (filter.getValue() instanceof DescribedType) {
+                DescribedType describedType = ((DescribedType) filter.getValue());
                 Object descriptor = describedType.getDescriptor();
 
                 for (Object filterId : filterIds) {
                     if (descriptor.equals(filterId)) {
-                        return describedType;
+                        return new AbstractMap.SimpleImmutableEntry<Symbol, DescribedType>(filter.getKey(), describedType);
                     }
                 }
             }

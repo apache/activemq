@@ -16,25 +16,26 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_CODE;
+
 import org.apache.qpid.proton.amqp.DescribedType;
-import org.apache.qpid.proton.amqp.UnsignedLong;
 
 /**
  * A Described Type wrapper for JMS no local option for MessageConsumer.
  */
-public class AmqpNoLocalType implements DescribedType {
+public class AmqpNoLocalFilter implements DescribedType {
 
-    public static final AmqpNoLocalType NO_LOCAL = new AmqpNoLocalType();
+    public static final AmqpNoLocalFilter NO_LOCAL = new AmqpNoLocalFilter();
 
     private final String noLocal;
 
-    public AmqpNoLocalType() {
+    public AmqpNoLocalFilter() {
         this.noLocal = "NoLocalFilter{}";
     }
 
     @Override
     public Object getDescriptor() {
-        return UnsignedLong.valueOf(0x0000468C00000003L);
+        return NO_LOCAL_CODE;
     }
 
     @Override

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -33,10 +34,14 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.client.AmqpUnknownFilterType;
 import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
+import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.engine.Receiver;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -74,18 +79,18 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     public void testCreateQueueReceiverWithJMSSelector() throws Exception {
         AmqpClient client = createAmqpClient();
 
-        client.setStateInspector(new AmqpValidator() {
+        client.setValidator(new AmqpValidator() {
 
             @SuppressWarnings("unchecked")
             @Override
             public void inspectOpenedResource(Receiver receiver) {
                 LOG.info("Receiver opened: {}", receiver);
 
-                if (receiver.getSource() == null) {
+                if (receiver.getRemoteSource() == null) {
                     markAsInvalid("Link opened with null source.");
                 }
 
-                Source source = (Source) receiver.getSource();
+                Source source = (Source) receiver.getRemoteSource();
                 Map<Symbol, Object> filters = source.getFilter();
 
                 if (findFilter(filters, JMS_SELECTOR_FILTER_IDS) == null) {
@@ -111,18 +116,18 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
     public void testCreateQueueReceiverWithNoLocalSet() throws Exception {
         AmqpClient client = createAmqpClient();
 
-        client.setStateInspector(new AmqpValidator() {
+        client.setValidator(new AmqpValidator() {
 
             @SuppressWarnings("unchecked")
             @Override
             public void inspectOpenedResource(Receiver receiver) {
                 LOG.info("Receiver opened: {}", receiver);
 
-                if (receiver.getSource() == null) {
+                if (receiver.getRemoteSource() == null) {
                     markAsInvalid("Link opened with null source.");
                 }
 
-                Source source = (Source) receiver.getSource();
+                Source source = (Source) receiver.getRemoteSource();
                 Map<Symbol, Object> filters = source.getFilter();
 
                 if (findFilter(filters, NO_LOCAL_FILTER_IDS) == null) {
@@ -361,6 +366,52 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
         assertEquals(0, queueView.getQueueSize());
 
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testUnsupportedFiltersAreNotListedAsSupported() throws Exception {
+        AmqpClient client = createAmqpClient();
+
+        client.setValidator(new AmqpValidator() {
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public void inspectOpenedResource(Receiver receiver) {
+                LOG.info("Receiver opened: {}", receiver);
+
+                if (receiver.getRemoteSource() == null) {
+                    markAsInvalid("Link opened with null source.");
+                }
+
+                Source source = (Source) receiver.getRemoteSource();
+                Map<Symbol, Object> filters = source.getFilter();
+
+                if (findFilter(filters, AmqpUnknownFilterType.UNKNOWN_FILTER_IDS) != null) {
+                    markAsInvalid("Broker should not return unsupported filter on attach.");
+                }
+            }
+        });
+
+        Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
+        filters.put(AmqpUnknownFilterType.UNKNOWN_FILTER_NAME, AmqpUnknownFilterType.UNKOWN_FILTER);
+
+        Source source = new Source();
+        source.setAddress("queue://" + getTestName());
+        source.setFilter(filters);
+        source.setDurable(TerminusDurability.NONE);
+        source.setExpiryPolicy(TerminusExpiryPolicy.LINK_DETACH);
+
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        session.createReceiver(source);
+
+        assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
+
+        connection.getStateInspector().assertValid();
         connection.close();
     }
 }
