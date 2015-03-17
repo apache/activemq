@@ -222,10 +222,9 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
             @Override
             public void run() {
                 checkClosed();
-
                 session.setEndpoint(getEndpoint().session());
+                session.setStateInspector(getStateInspector());
                 session.open(request);
-
                 pumpToProtonTransport();
             }
         });

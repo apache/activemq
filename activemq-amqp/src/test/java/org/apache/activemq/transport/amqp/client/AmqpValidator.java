@@ -17,14 +17,15 @@
 package org.apache.activemq.transport.amqp.client;
 
 import org.apache.qpid.proton.engine.Connection;
-import org.apache.qpid.proton.engine.Link;
+import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 /**
  * Abstract base for a validation hook that is used in tests to check
  * the state of a remote resource after a variety of lifecycle events.
  */
-public class AmqpStateInspector {
+public class AmqpValidator {
 
     private boolean valid = true;
     private String errorMessage;
@@ -37,7 +38,11 @@ public class AmqpStateInspector {
 
     }
 
-    public void inspectOpenedResource(Link link) {
+    public void inspectOpenedResource(Sender sender) {
+
+    }
+
+    public void inspectOpenedResource(Receiver receiver) {
 
     }
 
@@ -49,11 +54,19 @@ public class AmqpStateInspector {
 
     }
 
-    public void inspectClosedResource(Link link) {
+    public void inspectClosedResource(Sender sender) {
 
     }
 
-    public void inspectDetachedResource(Link link) {
+    public void inspectClosedResource(Receiver receiver) {
+
+    }
+
+    public void inspectDetachedResource(Sender sender) {
+
+    }
+
+    public void inspectDetachedResource(Receiver receiver) {
 
     }
 
@@ -80,7 +93,7 @@ public class AmqpStateInspector {
         }
     }
 
-    public void assertIfStateChecksFailed() {
+    public void assertValid() {
         if (!isValid()) {
             throw new AssertionError(errorMessage);
         }

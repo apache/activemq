@@ -26,7 +26,7 @@ import java.util.Map;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
-import org.apache.activemq.transport.amqp.client.AmqpStateInspector;
+import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
@@ -62,7 +62,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         AmqpClient client = createAmqpClient();
         assertNotNull(client);
 
-        client.setStateInspector(new AmqpStateInspector() {
+        client.setStateInspector(new AmqpValidator() {
 
             @Override
             public void inspectOpenedResource(Connection connection) {
@@ -88,6 +88,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
+        connection.getStateInspector().assertValid();
         connection.close();
 
         assertEquals(0, getProxyToBroker().getCurrentConnectionsCount());
@@ -131,7 +132,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
         connection1.connect();
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 
-        connection2.setStateInspector(new AmqpStateInspector() {
+        connection2.setStateInspector(new AmqpValidator() {
 
             @Override
             public void inspectOpenedResource(Connection connection) {
@@ -160,7 +161,7 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
             LOG.info("Second connection with same container Id failed as expected.");
         }
 
-        connection2.getStateInspector().assertIfStateChecksFailed();
+        connection2.getStateInspector().assertValid();
 
         assertEquals(1, getProxyToBroker().getCurrentConnectionsCount());
 

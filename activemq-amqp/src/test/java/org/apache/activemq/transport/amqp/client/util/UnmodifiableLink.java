@@ -124,14 +124,14 @@ public class UnmodifiableLink implements Link {
 
     @Override
     public Source getSource() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO Figure out a simple way to wrap the odd Source types in Proton-J
+        return link.getSource();
     }
 
     @Override
     public Target getTarget() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO Figure out a simple way to wrap the odd Source types in Proton-J
+        return link.getTarget();
     }
 
     @Override
@@ -146,14 +146,14 @@ public class UnmodifiableLink implements Link {
 
     @Override
     public Source getRemoteSource() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO Figure out a simple way to wrap the odd Source types in Proton-J
+        return link.getSource();
     }
 
     @Override
     public Target getRemoteTarget() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO Figure out a simple way to wrap the odd Target types in Proton-J
+        return link.getTarget();
     }
 
     @Override

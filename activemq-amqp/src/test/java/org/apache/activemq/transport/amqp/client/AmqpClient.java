@@ -38,7 +38,7 @@ public class AmqpClient {
     private final String password;
     private final URI remoteURI;
 
-    private AmqpStateInspector stateInspector = new AmqpStateInspector();
+    private AmqpValidator stateInspector = new AmqpValidator();
     private List<Symbol> offeredCapabilities = Collections.emptyList();
     private Map<Symbol, Object> offeredProperties = Collections.emptyMap();
 
@@ -176,7 +176,7 @@ public class AmqpClient {
     /**
      * @return the currently set state inspector used to check state after various events.
      */
-    public AmqpStateInspector getStateInspector() {
+    public AmqpValidator getStateInspector() {
         return stateInspector;
     }
 
@@ -187,9 +187,9 @@ public class AmqpClient {
      * @param stateInspector
      *        the new state inspector to use.
      */
-    public void setStateInspector(AmqpStateInspector stateInspector) {
+    public void setStateInspector(AmqpValidator stateInspector) {
         if (stateInspector == null) {
-            stateInspector = new AmqpStateInspector();
+            stateInspector = new AmqpValidator();
         }
 
         this.stateInspector = stateInspector;

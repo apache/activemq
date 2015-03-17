@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.transport.amqp.interop;
 
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -29,7 +33,11 @@ import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.transport.amqp.client.AmqpValidator;
 import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.engine.Receiver;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -59,6 +67,80 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         receiver.close();
         assertEquals(0, brokerService.getAdminView().getQueueSubscribers().length);
 
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateQueueReceiverWithJMSSelector() throws Exception {
+        AmqpClient client = createAmqpClient();
+
+        client.setStateInspector(new AmqpValidator() {
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public void inspectOpenedResource(Receiver receiver) {
+                LOG.info("Receiver opened: {}", receiver);
+
+                if (receiver.getSource() == null) {
+                    markAsInvalid("Link opened with null source.");
+                }
+
+                Source source = (Source) receiver.getSource();
+                Map<Symbol, Object> filters = source.getFilter();
+
+                if (findFilter(filters, JMS_SELECTOR_FILTER_IDS) == null) {
+                    markAsInvalid("Broker did not return the JMS Filter on Attach");
+                }
+            }
+        });
+
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        session.createReceiver("queue://" + getTestName(), "JMSPriority > 8");
+
+        assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
+
+        connection.getStateInspector().assertValid();
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateQueueReceiverWithNoLocalSet() throws Exception {
+        AmqpClient client = createAmqpClient();
+
+        client.setStateInspector(new AmqpValidator() {
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public void inspectOpenedResource(Receiver receiver) {
+                LOG.info("Receiver opened: {}", receiver);
+
+                if (receiver.getSource() == null) {
+                    markAsInvalid("Link opened with null source.");
+                }
+
+                Source source = (Source) receiver.getSource();
+                Map<Symbol, Object> filters = source.getFilter();
+
+                if (findFilter(filters, NO_LOCAL_FILTER_IDS) == null) {
+                    markAsInvalid("Broker did not return the NoLocal Filter on Attach");
+                }
+            }
+        });
+
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerService.getAdminView().getQueues().length);
+
+        session.createReceiver("queue://" + getTestName(), null, true);
+
+        assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
+
+        connection.getStateInspector().assertValid();
         connection.close();
     }
 

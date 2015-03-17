@@ -41,7 +41,7 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
     protected AsyncResult openRequest;
     protected AsyncResult closeRequest;
 
-    private AmqpStateInspector amqpStateInspector = new AmqpStateInspector();
+    private AmqpValidator amqpStateInspector;
 
     private E endpoint;
 
@@ -184,13 +184,13 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
         this.endpoint = endpoint;
     }
 
-    public AmqpStateInspector getStateInspector() {
+    public AmqpValidator getStateInspector() {
         return amqpStateInspector;
     }
 
-    public void setStateInspector(AmqpStateInspector stateInspector) {
+    public void setStateInspector(AmqpValidator stateInspector) {
         if (stateInspector == null) {
-            stateInspector = new AmqpStateInspector();
+            stateInspector = new AmqpValidator();
         }
 
         this.amqpStateInspector = stateInspector;

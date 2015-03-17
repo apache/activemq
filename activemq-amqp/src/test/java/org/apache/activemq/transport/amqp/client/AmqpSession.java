@@ -69,6 +69,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
             @Override
             public void run() {
                 checkClosed();
+                sender.setStateInspector(getStateInspector());
                 sender.open(request);
                 pumpToProtonTransport();
             }
@@ -83,23 +84,63 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * Create a receiver instance using the given address
      *
      * @param address
-     * 	      the address to which the receiver will subscribe for its messages.
+     *        the address to which the receiver will subscribe for its messages.
      *
      * @return a newly created receiver that is ready for use.
      *
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createReceiver(String address) throws Exception {
+        return createReceiver(address, null, false);
+    }
+
+    /**
+     * Create a receiver instance using the given address
+     *
+     * @param address
+     *        the address to which the receiver will subscribe for its messages.
+     * @param selector
+     *        the JMS selector to use for the subscription
+     *
+     * @return a newly created receiver that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver createReceiver(String address, String selector) throws Exception {
+        return createReceiver(address, selector, false);
+    }
+
+    /**
+     * Create a receiver instance using the given address
+     *
+     * @param address
+     * 	      the address to which the receiver will subscribe for its messages.
+     * @param selector
+     *        the JMS selector to use for the subscription
+     * @param noLocal
+     *        should the subscription have messages from its connection filtered.
+     *
+     * @return a newly created receiver that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver createReceiver(String address, String selector, boolean noLocal) throws Exception {
         checkClosed();
 
-        final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, address, getNextReceiverId());
         final ClientFuture request = new ClientFuture();
+        final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, address, getNextReceiverId());
+
+        receiver.setNoLocal(noLocal);
+        if (selector != null && !selector.isEmpty()) {
+            receiver.setSelector(selector);
+        }
 
         connection.getScheduler().execute(new Runnable() {
 
             @Override
             public void run() {
                 checkClosed();
+                receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
                 pumpToProtonTransport();
             }
@@ -123,17 +164,64 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * @throws Exception if an error occurs while creating the receiver.
      */
     public AmqpReceiver createDurableReceiver(String address, String subscriptionName) throws Exception {
+        return createDurableReceiver(address, subscriptionName, null, false);
+    }
+
+    /**
+     * Create a receiver instance using the given address that creates a durable subscription.
+     *
+     * @param address
+     *        the address to which the receiver will subscribe for its messages.
+     * @param subscriptionName
+     *        the name of the subscription that is being created.
+     * @param selector
+     *        the JMS selector to use for the subscription
+     *
+     * @return a newly created receiver that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver createDurableReceiver(String address, String subscriptionName, String selector) throws Exception {
+        return createDurableReceiver(address, subscriptionName, selector, false);
+    }
+
+    /**
+     * Create a receiver instance using the given address that creates a durable subscription.
+     *
+     * @param address
+     *        the address to which the receiver will subscribe for its messages.
+     * @param subscriptionName
+     *        the name of the subscription that is being created.
+     * @param selector
+     *        the JMS selector to use for the subscription
+     * @param noLocal
+     *        should the subscription have messages from its connection filtered.
+     *
+     * @return a newly created receiver that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver createDurableReceiver(String address, String subscriptionName, String selector, boolean noLocal) throws Exception {
         checkClosed();
 
+        if (subscriptionName == null || subscriptionName.isEmpty()) {
+            throw new IllegalArgumentException("subscription name must not be null or empty.");
+        }
+
+        final ClientFuture request = new ClientFuture();
         final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, address, getNextReceiverId());
         receiver.setSubscriptionName(subscriptionName);
-        final ClientFuture request = new ClientFuture();
+        receiver.setNoLocal(noLocal);
+        if (selector != null && !selector.isEmpty()) {
+            receiver.setSelector(selector);
+        }
 
         connection.getScheduler().execute(new Runnable() {
 
             @Override
             public void run() {
                 checkClosed();
+                receiver.setStateInspector(getStateInspector());
                 receiver.open(request);
                 pumpToProtonTransport();
             }
