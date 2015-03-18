@@ -16,9 +16,10 @@
  */
 package org.apache.activemq.transport.amqp.interop;
 
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.TimeUnit;
+import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
@@ -26,7 +27,10 @@ import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
-import org.apache.activemq.util.Wait;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
+import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
+import org.apache.qpid.proton.engine.Receiver;
 import org.junit.Test;
 
 /**
@@ -52,14 +56,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
 
         final BrokerViewMBean brokerView = getProxyToBroker();
 
-        assertTrue("Should be a durable sub", Wait.waitFor(new Wait.Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerView.getDurableTopicSubscribers().length == 1;
-            }
-
-        }, TimeUnit.SECONDS.toMillis(5000), TimeUnit.MILLISECONDS.toMillis(10)));
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
 
         connection.close();
     }
@@ -77,25 +74,13 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
 
         final BrokerViewMBean brokerView = getProxyToBroker();
 
-        assertTrue("Should be a durable sub", Wait.waitFor(new Wait.Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerView.getDurableTopicSubscribers().length == 1;
-            }
-
-        }, TimeUnit.SECONDS.toMillis(5000), TimeUnit.MILLISECONDS.toMillis(10)));
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
 
         receiver.detach();
 
-        assertTrue("Should be an inactive durable sub", Wait.waitFor(new Wait.Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerView.getInactiveDurableTopicSubscribers().length == 1;
-            }
-
-        }, TimeUnit.SECONDS.toMillis(5000), TimeUnit.MILLISECONDS.toMillis(10)));
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(1, brokerView.getInactiveDurableTopicSubscribers().length);
 
         connection.close();
     }
@@ -113,26 +98,115 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
 
         final BrokerViewMBean brokerView = getProxyToBroker();
 
-        assertTrue("Should be a durable sub", Wait.waitFor(new Wait.Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerView.getDurableTopicSubscribers().length == 1;
-            }
-
-        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(10)));
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
 
         receiver.close();
 
-        assertTrue("Should be an inactive durable sub", Wait.waitFor(new Wait.Condition() {
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
 
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerView.getDurableTopicSubscribers().length == 0 &&
-                       brokerView.getInactiveDurableTopicSubscribers().length == 0;
-            }
+        connection.close();
+    }
 
-        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(10)));
+    @Test(timeout = 60000)
+    public void testReattachToDurableNode() throws Exception {
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.createConnection();
+        connection.setContainerId(getTestName());
+        connection.connect();
+
+        AmqpSession session = connection.createSession();
+        AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName());
+
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver.detach();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(1, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName());
+
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver.close();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testLookupExistingSubscription() throws Exception {
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.createConnection();
+        connection.setContainerId(getTestName());
+        connection.connect();
+
+        AmqpSession session = connection.createSession();
+        AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName());
+
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver.detach();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(1, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver = session.lookupSubscription(getTestName());
+
+        assertNotNull(receiver);
+
+        Receiver protonReceiver = receiver.getReceiver();
+        assertNotNull(protonReceiver.getRemoteSource());
+        Source remoteSource = (Source) protonReceiver.getRemoteSource();
+
+        assertEquals(TerminusExpiryPolicy.NEVER, remoteSource.getExpiryPolicy());
+        assertEquals(TerminusDurability.UNSETTLED_STATE, remoteSource.getDurable());
+        assertEquals(COPY, remoteSource.getDistributionMode());
+
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver.close();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testLookupNonExistingSubscription() throws Exception {
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.createConnection();
+        connection.setContainerId(getTestName());
+        connection.connect();
+
+        AmqpSession session = connection.createSession();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        try {
+            session.lookupSubscription(getTestName());
+            fail("Should throw an exception since there is not subscription");
+        } catch (Exception e) {
+            LOG.info("Error on lookup: {}", e.getMessage());
+        }
 
         connection.close();
     }

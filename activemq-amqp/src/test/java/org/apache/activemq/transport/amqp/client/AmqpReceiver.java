@@ -89,6 +89,11 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      *        The unique ID assigned to this receiver.
      */
     public AmqpReceiver(AmqpSession session, String address, String receiverId) {
+
+        if (address != null && address.isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be empty.");
+        }
+
         this.session = session;
         this.address = address;
         this.receiverId = receiverId;
@@ -449,7 +454,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
         Source source = userSpecifiedSource;
         Target target = new Target();
 
-        if (userSpecifiedSource == null) {
+        if (userSpecifiedSource == null && address != null) {
             source = new Source();
             source.setAddress(address);
             configureSource(source);

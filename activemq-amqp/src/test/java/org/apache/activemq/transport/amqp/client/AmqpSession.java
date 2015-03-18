@@ -268,6 +268,43 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     /**
+     * Create a receiver instance using the given address that creates a durable subscription.
+     *
+     * @param subscriptionName
+     *        the name of the subscription that should be queried for on the remote..
+     *
+     * @return a newly created receiver that is ready for use if the subscription exists.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpReceiver lookupSubscription(String subscriptionName) throws Exception {
+        checkClosed();
+
+        if (subscriptionName == null || subscriptionName.isEmpty()) {
+            throw new IllegalArgumentException("subscription name must not be null or empty.");
+        }
+
+        final ClientFuture request = new ClientFuture();
+        final AmqpReceiver receiver = new AmqpReceiver(AmqpSession.this, (String) null, getNextReceiverId());
+        receiver.setSubscriptionName(subscriptionName);
+
+        connection.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                receiver.setStateInspector(getStateInspector());
+                receiver.open(request);
+                pumpToProtonTransport();
+            }
+        });
+
+        request.sync();
+
+        return receiver;
+    }
+
+    /**
      * @return this session's parent AmqpConnection.
      */
     public AmqpConnection getConnection() {

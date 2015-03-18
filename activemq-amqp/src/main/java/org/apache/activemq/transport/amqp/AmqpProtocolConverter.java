@@ -1460,6 +1460,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     source.setAddress(destination.getQualifiedName());
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
                     source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
+                    source.setDistributionMode(COPY);
                 } else {
                     consumerContext.closed = true;
                     sender.setSource(null);
