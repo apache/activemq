@@ -937,7 +937,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                         @Override
                         public void afterRollback() throws Exception {
                             LOG.trace("rollback {}", ack, new Throwable("here"));
-                            md.getMessage().onMessageRolledBack();
                             // ensure we don't filter this as a duplicate
                             connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
 
@@ -956,7 +955,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                             RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
                             int redeliveryCounter = md.getMessage().getRedeliveryCounter();
                             if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
-                                && redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
+                                && redeliveryCounter >= redeliveryPolicy.getMaximumRedeliveries()) {
                                 // We need to NACK the messages so that they get
                                 // sent to the
                                 // DLQ.
@@ -986,6 +985,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                     }
                                 }, redeliveryDelay);
                             }
+                            md.getMessage().onMessageRolledBack();
                         }
                     });
                 }
