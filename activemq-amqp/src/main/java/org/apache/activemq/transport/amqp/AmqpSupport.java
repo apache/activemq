@@ -52,6 +52,9 @@ public class AmqpSupport {
     // Symbols used in configuration of newly opened links.
     public static final Symbol COPY = Symbol.getSymbol("copy");
 
+    // Lifetime policy symbols
+    public static final Symbol DYNAMIC_NODE_LIFETIME_POLICY = Symbol.valueOf("lifetime-policy");
+
     /**
      * Search for a given Symbol in a given array of Symbol object.
      *

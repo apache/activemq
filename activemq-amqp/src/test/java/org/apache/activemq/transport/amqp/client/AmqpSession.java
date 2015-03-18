@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableSession;
 import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Session;
 
@@ -63,6 +64,38 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
         checkClosed();
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, address, getNextSenderId());
+        final ClientFuture request = new ClientFuture();
+
+        connection.getScheduler().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                sender.setStateInspector(getStateInspector());
+                sender.open(request);
+                pumpToProtonTransport();
+            }
+        });
+
+        request.sync();
+
+        return sender;
+    }
+
+    /**
+     * Create a sender instance using the given Target
+     *
+     * @param target
+     *        the caller created and configured Traget used to create the sender link.
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the receiver.
+     */
+    public AmqpSender createSender(Target target) throws Exception {
+        checkClosed();
+
+        final AmqpSender sender = new AmqpSender(AmqpSession.this, target, getNextSenderId());
         final ClientFuture request = new ClientFuture();
 
         connection.getScheduler().execute(new Runnable() {
@@ -153,10 +186,8 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     /**
-     * Create a receiver instance using the given address
+     * Create a receiver instance using the given Source
      *
-     * @param address
-     *        the address to which the receiver will subscribe for its messages.
      * @param source
      *        the caller created and configured Source used to create the receiver link.
      *

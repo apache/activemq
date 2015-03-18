@@ -64,6 +64,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     private final AmqpSession session;
     private final String address;
     private final String senderId;
+    private final Target userSpecifiedTarget;
 
     private boolean presettle;
     private long sendTimeout = DEFAULT_SEND_TIMEOUT;
@@ -82,8 +83,36 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
      *        The unique ID assigned to this sender.
      */
     public AmqpSender(AmqpSession session, String address, String senderId) {
+
+        if (address != null && address.isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be empty.");
+        }
+
         this.session = session;
         this.address = address;
+        this.senderId = senderId;
+        this.userSpecifiedTarget = null;
+    }
+
+    /**
+     * Create a new sender instance using the given Target when creating the link.
+     *
+     * @param session
+     *        The parent session that created the session.
+     * @param address
+     *        The address that this sender produces to.
+     * @param senderId
+     *        The unique ID assigned to this sender.
+     */
+    public AmqpSender(AmqpSession session, Target target, String senderId) {
+
+        if (target == null) {
+            throw new IllegalArgumentException("User specified Target cannot be null");
+        }
+
+        this.session = session;
+        this.userSpecifiedTarget = target;
+        this.address = target.getAddress();
         this.senderId = senderId;
     }
 
@@ -216,8 +245,11 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
         source.setAddress(senderId);
         source.setOutcomes(outcomes);
 
-        Target target = new Target();
-        target.setAddress(address);
+        Target target = userSpecifiedTarget;
+        if (target == null) {
+            target = new Target();
+            target.setAddress(address);
+        }
 
         String senderName = senderId + ":" + address;
 
