@@ -31,26 +31,30 @@ import org.apache.camel.Producer;
 import org.apache.camel.Service;
 import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.impl.DefaultEndpoint;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
 
 @ManagedResource(description = "Managed Camel Broker Endpoint")
-@UriEndpoint(scheme = "broker", consumerClass = BrokerConsumer.class)
+@UriEndpoint(scheme = "broker", consumerClass = BrokerConsumer.class, syntax = "broker:destination", label = "messaging")
 public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumersSupport, Service {
 
     static final String PRODUCER_BROKER_EXCHANGE = "producerBrokerExchange";
 
-    @UriParam
-    private final BrokerConfiguration configuration;
     private MessageInterceptorRegistry messageInterceptorRegistry;
-    @UriPath
-    private final ActiveMQDestination destination;
     private List<MessageInterceptor> messageInterceptorList = new CopyOnWriteArrayList<MessageInterceptor>();
 
-    public BrokerEndpoint(String uri, BrokerComponent component, ActiveMQDestination destination, BrokerConfiguration configuration) {
+    @UriPath(name = "destination") @Metadata(required = "true")
+    private String destinationName;
+    private final ActiveMQDestination destination;
+    @UriParam
+    private final BrokerConfiguration configuration;
+
+    public BrokerEndpoint(String uri, BrokerComponent component, String destinationName, ActiveMQDestination destination, BrokerConfiguration configuration) {
         super(UnsafeUriCharactersEncoder.encode(uri), component);
+        this.destinationName = destinationName;
         this.destination = destination;
         this.configuration = configuration;
     }
@@ -82,10 +86,17 @@ public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumers
         return destination;
     }
 
+    /**
+     * The name of the JMS destination
+     */
+    public String getDestinationName() {
+        return destinationName;
+    }
+
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        messageInterceptorRegistry =  MessageInterceptorRegistry.getInstance().get(configuration.getBrokerName());
+        messageInterceptorRegistry = MessageInterceptorRegistry.getInstance().get(configuration.getBrokerName());
         for (MessageInterceptor messageInterceptor : messageInterceptorList) {
             addMessageInterceptor(messageInterceptor);
         }
