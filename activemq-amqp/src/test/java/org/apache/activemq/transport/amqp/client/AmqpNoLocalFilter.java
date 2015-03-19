@@ -14,23 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.client;
 
-import java.io.IOException;
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_CODE;
 
-import org.apache.activemq.command.Command;
+import org.apache.qpid.proton.amqp.DescribedType;
 
 /**
+ * A Described Type wrapper for JMS no local option for MessageConsumer.
  */
-public interface IAmqpProtocolConverter {
+public class AmqpNoLocalFilter implements DescribedType {
 
-    void onAMQPData(Object command) throws Exception;
+    public static final AmqpNoLocalFilter NO_LOCAL = new AmqpNoLocalFilter();
 
-    void onAMQPException(IOException error);
+    private final String noLocal;
 
-    void onActiveMQCommand(Command command) throws Exception;
+    public AmqpNoLocalFilter() {
+        this.noLocal = "NoLocalFilter{}";
+    }
 
-    void updateTracer();
+    @Override
+    public Object getDescriptor() {
+        return NO_LOCAL_CODE;
+    }
 
-    void setProducerCredit(int producerCredit);
+    @Override
+    public Object getDescribed() {
+        return this.noLocal;
+    }
 }

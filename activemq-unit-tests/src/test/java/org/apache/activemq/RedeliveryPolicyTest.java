@@ -69,6 +69,20 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertEquals(500, delay);
     }
 
+    public void testGetNextWithInitialDelay() throws Exception {
+
+        RedeliveryPolicy policy = new RedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(500);
+
+        long delay = policy.getNextRedeliveryDelay(500);
+        assertEquals(500, delay);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(500, delay);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(500, delay);
+
+    }
+
     /**
      * @throws Exception
      */

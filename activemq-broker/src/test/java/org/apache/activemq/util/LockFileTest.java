@@ -28,6 +28,7 @@ public class LockFileTest {
     public void testNoDeleteOnUnlockIfNotLocked() throws Exception {
 
         File lockFile = new File(IOHelper.getDefaultDataDirectory(), "lockToTest1");
+        IOHelper.mkdirs(lockFile.getParentFile());
         lockFile.createNewFile();
 
         LockFile underTest = new LockFile(lockFile, true);
@@ -51,6 +52,7 @@ public class LockFileTest {
     public void testDeleteOnUnlockIfLocked() throws Exception {
 
         File lockFile = new File(IOHelper.getDefaultDataDirectory(), "lockToTest2");
+        IOHelper.mkdirs(lockFile.getParentFile());
         lockFile.createNewFile();
 
         LockFile underTest = new LockFile(lockFile, true);

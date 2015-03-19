@@ -14,23 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
-
-import java.io.IOException;
-
-import org.apache.activemq.command.Command;
+package org.apache.activemq.transport.amqp.client.sasl;
 
 /**
+ * Implements the Anonymous SASL authentication mechanism.
  */
-public interface IAmqpProtocolConverter {
+public class AnonymousMechanism extends AbstractMechanism {
 
-    void onAMQPData(Object command) throws Exception;
+    @Override
+    public byte[] getInitialResponse() {
+        return EMPTY;
+    }
 
-    void onAMQPException(IOException error);
+    @Override
+    public byte[] getChallengeResponse(byte[] challenge) {
+        return EMPTY;
+    }
 
-    void onActiveMQCommand(Command command) throws Exception;
+    @Override
+    public int getPriority() {
+        return PRIORITY.LOWEST.getValue();
+    }
 
-    void updateTracer();
-
-    void setProducerCredit(int producerCredit);
+    @Override
+    public String getName() {
+        return "ANONYMOUS";
+    }
 }

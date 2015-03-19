@@ -16,6 +16,20 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
+import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.QUEUE_PREFIX;
+import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILITY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.TOPIC_PREFIX;
+import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
+import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
+import static org.apache.activemq.transport.amqp.AmqpSupport.toBytes;
+import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -90,7 +104,6 @@ import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Modified;
@@ -136,25 +149,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpProtocolConverter.class);
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
     private static final int CHANNEL_MAX = 32767;
-    private static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
-    private static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
-    private static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
-    private static final Symbol COPY = Symbol.getSymbol("copy");
-    private static final UnsignedLong JMS_SELECTOR_CODE = UnsignedLong.valueOf(0x0000468C00000004L);
-    private static final Symbol JMS_SELECTOR_NAME = Symbol.valueOf("apache.org:selector-filter:string");
-    private static final Object[] JMS_SELECTOR_FILTER_IDS = new Object[] { JMS_SELECTOR_CODE, JMS_SELECTOR_NAME };
-    private static final UnsignedLong NO_LOCAL_CODE = UnsignedLong.valueOf(0x0000468C00000003L);
-    private static final Symbol NO_LOCAL_NAME = Symbol.valueOf("apache.org:selector-filter:string");
-    private static final Object[] NO_LOCAL_FILTER_IDS = new Object[] { NO_LOCAL_CODE, NO_LOCAL_NAME };
-    private static final Symbol TEMP_QUEUE_CAPABILITY = Symbol.valueOf("temporary-queue");
-    private static final Symbol TEMP_TOPIC_CAPABILITY = Symbol.valueOf("temporary-topic");
 
     private final AmqpTransport amqpTransport;
     private final AmqpWireFormat amqpWireFormat;
     private final BrokerService brokerService;
     private AuthenticationBroker authenticator;
 
-    protected int prefetch;
     protected int producerCredit;
     protected Transport protonTransport = Proton.transport();
     protected Connection protonConnection = Proton.connection();
@@ -184,8 +184,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         this.protonTransport.setChannelMax(CHANNEL_MAX);
 
         this.protonConnection.collect(eventCollector);
-        this.protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
-        this.protonConnection.setProperties(getConnetionProperties());
 
         updateTracer();
     }
@@ -211,6 +209,21 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
         properties.put(QUEUE_PREFIX, "queue://");
         properties.put(TOPIC_PREFIX, "topic://");
+
+        return properties;
+    }
+
+    /**
+     * Load and return a <code>Map<Symbol, Object></code> that contains the properties
+     * that this connection supplies to incoming connections when the open has failed
+     * and the remote should expect a close to follow.
+     *
+     * @return the properties that are offered to the incoming connection.
+     */
+    protected Map<Symbol, Object> getFailedConnetionProperties() {
+        Map<Symbol, Object> properties = new HashMap<Symbol, Object>();
+
+        properties.put(CONNECTION_OPEN_FAILED, true);
 
         return properties;
     }
@@ -396,17 +409,15 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         int credit = link.getCredit();
         if (context instanceof ConsumerContext) {
             ConsumerContext consumerContext = (ConsumerContext)context;
-            // change consumer prefetch if it's not been already set using
-            // transport connector property or consumer preference
-            if (consumerContext.consumerPrefetch == 0 && credit > 0) {
+
+            if (credit != consumerContext.credit) {
+                consumerContext.credit = credit >= 0 ? credit : 0;
                 ConsumerControl control = new ConsumerControl();
                 control.setConsumerId(consumerContext.consumerId);
                 control.setDestination(consumerContext.destination);
-                control.setPrefetch(credit);
-                consumerContext.consumerPrefetch = credit;
+                control.setPrefetch(consumerContext.credit);
                 sendToActiveMQ(control, null);
             }
-            consumerContext.credit = credit;
         }
         ((AmqpDeliveryListener) link.getContext()).drainCheck();
     }
@@ -597,9 +608,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             public void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException {
                 Throwable exception = null;
                 try {
-                    protonConnection.open();
-
                     if (response.isException()) {
+                        protonConnection.setProperties(getFailedConnetionProperties());
+                        protonConnection.open();
+
                         exception = ((ExceptionResponse) response).getException();
                         if (exception instanceof SecurityException) {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
@@ -608,7 +620,12 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         } else {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.ILLEGAL_STATE, exception.getMessage()));
                         }
+
                         protonConnection.close();
+                    } else {
+                        protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
+                        protonConnection.setProperties(getConnetionProperties());
+                        protonConnection.open();
                     }
                 } finally {
                     pumpProtonToSocket();
@@ -854,17 +871,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
     private final AtomicLong nextTransactionId = new AtomicLong();
 
-    public byte[] toBytes(long value) {
-        Buffer buffer = new Buffer(8);
-        buffer.bigEndianEditor().writeLong(value);
-        return buffer.data;
-    }
-
-    private long toLong(Binary value) {
-        Buffer buffer = new Buffer(value.getArray(), value.getArrayOffset(), value.getLength());
-        return buffer.bigEndianEditor().readLong();
-    }
-
     AmqpDeliveryListener coordinatorContext = new BaseProducerContext() {
 
         @Override
@@ -926,7 +932,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         if (response.isException()) {
                             ExceptionResponse er = (ExceptionResponse) response;
                             Rejected rejected = new Rejected();
-                            rejected.setError(createErrorCondition("failed", er.getException().getMessage()));
+                            rejected.setError(new ErrorCondition(Symbol.valueOf("failed"), er.getException().getMessage()));
                             delivery.disposition(rejected);
                         } else {
                             delivery.disposition(Accepted.getInstance());
@@ -1052,7 +1058,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         public ConsumerInfo info;
         private boolean endOfBrowse = false;
         public int credit;
-        public int consumerPrefetch = 0;
         private long lastDeliveredSequenceId;
 
         protected LinkedList<MessageDispatch> dispatchedInTx = new LinkedList<MessageDispatch>();
@@ -1412,15 +1417,18 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         org.apache.qpid.proton.amqp.messaging.Source source = (org.apache.qpid.proton.amqp.messaging.Source) sender.getRemoteSource();
 
         try {
+            final Map<Symbol, Object> supportedFilters = new HashMap<Symbol, Object>();
             final ConsumerId id = new ConsumerId(sessionContext.sessionId, sessionContext.nextConsumerId++);
             final ConsumerContext consumerContext = new ConsumerContext(id, sender);
             sender.setContext(consumerContext);
 
+            boolean noLocal = false;
             String selector = null;
+
             if (source != null) {
-                DescribedType filter = findFilter(source.getFilter(), JMS_SELECTOR_FILTER_IDS);
+                Map.Entry<Symbol, DescribedType> filter = findFilter(source.getFilter(), JMS_SELECTOR_FILTER_IDS);
                 if (filter != null) {
-                    selector = filter.getDescribed().toString();
+                    selector = filter.getValue().getDescribed().toString();
                     // Validate the Selector.
                     try {
                         SelectorParser.parse(selector);
@@ -1431,6 +1439,14 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                         consumerContext.closed = true;
                         return;
                     }
+
+                    supportedFilters.put(filter.getKey(), filter.getValue());
+                }
+
+                filter = findFilter(source.getFilter(), NO_LOCAL_FILTER_IDS);
+                if (filter != null) {
+                    noLocal = true;
+                    supportedFilters.put(filter.getKey(), filter.getValue());
                 }
             }
 
@@ -1444,7 +1460,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     source.setAddress(destination.getQualifiedName());
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
                     source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
-                    sender.setSource(source);
+                    source.setDistributionMode(COPY);
                 } else {
                     consumerContext.closed = true;
                     sender.setSource(null);
@@ -1460,7 +1476,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 source = new org.apache.qpid.proton.amqp.messaging.Source();
                 source.setAddress(destination.getQualifiedName());
                 source.setDynamic(true);
-                sender.setSource(source);
                 consumerContext.addCloseAction(new Runnable() {
 
                     @Override
@@ -1472,33 +1487,20 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 destination = createDestination(source);
             }
 
+            source.setFilter(supportedFilters.isEmpty() ? null : supportedFilters);
+            sender.setSource(source);
+
+            int senderCredit = sender.getRemoteCredit();
+
             subscriptionsByConsumerId.put(id, consumerContext);
             ConsumerInfo consumerInfo = new ConsumerInfo(id);
-            consumerContext.info = consumerInfo;
             consumerInfo.setSelector(selector);
             consumerInfo.setNoRangeAcks(true);
             consumerInfo.setDestination(destination);
-            consumerContext.setDestination(destination);
-            int senderCredit = sender.getRemoteCredit();
-            if (prefetch != 0) {
-                // use the value configured on the transport connector
-                // this value will not be changed to the consumer's preference
-                consumerInfo.setPrefetchSize(prefetch);
-                consumerContext.consumerPrefetch = prefetch;
-            } else {
-                if (senderCredit != 0) {
-                    // set the prefetch to the value of the remote credit
-                    // and ignore the later changes
-                    consumerInfo.setPrefetchSize(senderCredit);
-                    consumerContext.consumerPrefetch = senderCredit;
-                } else {
-                    // set zero value for now and change to the consumer's preference
-                    // on the first flow packet
-                    consumerInfo.setPrefetchSize(0);
-                }
-            }
-            consumerContext.credit = senderCredit;
+            consumerInfo.setPrefetchSize(senderCredit >= 0 ? senderCredit : 0);
             consumerInfo.setDispatchAsync(true);
+            consumerInfo.setNoLocal(noLocal);
+
             if (source.getDistributionMode() == COPY && destination.isQueue()) {
                 consumerInfo.setBrowser(true);
             }
@@ -1507,10 +1509,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                 consumerInfo.setSubscriptionName(sender.getName());
             }
 
-            DescribedType filter = findFilter(source.getFilter(), NO_LOCAL_FILTER_IDS);
-            if (filter != null) {
-                consumerInfo.setNoLocal(true);
-            }
+            consumerContext.info = consumerInfo;
+            consumerContext.setDestination(destination);
+            consumerContext.credit = senderCredit;
 
             sendToActiveMQ(consumerInfo, new ResponseHandler() {
                 @Override
@@ -1619,46 +1620,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         });
     }
 
-    private boolean contains(Symbol[] symbols, Symbol key) {
-        if (symbols == null || symbols.length == 0) {
-            return false;
-        }
-
-        for (Symbol symbol : symbols) {
-            if (symbol.equals(key)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private DescribedType findFilter(Map<Symbol, Object> filters, Object[] filterIds) {
-
-        if (filterIds == null || filterIds.length == 0) {
-            throw new IllegalArgumentException("Invalid Filter Ids array passed: " + filterIds);
-        }
-
-        if (filters == null || filters.isEmpty()) {
-            return null;
-        }
-
-        for (Object value : filters.values()) {
-            if (value instanceof DescribedType) {
-                DescribedType describedType = ((DescribedType) value);
-                Object descriptor = describedType.getDescriptor();
-
-                for (Object filterId : filterIds) {
-                    if (descriptor.equals(filterId)) {
-                        return describedType;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
     // //////////////////////////////////////////////////////////////////////////
     //
     // Implementation methods
@@ -1685,22 +1646,6 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
         } catch (Throwable e) {
             LOG.error("Failed to stop AMQP Transport ", e);
         }
-    }
-
-    ErrorCondition createErrorCondition(String name) {
-        return createErrorCondition(name, "");
-    }
-
-    ErrorCondition createErrorCondition(String name, String description) {
-        ErrorCondition condition = new ErrorCondition();
-        condition.setCondition(Symbol.valueOf(name));
-        condition.setDescription(description);
-        return condition;
-    }
-
-    @Override
-    public void setPrefetch(int prefetch) {
-        this.prefetch = prefetch;
     }
 
     @Override

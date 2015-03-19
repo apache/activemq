@@ -14,23 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.client;
 
-import java.io.IOException;
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_CODE;
 
-import org.apache.activemq.command.Command;
+import org.apache.qpid.proton.amqp.DescribedType;
 
 /**
+ * A Described Type wrapper for JMS selector values.
  */
-public interface IAmqpProtocolConverter {
+public class AmqpJmsSelectorFilter implements DescribedType {
 
-    void onAMQPData(Object command) throws Exception;
+    private final String selector;
 
-    void onAMQPException(IOException error);
+    public AmqpJmsSelectorFilter(String selector) {
+        this.selector = selector;
+    }
 
-    void onActiveMQCommand(Command command) throws Exception;
+    @Override
+    public Object getDescriptor() {
+        return JMS_SELECTOR_CODE;
+    }
 
-    void updateTracer();
+    @Override
+    public Object getDescribed() {
+        return this.selector;
+    }
 
-    void setProducerCredit(int producerCredit);
+    @Override
+    public String toString() {
+        return "AmqpJmsSelectorType{" + selector + "}";
+    }
 }

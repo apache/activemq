@@ -14,23 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
-
-import java.io.IOException;
-
-import org.apache.activemq.command.Command;
+package org.apache.activemq.transport.amqp.client;
 
 /**
+ * Events points exposed by the AmqpClient object.
  */
-public interface IAmqpProtocolConverter {
+public interface AmqpClientListener {
 
-    void onAMQPData(Object command) throws Exception;
+    /**
+     * Indicates some error has occurred during client operations.
+     *
+     * @param ex
+     *        The error that triggered this event.
+     */
+    void onClientException(Throwable ex);
 
-    void onAMQPException(IOException error);
-
-    void onActiveMQCommand(Command command) throws Exception;
-
-    void updateTracer();
-
-    void setProducerCredit(int producerCredit);
 }

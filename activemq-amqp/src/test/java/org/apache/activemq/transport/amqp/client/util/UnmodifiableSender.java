@@ -14,23 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.client.util;
 
-import java.io.IOException;
-
-import org.apache.activemq.command.Command;
+import org.apache.qpid.proton.engine.Sender;
 
 /**
+ * Unmodifiable Sender wrapper used to prevent test code from accidentally
+ * modifying Sender state.
  */
-public interface IAmqpProtocolConverter {
+public class UnmodifiableSender extends UnmodifiableLink implements Sender {
 
-    void onAMQPData(Object command) throws Exception;
+    public UnmodifiableSender(Sender sender) {
+        super(sender);
+    }
 
-    void onAMQPException(IOException error);
+    @Override
+    public void offer(int credits) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
 
-    void onActiveMQCommand(Command command) throws Exception;
+    @Override
+    public int send(byte[] bytes, int offset, int length) {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
 
-    void updateTracer();
-
-    void setProducerCredit(int producerCredit);
+    @Override
+    public void abort() {
+        throw new UnsupportedOperationException("Cannot alter the Link state");
+    }
 }

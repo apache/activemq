@@ -14,23 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
+package org.apache.activemq.transport.amqp.interop;
 
-import java.io.IOException;
+import static org.junit.Assert.assertNotNull;
 
-import org.apache.activemq.command.Command;
+import org.apache.activemq.transport.amqp.client.AmqpClient;
+import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
+import org.apache.activemq.transport.amqp.client.AmqpConnection;
+import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.junit.Test;
 
 /**
+ * Test for creation and configuration of AMQP sessions.
  */
-public interface IAmqpProtocolConverter {
+public class AmqpSessionTest extends AmqpClientTestSupport {
 
-    void onAMQPData(Object command) throws Exception;
-
-    void onAMQPException(IOException error);
-
-    void onActiveMQCommand(Command command) throws Exception;
-
-    void updateTracer();
-
-    void setProducerCredit(int producerCredit);
+    @Test
+    public void testCreateSession() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+        assertNotNull(session);
+        connection.close();
+    }
 }

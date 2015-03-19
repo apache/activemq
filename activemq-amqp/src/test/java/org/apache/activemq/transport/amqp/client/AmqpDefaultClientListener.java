@@ -14,23 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
-
-import java.io.IOException;
-
-import org.apache.activemq.command.Command;
+package org.apache.activemq.transport.amqp.client;
 
 /**
+ * Default listener implementation that stubs out all the event methods.
  */
-public interface IAmqpProtocolConverter {
+public class AmqpDefaultClientListener implements AmqpClientListener {
 
-    void onAMQPData(Object command) throws Exception;
+    @Override
+    public void onClientException(Throwable ex) {
 
-    void onAMQPException(IOException error);
-
-    void onActiveMQCommand(Command command) throws Exception;
-
-    void updateTracer();
-
-    void setProducerCredit(int producerCredit);
+    }
 }
