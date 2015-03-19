@@ -29,10 +29,12 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
+import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.DeleteOnClose;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
@@ -111,6 +113,98 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
         }
 
         connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateDynamicReceiverToTopic() throws Exception {
+        doTestCreateDynamicSender(true);
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateDynamicReceiverToQueue() throws Exception {
+        doTestCreateDynamicSender(false);
+    }
+
+    protected void doTestCreateDynamicReceiver(boolean topic) throws Exception {
+        Source source = createDynamicSource(topic);
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(source);
+        assertNotNull(receiver);
+
+        if (topic) {
+            assertEquals(1, brokerView.getTemporaryTopics().length);
+        } else {
+            assertEquals(1, brokerView.getTemporaryQueues().length);
+        }
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testDynamicReceiverLifetimeBoundToLinkTopic() throws Exception {
+        doTestDynamicReceiverLifetimeBoundToLinkQueue(true);
+    }
+
+    @Test(timeout = 60000)
+    public void testDynamicReceiverLifetimeBoundToLinkQueue() throws Exception {
+        doTestDynamicReceiverLifetimeBoundToLinkQueue(false);
+    }
+
+    protected void doTestDynamicReceiverLifetimeBoundToLinkQueue(boolean topic) throws Exception {
+        Source source = createDynamicSource(topic);
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver(source);
+        assertNotNull(receiver);
+
+        if (topic) {
+            assertEquals(1, brokerView.getTemporaryTopics().length);
+        } else {
+            assertEquals(1, brokerView.getTemporaryQueues().length);
+        }
+
+        receiver.close();
+
+        if (topic) {
+            assertEquals(0, brokerView.getTemporaryTopics().length);
+        } else {
+            assertEquals(0, brokerView.getTemporaryQueues().length);
+        }
+
+        connection.close();
+    }
+
+    protected Source createDynamicSource(boolean topic) {
+
+        Source source = new Source();
+        source.setDynamic(true);
+        source.setDurable(TerminusDurability.NONE);
+        source.setExpiryPolicy(TerminusExpiryPolicy.LINK_DETACH);
+
+        // Set the dynamic node lifetime-policy
+        Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
+        dynamicNodeProperties.put(DYNAMIC_NODE_LIFETIME_POLICY, DeleteOnClose.getInstance());
+        source.setDynamicNodeProperties(dynamicNodeProperties);
+
+        // Set the capability to indicate the node type being created
+        if (!topic) {
+            source.setCapabilities(TEMP_QUEUE_CAPABILITY);
+        } else {
+            source.setCapabilities(TEMP_TOPIC_CAPABILITY);
+        }
+
+        return source;
     }
 
     protected Target createDynamicTarget(boolean topic) {
