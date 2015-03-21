@@ -17,7 +17,8 @@
 package org.apache.activemq.transport.failover;
 
 import org.apache.activemq.broker.TransportConnector;
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -229,7 +230,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         Thread.sleep(5000);
 
         // We stop broker A.
-        Log.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
+        logger.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
         getBroker(BROKER_A_NAME).stop();
         getBroker(BROKER_A_NAME).waitUntilStopped();
         Thread.sleep(5000);

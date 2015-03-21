@@ -203,7 +203,7 @@ public class Topic extends BaseDestination implements Task {
             if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
                 // deactivate and remove
-                removed.deactivate(false);
+                removed.deactivate(false, 0l);
                 consumers.remove(removed);
             }
         }

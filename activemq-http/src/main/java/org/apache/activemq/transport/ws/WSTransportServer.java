@@ -21,6 +21,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
+import javax.servlet.Servlet;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.WebTransportServerSupport;
@@ -49,10 +51,10 @@ public class WSTransportServer extends WebTransportServerSupport {
 
     @Override
     protected void doStart() throws Exception {
-        server = new Server();
+        createServer();
 
         if (connector == null) {
-            connector = socketConnectorFactory.createConnector();
+            connector = socketConnectorFactory.createConnector(server);
         }
 
         URI boundTo = bind();
@@ -69,7 +71,7 @@ public class WSTransportServer extends WebTransportServerSupport {
             }
         }
 
-        holder.setServlet(new WSServlet());
+        holder.setServlet(createWSServlet());
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
@@ -79,9 +81,9 @@ public class WSTransportServer extends WebTransportServerSupport {
         // Update the Connect To URI with our actual location in case the configured port
         // was set to zero so that we report the actual port we are listening on.
 
-        int port = boundTo.getPort();
-        if (connector.getLocalPort() != -1) {
-            port = connector.getLocalPort();
+        int port = getConnectorLocalPort(); 
+        if (port == -1) {
+            port = boundTo.getPort();
         }
 
         setConnectURI(new URI(boundTo.getScheme(),
@@ -95,6 +97,19 @@ public class WSTransportServer extends WebTransportServerSupport {
         LOG.info("Listening for connections at {}", getConnectURI());
     }
 
+    private Servlet createWSServlet() throws Exception {
+        if (Server.getVersion().startsWith("9")) {
+            return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty9.WSServlet", true,
+                                          getClass().getClassLoader()).newInstance();
+        }
+        return (Servlet)Class.forName("org.apache.activemq.transport.ws.jetty8.WSServlet", true,
+                                      getClass().getClassLoader()).newInstance();
+    }
+
+    private int getConnectorLocalPort() throws Exception {
+        return (Integer)connector.getClass().getMethod("getLocalPort").invoke(connector);
+    }
+    
     @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         Server temp = server;

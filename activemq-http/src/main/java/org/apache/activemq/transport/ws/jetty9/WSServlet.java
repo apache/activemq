@@ -15,17 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.transport.ws;
+package org.apache.activemq.transport.ws.jetty9;
 
 import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
-import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketServlet;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
+import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 /**
  * Handle connection upgrade requests and creates web sockets
@@ -48,15 +52,21 @@ public class WSServlet extends WebSocketServlet {
         getServletContext().getNamedDispatcher("default").forward(request,response);
     }
 
-    @Override
-    public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
-        WebSocket socket;
-        if (protocol != null && protocol.startsWith("mqtt")) {
-            socket = new MQTTSocket();
-        } else {
-            socket = new StompSocket();
-        }
-        listener.onAccept((Transport)socket);
-        return socket;
+    
+    public void configure(WebSocketServletFactory factory) {
+        factory.setCreator(new WebSocketCreator() {
+            @Override
+            public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
+                WebSocketListener socket;
+                if (req.getSubProtocols().contains("mqtt")) {
+                    socket = new MQTTSocket();
+                } else {
+                    socket = new StompSocket();
+                }
+                return socket;
+            }
+        });
+        
     }
 }
+

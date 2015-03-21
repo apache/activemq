@@ -17,7 +17,9 @@
 package org.apache.activemq.camel.component.broker;
 
 import org.apache.camel.spi.UriParam;
+import org.apache.camel.spi.UriParams;
 
+@UriParams
 public class BrokerConfiguration {
 
     @UriParam
@@ -27,6 +29,9 @@ public class BrokerConfiguration {
         return brokerName;
     }
 
+    /**
+     * Name of the broker
+     */
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }

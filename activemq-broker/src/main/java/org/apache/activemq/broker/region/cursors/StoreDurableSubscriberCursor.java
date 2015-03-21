@@ -337,7 +337,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
-            cursor.setMaxAuditDepth(maxAuditDepth);
+            cursor.setMaxProducersToAudit(maxProducersToAudit);
         }
     }
 

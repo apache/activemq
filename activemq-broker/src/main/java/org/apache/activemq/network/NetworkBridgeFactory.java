@@ -76,6 +76,7 @@ public final class NetworkBridgeFactory {
         HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
         map.put("network", "true");
         map.put("async", "true");
+        map.put("create", "false"); // we don't want a vm connect during shutdown to trigger a broker create
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         return TransportFactory.connect(uri);
     }

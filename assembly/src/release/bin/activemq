@@ -24,6 +24,12 @@
 # See also http://activemq.apache.org/activemq-command-line-tools-reference.html
 # for additional commandline arguments
 #
+# System variables for this script, like ACTIVEMQ_OPTS and ACTIVEMQ_OPTS_MEMORY,
+# can be configured in 'env' script located in this directory.
+#
+# For more information on configuring the script, see http://activemq.apache.org/unix-shell-script.html
+#
+#
 # Authors:
 # Marc Schoechlin <ms@256bit.org>
 

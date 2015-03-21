@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.12-SNAPSHOT</version>
   </parent>
 
   <artifactId>apache-activemq</artifactId>
@@ -274,7 +274,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-servlet_2.5_spec</artifactId>
+      <artifactId>geronimo-servlet_3.0_spec</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -324,7 +324,7 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
-      <artifactId>jetty-all-server</artifactId>
+      <artifactId>jetty-all</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jdt</groupId>

@@ -48,6 +48,8 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.Wait;
@@ -120,16 +122,25 @@ public class StompTest extends StompTestSupport {
                 + "}}";
         }
 
+        queue = new ActiveMQQueue(getQueueName());
         super.setUp();
 
         stompConnect();
 
         connection = cf.createConnection("system", "manager");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        queue = new ActiveMQQueue(getQueueName());
         connection.start();
         xstream = new XStream();
         xstream.processAnnotations(SamplePojo.class);
+    }
+
+    @Override
+    public void applyBrokerPolicies() {
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry persistRedelivery = new PolicyEntry();
+        persistRedelivery.setPersistJMSRedelivered(true);
+        policyMap.put(queue, persistRedelivery);
+        brokerService.setDestinationPolicy(policyMap);
     }
 
     @Override

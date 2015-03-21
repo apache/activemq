@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.ws;
+package org.apache.activemq.transport.ws.jetty9;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -27,63 +27,32 @@ import org.apache.activemq.transport.mqtt.MQTTWireFormat;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
-import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.fusesource.mqtt.codec.DISCONNECT;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.CountDownLatch;
 
-public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryMessage, MQTTTransport, BrokerServiceAware {
+public class MQTTSocket  extends TransportSupport implements WebSocketListener, MQTTTransport, BrokerServiceAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
-    Connection outbound;
+    Session session;
     MQTTProtocolConverter protocolConverter = null;
     MQTTWireFormat wireFormat = new MQTTWireFormat();
     private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
     private BrokerService brokerService;
-
-    @Override
-    public void onMessage(byte[] bytes, int offset, int length) {
-        if (!transportStartedAtLeastOnce()) {
-            LOG.debug("Waiting for StompSocket to be properly started...");
-            try {
-                socketTransportStarted.await();
-            } catch (InterruptedException e) {
-                LOG.warn("While waiting for StompSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
-            }
-        }
-
-        try {
-            MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
-            getProtocolConverter().onMQTTCommand(frame);
-        } catch (Exception e) {
-            onException(IOExceptionSupport.create(e));
-        }
-    }
 
     private MQTTProtocolConverter getProtocolConverter() {
         if( protocolConverter == null ) {
             protocolConverter = new MQTTProtocolConverter(this, brokerService);
         }
         return protocolConverter;
-    }
-
-    @Override
-    public void onOpen(Connection connection) {
-        this.outbound = connection;
-    }
-
-    @Override
-    public void onClose(int closeCode, String message) {
-        try {
-            getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
-        } catch (Exception e) {
-            LOG.warn("Failed to close WebSocket", e);
-        }
     }
 
     protected void doStart() throws Exception {
@@ -125,7 +94,7 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
     @Override
     public void sendToMQTT(MQTTFrame command) throws IOException {
         ByteSequence bytes = wireFormat.marshal(command);
-        outbound.sendMessage(bytes.getData(), 0, bytes.getLength());
+        session.getRemote().sendBytes(ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength()));
     }
 
     @Override
@@ -146,5 +115,47 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
     @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+    }
+
+    @Override
+    public void onWebSocketBinary(byte[] bytes, int offset, int length) {
+        if (!transportStartedAtLeastOnce()) {
+            LOG.debug("Waiting for StompSocket to be properly started...");
+            try {
+                socketTransportStarted.await();
+            } catch (InterruptedException e) {
+                LOG.warn("While waiting for StompSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
+            }
+        }
+
+        try {
+            MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
+            getProtocolConverter().onMQTTCommand(frame);
+        } catch (Exception e) {
+            onException(IOExceptionSupport.create(e));
+        }
+    }
+
+    @Override
+    public void onWebSocketClose(int arg0, String arg1) {
+        try {
+            getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
+        } catch (Exception e) {
+            LOG.warn("Failed to close WebSocket", e);
+        }        
+    }
+
+    @Override
+    public void onWebSocketConnect(Session session) {
+        this.session = session;
+    }
+
+    @Override
+    public void onWebSocketError(Throwable arg0) {
+        
+    }
+
+    @Override
+    public void onWebSocketText(String arg0) {        
     }
 }

@@ -26,7 +26,6 @@ import java.util.Properties;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
-import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
@@ -35,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.Resource;
+import org.springframework.osgi.context.support.OsgiBundleXmlApplicationContext;
 
 public class ActiveMQServiceFactory implements ManagedServiceFactory {
 
@@ -74,12 +74,14 @@ public class ActiveMQServiceFactory implements ManagedServiceFactory {
             Thread.currentThread().setContextClassLoader(BrokerService.class.getClassLoader());
             Resource resource = Utils.resourceFromString(config);
 
-            ResourceXmlApplicationContext ctx = new ResourceXmlApplicationContext(resource, Collections.EMPTY_LIST, null, Collections.EMPTY_LIST, false) {
+            // when camel is embedded it needs a bundle context
+            OsgiBundleXmlApplicationContext ctx = new OsgiBundleXmlApplicationContext(new String[]{resource.getURL().toExternalForm()}) {
                 @Override
                 protected void initBeanDefinitionReader(XmlBeanDefinitionReader reader) {
                     reader.setValidating(false);
                 }
             };
+            ctx.setBundleContext(bundleContext);
 
             // Handle properties in configuration
             PropertyPlaceholderConfigurer configurator = new PropertyPlaceholderConfigurer();

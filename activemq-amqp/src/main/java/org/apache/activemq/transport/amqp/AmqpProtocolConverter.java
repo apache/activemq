@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.Destination;
 import javax.jms.InvalidClientIDException;
+import javax.jms.InvalidDestinationException;
 import javax.jms.InvalidSelectorException;
 
 import org.apache.activemq.broker.BrokerService;
@@ -315,6 +316,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
 
                 Event event = null;
                 while ((event = eventCollector.peek()) != null) {
+                    if (amqpTransport.isTrace()) {
+                        LOG.trace("Processing event: {}", event.getType());
+                    }
                     switch (event.getType()) {
                         case CONNECTION_REMOTE_OPEN:
                         case CONNECTION_REMOTE_CLOSE:
@@ -760,6 +764,10 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
             }
         }
 
+        public void close() {
+            closed = true;
+        }
+
         public boolean isAnonymous() {
             return anonymous;
         }
@@ -897,7 +905,7 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                     dest = createDestination(remoteTarget);
                 }
 
-                ProducerContext producerContext = new ProducerContext(producerId, dest, anonymous);
+                final ProducerContext producerContext = new ProducerContext(producerId, dest, anonymous);
 
                 receiver.setContext(producerContext);
                 receiver.flow(flow);
@@ -915,7 +923,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             } else {
                                 receiver.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                             }
+                            producerContext.closed = true;
                             receiver.close();
+                            receiver.free();
                         } else {
                             receiver.open();
                         }
@@ -1335,6 +1345,8 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             Throwable exception = ((ExceptionResponse) response).getException();
                             if (exception instanceof SecurityException) {
                                 sender.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
+                            } else if (exception instanceof InvalidDestinationException){
+                                sender.setCondition(new ErrorCondition(AmqpError.NOT_FOUND, exception.getMessage()));
                             } else {
                                 sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                             }
@@ -1420,7 +1432,9 @@ class AmqpProtocolConverter implements IAmqpProtocolConverter {
                             sender.setCondition(new ErrorCondition(AmqpError.INTERNAL_ERROR, exception.getMessage()));
                         }
                         subscriptionsByConsumerId.remove(id);
+                        consumerContext.closed = true;
                         sender.close();
+                        sender.free();
                     } else {
                         sessionContext.consumers.put(id, consumerContext);
                         sender.open();

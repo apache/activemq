@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DiscoveryRegistryServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     
     private static final Logger LOG = LoggerFactory.getLogger(HTTPDiscoveryAgent.class);
     long maxKeepAge = 1000*60*60; // 1 hour.

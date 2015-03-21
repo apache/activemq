@@ -151,6 +151,7 @@ public class MQTTTest extends MQTTTestSupport {
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Message " + i;
             if (i == NUM_MESSAGES / 2) {
+                latch.await(20, TimeUnit.SECONDS);
                 subscriptionProvider.unsubscribe(topic);
             }
             publishProvider.publish(topic, payload.getBytes(), AT_LEAST_ONCE);
@@ -964,6 +965,29 @@ public class MQTTTest extends MQTTTestSupport {
         assertEquals(TOPIC, new String(msg.getPayload()));
         msg.ack();
         newConnection.disconnect();
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testNoClientId() throws Exception {
+        final MQTT mqtt = createMQTTConnection("", true);
+        final BlockingConnection connection = mqtt.blockingConnection();
+        connection.connect();
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return connection.isConnected();
+            }
+        });
+
+        connection.subscribe(new Topic[]{new Topic("TopicA", QoS.AT_LEAST_ONCE)});
+        connection.publish("TopicA", "test".getBytes(), QoS.AT_LEAST_ONCE, true);
+        Message message = connection.receive(3, TimeUnit.SECONDS);
+        assertNotNull(message);
+        Thread.sleep(2000);
+        connection.subscribe(new Topic[]{new Topic("TopicA", QoS.AT_LEAST_ONCE)});
+        //TODO fix audit problem for retained messages
+        //message = connection.receive(3, TimeUnit.SECONDS);
+        //assertNotNull(message);
     }
 
     @Test(timeout = 60 * 1000)

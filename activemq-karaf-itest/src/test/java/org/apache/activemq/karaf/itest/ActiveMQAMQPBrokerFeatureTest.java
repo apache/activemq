@@ -17,15 +17,15 @@
 package org.apache.activemq.karaf.itest;
 
 import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 
 import javax.jms.Connection;
-import javax.jms.JMSException;
 
 @RunWith(PaxExam.class)
 public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
@@ -34,33 +34,38 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     @Configuration
     public static Option[] configure() {
         Option[] activeMQOptions = configure("activemq");
-
-        MavenArtifactProvisionOption qpidClient = CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client").versionAsInProject();
-        MavenArtifactProvisionOption qpidClientJms = CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client-jms").versionAsInProject();
-        MavenArtifactProvisionOption qpidCommon = CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-common").versionAsInProject();
-        MavenArtifactProvisionOption geronimoJms = CoreOptions.mavenBundle("org.apache.geronimo.specs", "geronimo-jms_1.1_spec").versionAsInProject();
-        MavenArtifactProvisionOption geronimoJta = CoreOptions.mavenBundle("org.apache.geronimo.specs", "geronimo-jta_1.1_spec","1.1.1");
+        final String fragmentHost = "qpid-amqp-jms-client";
+        Option qpidClient = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=qpid-amqp-client&Fragment-Host=" + fragmentHost);
+        Option qpidClientJms = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client-jms").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=" + fragmentHost);
+        Option qpidCommon = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-common").versionAsInProject().getURL().toString());
 
         Option[] options = append(qpidClient, activeMQOptions);
         options = append(qpidClientJms, options);
         options = append(qpidCommon, options);
-        options = append(geronimoJms, options);
-        options = append(geronimoJta, options);
 
         Option[] configuredOptions = configureBrokerStart(options);
         return configuredOptions;
     }
 
     @Override
-    protected Connection getConnection() throws JMSException {
-        ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", AMQP_PORT, AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
-        Connection connection = factory.createConnection();
-        connection.start();
+    protected Connection getConnection() throws Throwable {
 
+        ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", AMQP_PORT, AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
+        Connection connection = null;
+        ClassLoader originalLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            // ensure service loader uses a loader that can find the impl - not the system classpath
+            Thread.currentThread().setContextClassLoader(factory.getClass().getClassLoader());
+            connection = factory.createConnection();
+            connection.start();
+        } finally {
+            Thread.currentThread().setContextClassLoader(originalLoader);
+        }
         return connection;
     }
 
-    @Override
+    @Ignore
+    @Test(timeout = 5 * 60 * 1000)
     public void testTemporaryDestinations() throws Throwable {
         // ignore until we have temporary destination are working in amqp
     }

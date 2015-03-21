@@ -77,6 +77,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     private long expiryTimeout = 0l;
     private boolean createConnectionOnStartup = true;
     private boolean useAnonymousProducers = true;
+    private boolean reconnectOnException = true;
 
     // Temporary value used to always fetch the result of makeObject.
     private final AtomicReference<ConnectionPool> mostRecentlyCreated = new AtomicReference<ConnectionPool>(null);
@@ -115,6 +116,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
                             connection.setBlockIfSessionPoolIsFullTimeout(getBlockIfSessionPoolIsFullTimeout());
                         }
                         connection.setUseAnonymousProducers(isUseAnonymousProducers());
+                        connection.setReconnectOnException(isReconnectOnException());
 
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("Created new connection: {}", connection);
@@ -560,6 +562,23 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     }
 
     /**
+     * @return true if the underlying connection will be renewed on JMSException, false otherwise
+     */
+    public boolean isReconnectOnException() {
+        return reconnectOnException;
+    }
+
+    /**
+     * Controls weather the underlying connection should be reset (and renewed) on JMSException
+     *
+     * @param reconnectOnException
+     *          Boolean value that configures whether reconnect on exception should happen
+     */
+    public void setReconnectOnException(boolean reconnectOnException) {
+        this.reconnectOnException = reconnectOnException;
+    }
+
+    /**
      * Called by any superclass that implements a JNDIReferencable or similar that needs to collect
      * the properties of this class for storage etc.
      *
@@ -577,5 +596,6 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         props.setProperty("createConnectionOnStartup", Boolean.toString(isCreateConnectionOnStartup()));
         props.setProperty("useAnonymousProducers", Boolean.toString(isUseAnonymousProducers()));
         props.setProperty("blockIfSessionPoolIsFullTimeout", Long.toString(getBlockIfSessionPoolIsFullTimeout()));
+        props.setProperty("reconnectOnException", Boolean.toString(isReconnectOnException()));
     }
 }

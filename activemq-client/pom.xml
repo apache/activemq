@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.12-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-client</artifactId>
@@ -92,6 +92,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin-version}</version>
         <configuration>
           <links>
             <link>${javase-javadoc-url}</link>

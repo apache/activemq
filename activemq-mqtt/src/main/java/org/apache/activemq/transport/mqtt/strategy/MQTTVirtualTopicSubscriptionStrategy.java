@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -85,21 +86,25 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
     @Override
     public byte onSubscribe(String topicName, QoS requestedQoS) throws MQTTProtocolException {
         ActiveMQDestination destination = null;
+        ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         if (!protocol.isCleanSession() && protocol.getClientId() != null && requestedQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal()) {
             String converted = VIRTUALTOPIC_CONSUMER_PREFIX + protocol.getClientId() + ":" + requestedQoS + "." +
                                VIRTUALTOPIC_PREFIX + convertMQTTToActiveMQ(topicName);
             destination = new ActiveMQQueue(converted);
+            consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH);
         } else {
             String converted = convertMQTTToActiveMQ(topicName);
             if (!converted.startsWith(VIRTUALTOPIC_PREFIX)) {
                 converted = VIRTUALTOPIC_PREFIX + convertMQTTToActiveMQ(topicName);
             }
             destination = new ActiveMQTopic(converted);
+            consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH);
         }
 
-        ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         consumerInfo.setDestination(destination);
-        consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
+        if (protocol.getActiveMQSubscriptionPrefetch() > 0) {
+            consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
+        }
         consumerInfo.setRetroactive(true);
         consumerInfo.setDispatchAsync(true);
 
@@ -211,7 +216,10 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
                 ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
                 consumerInfo.setDestination(queue);
-                consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
+                consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH);
+                if (protocol.getActiveMQSubscriptionPrefetch() > 0) {
+                    consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
+                }
                 consumerInfo.setRetroactive(true);
                 consumerInfo.setDispatchAsync(true);
 

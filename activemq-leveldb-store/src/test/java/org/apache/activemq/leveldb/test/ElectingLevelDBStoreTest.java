@@ -24,6 +24,7 @@ import org.apache.activemq.leveldb.replicated.ElectingLevelDBStore;
 import org.apache.activemq.store.MessageStore;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public class ElectingLevelDBStoreTest extends ZooKeeperTestSupport {
     ArrayList<ElectingLevelDBStore> stores = new ArrayList<ElectingLevelDBStore>();
     ElectingLevelDBStore master = null;
 
+    @Ignore("https://issues.apache.org/jira/browse/AMQ-5512")
     @Test(timeout = 1000*60*10)
     public void testElection() throws Exception {
         deleteDirectory("leveldb-node1");

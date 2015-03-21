@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.11-SNAPSHOT</version>
+    <version>5.12-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-osgi</artifactId>
@@ -52,7 +52,7 @@
       com.fasterxml.jackson*;resolution:=optional,
       org.codehaus.jettison*;resolution:=optional,
       org.jasypt*;resolution:=optional,
-      org.eclipse.jetty*;resolution:=optional,
+      org.eclipse.jetty*;resolution:=optional;version="[8.1,10)",
       org.apache.zookeeper*;resolution:=optional,
       org.fusesource.leveldbjni*;resolution:=optional,
       org.fusesource.hawtjni*;resolution:=optional,
@@ -62,6 +62,7 @@
       org.xmlpull*;resolution:=optional,
       scala*;resolution:=optional,
       org.springframework*;version="[3,4]";resolution:=optional,
+      org.springframework.osgi*;version="[1,4]";resolution:=optional,
       org.apache.xbean.spring*;resolution:=optional,
       javax.annotation*,
       javax.jms*,
@@ -165,6 +166,29 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-spring</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.osgi</groupId>
+      <artifactId>spring-osgi-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.aop</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.beans</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.context</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>org.springframework.core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -332,7 +356,7 @@
     								</goals>
     							</pluginExecutionFilter>
     							<action>
-    								<ignore></ignore>
+    								<ignore />
     							</action>
     						</pluginExecution>
     					</pluginExecutions>

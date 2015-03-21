@@ -16,9 +16,12 @@
  */
 package org.apache.activemq.karaf.itest;
 
+import javax.security.auth.Subject;
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.features.FeaturesService;
+import org.apache.karaf.jaas.boot.principal.RolePrincipal;
+import org.apache.karaf.jaas.boot.principal.UserPrincipal;
 import org.junit.After;
 import org.junit.Before;
 import org.ops4j.pax.exam.Option;
@@ -27,6 +30,7 @@ import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.karaf.options.KarafDistributionOption;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption;
 import org.ops4j.pax.exam.options.UrlReference;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -37,6 +41,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
@@ -48,16 +53,13 @@ import java.util.concurrent.TimeUnit;
 
 import static org.ops4j.pax.exam.CoreOptions.*;
 import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.*;
 
 public abstract class AbstractFeatureTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
-    private static final long ASSERTION_TIMEOUT = 20000L;
-    private static final long COMMAND_TIMEOUT = 30000L;
+    public static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
+    public static final long ASSERTION_TIMEOUT = 30000L;
+    public static final long COMMAND_TIMEOUT = 30000L;
     public static final String USER = "karaf";
     public static final String PASSWORD = "karaf";
 
@@ -66,13 +68,14 @@ public abstract class AbstractFeatureTest {
         try {
             File location = new File(AbstractFeatureTest.class.getProtectionDomain().getCodeSource().getLocation().getFile());
             basedir = new File(location, "../..").getCanonicalPath();
+            System.err.println("basedir=" + basedir);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Inject
-    protected BundleContext bundleContext;
+    BundleContext bundleContext;
 
 	@Inject
 	FeaturesService featuresService;
@@ -97,39 +100,49 @@ public abstract class AbstractFeatureTest {
     ExecutorService executor = Executors.newCachedThreadPool();
 
     protected String executeCommand(final String command, final Long timeout, final Boolean silent) {
-            String response;
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            final PrintStream printStream = new PrintStream(byteArrayOutputStream);
-            final CommandSession commandSession = commandProcessor.createSession(System.in, printStream, printStream);
-            commandSession.put("APPLICATION", System.getProperty("karaf.name", "root"));
-            commandSession.put("USER", USER);
-            FutureTask<String> commandFuture = new FutureTask<String>(
-                    new Callable<String>() {
-                        public String call() {
-                            try {
-                                if (!silent) {
-                                    System.out.println(command);
-                                    System.out.flush();
+        String response;
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        final PrintStream printStream = new PrintStream(byteArrayOutputStream);
+        final CommandSession commandSession = commandProcessor.createSession(System.in, printStream, printStream);
+        commandSession.put("APPLICATION", System.getProperty("karaf.name", "root"));
+        commandSession.put("USER", USER);
+        FutureTask<String> commandFuture = new FutureTask<String>(
+                new Callable<String>() {
+                    public String call() {
+
+                        Subject subject = new Subject();
+                        subject.getPrincipals().add(new UserPrincipal("admin"));
+                        subject.getPrincipals().add(new RolePrincipal("admin"));
+                        subject.getPrincipals().add(new RolePrincipal("manager"));
+                        subject.getPrincipals().add(new RolePrincipal("viewer"));
+                        return Subject.doAs(subject, new PrivilegedAction<String>() {
+                            @Override
+                            public String run() {
+                                try {
+                                    if (!silent) {
+                                        System.out.println(command);
+                                        System.out.flush();
+                                    }
+                                    commandSession.execute(command);
+                                } catch (Exception e) {
+                                    e.printStackTrace(System.err);
                                 }
-                                commandSession.execute(command);
-                            } catch (Exception e) {
-                                e.printStackTrace(System.err);
+                                printStream.flush();
+                                return byteArrayOutputStream.toString();
                             }
-                            printStream.flush();
-                            return byteArrayOutputStream.toString();
-                        }
-                    });
+                        });
+                    }});
 
-            try {
-                executor.submit(commandFuture);
-                response = commandFuture.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
-                response = "SHELL COMMAND TIMED OUT: ";
-            }
-
-            return response;
+        try {
+            executor.submit(commandFuture);
+            response = commandFuture.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            response = "SHELL COMMAND TIMED OUT: ";
         }
+        LOG.info("Execute: " + command + " - Response:" + response);
+        return response;
+    }
 
     protected String executeCommand(final String command) {
         return executeCommand(command, COMMAND_TIMEOUT, false);
@@ -141,8 +154,13 @@ public abstract class AbstractFeatureTest {
 	 * @throws Exception
 	 */
 	public void installAndAssertFeature(final String feature) throws Throwable {
-		System.err.println(executeCommand("features:install " + feature));
-		System.err.println(executeCommand("osgi:list -t 0"));
+        executeCommand("osgi:list -t 0");
+		executeCommand("features:install " + feature);
+		assertFeatureInstalled(feature);
+	}
+
+    public void assertFeatureInstalled(final String feature) throws Throwable {
+        executeCommand("osgi:list -t 0");
         withinReason(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
@@ -150,9 +168,19 @@ public abstract class AbstractFeatureTest {
                 return true;
             }
         });
-	}
+    }
 
-
+    public boolean verifyBundleInstalled(final String bundleName) throws Exception {
+        boolean found = false;
+        for (Bundle bundle: bundleContext.getBundles()) {
+            LOG.debug("Checking: " + bundle.getSymbolicName());
+            if (bundle.getSymbolicName().equals(bundleName)) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
 
 	public static String karafVersion() {
         return System.getProperty("karafVersion", "unknown-need-env-var");
@@ -160,8 +188,10 @@ public abstract class AbstractFeatureTest {
 
     public static UrlReference getActiveMQKarafFeatureUrl() {
         String type = "xml/features";
-        return mavenBundle().groupId("org.apache.activemq").
+        UrlReference urlReference = mavenBundle().groupId("org.apache.activemq").
             artifactId("activemq-karaf").versionAsInProject().type(type);
+        System.err.println("FeatureURL: " + urlReference.getURL());
+        return urlReference;
     }
 
     // for use from a probe
@@ -185,10 +215,10 @@ public abstract class AbstractFeatureTest {
 
     public static Option[] configureBrokerStart(Option[] existingOptions, String xmlConfig) {
         existingOptions = append(
-                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server-default.cfg")),
+                replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/" + xmlConfig + ".xml")),
                 existingOptions);
         return append(
-                replaceConfigurationFile("etc/activemq.xml", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/" + xmlConfig + ".xml")),
+                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", new File(basedir + "/src/test/resources/org/apache/activemq/karaf/itest/org.apache.activemq.server-default.cfg")),
                 existingOptions);
     }
 
@@ -212,15 +242,14 @@ public abstract class AbstractFeatureTest {
         Option[] options =
             new Option[]{
                 karafDistributionConfiguration().frameworkUrl(
-                    maven().groupId("org.apache.karaf").artifactId("apache-karaf").type("tar.gz").version(karafVersion()))
-                    //This version doesn't affect the version of karaf we use
+                    maven().groupId("org.apache.karaf").artifactId("apache-karaf").type("tar.gz").versionAsInProject())
                     .karafVersion(karafVersion()).name("Apache Karaf")
                     .unpackDirectory(new File("target/paxexam/unpack/")),
 
                 KarafDistributionOption.keepRuntimeFolder(),
-                logLevel(LogLevelOption.LogLevel.INFO),
-                replaceConfigurationFile("etc/config.properties", new File(basedir+"/target/classes/org/apache/activemq/karaf/itest/config.properties")),
-                replaceConfigurationFile("etc/custom.properties", new File(basedir+"/src/test/resources/org/apache/activemq/karaf/itest/custom.properties")),
+                logLevel(LogLevelOption.LogLevel.WARN),
+                editConfigurationFilePut("etc/config.properties", "karaf.startlevel.bundle", "50"),
+                //debugConfiguration("5005", true),
                 features(getActiveMQKarafFeatureUrl(), f.toArray(new String[f.size()]))};
 
         return options;
