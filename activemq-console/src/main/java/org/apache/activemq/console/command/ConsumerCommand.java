@@ -39,6 +39,7 @@ public class ConsumerCommand extends AbstractCommand {
     int sleep;
     int transactionBatchSize;
     int parallelThreads = 1;
+    boolean bytesAsText;
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
@@ -71,6 +72,7 @@ public class ConsumerCommand extends AbstractCommand {
                 consumer.setSleep(sleep);
                 consumer.setTransactionBatchSize(transactionBatchSize);
                 consumer.setFinished(active);
+                consumer.setBytesAsText(bytesAsText);
                 consumer.start();
             }
 
@@ -146,6 +148,14 @@ public class ConsumerCommand extends AbstractCommand {
         this.parallelThreads = parallelThreads;
     }
 
+    public boolean isBytesAsText() {
+        return bytesAsText;
+    }
+
+    public void setBytesAsText(boolean bytesAsText) {
+        this.bytesAsText = bytesAsText;
+    }
+
     @Override
     protected void printHelp() {
         printHelpFromFile();
@@ -160,5 +170,4 @@ public class ConsumerCommand extends AbstractCommand {
     public String getOneLineDescription() {
         return "Receives messages from the broker";
     }
-
 }

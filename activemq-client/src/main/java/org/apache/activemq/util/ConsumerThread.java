@@ -38,6 +38,7 @@ public class ConsumerThread extends Thread {
     int transactions = 0;
     boolean running = false;
     CountDownLatch finished;
+    boolean bytesAsText;
 
     public ConsumerThread(Session session, Destination destination) {
         this.destination = destination;
@@ -56,6 +57,12 @@ public class ConsumerThread extends Thread {
                 Message msg = consumer.receive(receiveTimeOut);
                 if (msg != null) {
                     LOG.info(threadName + " Received " + (msg instanceof TextMessage ? ((TextMessage) msg).getText() : msg.getJMSMessageID()));
+                    if (bytesAsText && (msg instanceof BytesMessage)) {
+                        long length = ((BytesMessage) msg).getBodyLength();
+                        byte[] bytes = new byte[(int) length];
+                        ((BytesMessage) msg).readBytes(bytes);
+                        LOG.info("BytesMessage as text string: " + new String(bytes));
+                    }
                     received++;
                 } else {
                     if (breakOnNull) {
@@ -150,5 +157,13 @@ public class ConsumerThread extends Thread {
 
     public void setFinished(CountDownLatch finished) {
         this.finished = finished;
+    }
+
+    public boolean isBytesAsText() {
+        return bytesAsText;
+    }
+
+    public void setBytesAsText(boolean bytesAsText) {
+        this.bytesAsText = bytesAsText;
     }
 }

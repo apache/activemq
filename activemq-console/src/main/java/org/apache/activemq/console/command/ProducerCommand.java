@@ -18,14 +18,12 @@ package org.apache.activemq.console.command;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ProducerThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Session;
-import java.io.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -39,6 +37,8 @@ public class ProducerCommand extends AbstractCommand {
     int messageCount = 1000;
     int sleep = 0;
     boolean persistent = true;
+    String message = null;
+    String url = null;
     int messageSize = 0;
     int textMessageSize;
     long msgTTL = 0L;
@@ -77,6 +77,8 @@ public class ProducerCommand extends AbstractCommand {
                 producer.setMsgTTL(msgTTL);
                 producer.setPersistent(persistent);
                 producer.setTransactionBatchSize(transactionBatchSize);
+                producer.setMessage(message);
+                producer.setUrl(url);
                 producer.setMessageSize(messageSize);
                 producer.setMsgGroupID(msgGroupID);
                 producer.setTextMessageSize(textMessageSize);
@@ -194,6 +196,22 @@ public class ProducerCommand extends AbstractCommand {
 
     public void setParallelThreads(int parallelThreads) {
         this.parallelThreads = parallelThreads;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     @Override

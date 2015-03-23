@@ -20,10 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
 
@@ -44,6 +41,9 @@ public class ProducerThread extends Thread {
 
     int transactions = 0;
     int sentCount = 0;
+    String message;
+    String messageText = null;
+    String url = null;
     byte[] payload = null;
     boolean running = false;
     CountDownLatch finished;
@@ -114,35 +114,55 @@ public class ProducerThread extends Thread {
     }
 
     protected Message createMessage(int i) throws Exception {
-        Message message = null;
+        Message answer;
         if (payload != null) {
-            message = session.createBytesMessage();
-            ((BytesMessage)message).writeBytes(payload);
+            answer = session.createBytesMessage();
+            ((BytesMessage) answer).writeBytes(payload);
         } else {
             if (textMessageSize > 0) {
-                InputStreamReader reader = null;
-                try {
-                    InputStream is = getClass().getResourceAsStream("demo.txt");
-                    reader = new InputStreamReader(is);
-                    char[] chars = new char[textMessageSize];
-                    reader.read(chars);
-                    message = session.createTextMessage(String.valueOf(chars));
-                } catch (Exception e) {
-                    LOG.warn(Thread.currentThread().getName() + " Failed to load " + textMessageSize + " bytes of demo text. Using default text message instead");
-                    message = session.createTextMessage("test message: " + i);
-                } finally {
-                    if (reader != null) {
-                        reader.close();
-                    }
+                if (messageText == null) {
+                    messageText = readInputStream(getClass().getResourceAsStream("demo.txt"), textMessageSize, i);
                 }
+            } else if (url != null) {
+                messageText = readInputStream(new URL(url).openStream(), -1, i);
+            } else if (message != null) {
+                messageText = message;
             } else {
-                message = session.createTextMessage("test message: " + i);
+                messageText = createDefaultMessage(i);
             }
+            answer = session.createTextMessage(messageText);
         }
         if ((msgGroupID != null) && (!msgGroupID.isEmpty())) {
-            message.setStringProperty("JMSXGroupID", msgGroupID);
+            answer.setStringProperty("JMSXGroupID", msgGroupID);
         }
-        return message;
+        return answer;
+    }
+
+    private String readInputStream(InputStream is, int size, int messageNumber) throws IOException {
+        InputStreamReader reader = new InputStreamReader(is);
+        try {
+            char[] buffer;
+            if (size > 0) {
+                buffer = new char[size];
+            } else {
+                buffer = new char[1024];
+            }
+            int count;
+            StringBuilder builder = new StringBuilder();
+            while ((count = reader.read(buffer)) != -1) {
+                builder.append(buffer, 0, count);
+                if (size > 0) break;
+            }
+            return builder.toString();
+        } catch (IOException ioe) {
+            return createDefaultMessage(messageNumber);
+        } finally {
+            reader.close();
+        }
+    }
+
+    private String createDefaultMessage(int messageNumber) {
+        return "test message: " + messageNumber;
     }
 
     public void setMessageCount(int messageCount) {
@@ -227,5 +247,21 @@ public class ProducerThread extends Thread {
 
     public void setFinished(CountDownLatch finished) {
         this.finished = finished;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

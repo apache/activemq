@@ -9,3 +9,4 @@ Options :
     [--sleep                                         N] - millisecond sleep period between sends or receives; default 0
     [--transactionBatchSize                          N] - use send transaction batches of size N; default 0, no jms transactions
     [--parallelThreads                               N] - number of threads to run in parallel; default 1
+    [--bytesAsText                          true|false] - try to treat a BytesMessage as a text string

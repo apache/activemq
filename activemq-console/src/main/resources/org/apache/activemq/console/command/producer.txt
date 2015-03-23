@@ -13,4 +13,6 @@ Options :
     [--msgTTL                                        N] - message TTL in milliseconds
     [--messageSize                                   N] - size in bytes of a BytesMessage; default 0, a simple TextMessage is used
     [--textMessageSize                               N] - size in bytes of a TextMessage, a Lorem ipsum demo TextMessage is used
+    [--message                                      ..] - a text string to use as the message body
+    [--url                                         URL] - a url pointing to a document to use as the message body
     [--msgGroupID                                   ..] - JMS message group identifier
