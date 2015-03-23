@@ -35,7 +35,6 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.qpid.amqp_1_0.client.ConnectionClosedException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,15 +71,6 @@ public class JMSClientSimpleAuthTest {
             fail("Expected JMSException");
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
-        } catch (JMSException e) {
-            Exception linkedException = e.getLinkedException();
-            if (linkedException != null && linkedException instanceof ConnectionClosedException) {
-                ConnectionClosedException cce = (ConnectionClosedException) linkedException;
-                assertEquals("Error{condition=unauthorized-access,description=User name [null] or password is invalid.}", cce.getRemoteError().toString());
-            } else {
-                LOG.error("Unexpected Exception", e);
-                fail("Unexpected exception: " + e.getMessage());
-            }
         }
     }
 
@@ -92,15 +82,6 @@ public class JMSClientSimpleAuthTest {
             fail("Expected JMSException");
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
-        } catch (JMSException e)  {
-            Exception linkedException = e.getLinkedException();
-            if (linkedException != null && linkedException instanceof ConnectionClosedException) {
-                ConnectionClosedException cce = (ConnectionClosedException) linkedException;
-                assertEquals("Error{condition=unauthorized-access,description=User name [nosuchuser] or password is invalid.}", cce.getRemoteError().toString());
-            } else {
-                LOG.error("Unexpected Exception", e);
-                fail("Unexpected exception: " + e.getMessage());
-            }
         }
     }
 
@@ -112,15 +93,6 @@ public class JMSClientSimpleAuthTest {
             fail("Expected JMSException");
         } catch (JMSSecurityException ex) {
             LOG.debug("Failed to authenticate connection with no user / password.");
-        } catch (JMSException e) {
-            Exception linkedException = e.getLinkedException();
-            if (linkedException != null && linkedException instanceof ConnectionClosedException) {
-                ConnectionClosedException cce = (ConnectionClosedException) linkedException;
-                assertEquals("Error{condition=unauthorized-access,description=User name [user] or password is invalid.}", cce.getRemoteError().toString());
-            } else {
-                LOG.error("Unexpected Exception", e);
-                fail("Unexpected exception: " + e.getMessage());
-            }
         }
     }
 
@@ -134,15 +106,6 @@ public class JMSClientSimpleAuthTest {
                 fail("Expected JMSException");
             } catch (JMSSecurityException ex) {
                 LOG.debug("Failed to authenticate connection with no user / password.");
-            } catch (JMSException e) {
-                Exception linkedException = e.getLinkedException();
-                if (linkedException != null && linkedException instanceof ConnectionClosedException) {
-                    ConnectionClosedException cce = (ConnectionClosedException) linkedException;
-                    assertEquals("Error{condition=unauthorized-access,description=User name [user] or password is invalid.}", cce.getRemoteError().toString());
-                } else {
-                    LOG.error("Unexpected Exception", e);
-                    fail("Unexpected exception: " + e.getMessage());
-                }
             } finally {
                 if (connection != null) {
                     connection.close();

@@ -16,17 +16,18 @@
  */
 package org.apache.activemq.karaf.itest;
 
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import javax.jms.Connection;
+
+import org.apache.qpid.jms.JmsConnectionFactory;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.junit.PaxExam;
 
-import javax.jms.Connection;
-
+@Ignore
 @RunWith(PaxExam.class)
 public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     private static final Integer AMQP_PORT = 61636;
@@ -34,14 +35,9 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     @Configuration
     public static Option[] configure() {
         Option[] activeMQOptions = configure("activemq");
-        final String fragmentHost = "qpid-amqp-jms-client";
-        Option qpidClient = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=qpid-amqp-client&Fragment-Host=" + fragmentHost);
-        Option qpidClientJms = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-client-jms").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=" + fragmentHost);
-        Option qpidCommon = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-amqp-1-0-common").versionAsInProject().getURL().toString());
+        Option qpidClient = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-jms-client").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=qpid-jms-client");
 
         Option[] options = append(qpidClient, activeMQOptions);
-        options = append(qpidClientJms, options);
-        options = append(qpidCommon, options);
 
         Option[] configuredOptions = configureBrokerStart(options);
         return configuredOptions;
@@ -50,7 +46,12 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     @Override
     protected Connection getConnection() throws Throwable {
 
-        ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", AMQP_PORT, AbstractFeatureTest.USER, AbstractFeatureTest.PASSWORD);
+        String amqpURI = "amqp://localhost" + AMQP_PORT;
+        JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
+
+        factory.setUsername(AbstractFeatureTest.USER);
+        factory.setPassword(AbstractFeatureTest.PASSWORD);
+
         Connection connection = null;
         ClassLoader originalLoader = Thread.currentThread().getContextClassLoader();
         try {
@@ -64,6 +65,7 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
         return connection;
     }
 
+    @Override
     @Ignore
     @Test(timeout = 5 * 60 * 1000)
     public void testTemporaryDestinations() throws Throwable {

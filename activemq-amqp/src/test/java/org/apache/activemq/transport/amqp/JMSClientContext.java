@@ -27,7 +27,7 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
+import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,21 +170,21 @@ public class JMSClientContext {
 
         boolean useSSL = remoteURI.getScheme().toLowerCase().contains("ssl");
 
-        LOG.debug("In createConnectionFactory using port {} ssl? {}", remoteURI.getPort(), useSSL);
-
-        ConnectionFactoryImpl factory =
-            new ConnectionFactoryImpl(remoteURI.getHost(), remoteURI.getPort(), username, password, null, useSSL);
+        String amqpURI = (useSSL ? "amqps://" : "amqp://") + remoteURI.getHost() + ":" + remoteURI.getPort();
 
         if (useSSL) {
-            factory.setKeyStorePath(System.getProperty("javax.net.ssl.trustStore"));
-            factory.setKeyStorePassword("password");
-            factory.setTrustStorePath(System.getProperty("javax.net.ssl.keyStore"));
-            factory.setTrustStorePassword("password");
+            amqpURI += "?transport.verifyHost=false";
         }
 
+        LOG.debug("In createConnectionFactory using URI: {}", amqpURI);
+
+        JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
+
+        factory.setUsername(username);
+        factory.setPassword(password);
+        factory.setAlwaysSyncSend(syncPublish);
         factory.setTopicPrefix("topic://");
         factory.setQueuePrefix("queue://");
-        factory.setSyncPublish(syncPublish);
 
         return factory;
     }

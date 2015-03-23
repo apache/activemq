@@ -16,55 +16,66 @@
  */
 package org.apache.activemq.conversions;
 
-import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.QueueImpl;
-import org.apache.qpid.amqp_1_0.jms.impl.TopicImpl;
-import org.fusesource.mqtt.client.BlockingConnection;
-import org.fusesource.mqtt.client.MQTT;
-import org.fusesource.mqtt.client.QoS;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import javax.jms.*;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
-/**
- */
-public class AmqpAndMqttTest extends CombinationTestSupport {
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.qpid.jms.JmsConnectionFactory;
+import org.fusesource.mqtt.client.BlockingConnection;
+import org.fusesource.mqtt.client.MQTT;
+import org.fusesource.mqtt.client.QoS;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+public class AmqpAndMqttTest {
 
     protected BrokerService broker;
     private TransportConnector amqpConnector;
     private TransportConnector mqttConnector;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         broker = createBroker();
         broker.start();
         broker.waitUntilStarted();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        if( broker!=null ) {
+    @After
+    public void tearDown() throws Exception {
+        if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
             broker = null;
         }
-        super.tearDown();
     }
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.setAdvisorySupport(false);
+        broker.setSchedulerSupport(false);
+
         amqpConnector = broker.addConnector("amqp://0.0.0.0:0");
         mqttConnector = broker.addConnector("mqtt://0.0.0.0:0");
+
         return broker;
     }
 
-
+    @Test(timeout = 60000)
     public void testFromMqttToAmqp() throws Exception {
         Connection amqp = createAmqpConnection();
         Session session = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -95,7 +106,6 @@ public class AmqpAndMqttTest extends CombinationTestSupport {
         }
     }
 
-
     protected MQTT createMQTTConnection() throws Exception {
         MQTT mqtt = new MQTT();
         mqtt.setConnectAttemptsMax(1);
@@ -105,7 +115,14 @@ public class AmqpAndMqttTest extends CombinationTestSupport {
     }
 
     public Connection createAmqpConnection() throws Exception {
-        final ConnectionFactoryImpl factory = new ConnectionFactoryImpl("localhost", amqpConnector.getConnectUri().getPort(), "admin", "password");
+
+        String amqpURI = "amqp://localhost:" + amqpConnector.getConnectUri().getPort();
+
+        final JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
+
+        factory.setUsername("admin");
+        factory.setPassword("password");
+
         final Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
             @Override
@@ -116,5 +133,4 @@ public class AmqpAndMqttTest extends CombinationTestSupport {
         connection.start();
         return connection;
     }
-
 }
