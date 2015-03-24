@@ -43,7 +43,7 @@ public class ProducerThread extends Thread {
     int sentCount = 0;
     String message;
     String messageText = null;
-    String url = null;
+    String payloadUrl = null;
     byte[] payload = null;
     boolean running = false;
     CountDownLatch finished;
@@ -123,8 +123,8 @@ public class ProducerThread extends Thread {
                 if (messageText == null) {
                     messageText = readInputStream(getClass().getResourceAsStream("demo.txt"), textMessageSize, i);
                 }
-            } else if (url != null) {
-                messageText = readInputStream(new URL(url).openStream(), -1, i);
+            } else if (payloadUrl != null) {
+                messageText = readInputStream(new URL(payloadUrl).openStream(), -1, i);
             } else if (message != null) {
                 messageText = message;
             } else {
@@ -249,12 +249,12 @@ public class ProducerThread extends Thread {
         this.finished = finished;
     }
 
-    public String getUrl() {
-        return url;
+    public String getPayloadUrl() {
+        return payloadUrl;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setPayloadUrl(String payloadUrl) {
+        this.payloadUrl = payloadUrl;
     }
 
     public String getMessage() {

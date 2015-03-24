@@ -38,7 +38,7 @@ public class ProducerCommand extends AbstractCommand {
     int sleep = 0;
     boolean persistent = true;
     String message = null;
-    String url = null;
+    String payloadUrl = null;
     int messageSize = 0;
     int textMessageSize;
     long msgTTL = 0L;
@@ -78,7 +78,7 @@ public class ProducerCommand extends AbstractCommand {
                 producer.setPersistent(persistent);
                 producer.setTransactionBatchSize(transactionBatchSize);
                 producer.setMessage(message);
-                producer.setUrl(url);
+                producer.setPayloadUrl(payloadUrl);
                 producer.setMessageSize(messageSize);
                 producer.setMsgGroupID(msgGroupID);
                 producer.setTextMessageSize(textMessageSize);
@@ -198,12 +198,12 @@ public class ProducerCommand extends AbstractCommand {
         this.parallelThreads = parallelThreads;
     }
 
-    public String getUrl() {
-        return url;
+    public String getPayloadUrl() {
+        return payloadUrl;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setPayloadUrl(String payloadUrl) {
+        this.payloadUrl = payloadUrl;
     }
 
     public String getMessage() {
