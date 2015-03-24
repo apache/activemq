@@ -21,24 +21,23 @@ import java.util.ArrayList;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.transport.amqp.protocol.AmqpConnection;
 
 /**
  * Used to assign the best implementation of a AmqpProtocolConverter to the
  * AmqpTransport based on the AmqpHeader that the client sends us.
  */
-public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
+public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
 
     public static final int DEFAULT_PREFETCH = 1000;
 
     private final AmqpTransport transport;
     private final BrokerService brokerService;
 
-    private int producerCredit = DEFAULT_PREFETCH;
-
     interface Discriminator {
         boolean matches(AmqpHeader header);
 
-        IAmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService);
+        AmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService);
     }
 
     static final private ArrayList<Discriminator> DISCRIMINATORS = new ArrayList<Discriminator>();
@@ -46,8 +45,8 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
         DISCRIMINATORS.add(new Discriminator() {
 
             @Override
-            public IAmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService) {
-                return new AmqpProtocolConverter(transport, brokerService);
+            public AmqpProtocolConverter create(AmqpTransport transport, BrokerService brokerService) {
+                return new AmqpConnection(transport, brokerService);
             }
 
             @Override
@@ -66,7 +65,7 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     final private ArrayList<Command> pendingCommands = new ArrayList<Command>();
 
-    public AMQPProtocolDiscriminator(AmqpTransport transport, BrokerService brokerService) {
+    public AmqpProtocolDiscriminator(AmqpTransport transport, BrokerService brokerService) {
         this.transport = transport;
         this.brokerService = brokerService;
     }
@@ -88,8 +87,7 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
                 match = DISCRIMINATORS.get(0);
             }
 
-            IAmqpProtocolConverter next = match.create(transport, brokerService);
-            next.setProducerCredit(producerCredit);
+            AmqpProtocolConverter next = match.create(transport, brokerService);
             transport.setProtocolConverter(next);
             for (Command send : pendingCommands) {
                 next.onActiveMQCommand(send);
@@ -112,10 +110,5 @@ public class AMQPProtocolDiscriminator implements IAmqpProtocolConverter {
 
     @Override
     public void updateTracer() {
-    }
-
-    @Override
-    public void setProducerCredit(int producerCredit) {
-        this.producerCredit = producerCredit;
     }
 }

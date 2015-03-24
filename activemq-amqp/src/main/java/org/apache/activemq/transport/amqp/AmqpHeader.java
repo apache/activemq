@@ -19,6 +19,8 @@ package org.apache.activemq.transport.amqp;
 import org.fusesource.hawtbuf.Buffer;
 
 /**
+ * Represents the AMQP protocol handshake packet that is sent during the
+ * initial exchange with a remote peer.
  */
 public class AmqpHeader {
 

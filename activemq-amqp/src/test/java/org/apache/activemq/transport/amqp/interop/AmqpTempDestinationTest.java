@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.interop;
 
-import static org.apache.activemq.transport.amqp.AmqpSupport.DYNAMIC_NODE_LIFETIME_POLICY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.LIFETIME_POLICY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILITY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
 import static org.junit.Assert.assertEquals;
@@ -194,7 +194,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
         // Set the dynamic node lifetime-policy
         Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
-        dynamicNodeProperties.put(DYNAMIC_NODE_LIFETIME_POLICY, DeleteOnClose.getInstance());
+        dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
         source.setDynamicNodeProperties(dynamicNodeProperties);
 
         // Set the capability to indicate the node type being created
@@ -216,7 +216,7 @@ public class AmqpTempDestinationTest extends AmqpClientTestSupport {
 
         // Set the dynamic node lifetime-policy
         Map<Symbol, Object> dynamicNodeProperties = new HashMap<Symbol, Object>();
-        dynamicNodeProperties.put(DYNAMIC_NODE_LIFETIME_POLICY, DeleteOnClose.getInstance());
+        dynamicNodeProperties.put(LIFETIME_POLICY, DeleteOnClose.getInstance());
         target.setDynamicNodeProperties(dynamicNodeProperties);
 
         // Set the capability to indicate the node type being created

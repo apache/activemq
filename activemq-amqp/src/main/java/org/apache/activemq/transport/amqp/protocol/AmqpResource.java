@@ -14,23 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.amqp;
-
-import java.io.IOException;
-
-import org.apache.activemq.command.Command;
+package org.apache.activemq.transport.amqp.protocol;
 
 /**
+ * Root interface for all endpoint objects.
  */
-public interface IAmqpProtocolConverter {
+public interface AmqpResource {
 
-    void onAMQPData(Object command) throws Exception;
+    /**
+     * Request from the remote peer to open this resource.
+     */
+    void open();
 
-    void onAMQPException(IOException error);
+    /**
+     * Request from the remote peer to close this resource.
+     */
+    void close();
 
-    void onActiveMQCommand(Command command) throws Exception;
-
-    void updateTracer();
-
-    void setProducerCredit(int producerCredit);
 }

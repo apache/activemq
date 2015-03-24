@@ -30,7 +30,7 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * A <a href="http://amqp.org/">AMQP</a> over SSL transport factory
  */
-public class AMQPSslTransportFactory extends SslTransportFactory implements BrokerServiceAware {
+public class AmqpSslTransportFactory extends SslTransportFactory implements BrokerServiceAware {
 
     private BrokerService brokerService = null;
 

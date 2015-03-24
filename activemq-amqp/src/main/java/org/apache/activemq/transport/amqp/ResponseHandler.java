@@ -21,8 +21,21 @@ import java.io.IOException;
 import org.apache.activemq.command.Response;
 
 /**
- * Interface used by the AMQPProtocolConverter for callbacks.
+ * Interface used by the AmqpProtocolConverter for callbacks from the broker.
  */
-interface ResponseHandler {
-    void onResponse(IAmqpProtocolConverter converter, Response response) throws IOException;
+public interface ResponseHandler {
+
+    /**
+     * Called when the Broker has handled a previously issued request and
+     * has a response ready.
+     *
+     * @param converter
+     *        the protocol converter that is awaiting the response.
+     * @param response
+     *        the response from the broker.
+     *
+     * @throws IOException if an error occurs while processing the response.
+     */
+    void onResponse(AmqpProtocolConverter converter, Response response) throws IOException;
+
 }
