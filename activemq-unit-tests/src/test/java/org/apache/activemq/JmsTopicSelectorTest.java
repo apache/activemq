@@ -156,10 +156,11 @@ public class JmsTopicSelectorTest extends TestSupport {
 
             remaining--;
         }
-        assertEquals(remaining, 0);
+        assertEquals(0, remaining);
         consumer.close();
         consumeMessages(remaining);
     }
+
 
     public void testPropertySelector() throws Exception {
         int remaining = 5;
@@ -177,7 +178,7 @@ public class JmsTopicSelectorTest extends TestSupport {
             }
             remaining--;
         }
-        assertEquals(remaining, 3);
+        assertEquals(3, remaining);
         consumer.close();
         consumeMessages(remaining);
 
@@ -199,7 +200,7 @@ public class JmsTopicSelectorTest extends TestSupport {
             }
             remaining--;
         }
-        assertEquals(remaining, 2);
+        assertEquals(2, remaining);
         consumer.close();
         consumeMessages(remaining);
 
