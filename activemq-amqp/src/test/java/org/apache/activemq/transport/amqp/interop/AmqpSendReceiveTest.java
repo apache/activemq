@@ -28,7 +28,6 @@ import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpReceiver;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -36,7 +35,6 @@ import org.junit.Test;
  */
 public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
-    @Ignore("Test fails when JMS transformer is in play")
     @Test(timeout = 60000)
     public void testCloseBusyReceiver() throws Exception {
         final int MSG_COUNT = 20;
@@ -71,7 +69,7 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpReceiver receiver2 = session.createReceiver("queue://" + getTestName());
         receiver2.flow(200);
         for (int i = 0; i < MSG_COUNT; ++i) {
-            received = receiver1.receive(5, TimeUnit.SECONDS);
+            received = receiver2.receive(5, TimeUnit.SECONDS);
             assertEquals("msg" + i, received.getMessageId());
         }
 
