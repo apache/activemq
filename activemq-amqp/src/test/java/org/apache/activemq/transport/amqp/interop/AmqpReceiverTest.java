@@ -43,7 +43,6 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.engine.Receiver;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -340,7 +339,7 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-    @Ignore("Test fails currently due to improper implementation of drain.")
+    //@Ignore("Test fails currently due to improper implementation of drain.")
     @Test(timeout = 60000)
     public void testReceiverCanDrainMessages() throws Exception {
         int MSG_COUNT = 20;

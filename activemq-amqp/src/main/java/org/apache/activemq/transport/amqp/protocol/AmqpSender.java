@@ -30,6 +30,7 @@ import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
@@ -78,8 +79,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     private final boolean presettle;
 
     private boolean closed;
-    private boolean endOfBrowse;
     private int currentCredit;
+    private boolean draining;
     private long lastDeliveredSequenceId;
 
     private Buffer currentBuffer;
@@ -151,7 +152,31 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     public void flow() throws Exception {
         int updatedCredit = getEndpoint().getCredit();
 
-        if (updatedCredit != currentCredit) {
+        LOG.trace("Flow: drain={} credit={}, remoteCredit={}",
+                  getEndpoint().getDrain(), getEndpoint().getCredit(), getEndpoint().getRemoteCredit());
+
+        if (getEndpoint().getDrain() && (updatedCredit != currentCredit || !draining)) {
+            currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
+            draining = true;
+
+            // Revert to a pull consumer.
+            ConsumerControl control = new ConsumerControl();
+            control.setConsumerId(getConsumerId());
+            control.setDestination(getDestination());
+            control.setPrefetch(0);
+            sendToActiveMQ(control, null);
+
+            // Now request dispatch of the drain amount, we request immediate
+            // timeout and an completion message regardless so that we can know
+            // when we should marked the link as drained.
+            MessagePull pullRequest = new MessagePull();
+            pullRequest.setConsumerId(getConsumerId());
+            pullRequest.setDestination(getDestination());
+            pullRequest.setTimeout(-1);
+            pullRequest.setAlwaysSignalDone(true);
+            pullRequest.setQuantity(currentCredit);
+            sendToActiveMQ(pullRequest, null);
+        } else if (updatedCredit != currentCredit) {
             currentCredit = updatedCredit >= 0 ? updatedCredit : 0;
             ConsumerControl control = new ConsumerControl();
             control.setConsumerId(getConsumerId());
@@ -159,8 +184,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             control.setPrefetch(currentCredit);
             sendToActiveMQ(control, null);
         }
-
-        drainCheck();
     }
 
     @Override
@@ -357,9 +380,10 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
                 final ActiveMQMessage jms = temp;
                 if (jms == null) {
-                    // It's the end of browse signal.
-                    endOfBrowse = true;
-                    drainCheck();
+                    LOG.info("End of browse signals endpoint drained.");
+                    // It's the end of browse signal in response to a MessagePull
+                    getEndpoint().drained();
+                    draining = false;
                 } else {
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
                     jms.setReadOnlyBody(true);
@@ -434,18 +458,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     session.pumpProtonToSocket();
                 }
             });
-        }
-    }
-
-    private void drainCheck() {
-        // If we are a browser.. lets not say we are drained until
-        // we hit the end of browse message.
-        if (consumerInfo.isBrowser() && !endOfBrowse) {
-            return;
-        }
-
-        if (outbound.isEmpty()) {
-            getEndpoint().drained();
         }
     }
 }
