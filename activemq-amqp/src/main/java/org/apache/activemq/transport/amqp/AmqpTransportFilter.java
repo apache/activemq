@@ -25,7 +25,6 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
-import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -41,18 +40,17 @@ import org.slf4j.LoggerFactory;
 public class AmqpTransportFilter extends TransportFilter implements AmqpTransport {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransportFilter.class);
     static final Logger TRACE_BYTES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".BYTES");
-    static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
-    private IAmqpProtocolConverter protocolConverter;
+    public static final Logger TRACE_FRAMES = LoggerFactory.getLogger(AmqpTransportFilter.class.getPackage().getName() + ".FRAMES");
+    private AmqpProtocolConverter protocolConverter;
     private AmqpWireFormat wireFormat;
     private AmqpInactivityMonitor monitor;
 
     private boolean trace;
-    private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
     private final ReentrantLock lock = new ReentrantLock();
 
     public AmqpTransportFilter(Transport next, WireFormat wireFormat, BrokerService brokerService) {
         super(next);
-        this.protocolConverter = new AMQPProtocolDiscriminator(this, brokerService);
+        this.protocolConverter = new AmqpProtocolDiscriminator(this, brokerService);
         if (wireFormat instanceof AmqpWireFormat) {
             this.wireFormat = (AmqpWireFormat) wireFormat;
         }
@@ -170,20 +168,20 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
 
     @Override
     public String getTransformer() {
-        return transformer;
+        return wireFormat.getTransformer();
     }
 
     public void setTransformer(String transformer) {
-        this.transformer = transformer;
+        wireFormat.setTransformer(transformer);
     }
 
     @Override
-    public IAmqpProtocolConverter getProtocolConverter() {
+    public AmqpProtocolConverter getProtocolConverter() {
         return protocolConverter;
     }
 
     @Override
-    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter) {
+    public void setProtocolConverter(AmqpProtocolConverter protocolConverter) {
         this.protocolConverter = protocolConverter;
     }
 
@@ -195,7 +193,11 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     }
 
     public void setProducerCredit(int producerCredit) {
-        protocolConverter.setProducerCredit(producerCredit);
+        wireFormat.setProducerCredit(producerCredit);
+    }
+
+    public int getProducerCredit() {
+        return wireFormat.getProducerCredit();
     }
 
     @Override

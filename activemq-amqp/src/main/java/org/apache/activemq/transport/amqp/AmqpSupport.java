@@ -20,10 +20,12 @@ import java.nio.ByteBuffer;
 import java.util.AbstractMap;
 import java.util.Map;
 
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedLong;
+import org.apache.qpid.proton.amqp.transaction.Coordinator;
 import org.fusesource.hawtbuf.Buffer;
 
 /**
@@ -53,7 +55,7 @@ public class AmqpSupport {
     public static final Symbol COPY = Symbol.getSymbol("copy");
 
     // Lifetime policy symbols
-    public static final Symbol DYNAMIC_NODE_LIFETIME_POLICY = Symbol.valueOf("lifetime-policy");
+    public static final Symbol LIFETIME_POLICY = Symbol.valueOf("lifetime-policy");
 
     /**
      * Search for a given Symbol in a given array of Symbol object.
@@ -168,5 +170,40 @@ public class AmqpSupport {
     public static long toLong(Binary value) {
         Buffer buffer = new Buffer(value.getArray(), value.getArrayOffset(), value.getLength());
         return buffer.bigEndianEditor().readLong();
+    }
+
+    /**
+     * Given an AMQP endpoint, deduce the appropriate ActiveMQDestination type and create
+     * a new instance.  By default if the endpoint address does not carry the standard prefix
+     * value then we default to a Queue type destination.  If the endpoint is null or is an
+     * AMQP Coordinator type endpoint this method returns null to indicate no destination
+     * can be mapped.
+     *
+     * @param endpoint
+     *        the AMQP endpoint to construct an ActiveMQDestination from.
+     *
+     * @return a new ActiveMQDestination that best matches the address of the given endpoint
+     *
+     * @throws AmqpProtocolException if an error occurs while deducing the destination type.
+     */
+    public static ActiveMQDestination createDestination(Object endpoint) throws AmqpProtocolException {
+        if (endpoint == null) {
+            return null;
+        } else if (endpoint instanceof Coordinator) {
+            return null;
+        } else if (endpoint instanceof org.apache.qpid.proton.amqp.messaging.Terminus) {
+            org.apache.qpid.proton.amqp.messaging.Terminus terminus = (org.apache.qpid.proton.amqp.messaging.Terminus) endpoint;
+            if (terminus.getAddress() == null || terminus.getAddress().length() == 0) {
+                if (terminus instanceof org.apache.qpid.proton.amqp.messaging.Source) {
+                    throw new AmqpProtocolException("amqp:invalid-field", "source address not set");
+                } else {
+                    throw new AmqpProtocolException("amqp:invalid-field", "target address not set");
+                }
+            }
+
+            return ActiveMQDestination.createDestination(terminus.getAddress(), ActiveMQDestination.QUEUE_TYPE);
+        } else {
+            throw new RuntimeException("Unexpected terminus type: " + endpoint);
+        }
     }
 }

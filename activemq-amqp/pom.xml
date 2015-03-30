@@ -54,7 +54,7 @@
     <!-- Testing Dependencies -->
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+      <artifactId>qpid-jms-client</artifactId>
       <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>

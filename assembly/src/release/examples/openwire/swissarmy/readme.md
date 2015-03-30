@@ -1,5 +1,7 @@
 # Overview
 
+** These examples are deprecated and will be removed in the future versions. Please refer to (http://activemq.apache.org/examples.html) for more information on the replacement. **
+
 Before running the examples you should start ActiveMQ on your machine. Follow the 
 installation instructions to use a binary distribution of ActiveMQ. To run the broker 
 in a command shell, type: 

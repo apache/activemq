@@ -44,7 +44,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
     private static Timer ACTIVITY_CHECK_TIMER;
 
     private final AtomicBoolean failed = new AtomicBoolean(false);
-    private IAmqpProtocolConverter protocolConverter;
+    private AmqpProtocolConverter protocolConverter;
 
     private long connectionTimeout = AmqpWireFormat.DEFAULT_CONNECTION_TIMEOUT;
     private SchedulerTimerTask connectCheckerTask;
@@ -98,15 +98,15 @@ public class AmqpInactivityMonitor extends TransportFilter {
         }
     }
 
-    public void setProtocolConverter(IAmqpProtocolConverter protocolConverter) {
+    public void setProtocolConverter(AmqpProtocolConverter protocolConverter) {
         this.protocolConverter = protocolConverter;
     }
 
-    public IAmqpProtocolConverter getProtocolConverter() {
+    public AmqpProtocolConverter getProtocolConverter() {
         return protocolConverter;
     }
 
-    synchronized void startConnectChecker(long connectionTimeout) {
+    public synchronized void startConnectChecker(long connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
         if (connectionTimeout > 0 && connectCheckerTask == null) {
             connectCheckerTask = new SchedulerTimerTask(connectChecker);
@@ -124,7 +124,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
         }
     }
 
-    synchronized void stopConnectChecker() {
+    public synchronized void stopConnectChecker() {
         if (connectCheckerTask != null) {
             connectCheckerTask.cancel();
             connectCheckerTask = null;

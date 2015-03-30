@@ -16,22 +16,31 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import java.io.File;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBStore;
-// import org.apache.activemq.leveldb.LevelDBStore;
-
-import java.io.File;
 
 public class IDERunner {
 
+    private static final String AMQP_TRANSFORMER = "jms";
+    private static final boolean TRANSPORT_TRACE = true;
+
     public static void main(String[]args) throws Exception {
-        BrokerService bs = new BrokerService();
-        bs.addConnector("amqp://0.0.0.0:5672?trace=true");
+        BrokerService brokerService = new BrokerService();
+
+        brokerService.addConnector(
+            "amqp://0.0.0.0:5672?trace=" + TRANSPORT_TRACE + "&transport.transformer=" + AMQP_TRANSFORMER);
+
         KahaDBStore store = new KahaDBStore();
         store.setDirectory(new File("target/activemq-data/kahadb"));
-        bs.setPersistenceAdapter(store);
-        bs.deleteAllMessages();
-        bs.start();
-        bs.waitUntilStopped();
+
+        brokerService.setStoreOpenWireVersion(10);
+        brokerService.setPersistenceAdapter(store);
+        brokerService.setUseJmx(false);
+        brokerService.deleteAllMessages();
+
+        brokerService.start();
+        brokerService.waitUntilStopped();
     }
 }

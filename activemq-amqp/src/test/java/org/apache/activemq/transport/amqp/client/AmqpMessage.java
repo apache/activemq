@@ -16,9 +16,16 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableDelivery;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
+import org.apache.qpid.proton.amqp.messaging.Properties;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.message.Message;
 
@@ -27,6 +34,9 @@ public class AmqpMessage {
     private final AmqpReceiver receiver;
     private final Message message;
     private final Delivery delivery;
+
+    private Map<Symbol, Object> messageAnnotationsMap;
+    private Map<String, Object> applicationPropertiesMap;
 
     /**
      * Creates a new AmqpMessage that wraps the information necessary to handle
@@ -62,11 +72,49 @@ public class AmqpMessage {
      * @param delivery
      *        the Delivery instance that produced this message.
      */
+    @SuppressWarnings("unchecked")
     public AmqpMessage(AmqpReceiver receiver, Message message, Delivery delivery) {
         this.receiver = receiver;
         this.message = message;
         this.delivery = delivery;
+
+        if (message.getMessageAnnotations() != null) {
+            messageAnnotationsMap = message.getMessageAnnotations().getValue();
+        }
+
+        if (message.getApplicationProperties() != null) {
+            applicationPropertiesMap = message.getApplicationProperties().getValue();
+        }
     }
+
+    //----- Access to interal client resources -------------------------------//
+
+    /**
+     * @return the AMQP Delivery object linked to a received message.
+     */
+    public Delivery getWrappedDelivery() {
+        if (delivery != null) {
+            return new UnmodifiableDelivery(delivery);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return the AMQP Message that is wrapped by this object.
+     */
+    public Message getWrappedMessage() {
+        return message;
+    }
+
+    /**
+     * @return the AmqpReceiver that consumed this message.
+     */
+    public AmqpReceiver getAmqpReceiver() {
+        return receiver;
+    }
+
+    //----- Message disposition control --------------------------------------//
 
     /**
      * Accepts the message marking it as consumed on the remote peer.
@@ -134,29 +182,96 @@ public class AmqpMessage {
         receiver.release(delivery);
     }
 
+    //----- Convenience methods for constructing outbound messages -----------//
+
     /**
-     * @return the AMQP Delivery object linked to a received message.
+     * Sets the MessageId property on an outbound message using the provided String
+     *
+     * @param messageId
+     *        the String message ID value to set.
      */
-    public Delivery getWrappedDelivery() {
-        if (delivery != null) {
-            return new UnmodifiableDelivery(delivery);
+    public void setMessageId(String messageId) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setMessageId(messageId);
+    }
+
+    /**
+     * Return the set MessageId value in String form, if there are no properties
+     * in the given message return null.
+     *
+     * @return the set message ID in String form or null if not set.
+     */
+    public String getMessageId() {
+        if (message.getProperties() == null) {
+            return null;
         }
 
-        return null;
+        return message.getProperties().getMessageId().toString();
     }
 
     /**
-     * @return the AMQP Message that is wrapped by this object.
+     * Sets a given application property on an outbound message.
+     *
+     * @param key
+     *        the name to assign the new property.
+     * @param value
+     *        the value to set for the named property.
      */
-    public Message getWrappedMessage() {
-        return message;
+    public void setApplicationProperty(String key, Object value) {
+        checkReadOnly();
+        lazyCreateApplicationProperties();
+        applicationPropertiesMap.put(key, value);
     }
 
     /**
-     * @return the AmqpReceiver that consumed this message.
+     * Gets the application property that is mapped to the given name or null
+     * if no property has been set with that name.
+     *
+     * @param key
+     *        the name used to lookup the property in the application properties.
+     *
+     * @return the propety value or null if not set.
      */
-    public AmqpReceiver getAmqpReceiver() {
-        return receiver;
+    public Object getApplicationProperty(String key) {
+        if (applicationPropertiesMap == null) {
+            return null;
+        }
+
+        return applicationPropertiesMap.get(key);
+    }
+
+    /**
+     * Perform a proper annotation set on the AMQP Message based on a Symbol key and
+     * the target value to append to the current annotations.
+     *
+     * @param key
+     *        The name of the Symbol whose value is being set.
+     * @param value
+     *        The new value to set in the annotations of this message.
+     */
+    public void setMessageAnnotation(String key, Object value) {
+        checkReadOnly();
+        lazyCreateMessageAnnotations();
+        messageAnnotationsMap.put(Symbol.valueOf(key), value);
+    }
+
+    /**
+     * Given a message annotation name, lookup and return the value associated with
+     * that annotation name.  If the message annotations have not been created yet
+     * then this method will always return null.
+     *
+     * @param key
+     *        the Symbol name that should be looked up in the message annotations.
+     *
+     * @return the value of the annotation if it exists, or null if not set or not accessible.
+     */
+    public Object getMessageAnnotation(String key) {
+        if (messageAnnotationsMap == null) {
+            return null;
+        }
+
+        return messageAnnotationsMap.get(Symbol.valueOf(key));
     }
 
     /**
@@ -169,11 +284,36 @@ public class AmqpMessage {
      * @throws IllegalStateException if the message is read only.
      */
     public void setText(String value) throws IllegalStateException {
+        checkReadOnly();
+        AmqpValue body = new AmqpValue(value);
+        getWrappedMessage().setBody(body);
+    }
+
+    //----- Internal implementation ------------------------------------------//
+
+    private void checkReadOnly() throws IllegalStateException {
         if (delivery != null) {
             throw new IllegalStateException("Message is read only.");
         }
+    }
 
-        AmqpValue body = new AmqpValue(value);
-        getWrappedMessage().setBody(body);
+    private void lazyCreateMessageAnnotations() {
+        if (messageAnnotationsMap == null) {
+            messageAnnotationsMap = new HashMap<Symbol,Object>();
+            message.setMessageAnnotations(new MessageAnnotations(messageAnnotationsMap));
+        }
+    }
+
+    private void lazyCreateApplicationProperties() {
+        if (applicationPropertiesMap == null) {
+            applicationPropertiesMap = new HashMap<String, Object>();
+            message.setApplicationProperties(new ApplicationProperties(applicationPropertiesMap));
+        }
+    }
+
+    private void lazyCreateProperties() {
+        if (message.getProperties() == null) {
+            message.setProperties(new Properties());
+        }
     }
 }
