@@ -211,6 +211,32 @@ public class AmqpMessage {
     }
 
     /**
+     * Sets the GroupId property on an outbound message using the provided String
+     *
+     * @param messageId
+     *        the String Group ID value to set.
+     */
+    public void setGroupId(String groupId) {
+        checkReadOnly();
+        lazyCreateProperties();
+        getWrappedMessage().setGroupId(groupId);
+    }
+
+    /**
+     * Return the set GroupId value in String form, if there are no properties
+     * in the given message return null.
+     *
+     * @return the set GroupID in String form or null if not set.
+     */
+    public String getGroupId() {
+        if (message.getProperties() == null) {
+            return null;
+        }
+
+        return message.getProperties().getGroupId();
+    }
+
+    /**
      * Sets a given application property on an outbound message.
      *
      * @param key
