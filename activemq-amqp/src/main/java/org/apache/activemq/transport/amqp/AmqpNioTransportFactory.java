@@ -80,9 +80,14 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
     @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        transport = new AmqpTransportFilter(transport, format, brokerService);
-        IntrospectionSupport.setProperties(transport, options);
-        return super.compositeConfigure(transport, format, options);
+        AmqpTransportFilter amqpTransport = new AmqpTransportFilter(transport, format, brokerService);
+
+        Map<String, Object> wireFormatOptions = IntrospectionSupport.extractProperties(options, "wireFormat.");
+
+        IntrospectionSupport.setProperties(amqpTransport, options);
+        IntrospectionSupport.setProperties(amqpTransport.getWireFormat(), wireFormatOptions);
+
+        return super.compositeConfigure(amqpTransport, format, options);
     }
 
     @Override

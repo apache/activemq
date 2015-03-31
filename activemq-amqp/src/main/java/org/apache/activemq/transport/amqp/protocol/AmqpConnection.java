@@ -26,11 +26,8 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.Principal;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,8 +54,6 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.ShutdownInfo;
-import org.apache.activemq.security.AuthenticationBroker;
-import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpInactivityMonitor;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
@@ -67,6 +62,7 @@ import org.apache.activemq.transport.amqp.AmqpTransport;
 import org.apache.activemq.transport.amqp.AmqpTransportFilter;
 import org.apache.activemq.transport.amqp.AmqpWireFormat;
 import org.apache.activemq.transport.amqp.ResponseHandler;
+import org.apache.activemq.transport.amqp.sasl.AmqpAuthenticator;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.qpid.proton.Proton;
@@ -80,7 +76,6 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
-import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
@@ -108,27 +103,28 @@ public class AmqpConnection implements AmqpProtocolConverter {
     private final AmqpTransport amqpTransport;
     private final AmqpWireFormat amqpWireFormat;
     private final BrokerService brokerService;
-    private AuthenticationBroker authenticator;
-    private Sasl sasl;
 
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private final AtomicInteger lastCommandId = new AtomicInteger();
     private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final ConnectionInfo connectionInfo = new ConnectionInfo();
-    private long nextSessionId = 0;
-    private long nextTempDestinationId = 0;
-    private boolean closing = false;
-    private boolean closedSocket = false;
+    private long nextSessionId;
+    private long nextTempDestinationId;
+    private boolean closing;
+    private boolean closedSocket;
+    private AmqpAuthenticator authenticator;
 
     private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
     private final ConcurrentMap<ConsumerId, AmqpSender> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, AmqpSender>();
 
     public AmqpConnection(AmqpTransport transport, BrokerService brokerService) {
         this.amqpTransport = transport;
+
         AmqpInactivityMonitor monitor = transport.getInactivityMonitor();
         if (monitor != null) {
             monitor.setProtocolConverter(this);
         }
+
         this.amqpWireFormat = transport.getWireFormat();
         this.brokerService = brokerService;
 
@@ -272,11 +268,10 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
             switch (header.getProtocolId()) {
                 case 0:
+                    authenticator = null;
                     break; // nothing to do..
                 case 3: // Client will be using SASL for auth..
-                    sasl = protonTransport.sasl();
-                    sasl.setMechanisms(new String[] { "ANONYMOUS", "PLAIN" });
-                    sasl.server();
+                    authenticator = new AmqpAuthenticator(amqpTransport, protonTransport.sasl(), brokerService);
                     break;
                 default:
             }
@@ -285,10 +280,6 @@ public class AmqpConnection implements AmqpProtocolConverter {
             frame = (Buffer) command;
         }
 
-        onFrame(frame);
-    }
-
-    public void onFrame(Buffer frame) throws Exception {
         while (frame.length > 0) {
             try {
                 int count = protonTransport.input(frame.data, frame.offset, frame.length);
@@ -298,89 +289,69 @@ public class AmqpConnection implements AmqpProtocolConverter {
                 return;
             }
 
-            try {
-                if (sasl != null) {
-                    // Lets try to complete the sasl handshake.
-                    if (sasl.getRemoteMechanisms().length > 0) {
-                        if ("PLAIN".equals(sasl.getRemoteMechanisms()[0])) {
-                            byte[] data = new byte[sasl.pending()];
-                            sasl.recv(data, 0, data.length);
-                            Buffer[] parts = new Buffer(data).split((byte) 0);
-                            if (parts.length > 0) {
-                                connectionInfo.setUserName(parts[0].utf8().toString());
-                            }
-                            if (parts.length > 1) {
-                                connectionInfo.setPassword(parts[1].utf8().toString());
-                            }
+            if (authenticator != null) {
+                processSaslExchange();
+            } else {
+                processProtonEvents();
+            }
+        }
+    }
 
-                            if (tryAuthenticate(connectionInfo, amqpTransport.getPeerCertificates())) {
-                                sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
-                            } else {
-                                sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
-                            }
+    private void processSaslExchange() throws Exception {
+        authenticator.processSaslExchange(connectionInfo);
+        if (authenticator.isDone()) {
+            amqpTransport.getWireFormat().resetMagicRead();
+        }
+        pumpProtonToSocket();
+    }
 
-                            amqpTransport.getWireFormat().resetMagicRead();
-                            sasl = null;
-                            LOG.debug("SASL [PLAIN] Handshake complete.");
-                        } else if ("ANONYMOUS".equals(sasl.getRemoteMechanisms()[0])) {
-                            if (tryAuthenticate(connectionInfo, amqpTransport.getPeerCertificates())) {
-                                sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
-                            } else {
-                                sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
-                            }
-                            amqpTransport.getWireFormat().resetMagicRead();
-                            sasl = null;
-                            LOG.debug("SASL [ANONYMOUS] Handshake complete.");
-                        }
-                    }
+    private void processProtonEvents() throws Exception {
+        try {
+            Event event = null;
+            while ((event = eventCollector.peek()) != null) {
+                if (amqpTransport.isTrace()) {
+                    LOG.trace("Processing event: {}", event.getType());
+                }
+                switch (event.getType()) {
+                    case CONNECTION_REMOTE_OPEN:
+                        processConnectionOpen(event.getConnection());
+                        break;
+                    case CONNECTION_REMOTE_CLOSE:
+                        processConnectionClose(event.getConnection());
+                        break;
+                    case SESSION_REMOTE_OPEN:
+                        processSessionOpen(event.getSession());
+                        break;
+                    case SESSION_REMOTE_CLOSE:
+                        processSessionClose(event.getSession());
+                        break;
+                    case LINK_REMOTE_OPEN:
+                        processLinkOpen(event.getLink());
+                        break;
+                    case LINK_REMOTE_DETACH:
+                        processLinkDetach(event.getLink());
+                        break;
+                    case LINK_REMOTE_CLOSE:
+                        processLinkClose(event.getLink());
+                        break;
+                    case LINK_FLOW:
+                        processLinkFlow(event.getLink());
+                        break;
+                    case DELIVERY:
+                        processDelivery(event.getDelivery());
+                        break;
+                    default:
+                        break;
                 }
 
-                Event event = null;
-                while ((event = eventCollector.peek()) != null) {
-                    if (amqpTransport.isTrace()) {
-                        LOG.trace("Processing event: {}", event.getType());
-                    }
-                    switch (event.getType()) {
-                        case CONNECTION_REMOTE_OPEN:
-                            processConnectionOpen(event.getConnection());
-                            break;
-                        case CONNECTION_REMOTE_CLOSE:
-                            processConnectionClose(event.getConnection());
-                            break;
-                        case SESSION_REMOTE_OPEN:
-                            processSessionOpen(event.getSession());
-                            break;
-                        case SESSION_REMOTE_CLOSE:
-                            processSessionClose(event.getSession());
-                            break;
-                        case LINK_REMOTE_OPEN:
-                            processLinkOpen(event.getLink());
-                            break;
-                        case LINK_REMOTE_DETACH:
-                            processLinkDetach(event.getLink());
-                            break;
-                        case LINK_REMOTE_CLOSE:
-                            processLinkClose(event.getLink());
-                            break;
-                        case LINK_FLOW:
-                            processLinkFlow(event.getLink());
-                            break;
-                        case DELIVERY:
-                            processDelivery(event.getDelivery());
-                            break;
-                        default:
-                            break;
-                    }
-
-                    eventCollector.pop();
-                }
-
-            } catch (Throwable e) {
-                handleException(new AmqpProtocolException("Could not process AMQP commands", true, e));
+                eventCollector.pop();
             }
 
-            pumpProtonToSocket();
+        } catch (Throwable e) {
+            handleException(new AmqpProtocolException("Could not process AMQP commands", true, e));
         }
+
+        pumpProtonToSocket();
     }
 
     protected void processConnectionOpen(Connection connection) throws Exception {
@@ -696,47 +667,5 @@ public class AmqpConnection implements AmqpProtocolConverter {
         }
 
         monitor.stopConnectChecker();
-    }
-
-    private boolean tryAuthenticate(ConnectionInfo info, X509Certificate[] peerCertificates) {
-        try {
-            if (getAuthenticator().authenticate(info.getUserName(), info.getPassword(), peerCertificates) != null) {
-                return true;
-            }
-
-            return false;
-        } catch (Throwable error) {
-            return false;
-        }
-    }
-
-    private AuthenticationBroker getAuthenticator() {
-        if (authenticator == null) {
-            try {
-                authenticator = (AuthenticationBroker) brokerService.getBroker().getAdaptor(AuthenticationBroker.class);
-            } catch (Exception e) {
-                LOG.debug("Failed to lookup AuthenticationBroker from Broker, will use a default Noop version.");
-            }
-
-            if (authenticator == null) {
-                authenticator = new DefaultAuthenticationBroker();
-            }
-        }
-
-        return authenticator;
-    }
-
-    private class DefaultAuthenticationBroker implements AuthenticationBroker {
-
-        @Override
-        public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
-            return new SecurityContext(username) {
-
-                @Override
-                public Set<Principal> getPrincipals() {
-                    return null;
-                }
-            };
-        }
     }
 }

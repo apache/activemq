@@ -72,6 +72,7 @@ if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
 fi
 
 # Set additional JSE arguments
+#ACTIVEMQ_SSL_OPTS="-Dcom.sun.security.enableCRLDP=true -Docsp.enable=true -Docsp.responderURL=http://ocsp.example.net:80"
 ACTIVEMQ_SSL_OPTS=""
 
 # Uncomment to enable remote debugging

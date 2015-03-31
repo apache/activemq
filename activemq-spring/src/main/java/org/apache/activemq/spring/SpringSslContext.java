@@ -21,17 +21,18 @@ import java.net.MalformedURLException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 import javax.annotation.PostConstruct;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
 
 import org.apache.activemq.broker.SslContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 
 /**
  * Extends the SslContext so that it's easier to configure from spring.
@@ -41,6 +42,8 @@ import org.apache.activemq.broker.SslContext;
  *
  */
 public class SpringSslContext extends SslContext {
+
+    private static final transient Logger LOG = LoggerFactory.getLogger(SpringSslContext.class);
 
     private String keyStoreType="jks";
     private String trustStoreType="jks";
@@ -55,6 +58,8 @@ public class SpringSslContext extends SslContext {
     private String keyStoreKeyPassword;
     private String keyStorePassword;
     private String trustStorePassword;
+
+    private String crlPath;
 
     /**
      * JSR-250 callback wrapper; converts checked exceptions to runtime exceptions
@@ -92,9 +97,23 @@ public class SpringSslContext extends SslContext {
         if( ks ==null ) {
             return new ArrayList<TrustManager>(0);
         }
-
         TrustManagerFactory tmf  = TrustManagerFactory.getInstance(trustStoreAlgorithm);
-        tmf.init(ks);
+        if (crlPath != null) {
+            if (trustStoreAlgorithm.equalsIgnoreCase("PKIX")) {
+                Collection<? extends CRL> crlList = loadCRL();
+
+                if (crlList != null) {
+                    PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(ks, null);
+                    pkixParams.setRevocationEnabled(true);
+                    pkixParams.addCertStore(CertStore.getInstance("Collection", new CollectionCertStoreParameters(crlList)));
+                    tmf.init(new CertPathTrustManagerParameters(pkixParams));
+                }
+            } else {
+                LOG.warn("Revocation checking is only supported with 'trustStoreAlgorithm=\"PKIX\"'. Ignoring CRL: " + crlPath);
+            }
+        } else {
+            tmf.init(ks);
+        }
         return Arrays.asList(tmf.getTrustManagers());
     }
 
@@ -217,6 +236,27 @@ public class SpringSslContext extends SslContext {
 
     public void setSecureRandomAlgorithm(String secureRandomAlgorithm) {
         this.secureRandomAlgorithm = secureRandomAlgorithm;
+    }
+
+    public String getCrlPath() {
+        return crlPath;
+    }
+
+    public void setCrlPath(String crlPath) {
+        this.crlPath = crlPath;
+    }
+
+    private Collection<? extends CRL> loadCRL() throws Exception {
+        if (crlPath == null) {
+            return null;
+        }
+        Resource resource = Utils.resourceFromString(crlPath);
+        InputStream is = resource.getInputStream();
+        try {
+            return CertificateFactory.getInstance("X.509").generateCRLs(is);
+        } finally {
+            is.close();
+        }
     }
 
 }

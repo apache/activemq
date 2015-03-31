@@ -18,7 +18,10 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.File;
 
+import javax.jms.Connection;
+
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 
 public class IDERunner {
@@ -29,8 +32,10 @@ public class IDERunner {
     public static void main(String[]args) throws Exception {
         BrokerService brokerService = new BrokerService();
 
-        brokerService.addConnector(
-            "amqp://0.0.0.0:5672?trace=" + TRANSPORT_TRACE + "&transport.transformer=" + AMQP_TRANSFORMER);
+        TransportConnector connector = brokerService.addConnector(
+            "amqp://0.0.0.0:5672?trace=" + TRANSPORT_TRACE +
+                "&transport.transformer=" + AMQP_TRANSFORMER +
+                "&transport.wireFormat.maxAmqpFrameSize=104857600");
 
         KahaDBStore store = new KahaDBStore();
         store.setDirectory(new File("target/activemq-data/kahadb"));
@@ -41,6 +46,10 @@ public class IDERunner {
         brokerService.deleteAllMessages();
 
         brokerService.start();
+
+        Connection connection = JMSClientContext.INSTANCE.createConnection(connector.getPublishableConnectURI());
+        connection.start();
+
         brokerService.waitUntilStopped();
     }
 }
