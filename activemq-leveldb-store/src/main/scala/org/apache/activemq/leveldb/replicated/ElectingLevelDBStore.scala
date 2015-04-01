@@ -228,6 +228,7 @@ class ElectingLevelDBStore extends ProxyLevelDBStore {
     master_started.set(true)
     master.blocking_executor.execute(^{
       master.start();
+      master_stopped.set(false)
       master_started_latch.countDown()
     })
     master.blocking_executor.execute(^{
