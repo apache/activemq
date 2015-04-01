@@ -36,7 +36,7 @@ public class AmqpAuthenticator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpAuthenticator.class);
 
-    private static final String[] mechanisms = new String[] { "ANONYMOUS", "PLAIN" };
+    private static final String[] mechanisms = new String[] { "PLAIN", "ANONYMOUS" };
 
     private final BrokerService brokerService;
     private final AmqpTransport transport;
