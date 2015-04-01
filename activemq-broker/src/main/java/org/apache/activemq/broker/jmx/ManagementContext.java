@@ -315,6 +315,11 @@ public class ManagementContext implements Service {
         return connectorStarting.get() || (connectorServer != null && connectorServer.isActive());
     }
 
+    public boolean isStarted()
+    {
+       return started.get();
+    }
+
     /**
      * Enables/disables the searching for the Java 5 platform MBeanServer
      */
