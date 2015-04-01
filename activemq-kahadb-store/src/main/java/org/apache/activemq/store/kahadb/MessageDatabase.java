@@ -601,7 +601,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
-                LOG.info("Recovering from the journal ...");
+                LOG.info("Recovering from the journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
                     JournalCommand<?> message = load(recoveryPosition);
                     metadata.lastUpdate = recoveryPosition;

@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
+import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -623,8 +624,12 @@ public class Journal {
                 accessorPool.closeDataFileAccessor(reader);
             }
 
-            if (cur.getType() == 0) {
-                // invalid offset - jump to next datafile
+            Sequence corruptedRange = dataFile.corruptedBlocks.get(cur.getOffset());
+            if (corruptedRange != null) {
+                // skip corruption
+                cur.setSize((int) corruptedRange.range());
+            } else if (cur.getType() == 0) {
+                // eof - jump to next datafile
                 cur.setOffset(maxFileLength);
             } else if (cur.getType() == USER_RECORD_TYPE) {
                 // Only return user records.
