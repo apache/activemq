@@ -136,11 +136,11 @@ class StompSocket extends TransportSupport implements WebSocketListener, StompTr
 
         try {
             if (data != null) {
-                if (data.startsWith("\n")) {
+                if (data.equals("\n")) {
                     sendToActiveMQ(new KeepAliveInfo());
+                } else {
+                    protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
                 }
-
-                protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
             }
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
