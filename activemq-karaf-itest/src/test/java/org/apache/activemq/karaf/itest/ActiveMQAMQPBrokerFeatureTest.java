@@ -27,7 +27,6 @@ import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
-@Ignore
 @RunWith(PaxExam.class)
 public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     private static final Integer AMQP_PORT = 61636;
@@ -35,9 +34,13 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     @Configuration
     public static Option[] configure() {
         Option[] activeMQOptions = configure("activemq");
+        Option netty = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("io.netty", "netty-all").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=netty-all");
+        Option protonJ = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "proton-j").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=proton-j");
         Option qpidClient = CoreOptions.wrappedBundle(CoreOptions.mavenBundle("org.apache.qpid", "qpid-jms-client").versionAsInProject().getURL().toString() + "$Bundle-SymbolicName=qpid-jms-client");
 
-        Option[] options = append(qpidClient, activeMQOptions);
+        Option[] options = append(protonJ, activeMQOptions);
+        options = append(netty, options);
+        options = append(qpidClient, options);
 
         Option[] configuredOptions = configureBrokerStart(options);
         return configuredOptions;
@@ -46,22 +49,14 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     @Override
     protected Connection getConnection() throws Throwable {
 
-        String amqpURI = "amqp://localhost" + AMQP_PORT;
+        String amqpURI = "amqp://localhost:" + AMQP_PORT;
         JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
 
         factory.setUsername(AbstractFeatureTest.USER);
         factory.setPassword(AbstractFeatureTest.PASSWORD);
 
-        Connection connection = null;
-        ClassLoader originalLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            // ensure service loader uses a loader that can find the impl - not the system classpath
-            Thread.currentThread().setContextClassLoader(factory.getClass().getClassLoader());
-            connection = factory.createConnection();
-            connection.start();
-        } finally {
-            Thread.currentThread().setContextClassLoader(originalLoader);
-        }
+        Connection connection = factory.createConnection();
+        connection.start();
         return connection;
     }
 
