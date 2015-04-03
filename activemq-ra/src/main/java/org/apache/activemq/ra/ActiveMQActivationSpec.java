@@ -639,6 +639,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
      */
     public void setInitialRedeliveryDelay(long initialRedeliveryDelay) {
         lazyCreateRedeliveryPolicy().setInitialRedeliveryDelay(initialRedeliveryDelay);
+        redeliveryPolicy.setRedeliveryDelay(initialRedeliveryDelay);
     }
 
     /**
