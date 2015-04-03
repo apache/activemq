@@ -75,11 +75,11 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         policy.setInitialRedeliveryDelay(500);
 
         long delay = policy.getNextRedeliveryDelay(500);
-        assertEquals(500, delay);
+        assertEquals(1000, delay);
         delay = policy.getNextRedeliveryDelay(delay);
-        assertEquals(500, delay);
+        assertEquals(1000, delay);
         delay = policy.getNextRedeliveryDelay(delay);
-        assertEquals(500, delay);
+        assertEquals(1000, delay);
 
     }
 

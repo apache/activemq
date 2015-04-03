@@ -98,10 +98,7 @@ public class RedeliveryPolicy extends DestinationMapEntry implements Cloneable, 
     }
 
     public long getNextRedeliveryDelay(long previousDelay) {
-        long nextDelay = initialRedeliveryDelay;
-        if (nextDelay == 0) {
-            nextDelay = redeliveryDelay;
-        }
+        long nextDelay = redeliveryDelay;
 
         if (previousDelay > 0 && useExponentialBackOff && backOffMultiplier > 1) {
             nextDelay = (long) (previousDelay * backOffMultiplier);
