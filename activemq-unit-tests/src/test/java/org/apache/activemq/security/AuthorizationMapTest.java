@@ -45,9 +45,8 @@ public class AuthorizationMapTest extends TestCase {
     }
 
     public void testComposite() {
-        DefaultAuthorizationMap map = (DefaultAuthorizationMap)createAuthorizationMap();
-        map.put(new ActiveMQQueue("QUEUEA"), createEntry("QUEUEA", "users", "users", "users"));
-        map.put(new ActiveMQQueue("QUEUEB"), createEntry("QUEUEB", "users", "users", "users"));
+        AuthorizationMap map = createAuthorizationMap();
+        addABEntry(map);
 
         Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR,DENIED"));
         assertEquals("set size: " + readACLs, 1, readACLs.size());
@@ -60,6 +59,12 @@ public class AuthorizationMapTest extends TestCase {
         readACLs = map.getReadACLs(new ActiveMQQueue("QUEUEA,QUEUEB"));
         assertEquals("set size: " + readACLs, 2, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(USERS));
+    }
+
+    protected void addABEntry(AuthorizationMap map) {
+        DefaultAuthorizationMap defaultMap = (DefaultAuthorizationMap) map;
+        defaultMap.put(new ActiveMQQueue("QUEUEA"), createEntry("QUEUEA", "users", "users", "users"));
+        defaultMap.put(new ActiveMQQueue("QUEUEB"), createEntry("QUEUEB", "users", "users", "users"));
     }
 
     public void testAuthorizationMapWithTempDest() {
