@@ -17,18 +17,17 @@
 
 package org.apache.activemq.transport.tcp;
 
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.wireformat.WireFormat;
+
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.security.auth.Subject;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
-
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-import javax.security.auth.Subject;
-
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.wireformat.WireFormat;
 
 /**
  *  An SSL TransportServer.

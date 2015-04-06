@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.directory.api.ldap.model.exception.LdapException;
+import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapNetworkConnection;
-import org.apache.directory.shared.ldap.model.exception.LdapException;
-import org.apache.directory.shared.ldap.model.name.Dn;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,14 +30,14 @@ import java.io.InputStream;
 /**
  * Test of the {@link SimpleCachedLDAPAuthorizationMap} that tests against a basic OpenLDAP instance.
  * Disabled by default because it requires external setup to provide the OpenLDAP instance.
- * 
- * To enable, you need an OpenLDAP with a minimum of the following in the slapd.conf file: 
- * 
+ *
+ * To enable, you need an OpenLDAP with a minimum of the following in the slapd.conf file:
+ *
  * suffix   "dc=apache,dc=org"
  * rootdn   "cn=Manager,dc=apache,dc=org"
  * rootpw   {SSHA}+Rx8kj98q3FlK5rUkT2hAtMP5v2ImQ82
- * 
- * If you wish to use different settings or don't use the default port, change the constants 
+ *
+ * If you wish to use different settings or don't use the default port, change the constants
  * below for your environment.
  */
 @Ignore
@@ -47,22 +47,22 @@ public class CachedLDAPAuthorizationModuleOpenLDAPTest extends AbstractCachedLDA
     protected static final String LDAP_PASS = "password";
     protected static final String LDAP_HOST = "localhost";
     protected static final int LDAP_PORT = 389;
-    
+
     @Before
     @Override
     public void setup() throws Exception {
-        
+
         super.setup();
-        
+
         cleanAndLoad("dc=apache,dc=org", "org/apache/activemq/security/activemq-openldap.ldif",
                 LDAP_HOST, LDAP_PORT, LDAP_USER, LDAP_PASS, map.open());
     }
-    
+
     @Test
     public void testRenameDestination() throws Exception {
         // Subtree rename not implemented by OpenLDAP.
     }
-    
+
     @Override
     protected SimpleCachedLDAPAuthorizationMap createMap() {
         SimpleCachedLDAPAuthorizationMap newMap = super.createMap();
@@ -76,27 +76,27 @@ public class CachedLDAPAuthorizationModuleOpenLDAPTest extends AbstractCachedLDA
         newMap.setTempSearchBase("ou=Temp,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org");
         return newMap;
     }
-    
+
     @Override
     protected InputStream getAddLdif() {
         return getClass().getClassLoader().getResourceAsStream("org/apache/activemq/security/activemq-openldap-add.ldif");
     }
-    
+
     @Override
     protected InputStream getRemoveLdif() {
         return getClass().getClassLoader().getResourceAsStream("org/apache/activemq/security/activemq-openldap-delete.ldif");
     }
-    
+
     @Override
     protected String getMemberAttributeValueForModifyRequest() {
         return "cn=users,ou=Group,ou=ActiveMQ,dc=activemq,dc=apache,dc=org";
     }
-    
+
     @Override
     protected String getQueueBaseDn() {
         return "ou=Queue,ou=Destination,ou=ActiveMQ,dc=activemq,dc=apache,dc=org";
     }
-    
+
     @Override
     protected LdapConnection getLdapConnection() throws LdapException, IOException {
         LdapConnection connection = new LdapNetworkConnection(LDAP_HOST, LDAP_PORT);

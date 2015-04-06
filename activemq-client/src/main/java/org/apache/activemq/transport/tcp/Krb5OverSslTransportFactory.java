@@ -16,13 +16,11 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.security.PrivilegedAction;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -30,12 +28,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.util.URISupport;
-import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.PrivilegedAction;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An implementation of the TcpTransportFactory using SSL and Kerberos V5. 
@@ -46,7 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Krb5OverSslTransportFactory extends SslTransportFactory {
     public static final String KRB5_CONFIG_NAME = "krb5ConfigName";
-    public static final String KRB5_USE_CURRENT_SUBJECT = "krb5UseCurrentSubject";
     private static final Logger LOG = LoggerFactory.getLogger(Krb5OverSslTransportFactory.class);
 
     protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
@@ -56,7 +53,7 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
      * Overriding to use {@link Krb5OverSslTransport} additionally performing
      * login if necesseray.
      */
-    protected Transport createTransport(final URI location, final WireFormat wf) throws UnknownHostException, IOException {
+    protected Transport createTransport(final URI location, final WireFormat wf) throws IOException {
         String path = location.getPath();
         final URI localLocation = getLocalLocation(location, path);
         final SocketFactory socketFactory = createSocketFactory();

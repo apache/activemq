@@ -1,26 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.transport.tcp;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttribute;
-import javax.naming.directory.BasicAttributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-import javax.naming.directory.ModificationItem;
-import javax.naming.ldap.InitialLdapContext;
-import javax.naming.ldap.LdapContext;
 
 import org.apache.activemq.transport.TransportBrokerTestSupport;
 import org.apache.commons.io.FileUtils;
@@ -48,6 +42,24 @@ import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
+import javax.naming.directory.*;
+import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
+
+/**
+ * An {@link Krb5BrokerTestSupport} testing Kerberos authentication
+ * and security layer negotiation.  These tests require both the LDAP
+ * and the Kerberos protocol.  As with any "three-headed" Kerberos
+ * scenario, there are 3 principals:  1 for the test user, 1 for the
+ * Kerberos ticket-granting service (TGS), and 1 for the Host service.
+ */
 public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     private static final String KERBEROS_PRINCIPAL_USER1 = "user1@EXAMPLE.COM";
     private static final String KERBEROS_PRINCIPAL_USER2 = "user2@EXAMPLE.COM";
@@ -55,24 +67,36 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(Krb5BrokerTestSupport.class);
 
-    /** The used DirectoryService instance */
+    /**
+     * The used DirectoryService instance
+     */
     public static DirectoryService service;
 
-    /** The used LdapServer instance */
+    /**
+     * The used LdapServer instance
+     */
     public static LdapServer ldapServer;
 
-    /** The used KdcServer instance */
+    /**
+     * The used KdcServer instance
+     */
     public static KdcServer kdcServer;
 
     private DirContext ctx;
 
-    /** the context root for the schema */
+    /**
+     * the context root for the schema
+     */
     protected LdapContext schemaRoot;
 
-    /** the context root for the system partition */
+    /**
+     * the context root for the system partition
+     */
     protected LdapContext sysRoot;
 
-    /** the context root for the rootDSE */
+    /**
+     * the context root for the rootDSE
+     */
     protected CoreSession rootDse;
 
     private static boolean initialized = false;
@@ -95,7 +119,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
             DirContext server = setupServer();
             setPrincipals(server);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -110,7 +134,6 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
 
         File loginModuleConf = new File(basedir + "/target/LoginModule.conf");
         FileUtils.write(loginModuleConf, getLoginModuleFileContent(hostname));
-        System.setProperty("java.security.krb5.conf", krb5conf.getPath());
         System.setProperty("java.security.auth.login.config", loginModuleConf.getPath());
         System.setProperty("javax.security.auth.useSubjectCredsOnly", "true");
     }
@@ -141,7 +164,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
 
     /**
      * Creates a keytab file for given principal.
-     * 
+     *
      * @param principalName
      * @param passPhrase
      * @param keytabFile
@@ -197,7 +220,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
         // if krb5kdc is disabled then enable it
         if (isKrb5KdcDisabled) {
             Attribute disabled = new BasicAttribute("m-disabled");
-            ModificationItem[] mods = new ModificationItem[] { new ModificationItem(DirContext.REMOVE_ATTRIBUTE, disabled) };
+            ModificationItem[] mods = new ModificationItem[]{new ModificationItem(DirContext.REMOVE_ATTRIBUTE, disabled)};
             schemaRoot.modifyAttributes("cn=Krb5kdc", mods);
         }
 
@@ -279,9 +302,8 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
 
     /**
      * Convenience method for creating an organizational unit.
-     * 
-     * @param ou
-     *            the ou of the organizationalUnit
+     *
+     * @param ou the ou of the organizationalUnit
      * @return the attributes of the organizationalUnit
      */
     protected Attributes getOrgUnitAttributes(String ou) {
@@ -348,39 +370,39 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     }
 
     protected String getLoginModuleFileContent(String hostname) {
-        return 
-        "User1 {\n"+
-        "    com.sun.security.auth.module.Krb5LoginModule required\n"+
-        "    useKeyTab=true\n"+
-        "    useTicketCache=false\n"+
-        "    keyTab=\"file:./target/User1.keytab\"\n"+
-        "    principal=\"user1@EXAMPLE.COM\";\n"+
-        "};\n"+
-        "\n"+
-        "User2 {\n"+
-        "    com.sun.security.auth.module.Krb5LoginModule required\n"+
-        "    useKeyTab=true\n"+
-        "    useTicketCache=false\n"+
-        "    keyTab=\"file:./target/User2.keytab\"\n"+
-        "    principal=\"user2@EXAMPLE.COM\";\n"+
-        "};\n"+
-        "\n"+
-        "Broker {\n"+
-        "    com.sun.security.auth.module.Krb5LoginModule required\n"+
-        "    useKeyTab=true\n"+
-        "    storeKey=true\n"+
-        "    useTicketCache=false\n"+
-        "    keyTab=\"file:./target/Broker.keytab\"\n"+
-        "    principal=\"host/" + hostname + "@EXAMPLE.COM\";\n"+
-        "};\n"+
-        "\n"+
-        "LDAPServer {\n"+
-        "    com.sun.security.auth.module.Krb5LoginModule required\n"+
-        "    useKeyTab=true\n"+
-        "    storeKey=true\n"+
-        "    useTicketCache=false\n"+
-        "    keyTab=\"file:./target/LDAPServer.keytab\"\n"+
-        "    principal=\"ldap/localhost@EXAMPLE.COM\";\n"+
-        "};";
+        return
+                "User1 {\n" +
+                        "    com.sun.security.auth.module.Krb5LoginModule required\n" +
+                        "    useKeyTab=true\n" +
+                        "    useTicketCache=false\n" +
+                        "    keyTab=\"file:./target/User1.keytab\"\n" +
+                        "    principal=\"user1@EXAMPLE.COM\";\n" +
+                        "};\n" +
+                        "\n" +
+                        "User2 {\n" +
+                        "    com.sun.security.auth.module.Krb5LoginModule required\n" +
+                        "    useKeyTab=true\n" +
+                        "    useTicketCache=false\n" +
+                        "    keyTab=\"file:./target/User2.keytab\"\n" +
+                        "    principal=\"user2@EXAMPLE.COM\";\n" +
+                        "};\n" +
+                        "\n" +
+                        "Broker {\n" +
+                        "    com.sun.security.auth.module.Krb5LoginModule required\n" +
+                        "    useKeyTab=true\n" +
+                        "    storeKey=true\n" +
+                        "    useTicketCache=false\n" +
+                        "    keyTab=\"file:./target/Broker.keytab\"\n" +
+                        "    principal=\"host/" + hostname + "@EXAMPLE.COM\";\n" +
+                        "};\n" +
+                        "\n" +
+                        "LDAPServer {\n" +
+                        "    com.sun.security.auth.module.Krb5LoginModule required\n" +
+                        "    useKeyTab=true\n" +
+                        "    storeKey=true\n" +
+                        "    useTicketCache=false\n" +
+                        "    keyTab=\"file:./target/LDAPServer.keytab\"\n" +
+                        "    principal=\"ldap/localhost@EXAMPLE.COM\";\n" +
+                        "};";
     }
 }

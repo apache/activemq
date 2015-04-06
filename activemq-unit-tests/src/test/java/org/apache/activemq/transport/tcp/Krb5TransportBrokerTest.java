@@ -20,9 +20,6 @@
 package org.apache.activemq.transport.tcp;
 
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.apache.directory.api.ldap.model.constants.SupportedSaslMechanisms;
 import org.apache.directory.server.annotations.CreateKdcServer;
 import org.apache.directory.server.annotations.CreateLdapServer;
@@ -39,16 +36,10 @@ import org.apache.directory.server.ldap.handlers.sasl.gssapi.GssapiMechanismHand
 import org.apache.directory.server.ldap.handlers.sasl.ntlm.NtlmMechanismHandler;
 import org.apache.directory.server.ldap.handlers.sasl.plain.PlainMechanismHandler;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 
-/**
- * An {@link AbstractServerTest} testing SASL GSSAPI authentication
- * and security layer negotiation.  These tests require both the LDAP
- * and the Kerberos protocol.  As with any "three-headed" Kerberos
- * scenario, there are 3 principals:  1 for the test user, 1 for the
- * Kerberos ticket-granting service (TGS), and 1 for the LDAP service.
- *
- * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
- */
+
 @CreateDS(name = "SaslGssapiBindITest-class",
     partitions =
         {

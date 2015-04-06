@@ -17,20 +17,19 @@
 
 package org.apache.activemq.transport.tcp;
 
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
+import org.apache.activemq.wireformat.WireFormat;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
-import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A Transport class that uses SSL and client-side certificate authentication.
@@ -53,8 +52,6 @@ public class Krb5OverSslTransport extends SslTransport {
      *                for obvious reasons.
      * @param remoteLocation The remote location.
      * @param localLocation The local location.
-     * @param needClientAuth If set to true, the underlying socket will need
-     *                client certificate authentication.
      * @throws UnknownHostException If TcpTransport throws.
      * @throws IOException If TcpTransport throws.
      */
@@ -95,7 +92,6 @@ public class Krb5OverSslTransport extends SslTransport {
     }
 
     public void setKrb5ConfigName(String krb5ConfigName) {
-        //FIXME
         //no-op just a workaround
     }
 
