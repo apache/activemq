@@ -17,6 +17,7 @@
 
 package org.apache.activemq.bugs;
 
+import java.io.File;
 import java.net.URI;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,11 +56,13 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -123,6 +126,11 @@ public class AMQ4952Test {
     @Parameterized.Parameters(name = "enableAudit={0}")
     public static Iterable<Object[]> getTestParameters() {
         return Arrays.asList(new Object[][] { { Boolean.TRUE }, { Boolean.FALSE } });
+    }
+
+    @BeforeClass
+    public static void dbHomeSysProp() throws Exception {
+        System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
     }
 
     @Test

@@ -22,6 +22,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     public static final String TOPIC_QUALIFIED_PREFIX = "topic://";
     public static final String TEMP_QUEUE_QUALIFED_PREFIX = "temp-queue://";
     public static final String TEMP_TOPIC_QUALIFED_PREFIX = "temp-topic://";
+    public static final String IS_DLQ = "isDLQ";
 
     public static final String TEMP_DESTINATION_NAME_PREFIX = "ID:";
 
@@ -396,6 +398,17 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public boolean isPattern() {
         return isPattern;
+    }
+
+    public boolean isDLQ() {
+        return options != null && options.containsKey(IS_DLQ);
+    }
+
+    public void setDLQ() {
+        if (options == null) {
+            options = new HashMap<String, String>();
+        }
+        options.put(IS_DLQ, String.valueOf(true));
     }
 
     public static UnresolvedDestinationTransformer getUnresolvableDestinationTransformer() {

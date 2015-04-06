@@ -30,14 +30,16 @@ public class ConsumerThread extends Thread {
     int receiveTimeOut = 3000;
     Destination destination;
     Session session;
+    boolean durable;
     boolean breakOnNull = true;
     int sleep;
-    int transactionBatchSize;
+    int batchSize;
 
     int received = 0;
     int transactions = 0;
     boolean running = false;
     CountDownLatch finished;
+    boolean bytesAsText;
 
     public ConsumerThread(Session session, Destination destination) {
         this.destination = destination;
@@ -51,11 +53,21 @@ public class ConsumerThread extends Thread {
         String threadName = Thread.currentThread().getName();
         LOG.info(threadName + " wait until " + messageCount + " messages are consumed");
         try {
-            consumer = session.createConsumer(destination);
+            if (durable && destination instanceof Topic) {
+                consumer = session.createDurableSubscriber((Topic) destination, getName());
+            } else {
+                consumer = session.createConsumer(destination);
+            }
             while (running && received < messageCount) {
                 Message msg = consumer.receive(receiveTimeOut);
                 if (msg != null) {
                     LOG.info(threadName + " Received " + (msg instanceof TextMessage ? ((TextMessage) msg).getText() : msg.getJMSMessageID()));
+                    if (bytesAsText && (msg instanceof BytesMessage)) {
+                        long length = ((BytesMessage) msg).getBodyLength();
+                        byte[] bytes = new byte[(int) length];
+                        ((BytesMessage) msg).readBytes(bytes);
+                        LOG.info("BytesMessage as text string: " + new String(bytes));
+                    }
                     received++;
                 } else {
                     if (breakOnNull) {
@@ -63,11 +75,17 @@ public class ConsumerThread extends Thread {
                     }
                 }
 
-                if (transactionBatchSize > 0 && received > 0 && received % transactionBatchSize == 0) {
-                    LOG.info(threadName + " Committing transaction: " + transactions++);
-                    session.commit();
+                if (session.getTransacted()) {
+                    if (batchSize > 0 && received > 0 && received % batchSize == 0) {
+                        LOG.info(threadName + " Committing transaction: " + transactions++);
+                        session.commit();
+                    }
+                } else if (session.getAcknowledgeMode() == Session.CLIENT_ACKNOWLEDGE) {
+                    if (batchSize > 0 && received > 0 && received % batchSize == 0) {
+                        LOG.info("Acknowledging last " + batchSize + " messages; messages so far = " + received);
+                        msg.acknowledge();
+                    }
                 }
-
                 if (sleep > 0) {
                     Thread.sleep(sleep);
                 }
@@ -96,6 +114,14 @@ public class ConsumerThread extends Thread {
         return received;
     }
 
+    public boolean isDurable() {
+        return durable;
+    }
+
+    public void setDurable(boolean durable) {
+        this.durable = durable;
+    }
+
     public void setMessageCount(int messageCount) {
         this.messageCount = messageCount;
     }
@@ -104,12 +130,12 @@ public class ConsumerThread extends Thread {
         this.breakOnNull = breakOnNull;
     }
 
-    public int getTransactionBatchSize() {
-        return transactionBatchSize;
+    public int getBatchSize() {
+        return batchSize;
     }
 
-    public void setTransactionBatchSize(int transactionBatchSize) {
-        this.transactionBatchSize = transactionBatchSize;
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
     }
 
     public int getMessageCount() {
@@ -150,5 +176,13 @@ public class ConsumerThread extends Thread {
 
     public void setFinished(CountDownLatch finished) {
         this.finished = finished;
+    }
+
+    public boolean isBytesAsText() {
+        return bytesAsText;
+    }
+
+    public void setBytesAsText(boolean bytesAsText) {
+        this.bytesAsText = bytesAsText;
     }
 }

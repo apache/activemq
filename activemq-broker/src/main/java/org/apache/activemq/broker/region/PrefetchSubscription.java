@@ -88,13 +88,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * Allows a message to be pulled on demand by a client
      */
     @Override
-    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+    public Response pullMessage(ConnectionContext context, final MessagePull pull) throws Exception {
         // The slave should not deliver pull messages.
         // TODO: when the slave becomes a master, He should send a NULL message to all the
         // consumers to 'wake them up' in case they were waiting for a message.
         if (getPrefetchSize() == 0) {
-
-            prefetchExtension.incrementAndGet();
+            prefetchExtension.set(pull.getQuantity());
             final long dispatchCounterBeforePull = dispatchCounter;
 
             // Have the destination push us some messages.
@@ -105,10 +104,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
             synchronized(this) {
                 // If there was nothing dispatched.. we may need to setup a timeout.
-                if (dispatchCounterBeforePull == dispatchCounter) {
+                if (dispatchCounterBeforePull == dispatchCounter || pull.isAlwaysSignalDone()) {
                     // immediate timeout used by receiveNoWait()
                     if (pull.getTimeout() == -1) {
-                        // Send a NULL message.
+                        // Null message indicates the pull is done or did not have pending.
+                        prefetchExtension.set(1);
                         add(QueueMessageReference.NULL_MESSAGE);
                         dispatchPending();
                     }
@@ -116,7 +116,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         scheduler.executeAfterDelay(new Runnable() {
                             @Override
                             public void run() {
-                                pullTimeout(dispatchCounterBeforePull);
+                                pullTimeout(dispatchCounterBeforePull, pull.isAlwaysSignalDone());
                             }
                         }, pull.getTimeout());
                     }
@@ -130,14 +130,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * Occurs when a pull times out. If nothing has been dispatched since the
      * timeout was setup, then send the NULL message.
      */
-    final void pullTimeout(long dispatchCounterBeforePull) {
+    final void pullTimeout(long dispatchCounterBeforePull, boolean alwaysSignalDone) {
         synchronized (pendingLock) {
-            if (dispatchCounterBeforePull == dispatchCounter) {
+            if (dispatchCounterBeforePull == dispatchCounter || alwaysSignalDone) {
                 try {
+                    prefetchExtension.set(1);
                     add(QueueMessageReference.NULL_MESSAGE);
                     dispatchPending();
                 } catch (Exception e) {
                     context.getConnection().serviceException(e);
+                } finally {
+                    prefetchExtension.set(0);
                 }
             }
         }
@@ -147,7 +150,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     public void add(MessageReference node) throws Exception {
         synchronized (pendingLock) {
             // The destination may have just been removed...
-            if( !destinations.contains(node.getRegionDestination()) && node!=QueueMessageReference.NULL_MESSAGE) {
+            if (!destinations.contains(node.getRegionDestination()) && node != QueueMessageReference.NULL_MESSAGE) {
                 // perhaps we should inform the caller that we are no longer valid to dispatch to?
                 return;
             }
@@ -213,7 +216,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
                 // Acknowledge all dispatched messages up till the message id of
                 // the acknowledgment.
-                int index = 0;
                 boolean inAckRange = false;
                 List<MessageReference> removeList = new ArrayList<MessageReference>();
                 for (final MessageReference node : dispatched) {
@@ -231,7 +233,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         } else {
                             registerRemoveSync(context, node);
                         }
-                        index++;
                         acknowledge(context, ack, node);
                         if (ack.getLastMessageId().equals(messageId)) {
                             destination = (Destination) node.getRegionDestination();

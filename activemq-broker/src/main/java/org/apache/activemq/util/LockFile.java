@@ -37,6 +37,7 @@ public class LockFile {
     private RandomAccessFile readFile;
     private int lockCounter;
     private final boolean deleteOnUnlock;
+    private volatile boolean locked;
 
     public LockFile(File file, boolean deleteOnUnlock) {
         this.file = file;
@@ -76,6 +77,7 @@ public class LockFile {
                 if (lock != null) {
                     lockCounter++;
                     System.setProperty(getVmLockKey(), new Date().toString());
+                    locked = true;
                 } else {
                     // new read file for next attempt
                     closeReadFile();
@@ -118,7 +120,7 @@ public class LockFile {
         }
         closeReadFile();
 
-        if (deleteOnUnlock) {
+        if (locked && deleteOnUnlock) {
             file.delete();
         }
     }
@@ -140,7 +142,8 @@ public class LockFile {
     }
 
     public boolean keepAlive() {
-        return lock != null && lock.isValid() && file.exists();
+        locked = locked && lock != null && lock.isValid() && file.exists();
+        return locked;
     }
 
 }

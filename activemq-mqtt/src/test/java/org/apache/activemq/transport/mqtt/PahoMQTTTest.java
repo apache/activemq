@@ -16,39 +16,29 @@
  */
 package org.apache.activemq.transport.mqtt;
 
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.Wait;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.*;
 
 public class PahoMQTTTest extends MQTTTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(PahoMQTTTest.class);
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        protocolConfig = "transport.activeMQSubscriptionPrefetch=32766";
-        super.setUp();
-    }
 
     @Test(timeout = 300000)
     public void testLotsOfClients() throws Exception {
@@ -79,9 +69,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
                 @Override
                 public void run() {
                     try {
-                        MqttClient client = new MqttClient("tcp://localhost:" + getPort(),
-                                                           Thread.currentThread().getName(),
-                                                           new MemoryPersistence());
+                        MqttClient client = new MqttClient("tcp://localhost:" + getPort(), Thread.currentThread().getName(), new MemoryPersistence());
                         client.connect();
                         connectedDoneLatch.countDown();
                         sendBarrier.await();
@@ -121,7 +109,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
         assertNull("Async error: " + asyncError.get(), asyncError.get());
     }
 
-    @Test(timeout=300000)
+    @Test(timeout = 300000)
     public void testSendAndReceiveMQTT() throws Exception {
 
         ActiveMQConnection activeMQConnection = (ActiveMQConnection) cf.createConnection();
@@ -138,6 +126,170 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         client.disconnect();
         client.close();
+    }
+
+    @Test(timeout = 300000)
+    public void testSubs() throws Exception {
+
+        stopBroker();
+        protocolConfig = "transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
+        startBroker();
+
+        final DefaultListener listener = new DefaultListener();
+        // subscriber connects and creates durable sub
+        MqttClient client = createClient(false, "receive", listener);
+
+        final String ACCOUNT_PREFIX = "test/";
+
+        client.subscribe(ACCOUNT_PREFIX + "1/2/3");
+        client.subscribe(ACCOUNT_PREFIX + "a/+/#");
+        client.subscribe(ACCOUNT_PREFIX + "#");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        String expectedResult = "should get everything";
+        client.publish(ACCOUNT_PREFIX + "1/2/3/4", expectedResult.getBytes(), 0, false);
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200));
+
+
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+        assertEquals(expectedResult, listener.result);
+
+        expectedResult = "should get everything";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "a/1/2", expectedResult.getBytes(), 0, false);
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        client.unsubscribe(ACCOUNT_PREFIX + "a/+/#");
+        client.unsubscribe(ACCOUNT_PREFIX + "#");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "should still get 1/2/3";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "1/2/3", expectedResult.getBytes(), 0, false);
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+    }
+
+    @Test(timeout = 300000)
+    public void testOverlappingTopics() throws Exception {
+
+        stopBroker();
+        protocolConfig = "transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions";
+        startBroker();
+
+        final DefaultListener listener = new DefaultListener();
+        // subscriber connects and creates durable sub
+        MqttClient client = createClient(false, "receive", listener);
+
+        final String ACCOUNT_PREFIX = "test/";
+
+        // *****************************************
+        // check a simple # subscribe works
+        // *****************************************
+        client.subscribe(ACCOUNT_PREFIX + "#");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+        String expectedResult = "hello mqtt broker on hash";
+        client.publish(ACCOUNT_PREFIX + "a/b/c", expectedResult.getBytes(), 0, false);
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200)));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "hello mqtt broker on a different topic";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "1/2/3/4/5/6", expectedResult.getBytes(), 0, false);
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200)));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        // *****************************************
+        // now subscribe on a topic that overlaps the root # wildcard - we
+        // should still get everything
+        // *****************************************
+        client.subscribe(ACCOUNT_PREFIX + "1/2/3");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "hello mqtt broker on explicit topic";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "1/2/3", expectedResult.getBytes(), 0, false);
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200)));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "hello mqtt broker on some other topic";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "a/b/c/d/e", expectedResult.getBytes(), 0, false);
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(45), TimeUnit.MILLISECONDS.toMillis(200)));
+        assertEquals(expectedResult, listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        // *****************************************
+        // now unsub hash - we should only get called back on 1/2/3
+        // *****************************************
+        client.unsubscribe(ACCOUNT_PREFIX + "#");
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "this should not come back...";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "1/2/3/4", expectedResult.getBytes(), 0, false);
+        assertFalse(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(20)));
+        assertNull(listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
+
+        expectedResult = "this should not come back either...";
+        listener.result = null;
+        client.publish(ACCOUNT_PREFIX + "a/b/c", expectedResult.getBytes(), 0, false);
+        assertFalse(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return listener.result != null;
+            }
+        }, TimeUnit.SECONDS.toMillis(20)));
+        assertNull(listener.result);
+        assertTrue(client.getPendingDeliveryTokens().length == 0);
     }
 
     @Test(timeout = 300000)
@@ -176,12 +328,12 @@ public class PahoMQTTTest extends MQTTTestSupport {
         LOG.info("Subscribing durable subscriber...");
         client3.subscribe(topic, 1);
 
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return listener.received == 2;
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(100)));
         assertEquals(2, listener.received);
         disconnect(client3);
         LOG.info("Disconnected durable subscriber.");
@@ -209,7 +361,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return client.isConnected();
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(100));
         return client;
     }
 
@@ -221,7 +373,7 @@ public class PahoMQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return !client.isConnected();
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(100));
     }
 
     protected void waitForDelivery(final MqttClient client) throws Exception {
@@ -230,13 +382,14 @@ public class PahoMQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return client.getPendingDeliveryTokens().length == 0;
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(200));
         assertTrue(client.getPendingDeliveryTokens().length == 0);
     }
 
     static class DefaultListener implements MqttCallback {
 
         int received = 0;
+        String result;
 
         @Override
         public void connectionLost(Throwable cause) {
@@ -245,8 +398,9 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
-            LOG.info("Received: " + message);
+            LOG.debug("Received: " + message);
             received++;
+            result = new String(message.getPayload());
         }
 
         @Override
@@ -254,5 +408,4 @@ public class PahoMQTTTest extends MQTTTestSupport {
 
         }
     }
-
 }

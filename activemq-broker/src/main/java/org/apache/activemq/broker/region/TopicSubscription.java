@@ -326,23 +326,23 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     @Override
-    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+    public Response pullMessage(ConnectionContext context, final MessagePull pull) throws Exception {
 
         // The slave should not deliver pull messages.
-        if (getPrefetchSize() == 0 ) {
+        if (getPrefetchSize() == 0) {
 
             final long currentDispatchedCount = dispatchedCounter.get();
-            prefetchExtension.incrementAndGet();
+            prefetchExtension.set(pull.getQuantity());
             dispatchMatched();
 
             // If there was nothing dispatched.. we may need to setup a timeout.
-            if (currentDispatchedCount == dispatchedCounter.get()) {
+            if (currentDispatchedCount == dispatchedCounter.get() || pull.isAlwaysSignalDone()) {
 
                 // immediate timeout used by receiveNoWait()
                 if (pull.getTimeout() == -1) {
-                    prefetchExtension.decrementAndGet();
                     // Send a NULL message to signal nothing pending.
                     dispatch(null);
+                    prefetchExtension.set(0);
                 }
 
                 if (pull.getTimeout() > 0) {
@@ -350,7 +350,7 @@ public class TopicSubscription extends AbstractSubscription {
 
                         @Override
                         public void run() {
-                            pullTimeout(currentDispatchedCount);
+                            pullTimeout(currentDispatchedCount, pull.isAlwaysSignalDone());
                         }
                     }, pull.getTimeout());
                 }
@@ -363,15 +363,15 @@ public class TopicSubscription extends AbstractSubscription {
      * Occurs when a pull times out. If nothing has been dispatched since the
      * timeout was setup, then send the NULL message.
      */
-    private final void pullTimeout(long currentDispatchedCount) {
+    private final void pullTimeout(long currentDispatchedCount, boolean alwaysSendDone) {
         synchronized (matchedListMutex) {
-            if (currentDispatchedCount == dispatchedCounter.get()) {
+            if (currentDispatchedCount == dispatchedCounter.get() || alwaysSendDone) {
                 try {
                     dispatch(null);
                 } catch (Exception e) {
                     context.getConnection().serviceException(e);
                 } finally {
-                    prefetchExtension.decrementAndGet();
+                    prefetchExtension.set(0);
                 }
             }
         }
@@ -583,7 +583,7 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void dispatch(final MessageReference node) throws IOException {
-        Message message = node.getMessage();
+        Message message = node != null ? node.getMessage() : null;
         if (node != null) {
             node.incrementReferenceCount();
         }

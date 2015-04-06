@@ -344,16 +344,18 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         List<NetworkInterface> possibles = new ArrayList<NetworkInterface>();
         while (ifcs.hasMoreElements()) {
             NetworkInterface ni = ifcs.nextElement();
-            if (ni.supportsMulticast()
-                && ni.isUp()) {
-                for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
-                    if (ia.getAddress() instanceof java.net.Inet4Address
-                        && !ia.getAddress().isLoopbackAddress()
-                        && !ni.getDisplayName().startsWith("vnic")) {
-                        possibles.add(ni);
+            try {
+                if (ni.supportsMulticast()
+                        && ni.isUp()) {
+                    for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+                        if (ia.getAddress() instanceof java.net.Inet4Address
+                                && !ia.getAddress().isLoopbackAddress()
+                                && !ni.getDisplayName().startsWith("vnic")) {
+                            possibles.add(ni);
+                        }
                     }
                 }
-            }
+            } catch (SocketException ignored) {}
         }
         return possibles.isEmpty() ? null : possibles.get(possibles.size() - 1);
     }

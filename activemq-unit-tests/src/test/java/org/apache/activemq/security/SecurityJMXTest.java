@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 public class SecurityJMXTest extends TestCase {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleAuthenticationPluginTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityJMXTest.class);
     private BrokerService broker;
 
     @Override

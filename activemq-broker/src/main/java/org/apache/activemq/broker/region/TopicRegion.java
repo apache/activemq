@@ -109,6 +109,9 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
+            if (broker.getBrokerService().isRejectDurableConsumers()) {
+                throw new JMSException("Durable Consumers are not allowed");
+            }
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
@@ -376,6 +379,15 @@ public class TopicRegion extends AbstractRegion {
             }
         }
         return inactiveDestinations;
+    }
+
+    public DurableTopicSubscription lookupSubscription(String subscriptionName, String clientId) {
+        SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+        if (durableSubscriptions.containsKey(key)) {
+            return durableSubscriptions.get(key);
+        }
+
+        return null;
     }
 
     public boolean isKeepDurableSubsActive() {

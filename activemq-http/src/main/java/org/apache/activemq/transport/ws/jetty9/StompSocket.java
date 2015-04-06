@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.transport.stomp.ProtocolConverter;
 import org.apache.activemq.transport.stomp.Stomp;
@@ -45,7 +46,7 @@ class StompSocket extends TransportSupport implements WebSocketListener, StompTr
     ProtocolConverter protocolConverter = new ProtocolConverter(this, null);
     StompWireFormat wireFormat = new StompWireFormat();
     private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
-    private StompInactivityMonitor stompInactivityMonitor = new StompInactivityMonitor(this, wireFormat);
+    private final StompInactivityMonitor stompInactivityMonitor = new StompInactivityMonitor(this, wireFormat);
 
     private boolean transportStartedAtLeastOnce() {
         return socketTransportStarted.getCount() == 0;
@@ -54,6 +55,7 @@ class StompSocket extends TransportSupport implements WebSocketListener, StompTr
     @Override
     protected void doStart() throws Exception {
         socketTransportStarted.countDown();
+        stompInactivityMonitor.setTransportListener(getTransportListener());
     }
 
     @Override
@@ -118,7 +120,7 @@ class StompSocket extends TransportSupport implements WebSocketListener, StompTr
     }
 
     @Override
-    public void onWebSocketError(Throwable arg0) {       
+    public void onWebSocketError(Throwable arg0) {
     }
 
     @Override
@@ -133,10 +135,15 @@ class StompSocket extends TransportSupport implements WebSocketListener, StompTr
         }
 
         try {
-            protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
+            if (data != null) {
+                if (data.equals("\n")) {
+                    sendToActiveMQ(new KeepAliveInfo());
+                } else {
+                    protocolConverter.onStompCommand((StompFrame)wireFormat.unmarshal(new ByteSequence(data.getBytes("UTF-8"))));
+                }
+            }
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }
     }
-
 }

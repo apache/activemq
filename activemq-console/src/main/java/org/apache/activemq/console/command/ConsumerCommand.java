@@ -19,7 +19,6 @@ package org.apache.activemq.console.command;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.ConsumerThread;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +36,13 @@ public class ConsumerCommand extends AbstractCommand {
     String destination = "queue://TEST";
     int messageCount = 1000;
     int sleep;
-    int transactionBatchSize;
+    boolean transacted;
+    private boolean durable;
+    private String clientId;
+    int batchSize = 10;
+    int ackMode = Session.AUTO_ACKNOWLEDGE;
     int parallelThreads = 1;
+    boolean bytesAsText;
 
     @Override
     protected void runTask(List<String> tokens) throws Exception {
@@ -48,31 +52,43 @@ public class ConsumerCommand extends AbstractCommand {
         LOG.info("Running " + parallelThreads + " parallel threads");
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-        Connection conn = factory.createConnection(user, password);
-        conn.start();
+        Connection conn = null;
+        try {
+            conn = factory.createConnection(user, password);
+            if (durable && clientId != null && clientId.length() > 0 && !"null".equals(clientId)) {
+                conn.setClientID(clientId);
+            }
+            conn.start();
 
-        Session sess;
-        if (transactionBatchSize != 0) {
-            sess = conn.createSession(true, Session.SESSION_TRANSACTED);
-        } else {
-            sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session sess;
+            if (transacted) {
+                sess = conn.createSession(true, Session.SESSION_TRANSACTED);
+            } else {
+                sess = conn.createSession(false, ackMode);
+            }
+
+
+            CountDownLatch active = new CountDownLatch(parallelThreads);
+
+            for (int i = 1; i <= parallelThreads; i++) {
+                ConsumerThread consumer = new ConsumerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
+                consumer.setName("consumer-" + i);
+                consumer.setDurable(durable);
+                consumer.setBreakOnNull(false);
+                consumer.setMessageCount(messageCount);
+                consumer.setSleep(sleep);
+                consumer.setBatchSize(batchSize);
+                consumer.setFinished(active);
+                consumer.setBytesAsText(bytesAsText);
+                consumer.start();
+            }
+
+            active.await();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
-
-
-        CountDownLatch active = new CountDownLatch(parallelThreads);
-
-        for (int i = 1; i <= parallelThreads; i++) {
-            ConsumerThread consumer = new ConsumerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
-            consumer.setName("consumer-" + i);
-            consumer.setBreakOnNull(false);
-            consumer.setMessageCount(messageCount);
-            consumer.setSleep(sleep);
-            consumer.setTransactionBatchSize(transactionBatchSize);
-            consumer.setFinished(active);
-            consumer.start();
-        }
-
-        active.await();
     }
 
     public String getBrokerUrl() {
@@ -123,12 +139,12 @@ public class ConsumerCommand extends AbstractCommand {
         this.sleep = sleep;
     }
 
-    public int getTransactionBatchSize() {
-        return transactionBatchSize;
+    public int getBatchSize() {
+        return batchSize;
     }
 
-    public void setTransactionBatchSize(int transactionBatchSize) {
-        this.transactionBatchSize = transactionBatchSize;
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
     }
 
     public int getParallelThreads() {
@@ -137,6 +153,54 @@ public class ConsumerCommand extends AbstractCommand {
 
     public void setParallelThreads(int parallelThreads) {
         this.parallelThreads = parallelThreads;
+    }
+
+    public boolean isBytesAsText() {
+        return bytesAsText;
+    }
+
+    public void setBytesAsText(boolean bytesAsText) {
+        this.bytesAsText = bytesAsText;
+    }
+
+    public boolean isTransacted() {
+        return transacted;
+    }
+
+    public void setTransacted(boolean transacted) {
+        this.transacted = transacted;
+    }
+
+    public int getAckMode() {
+        return ackMode;
+    }
+
+    public void setAckMode(String ackMode) {
+        if ("CLIENT_ACKNOWLEDGE".equals(ackMode)) {
+            this.ackMode = Session.CLIENT_ACKNOWLEDGE;
+        }
+        if ("AUTO_ACKNOWLEDGE".equals(ackMode)) {
+            this.ackMode = Session.AUTO_ACKNOWLEDGE;
+        }
+        if ("DUPS_OK_ACKNOWLEDGE".equals(ackMode)) {
+            this.ackMode = Session.DUPS_OK_ACKNOWLEDGE;
+        }
+    }
+
+    public boolean isDurable() {
+        return durable;
+    }
+
+    public void setDurable(boolean durable) {
+        this.durable = durable;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     @Override
@@ -153,5 +217,4 @@ public class ConsumerCommand extends AbstractCommand {
     public String getOneLineDescription() {
         return "Receives messages from the broker";
     }
-
 }

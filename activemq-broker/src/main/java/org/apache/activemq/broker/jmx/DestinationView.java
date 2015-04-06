@@ -524,7 +524,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public boolean isDLQ() {
-        return destination.isDLQ();
+        return destination.getActiveMQDestination().isDLQ();
     }
 
     @Override

@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public class QueueDispatchSelector extends SimpleDispatchSelector {
     private static final Logger LOG = LoggerFactory.getLogger(QueueDispatchSelector.class);
     private Subscription exclusiveConsumer;
-   
-   
+    private boolean paused;
+
     /**
      * @param destination
      */
@@ -54,11 +54,22 @@ public class QueueDispatchSelector extends SimpleDispatchSelector {
     public boolean canSelect(Subscription subscription,
             MessageReference m) throws Exception {
        
-        boolean result =  super.canDispatch(subscription, m);
+        boolean result = !paused && super.canDispatch(subscription, m);
         if (result && !subscription.isBrowser()) {
             result = exclusiveConsumer == null || exclusiveConsumer == subscription;
         }
         return result;
     }
-    
+
+    public void pause() {
+        paused = true;
+    }
+
+    public void resume() {
+        paused = false;
+    }
+
+    public boolean isPaused() {
+        return paused;
+    }
 }

@@ -58,6 +58,15 @@ public class FilePendingMessageCursorTestSupport {
     public void testAddToEmptyCursorWhenTempStoreIsFull() throws Exception {
         createBrokerWithTempStoreLimit();
         SystemUsage usage = brokerService.getSystemUsage();
+
+        PList dud = brokerService.getTempDataStore().getPList("dud");
+        // fill the temp store
+        int id=0;
+        ByteSequence payload = new ByteSequence(new byte[1024]);
+        while (!usage.getTempUsage().isFull()) {
+            dud.addFirst("A-" + (++id), payload);
+        }
+
         assertTrue("temp store is full: %" + usage.getTempUsage().getPercentUsage(), usage.getTempUsage().isFull());
 
         underTest = new FilePendingMessageCursor(brokerService.getBroker(), "test", false);

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.store.kahadb.disk.util;
 
+import org.apache.activemq.util.RecoverableRandomAccessFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -52,7 +54,7 @@ public class DiskBenchmark {
             try {
                 File file = new File(f);
                 if (file.exists()) {
-                    System.out.println("File " + file + " allready exists, will not benchmark.");
+                    System.out.println("File " + file + " already exists, will not benchmark.");
                 } else {
                     System.out.println("Benchmarking: " + file.getCanonicalPath());
                     Report report = benchmark.benchmark(file);
@@ -193,7 +195,7 @@ public class DiskBenchmark {
         }
     }
 
-    public Report benchmark(File file) throws IOException {
+    public Report benchmark(File file) throws Exception {
         Report rc = new Report();
 
         // Initialize the block we will be writing to disk.
@@ -203,8 +205,8 @@ public class DiskBenchmark {
         }
 
         rc.size = data.length;
-        RandomAccessFile raf = new RandomAccessFile(file, "rw");
-        raf.setLength(size);
+        RecoverableRandomAccessFile raf = new RecoverableRandomAccessFile(file, "rw");
+        preallocateDataFile(raf, file.getParentFile());
 
         // Figure out how many writes we can do in the sample interval.
         long start = System.currentTimeMillis();
@@ -235,7 +237,7 @@ public class DiskBenchmark {
         rc.writes = ioCount;
         rc.writeDuration = (now - start);
 
-        raf = new RandomAccessFile(file, "rw");
+        raf = new RecoverableRandomAccessFile(file, "rw");
         start = System.currentTimeMillis();
         now = System.currentTimeMillis();
         ioCount = 0;
@@ -246,7 +248,7 @@ public class DiskBenchmark {
             for (long i = 0; i + data.length < size; i += data.length) {
                 raf.seek(i);
                 raf.write(data);
-                raf.getChannel().force(false);
+                raf.getChannel().force(!SKIP_METADATA_UPDATE);
                 ioCount++;
                 now = System.currentTimeMillis();
                 if ((now - start) > sampleInterval) {
@@ -259,7 +261,7 @@ public class DiskBenchmark {
         rc.syncWrites = ioCount;
         rc.syncWriteDuration = (now - start);
 
-        raf = new RandomAccessFile(file, "rw");
+        raf = new RecoverableRandomAccessFile(file, "rw");
         start = System.currentTimeMillis();
         now = System.currentTimeMillis();
         ioCount = 0;
@@ -283,6 +285,24 @@ public class DiskBenchmark {
         rc.reads = ioCount;
         rc.readDuration = (now - start);
         return rc;
+    }
+
+    private void preallocateDataFile(RecoverableRandomAccessFile raf, File location) throws Exception {
+        File tmpFile;
+        if (location != null && location.isDirectory()) {
+            tmpFile = new File(location, "template.dat");
+        }else {
+            tmpFile = new File("template.dat");
+        }
+        if (tmpFile.exists()) {
+            tmpFile.delete();
+        }
+        RandomAccessFile templateFile = new RandomAccessFile(tmpFile, "rw");
+        templateFile.setLength(size);
+        templateFile.getChannel().force(true);
+        templateFile.getChannel().transferTo(0, size, raf.getChannel());
+        templateFile.close();
+        tmpFile.delete();
     }
 
     public boolean isVerbose() {

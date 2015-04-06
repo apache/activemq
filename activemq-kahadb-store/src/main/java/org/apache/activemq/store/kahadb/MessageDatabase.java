@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -239,6 +238,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     int journalMaxWriteBatchSize = Journal.DEFAULT_MAX_WRITE_BATCH_SIZE;
     boolean enableIndexWriteAsync = false;
     int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE;
+    private String preallocationScope = Journal.PreallocationScope.ENTIRE_JOURNAL.name();
+    private String preallocationStrategy = Journal.PreallocationStrategy.SPARSE_FILE.name();
 
     protected AtomicBoolean opened = new AtomicBoolean();
     private boolean ignoreMissingJournalfiles = false;
@@ -600,7 +601,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
-                LOG.info("Recovering from the journal ...");
+                LOG.info("Recovering from the journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
                     JournalCommand<?> message = load(recoveryPosition);
                     metadata.lastUpdate = recoveryPosition;
@@ -2487,6 +2488,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setArchiveDataLogs(isArchiveDataLogs());
         manager.setSizeAccumulator(journalSize);
         manager.setEnableAsyncDiskSync(isEnableJournalDiskSyncs());
+        manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
+        manager.setPreallocationStrategy(
+                Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
             manager.setDirectoryArchive(getDirectoryArchive());
@@ -2832,25 +2836,22 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         void configureLast(Transaction tx) throws IOException {
             // Figure out the next key using the last entry in the destination.
-            if (highPriorityIndex != null) {
-                Entry<Long, MessageKeys> lastEntry = highPriorityIndex.getLast(tx);
+            TreeSet<Long> orderedSet = new TreeSet<Long>();
+
+            addLast(orderedSet, highPriorityIndex, tx);
+            addLast(orderedSet, defaultPriorityIndex, tx);
+            addLast(orderedSet, lowPriorityIndex, tx);
+
+            if (!orderedSet.isEmpty()) {
+                nextMessageId = orderedSet.last() + 1;
+            }
+        }
+
+        private void addLast(TreeSet<Long> orderedSet, BTreeIndex<Long, MessageKeys> index, Transaction tx) throws IOException {
+            if (index != null) {
+                Entry<Long, MessageKeys> lastEntry = index.getLast(tx);
                 if (lastEntry != null) {
-                    nextMessageId = lastEntry.getKey() + 1;
-                } else {
-                    lastEntry = defaultPriorityIndex.getLast(tx);
-                    if (lastEntry != null) {
-                        nextMessageId = lastEntry.getKey() + 1;
-                    } else {
-                        lastEntry = lowPriorityIndex.getLast(tx);
-                        if (lastEntry != null) {
-                            nextMessageId = lastEntry.getKey() + 1;
-                        }
-                    }
-                }
-            } else {
-                Entry<Long, MessageKeys> lastEntry = defaultPriorityIndex.getLast(tx);
-                if (lastEntry != null) {
-                    nextMessageId = lastEntry.getKey() + 1;
+                    orderedSet.add(lastEntry.getKey());
                 }
             }
         }
@@ -3175,4 +3176,21 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     interface IndexAware {
         public void sequenceAssignedWithIndexLocked(long index);
     }
+
+    public String getPreallocationScope() {
+        return preallocationScope;
+    }
+
+    public void setPreallocationScope(String preallocationScope) {
+        this.preallocationScope = preallocationScope;
+    }
+
+    public String getPreallocationStrategy() {
+        return preallocationStrategy;
+    }
+
+    public void setPreallocationStrategy(String preallocationStrategy) {
+        this.preallocationStrategy = preallocationStrategy;
+    }
+
 }

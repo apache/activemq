@@ -32,7 +32,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
-       org.springframework.jms*;version="[3,4)",
+       org.springframework.jms*;version="[3,5)",
        org.apache.activemq.pool,
        org.apache.camel*;version="${camel-version-range}",
        *
@@ -40,6 +40,10 @@
     <activemq.osgi.export>
         org.apache.activemq.camel*;version:="${project.version}";-noimport:=true
     </activemq.osgi.export>
+    <camel.osgi.export.service>
+      org.apache.camel.spi.ComponentResolver;component=activemq,
+      org.apache.camel.spi.ComponentResolver;component=broker
+    </camel.osgi.export.service>
   </properties>
 
   <dependencies>
@@ -135,17 +139,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>openejb-core</artifactId>
-      <version>3.1</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
       <optional>true</optional>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.activemq</groupId>
-          <artifactId>activemq-core</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.objectweb.howl</groupId>

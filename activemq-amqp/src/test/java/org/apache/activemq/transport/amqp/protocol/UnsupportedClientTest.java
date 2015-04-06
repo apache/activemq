@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -69,16 +70,16 @@ public class UnsupportedClientTest extends AmqpTestSupport {
         header.setRevision(1);
 
         // Test TCP
-        doTestInvalidHeaderProcessing(port, header, false);
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
 
         // Test SSL
-        doTestInvalidHeaderProcessing(sslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
 
         // Test NIO
-        doTestInvalidHeaderProcessing(nioPort, header, false);
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
 
         // Test NIO+SSL
-        doTestInvalidHeaderProcessing(nioPlusSslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
     }
 
     @Test(timeout = 60000)
@@ -91,16 +92,16 @@ public class UnsupportedClientTest extends AmqpTestSupport {
         header.setRevision(0);
 
         // Test TCP
-        doTestInvalidHeaderProcessing(port, header, false);
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
 
         // Test SSL
-        doTestInvalidHeaderProcessing(sslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
 
         // Test NIO
-        doTestInvalidHeaderProcessing(nioPort, header, false);
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
 
         // Test NIO+SSL
-        doTestInvalidHeaderProcessing(nioPlusSslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
     }
 
     @Test(timeout = 60000)
@@ -113,16 +114,16 @@ public class UnsupportedClientTest extends AmqpTestSupport {
         header.setRevision(0);
 
         // Test TCP
-        doTestInvalidHeaderProcessing(port, header, false);
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
 
         // Test SSL
-        doTestInvalidHeaderProcessing(sslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
 
         // Test NIO
-        doTestInvalidHeaderProcessing(nioPort, header, false);
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
 
         // Test NIO+SSL
-        doTestInvalidHeaderProcessing(nioPlusSslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
     }
 
     @Test(timeout = 60000)
@@ -135,16 +136,16 @@ public class UnsupportedClientTest extends AmqpTestSupport {
         header.setRevision(1);
 
         // Test TCP
-        doTestInvalidHeaderProcessing(port, header, false);
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
 
         // Test SSL
-        doTestInvalidHeaderProcessing(sslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
 
         // Test NIO
-        doTestInvalidHeaderProcessing(nioPort, header, false);
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
 
         // Test NIO+SSL
-        doTestInvalidHeaderProcessing(nioPlusSslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
     }
 
     @Test(timeout = 60000)
@@ -153,16 +154,16 @@ public class UnsupportedClientTest extends AmqpTestSupport {
         AmqpHeader header = new AmqpHeader(new Buffer(new byte[]{'S', 'T', 'O', 'M', 'P', 0, 0, 0}), false);
 
         // Test TCP
-        doTestInvalidHeaderProcessing(port, header, false);
+        doTestInvalidHeaderProcessing(amqpPort, header, false);
 
         // Test SSL
-        doTestInvalidHeaderProcessing(sslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpSslPort, header, true);
 
         // Test NIO
-        doTestInvalidHeaderProcessing(nioPort, header, false);
+        doTestInvalidHeaderProcessing(amqpNioPort, header, false);
 
         // Test NIO+SSL
-        doTestInvalidHeaderProcessing(nioPlusSslPort, header, true);
+        doTestInvalidHeaderProcessing(amqpNioPlusSslPort, header, true);
     }
 
     protected void doTestInvalidHeaderProcessing(int port, final AmqpHeader header, boolean ssl) throws Exception {
@@ -185,7 +186,7 @@ public class UnsupportedClientTest extends AmqpTestSupport {
                     return true;
                 }
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
     }
 
     private ClientConnection createClientConnection(boolean ssl) {

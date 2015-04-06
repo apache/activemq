@@ -79,8 +79,8 @@ public class AuthorizationTest extends RuntimeConfigTestSupport {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        final String ALL_USERS = "ALL.USERS";
-        final String ALL_GUESTS = "ALL.GUESTS";
+        final String ALL_USERS = "ALL.USERS.>";
+        final String ALL_GUESTS = "ALL.GUESTS.>";
 
         assertAllowed("user", ALL_USERS);
         assertAllowed("guest", ALL_GUESTS);
@@ -88,65 +88,18 @@ public class AuthorizationTest extends RuntimeConfigTestSupport {
         assertDenied("guest", ALL_GUESTS + "," + ALL_USERS);
 
         final String ALL_PREFIX = "ALL.>";
-        final String ALL_WILDCARD = "ALL.*";
 
-        assertAllowed("user", ALL_PREFIX);
-        assertAllowed("user", ALL_WILDCARD);
-        assertAllowed("guest", ALL_PREFIX);
-        assertAllowed("guest", ALL_WILDCARD);
+        assertDenied("user", ALL_PREFIX);
+        assertDenied("guest", ALL_PREFIX);
 
-        assertAllowed("user", "ALL.USERS,ALL.>");
-        assertAllowed("guest", "ALL.GUESTS,ALL.*");
-        assertDenied("user", "ALL.GUESTS,ALL.>");
-        assertDenied("guest", "ALL.USERS,ALL.*");
+        assertAllowed("user", "ALL.USERS.A");
+        assertAllowed("user", "ALL.USERS.A,ALL.USERS.B");
+        assertAllowed("guest", "ALL.GUESTS.A");
+        assertAllowed("guest", "ALL.GUESTS.A,ALL.GUESTS.B");
 
-        assertDenied("user", "ALL.USERS,ALL.GUESTS.>");
-        assertDenied("guest", "ALL.GUESTS,ALL.USERS.*");
-        assertDenied("user", "ALL.USERS.*,ALL.GUESTS.>");
-        assertDenied("guest", "ALL.GUESTS.>,ALL.USERS.*");
+        assertDenied("user", "USERS.>");
+        assertDenied("guest", "GUESTS.>");
 
-        // subscribe to wildcards and check whether messages are actually filtered
-        final ActiveMQConnection userConn = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection("user", "user");
-        final ActiveMQConnection guestConn = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection("guest", "guest");
-        userConn.start();
-        guestConn.start();
-        try {
-            final Session userSession = userConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            final Session guestSession = guestConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            final MessageProducer userProducer = userSession.createProducer(null);
-            final MessageProducer guestProducer = guestSession.createProducer(null);
-
-            // test prefix filter
-            MessageConsumer userConsumer = userSession.createConsumer(userSession.createQueue(ALL_PREFIX));
-            MessageConsumer guestConsumer = guestSession.createConsumer(userSession.createQueue(ALL_PREFIX));
-
-            userProducer.send(userSession.createQueue(ALL_USERS), userSession.createTextMessage(ALL_USERS));
-            assertNotNull(userConsumer.receive(RECEIVE_TIMEOUT));
-            assertNull(guestConsumer.receive(RECEIVE_TIMEOUT));
-
-            guestProducer.send(guestSession.createQueue(ALL_GUESTS), guestSession.createTextMessage(ALL_GUESTS));
-            assertNotNull(guestConsumer.receive(RECEIVE_TIMEOUT));
-            assertNull(userConsumer.receive(RECEIVE_TIMEOUT));
-
-            userConsumer.close();
-            guestConsumer.close();
-
-            // test wildcard filter
-            userConsumer = userSession.createConsumer(userSession.createQueue(ALL_WILDCARD));
-            guestConsumer = guestSession.createConsumer(userSession.createQueue(ALL_WILDCARD));
-
-            userProducer.send(userSession.createQueue(ALL_USERS), userSession.createTextMessage(ALL_USERS));
-            assertNotNull(userConsumer.receive(RECEIVE_TIMEOUT));
-            assertNull(guestConsumer.receive(RECEIVE_TIMEOUT));
-
-            guestProducer.send(guestSession.createQueue(ALL_GUESTS), guestSession.createTextMessage(ALL_GUESTS));
-            assertNotNull(guestConsumer.receive(RECEIVE_TIMEOUT));
-            assertNull(userConsumer.receive(RECEIVE_TIMEOUT));
-
-        } finally {
-            userConn.close();
-            guestConn.close();
-        }
 
         assertAllowedTemp("guest");
     }

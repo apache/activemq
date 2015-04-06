@@ -602,7 +602,7 @@ public class StompTest extends StompTestSupport {
         }
 
         // sleep a while before publishing another set of messages
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(500);
 
         for (int i = 0; i < ctr; ++i) {
             data[i] = getName() + ":second:" + i;
@@ -781,7 +781,7 @@ public class StompTest extends StompTestSupport {
                 LOG.info("queueView, enqueue:" + queueView.getEnqueueCount() +", dequeue:" + queueView.getDequeueCount() + ", inflight:" + queueView.getInFlightCount());
                 return queueView.getDequeueCount() == 1;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25)));
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -1533,9 +1533,13 @@ public class StompTest extends StompTestSupport {
         // disconnect
         frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e){}
+        Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return getProxyToBroker().getCurrentConnectionsCount() == 1;
+            }
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
 
         //reconnect
         stompConnect();
@@ -1556,7 +1560,7 @@ public class StompTest extends StompTestSupport {
             public boolean isSatisified() throws Exception {
                 return view.getDurableTopicSubscribers().length == 0 && view.getInactiveDurableTopicSubscribers().length == 0;
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(25));
 
         assertEquals(view.getDurableTopicSubscribers().length, 0);
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
@@ -2183,7 +2187,7 @@ public class StompTest extends StompTestSupport {
             public boolean isSatisified() throws Exception {
                 return brokerService.getBroker().getClients().length == expected;
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100));
         org.apache.activemq.broker.Connection[] clients = brokerService.getBroker().getClients();
         int actual = clients.length;
 

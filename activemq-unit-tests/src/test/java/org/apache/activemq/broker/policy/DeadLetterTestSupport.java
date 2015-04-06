@@ -31,6 +31,7 @@ import javax.jms.Topic;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
@@ -59,7 +60,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected BrokerService broker;
     protected boolean transactedMode;
     protected int acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
-    private Destination destination;
+    protected Destination destination;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -118,11 +119,17 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         dlqConsumer = session.createConsumer(dlqDestination);
     }
     
-    protected void makeDlqBrowser() throws JMSException {
+    protected void makeDlqBrowser() throws Exception {
         dlqDestination = createDlqDestination();
 
         LOG.info("Browsing dead letter on: " + dlqDestination);
-        dlqBrowser = session.createBrowser((Queue)dlqDestination);    	
+        dlqBrowser = session.createBrowser((Queue)dlqDestination);
+        verifyIsDlq((Queue) dlqDestination);
+    }
+
+    protected void verifyIsDlq(Queue dlqQ) throws Exception {
+        final QueueViewMBean queueViewMBean = getProxyToQueue(dlqQ.getQueueName());
+        assertTrue("is dlq", queueViewMBean.isDLQ());
     }
 
     protected void sendMessages() throws JMSException {

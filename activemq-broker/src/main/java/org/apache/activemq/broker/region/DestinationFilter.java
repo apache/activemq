@@ -384,11 +384,6 @@ public class DestinationFilter implements Destination {
     }
 
     @Override
-    public boolean isDLQ() {
-        return next.isDLQ();
-    }
-
-    @Override
     public void duplicateFromStore(Message message, Subscription subscription) {
         next.duplicateFromStore(message, subscription);
     }

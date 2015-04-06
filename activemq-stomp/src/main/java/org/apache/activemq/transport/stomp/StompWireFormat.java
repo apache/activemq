@@ -46,8 +46,10 @@ public class StompWireFormat implements WireFormat {
     private static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
 
     private int version = 1;
+    private int maxDataLength = MAX_DATA_LENGTH;
     private String stompVersion = Stomp.DEFAULT_VERSION;
 
+    @Override
     public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -56,12 +58,14 @@ public class StompWireFormat implements WireFormat {
         return baos.toByteSequence();
     }
 
+    @Override
     public Object unmarshal(ByteSequence packet) throws IOException {
         ByteArrayInputStream stream = new ByteArrayInputStream(packet);
         DataInputStream dis = new DataInputStream(stream);
         return unmarshal(dis);
     }
 
+    @Override
     public void marshal(Object command, DataOutput os) throws IOException {
         StompFrame stomp = (org.apache.activemq.transport.stomp.StompFrame)command;
 
@@ -90,6 +94,7 @@ public class StompWireFormat implements WireFormat {
         os.write(END_OF_FRAME);
     }
 
+    @Override
     public Object unmarshal(DataInput in) throws IOException {
 
         try {
@@ -124,7 +129,7 @@ public class StompWireFormat implements WireFormat {
 
                     if (baos == null) {
                         baos = new ByteArrayOutputStream();
-                    } else if (baos.size() > MAX_DATA_LENGTH) {
+                    } else if (baos.size() > getMaxDataLength()) {
                         throw new ProtocolException("The maximum data length was exceeded", true);
                     }
 
@@ -249,7 +254,7 @@ public class StompWireFormat implements WireFormat {
             throw new ProtocolException("Specified content-length is not a valid integer", true);
         }
 
-        if (length > MAX_DATA_LENGTH) {
+        if (length > getMaxDataLength()) {
             throw new ProtocolException("The maximum data length was exceeded", true);
         }
 
@@ -277,6 +282,7 @@ public class StompWireFormat implements WireFormat {
                 }
             }
             result =  new String(stream.toByteArray(), "UTF-8");
+            stream.close();
         }
 
         return result;
@@ -315,13 +321,17 @@ public class StompWireFormat implements WireFormat {
             }
         }
 
+        decoded.close();
+
         return new String(decoded.toByteArray(), "UTF-8");
     }
 
+    @Override
     public int getVersion() {
         return version;
     }
 
+    @Override
     public void setVersion(int version) {
         this.version = version;
     }
@@ -332,5 +342,13 @@ public class StompWireFormat implements WireFormat {
 
     public void setStompVersion(String stompVersion) {
         this.stompVersion = stompVersion;
+    }
+
+    public void setMaxDataLength(int maxDataLength) {
+        this.maxDataLength = maxDataLength;
+    }
+
+    public int getMaxDataLength() {
+        return maxDataLength;
     }
 }

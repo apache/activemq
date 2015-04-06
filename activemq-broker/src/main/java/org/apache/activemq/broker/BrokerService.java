@@ -249,6 +249,7 @@ public class BrokerService implements Service {
 
     private boolean restartAllowed = true;
     private boolean restartRequested = false;
+    private boolean rejectDurableConsumers = false;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
 
@@ -3052,5 +3053,13 @@ public class BrokerService implements Service {
 
     public void incrementTotalConnections() {
         this.totalConnections.incrementAndGet();
+    }
+
+    public boolean isRejectDurableConsumers() {
+        return rejectDurableConsumers;
+    }
+
+    public void setRejectDurableConsumers(boolean rejectDurableConsumers) {
+        this.rejectDurableConsumers = rejectDurableConsumers;
     }
 }

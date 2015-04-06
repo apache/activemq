@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
@@ -36,11 +37,17 @@ public class AmqpWireFormat implements WireFormat {
 
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 30000L;
+    public static final int DEFAULT_PRODUCER_CREDIT = 1000;
+
     private static final int SASL_PROTOCOL = 3;
 
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
+    private long connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private int producerCredit = DEFAULT_PRODUCER_CREDIT;
+    private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
 
     private boolean magicRead = false;
     private ResetListener resetListener;
@@ -195,5 +202,29 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setAllowNonSaslConnections(boolean allowNonSaslConnections) {
         this.allowNonSaslConnections = allowNonSaslConnections;
+    }
+
+    public long getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    public void setConnectAttemptTimeout(long connectAttemptTimeout) {
+        this.connectAttemptTimeout = connectAttemptTimeout;
+    }
+
+    public void setProducerCredit(int producerCredit) {
+        this.producerCredit = producerCredit;
+    }
+
+    public int getProducerCredit() {
+        return producerCredit;
+    }
+
+    public String getTransformer() {
+        return transformer;
+    }
+
+    public void setTransformer(String transformer) {
+        this.transformer = transformer;
     }
 }

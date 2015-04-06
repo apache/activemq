@@ -168,6 +168,8 @@ public class MQTTTestSupport {
         brokerService = new BrokerService();
         brokerService.setPersistent(isPersistent());
         brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
         brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
         brokerService.setPopulateJMSXUserID(true);
     }
@@ -397,17 +399,17 @@ public class MQTTTestSupport {
         return new Tracer() {
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("Client Received:\n" + frame);
+                LOG.debug("Client Received:\n" + frame);
             }
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("Client Sent:\n" + frame);
+                LOG.debug("Client Sent:\n" + frame);
             }
 
             @Override
             public void debug(String message, Object... args) {
-                LOG.info(String.format(message, args));
+                LOG.debug(String.format(message, args));
             }
         };
     }

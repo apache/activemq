@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.jms.pool;
 
+import static org.junit.Assert.fail;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.IllegalStateException;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,20 +31,9 @@ import org.slf4j.LoggerFactory;
  * A couple of tests against the PooledConnection class.
  *
  */
-public class PooledConnectionTest extends TestCase {
+public class PooledConnectionTest extends JmsPoolTestSupport {
 
-    private final Logger log = LoggerFactory.getLogger(PooledConnectionTest.class);
-
-    @Override
-    public void setUp() throws Exception {
-        log.debug("setUp() called.");
-    }
-
-
-    @Override
-    public void tearDown() throws Exception {
-        log.debug("tearDown() called.");
-    }
+    private final Logger LOG = LoggerFactory.getLogger(PooledConnectionTest.class);
 
     /**
      * AMQ-3752:
@@ -52,8 +42,9 @@ public class PooledConnectionTest extends TestCase {
      *
      * @throws Exception
      */
+    @Test(timeout = 60000)
     public void testRepeatedSetClientIDCalls() throws Exception {
-        log.debug("running testRepeatedSetClientIDCalls()");
+        LOG.debug("running testRepeatedSetClientIDCalls()");
 
         // 1st test: call setClientID("newID") twice
         // this should be tolerated and not result in an exception
@@ -68,7 +59,7 @@ public class PooledConnectionTest extends TestCase {
             conn.close();
             cf = null;
         } catch (IllegalStateException ise) {
-            log.error("Repeated calls to ActiveMQConnection.setClientID(\"newID\") caused " + ise.getMessage());
+            LOG.error("Repeated calls to ActiveMQConnection.setClientID(\"newID\") caused " + ise.getMessage());
             fail("Repeated calls to ActiveMQConnection.setClientID(\"newID\") caused " + ise.getMessage());
         }
 
@@ -82,7 +73,7 @@ public class PooledConnectionTest extends TestCase {
             conn.setClientID("newID2");
             fail("calling ActiveMQConnection.setClientID() twice with different clientID must raise an IllegalStateException");
         } catch (IllegalStateException ise) {
-            log.debug("Correctly received " + ise);
+            LOG.debug("Correctly received " + ise);
         } finally {
             conn.close();
         }
@@ -96,19 +87,20 @@ public class PooledConnectionTest extends TestCase {
         conn.setClientID("newID3");
         fail("Calling setClientID() after start() mut raise a JMSException.");
         } catch (IllegalStateException ise) {
-            log.debug("Correctly received " + ise);
+            LOG.debug("Correctly received " + ise);
         } finally {
             conn.close();
         }
 
-        log.debug("Test finished.");
+        LOG.debug("Test finished.");
     }
 
     protected ConnectionFactory createPooledConnectionFactory() {
         PooledConnectionFactory cf = new PooledConnectionFactory();
-        cf.setConnectionFactory(new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false"));
+        cf.setConnectionFactory(new ActiveMQConnectionFactory(
+            "vm://localhost?broker.persistent=false&broker.useJmx=false&broker.schedulerSupport=false"));
         cf.setMaxConnections(1);
-        log.debug("ConnectionFactory initialized.");
+        LOG.debug("ConnectionFactory initialized.");
         return cf;
     }
 }

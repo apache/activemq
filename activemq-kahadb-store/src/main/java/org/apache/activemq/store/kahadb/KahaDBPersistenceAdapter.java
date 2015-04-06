@@ -511,6 +511,22 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
         letter.setBrokerService(brokerService);
     }
 
+    public String getPreallocationScope() {
+        return letter.getPreallocationScope();
+    }
+
+    public void setPreallocationScope(String preallocationScope) {
+        this.letter.setPreallocationScope(preallocationScope);
+    }
+
+    public String getPreallocationStrategy() {
+        return letter.getPreallocationStrategy();
+    }
+
+    public void setPreallocationStrategy(String preallocationStrategy) {
+        this.letter.setPreallocationStrategy(preallocationStrategy);
+    }
+
     public boolean isArchiveDataLogs() {
         return letter.isArchiveDataLogs();
     }

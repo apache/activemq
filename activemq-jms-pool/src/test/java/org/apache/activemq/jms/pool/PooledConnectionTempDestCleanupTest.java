@@ -31,8 +31,6 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test of lingering temporary destinations on pooled connections when the
@@ -42,12 +40,7 @@ import org.slf4j.LoggerFactory;
  *
  * jira: AMQ-3457
  */
-public class PooledConnectionTempDestCleanupTest {
-
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(PooledConnectionTempDestCleanupTest.class);
-
-    protected BrokerService embeddedBroker;
+public class PooledConnectionTempDestCleanupTest extends JmsPoolTestSupport {
 
     protected ActiveMQConnectionFactory directConnFact;
     protected Connection directConn1;
@@ -64,15 +57,18 @@ public class PooledConnectionTempDestCleanupTest {
      * Prepare to run a test case: create, configure, and start the embedded
      * broker, as well as creating the client connections to the broker.
      */
+    @Override
     @Before
-    public void prepTest() throws java.lang.Exception {
-        embeddedBroker = new BrokerService();
-        configureBroker(embeddedBroker);
-        embeddedBroker.start();
-        embeddedBroker.waitUntilStarted();
+    public void setUp() throws java.lang.Exception {
+        super.setUp();
+
+        brokerService = new BrokerService();
+        configureBroker(brokerService);
+        brokerService.start();
+        brokerService.waitUntilStarted();
 
         // Create the ActiveMQConnectionFactory and the PooledConnectionFactory.
-        directConnFact = new ActiveMQConnectionFactory(embeddedBroker.getVmConnectorURI());
+        directConnFact = new ActiveMQConnectionFactory(brokerService.getVmConnectorURI());
         pooledConnFact = new PooledConnectionFactory();
         pooledConnFact.setConnectionFactory(directConnFact);
 
@@ -88,8 +84,9 @@ public class PooledConnectionTempDestCleanupTest {
         pooledConn2.start();
     }
 
+    @Override
     @After
-    public void cleanupTest() throws java.lang.Exception {
+    public void tearDown() throws java.lang.Exception {
         try {
             pooledConn1.stop();
         } catch (JMSException jms_exc) {
@@ -107,16 +104,15 @@ public class PooledConnectionTempDestCleanupTest {
         } catch (JMSException jms_exc) {
         }
 
-        try {
-            embeddedBroker.stop();
-        } catch (JMSException jms_exc) {
-        }
+        super.tearDown();
     }
 
-    protected void configureBroker(BrokerService broker_svc) throws Exception {
-        broker_svc.setBrokerName("testbroker1");
-        broker_svc.setUseJmx(false);
-        broker_svc.setPersistent(false);
+    protected void configureBroker(BrokerService brokerService) throws Exception {
+        brokerService.setBrokerName("testbroker1");
+        brokerService.setUseJmx(false);
+        brokerService.setPersistent(false);
+        brokerService.setAdvisorySupport(false);
+        brokerService.setSchedulerSupport(false);
     }
 
     /**
@@ -129,7 +125,7 @@ public class PooledConnectionTempDestCleanupTest {
      * 5. close the first connection 6. check that the temporary destination no
      * longer exists in the broker
      */
-    @Test
+    @Test(timeout = 60000)
     public void testPooledLingeringTempDests() throws java.lang.Exception {
         Session session1;
         Session session2;
@@ -160,7 +156,7 @@ public class PooledConnectionTempDestCleanupTest {
      * exists in the broker 8. check that the second temporary destination does
      * still exist in the broker
      */
-    @Test
+    @Test(timeout = 60000)
     public void testPooledTempDestsCleanupOverzealous() throws java.lang.Exception {
         Session session1;
         Session session2;
@@ -195,7 +191,7 @@ public class PooledConnectionTempDestCleanupTest {
      * the first connection 6. check that the destination no longer exists in
      * the broker
      */
-    @Test
+    @Test(timeout = 60000)
     public void testDirectLingeringTempDests() throws java.lang.Exception {
         Session session1;
         Session session2;
@@ -216,7 +212,7 @@ public class PooledConnectionTempDestCleanupTest {
     }
 
     private boolean destinationExists(Destination dest) throws Exception {
-        RegionBroker rb = (RegionBroker) embeddedBroker.getBroker().getAdaptor(RegionBroker.class);
+        RegionBroker rb = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
         return rb.getTopicRegion().getDestinationMap().containsKey(dest) || rb.getQueueRegion().getDestinationMap().containsKey(dest)
                 || rb.getTempTopicRegion().getDestinationMap().containsKey(dest) || rb.getTempQueueRegion().getDestinationMap().containsKey(dest);
     }

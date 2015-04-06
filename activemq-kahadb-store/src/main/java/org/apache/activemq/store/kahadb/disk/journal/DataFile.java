@@ -19,11 +19,15 @@ package org.apache.activemq.store.kahadb.disk.journal;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
 import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.RecoverableRandomAccessFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DataFile
@@ -32,12 +36,14 @@ import org.apache.activemq.util.RecoverableRandomAccessFile;
  */
 public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFile> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DataFile.class);
+
     protected final File file;
     protected final Integer dataFileId;
     protected volatile int length;
     protected final SequenceSet corruptedBlocks = new SequenceSet();
 
-    DataFile(File file, int number, int preferedSize) {
+    DataFile(File file, int number) {
         this.file = file;
         this.dataFileId = Integer.valueOf(number);
         length = (int)(file.exists() ? file.length() : 0);
@@ -106,4 +112,5 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     public int hashCode() {
         return dataFileId;
     }
+
 }

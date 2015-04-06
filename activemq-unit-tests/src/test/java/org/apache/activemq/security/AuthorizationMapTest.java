@@ -44,12 +44,27 @@ public class AuthorizationMapTest extends TestCase {
 
     }
 
-    public void testCompositeDoesNotBypassAuthorizationMap() {
+    public void testComposite() {
         AuthorizationMap map = createAuthorizationMap();
+        addABEntry(map);
 
         Set<?> readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR,DENIED"));
         assertEquals("set size: " + readACLs, 1, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(ADMINS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR,USERS.BAR.FOO"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("QUEUEA,QUEUEB"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+    }
+
+    protected void addABEntry(AuthorizationMap map) {
+        DefaultAuthorizationMap defaultMap = (DefaultAuthorizationMap) map;
+        defaultMap.put(new ActiveMQQueue("QUEUEA"), createEntry("QUEUEA", "users", "users", "users"));
+        defaultMap.put(new ActiveMQQueue("QUEUEB"), createEntry("QUEUEB", "users", "users", "users"));
     }
 
     public void testAuthorizationMapWithTempDest() {
@@ -87,6 +102,104 @@ public class AuthorizationMapTest extends TestCase {
         Set<?> tempAdminACLs = map.getTempDestinationAdminACLs();
         assertEquals("set size: " + tempAdminACLs, 1, tempAdminACLs.size());
         assertTrue("Contains users group", tempAdminACLs.contains(TEMP_DESTINATION_ADMINS));
+    }
+
+    public void testWildcardSubscriptions() {
+        final GroupPrincipal USERSA = new GroupPrincipal("usersA");
+
+        DefaultAuthorizationMap map = new DefaultAuthorizationMap();
+        List<DestinationMapEntry> entries = new ArrayList<>();
+        entries.add(createEntry("A", "usersA", null, null));
+        map.setAuthorizationEntries(entries);
+
+        Set<?> readACLs = map.getReadACLs(new ActiveMQQueue(">"));
+        assertEquals("set size: " + readACLs, 0, readACLs.size());
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("A"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERSA));
+
+        entries.add(createEntry("USERS.>", "users", null, null));
+        map.setAuthorizationEntries(entries);
+
+        readACLs = map.getReadACLs(new ActiveMQQueue(">"));
+        assertEquals("set size: " + readACLs, 0, readACLs.size());
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("A"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERSA));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.>"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.>"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.TEST"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        entries.add(createEntry("USERS.A.>", "usersA", null, null));
+        map.setAuthorizationEntries(entries);
+
+        readACLs = map.getReadACLs(new ActiveMQQueue(">"));
+        assertEquals("set size: " + readACLs, 0, readACLs.size());
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("A"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERSA));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.>"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.>"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.TEST"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.A.>"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+        assertTrue("Contains users group", readACLs.contains(USERSA));
+
+        entries.add(createEntry(">", "admins", null, null));
+        map.setAuthorizationEntries(entries);
+
+        readACLs = map.getReadACLs(new ActiveMQQueue(">"));
+        assertEquals("set size: " + readACLs, 1, readACLs.size());
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("A"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERSA));
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.>"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.>"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+        assertTrue("Contains users group", readACLs.contains(USERS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.TEST"));
+        assertEquals("set size: " + readACLs, 2, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
+
+        readACLs = map.getReadACLs(new ActiveMQQueue("USERS.A.>"));
+        assertEquals("set size: " + readACLs, 3, readACLs.size());
+        assertTrue("Contains users group", readACLs.contains(USERS));
+        assertTrue("Contains users group", readACLs.contains(USERSA));
+        assertTrue("Contains admins group", readACLs.contains(ADMINS));
     }
 
     protected AuthorizationMap createWildcardAuthorizationMap() {
@@ -189,6 +302,27 @@ public class AuthorizationMapTest extends TestCase {
         answer.setTempDestinationAuthorizationEntry(tEntry);
 
         return answer;
+    }
+
+    protected AuthorizationEntry createEntry(String queue, String read, String write, String admin) {
+        AuthorizationEntry entry = new AuthorizationEntry();
+        if (queue != null) {
+            entry.setQueue(queue);
+        }
+        try {
+            if (read != null) {
+                entry.setRead(read);
+            }
+            if (write != null) {
+                entry.setWrite(write);
+            }
+            if (admin != null) {
+                entry.setAdmin(admin);
+            }
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+        return entry;
     }
 
 }

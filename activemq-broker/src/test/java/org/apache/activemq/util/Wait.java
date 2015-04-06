@@ -21,10 +21,10 @@ package org.apache.activemq.util;
 import java.util.concurrent.TimeUnit;
 
 public class Wait {
-    
+
     public static final long MAX_WAIT_MILLIS = 30*1000;
-    public static final int SLEEP_MILLIS = 1000;
-    
+    public static final long SLEEP_MILLIS = 1000;
+
     public interface Condition {
         boolean isSatisified() throws Exception;
     }
@@ -37,14 +37,14 @@ public class Wait {
         return waitFor(condition, duration, SLEEP_MILLIS);
     }
 
-    public static boolean waitFor(final Condition condition, final long duration, final int sleepMillis) throws Exception {
+    public static boolean waitFor(final Condition condition, final long duration, final long sleepMillis) throws Exception {
 
         final long expiry = System.currentTimeMillis() + duration;
         boolean conditionSatisified = condition.isSatisified();
         while (!conditionSatisified && System.currentTimeMillis() < expiry) {
             TimeUnit.MILLISECONDS.sleep(sleepMillis);
             conditionSatisified = condition.isSatisified();
-        }   
+        }
         return conditionSatisified;
-    }  
+    }
 }

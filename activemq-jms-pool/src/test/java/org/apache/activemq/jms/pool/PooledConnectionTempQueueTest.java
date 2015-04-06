@@ -33,15 +33,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PooledConnectionTempQueueTest {
+public class PooledConnectionTempQueueTest extends JmsPoolTestSupport {
 
     private final Logger LOG = LoggerFactory.getLogger(PooledConnectionTempQueueTest.class);
 
     protected static final String SERVICE_QUEUE = "queue1";
 
-    @Test
+    @Test(timeout = 60000)
     public void testTempQueueIssue() throws JMSException, InterruptedException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+            "vm://localhost?broker.persistent=false&broker.useJmx=false");
         final PooledConnectionFactory cf = new PooledConnectionFactory();
         cf.setConnectionFactory(factory);
 
@@ -81,11 +82,11 @@ public class PooledConnectionTempQueueTest {
         producer.send(msg);
 
         // This sleep also seems to matter
-        Thread.sleep(5000);
+        Thread.sleep(3000);
 
         MessageConsumer consumer = session.createConsumer(tempQueue);
         Message replyMsg = consumer.receive();
-        System.out.println(replyMsg.getJMSCorrelationID());
+        LOG.debug("Reply message: {}", replyMsg);
 
         consumer.close();
 
@@ -102,11 +103,11 @@ public class PooledConnectionTempQueueTest {
         final javax.jms.Message inMessage = consumer.receive();
 
         String requestMessageId = inMessage.getJMSMessageID();
-        System.out.println("Received message " + requestMessageId);
+        LOG.debug("Received message " + requestMessageId);
         final TextMessage replyMessage = session.createTextMessage("Result");
         replyMessage.setJMSCorrelationID(inMessage.getJMSMessageID());
         final MessageProducer producer = session.createProducer(inMessage.getJMSReplyTo());
-        System.out.println("Sending reply to " + inMessage.getJMSReplyTo());
+        LOG.debug("Sending reply to " + inMessage.getJMSReplyTo());
         producer.send(replyMessage);
 
         producer.close();
@@ -114,5 +115,4 @@ public class PooledConnectionTempQueueTest {
         session.close();
         con.close();
     }
-
 }

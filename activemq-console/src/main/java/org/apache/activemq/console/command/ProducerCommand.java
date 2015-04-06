@@ -18,14 +18,12 @@ package org.apache.activemq.console.command;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ProducerThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Session;
-import java.io.*;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -39,6 +37,8 @@ public class ProducerCommand extends AbstractCommand {
     int messageCount = 1000;
     int sleep = 0;
     boolean persistent = true;
+    String message = null;
+    String payloadUrl = null;
     int messageSize = 0;
     int textMessageSize;
     long msgTTL = 0L;
@@ -55,34 +55,43 @@ public class ProducerCommand extends AbstractCommand {
         LOG.info("Running " + parallelThreads + " parallel threads");
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-        Connection conn = factory.createConnection(user, password);
-        conn.start();
+        Connection conn = null;
+        try {
+            conn = factory.createConnection(user, password);
+            conn.start();
 
-        Session sess;
-        if (transactionBatchSize != 0) {
-            sess = conn.createSession(true, Session.SESSION_TRANSACTED);
-        } else {
-            sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session sess;
+            if (transactionBatchSize != 0) {
+                sess = conn.createSession(true, Session.SESSION_TRANSACTED);
+            } else {
+                sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            }
+
+            CountDownLatch active = new CountDownLatch(parallelThreads);
+
+            for (int i = 1; i <= parallelThreads; i++) {
+                ProducerThread producer = new ProducerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
+                producer.setName("producer-" + i);
+                producer.setMessageCount(messageCount);
+                producer.setSleep(sleep);
+                producer.setMsgTTL(msgTTL);
+                producer.setPersistent(persistent);
+                producer.setTransactionBatchSize(transactionBatchSize);
+                producer.setMessage(message);
+                producer.setPayloadUrl(payloadUrl);
+                producer.setMessageSize(messageSize);
+                producer.setMsgGroupID(msgGroupID);
+                producer.setTextMessageSize(textMessageSize);
+                producer.setFinished(active);
+                producer.start();
+            }
+
+            active.await();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
-
-        CountDownLatch active = new CountDownLatch(parallelThreads);
-
-        for (int i = 1; i <= parallelThreads; i++) {
-            ProducerThread producer = new ProducerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
-            producer.setName("producer-" + i);
-            producer.setMessageCount(messageCount);
-            producer.setSleep(sleep);
-            producer.setMsgTTL(msgTTL);
-            producer.setPersistent(persistent);
-            producer.setTransactionBatchSize(transactionBatchSize);
-            producer.setMessageSize(messageSize);
-            producer.setMsgGroupID(msgGroupID);
-            producer.setTextMessageSize(textMessageSize);
-            producer.setFinished(active);
-            producer.start();
-        }
-
-        active.await();
     }
 
     public String getBrokerUrl() {
@@ -187,6 +196,22 @@ public class ProducerCommand extends AbstractCommand {
 
     public void setParallelThreads(int parallelThreads) {
         this.parallelThreads = parallelThreads;
+    }
+
+    public String getPayloadUrl() {
+        return payloadUrl;
+    }
+
+    public void setPayloadUrl(String payloadUrl) {
+        this.payloadUrl = payloadUrl;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     @Override
