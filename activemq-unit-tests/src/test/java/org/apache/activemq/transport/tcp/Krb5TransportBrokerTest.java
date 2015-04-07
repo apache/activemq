@@ -20,6 +20,7 @@
 package org.apache.activemq.transport.tcp;
 
 
+import org.apache.activemq.transport.TransportBrokerTestSupport;
 import org.apache.directory.api.ldap.model.constants.SupportedSaslMechanisms;
 import org.apache.directory.server.annotations.CreateKdcServer;
 import org.apache.directory.server.annotations.CreateLdapServer;
@@ -85,8 +86,13 @@ import java.net.URISyntaxException;
             @CreateTransport(protocol = "UDP", port = 6088),
             @CreateTransport(protocol = "TCP", port = 6088)
     })
-public class Krb5TransportBrokerTest extends Krb5BrokerTestSupport {
+public class Krb5TransportBrokerTest extends TransportBrokerTestSupport {
+    static {
+        //Initialize ApacheDS processing annotations on given class
+        new Krb5BrokerTestSupport(Krb5TransportBrokerTest.class).processApacheDSAnnotations();
+    }
 
+    @Override
     protected String getBindLocation() {
         return "krb5://localhost:0?transport.soWriteTimeout=20000&krb5ConfigName=Broker";
     }
@@ -99,5 +105,4 @@ public class Krb5TransportBrokerTest extends Krb5BrokerTestSupport {
     public static junit.framework.Test suite() {
         return suite(Krb5TransportBrokerTest.class);
     }
-
 }

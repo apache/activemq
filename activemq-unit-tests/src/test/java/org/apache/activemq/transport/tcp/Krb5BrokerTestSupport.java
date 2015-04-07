@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.transport.TransportBrokerTestSupport;
 import org.apache.commons.io.FileUtils;
 import org.apache.directory.api.ldap.model.constants.SchemaConstants;
 import org.apache.directory.server.annotations.CreateLdapServer;
@@ -30,11 +29,9 @@ import org.apache.directory.server.core.factory.PartitionFactory;
 import org.apache.directory.server.core.jndi.CoreContextFactory;
 import org.apache.directory.server.factory.ServerAnnotationProcessor;
 import org.apache.directory.server.i18n.I18n;
-import org.apache.directory.server.kerberos.kdc.KdcServer;
 import org.apache.directory.server.kerberos.shared.crypto.encryption.KerberosKeyFactory;
 import org.apache.directory.server.kerberos.shared.keytab.Keytab;
 import org.apache.directory.server.kerberos.shared.keytab.KeytabEntry;
-import org.apache.directory.server.ldap.LdapServer;
 import org.apache.directory.shared.kerberos.KerberosTime;
 import org.apache.directory.shared.kerberos.codec.types.EncryptionType;
 import org.apache.directory.shared.kerberos.components.EncryptionKey;
@@ -60,7 +57,7 @@ import java.util.*;
  * scenario, there are 3 principals:  1 for the test user, 1 for the
  * Kerberos ticket-granting service (TGS), and 1 for the Host service.
  */
-public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
+public class Krb5BrokerTestSupport {
     private static final String KERBEROS_PRINCIPAL_USER1 = "user1@EXAMPLE.COM";
     private static final String KERBEROS_PRINCIPAL_USER2 = "user2@EXAMPLE.COM";
     private static final String KERBEROS_PRINCIPAL_PASSWORD = "Piotr Klimczak";
@@ -70,17 +67,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     /**
      * The used DirectoryService instance
      */
-    public static DirectoryService service;
-
-    /**
-     * The used LdapServer instance
-     */
-    public static LdapServer ldapServer;
-
-    /**
-     * The used KdcServer instance
-     */
-    public static KdcServer kdcServer;
+    public DirectoryService service;
 
     private DirContext ctx;
 
@@ -99,19 +86,16 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
      */
     protected CoreSession rootDse;
 
-    private static boolean initialized = false;
-    private static String hostname;
+    private String hostname;
 
-    public Krb5BrokerTestSupport() {
-        super();
+    private Class<?> testClass;
 
-        if (!initialized) {
-            init();
-            initialized = true;
-        }
+
+    public Krb5BrokerTestSupport(Class<?> testClass) {
+        this.testClass = testClass;
     }
 
-    private void init() {
+    public void processApacheDSAnnotations() {
         try {
             hostname = InetAddress.getLocalHost().getHostName();
             configureSystemProperties();
@@ -170,7 +154,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
      * @param keytabFile
      * @throws IOException
      */
-    public static void createKeytab(final String principalName, final String passPhrase, final File keytabFile) throws IOException {
+    public void createKeytab(final String principalName, final String passPhrase, final File keytabFile) throws IOException {
         final KerberosTime timeStamp = new KerberosTime();
         final int principalType = 1; // KRB5_NT_PRINCIPAL
 
@@ -227,7 +211,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
         // Get a context, create the ou=users subcontext, then create the 3
         // principals.
         Hashtable<String, Object> env = new Hashtable<String, Object>();
-        env.put(DirectoryService.JNDI_KEY, getService());
+        env.put(DirectoryService.JNDI_KEY, service);
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.directory.server.core.jndi.CoreContextFactory");
         env.put(Context.PROVIDER_URL, "dc=example,dc=com");
         env.put(Context.SECURITY_PRINCIPAL, "uid=admin,ou=system");
@@ -242,7 +226,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
     }
 
     private Description getDescription() {
-        return Description.createSuiteDescription(this.getClass().getName(), this.getClass().getAnnotations());
+        return Description.createSuiteDescription(testClass.getName(), testClass.getAnnotations());
     }
 
     private void createServer() {
@@ -281,14 +265,16 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
             // check if it has a LdapServerBuilder
             // then use the DS created above
             if (classLdapServerBuilder != null) {
-                ldapServer = ServerAnnotationProcessor.createLdapServer(getDescription(), directoryService);
+                //ldapServer =
+                        ServerAnnotationProcessor.createLdapServer(getDescription(), directoryService);
             }
 
-            if (kdcServer == null) {
+            //if (kdcServer == null) {
                 int minPort = getMinPort();
 
-                kdcServer = ServerAnnotationProcessor.getKdcServer(getDescription(), directoryService, minPort + 1);
-            }
+//                kdcServer =
+                        ServerAnnotationProcessor.getKdcServer(getDescription(), directoryService, minPort + 1);
+            //}
 
             // print out information which partition factory we use
             DirectoryServiceFactory dsFactory = DefaultDirectoryServiceFactory.class.newInstance();
@@ -319,7 +305,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
 
     protected void setContexts(String user, String passwd) throws Exception {
         Hashtable<String, Object> env = new Hashtable<String, Object>();
-        env.put(DirectoryService.JNDI_KEY, getService());
+        env.put(DirectoryService.JNDI_KEY, service);
         env.put(Context.SECURITY_PRINCIPAL, user);
         env.put(Context.SECURITY_CREDENTIALS, passwd);
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
@@ -330,7 +316,7 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
         sysRoot = new InitialLdapContext(envFinal, null);
 
         envFinal.put(Context.PROVIDER_URL, "");
-        rootDse = getService().getAdminSession();
+        rootDse = service.getAdminSession();
 
         envFinal.put(Context.PROVIDER_URL, SchemaConstants.OU_SCHEMA);
         schemaRoot = new InitialLdapContext(envFinal, null);
@@ -343,30 +329,6 @@ public abstract class Krb5BrokerTestSupport extends TransportBrokerTestSupport {
         int minPort = 0;
 
         return minPort;
-    }
-
-    public static DirectoryService getService() {
-        return service;
-    }
-
-    public static void setService(DirectoryService service) {
-        Krb5BrokerTestSupport.service = service;
-    }
-
-    public static LdapServer getLdapServer() {
-        return ldapServer;
-    }
-
-    public static void setLdapServer(LdapServer ldapServer) {
-        Krb5BrokerTestSupport.ldapServer = ldapServer;
-    }
-
-    public static KdcServer getKdcServer() {
-        return kdcServer;
-    }
-
-    public static void setKdcServer(KdcServer kdcServer) {
-        Krb5BrokerTestSupport.kdcServer = kdcServer;
     }
 
     protected String getLoginModuleFileContent(String hostname) {

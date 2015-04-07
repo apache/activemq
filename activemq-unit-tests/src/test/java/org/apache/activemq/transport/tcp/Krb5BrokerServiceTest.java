@@ -16,8 +16,9 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import junit.framework.Test;
-import junit.textui.TestRunner;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.directory.api.ldap.model.constants.SupportedSaslMechanisms;
 import org.apache.directory.server.annotations.CreateKdcServer;
@@ -34,6 +35,8 @@ import org.apache.directory.server.ldap.handlers.sasl.digestMD5.DigestMd5Mechani
 import org.apache.directory.server.ldap.handlers.sasl.gssapi.GssapiMechanismHandler;
 import org.apache.directory.server.ldap.handlers.sasl.ntlm.NtlmMechanismHandler;
 import org.apache.directory.server.ldap.handlers.sasl.plain.PlainMechanismHandler;
+import org.junit.Assert;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +46,7 @@ import javax.net.ssl.SSLSocket;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.security.Principal;
 import java.security.PrivilegedAction;
 
 @CreateDS(name = "SaslGssapiBindITest-class",
@@ -92,38 +94,42 @@ import java.security.PrivilegedAction;
                         @CreateTransport(protocol = "UDP", port = 6088),
                         @CreateTransport(protocol = "TCP", port = 6088)
                 })
-public class Krb5BrokerServiceTest extends Krb5BrokerTestSupport {
+public class Krb5BrokerServiceTest extends BrokerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(Krb5BrokerServiceTest.class);
 
-    protected String getBindLocation() {
-        return "krb5://localhost:0?transport.soWriteTimeout=20000&krb5ConfigName=Broker";
+    static {
+        //Initialize ApacheDS processing annotations on given class
+        new Krb5BrokerTestSupport(Krb5BrokerServiceTest.class).processApacheDSAnnotations();
     }
 
-    @Override
-    protected URI getBindURI() throws URISyntaxException {
-        return new URI("krb5://localhost:0?soWriteTimeout=20000&krb5ConfigName=User1");
-    }
+    private TransportConnector connector;
 
+    @Test
     public void testPositive() throws Exception {
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(null, null, null);
-        makeSSLConnection(context, "User1", connector);
+
+        Principal peerPrincipal = makeSSLConnection(context, "User1", connector);
+
+        Assert.assertNotNull("No peer principal", peerPrincipal);
+        Assert.assertTrue(peerPrincipal.getName().contains("host/"));
+        Assert.assertTrue(peerPrincipal.getName().contains("@EXAMPLE.COM"));
     }
 
-    private void makeSSLConnection(final SSLContext context, String krb5ConfigName, final TransportConnector connector) throws Exception, SocketException {
+    private Principal makeSSLConnection(final SSLContext context, String krb5ConfigName, final TransportConnector connector) throws Exception, SocketException {
 
         LoginContext loginCtx = new LoginContext(krb5ConfigName);
         loginCtx.login();
         Subject subject = loginCtx.getSubject();
 
-        Subject.doAs(subject, new PrivilegedAction<Void>() {
-            public Void run() {
+        return (Principal) Subject.doAs(subject, new PrivilegedAction<Principal>() {
+            public Principal run() {
                 try {
                     SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket("localhost", connector.getUri().getPort());
 
                     sslSocket.setEnabledCipherSuites(new String[]{Krb5OverSslTransport.KRB5_CIPHER});
 
-                    sslSocket.setSoTimeout(5000);
+                    sslSocket.setSoTimeout(20000);
 
                     SSLSession session = sslSocket.getSession();
                     sslSocket.startHandshake();
@@ -133,7 +139,7 @@ public class Krb5BrokerServiceTest extends Krb5BrokerTestSupport {
                     LOG.info("LocalPrincipal: " + session.getLocalPrincipal());
                     LOG.info("PeerPrincipal: " + session.getPeerPrincipal());
 
-                    return null;
+                    return session.getPeerPrincipal();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -141,17 +147,11 @@ public class Krb5BrokerServiceTest extends Krb5BrokerTestSupport {
         });
     }
 
-
-    protected void setUp() throws Exception {
-        maxWait = 10000;
-        super.setUp();
+    @Override
+    protected BrokerService createBroker() throws Exception {
+        BrokerService service = super.createBroker();
+        connector = service.addConnector("krb5://localhost:0?transport.soWriteTimeout=20000&krb5ConfigName=Broker");
+        return service;
     }
 
-    public static Test suite() {
-        return suite(Krb5BrokerServiceTest.class);
-    }
-
-    public static void main(String[] args) {
-        TestRunner.run(suite());
-    }
 }
