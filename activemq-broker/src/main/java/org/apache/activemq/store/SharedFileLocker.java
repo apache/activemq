@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.store;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.util.LockFile;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Represents an exclusive lock on a database to avoid multiple brokers running
@@ -48,19 +48,30 @@ public class SharedFileLocker extends AbstractLocker {
             if (failIfLocked) {
                 lockFile.lock();
             } else {
+                // Print a warning only once
+                boolean warned = false;
                 boolean locked = false;
                 while ((!isStopped()) && (!isStopping())) {
                     try {
                         lockFile.lock();
                         locked = keepAlive();
+                        LOG.info("locked " + locked);
                         break;
                     } catch (IOException e) {
-                        LOG.info("Database "
-                                + lockFileName
-                                + " is locked... waiting "
-                                + (lockAcquireSleepInterval / 1000)
-                                + " seconds for the database to be unlocked. Reason: "
-                                + e);
+                        if (!warned)
+                        {
+                            LOG.info("Database "
+                                         + lockFileName
+                                         + " is locked by another server. This broker is now in slave mode waiting a lock to be acquired");
+                            warned = true;
+                        }
+
+                        LOG.debug("Database "
+                                    + lockFileName
+                                    + " is locked... waiting "
+                                    + (lockAcquireSleepInterval / 1000)
+                                    + " seconds for the database to be unlocked. Reason: "
+                                    + e);
                         try {
                             Thread.sleep(lockAcquireSleepInterval);
                         } catch (InterruptedException e1) {
