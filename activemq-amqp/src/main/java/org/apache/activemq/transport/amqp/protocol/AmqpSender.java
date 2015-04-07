@@ -46,7 +46,9 @@ import org.apache.qpid.proton.amqp.messaging.Outcome;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Released;
 import org.apache.qpid.proton.amqp.transaction.TransactionalState;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
@@ -305,6 +307,21 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 outbound.addLast(dispatch);
             }
             pumpOutbound();
+            session.pumpProtonToSocket();
+        }
+    }
+
+    /**
+     * Called when the Broker sends a ConsumerControl command to the Consumer that
+     * this sender creates to obtain messages to dispatch via the sender for this
+     * end of the open link.
+     *
+     * @param control
+     *        The ConsumerControl command to process.
+     */
+    public void onConsumerControl(ConsumerControl control) {
+        if (control.isClose()) {
+            close(new ErrorCondition(AmqpError.INTERNAL_ERROR, "Receiver forcably closed"));
             session.pumpProtonToSocket();
         }
     }

@@ -46,6 +46,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
@@ -538,6 +539,12 @@ public class AmqpConnection implements AmqpProtocolConverter {
             // Pass down any unexpected async errors. Should this close the connection?
             Throwable exception = ((ConnectionError) command).getException();
             handleException(exception);
+        } else if (command.isConsumerControl()) {
+            ConsumerControl control = (ConsumerControl) command;
+            AmqpSender sender = subscriptionsByConsumerId.get(control.getConsumerId());
+            if (sender != null) {
+                sender.onConsumerControl(control);
+            }
         } else if (command.isBrokerInfo()) {
             // ignore
         } else {

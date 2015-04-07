@@ -339,7 +339,6 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-    //@Ignore("Test fails currently due to improper implementation of drain.")
     @Test(timeout = 60000)
     public void testReceiverCanDrainMessages() throws Exception {
         int MSG_COUNT = 20;

@@ -107,6 +107,8 @@ public class AmqpTestSupport {
         brokerService.setUseJmx(true);
         brokerService.getManagementContext().setCreateConnector(false);
 
+        performAdditionalConfiguration(brokerService);
+
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(new KeyManager[0], new TrustManager[]{new DefaultTrustManager()}, new SecureRandom());
         SSLContext.setDefault(ctx);
@@ -130,6 +132,10 @@ public class AmqpTestSupport {
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
         addTranportConnectors();
+    }
+
+    protected void performAdditionalConfiguration(BrokerService brokerService) throws Exception {
+
     }
 
     protected void addTranportConnectors() throws Exception {
