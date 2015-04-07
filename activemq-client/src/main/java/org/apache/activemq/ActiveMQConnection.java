@@ -1587,19 +1587,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             c.dispose();
         }
 
-        if (isConnectionInfoSentToBroker) {
-            if (!transportFailed.get() && !closing.get()) {
-                syncSendPacket(info.createRemoveCommand());
-            }
-            isConnectionInfoSentToBroker = false;
-        }
         if (userSpecifiedClientID) {
             info.setClientId(null);
             userSpecifiedClientID = false;
         }
         clientIDSet = false;
 
-        started.set(false);
+        stop();
     }
 
     /**
