@@ -20,6 +20,10 @@ package org.apache.activemq.store;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.IOHelper;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,11 +32,32 @@ import org.junit.rules.TemporaryFolder;
 public class SharedFileLockerTest
 {
    @Rule
-   public TemporaryFolder testFolder = new TemporaryFolder();
+   public TemporaryFolder testFolder;
+
+
+   public SharedFileLockerTest()
+   {
+      File file = new File(IOHelper.getDefaultDataDirectory());
+      file.mkdir();
+
+      // TemporaryFolder will make sure the files are removed after the test is done
+      testFolder = new TemporaryFolder(file);
+
+   }
 
    @Test
-   public void testLock() throws Exception
+   public void testLogging() throws Exception
    {
+      final AtomicInteger logCounts = new AtomicInteger(0);
+      DefaultTestAppender appender = new DefaultTestAppender() {
+         @Override
+         public void doAppend(LoggingEvent event) {
+            logCounts.incrementAndGet();
+         }
+      };
+
+      Logger.getRootLogger().addAppender(appender);
+
       final AtomicInteger errors = new AtomicInteger(0);
 
       Thread thread = null;
@@ -80,6 +105,8 @@ public class SharedFileLockerTest
          // 10 seconds here is an eternity, but it should only take milliseconds
          thread.join(5000);
 
+         Assert.assertEquals("Extra logs in place", 1, logCounts.get());
+
          long timeout = System.currentTimeMillis() + 5000;
 
          while (timeout > System.currentTimeMillis() && !locker2.keepAlive())
@@ -91,9 +118,15 @@ public class SharedFileLockerTest
 
          locker2.stop();
 
+         Assert.assertEquals(0, errors.get());
+
       }
       finally
       {
+
+
+         Logger.getRootLogger().removeAppender(appender);
+
          // to make sure we won't leak threads if the test ever failed for any reason
          thread.join(1000);
          if (thread.isAlive())

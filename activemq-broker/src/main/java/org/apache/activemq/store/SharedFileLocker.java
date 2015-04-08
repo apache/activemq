@@ -55,7 +55,6 @@ public class SharedFileLocker extends AbstractLocker {
                     try {
                         lockFile.lock();
                         locked = keepAlive();
-                        LOG.info("locked " + locked);
                         break;
                     } catch (IOException e) {
                         if (!warned)
