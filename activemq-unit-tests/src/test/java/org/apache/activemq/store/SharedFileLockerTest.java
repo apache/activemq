@@ -46,7 +46,26 @@ public class SharedFileLockerTest
    }
 
    @Test
+   public void testLoop() throws Exception
+   {
+      // Increase the number of iterations if you are debugging races
+      for (int i = 0 ; i < 100; i++)
+      {
+         internalLoop(5);
+      }
+
+   }
+
+
+   @Test
    public void testLogging() throws Exception
+   {
+      // using a bigger wait here
+      // to make sure we won't log any extra info
+      internalLoop(100);
+   }
+
+   private void internalLoop(long timewait) throws Exception
    {
       final AtomicInteger logCounts = new AtomicInteger(0);
       DefaultTestAppender appender = new DefaultTestAppender() {
@@ -76,8 +95,6 @@ public class SharedFileLockerTest
 
          Assert.assertTrue(locker1.keepAlive());
 
-         Thread.sleep(10);
-
          thread = new Thread("Locker Thread")
          {
             public void run()
@@ -95,8 +112,21 @@ public class SharedFileLockerTest
 
          thread.start();
 
-         // Waiting some small time here, you shouldn't see many messages
-         Thread.sleep(100);
+         // I need to make sure the info was already logged
+         // but I don't want to have an unecessary wait here,
+         // as I want the test to run as fast as possible
+         {
+            long timeout = System.currentTimeMillis() + 5000;
+            while (logCounts.get() < 1 && System.currentTimeMillis() < timeout)
+            {
+               Thread.sleep(1);
+            }
+         }
+
+         if (timewait > 0)
+         {
+            Thread.sleep(timewait);
+         }
 
          Assert.assertTrue(thread.isAlive());
 

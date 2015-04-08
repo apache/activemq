@@ -44,7 +44,7 @@ public class SharedFileLocker extends AbstractLocker {
     public void doStart() throws Exception {
         if (lockFile == null) {
             File lockFileName = new File(directory, "lock");
-            lockFile = new LockFile(lockFileName, true);
+            lockFile = new LockFile(lockFileName, false);
             if (failIfLocked) {
                 lockFile.lock();
             } else {
