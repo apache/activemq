@@ -1793,7 +1793,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     final boolean cursorAdd(final Message msg) throws Exception {
         messagesLock.writeLock().lock();
         try {
-            return messages.addMessageLast(msg);
+        	return messages.tryAddMessageLast(msg, 10l);
         } finally {
             messagesLock.writeLock().unlock();
         }
