@@ -17,14 +17,11 @@
 
 package org.apache.activemq.bugs;
 
-import static org.junit.Assert.assertTrue;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -36,6 +33,8 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class AMQ3779Test {
 
@@ -84,8 +83,9 @@ public class AMQ3779Test {
                 brokerService.waitUntilStopped();
             }
         } finally {
-            LOG.removeAppender(appender);
+           Logger.getRootLogger().removeAppender(appender);
         }
+
     }
 
     @Test(timeout = 60000)
