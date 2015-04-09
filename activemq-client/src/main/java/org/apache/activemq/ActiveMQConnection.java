@@ -1572,7 +1572,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * connection.
      */
     public void cleanup() throws JMSException {
+        doCleanup(false);
+    }
 
+    public void doCleanup(boolean removeConnection) throws JMSException {
         if (advisoryConsumer != null && !isTransportFailed()) {
             advisoryConsumer.dispose();
             advisoryConsumer = null;
@@ -1587,13 +1590,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             c.dispose();
         }
 
-        if (userSpecifiedClientID) {
-            info.setClientId(null);
-            userSpecifiedClientID = false;
+        if (removeConnection) {
+            if (isConnectionInfoSentToBroker) {
+                if (!transportFailed.get() && !closing.get()) {
+                    syncSendPacket(info.createRemoveCommand());
+                }
+                isConnectionInfoSentToBroker = false;
+            }
+            if (userSpecifiedClientID) {
+                info.setClientId(null);
+                userSpecifiedClientID = false;
+            }
+            clientIDSet = false;
         }
-        clientIDSet = false;
 
-        stop();
+        started.set(false);
     }
 
     /**
@@ -1983,7 +1994,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     ServiceSupport.dispose(ActiveMQConnection.this.transport);
                     brokerInfoReceived.countDown();
                     try {
-                        cleanup();
+                        doCleanup(true);
                     } catch (JMSException e) {
                         LOG.warn("Exception during connection cleanup, " + e, e);
                     }
