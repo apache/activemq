@@ -33,11 +33,11 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.*;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 
 /**
  *
@@ -159,6 +159,28 @@ public class AdvisoryTests extends TestCase {
 
         Message msg = advisoryConsumer.receive(2000);
         assertNotNull(msg);
+    }
+
+    public void testMessageDLQd() throws Exception {
+        ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
+        policy.setTopicPrefetch(2);
+        ((ActiveMQConnection)connection).setPrefetchPolicy(policy);
+        Session s = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        Topic topic = s.createTopic(getClass().getName());
+
+        Topic advisoryTopic = s.createTopic(">");
+        for (int i = 0; i < 100; i++) {
+            MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
+        }
+
+
+        MessageProducer producer = s.createProducer(topic);
+        int count = 10;
+        for (int i = 0; i < count; i++) {
+            BytesMessage m = s.createBytesMessage();
+            producer.send(m);
+        }
+        // we should get here without StackOverflow
     }
 
     public void xtestMessageDiscardedAdvisory() throws Exception {
