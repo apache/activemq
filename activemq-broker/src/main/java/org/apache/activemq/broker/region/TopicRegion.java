@@ -200,7 +200,8 @@ public class TopicRegion extends AbstractRegion {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
-            throw new InvalidDestinationException("No durable subscription exists for: " + info.getSubscriptionName());
+			throw new InvalidDestinationException("No durable subscription exists for clientID: "
+					+ info.getClientId() + " and subscriptionName: " + info.getSubscriptionName());
         }
         if (sub.isActive()) {
             throw new JMSException("Durable consumer is in use");
@@ -336,7 +337,9 @@ public class TopicRegion extends AbstractRegion {
                 }
                 durableSubscriptions.put(key, sub);
             } else {
-                throw new JMSException("That durable subscription is already active.");
+				throw new JMSException("Durable subscription is already active for clientID: "
+						+ context.getClientId() + " and subscriptionName: "
+						+ info.getSubscriptionName());
             }
             return sub;
         }
