@@ -91,7 +91,7 @@ public class AmqpSession implements AmqpResource {
 
     @Override
     public void open() {
-        LOG.trace("Session {} opened", getSessionId());
+        LOG.debug("Session {} opened", getSessionId());
 
         getEndpoint().setContext(this);
         getEndpoint().setIncomingCapacity(Integer.MAX_VALUE);
@@ -102,7 +102,7 @@ public class AmqpSession implements AmqpResource {
 
     @Override
     public void close() {
-        LOG.trace("Session {} closed", getSessionId());
+        LOG.debug("Session {} closed", getSessionId());
 
         getEndpoint().setContext(null);
         getEndpoint().close();
@@ -156,6 +156,8 @@ public class AmqpSession implements AmqpResource {
 
         ProducerInfo producerInfo = new ProducerInfo(getNextProducerId());
         final AmqpReceiver receiver = new AmqpReceiver(this, protonReceiver, producerInfo);
+
+        LOG.debug("opening new receiver {} on link: {}", producerInfo.getProducerId(), protonReceiver.getName());
 
         try {
             Target target = (Target) remoteTarget;
@@ -212,6 +214,8 @@ public class AmqpSession implements AmqpResource {
 
         ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
         final AmqpSender sender = new AmqpSender(this, protonSender, consumerInfo);
+
+        LOG.debug("opening new sender {} on link: {}", consumerInfo.getConsumerId(), protonSender.getName());
 
         try {
             final Map<Symbol, Object> supportedFilters = new HashMap<Symbol, Object>();
