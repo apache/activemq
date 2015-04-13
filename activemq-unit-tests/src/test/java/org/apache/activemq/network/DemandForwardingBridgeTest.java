@@ -75,6 +75,13 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         connection1.send(consumerInfo1.createRemoveCommand());
 
         final DestinationStatistics destinationStatistics = broker.getDestination(destination).getDestinationStatistics();
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == destinationStatistics.getDispatched().getCount();
+            }
+        });
         assertEquals("broker dest stat dispatched", 1, destinationStatistics.getDispatched().getCount());
         assertEquals("broker dest stat dequeues", 0, destinationStatistics.getDequeues().getCount());
         assertEquals("broker dest stat forwards", 0, destinationStatistics.getForwards().getCount());
