@@ -94,29 +94,69 @@ import java.security.PrivilegedAction;
                         @CreateTransport(protocol = "UDP", port = 6088),
                         @CreateTransport(protocol = "TCP", port = 6088)
                 })
-public class Krb5BrokerServiceTest extends BrokerTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(Krb5BrokerServiceTest.class);
+public class Krb5TransportConnectionTest extends BrokerTestSupport {
+    private static final Logger LOG = LoggerFactory.getLogger(Krb5TransportConnectionTest.class);
 
     static {
         //Initialize ApacheDS processing annotations on given class
-        new Krb5BrokerTestSupport(Krb5BrokerServiceTest.class).processApacheDSAnnotations();
+        new Krb5BrokerTestSupport(Krb5TransportConnectionTest.class).processApacheDSAnnotations();
     }
 
-    private TransportConnector connector;
+    private TransportConnector connectorDefault;
+    private TransportConnector connectorWithTLS_KRB5_WITH_3DES_EDE_CBC_SHA;
 
     @Test
-    public void testPositive() throws Exception {
-        SSLContext context = SSLContext.getInstance("TLS");
-        context.init(null, null, null);
-
-        Principal peerPrincipal = makeSSLConnection(context, "User1", connector);
+    public void testDefault() throws Exception {
+        Principal peerPrincipal = makeSSLConnection("User1", Krb5OverSslTransport.KRB5_CIPHERS, connectorDefault);
 
         Assert.assertNotNull("No peer principal", peerPrincipal);
         Assert.assertTrue(peerPrincipal.getName().contains("host/"));
         Assert.assertTrue(peerPrincipal.getName().contains("@EXAMPLE.COM"));
     }
 
-    private Principal makeSSLConnection(final SSLContext context, String krb5ConfigName, final TransportConnector connector) throws Exception, SocketException {
+    @Test
+    public void testSupportedNonDefault() throws Exception {
+        //0x00,0x1F  TLS_KRB5_WITH_3DES_EDE_CBC_SHA            [RFC2712]
+        Principal peerPrincipal = makeSSLConnection("User1", "TLS_KRB5_WITH_3DES_EDE_CBC_SHA", connectorWithTLS_KRB5_WITH_3DES_EDE_CBC_SHA);
+
+        Assert.assertNotNull("No peer principal", peerPrincipal);
+        Assert.assertTrue(peerPrincipal.getName().contains("host/"));
+        Assert.assertTrue(peerPrincipal.getName().contains("@EXAMPLE.COM"));
+    }
+
+    @Test
+    public void testUnsupportedNonDefault() throws Exception {
+        Exception expected = null;
+
+        try {
+            //One of defaults: 0x00,0x3C  TLS_RSA_WITH_AES_128_CBC_SHA256           [RFC5246]
+            makeSSLConnection("User1", "TLS_RSA_WITH_AES_128_CBC_SHA256", connectorDefault);
+        } catch (Exception e) {
+            expected = e;
+        }
+
+        assertNotNull(expected);
+        assertTrue(expected.getMessage().contains("No appropriate protocol"));
+    }
+
+    @Test
+    public void testUnsupportedDefault() throws Exception {
+        Exception expected = null;
+
+        try {
+            //0x00,0x1E  TLS_KRB5_WITH_DES_CBC_SHA                 [RFC2712]
+            makeSSLConnection("User1", "TLS_KRB5_WITH_DES_CBC_SHA", connectorWithTLS_KRB5_WITH_3DES_EDE_CBC_SHA);
+        } catch (Exception e) {
+            expected = e;
+        }
+
+        assertNotNull(expected);
+        assertTrue(expected.getMessage().contains("handshake_failure"));
+    }
+
+    private Principal makeSSLConnection(String krb5ConfigName, final String enabledCipherSuites, final TransportConnector connector) throws Exception, SocketException {
+        final SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, null, null);
 
         LoginContext loginCtx = new LoginContext(krb5ConfigName);
         loginCtx.login();
@@ -127,7 +167,7 @@ public class Krb5BrokerServiceTest extends BrokerTestSupport {
                 try {
                     SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket("localhost", connector.getUri().getPort());
 
-                    sslSocket.setEnabledCipherSuites(new String[]{Krb5OverSslTransport.KRB5_CIPHER});
+                    sslSocket.setEnabledCipherSuites(enabledCipherSuites.split(","));
 
                     sslSocket.setSoTimeout(20000);
 
@@ -150,7 +190,11 @@ public class Krb5BrokerServiceTest extends BrokerTestSupport {
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService service = super.createBroker();
-        connector = service.addConnector("krb5://localhost:0?transport.soWriteTimeout=20000&krb5ConfigName=Broker");
+
+        connectorDefault = service.addConnector("krb5://localhost:0?transport.soWriteTimeout=20000&krb5ConfigName=Broker");
+
+        //0x00,0x1F  TLS_KRB5_WITH_3DES_EDE_CBC_SHA            [RFC2712]
+        connectorWithTLS_KRB5_WITH_3DES_EDE_CBC_SHA = service.addConnector("krb5://localhost:0?transport.soWriteTimeout=20000&krb5ConfigName=Broker&transport.enabledCipherSuites=TLS_KRB5_WITH_3DES_EDE_CBC_SHA");
         return service;
     }
 

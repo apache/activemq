@@ -167,9 +167,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             //
             //  see: https://issues.apache.org/jira/browse/AMQ-4582
             //
+            Object cipherSuites = null;
             if (socket instanceof SSLServerSocket) {
                 if (transportOptions.containsKey("enabledCipherSuites")) {
-                    Object cipherSuites = transportOptions.remove("enabledCipherSuites");
+                    cipherSuites = transportOptions.remove("enabledCipherSuites");
 
                     if (!IntrospectionSupport.setProperty(socket, "enabledCipherSuites", cipherSuites)) {
                         throw new SocketException(String.format(
@@ -179,6 +180,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             }
 
             IntrospectionSupport.setProperties(socket, transportOptions);
+
+            //Be sure that "socket." defaults will not be applied if enabledCipherSuites is defined on "transport."
+            if (cipherSuites != null) {
+                transportOptions.put("socket.enabledCipherSuites", cipherSuites);
+            }
         }
     }
 
@@ -481,17 +487,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     "maximumConnections' property on the TCP transport configuration URI " +
                     "in the ActiveMQ configuration file (e.g., activemq.xml)");
             } else {
-                HashMap<String, Object> options = new HashMap<String, Object>();
-                options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
-                options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
-                options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
-                options.put("trace", Boolean.valueOf(trace));
-                options.put("soTimeout", Integer.valueOf(soTimeout));
-                options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
-                options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
-                options.put("logWriterName", logWriterName);
-                options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
-                options.put("startLogging", Boolean.valueOf(startLogging));
+                HashMap<String, Object> options = getDefaultTransportOptions();
                 options.putAll(transportOptions);
 
                 WireFormat format = wireFormatFactory.createWireFormat();
@@ -524,6 +520,26 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 onAcceptError(e);
             }
         }
+    }
+
+    /**
+     * Defines default tranport options map for this transport
+     *
+     * @return default transport options map for this transport
+     */
+    protected HashMap<String, Object> getDefaultTransportOptions() {
+        HashMap<String, Object> options = new HashMap<String, Object>();
+        options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
+        options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
+        options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
+        options.put("trace", Boolean.valueOf(trace));
+        options.put("soTimeout", Integer.valueOf(soTimeout));
+        options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
+        options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
+        options.put("logWriterName", logWriterName);
+        options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
+        options.put("startLogging", Boolean.valueOf(startLogging));
+        return options;
     }
 
     public int getSoTimeout() {

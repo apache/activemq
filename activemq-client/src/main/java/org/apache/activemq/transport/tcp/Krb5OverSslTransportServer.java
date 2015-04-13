@@ -18,6 +18,7 @@
 package org.apache.activemq.transport.tcp;
 
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 import javax.net.ssl.SSLServerSocketFactory;
@@ -28,13 +29,12 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedAction;
+import java.util.HashMap;
 
 /**
- *  An SSL TransportServer.
+ *  An KRB5 TransportServer.
  *
- *  Allows for client certificate authentication (refer to setNeedClientAuth for
- *      details).
- *  NOTE: Client certificate authentication is disabled by default.
+ *  Implementation based on SSL TransportServer and
  *
  */
 public class Krb5OverSslTransportServer extends SslTransportServer {
@@ -57,7 +57,7 @@ public class Krb5OverSslTransportServer extends SslTransportServer {
 
     @Override
     public void run() {
-        Subject subject = Krb5OverSslTransportFactory.getSecuritySubject(location);
+        Subject subject = Krb5OverSslTransport.getSecuritySubject(location);
 
         Subject.doAs(subject, new PrivilegedAction<Void>() {
             public Void run() {
@@ -74,7 +74,7 @@ public class Krb5OverSslTransportServer extends SslTransportServer {
     /**
      * Used to create Transports for this server.
      *
-     * Overridden to allow the use of SslTransports (instead of TcpTransports).
+     * Overridden to allow the use of Krb5OverSslTransports (instead of SslTransports).
      *
      * @param socket The incoming socket that will be wrapped into the new Transport.
      * @param format The WireFormat being used.
@@ -82,6 +82,24 @@ public class Krb5OverSslTransportServer extends SslTransportServer {
      * @throws IOException
      */
     protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
-        return new Krb5OverSslTransport(format, (SSLSocket)socket, location);
+        try {
+            return new Krb5OverSslTransport(format, (SSLSocket)socket);
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
+
+    /**
+     * Adds enabledCipherSuites default values to default Transport Options map.
+     *
+     * @return default transport options map for this transport
+     */
+    @Override
+    protected HashMap<String, Object> getDefaultTransportOptions() {
+        HashMap<String, Object> defaultOptions = super.getDefaultTransportOptions();
+
+        defaultOptions.put("enabledCipherSuites", Krb5OverSslTransport.KRB5_CIPHERS);
+
+        return defaultOptions;
     }
 }

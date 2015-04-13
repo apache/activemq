@@ -53,8 +53,8 @@ public class MQTTSslTransportFactory extends SslTransportFactory implements Brok
     }
 
     @Override
-    protected SslTransportServer createSslTransportServer(URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        final SslTransportServer server = super.createSslTransportServer(location, serverSocketFactory);
+    protected SslTransportServer createTransportServer(URI location) throws IOException, URISyntaxException {
+        final SslTransportServer server = (SslTransportServer)super.createTransportServer(location);
         server.setAllowLinkStealing(true);
         return server;
     }

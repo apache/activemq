@@ -17,11 +17,13 @@
 package org.apache.activemq.transport.tcp;
 
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -43,11 +45,12 @@ import java.util.Map;
  * context thus being able to authenticate user with Kerberos.
  */
 public class Krb5OverSslTransportFactory extends SslTransportFactory {
-    public static final String KRB5_CONFIG_NAME = "krb5ConfigName";
     private static final Logger LOG = LoggerFactory.getLogger(Krb5OverSslTransportFactory.class);
 
-    protected SslTransportServer createSslTransportServer(final URI location, SSLServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        return new Krb5OverSslTransportServer(this, location, serverSocketFactory);
+    @Override
+    protected TcpTransportServer createTransportServer(final URI location) throws IOException, URISyntaxException {
+        SSLServerSocketFactory sslServerSocketFactory = createServerSocketFactory();
+        return new Krb5OverSslTransportServer(this, location, sslServerSocketFactory);
     }
     /**
      * Overriding to use {@link Krb5OverSslTransport} additionally performing
@@ -58,51 +61,31 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
         final URI localLocation = getLocalLocation(location, path);
         final SocketFactory socketFactory = createSocketFactory();
 
-        Subject subject = getSecuritySubject(location);
+        Subject subject = Krb5OverSslTransport.getSecuritySubject(location);
 
         return Subject.doAs(subject, new PrivilegedAction<Transport>() {
             public Transport run() {
                 try {
                     return new Krb5OverSslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
         });
     }
 
-    private URI getLocalLocation(final URI location, String path) {
-        if (path != null && path.length() > 0) {
-            int localPortIndex = path.indexOf(':');
-            try {
-                Integer.parseInt(path.substring(localPortIndex + 1, path.length()));
-                String localString = location.getScheme() + ":/" + path;
-                return new URI(localString);
-            } catch (Exception e) {
-                LOG.warn("path isn't a valid local location for SslTransport to use", e);
-            }
-        }
-        return null;
-    }
+    /**
+     *
+     * Defines default list of socket.* options for this transport
+     *
+     * @return Default list of socket.* options for this transport
+     */
+    @Override
+    protected Map<String,Object> getDefaultSocketOptions() {
+        Map<String,Object> defaultSocketOptions =  super.getDefaultSocketOptions();
 
-    public static Subject getSecuritySubject(URI location) {
-        String krb5ConfigName = null;
+        defaultSocketOptions.put("enabledCipherSuites", Krb5OverSslTransport.KRB5_CIPHERS);
 
-        try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            krb5ConfigName = options.get(KRB5_CONFIG_NAME);
-            if (krb5ConfigName == null) {
-                throw new IllegalStateException("No security context established and no '" + KRB5_CONFIG_NAME + "' URL parameter is set!");
-            }
-
-            LoginContext loginCtx = new LoginContext(krb5ConfigName);
-            loginCtx.login();
-
-            return loginCtx.getSubject();
-        } catch (LoginException e) {
-            throw new RuntimeException("Cannot authenticate using Login configuration: " + krb5ConfigName, e);
-        } catch (URISyntaxException e1) {
-            throw new RuntimeException(e1);
-        }
+        return defaultSocketOptions;
     }
 }

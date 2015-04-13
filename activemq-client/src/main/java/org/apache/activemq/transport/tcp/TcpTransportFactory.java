@@ -46,9 +46,7 @@ public class TcpTransportFactory extends TransportFactory {
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory);
+            TcpTransportServer server = createTransportServer(location);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -66,12 +64,12 @@ public class TcpTransportFactory extends TransportFactory {
      * TcpTransportServer.
      *
      * @param location
-     * @param serverSocketFactory
      * @return
      * @throws IOException
      * @throws URISyntaxException
      */
-    protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+    protected TcpTransportServer createTransportServer(final URI location) throws IOException, URISyntaxException {
+        ServerSocketFactory serverSocketFactory = ServerSocketFactory.getDefault();
         return new TcpTransportServer(this, location, serverSocketFactory);
     }
 
@@ -81,7 +79,8 @@ public class TcpTransportFactory extends TransportFactory {
         TcpTransport tcpTransport = (TcpTransport)transport.narrow(TcpTransport.class);
         IntrospectionSupport.setProperties(tcpTransport, options);
 
-        Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
+        Map<String, Object> socketOptions = getDefaultSocketOptions();
+        socketOptions.putAll(IntrospectionSupport.extractProperties(options, "socket."));
         tcpTransport.setSocketOptions(socketOptions);
 
         if (tcpTransport.isTrace()) {
@@ -151,15 +150,15 @@ public class TcpTransportFactory extends TransportFactory {
         return new TcpTransport(wf, socketFactory, location, localLocation);
     }
 
-    protected ServerSocketFactory createServerSocketFactory() throws IOException {
-        return ServerSocketFactory.getDefault();
-    }
-
     protected SocketFactory createSocketFactory() throws IOException {
         return SocketFactory.getDefault();
     }
 
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         return new InactivityMonitor(transport, format);
+    }
+
+    protected Map<String,Object> getDefaultSocketOptions() {
+        return new HashMap<String,Object>();
     }
 }

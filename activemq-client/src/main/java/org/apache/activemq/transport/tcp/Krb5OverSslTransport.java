@@ -17,13 +17,14 @@
 
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,17 +33,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A Transport class that uses SSL and client-side certificate authentication.
- * Client-side certificate authentication must be enabled through the
- * constructor. By default, this class will have the same client authentication
- * behavior as the socket it is passed. This class will set ConnectionInfo's
- * transportContext to the SSL certificates of the client. NOTE: Accessor method
- * for needClientAuth was not provided on purpose. This is because
- * needClientAuth's value must be set before the socket is connected. Otherwise,
- * unexpected situations may occur.
+ * Doc?
  */
 public class Krb5OverSslTransport extends SslTransport {
-    public static final String KRB5_CIPHER = "TLS_KRB5_WITH_3DES_EDE_CBC_SHA";
+    public static final String KRB5_CONFIG_NAME = "krb5ConfigName";
+
+    // Cipher Suites as in RFC2712 excluding those which were failing:
+    // TLS_KRB5_WITH_IDEA_CBC_SHA, TLS_KRB5_WITH_IDEA_CBC_MD5
+    public static final String KRB5_CIPHERS = "TLS_KRB5_WITH_DES_CBC_SHA,TLS_KRB5_WITH_3DES_EDE_CBC_SHA,TLS_KRB5_WITH_RC4_128_SHA,TLS_KRB5_WITH_DES_CBC_MD5,TLS_KRB5_WITH_3DES_EDE_CBC_MD5,TLS_KRB5_WITH_RC4_128_MD5";
+
 
     /**
      * Connect to a remote node such as a Broker.
@@ -55,33 +54,20 @@ public class Krb5OverSslTransport extends SslTransport {
      * @throws UnknownHostException If TcpTransport throws.
      * @throws IOException If TcpTransport throws.
      */
-    public Krb5OverSslTransport(WireFormat wireFormat, SSLSocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException {
+    public Krb5OverSslTransport(WireFormat wireFormat, SSLSocketFactory socketFactory, URI remoteLocation, URI localLocation) throws IOException, URISyntaxException {
         super(wireFormat, socketFactory, remoteLocation, localLocation, false);
-        configureTransport(remoteLocation);
     }
-    
+
     /**
      * Initialize from a ServerSocket. No access to needClientAuth is given
      * since it is already set within the provided socket.
-     * 
+     *
      * @param wireFormat The WireFormat to be used.
      * @param socket The Socket to be used. Forcing SSL.
      * @throws IOException If TcpTransport throws.
      */
-    public Krb5OverSslTransport(WireFormat wireFormat, SSLSocket socket, URI remoteLocation) throws IOException {
+    public Krb5OverSslTransport(WireFormat wireFormat, SSLSocket socket) throws IOException, URISyntaxException {
         super(wireFormat, socket);
-        configureTransport(remoteLocation);
-    }
-
-    private void configureTransport(URI remoteLocation) throws IOException {
-        try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(remoteLocation));
-            IntrospectionSupport.setProperties(this, options);
-            String enabledSuites[] = { Krb5OverSslTransport.KRB5_CIPHER };
-            ((SSLSocket)socket).setEnabledCipherSuites(enabledSuites);
-        } catch (URISyntaxException e) {
-            throw IOExceptionSupport.create(e);
-        }
     }
 
     /**
@@ -95,4 +81,24 @@ public class Krb5OverSslTransport extends SslTransport {
         //no-op just a workaround
     }
 
+    public static Subject getSecuritySubject(URI location) {
+        String krb5ConfigName = null;
+
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            krb5ConfigName = options.get(KRB5_CONFIG_NAME);
+            if (krb5ConfigName == null) {
+                throw new IllegalStateException("No security context established and no '" + KRB5_CONFIG_NAME + "' URL parameter is set!");
+            }
+
+            LoginContext loginCtx = new LoginContext(krb5ConfigName);
+            loginCtx.login();
+
+            return loginCtx.getSubject();
+        } catch (LoginException e) {
+            throw new RuntimeException("Cannot authenticate using Login configuration: " + krb5ConfigName, e);
+        } catch (URISyntaxException e1) {
+            throw new RuntimeException(e1);
+        }
+    }
 }
