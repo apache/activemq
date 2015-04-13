@@ -602,7 +602,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // Avoid replaying dup commands
         if (!ss.getProducerIds().contains(info.getProducerId())) {
             ActiveMQDestination destination = info.getDestination();
-            if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination)) {
+            // Do not check for null here as it would cause the count of max producers to exclude
+            // anonymous producers.  The isAdvisoryTopic method checks for null so it is safe to
+            // call it from here with a null Destination value.
+            if (!AdvisorySupport.isAdvisoryTopic(destination)) {
                 if (getProducerCount(connectionId) >= connector.getMaximumProducersAllowedPerConnection()){
                     throw new IllegalStateException("Can't add producer on connection " + connectionId + ": at maximum limit: " + connector.getMaximumProducersAllowedPerConnection());
                 }
