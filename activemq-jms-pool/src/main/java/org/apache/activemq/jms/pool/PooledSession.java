@@ -47,7 +47,7 @@ import javax.jms.TopicSubscriber;
 import javax.jms.XASession;
 import javax.transaction.xa.XAResource;
 
-import org.apache.commons.pool.KeyedObjectPool;
+import org.apache.commons.pool2.KeyedObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

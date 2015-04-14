@@ -28,8 +28,10 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 
-import org.apache.commons.pool.KeyedPoolableObjectFactory;
-import org.apache.commons.pool.impl.GenericKeyedObjectPool;
+import org.apache.commons.pool2.KeyedPooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,27 +87,10 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
             this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
-                new KeyedPoolableObjectFactory<ConnectionKey, ConnectionPool>() {
-
+                new KeyedPooledObjectFactory<ConnectionKey, ConnectionPool>() {
                     @Override
-                    public void activateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                    }
-
-                    @Override
-                    public void destroyObject(ConnectionKey key, ConnectionPool connection) throws Exception {
-                        try {
-                            if (LOG.isTraceEnabled()) {
-                                LOG.trace("Destroying connection: {}", connection);
-                            }
-                            connection.close();
-                        } catch (Exception e) {
-                            LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
-                        }
-                    }
-
-                    @Override
-                    public ConnectionPool makeObject(ConnectionKey key) throws Exception {
-                        Connection delegate = createConnection(key);
+                    public PooledObject<ConnectionPool> makeObject(ConnectionKey connectionKey) throws Exception {
+                        Connection delegate = createConnection(connectionKey);
 
                         ConnectionPool connection = createConnectionPool(delegate);
                         connection.setIdleTimeout(getIdleTimeout());
@@ -124,15 +109,25 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
                         PooledConnectionFactory.this.mostRecentlyCreated.set(connection);
 
-                        return connection;
+                        return new DefaultPooledObject<ConnectionPool>(connection);
                     }
 
                     @Override
-                    public void passivateObject(ConnectionKey key, ConnectionPool connection) throws Exception {
+                    public void destroyObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) throws Exception {
+                        ConnectionPool connection = pooledObject.getObject();
+                        try {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("Destroying connection: {}", connection);
+                            }
+                            connection.close();
+                        } catch (Exception e) {
+                            LOG.warn("Close connection failed for connection: " + connection + ". This exception will be ignored.",e);
+                        }
                     }
 
                     @Override
-                    public boolean validateObject(ConnectionKey key, ConnectionPool connection) {
+                    public boolean validateObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) {
+                        ConnectionPool connection = pooledObject.getObject();
                         if (connection != null && connection.expiredCheck()) {
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("Connection has expired: {} and will be destroyed", connection);
@@ -143,10 +138,19 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
                         return true;
                     }
+
+                    @Override
+                    public void activateObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) throws Exception {
+                    }
+
+                    @Override
+                    public void passivateObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) throws Exception {
+                    }
+
                 });
 
             // Set max idle (not max active) since our connections always idle in the pool.
-            this.connectionsPool.setMaxIdle(1);
+            this.connectionsPool.setMaxIdlePerKey(1);
             this.connectionsPool.setLifo(false);
 
             // We always want our validate method to control when idle objects are evicted.
@@ -378,7 +382,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @return the maxConnections that will be created for this pool.
      */
     public int getMaxConnections() {
-        return getConnectionsPool().getMaxIdle();
+        return getConnectionsPool().getMaxIdlePerKey();
     }
 
     /**
@@ -389,7 +393,8 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
      * @param maxConnections the maxConnections to set
      */
     public void setMaxConnections(int maxConnections) {
-        getConnectionsPool().setMaxIdle(maxConnections);
+        getConnectionsPool().setMaxIdlePerKey(maxConnections);
+        getConnectionsPool().setMaxTotalPerKey(maxConnections);
     }
 
     /**

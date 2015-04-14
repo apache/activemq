@@ -173,7 +173,7 @@
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
         <include>org.apache.commons:commons-dbcp2</include>
-        <include>commons-pool:commons-pool</include>
+        <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
         <include>commons-net:commons-net</include>
         <include>commons-lang:commons-lang</include>
