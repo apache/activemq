@@ -208,7 +208,6 @@ public class BrokerService implements Service {
     private boolean useLocalHostBrokerName;
     private final CountDownLatch stoppedLatch = new CountDownLatch(1);
     private final CountDownLatch startedLatch = new CountDownLatch(1);
-    private boolean supportFailOver;
     private Broker regionBroker;
     private int producerSystemUsagePortion = 60;
     private int consumerSystemUsagePortion = 40;
@@ -1762,21 +1761,6 @@ public class BrokerService implements Service {
         if (useLocalHostBrokerName && !started.get() && brokerName == null || brokerName == DEFAULT_BROKER_NAME) {
             brokerName = LOCAL_HOST_NAME;
         }
-    }
-
-    /**
-     * @return the supportFailOver
-     */
-    public boolean isSupportFailOver() {
-        return this.supportFailOver;
-    }
-
-    /**
-     * @param supportFailOver
-     *            the supportFailOver to set
-     */
-    public void setSupportFailOver(boolean supportFailOver) {
-        this.supportFailOver = supportFailOver;
     }
 
     /**

@@ -380,7 +380,7 @@ public class TransactionBroker extends BrokerFilter {
 
     public synchronized void brokerServiceStarted() {
         super.brokerServiceStarted();
-        if (getBrokerService().isSupportFailOver() && audit == null) {
+        if (audit == null) {
             audit = new ActiveMQMessageAudit();
         }
     }
