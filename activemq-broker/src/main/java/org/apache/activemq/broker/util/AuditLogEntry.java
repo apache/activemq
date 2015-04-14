@@ -17,10 +17,14 @@
 
 package org.apache.activemq.broker.util;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.activemq.broker.jmx.Sensitive;
 
 public class AuditLogEntry {
 
@@ -75,5 +79,31 @@ public class AuditLogEntry {
 
     public void setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
+    }
+
+   /**
+    * Method to remove any sensitive parameters before logging.  Replaces any sensitive value with ****.  Sensitive
+    * values are defined on MBean interface implementation method parameters using the @Sensitive annotation.
+    *
+    * @param arguments A array of arguments to test against method signature
+    * @param method The method to test the arguments against.
+    */
+    public static Object[] sanitizeArguments(Object[] arguments, Method method)
+    {
+       Object[] sanitizedArguments = arguments.clone();
+       Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+
+       for (int i = 0; i < arguments.length; i++)
+       {
+          for (Annotation annotation : parameterAnnotations[i])
+          {
+             if (annotation instanceof Sensitive)
+             {
+                sanitizedArguments[i] = "****";
+                break;
+             }
+          }
+       }
+       return sanitizedArguments;
     }
 }
