@@ -109,7 +109,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
      * than the default with the Spring {@link JmsTemplate} which will create a new connection, session, producer
      * for each message then close them all down again.
      * <p/>
-     * The default value is true. Note that this requires an extra dependency on commons-pool.
+     * The default value is true. Note that this requires an extra dependency on commons-pool2.
      */
     public void setUsePooledConnection(boolean usePooledConnection) {
         this.usePooledConnection = usePooledConnection;
@@ -162,7 +162,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     protected ConnectionFactory createPooledConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-        // lets not use classes directly to avoid a runtime dependency on commons-pool
+        // lets not use classes directly to avoid a runtime dependency on commons-pool2
         // for folks not using this option
         try {
             Class type = loadClass("org.apache.activemq.pool.PooledConnectionFactory", getClass().getClassLoader());
