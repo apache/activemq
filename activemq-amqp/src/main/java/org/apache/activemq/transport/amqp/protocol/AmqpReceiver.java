@@ -219,7 +219,6 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                             rejected.setError(condition);
                             delivery.disposition(rejected);
                         } else {
-
                             if (getEndpoint().getCredit() <= (getConfiguredReceiverCredit() * .2)) {
                                 LOG.trace("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
                                 getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
@@ -234,10 +233,9 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                             } else {
                                 delivery.disposition(Accepted.getInstance());
                             }
-
-                            delivery.settle();
                         }
 
+                        delivery.settle();
                         session.pumpProtonToSocket();
                     }
                 });
@@ -247,6 +245,8 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                     getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
                     session.pumpProtonToSocket();
                 }
+
+                delivery.settle();
                 sendToActiveMQ(message);
             }
         }

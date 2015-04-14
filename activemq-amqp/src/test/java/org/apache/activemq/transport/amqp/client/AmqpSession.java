@@ -54,16 +54,33 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
      * Create a sender instance using the given address
      *
      * @param address
-     * 	      the address to which the sender will produce its messages.
+     *        the address to which the sender will produce its messages.
      *
      * @return a newly created sender that is ready for use.
      *
      * @throws Exception if an error occurs while creating the sender.
      */
     public AmqpSender createSender(final String address) throws Exception {
+        return createSender(address, false);
+    }
+
+    /**
+     * Create a sender instance using the given address
+     *
+     * @param address
+     * 	      the address to which the sender will produce its messages.
+     * @param presettle
+     *        controls if the created sender produces message that have already been marked settled.
+     *
+     * @return a newly created sender that is ready for use.
+     *
+     * @throws Exception if an error occurs while creating the sender.
+     */
+    public AmqpSender createSender(final String address, boolean presettle) throws Exception {
         checkClosed();
 
         final AmqpSender sender = new AmqpSender(AmqpSession.this, address, getNextSenderId());
+        sender.setPresettle(presettle);
         final ClientFuture request = new ClientFuture();
 
         connection.getScheduler().execute(new Runnable() {

@@ -377,13 +377,12 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 outcome = (Outcome) state;
             } else {
                 LOG.warn("Message send updated with unsupported state: {}", state);
-                continue;
+                outcome = null;
             }
 
             AsyncResult request = (AsyncResult) delivery.getContext();
 
             if (outcome instanceof Accepted) {
-                toRemove.add(delivery);
                 LOG.trace("Outcome of delivery was accepted: {}", delivery);
                 tagGenerator.returnTag(delivery.getTag());
                 if (request != null && !request.isComplete()) {
@@ -391,7 +390,6 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 }
             } else if (outcome instanceof Rejected) {
                 Exception remoteError = getRemoteError();
-                toRemove.add(delivery);
                 LOG.trace("Outcome of delivery was rejected: {}", delivery);
                 tagGenerator.returnTag(delivery.getTag());
                 if (request != null && !request.isComplete()) {
@@ -399,9 +397,12 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
                 } else {
                     connection.fireClientException(getRemoteError());
                 }
-            } else {
+            } else if (outcome != null) {
                 LOG.warn("Message send updated with unsupported outcome: {}", outcome);
             }
+
+            delivery.settle();
+            toRemove.add(delivery);
         }
 
         pending.removeAll(toRemove);

@@ -18,14 +18,17 @@ package org.apache.activemq.transport.amqp.interop;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
 import org.apache.activemq.transport.amqp.client.AmqpClientTestSupport;
 import org.apache.activemq.transport.amqp.client.AmqpConnection;
 import org.apache.activemq.transport.amqp.client.AmqpMessage;
 import org.apache.activemq.transport.amqp.client.AmqpSender;
 import org.apache.activemq.transport.amqp.client.AmqpSession;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 
 /**
@@ -87,6 +90,35 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
         QueueViewMBean queue = getProxyToQueue(getTestName());
 
         assertEquals(1, queue.getQueueSize());
+
+        sender.close();
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testPresettledSender() throws Exception {
+        final int MSG_COUNT = 1000;
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("topic://" + getTestName(), true);
+
+        for (int i = 0; i < MSG_COUNT; ++i) {
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message: " + i);
+            sender.send(message);
+        }
+
+        final TopicViewMBean topic = getProxyToTopic(getTestName());
+        assertTrue("All messages should arrive", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return topic.getEnqueueCount() == MSG_COUNT;
+            }
+        }));
 
         sender.close();
         connection.close();
