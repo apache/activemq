@@ -96,6 +96,30 @@ public class AmqpSenderTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testSendMultipleMessagesToQueue() throws Exception {
+        final int MSG_COUNT = 100;
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+
+        for (int i = 0; i < MSG_COUNT; ++i) {
+            AmqpMessage message = new AmqpMessage();
+            message.setText("Test-Message: " + i);
+            sender.send(message);
+        }
+
+        QueueViewMBean queue = getProxyToQueue(getTestName());
+
+        assertEquals(MSG_COUNT, queue.getQueueSize());
+
+        sender.close();
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
     public void testUnsettledSender() throws Exception {
         final int MSG_COUNT = 1000;
 
