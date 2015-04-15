@@ -419,7 +419,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
                 }
             });
 
-            sendToActiveMQ(new ShutdownInfo(), null);
+            sendToActiveMQ(new ShutdownInfo());
         }
     }
 
@@ -655,6 +655,8 @@ public class AmqpConnection implements AmqpProtocolConverter {
         exception.printStackTrace();
         LOG.debug("Exception detail", exception);
         try {
+            // Must ensure that the broker removes Connection resources.
+            sendToActiveMQ(new ShutdownInfo());
             amqpTransport.stop();
         } catch (Throwable e) {
             LOG.error("Failed to stop AMQP Transport ", e);

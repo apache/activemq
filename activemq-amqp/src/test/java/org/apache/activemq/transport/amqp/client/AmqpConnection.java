@@ -234,6 +234,31 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         return session;
     }
 
+    //----- Access to low level IO for specific test cases -------------------//
+
+    public void sendRawBytes(final byte[] rawData) throws Exception {
+        checkClosed();
+
+        final ClientFuture request = new ClientFuture();
+
+        serializer.execute(new Runnable() {
+
+            @Override
+            public void run() {
+                checkClosed();
+                try {
+                    transport.send(ByteBuffer.wrap(rawData));
+                } catch (IOException e) {
+                    fireClientException(e);
+                } finally {
+                    request.onSuccess();
+                }
+            }
+        });
+
+        request.sync();
+    }
+
     //----- Configuration accessors ------------------------------------------//
 
     /**
