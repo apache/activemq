@@ -603,10 +603,19 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 int redoCounter = 0;
                 LOG.info("Recovering from the journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
-                    JournalCommand<?> message = load(recoveryPosition);
-                    metadata.lastUpdate = recoveryPosition;
-                    process(message, recoveryPosition, lastIndoubtPosition);
-                    redoCounter++;
+                    try {
+                        JournalCommand<?> message = load(recoveryPosition);
+                        metadata.lastUpdate = recoveryPosition;
+                        process(message, recoveryPosition, lastIndoubtPosition);
+                        redoCounter++;
+                    } catch (IOException failedRecovery) {
+                        if (isIgnoreMissingJournalfiles()) {
+                            // track this dud location
+                            journal.corruptRecoveryLocation(recoveryPosition);
+                        } else {
+                            throw failedRecovery;
+                        }
+                    }
                     recoveryPosition = journal.getNextLocation(recoveryPosition);
                      if (LOG.isInfoEnabled() && redoCounter % 100000 == 0) {
                          LOG.info("@" + recoveryPosition +  ", "  + redoCounter + " entries recovered ..");
@@ -826,8 +835,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
 
         if (!missingPredicates.isEmpty()) {
-            for (StoredDestination sd : storedDestinations.values()) {
-
+            for (Entry<String, StoredDestination> sdEntry : storedDestinations.entrySet()) {
+                final StoredDestination sd = sdEntry.getValue();
                 final ArrayList<Long> matches = new ArrayList<Long>();
                 sd.locationIndex.visit(tx, new BTreeVisitor.OrVisitor<Location, Long>(missingPredicates) {
                     @Override
@@ -847,6 +856,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             MessageKeys keys = sd.orderIndex.remove(tx, sequenceId);
                             sd.locationIndex.remove(tx, keys.location);
                             sd.messageIdIndex.remove(tx, keys.messageId);
+                            LOG.info("[" + sdEntry.getKey() + "] dropped: " + keys.messageId + " at corrupt location: " + keys.location);
                             undoCounter++;
                             // TODO: do we need to modify the ack positions for the pub sub case?
                         }

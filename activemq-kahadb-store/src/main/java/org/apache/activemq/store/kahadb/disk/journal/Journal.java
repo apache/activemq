@@ -55,6 +55,28 @@ public class Journal {
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
     public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
 
+    // tackle corruption when checksum is disabled or corrupt with zeros, minimise data loss
+    public void corruptRecoveryLocation(Location recoveryPosition) throws IOException {
+        DataFile dataFile = getDataFile(recoveryPosition);
+        // with corruption on recovery we have no faith in the content - slip to the next batch record or eof
+        DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
+        try {
+            int nextOffset = findNextBatchRecord(reader, recoveryPosition.getOffset() + 1);
+            Sequence sequence = new Sequence(recoveryPosition.getOffset(), nextOffset >= 0 ? nextOffset - 1 : dataFile.getLength() - 1);
+            LOG.info("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
+
+            // skip corruption on getNextLocation
+            recoveryPosition.setOffset((int) sequence.getLast() + 1);
+            recoveryPosition.setSize(-1);
+
+            dataFile.corruptedBlocks.add(sequence);
+
+        } catch (IOException e) {
+        } finally {
+            accessorPool.closeDataFileAccessor(reader);
+        }
+    }
+
     public enum PreallocationStrategy {
         SPARSE_FILE,
         OS_KERNEL_COPY,
@@ -301,7 +323,7 @@ public class Journal {
         try {
             while( true ) {
                 int size = checkBatchRecord(reader, location.getOffset());
-                if ( size>=0 ) {
+                if ( size>=0 && location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size <= dataFile.getLength()) {
                     location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
                 } else {
 
