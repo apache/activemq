@@ -104,6 +104,8 @@ public class AmqpWireFormat implements WireFormat {
             int size = dataIn.readInt();
             if (size > maxFrameSize) {
                 throw new AmqpProtocolException("Frame size exceeded max frame length.");
+            } else if (size <= 0) {
+                throw new AmqpProtocolException("Frame size value was invalid: " + size);
             }
             Buffer frame = new Buffer(size);
             frame.bigEndianEditor().writeInt(size);

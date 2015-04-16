@@ -497,6 +497,15 @@ public class AmqpConnection implements AmqpProtocolConverter {
     public void onAMQPException(IOException error) {
         closedSocket = true;
         if (!closing) {
+            try {
+                closing = true;
+                // Attempt to inform the other end that we are going to close
+                // so that the client doesn't wait around forever.
+                protonConnection.setCondition(new ErrorCondition(AmqpError.DECODE_ERROR, error.getMessage()));
+                protonConnection.close();
+                pumpProtonToSocket();
+            } catch (Exception ignore) {
+            }
             amqpTransport.sendToActiveMQ(error);
         } else {
             try {
