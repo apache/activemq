@@ -220,7 +220,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                             delivery.disposition(rejected);
                         } else {
                             if (getEndpoint().getCredit() <= (getConfiguredReceiverCredit() * .2)) {
-                                LOG.trace("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
+                                LOG.debug("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
                                 getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
                             }
 
@@ -241,7 +241,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
                 });
             } else {
                 if (getEndpoint().getCredit() <= (getConfiguredReceiverCredit() * .2)) {
-                    LOG.trace("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
+                    LOG.debug("Sending more credit ({}) to producer: {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), getProducerId());
                     getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
                     session.pumpProtonToSocket();
                 }

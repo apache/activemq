@@ -397,7 +397,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
                 final ActiveMQMessage jms = temp;
                 if (jms == null) {
-                    LOG.info("End of browse signals endpoint drained.");
+                    LOG.trace("Sender:[{}] browse done.", getEndpoint().getName());
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
