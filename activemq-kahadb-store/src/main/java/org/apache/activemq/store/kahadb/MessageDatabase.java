@@ -610,6 +610,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         redoCounter++;
                     } catch (IOException failedRecovery) {
                         if (isIgnoreMissingJournalfiles()) {
+                            LOG.debug("Failed to recover data at position:" + recoveryPosition, failedRecovery);
                             // track this dud location
                             journal.corruptRecoveryLocation(recoveryPosition);
                         } else {

@@ -116,6 +116,9 @@ public class JournalCorruptionEofIndexRecoveryTest {
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(true);
 
+        adapter.setPreallocationStrategy("zeros");
+        adapter.setPreallocationScope("entire_journal");
+
     }
 
     @After
@@ -183,6 +186,20 @@ public class JournalCorruptionEofIndexRecoveryTest {
         assertEquals("missing one index recreation", 3, broker.getAdminView().getTotalMessageCount());
 
         assertEquals("Drain", 3, drainQueue(4));
+
+    }
+
+    @Test
+    public void testRecoverIndex() throws Exception {
+        startBroker();
+
+        final int numToSend = 4;
+        produceMessagesToConsumeMultipleDataFiles(numToSend);
+
+        // force journal replay by whacking the index
+        restartBroker(false, true);
+
+        assertEquals("Drain", numToSend, drainQueue(numToSend));
 
     }
 

@@ -19,6 +19,8 @@ package org.apache.activemq.store.kahadb.disk.journal;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +37,8 @@ import static org.junit.Assert.assertTrue;
  * <a href="http://christianposta.com/blog>http://christianposta.com/blog</a>.
  */
 public class PreallocationJournalTest  {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PreallocationJournalTest.class);
 
     @Test
     public void testSparseFilePreallocation() throws Exception {
@@ -76,6 +80,7 @@ public class PreallocationJournalTest  {
         assertTrue("file size as expected", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+                LOG.info ("file size:" + journalLog + ", chan.size " + channel.size() + ", jfileSize.length: " + journalLog.length());
                 return Journal.DEFAULT_MAX_FILE_LENGTH == channel.size();
             }
         }));
@@ -87,8 +92,7 @@ public class PreallocationJournalTest  {
         buff.position(0);
         assertEquals(0x00, buff.get());
 
-        System.out.println("File size: " + channel.size());
-
+        LOG.info("File size: " + channel.size());
 
         store.stop();
     }

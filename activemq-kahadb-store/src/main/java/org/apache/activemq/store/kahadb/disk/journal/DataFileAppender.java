@@ -314,8 +314,11 @@ class DataFileAppender implements FileAppender {
                     }
                     dataFile = wb.dataFile;
                     file = dataFile.openRandomAccessFile();
-                    // pre allocate on first open
-                    journal.preallocateEntireJournalDataFile(file);
+                    // pre allocate on first open of new file (length==0)
+                    // note dataFile.length cannot be used because it is updated in enqueue
+                    if (file.length() == 0l) {
+                        journal.preallocateEntireJournalDataFile(file);
+                    }
                 }
 
                 Journal.WriteCommand write = wb.writes.getHead();
