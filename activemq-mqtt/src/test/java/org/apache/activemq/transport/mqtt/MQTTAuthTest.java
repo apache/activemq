@@ -138,8 +138,9 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         MQTT mqtt = createMQTTConnection();
         mqtt.setClientId("foo");
         mqtt.setKeepAlive((short) 2);
+        mqtt.setVersion("3.1.1");
 
-        final BlockingConnection connection = mqtt.blockingConnection();
+        BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
 
         final String NAMED = "named";
@@ -163,7 +164,28 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         assertEquals(ANONYMOUS, new String(msg.getPayload()));
         msg.ack();
 
+        //delete retained message
+        connection.publish(ANONYMOUS, "".getBytes(), QoS.AT_MOST_ONCE, true);
+
         connection.disconnect();
+
+        // Test 3.1 functionality
+        mqtt.setVersion("3.1");
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        qos = connection.subscribe(new Topic[] { new Topic(NAMED, QoS.AT_MOST_ONCE) });
+        assertEquals(QoS.AT_MOST_ONCE.ordinal(), qos[0]);
+
+        MQTT mqttPub = createMQTTConnection("pub", true);
+        mqttPub.setUserName("admin");
+        mqttPub.setPassword("admin");
+
+        BlockingConnection connectionPub = mqttPub.blockingConnection();
+        connectionPub.connect();
+        connectionPub.publish(NAMED, NAMED.getBytes(), QoS.AT_MOST_ONCE, true);
+
+        msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        assertNull(msg);
     }
 
     @Test(timeout = 60 * 1000)

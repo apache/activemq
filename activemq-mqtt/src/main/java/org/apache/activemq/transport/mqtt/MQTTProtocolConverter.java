@@ -87,6 +87,8 @@ public class MQTTProtocolConverter {
     private static final Logger LOG = LoggerFactory.getLogger(MQTTProtocolConverter.class);
 
     public static final String QOS_PROPERTY_NAME = "ActiveMQ.MQTT.QoS";
+    public static final int V3_1 = 3;
+    public static final int V3_1_1 = 4;
 
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
     private static final MQTTFrame PING_RESP_FRAME = new PINGRESP().encode();
@@ -118,6 +120,8 @@ public class MQTTProtocolConverter {
     private int activeMQSubscriptionPrefetch = -1;
     private final MQTTPacketIdGenerator packetIdGenerator;
     private boolean publishDollarTopics;
+
+    public int version;
 
     private final FactoryFinder STRATAGY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/strategies/");
 
@@ -245,6 +249,8 @@ public class MQTTProtocolConverter {
         if (connect.password() != null) {
             passswd = connect.password().toString();
         }
+
+        version = connect.version();
 
         configureInactivityMonitor(connect.keepAlive());
 
