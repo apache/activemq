@@ -191,10 +191,38 @@ public class AnnotatedMBean extends StandardMBean {
             entry.setUser(caller);
             entry.setTimestamp(System.currentTimeMillis());
             entry.setOperation(this.getMBeanInfo().getClassName() + "." + s);
-            entry.getParameters().put("arguments", objects);
+
+            try
+            {
+               if (objects.length == strings.length)
+               {
+                  Method m = getMBeanMethod(this.getImplementationClass(), s, strings);
+                  entry.getParameters().put("arguments", AuditLogEntry.sanitizeArguments(objects, m));
+               }
+               else
+               {
+                  // Supplied Method Signature and Arguments do not match.  Set all supplied Arguments in Log Entry.  To diagnose user error.
+                  entry.getParameters().put("arguments", objects);
+               }
+            }
+            catch (ReflectiveOperationException e)
+            {
+               // Method or Class not found, set all supplied arguments.  Set all supplied Arguments in Log Entry.  To diagnose user error.
+               entry.getParameters().put("arguments", objects);
+            }
 
             auditLog.log(entry);
         }
         return super.invoke(s, objects, strings);
+    }
+
+    private Method getMBeanMethod(Class clazz, String methodName, String[] signature) throws ReflectiveOperationException
+    {
+       Class[] parameterTypes = new Class[signature.length];
+       for (int i = 0; i < signature.length; i++)
+       {
+          parameterTypes[i] = Class.forName(signature[i]);
+       }
+       return clazz.getMethod(methodName, parameterTypes);
     }
 }
