@@ -179,6 +179,12 @@ public class AmqpSession implements AmqpResource {
                 });
             } else if (targetNodeName != null && !targetNodeName.isEmpty()) {
                 destination = createDestination(remoteTarget);
+                if (destination.isTemporary()) {
+                    String connectionId = ((ActiveMQTempDestination) destination).getConnectionId();
+                    if (connectionId == null) {
+                        throw new AmqpProtocolException(AmqpError.PRECONDITION_FAILED.toString(), "Not a broker created temp destination");
+                    }
+                }
             }
 
             receiver.setDestination(destination);
@@ -276,6 +282,12 @@ public class AmqpSession implements AmqpResource {
                 });
             } else {
                 destination = createDestination(source);
+                if (destination.isTemporary()) {
+                    String connectionId = ((ActiveMQTempDestination) destination).getConnectionId();
+                    if (connectionId == null) {
+                        throw new AmqpProtocolException(AmqpError.INVALID_FIELD.toString(), "Not a broker created temp destination");
+                    }
+                }
             }
 
             source.setFilter(supportedFilters.isEmpty() ? null : supportedFilters);
@@ -359,11 +371,11 @@ public class AmqpSession implements AmqpResource {
 
     //----- Internal Implementation ------------------------------------------//
 
-    protected ConsumerId getNextConsumerId() {
+    private ConsumerId getNextConsumerId() {
         return new ConsumerId(sessionId, nextConsumerId++);
     }
 
-    protected ProducerId getNextProducerId() {
+    private ProducerId getNextProducerId() {
         return new ProducerId(sessionId, nextProducerId++);
     }
 }

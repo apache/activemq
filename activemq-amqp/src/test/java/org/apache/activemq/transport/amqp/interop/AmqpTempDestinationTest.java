@@ -21,6 +21,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILI
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,68 @@ import org.junit.Test;
  * Tests for JMS temporary destination mappings to AMQP
  */
 public class AmqpTempDestinationTest extends AmqpClientTestSupport {
+
+    @Test(timeout = 60000)
+    public void testCannotCreateSenderWithNamedTempQueue() throws Exception {
+        doTestCannotCreateSenderWithNamedTempDestination(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testCannotCreateSenderWithNamedTempTopic() throws Exception {
+        doTestCannotCreateSenderWithNamedTempDestination(true);
+    }
+
+    protected void doTestCannotCreateSenderWithNamedTempDestination(boolean topic) throws Exception {
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        String address = null;
+        if (topic) {
+            address = "temp-topic://" + getTestName();
+        } else {
+            address = "temp-queue://" + getTestName();
+        }
+
+        try {
+            session.createSender(address);
+            fail("Should not be able to create sender to a temp destination that doesn't exist.");
+        } catch (Exception ex) {
+            LOG.info("Error creating sender: {}", ex.getMessage());
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testCanntCreateReceverWithNamedTempQueue() throws Exception {
+        doTestCannotCreateReceiverWithNamedTempDestination(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testCannotCreateReceiverWithNamedTempTopic() throws Exception {
+        doTestCannotCreateReceiverWithNamedTempDestination(true);
+    }
+
+    protected void doTestCannotCreateReceiverWithNamedTempDestination(boolean topic) throws Exception {
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        String address = null;
+        if (topic) {
+            address = "temp-topic://" + getTestName();
+        } else {
+            address = "temp-queue://" + getTestName();
+        }
+
+        try {
+            session.createReceiver(address);
+            fail("Should not be able to create sender to a temp destination that doesn't exist.");
+        } catch (Exception ex) {
+            LOG.info("Error creating sender: {}", ex.getMessage());
+        }
+    }
 
     @Test(timeout = 60000)
     public void testCreateDynamicSenderToTopic() throws Exception {
