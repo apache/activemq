@@ -498,7 +498,7 @@ invoke_stop(){
          echo
          echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$PID'"
          kill -KILL $PID
-         RET="1"
+         RET="$?"
        fi
     elif [ -f "$ACTIVEMQ_PIDFILE" ];then
        echo "ERROR: No or outdated process id in '$ACTIVEMQ_PIDFILE'"
