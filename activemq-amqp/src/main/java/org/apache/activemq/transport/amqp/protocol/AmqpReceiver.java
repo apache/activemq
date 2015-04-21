@@ -141,11 +141,11 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     protected InboundTransformer getInboundTransformer() {
         if (inboundTransformer == null) {
             String transformer = session.getConnection().getConfiguredTransformer();
-            if (transformer.equals(InboundTransformer.TRANSFORMER_JMS)) {
+            if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_JMS)) {
                 inboundTransformer = new JMSMappingInboundTransformer(ActiveMQJMSVendor.INSTANCE);
-            } else if (transformer.equals(InboundTransformer.TRANSFORMER_NATIVE)) {
+            } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_NATIVE)) {
                 inboundTransformer = new AMQPNativeInboundTransformer(ActiveMQJMSVendor.INSTANCE);
-            } else if (transformer.equals(InboundTransformer.TRANSFORMER_RAW)) {
+            } else if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_RAW)) {
                 inboundTransformer = new AMQPRawInboundTransformer(ActiveMQJMSVendor.INSTANCE);
             } else {
                 LOG.warn("Unknown transformer type {} using native one instead", transformer);
