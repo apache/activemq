@@ -143,7 +143,8 @@
 
     <dependency>
       <groupId>org.eclipse.paho</groupId>
-      <artifactId>mqtt-client</artifactId>
+      <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+      <version>1.0.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -286,6 +287,10 @@
           <url>http://repo.spring.io/plugins-release</url>
           <releases><enabled>true</enabled></releases>
           <snapshots><enabled>false</enabled></snapshots>
+      </repository>
+      <repository>
+          <id>Eclipse Paho Repo</id>
+          <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
       </repository>
   </repositories>
 

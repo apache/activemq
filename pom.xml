@@ -101,7 +101,6 @@
     <org-apache-derby-version>10.11.1.1</org-apache-derby-version>
     <org.osgi.core-version>4.3.1</org.osgi.core-version>
     <p2psockets-version>1.1.2</p2psockets-version>
-    <paho-version>0.4.0</paho-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.6</zookeeper-version>
     <qpid-proton-version>0.8</qpid-proton-version>
@@ -370,11 +369,6 @@
         <version>${project.version}</version>
         <type>test-jar</type>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.paho</groupId>
-        <artifactId>mqtt-client</artifactId>
-        <version>${paho-version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
