@@ -563,11 +563,11 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     //----- Utility methods for connection resources to use ------------------//
 
-    void regosterSender(ConsumerId consumerId, AmqpSender sender) {
+    void registerSender(ConsumerId consumerId, AmqpSender sender) {
         subscriptionsByConsumerId.put(consumerId, sender);
     }
 
-    void unregosterSender(ConsumerId consumerId) {
+    void unregisterSender(ConsumerId consumerId) {
         subscriptionsByConsumerId.remove(consumerId);
     }
 

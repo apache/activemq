@@ -80,7 +80,6 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     private final ConsumerInfo consumerInfo;
     private final boolean presettle;
 
-    private boolean closed;
     private int currentCredit;
     private boolean draining;
     private long lastDeliveredSequenceId;
@@ -108,8 +107,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
 
     @Override
     public void open() {
-        if (!closed) {
-            session.regosterSender(getConsumerId(), this);
+        if (!isClosed()) {
+            session.registerSender(getConsumerId(), this);
         }
 
         super.open();
@@ -142,9 +141,9 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 rsi.setClientId(session.getConnection().getClientId());
 
                 sendToActiveMQ(rsi, null);
-
-                session.unregisterSender(getConsumerId());
             }
+
+            session.unregisterSender(getConsumerId());
         }
 
         super.close();
@@ -350,7 +349,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     //----- Internal Implementation ------------------------------------------//
 
     public void pumpOutbound() throws Exception {
-        while (!closed) {
+        while (!isClosed()) {
             while (currentBuffer != null) {
                 int sent = getEndpoint().send(currentBuffer.data, currentBuffer.offset, currentBuffer.length);
                 if (sent > 0) {

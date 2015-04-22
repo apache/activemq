@@ -345,14 +345,14 @@ public class AmqpSession implements AmqpResource {
         connection.pumpProtonToSocket();
     }
 
-    public void regosterSender(ConsumerId consumerId, AmqpSender sender) {
+    public void registerSender(ConsumerId consumerId, AmqpSender sender) {
         consumers.put(consumerId, sender);
-        connection.regosterSender(consumerId, sender);
+        connection.registerSender(consumerId, sender);
     }
 
     public void unregisterSender(ConsumerId consumerId) {
         consumers.remove(consumerId);
-        connection.unregosterSender(consumerId);
+        connection.unregisterSender(consumerId);
     }
 
     //----- Configuration accessors ------------------------------------------//
