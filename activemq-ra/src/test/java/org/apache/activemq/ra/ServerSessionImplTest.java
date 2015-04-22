@@ -34,8 +34,12 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.util.Wait;
 import org.hamcrest.Description;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -181,7 +185,11 @@ public class ServerSessionImplTest extends TestCase {
         ActiveMQSession session1 = (ActiveMQSession) serverSession1.getSession();
         for (int i=0; i<maxMessages; i++) {
             MessageDispatch messageDispatch = new  MessageDispatch();
-            messageDispatch.setMessage(new ActiveMQTextMessage());
+            ActiveMQMessage message = new ActiveMQTextMessage();
+            message.setMessageId(new MessageId("0:0:0:" + i));
+            message.getMessageId().setBrokerSequenceId(i);
+            messageDispatch.setMessage(message);
+            messageDispatch.setConsumerId(new ConsumerId("0:0:0"));
             session1.dispatch(messageDispatch);
         }
 
@@ -199,9 +207,13 @@ public class ServerSessionImplTest extends TestCase {
             }
         });
 
-        while (messageCount.getCount() > maxMessages - 10) {
-            TimeUnit.MILLISECONDS.sleep(100);
-        }
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return messageCount.getCount() < maxMessages - 10;
+            }
+        });
+        assertTrue("some messages consumed", messageCount.getCount() < maxMessages);
         LOG.info("Closing pool on {}", messageCount.getCount());
         pool.close();
 

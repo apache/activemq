@@ -310,6 +310,7 @@ public class MDBTest extends TestCase {
             @Override
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
+                    System.err.println("Event :" + event.getRenderedMessage());
                     errorMessage.set(event.getRenderedMessage());
                 }
             }
@@ -389,7 +390,7 @@ public class MDBTest extends TestCase {
         // Activate an Endpoint
         adapter.endpointActivation(messageEndpointFactory, activationSpec);
 
-        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(1000);
+        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(4000);
         if (msg != null) {
             assertEquals("Prefetch size hasn't been set", 0, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
         } else {
@@ -410,7 +411,7 @@ public class MDBTest extends TestCase {
         adapter.stop();
 
         assertNotNull("We got an error message", errorMessage.get());
-        assertTrue("correct message", errorMessage.get().contains("zero"));
+        assertTrue("correct message: " +  errorMessage.get(), errorMessage.get().contains("zero"));
 
         LogManager.getRootLogger().removeAppender(testAppender);
         brokerService.stop();

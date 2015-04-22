@@ -66,6 +66,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -482,9 +483,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     @Override
-    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeiveredSequenceId)
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId)
             throws Exception {
-        super.removeSubscription(context, sub, lastDeiveredSequenceId);
+        super.removeSubscription(context, sub, lastDeliveredSequenceId);
         // synchronize with dispatch method so that no new messages are sent
         // while removing up a subscription.
         pagedInPendingDispatchLock.writeLock().lock();
@@ -492,7 +493,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             LOG.debug("{} remove sub: {}, lastDeliveredSeqId: {}, dequeues: {}, dispatched: {}, inflight: {}, groups: {}", new Object[]{
                     getActiveMQDestination().getQualifiedName(),
                     sub,
-                    lastDeiveredSequenceId,
+                    lastDeliveredSequenceId,
                     getDestinationStatistics().getDequeues().getCount(),
                     getDestinationStatistics().getDispatched().getCount(),
                     getDestinationStatistics().getInflight().getCount(),
@@ -536,12 +537,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 List<MessageReference> unAckedMessages = sub.remove(context, this);
 
                 // locate last redelivered in unconsumed list (list in delivery rather than seq order)
-                if (lastDeiveredSequenceId > 0) {
+                if (lastDeliveredSequenceId > RemoveInfo.LAST_DELIVERED_UNSET) {
                     for (MessageReference ref : unAckedMessages) {
-                        if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
+                        if (ref.getMessageId().getBrokerSequenceId() == lastDeliveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
-                            LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeiveredSequenceId, ref.getMessageId());
+                            LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeliveredSequenceId, ref.getMessageId());
                             break;
                         }
                     }
@@ -557,7 +558,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         qmr.unlock();
 
                         // have no delivery information
-                        if (lastDeiveredSequenceId == 0) {
+                        if (lastDeliveredSequenceId == RemoveInfo.LAST_DELIVERED_UNKNOWN) {
                             qmr.incrementRedeliveryCounter();
                         } else {
                             if (markAsRedelivered) {
@@ -821,9 +822,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         checkUsage(context, producerExchange, message);
         sendLock.lockInterruptibly();
         try {
+            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
             if (store != null && message.isPersistent()) {
                 try {
-                    message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                     if (messages.isCacheEnabled()) {
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
                         result.addListener(new PendingMarshalUsageTracker(message));

@@ -29,9 +29,10 @@ import org.apache.activemq.state.CommandVisitor;
 public class RemoveInfo extends BaseCommand {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.REMOVE_INFO;
-
+    public static final int LAST_DELIVERED_UNSET = -1;
+    public static final int LAST_DELIVERED_UNKNOWN = -2;
     protected DataStructure objectId;
-    protected long lastDeliveredSequenceId;
+    protected long lastDeliveredSequenceId = LAST_DELIVERED_UNKNOWN;
 
     public RemoveInfo() {
     }

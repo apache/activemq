@@ -228,7 +228,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private DeliveryListener deliveryListener;
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
-    private long lastDeliveredSequenceId;
+    private long lastDeliveredSequenceId = -2;
 
     /**
      * Construct the Session
@@ -878,7 +878,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         MessageDispatch messageDispatch;
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
-            ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
+            final ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
 
             MessageAck earlyAck = null;
             if (message.isExpired()) {
@@ -913,6 +913,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
 
             md.setDeliverySequenceId(getNextDeliveryId());
+            lastDeliveredSequenceId = message.getMessageId().getBrokerSequenceId();
 
             final MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             try {

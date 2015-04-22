@@ -664,7 +664,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         }
                     }
 
-                    long lastDeliveredSequenceId = 0;
+                    long lastDeliveredSequenceId = -1;
                     for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
                         ActiveMQSession s = i.next();
                         s.dispose();
@@ -683,7 +683,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         RemoveInfo removeCommand = info.createRemoveCommand();
                         removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
                         try {
-                            doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
+                            doSyncSendPacket(removeCommand, closeTimeout);
                         } catch (JMSException e) {
                             if (e.getCause() instanceof RequestTimedOutIOException) {
                                 // expected
