@@ -108,7 +108,7 @@ public class TransactedStoreUsageSuspendResumeTest {
         broker.setPersistent(true);
 
         KahaDBPersistenceAdapter kahaDB = new KahaDBPersistenceAdapter();
-        kahaDB.setJournalMaxFileLength(500 * 1024);
+        kahaDB.setJournalMaxFileLength(256 * 1024);
         kahaDB.setCleanupInterval(10*1000);
         broker.setPersistenceAdapter(kahaDB);
 
@@ -165,13 +165,30 @@ public class TransactedStoreUsageSuspendResumeTest {
         BytesMessage message = session.createBytesMessage();
         message.writeBytes(new byte[10]);
 
-        for (int i=0; i<4240; i++) {
+        for (int i=0; i<1240; i++) {
             // mostly fill the store with retained messages
             // so consumer only has a small bit of store usage to work with
             producer.send(retainQueue, message);
             session.commit();
         }
 
+        // issue with gc and linear store usage
+        // some daylight in needed between retainQ and regularQ to free up the store
+        // log4j.logger.org.apache.activemq.store.kahadb.MessageDatabase=TRACE
+        Destination shortRetainQueue = session.createQueue(QUEUE_NAME + "-retain-short");
+        for (int i=0; i<1240; i++) {
+            producer.send(shortRetainQueue, message);
+            session.commit();
+        }
+
+        MessageConsumer consumer = session.createConsumer(shortRetainQueue);
+        for (int i=0; i<1240; i++) {
+            consumer.receive(4000);
+            session.commit();
+        }
+
+        LOG.info("Done with retain q. Mem Usage: " + broker.getSystemUsage().getMemoryUsage());
+        LOG.info("Done with retain q. Store Usage: " +broker.getSystemUsage().getStoreUsage());
         consumerStartLatch.countDown();
         for (int i = 0; i < MAX_MESSAGES; i++) {
             producer.send(queue,  message);
