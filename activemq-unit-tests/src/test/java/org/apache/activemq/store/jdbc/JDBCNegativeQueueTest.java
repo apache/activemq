@@ -35,7 +35,6 @@ public class JDBCNegativeQueueTest extends NegativeQueueTest {
     protected void configureBroker(BrokerService answer) throws Exception {
         super.configureBroker(answer);
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        jdbc.setDataSource(dataSource);
         answer.setPersistenceAdapter(jdbc);
         dataSource = jdbc.getDataSource();
     }

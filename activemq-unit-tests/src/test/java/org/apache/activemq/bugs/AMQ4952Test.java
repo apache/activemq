@@ -55,6 +55,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.ConditionalNetworkBridgeFilterFactory;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.store.jdbc.DataSourceServiceSupport;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -275,13 +276,19 @@ public class AMQ4952Test {
 
     protected void doTearDown() throws Exception {
 
+        DataSource dataSource = ((JDBCPersistenceAdapter)producerBroker.getPersistenceAdapter()).getDataSource();
         try {
             producerBroker.stop();
         } catch (Exception ex) {
+        } finally {
+            DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
         }
+        dataSource = ((JDBCPersistenceAdapter)consumerBroker.getPersistenceAdapter()).getDataSource();
         try {
             consumerBroker.stop();
         } catch (Exception ex) {
+        } finally {
+            DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
         }
     }
 

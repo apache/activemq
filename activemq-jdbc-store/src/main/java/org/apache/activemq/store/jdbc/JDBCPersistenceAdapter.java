@@ -336,6 +336,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             cleanupTicket.cancel(true);
             cleanupTicket = null;
         }
+        closeDataSource(getDataSource());
     }
 
     public void cleanup() {
@@ -408,15 +409,14 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 throw new IllegalArgumentException(
                         "No dataSource property has been configured");
             }
-        } else {
-            LOG.info("Using a separate dataSource for locking: "
-                    + lockDataSource);
         }
         return lockDataSource;
     }
 
     public void setLockDataSource(DataSource dataSource) {
         this.lockDataSource = dataSource;
+        LOG.info("Using a separate dataSource for locking: "
+                            + lockDataSource);
     }
 
     @Override

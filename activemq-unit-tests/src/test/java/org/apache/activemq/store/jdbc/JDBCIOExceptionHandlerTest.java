@@ -31,6 +31,7 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -51,14 +52,15 @@ public class JDBCIOExceptionHandlerTest {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerTest.class);
     private static final String TRANSPORT_URL = "tcp://0.0.0.0:0";
 
-    private static final String DATABASE_NAME = "DERBY_OVERRIDE";
     private ActiveMQConnectionFactory factory;
     private ReconnectingEmbeddedDataSource dataSource;
     private BrokerService broker;
 
-    @Before
-    public void dbHomeSysProp() throws Exception {
-        System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
+    @After
+    public void stopDB() {
+        if (dataSource != null) {
+            dataSource.stopDB();
+        }
     }
 
     protected BrokerService createBroker(boolean withJMX) throws Exception {
@@ -71,15 +73,11 @@ public class JDBCIOExceptionHandlerTest {
 
         broker.setUseJmx(withJMX);
 
-        EmbeddedDataSource embeddedDataSource = new EmbeddedDataSource();
-        embeddedDataSource.setDatabaseName(DATABASE_NAME);
-        embeddedDataSource.setCreateDatabase("create");
-
+        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) jdbc.getDataSource();
         // create a wrapper to EmbeddedDataSource to allow the connection be
         // reestablished to derby db
         dataSource = new ReconnectingEmbeddedDataSource(embeddedDataSource);
-
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
         jdbc.setDataSource(dataSource);
 
         jdbc.setLockKeepAlivePeriod(1000l);
@@ -310,23 +308,17 @@ public class JDBCIOExceptionHandlerTest {
          *
          * @throws SQLException
          */
-        public void restartDB() throws SQLException {
-            EmbeddedDataSource newDatasource = new EmbeddedDataSource();
-            newDatasource.setDatabaseName(DATABASE_NAME);
+        public void restartDB() throws Exception {
+            EmbeddedDataSource newDatasource =
+                    (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(broker.getDataDirectoryFile().getCanonicalPath());
             newDatasource.getConnection();
             LOG.info("*** DB restarted now...");
             this.realDatasource = newDatasource;
         }
 
         public void stopDB() {
-            try {
-                realDatasource.setShutdownDatabase("shutdown");
-                LOG.info("***DB is being shutdown...");
-                dataSource.getConnection();
-                fail("should have thrown a db closed exception");
-            } catch (Exception ex) {
-                ex.printStackTrace(System.out);
-            }
+            LOG.info("***DB is being shutdown...");
+            DataSourceServiceSupport.shutdownDefaultDataSource(realDatasource);
         }
 
         public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {

@@ -73,7 +73,6 @@ public class TrapMessageInJDBCStoreTest extends TestCase {
         broker.setUseJmx(withJMX);
 
         EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory());
-        embeddedDataSource.setCreateDatabase("create");
 
         //wire in a TestTransactionContext (wrapper to TransactionContext) that has an executeBatch()
         // method that can be configured to throw a SQL exception on demand

@@ -563,7 +563,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void testQueueBacklog() throws Exception {
-        final int backlog = 180000;
+        final int backlog = 18000;
         ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
 
         ProducerThread lowPri = new ProducerThread(queue, backlog, LOW_PRI);

@@ -24,10 +24,8 @@ public class JDBCNetworkBrokerDetachTest extends NetworkBrokerDetachTest {
 
     protected void configureBroker(BrokerService broker) throws Exception {
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
+        EmbeddedDataSource dataSource = (EmbeddedDataSource) jdbc.getDataSource();
         dataSource.setDatabaseName(broker.getBrokerName());
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         broker.setUseVirtualTopics(false);

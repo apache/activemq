@@ -78,15 +78,8 @@ public class AMQ4636Test {
             broker.stop();
             broker.waitUntilStopped();
         }
-        try {
-            if (embeddedDataSource != null) {
-                // ref http://svn.apache.org/viewvc/db/derby/code/trunk/java/testing/org/apache/derbyTesting/junit/JDBCDataSource.java?view=markup
-                embeddedDataSource.setShutdownDatabase("shutdown");
-                embeddedDataSource.getConnection();
-            }
-        } catch (Exception ignored) {
-        } finally {
-            embeddedDataSource.setShutdownDatabase(null);
+        if (embeddedDataSource != null) {
+            DataSourceServiceSupport.shutdownDefaultDataSource(embeddedDataSource);
         }
     }
 

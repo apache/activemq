@@ -47,6 +47,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import javax.sql.DataSource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -137,22 +138,21 @@ public class JDBCStoreAutoCommitTest {
             c1.close();
             broker.stop();
             broker.waitUntilStopped();
+            if (realDataSource != null) {
+                DataSourceServiceSupport.shutdownDefaultDataSource(realDataSource);
+            }
         }
     }
 
+    DataSource realDataSource;
     private BrokerService createBrokerService() throws IOException {
         BrokerService broker = new BrokerService();
         broker.setBrokerName(BROKER_NAME);
         broker.setUseJmx(false);
 
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource embeddedDataSource = new EmbeddedDataSource();
-        embeddedDataSource.setDatabaseName("derbyDb");
-        embeddedDataSource.setCreateDatabase("create");
-
-        javax.sql.DataSource wrappedDataSource = new TestDataSource(embeddedDataSource);
-
-        jdbc.setDataSource(wrappedDataSource);
+        realDataSource = jdbc.getDataSource();
+        jdbc.setDataSource(new TestDataSource(realDataSource));
 
         broker.setPersistenceAdapter(jdbc);
         return broker;

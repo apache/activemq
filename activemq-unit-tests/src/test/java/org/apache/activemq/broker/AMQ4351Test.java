@@ -63,11 +63,6 @@ public class AMQ4351Test extends BrokerTestSupport {
         System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
 
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
-
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         return broker;
