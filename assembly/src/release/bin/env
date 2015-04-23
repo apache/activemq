@@ -26,9 +26,7 @@
 # Set jvm memory configuration
 ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
 
-if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
-fi
+ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 
 # Uncomment to enable audit logging
 #ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS -Dorg.apache.activemq.audit=true"
@@ -70,9 +68,7 @@ ACTIVEMQ_SUNJMX_START="$ACTIVEMQ_SUNJMX_START -Dcom.sun.management.jmxremote"
 ACTIVEMQ_SUNJMX_CONTROL=""
 
 # Specify the queue manager URL for using "browse" option of sysv initscript
-if [ -z "$ACTIVEMQ_QUEUEMANAGERURL" ]; then
-    ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
-fi
+ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
 
 # Set additional JSE arguments
 ACTIVEMQ_SSL_OPTS=""
@@ -82,9 +78,7 @@ ACTIVEMQ_SSL_OPTS=""
 
 # ActiveMQ tries to shutdown the broker by jmx,
 # after a specified number of seconds send SIGKILL
-if [ -z "$ACTIVEMQ_KILL_MAXSECONDS" ]; then
-    ACTIVEMQ_KILL_MAXSECONDS=30
-fi
+ACTIVEMQ_KILL_MAXSECONDS=30
 
 # Active MQ installation dirs
 # ACTIVEMQ_HOME="<Installationdir>/"
