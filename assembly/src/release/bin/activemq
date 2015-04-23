@@ -503,13 +503,15 @@ invoke_stop(){
        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
 
+       ACTIVEMQ_PID="`cat $ACTIVEMQ_PIDFILE`"
+
        invokeJar "stop"
        RET="$?"
 
        FOUND="0"
-       i=1
+       i=0
        echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$ACTIVEMQ_PID' : "
-       while [ "$i" -gt "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
+       while [ "$i" -le "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
          if [ ! checkStopRunning ];then
             if [ ! checkRunning ]; then
                echo " FINISHED"
@@ -530,8 +532,8 @@ invoke_stop(){
        done
        if [ "$FOUND" -ne "1" ];then
          echo
-         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$ACTIVEMQ_PID'"
-         kill -KILL $ACTIVEMQ_PID
+         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process"
+         invoke_kill
          RET="$?"
        fi
     elif [ -f "$ACTIVEMQ_PIDFILE" ];then
