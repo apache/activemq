@@ -467,6 +467,27 @@ invoke_console(){
     exit "$RET"
 }
 
+
+# Kill ActiveMQ
+# @RET    : 0 => stop was successful
+#          !0 => something went wrong
+#
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE         : the name of the pid file
+
+
+invoke_kill(){
+    if ( checkRunning ); then
+       ACTIVEMQ_PID="`cat $ACTIVEMQ_PIDFILE`"
+       echo "INFO: sending SIGKILL to pid '$ACTIVEMQ_PID'"
+       kill -KILL $ACTIVEMQ_PID
+       return $?
+    fi
+    echo "INFO: not running, nothing to do"
+    return 0
+}
+
+
 # Stop ActiveMQ
 # @RET    : 0 => stop was successful
 #          !0 => something went wrong
@@ -571,6 +592,7 @@ show_help() {
   invokeJar|sed "s,Usage: Main,Usage: $0,"
   cat << EOF
 Tasks provided by the sysv init script:
+    kill            - terminate instance in a drastic way by sending SIGKILL
     restart         - stop running instance (if there is one), start new instance
     console         - start broker in foreground, useful for debugging purposes
     status          - check if activemq process is running
@@ -616,7 +638,11 @@ case "$1" in
     exit $?
     ;;
   stop)
-    invoke_stop
+    invoke_stop 
+    exit $?
+    ;;
+  kill)
+    invoke_kill
     exit $?
     ;;
   decrypt|encrypt|create)
