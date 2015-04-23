@@ -238,4 +238,11 @@ public abstract class TestSupport extends CombinationTestSupport {
         assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
     }
 
+    public void safeCloseConnection(Connection c) {
+        if (c != null) {
+            try {
+                c.close();
+            } catch (JMSException ignored) {}
+        }
+    }
 }
