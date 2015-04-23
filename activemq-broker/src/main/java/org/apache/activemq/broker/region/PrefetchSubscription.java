@@ -626,7 +626,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         rc.addAll(references);
-        destination.getDestinationStatistics().getDispatched().subtract(references.size());
         destination.getDestinationStatistics().getInflight().subtract(references.size());
         dispatched.removeAll(references);
     }
