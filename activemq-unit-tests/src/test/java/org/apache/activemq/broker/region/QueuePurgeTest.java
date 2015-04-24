@@ -95,7 +95,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
         QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("purging..");
 
-        org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.region.Queue.class);
+        org.apache.log4j.Logger log4jLogger = org.apache.log4j.Logger.getLogger(org.apache.activemq.broker.jmx.QueueView.class);
         final AtomicBoolean gotPurgeLogMessage = new AtomicBoolean(false);
 
         Appender appender = new DefaultTestAppender() {
@@ -103,7 +103,7 @@ public class QueuePurgeTest extends CombinationTestSupport {
             public void doAppend(LoggingEvent event) {
                 if (event.getMessage() instanceof String) {
                     String message = (String) event.getMessage();
-                    if (message.contains("purged of " + NUM_TO_SEND +" messages")) {
+                    if (message.contains("purge of " + NUM_TO_SEND +" messages")) {
                         LOG.info("Received a log message: {} ", event.getMessage());
                         gotPurgeLogMessage.set(true);
                     }
