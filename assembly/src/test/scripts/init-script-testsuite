@@ -90,7 +90,7 @@ if ( ! [ -x "activemq" ] );then
 fi
 
 echo "Setup a testdir"
-TESTDIR="/tmp/activemq/initscript-testing-$$-$USER"
+TESTDIR="/tmp/activemq/initscript-testing-$$-$USER/a/b/c/d/.././e/"
 mkdir -p $TESTDIR
 
 echo "Setting HOME to $TESTDIR"

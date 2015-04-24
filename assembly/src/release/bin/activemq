@@ -68,7 +68,7 @@ pathCanonical() {
     if [ "$bas" != "$dir" ]; then
       dst="`pathCanonical "$dir"`/$bas"
     fi
-    echo "${dst}" | sed -e 's#//#/#g' -e 's#/./#/#g' -e 's#/[^/]*/../#/#g'
+    echo "${dst}" | sed -e 's#//#/#g' -e 's#/\./#/#g' -e 's#/[^/]*/\.\./#/#g'
 }
 
 
