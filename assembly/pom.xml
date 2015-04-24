@@ -374,7 +374,7 @@
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring3</artifactId>
+      <artifactId>jasypt-spring31</artifactId>
       <version>${jasypt-version}</version>
     </dependency>
     <dependency>
