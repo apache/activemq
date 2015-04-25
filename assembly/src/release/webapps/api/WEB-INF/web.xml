@@ -43,6 +43,10 @@
         <init-param>
           <param-name>discoveryEnabled</param-name>
           <param-value>false</param-value>
+        </init-param>      
+        <init-param>
+          <param-name>discoveryAgentUrl</param-name>
+          <param-value>http://${host}:8161/api/jolokia</param-value>
         </init-param>
         <init-param>
           <param-name>agentDescription</param-name>
