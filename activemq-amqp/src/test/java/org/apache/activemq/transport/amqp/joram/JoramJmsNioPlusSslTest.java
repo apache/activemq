@@ -42,19 +42,19 @@ import org.objectweb.jtests.jms.conform.selector.SelectorSyntaxTest;
 import org.objectweb.jtests.jms.conform.selector.SelectorTest;
 import org.objectweb.jtests.jms.conform.session.QueueSessionTest;
 import org.objectweb.jtests.jms.conform.session.SessionTest;
+import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    //    TopicSessionTest.class,    // Hangs, see https://issues.apache.org/jira/browse/PROTON-154
+    TopicSessionTest.class,
     MessageHeaderTest.class,
     QueueBrowserTest.class,
     MessageTypeTest.class,
-    //,UnifiedSessionTest.class    // https://issues.apache.org/jira/browse/AMQ-4375
     TemporaryTopicTest.class,
-    TopicConnectionTest.class,    // https://issues.apache.org/jira/browse/AMQ-4654
+    TopicConnectionTest.class,
     SelectorSyntaxTest.class,
     QueueSessionTest.class,
     SelectorTest.class,
@@ -76,6 +76,7 @@ public class JoramJmsNioPlusSslTest {
     public Timeout to = new Timeout(10 * 1000);
 
     private static SSLContext def;
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         System.setProperty("joram.jms.test.file", getJmsTestFileName());
@@ -85,6 +86,7 @@ public class JoramJmsNioPlusSslTest {
         def = SSLContext.getDefault();
         SSLContext.setDefault(ctx);
     }
+
     @AfterClass
     public static void afterClass() throws Exception {
         System.clearProperty("joram.jms.test.file");

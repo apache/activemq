@@ -162,9 +162,14 @@ public class DestinationMap {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected Set findWildcardMatches(ActiveMQDestination key) {
+       return findWildcardMatches(key, true);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected Set findWildcardMatches(ActiveMQDestination key, boolean deep) {
         String[] paths = key.getDestinationPaths();
         Set answer = new HashSet();
-        getRootNode(key).appendMatchingValues(answer, paths, 0);
+        getRootNode(key).appendMatchingValues(answer, paths, 0, deep);
         return answer;
     }
 

@@ -352,6 +352,20 @@ public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Lo
         return false;
     }
 
+    public Sequence get(int value) {
+        if (!isEmpty()) {
+            Sequence sequence = getHead();
+            while (sequence != null) {
+                if (sequence.contains(value)) {
+                    return sequence;
+                }
+                sequence = sequence.getNext();
+            }
+        }
+        return null;
+    }
+
+
     /**
      * Computes the size of this Sequence by summing the values of all
      * the contained sequences.

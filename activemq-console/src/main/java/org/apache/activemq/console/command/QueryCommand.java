@@ -16,15 +16,9 @@
  */
 package org.apache.activemq.console.command;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 import org.apache.activemq.console.util.JmxMBeansUtil;
+
+import java.util.*;
 
 public class QueryCommand extends AbstractJmxCommand {
     // Predefined type=identifier query
@@ -96,7 +90,7 @@ public class QueryCommand extends AbstractJmxCommand {
 
     private final List<String> queryAddObjects = new ArrayList<String>(10);
     private final List<String> querySubObjects = new ArrayList<String>(10);
-    private final Set queryViews = new HashSet(10);
+    private final Set queryViews = new LinkedHashSet();
 
     @Override
     public String getName() {
@@ -117,16 +111,13 @@ public class QueryCommand extends AbstractJmxCommand {
     protected void runTask(List<String> tokens) throws Exception {
         try {
             // Query for the mbeans to add
-            List addMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), queryAddObjects, queryViews);
-
+            Map<String,List> addMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), queryAddObjects, queryViews);
             // Query for the mbeans to sub
             if (querySubObjects.size() > 0) {
-                List subMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), querySubObjects, queryViews);
-                addMBeans.removeAll(subMBeans);
+                Map<String,List> subMBeans = JmxMBeansUtil.queryMBeansAsMap(createJmxConnection(), querySubObjects, queryViews);
+                addMBeans.keySet().removeAll(subMBeans.keySet());
             }
-
-            context.printMBean(JmxMBeansUtil.filterMBeansView(addMBeans, queryViews));
-
+            context.printMBean(JmxMBeansUtil.filterMBeansView(new ArrayList(addMBeans.values()), queryViews));
         } catch (Exception e) {
             context.printException(new RuntimeException("Failed to execute query task. Reason: " + e));
             throw new Exception(e);

@@ -111,14 +111,10 @@ class CallerBufferingDataFileAppender extends DataFileAppender {
                 wb = (WriteBatch)o;
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
-                        file.setLength(dataFile.getLength());
                         dataFile.closeRandomAccessFile(file);
                     }
                     dataFile = wb.dataFile;
                     file = dataFile.openRandomAccessFile();
-                    if( file.length() < journal.preferedFileLength ) {
-                        file.setLength(journal.preferedFileLength);
-                    }
                 }
 
                 final DataByteArrayOutputStream buff = wb.buff;

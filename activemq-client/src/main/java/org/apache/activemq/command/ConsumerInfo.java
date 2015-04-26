@@ -62,7 +62,7 @@ public class ConsumerInfo extends BaseCommand {
 
     // not marshalled, populated from RemoveInfo, the last message delivered, used
     // to suppress redelivery on prefetched messages after close
-    private transient long lastDeliveredSequenceId;
+    private transient long lastDeliveredSequenceId = RemoveInfo.LAST_DELIVERED_UNSET;
     private transient long assignedGroupCount;
     // originated from a
     // network connection

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.activemq.command.ActiveMQQueue;
 /**
  * 
  * 
@@ -25,4 +26,11 @@ public class SimpleAuthorizationMapTest extends AuthorizationMapTest {
     protected AuthorizationMap createAuthorizationMap() {
         return SimpleSecurityBrokerSystemTest.createAuthorizationMap();
     }
+
+    protected void addABEntry(AuthorizationMap map) {
+        SimpleAuthorizationMap simpleMap = (SimpleAuthorizationMap) map;
+        simpleMap.getReadACLs().put(new ActiveMQQueue("QUEUEA"), USERS);
+        simpleMap.getReadACLs().put(new ActiveMQQueue("QUEUEB"), USERS);
+    }
+
 }

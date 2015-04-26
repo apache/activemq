@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
@@ -308,6 +310,7 @@ public class MDBTest extends TestCase {
             @Override
             public void doAppend(LoggingEvent event) {
                 if (event.getLevel().isGreaterOrEqual(Level.ERROR)) {
+                    System.err.println("Event :" + event.getRenderedMessage());
                     errorMessage.set(event.getRenderedMessage());
                 }
             }
@@ -387,7 +390,7 @@ public class MDBTest extends TestCase {
         // Activate an Endpoint
         adapter.endpointActivation(messageEndpointFactory, activationSpec);
 
-        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(1000);
+        ActiveMQMessage msg = (ActiveMQMessage)advisory.receive(4000);
         if (msg != null) {
             assertEquals("Prefetch size hasn't been set", 0, ((ConsumerInfo)msg.getDataStructure()).getPrefetchSize());
         } else {
@@ -408,7 +411,7 @@ public class MDBTest extends TestCase {
         adapter.stop();
 
         assertNotNull("We got an error message", errorMessage.get());
-        assertTrue("correct message", errorMessage.get().contains("zero"));
+        assertTrue("correct message: " +  errorMessage.get(), errorMessage.get().contains("zero"));
 
         LogManager.getRootLogger().removeAppender(testAppender);
         brokerService.stop();
@@ -424,12 +427,18 @@ public class MDBTest extends TestCase {
         adapter.setServerUrl("vm://localhost?broker.persistent=false");
         adapter.start(new StubBootstrapContext());
 
-        final CountDownLatch messageDelivered = new CountDownLatch(2);
+        final CountDownLatch messageDelivered = new CountDownLatch(5);
+        final AtomicLong timeReceived = new AtomicLong();
+        final AtomicBoolean failed = new AtomicBoolean(false);
 
         final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
             public void onMessage(Message message) {
                 super.onMessage(message);
                 try {
+                    long now = System.currentTimeMillis();
+                    if ((now - timeReceived.getAndSet(now)) > 1000) {
+                        failed.set(true);
+                    }
                     messageDelivered.countDown();
                     if (!messageDelivered.await(1, TimeUnit.MILLISECONDS)) {
                         throw new RuntimeException(getName() + " ex on first delivery");
@@ -463,6 +472,7 @@ public class MDBTest extends TestCase {
         ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
         activationSpec.setDestinationType(Queue.class.getName());
         activationSpec.setDestination("TEST");
+        activationSpec.setInitialRedeliveryDelay(100);
         activationSpec.setResourceAdapter(adapter);
         activationSpec.validate();
 
@@ -486,7 +496,7 @@ public class MDBTest extends TestCase {
         } catch (Exception e) {
 
         }
-
+        timeReceived.set(System.currentTimeMillis());
         // Send the broker a message to that endpoint
         MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
         producer.send(session.createTextMessage("Hello!"));
@@ -494,6 +504,7 @@ public class MDBTest extends TestCase {
 
         // Wait for the message to be delivered twice.
         assertTrue(messageDelivered.await(10000, TimeUnit.MILLISECONDS));
+        assertFalse("Delivery policy delay not working", failed.get());
 
         // Shut the Endpoint down.
         adapter.endpointDeactivation(messageEndpointFactory, activationSpec);

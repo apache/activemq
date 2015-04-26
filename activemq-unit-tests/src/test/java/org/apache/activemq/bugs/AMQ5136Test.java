@@ -23,6 +23,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
@@ -37,6 +38,7 @@ public class AMQ5136Test {
     public void startBroker() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
         brokerService.start();
     }
 

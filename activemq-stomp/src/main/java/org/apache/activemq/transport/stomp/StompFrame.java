@@ -94,85 +94,108 @@ public class StompFrame implements Command {
         this.headers = headers;
     }
 
-    //
-    // Methods in the Command interface
-    //
+    @Override
     public int getCommandId() {
         return 0;
     }
 
+    @Override
     public Endpoint getFrom() {
         return null;
     }
 
+    @Override
     public Endpoint getTo() {
         return null;
     }
 
+    @Override
     public boolean isBrokerInfo() {
         return false;
     }
 
+    @Override
     public boolean isMessage() {
         return false;
     }
 
+    @Override
     public boolean isMessageAck() {
         return false;
     }
 
+    @Override
     public boolean isMessageDispatch() {
         return false;
     }
 
+    @Override
     public boolean isMessageDispatchNotification() {
         return false;
     }
 
+    @Override
     public boolean isResponse() {
         return false;
     }
 
+    @Override
     public boolean isResponseRequired() {
         return false;
     }
 
+    @Override
     public boolean isShutdownInfo() {
         return false;
     }
 
+    @Override
     public boolean isConnectionControl() {
         return false;
     }
 
+    @Override
+    public boolean isConsumerControl() {
+        return false;
+    }
+
+    @Override
     public boolean isWireFormatInfo() {
         return false;
     }
 
+    @Override
     public void setCommandId(int value) {
     }
 
+    @Override
     public void setFrom(Endpoint from) {
     }
 
+    @Override
     public void setResponseRequired(boolean responseRequired) {
     }
 
+    @Override
     public void setTo(Endpoint to) {
     }
 
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return null;
     }
 
+    @Override
     public byte getDataStructureType() {
         return 0;
     }
 
+    @Override
     public boolean isMarshallAware() {
         return false;
     }
 
+    @Override
     public String toString() {
         return format(true);
     }

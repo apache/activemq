@@ -182,7 +182,7 @@ class DataFileAppender implements FileAppender {
     private WriteBatch enqueue(Journal.WriteCommand write) throws IOException {
         synchronized (enqueueMutex) {
             if (shutdown) {
-                throw new IOException("Async Writter Thread Shutdown");
+                throw new IOException("Async Writer Thread Shutdown");
             }
 
             if (!running) {
@@ -207,9 +207,10 @@ class DataFileAppender implements FileAppender {
             while ( true ) {
                 if (nextWriteBatch == null) {
                     DataFile file = journal.getCurrentWriteFile();
-                    if( file.getLength() > journal.getMaxFileLength() ) {
+                    if( file.getLength() + write.location.getSize() >= journal.getMaxFileLength() ) {
                         file = journal.rotateWriteFile();
                     }
+
 
                     nextWriteBatch = newWriteBatch(write, file);
                     enqueueMutex.notifyAll();
@@ -226,7 +227,7 @@ class DataFileAppender implements FileAppender {
                                 final long start = System.currentTimeMillis();
                                 enqueueMutex.wait();
                                 if (maxStat > 0) {
-                                    logger.info("Watiting for write to finish with full batch... millis: " +
+                                    logger.info("Waiting for write to finish with full batch... millis: " +
                                                 (System.currentTimeMillis() - start));
                                }
                             }
@@ -234,7 +235,7 @@ class DataFileAppender implements FileAppender {
                             throw new InterruptedIOException();
                         }
                         if (shutdown) {
-                            throw new IOException("Async Writter Thread Shutdown");
+                            throw new IOException("Async Writer Thread Shutdown");
                         }
                     }
                 }
@@ -273,6 +274,7 @@ class DataFileAppender implements FileAppender {
 
     int statIdx = 0;
     int[] stats = new int[maxStat];
+    final byte[] end = new byte[]{0};
     /**
      * The async processing loop that writes to the data files and does the
      * force calls. Since the file sync() call is the slowest of all the
@@ -308,13 +310,14 @@ class DataFileAppender implements FileAppender {
 
                 if (dataFile != wb.dataFile) {
                     if (file != null) {
-                        file.setLength(dataFile.getLength());
                         dataFile.closeRandomAccessFile(file);
                     }
                     dataFile = wb.dataFile;
                     file = dataFile.openRandomAccessFile();
-                    if( file.length() < journal.preferedFileLength ) {
-                        file.setLength(journal.preferedFileLength);
+                    // pre allocate on first open of new file (length==0)
+                    // note dataFile.length cannot be used because it is updated in enqueue
+                    if (file.length() == 0l) {
+                        journal.preallocateEntireJournalDataFile(file);
                     }
                 }
 
@@ -337,15 +340,19 @@ class DataFileAppender implements FileAppender {
                     write = write.getNext();
                 }
 
+                // append 'unset' next batch (5 bytes) so read can always find eof
+                buff.writeInt(0);
+                buff.writeByte(0);
+
                 ByteSequence sequence = buff.toByteSequence();
 
                 // Now we can fill in the batch control record properly.
                 buff.reset();
                 buff.skip(5+Journal.BATCH_CONTROL_RECORD_MAGIC.length);
-                buff.writeInt(sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
+                buff.writeInt(sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE - 5);
                 if( journal.isChecksum() ) {
                     Checksum checksum = new Adler32();
-                    checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE);
+                    checksum.update(sequence.getData(), sequence.getOffset()+Journal.BATCH_CONTROL_RECORD_SIZE, sequence.getLength()-Journal.BATCH_CONTROL_RECORD_SIZE - 5);
                     buff.writeLong(checksum.getValue());
                 }
 

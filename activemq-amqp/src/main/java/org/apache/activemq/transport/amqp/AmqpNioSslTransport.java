@@ -26,12 +26,8 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AmqpNioSslTransport extends NIOSSLTransport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AmqpNioSslTransport.class);
 
     private final AmqpFrameParser frameReader = new AmqpFrameParser(this);
 

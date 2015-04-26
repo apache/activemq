@@ -119,7 +119,7 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
         assertNotNull("Expecting an exception when updateMessage fails", expectedException);                
         
         consumer.close();
-        connection.close();
+        safeCloseConnection(connection);
         
         restartBroker();
         
@@ -187,7 +187,7 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
         assertNotNull("Expecting an exception when updateMessage fails", expectedException);
 
         consumer.close();
-        connection.close();
+        safeCloseConnection(connection);
 
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();

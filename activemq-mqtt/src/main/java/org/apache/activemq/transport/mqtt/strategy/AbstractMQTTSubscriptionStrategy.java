@@ -204,7 +204,13 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
                 if (response.isException()) {
                     final Throwable throwable = ((ExceptionResponse) response).getException();
                     LOG.warn("Error subscribing to {}", topicName, throwable);
-                    qos[0] = SUBSCRIBE_ERROR;
+                    // version 3.1 don't supports silent fail
+                    // version 3.1.1 send "error" qos
+                    if (protocol.version == protocol.V3_1_1) {
+                        qos[0] = SUBSCRIBE_ERROR;
+                    } else {
+                        qos[0] = (byte) qoS.ordinal();
+                    }
                 } else {
                     qos[0] = (byte) qoS.ordinal();
                 }

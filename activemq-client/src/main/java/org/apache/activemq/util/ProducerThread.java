@@ -20,18 +20,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.*;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProducerThread extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProducerThread.class);
 
     int messageCount = 1000;
+    boolean runIndefinitely = false;
     Destination destination;
     protected Session session;
     int sleep = 0;
@@ -43,10 +42,14 @@ public class ProducerThread extends Thread {
     int transactionBatchSize;
 
     int transactions = 0;
-    int sentCount = 0;
+    AtomicInteger sentCount = new AtomicInteger(0);
+    String message;
+    String messageText = null;
+    String payloadUrl = null;
     byte[] payload = null;
     boolean running = false;
     CountDownLatch finished;
+    CountDownLatch paused = new CountDownLatch(0);
 
 
     public ProducerThread(Session session, Destination destination) {
@@ -67,18 +70,20 @@ public class ProducerThread extends Thread {
             LOG.info(threadName +  " Started to calculate elapsed time ...\n");
             long tStart = System.currentTimeMillis();
 
-            for (sentCount = 0; sentCount < messageCount && running; sentCount++) {
-                Message message = createMessage(sentCount);
-                producer.send(message);
-                LOG.info(threadName + " Sent: " + (message instanceof TextMessage ? ((TextMessage) message).getText() : message.getJMSMessageID()));
-
-                if (transactionBatchSize > 0 && sentCount > 0 && sentCount % transactionBatchSize == 0) {
-                    LOG.info(threadName + " Committing transaction: " + transactions++);
-                    session.commit();
+            if (runIndefinitely) {
+                while (running) {
+                    synchronized (this) {
+                        paused.await();
+                    }
+                    sendMessage(producer, threadName);
+                    sentCount.incrementAndGet();
                 }
-
-                if (sleep > 0) {
-                    Thread.sleep(sleep);
+            }else{
+                for (sentCount.set(0); sentCount.get() < messageCount && running; sentCount.incrementAndGet()) {
+                    synchronized (this) {
+                        paused.await();
+                    }
+                    sendMessage(producer, threadName);
                 }
             }
 
@@ -104,6 +109,23 @@ public class ProducerThread extends Thread {
         }
     }
 
+    private void sendMessage(MessageProducer producer, String threadName) throws Exception {
+        Message message = createMessage(sentCount.get());
+        producer.send(message);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(threadName + " Sent: " + (message instanceof TextMessage ? ((TextMessage) message).getText() : message.getJMSMessageID()));
+        }
+
+        if (transactionBatchSize > 0 && sentCount.get() > 0 && sentCount.get() % transactionBatchSize == 0) {
+            LOG.info(threadName + " Committing transaction: " + transactions++);
+            session.commit();
+        }
+
+        if (sleep > 0) {
+            Thread.sleep(sleep);
+        }
+    }
+
     private void initPayLoad() {
         if (messageSize > 0) {
             payload = new byte[messageSize];
@@ -114,35 +136,55 @@ public class ProducerThread extends Thread {
     }
 
     protected Message createMessage(int i) throws Exception {
-        Message message = null;
+        Message answer;
         if (payload != null) {
-            message = session.createBytesMessage();
-            ((BytesMessage)message).writeBytes(payload);
+            answer = session.createBytesMessage();
+            ((BytesMessage) answer).writeBytes(payload);
         } else {
             if (textMessageSize > 0) {
-                InputStreamReader reader = null;
-                try {
-                    InputStream is = getClass().getResourceAsStream("demo.txt");
-                    reader = new InputStreamReader(is);
-                    char[] chars = new char[textMessageSize];
-                    reader.read(chars);
-                    message = session.createTextMessage(String.valueOf(chars));
-                } catch (Exception e) {
-                    LOG.warn(Thread.currentThread().getName() + " Failed to load " + textMessageSize + " bytes of demo text. Using default text message instead");
-                    message = session.createTextMessage("test message: " + i);
-                } finally {
-                    if (reader != null) {
-                        reader.close();
-                    }
+                if (messageText == null) {
+                    messageText = readInputStream(getClass().getResourceAsStream("demo.txt"), textMessageSize, i);
                 }
+            } else if (payloadUrl != null) {
+                messageText = readInputStream(new URL(payloadUrl).openStream(), -1, i);
+            } else if (message != null) {
+                messageText = message;
             } else {
-                message = session.createTextMessage("test message: " + i);
+                messageText = createDefaultMessage(i);
             }
+            answer = session.createTextMessage(messageText);
         }
         if ((msgGroupID != null) && (!msgGroupID.isEmpty())) {
-            message.setStringProperty("JMSXGroupID", msgGroupID);
+            answer.setStringProperty("JMSXGroupID", msgGroupID);
         }
-        return message;
+        return answer;
+    }
+
+    private String readInputStream(InputStream is, int size, int messageNumber) throws IOException {
+        InputStreamReader reader = new InputStreamReader(is);
+        try {
+            char[] buffer;
+            if (size > 0) {
+                buffer = new char[size];
+            } else {
+                buffer = new char[1024];
+            }
+            int count;
+            StringBuilder builder = new StringBuilder();
+            while ((count = reader.read(buffer)) != -1) {
+                builder.append(buffer, 0, count);
+                if (size > 0) break;
+            }
+            return builder.toString();
+        } catch (IOException ioe) {
+            return createDefaultMessage(messageNumber);
+        } finally {
+            reader.close();
+        }
+    }
+
+    private String createDefaultMessage(int messageNumber) {
+        return "test message: " + messageNumber;
     }
 
     public void setMessageCount(int messageCount) {
@@ -162,7 +204,7 @@ public class ProducerThread extends Thread {
     }
 
     public int getSentCount() {
-        return sentCount;
+        return sentCount.get();
     }
 
     public boolean isPersistent() {
@@ -227,5 +269,41 @@ public class ProducerThread extends Thread {
 
     public void setFinished(CountDownLatch finished) {
         this.finished = finished;
+    }
+
+    public String getPayloadUrl() {
+        return payloadUrl;
+    }
+
+    public void setPayloadUrl(String payloadUrl) {
+        this.payloadUrl = payloadUrl;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public boolean isRunIndefinitely() {
+        return runIndefinitely;
+    }
+
+    public void setRunIndefinitely(boolean runIndefinitely) {
+        this.runIndefinitely = runIndefinitely;
+    }
+
+    public synchronized void pauseProducer(){
+        this.paused = new CountDownLatch(1);
+    }
+
+    public synchronized void resumeProducer(){
+        this.paused.countDown();
+    }
+
+    public void resetCounters(){
+        this.sentCount.set(0);
     }
 }

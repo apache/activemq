@@ -28,11 +28,15 @@ import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.BrokerSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides a JMX Management view of a Queue.
  */
 public class QueueView extends DestinationView implements QueueViewMBean {
+    private static final Logger LOG = LoggerFactory.getLogger(QueueView.class);
+
     public QueueView(ManagedRegionBroker broker, Queue destination) {
         super(broker, destination);
     }
@@ -53,7 +57,11 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     public void purge() throws Exception {
+        final long originalMessageCount = destination.getDestinationStatistics().getMessages().getCount();
+
         ((Queue)destination).purge();
+
+        LOG.info("{} purge of {} messages", destination.getActiveMQDestination().getQualifiedName(), originalMessageCount);
     }
 
     public boolean removeMessage(String messageId) throws Exception {
@@ -225,5 +233,23 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     public void removeAllMessageGroups() {
         Queue queue = (Queue) destination;
         queue.getMessageGroupOwners().removeAll();
+    }
+
+    @Override
+    public void pause() {
+        Queue queue = (Queue) destination;
+        queue.pauseDispatch();
+    }
+
+    @Override
+    public void resume() {
+        Queue queue = (Queue) destination;
+        queue.resumeDispatch();
+    }
+
+    @Override
+    public boolean isPaused() {
+        Queue queue = (Queue) destination;
+        return queue.isDispatchPaused();
     }
 }

@@ -777,9 +777,13 @@ public class RegionBroker extends EmptyBroker {
                         if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
                             // message may be inflight to other subscriptions so do not modify
                             message = message.copy();
-                            message.getMessageId().setFutureOrSequenceLong(null);
-                            stampAsExpired(message);
-                            message.setExpiration(0);
+                            long dlqExpiration = deadLetterStrategy.getExpiration();
+                            if (dlqExpiration > 0) {
+                                dlqExpiration += System.currentTimeMillis();
+                            } else {
+                                stampAsExpired(message);
+                            }
+                            message.setExpiration(dlqExpiration);
                             if (!message.isPersistent()) {
                                 message.setPersistent(true);
                                 message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
@@ -797,6 +801,7 @@ public class RegionBroker extends EmptyBroker {
                             if (context.getSecurityContext() == null || !context.getSecurityContext().isBrokerContext()) {
                                 adminContext = BrokerSupport.getConnectionContext(this);
                             }
+                            addDestination(adminContext, deadLetterDestination, false).getActiveMQDestination().setDLQ();
                             BrokerSupport.resendNoCopy(adminContext, message, deadLetterDestination);
                             return true;
                         }

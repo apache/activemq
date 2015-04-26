@@ -16,10 +16,9 @@
  */
 package org.apache.activemq.store.kahadb.disk.journal;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,12 +26,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNode;
-import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.store.kahadb.disk.util.SequenceSet;
+import org.apache.activemq.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.DataByteArrayInputStream;
-import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.store.kahadb.disk.util.LinkedNodeList;
 import org.apache.activemq.store.kahadb.disk.util.SchedulerTimerTask;
 import org.apache.activemq.store.kahadb.disk.util.Sequence;
@@ -57,6 +54,38 @@ public class Journal {
     public static final byte[] BATCH_CONTROL_RECORD_MAGIC = bytes("WRITE BATCH");
     public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
     public static final byte[] BATCH_CONTROL_RECORD_HEADER = createBatchControlRecordHeader();
+
+    // tackle corruption when checksum is disabled or corrupt with zeros, minimise data loss
+    public void corruptRecoveryLocation(Location recoveryPosition) throws IOException {
+        DataFile dataFile = getDataFile(recoveryPosition);
+        // with corruption on recovery we have no faith in the content - slip to the next batch record or eof
+        DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
+        try {
+            int nextOffset = findNextBatchRecord(reader, recoveryPosition.getOffset() + 1);
+            Sequence sequence = new Sequence(recoveryPosition.getOffset(), nextOffset >= 0 ? nextOffset - 1 : dataFile.getLength() - 1);
+            LOG.info("Corrupt journal records found in '" + dataFile.getFile() + "' between offsets: " + sequence);
+
+            // skip corruption on getNextLocation
+            recoveryPosition.setOffset((int) sequence.getLast() + 1);
+            recoveryPosition.setSize(-1);
+
+            dataFile.corruptedBlocks.add(sequence);
+
+        } catch (IOException e) {
+        } finally {
+            accessorPool.closeDataFileAccessor(reader);
+        }
+    }
+
+    public enum PreallocationStrategy {
+        SPARSE_FILE,
+        OS_KERNEL_COPY,
+        ZEROS;
+    }
+
+    public enum PreallocationScope {
+        ENTIRE_JOURNAL;
+    }
 
     private static byte[] createBatchControlRecordHeader() {
         try {
@@ -94,7 +123,6 @@ public class Journal {
     protected boolean started;
 
     protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
-    protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
     protected int writeBatchSize = DEFAULT_MAX_WRITE_BATCH_SIZE;
 
     protected FileAppender appender;
@@ -114,6 +142,9 @@ public class Journal {
     protected boolean enableAsyncDiskSync = true;
     private Timer timer;
 
+    protected PreallocationScope preallocationScope = PreallocationScope.ENTIRE_JOURNAL;
+    protected PreallocationStrategy preallocationStrategy = PreallocationStrategy.SPARSE_FILE;
+
     public interface DataFileRemovedListener {
         void fileRemoved(DataFile datafile);
     }
@@ -128,7 +159,6 @@ public class Journal {
         long start = System.currentTimeMillis();
         accessorPool = new DataFileAccessorPool(this);
         started = true;
-        preferedFileLength = Math.max(PREFERED_DIFF, getMaxFileLength() - PREFERED_DIFF);
 
         appender = callerBufferAppender ? new CallerBufferingDataFileAppender(this) : new DataFileAppender(this);
 
@@ -144,7 +174,7 @@ public class Journal {
                     String n = file.getName();
                     String numStr = n.substring(filePrefix.length(), n.length()-fileSuffix.length());
                     int num = Integer.parseInt(numStr);
-                    DataFile dataFile = new DataFile(file, num, preferedFileLength);
+                    DataFile dataFile = new DataFile(file, num);
                     fileMap.put(dataFile.getDataFileId(), dataFile);
                     totalLength.addAndGet(dataFile.getLength());
                 } catch (NumberFormatException e) {
@@ -173,10 +203,20 @@ public class Journal {
 
         getCurrentWriteFile();
 
+        if (preallocationStrategy != PreallocationStrategy.SPARSE_FILE && maxFileLength != DEFAULT_MAX_FILE_LENGTH) {
+            LOG.warn("You are using a preallocation strategy and journal maxFileLength which should be benchmarked accordingly to not introduce unexpected latencies.");
+        }
+
         if( lastAppendLocation.get()==null ) {
             DataFile df = dataFiles.getTail();
             lastAppendLocation.set(recoveryCheck(df));
         }
+
+        // ensure we don't report unused space of last journal file in size metric
+        if (totalLength.get() > maxFileLength && lastAppendLocation.get().getOffset() > 0) {
+            totalLength.addAndGet(lastAppendLocation.get().getOffset() - maxFileLength);
+        }
+
 
         cleanupTask = new Runnable() {
             public void run() {
@@ -188,6 +228,82 @@ public class Journal {
         this.timer.scheduleAtFixedRate(task, DEFAULT_CLEANUP_INTERVAL,DEFAULT_CLEANUP_INTERVAL);
         long end = System.currentTimeMillis();
         LOG.trace("Startup took: "+(end-start)+" ms");
+    }
+
+
+    public void preallocateEntireJournalDataFile(RecoverableRandomAccessFile file) {
+
+        if (PreallocationScope.ENTIRE_JOURNAL == preallocationScope) {
+
+            if (PreallocationStrategy.OS_KERNEL_COPY == preallocationStrategy) {
+                doPreallocationKernelCopy(file);
+
+            }else if (PreallocationStrategy.ZEROS == preallocationStrategy) {
+                doPreallocationZeros(file);
+            }
+            else {
+                doPreallocationSparseFile(file);
+            }
+        }else {
+            LOG.info("Using journal preallocation scope of batch allocation");
+        }
+    }
+
+    private void doPreallocationSparseFile(RecoverableRandomAccessFile file) {
+        try {
+            file.seek(maxFileLength - 1);
+            file.write((byte)0x00);
+        } catch (IOException e) {
+            LOG.error("Could not preallocate journal file with sparse file! Will continue without preallocation", e);
+        }
+    }
+
+    private void doPreallocationZeros(RecoverableRandomAccessFile file) {
+        ByteBuffer buffer = ByteBuffer.allocate(maxFileLength);
+        for (int i = 0; i < maxFileLength; i++) {
+            buffer.put((byte) 0x00);
+        }
+        buffer.flip();
+
+        try {
+            FileChannel channel = file.getChannel();
+            channel.write(buffer);
+            channel.force(false);
+            channel.position(0);
+        } catch (IOException e) {
+            LOG.error("Could not preallocate journal file with zeros! Will continue without preallocation", e);
+        }
+    }
+
+    private void doPreallocationKernelCopy(RecoverableRandomAccessFile file) {
+
+        // create a template file that will be used to pre-allocate the journal files
+        File templateFile = createJournalTemplateFile();
+
+        RandomAccessFile templateRaf = null;
+        try {
+            templateRaf = new RandomAccessFile(templateFile, "rw");
+            templateRaf.setLength(maxFileLength);
+            templateRaf.getChannel().force(true);
+            templateRaf.getChannel().transferTo(0, getMaxFileLength(), file.getChannel());
+            templateRaf.close();
+            templateFile.delete();
+        } catch (FileNotFoundException e) {
+            LOG.error("Could not find the template file on disk at " + templateFile.getAbsolutePath(), e);
+        } catch (IOException e) {
+            LOG.error("Could not transfer the template file to journal, transferFile=" + templateFile.getAbsolutePath(), e);
+        }
+    }
+
+    private File createJournalTemplateFile() {
+        String fileName = "db-log.template";
+        File rc  = new File(directory, fileName);
+        if (rc.exists()) {
+            System.out.println("deleting file because it already exists...");
+            rc.delete();
+
+        }
+        return rc;
     }
 
     private static byte[] bytes(String string) {
@@ -207,7 +323,7 @@ public class Journal {
         try {
             while( true ) {
                 int size = checkBatchRecord(reader, location.getOffset());
-                if ( size>=0 ) {
+                if ( size>=0 && location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size <= dataFile.getLength()) {
                     location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
                 } else {
 
@@ -330,8 +446,7 @@ public class Journal {
     synchronized DataFile rotateWriteFile() {
         int nextNum = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
         File file = getFile(nextNum);
-        DataFile nextWriteFile = new DataFile(file, nextNum, preferedFileLength);
-        // actually allocate the disk space
+        DataFile nextWriteFile = new DataFile(file, nextNum);
         fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
         fileByFileMap.put(file, nextWriteFile);
         dataFiles.addLast(nextWriteFile);
@@ -368,20 +483,25 @@ public class Journal {
         return dataFile.getNext();
     }
 
-    public synchronized void close() throws IOException {
-        if (!started) {
-            return;
+    public void close() throws IOException {
+        synchronized (this) {
+            if (!started) {
+                return;
+            }
+            if (this.timer != null) {
+                this.timer.cancel();
+            }
+            accessorPool.close();
         }
-        if (this.timer != null) {
-            this.timer.cancel();
-        }
-        accessorPool.close();
+        // the appender can be calling back to to the journal blocking a close AMQ-5620
         appender.close();
-        fileMap.clear();
-        fileByFileMap.clear();
-        dataFiles.clear();
-        lastAppendLocation.set(null);
-        started = false;
+        synchronized (this) {
+            fileMap.clear();
+            fileByFileMap.clear();
+            dataFiles.clear();
+            lastAppendLocation.set(null);
+            started = false;
+        }
     }
 
     protected synchronized void cleanup() {
@@ -399,9 +519,9 @@ public class Journal {
         boolean result = true;
         for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
             DataFile dataFile = i.next();
-            totalLength.addAndGet(-dataFile.getLength());
             result &= dataFile.delete();
         }
+        totalLength.set(0);
         fileMap.clear();
         fileByFileMap.clear();
         lastAppendLocation.set(null);
@@ -479,26 +599,6 @@ public class Journal {
         return directory.toString();
     }
 
-    public synchronized void appendedExternally(Location loc, int length) throws IOException {
-        DataFile dataFile = null;
-        if( dataFiles.getTail().getDataFileId() == loc.getDataFileId() ) {
-            // It's an update to the current log file..
-            dataFile = dataFiles.getTail();
-            dataFile.incrementLength(length);
-        } else if( dataFiles.getTail().getDataFileId()+1 == loc.getDataFileId() ) {
-            // It's an update to the next log file.
-            int nextNum = loc.getDataFileId();
-            File file = getFile(nextNum);
-            dataFile = new DataFile(file, nextNum, preferedFileLength);
-            // actually allocate the disk space
-            fileMap.put(dataFile.getDataFileId(), dataFile);
-            fileByFileMap.put(file, dataFile);
-            dataFiles.addLast(dataFile);
-        } else {
-            throw new IOException("Invalid external append.");
-        }
-    }
-
     public synchronized Location getNextLocation(Location location) throws IOException, IllegalStateException {
 
         Location cur = null;
@@ -546,65 +646,14 @@ public class Journal {
                 accessorPool.closeDataFileAccessor(reader);
             }
 
-            if (cur.getType() == 0) {
-                return null;
+            Sequence corruptedRange = dataFile.corruptedBlocks.get(cur.getOffset());
+            if (corruptedRange != null) {
+                // skip corruption
+                cur.setSize((int) corruptedRange.range());
+            } else if (cur.getType() == 0) {
+                // eof - jump to next datafile
+                cur.setOffset(maxFileLength);
             } else if (cur.getType() == USER_RECORD_TYPE) {
-                // Only return user records.
-                return cur;
-            }
-        }
-    }
-
-    public synchronized Location getNextLocation(File file, Location lastLocation, boolean thisFileOnly) throws IllegalStateException, IOException {
-        DataFile df = fileByFileMap.get(file);
-        return getNextLocation(df, lastLocation, thisFileOnly);
-    }
-
-    public synchronized Location getNextLocation(DataFile dataFile, Location lastLocation, boolean thisFileOnly) throws IOException, IllegalStateException {
-
-        Location cur = null;
-        while (true) {
-            if (cur == null) {
-                if (lastLocation == null) {
-                    DataFile head = dataFile.getHeadNode();
-                    cur = new Location();
-                    cur.setDataFileId(head.getDataFileId());
-                    cur.setOffset(0);
-                } else {
-                    // Set to the next offset..
-                    cur = new Location(lastLocation);
-                    cur.setOffset(cur.getOffset() + cur.getSize());
-                }
-            } else {
-                cur.setOffset(cur.getOffset() + cur.getSize());
-            }
-
-            // Did it go into the next file??
-            if (dataFile.getLength() <= cur.getOffset()) {
-                if (thisFileOnly) {
-                    return null;
-                } else {
-                    dataFile = getNextDataFile(dataFile);
-                    if (dataFile == null) {
-                        return null;
-                    } else {
-                        cur.setDataFileId(dataFile.getDataFileId().intValue());
-                        cur.setOffset(0);
-                    }
-                }
-            }
-
-            // Load in location size and type.
-            DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
-            try {
-                reader.readLocationDetails(cur);
-            } finally {
-                accessorPool.closeDataFileAccessor(reader);
-            }
-
-            if (cur.getType() == 0) {
-                return null;
-            } else if (cur.getType() > 0) {
                 // Only return user records.
                 return cur;
             }
@@ -641,6 +690,22 @@ public class Journal {
         } finally {
             accessorPool.closeDataFileAccessor(updater);
         }
+    }
+
+    public PreallocationStrategy getPreallocationStrategy() {
+        return preallocationStrategy;
+    }
+
+    public void setPreallocationStrategy(PreallocationStrategy preallocationStrategy) {
+        this.preallocationStrategy = preallocationStrategy;
+    }
+
+    public PreallocationScope getPreallocationScope() {
+        return preallocationScope;
+    }
+
+    public void setPreallocationScope(PreallocationScope preallocationScope) {
+        this.preallocationScope = preallocationScope;
     }
 
     public File getDirectory() {
@@ -713,21 +778,7 @@ public class Journal {
     }
 
     public long getDiskSize() {
-        long tailLength=0;
-        synchronized( this ) {
-            if( !dataFiles.isEmpty() ) {
-                tailLength = dataFiles.getTail().getLength();
-            }
-        }
-
-        long rc = totalLength.get();
-
-        // The last file is actually at a minimum preferedFileLength big.
-        if( tailLength < preferedFileLength ) {
-            rc -= tailLength;
-            rc += preferedFileLength;
-        }
-        return rc;
+        return totalLength.get();
     }
 
     public void setReplicationTarget(ReplicationTarget replicationTarget) {

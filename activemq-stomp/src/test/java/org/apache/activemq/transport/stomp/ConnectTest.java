@@ -31,11 +31,9 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.security.JaasDualAuthenticationPlugin;
 import org.apache.activemq.util.Wait;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +58,7 @@ public class ConnectTest {
         }
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testStompConnectLeak() throws Exception {
 
         brokerService.addConnector("stomp://0.0.0.0:0?transport.soLinger=0");
@@ -84,11 +82,12 @@ public class ConnectTest {
             public boolean isSatisified() throws Exception {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testJaasDualStopWithOpenConnection() throws Exception {
 
         brokerService.setPlugins(new BrokerPlugin[]{new JaasDualAuthenticationPlugin()});
@@ -120,7 +119,7 @@ public class ConnectTest {
             public boolean isSatisified() throws Exception {
                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
         assertTrue("connected on time", doneConnect.await(5, TimeUnit.SECONDS));
         brokerService.stop();
@@ -135,7 +134,7 @@ public class ConnectTest {
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testInactivityMonitor() throws Exception {
 
         brokerService.addConnector("stomp://0.0.0.0:0?transport.defaultHeartBeat=1000,0&transport.useKeepAlive=false");
@@ -159,11 +158,11 @@ public class ConnectTest {
         t1.start();
 
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
-                 @Override
-                 public boolean isSatisified() throws Exception {
-                     return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
-                 }
-             }));
+             @Override
+             public boolean isSatisified() throws Exception {
+                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
+             }
+         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
         // and it should be closed due to inactivity
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
@@ -171,7 +170,8 @@ public class ConnectTest {
             public boolean isSatisified() throws Exception {
                 return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
+
         assertTrue("no exceptions", exceptions.isEmpty());
     }
 }

@@ -31,6 +31,7 @@ import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,8 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         policy.setDeadLetterStrategy(strategy);
 
         PolicyMap pMap = new PolicyMap();
-        pMap.setDefaultEntry(policy);
+        pMap.put(new ActiveMQQueue(getDestinationString()), policy);
+        pMap.put(new ActiveMQTopic(getDestinationString()), policy);
 
         broker.setDestinationPolicy(pMap);
 

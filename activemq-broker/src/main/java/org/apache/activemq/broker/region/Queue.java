@@ -49,12 +49,7 @@ import javax.jms.ResourceAllocationException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.region.cursors.OrderedPendingList;
-import org.apache.activemq.broker.region.cursors.PendingList;
-import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.broker.region.cursors.PrioritizedPendingList;
-import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
-import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.*;
 import org.apache.activemq.broker.region.group.CachedMessageGroupMapFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
@@ -71,6 +66,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -109,8 +105,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private final PendingList pagedInMessages = new OrderedPendingList();
     // Messages that are paged in but have not yet been targeted at a subscription
     private final ReentrantReadWriteLock pagedInPendingDispatchLock = new ReentrantReadWriteLock();
-    protected PendingList pagedInPendingDispatch = new OrderedPendingList();
-    protected PendingList redeliveredWaitingDispatch = new OrderedPendingList();
+    protected QueueDispatchPendingList dispatchPendingList = new QueueDispatchPendingList();
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new CachedMessageGroupMapFactory();
@@ -146,6 +141,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     };
 
     private final Object iteratingMutex = new Object();
+
+
 
     class TimeoutMessage implements Delayed {
 
@@ -341,14 +338,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public void setPrioritizedMessages(boolean prioritizedMessages) {
         super.setPrioritizedMessages(prioritizedMessages);
-
-        if (prioritizedMessages && this.pagedInPendingDispatch instanceof OrderedPendingList) {
-            pagedInPendingDispatch = new PrioritizedPendingList();
-            redeliveredWaitingDispatch = new PrioritizedPendingList();
-        } else if(pagedInPendingDispatch instanceof PrioritizedPendingList) {
-            pagedInPendingDispatch = new OrderedPendingList();
-            redeliveredWaitingDispatch = new OrderedPendingList();
-        }
+        dispatchPendingList.setPrioritizedMessages(prioritizedMessages);
     }
 
     @Override
@@ -394,7 +384,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                    listener.processExpired();
                } while (!listener.done());
             } else {
-                destinationStatistics.getMessages().setCount(messageCount);
+                destinationStatistics.getMessages().add(messageCount);
             }
         }
     }
@@ -493,9 +483,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     @Override
-    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeiveredSequenceId)
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId)
             throws Exception {
-        super.removeSubscription(context, sub, lastDeiveredSequenceId);
+        super.removeSubscription(context, sub, lastDeliveredSequenceId);
         // synchronize with dispatch method so that no new messages are sent
         // while removing up a subscription.
         pagedInPendingDispatchLock.writeLock().lock();
@@ -503,7 +493,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             LOG.debug("{} remove sub: {}, lastDeliveredSeqId: {}, dequeues: {}, dispatched: {}, inflight: {}, groups: {}", new Object[]{
                     getActiveMQDestination().getQualifiedName(),
                     sub,
-                    lastDeiveredSequenceId,
+                    lastDeliveredSequenceId,
                     getDestinationStatistics().getDequeues().getCount(),
                     getDestinationStatistics().getDispatched().getCount(),
                     getDestinationStatistics().getInflight().getCount(),
@@ -547,12 +537,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 List<MessageReference> unAckedMessages = sub.remove(context, this);
 
                 // locate last redelivered in unconsumed list (list in delivery rather than seq order)
-                if (lastDeiveredSequenceId > 0) {
+                if (lastDeliveredSequenceId > RemoveInfo.LAST_DELIVERED_UNSET) {
                     for (MessageReference ref : unAckedMessages) {
-                        if (ref.getMessageId().getBrokerSequenceId() == lastDeiveredSequenceId) {
+                        if (ref.getMessageId().getBrokerSequenceId() == lastDeliveredSequenceId) {
                             lastDeliveredRef = ref;
                             markAsRedelivered = true;
-                            LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeiveredSequenceId, ref.getMessageId());
+                            LOG.debug("found lastDeliveredSeqID: {}, message reference: {}", lastDeliveredSequenceId, ref.getMessageId());
                             break;
                         }
                     }
@@ -568,7 +558,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         qmr.unlock();
 
                         // have no delivery information
-                        if (lastDeiveredSequenceId == 0) {
+                        if (lastDeliveredSequenceId == RemoveInfo.LAST_DELIVERED_UNKNOWN) {
                             qmr.incrementRedeliveryCounter();
                         } else {
                             if (markAsRedelivered) {
@@ -581,7 +571,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                         }
                     }
                     if (!qmr.isDropped()) {
-                        redeliveredWaitingDispatch.addMessageLast(qmr);
+                        dispatchPendingList.addMessageForRedelivery(qmr);
                     }
                 }
                 if (sub instanceof QueueBrowserSubscription) {
@@ -589,7 +579,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     browserDispatches.remove(sub);
                 }
                 // AMQ-5107: don't resend if the broker is shutting down
-                if (!redeliveredWaitingDispatch.isEmpty() && (! this.brokerService.isStopping())) {
+                if (dispatchPendingList.hasRedeliveries() && (! this.brokerService.isStopping())) {
                     doDispatch(new OrderedPendingList());
                 }
             } finally {
@@ -832,9 +822,9 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         checkUsage(context, producerExchange, message);
         sendLock.lockInterruptibly();
         try {
+            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
             if (store != null && message.isPersistent()) {
                 try {
-                    message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                     if (messages.isCacheEnabled()) {
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());
                         result.addListener(new PendingMarshalUsageTracker(message));
@@ -1116,8 +1106,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 pageInMessages(!memoryUsage.isFull(110));
             };
 
-            doBrowseList(browseList, max, redeliveredWaitingDispatch, pagedInPendingDispatchLock, connectionContext, "redeliveredWaitingDispatch");
-            doBrowseList(browseList, max, pagedInPendingDispatch, pagedInPendingDispatchLock, connectionContext, "pagedInPendingDispatch");
+            doBrowseList(browseList, max, dispatchPendingList, pagedInPendingDispatchLock, connectionContext, "redeliveredWaitingDispatch+pagedInPendingDispatch");
             doBrowseList(browseList, max, pagedInMessages, pagedInMessagesLock, connectionContext, "pagedInMessages");
 
             // we need a store iterator to walk messages on disk, independent of the cursor which is tracking
@@ -1244,8 +1233,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         if (this.destinationStatistics.getMessages().getCount() > 0) {
             LOG.warn("{} after purge of {} messages, message count stats report: {}", getActiveMQDestination().getQualifiedName(), originalMessageCount, this.destinationStatistics.getMessages().getCount());
-        } else {
-            LOG.info("{} purged of {} messages", getActiveMQDestination().getQualifiedName(), originalMessageCount);
         }
         gc();
         this.destinationStatistics.getMessages().setCount(0);
@@ -1579,7 +1566,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
             pagedInPendingDispatchLock.readLock().lock();
             try {
-                pageInMoreMessages |= !pagedInPendingDispatch.isEmpty();
+                pageInMoreMessages |= !dispatchPendingList.isEmpty();
             } finally {
                 pagedInPendingDispatchLock.readLock().unlock();
             }
@@ -1591,7 +1578,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             // then we do a dispatch.
             boolean hasBrowsers = browserDispatches.size() > 0;
 
-            if (pageInMoreMessages || hasBrowsers || !redeliveredWaitingDispatch.isEmpty()) {
+            if (pageInMoreMessages || hasBrowsers || !dispatchPendingList.hasRedeliveries()) {
                 try {
                     pageInMessages(hasBrowsers);
                 } catch (Throwable e) {
@@ -1649,6 +1636,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    public void pauseDispatch() {
+        dispatchSelector.pause();
+    }
+
+    public void resumeDispatch() {
+        dispatchSelector.resume();
+    }
+
+    public boolean isDispatchPaused() {
+        return dispatchSelector.isPaused();
+    }
+
     protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
         return new MessageReferenceFilter() {
             @Override
@@ -1696,7 +1695,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         removeMessage(c, null, r);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            pagedInPendingDispatch.remove(r);
+            dispatchPendingList.remove(r);
         } finally {
             pagedInPendingDispatchLock.writeLock().unlock();
         }
@@ -1843,13 +1842,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         PendingList newlyPaged = doPageInForDispatch(force, processExpired);
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            if (pagedInPendingDispatch.isEmpty()) {
-                pagedInPendingDispatch.addAll(newlyPaged);
+            if (dispatchPendingList.isEmpty()) {
+                dispatchPendingList.addAll(newlyPaged);
 
             } else {
                 for (MessageReference qmr : newlyPaged) {
-                    if (!pagedInPendingDispatch.contains(qmr)) {
-                        pagedInPendingDispatch.addMessageLast(qmr);
+                    if (!dispatchPendingList.contains(qmr)) {
+                        dispatchPendingList.addMessageLast(qmr);
                     }
                 }
             }
@@ -1866,7 +1865,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         int pagedInPendingSize = 0;
         pagedInPendingDispatchLock.readLock().lock();
         try {
-            pagedInPendingSize = pagedInPendingDispatch.size();
+            pagedInPendingSize = dispatchPendingList.size();
         } finally {
             pagedInPendingDispatchLock.readLock().unlock();
         }
@@ -1959,27 +1958,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            if (!redeliveredWaitingDispatch.isEmpty()) {
-                // Try first to dispatch redelivered messages to keep an
-                // proper order
-                redeliveredWaitingDispatch = doActualDispatch(redeliveredWaitingDispatch);
-            }
-            if (redeliveredWaitingDispatch.isEmpty()) {
-                if (!pagedInPendingDispatch.isEmpty()) {
-                    // Next dispatch anything that had not been
-                    // dispatched before.
-                    pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
-                }
-            }
+            doActualDispatch(dispatchPendingList);
             // and now see if we can dispatch the new stuff.. and append to the pending
             // list anything that does not actually get dispatched.
             if (list != null && !list.isEmpty()) {
-                if (redeliveredWaitingDispatch.isEmpty() && pagedInPendingDispatch.isEmpty()) {
-                    pagedInPendingDispatch.addAll(doActualDispatch(list));
+                if (dispatchPendingList.isEmpty()) {
+                    dispatchPendingList.addAll(doActualDispatch(list));
                 } else {
                     for (MessageReference qmr : list) {
-                        if (!pagedInPendingDispatch.contains(qmr)) {
-                            pagedInPendingDispatch.addMessageLast(qmr);
+                        if (!dispatchPendingList.contains(qmr)) {
+                            dispatchPendingList.addMessageLast(qmr);
                         }
                     }
                     doWakeUp = true;
@@ -2178,10 +2166,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
-            for (MessageReference ref : pagedInPendingDispatch) {
+            for (MessageReference ref : dispatchPendingList) {
                 if (messageId.equals(ref.getMessageId())) {
                     message = (QueueMessageReference)ref;
-                    pagedInPendingDispatch.remove(ref);
+                    dispatchPendingList.remove(ref);
                     break;
                 }
             }
@@ -2231,7 +2219,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             throw new JMSException("Slave broker out of sync with master - Message: "
                     + messageDispatchNotification.getMessageId() + " on "
                     + messageDispatchNotification.getDestination() + " does not exist among pending("
-                    + pagedInPendingDispatch.size() + ") for subscription: "
+                    + dispatchPendingList.size() + ") for subscription: "
                     + messageDispatchNotification.getConsumerId());
         }
         return message;

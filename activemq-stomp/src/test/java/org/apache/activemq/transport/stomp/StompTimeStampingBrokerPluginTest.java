@@ -66,7 +66,7 @@ public class StompTimeStampingBrokerPluginTest {
 
         broker = new BrokerService();
         broker.setPersistent(false);
-        broker.setUseJmx(true);
+        broker.setUseJmx(false);
         broker.setPlugins(new BrokerPlugin[] {tsbp});
         connectionUri = broker.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
         String stompConnectionUri = broker.addConnector("stomp://0.0.0.0:0").getPublishableConnectString();

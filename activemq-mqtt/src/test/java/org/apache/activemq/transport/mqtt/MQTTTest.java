@@ -73,7 +73,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTTest.class);
 
-    private static final int NUM_MESSAGES = 250;
+    private static final int NUM_MESSAGES = 200;
 
     @Test(timeout = 60 * 1000)
     public void testSendAndReceiveMQTT() throws Exception {
@@ -191,7 +191,7 @@ public class MQTTTest extends MQTTTestSupport {
         for (int i = 0; i < NUM_MESSAGES; i++) {
             String payload = "Test Message: " + i;
             provider.publish("foo", payload.getBytes(), AT_LEAST_ONCE);
-            byte[] message = provider.receive(5000);
+            byte[] message = provider.receive(2000);
             assertNotNull("Should get a message", message);
             assertEquals(payload, new String(message));
         }
@@ -394,7 +394,7 @@ public class MQTTTest extends MQTTTestSupport {
             assertNotEquals("Subscribe failed " + wildcard, (byte)0x80, qos[0]);
 
             // test retained messages
-            Message msg = connection.receive(5, TimeUnit.SECONDS);
+            Message msg = connection.receive(2, TimeUnit.SECONDS);
             do {
                 assertNotNull("RETAINED null " + wildcard, msg);
                 assertTrue("RETAINED prefix " + wildcard, new String(msg.getPayload()).startsWith(RETAINED));
@@ -657,7 +657,7 @@ public class MQTTTest extends MQTTTestSupport {
         mqtt.setTracer(new Tracer() {
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("Client received:\n" + frame);
+                LOG.debug("Client received:\n" + frame);
                 if (frame.messageType() == PUBLISH.TYPE) {
                     PUBLISH publish = new PUBLISH();
                     try {
@@ -671,7 +671,7 @@ public class MQTTTest extends MQTTTestSupport {
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("Client sent:\n" + frame);
+                LOG.debug("Client sent:\n" + frame);
             }
         });
 
@@ -694,7 +694,7 @@ public class MQTTTest extends MQTTTestSupport {
         connection.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
         int received = 0;
 
-        Message msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+        Message msg = connection.receive(2000, TimeUnit.MILLISECONDS);
         do {
             assertNotNull(msg);
             assertEquals(TOPIC, new String(msg.getPayload()));
@@ -704,7 +704,7 @@ public class MQTTTest extends MQTTTestSupport {
                 Thread.sleep(1000);
                 waitCount++;
             }
-            msg = connection.receive(5000, TimeUnit.MILLISECONDS);
+            msg = connection.receive(2000, TimeUnit.MILLISECONDS);
         } while (msg != null && received++ < subs.length * 2);
         assertEquals("Unexpected number of messages", subs.length * 2, received + 1);
 
@@ -742,7 +742,7 @@ public class MQTTTest extends MQTTTestSupport {
         mqtt.setTracer(new Tracer() {
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("Client received:\n" + frame);
+                LOG.debug("Client received:\n" + frame);
                 if (frame.messageType() == PUBLISH.TYPE) {
                     PUBLISH publish = new PUBLISH();
                     try {
@@ -756,7 +756,7 @@ public class MQTTTest extends MQTTTestSupport {
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("Client sent:\n" + frame);
+                LOG.debug("Client sent:\n" + frame);
             }
         });
 
@@ -774,7 +774,7 @@ public class MQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return publishList.size() == 2;
             }
-        }, 5000);
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(100));
         assertEquals(2, publishList.size());
 
         connection.disconnect();
@@ -787,7 +787,7 @@ public class MQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return publishList.size() == 4;
             }
-        }, 5000);
+        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(100));
         assertEquals(4, publishList.size());
 
         // make sure we received duplicate message ids
@@ -808,12 +808,12 @@ public class MQTTTest extends MQTTTestSupport {
         mqtt.setTracer(new Tracer() {
             @Override
             public void onReceive(MQTTFrame frame) {
-                LOG.info("Client received:\n" + frame);
+                LOG.debug("Client received:\n" + frame);
                 if (frame.messageType() == PUBLISH.TYPE) {
                     PUBLISH publish = new PUBLISH();
                     try {
                         publish.decode(frame);
-                        LOG.info("PUBLISH " + publish);
+                        LOG.debug("PUBLISH " + publish);
                     } catch (ProtocolException e) {
                         fail("Error decoding publish " + e.getMessage());
                     }
@@ -826,7 +826,7 @@ public class MQTTTest extends MQTTTestSupport {
 
             @Override
             public void onSend(MQTTFrame frame) {
-                LOG.info("Client sent:\n" + frame);
+                LOG.debug("Client sent:\n" + frame);
             }
         });
 
@@ -884,7 +884,7 @@ public class MQTTTest extends MQTTTestSupport {
             mqtts[i].setTracer(new Tracer() {
                 @Override
                 public void onReceive(MQTTFrame frame) {
-                    LOG.info("Client received:\n" + frame);
+                    LOG.debug("Client received:\n" + frame);
                     if (frame.messageType() == PUBLISH.TYPE) {
                         PUBLISH publish = new PUBLISH();
                         try {
@@ -902,7 +902,7 @@ public class MQTTTest extends MQTTTestSupport {
 
                 @Override
                 public void onSend(MQTTFrame frame) {
-                    LOG.info("Client sent:\n" + frame);
+                    LOG.debug("Client sent:\n" + frame);
                 }
             });
         }
@@ -928,7 +928,6 @@ public class MQTTTest extends MQTTTestSupport {
 
             connection.disconnect();
         }
-
     }
 
     @Test(timeout = 60 * 1000)
@@ -952,12 +951,12 @@ public class MQTTTest extends MQTTTestSupport {
 
         final BlockingConnection newConnection = mqtt.blockingConnection();
         newConnection.connect();
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return newConnection.isConnected();
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         assertEquals(QoS.EXACTLY_ONCE.ordinal(), qos[0]);
         Message msg = newConnection.receive(1000, TimeUnit.MILLISECONDS);
@@ -972,20 +971,20 @@ public class MQTTTest extends MQTTTestSupport {
         final MQTT mqtt = createMQTTConnection("", true);
         final BlockingConnection connection = mqtt.blockingConnection();
         connection.connect();
-        Wait.waitFor(new Wait.Condition() {
+        assertTrue(Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return connection.isConnected();
             }
-        });
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         connection.subscribe(new Topic[]{new Topic("TopicA", QoS.AT_LEAST_ONCE)});
         connection.publish("TopicA", "test".getBytes(), QoS.AT_LEAST_ONCE, true);
         Message message = connection.receive(3, TimeUnit.SECONDS);
         assertNotNull(message);
-        Thread.sleep(2000);
-        connection.subscribe(new Topic[]{new Topic("TopicA", QoS.AT_LEAST_ONCE)});
         //TODO fix audit problem for retained messages
+        //Thread.sleep(2000);
+        //connection.subscribe(new Topic[]{new Topic("TopicA", QoS.AT_LEAST_ONCE)});
         //message = connection.receive(3, TimeUnit.SECONDS);
         //assertNotNull(message);
     }
@@ -1015,7 +1014,7 @@ public class MQTTTest extends MQTTTestSupport {
         final MQTT mqttClean = createMQTTConnection(CLIENTID, true);
         final BlockingConnection clean = mqttClean.blockingConnection();
         clean.connect();
-        msg = clean.receive(10000, TimeUnit.MILLISECONDS);
+        msg = clean.receive(2000, TimeUnit.MILLISECONDS);
         assertNull(msg);
         clean.subscribe(new Topic[] { new Topic(TOPIC, QoS.EXACTLY_ONCE) });
         clean.publish(TOPIC, TOPIC.getBytes(), QoS.EXACTLY_ONCE, false);
@@ -1168,8 +1167,9 @@ public class MQTTTest extends MQTTTestSupport {
         connection.subscribe(new Topic[] { new Topic(DOLLAR_TOPIC, QoS.EXACTLY_ONCE)});
         connection.publish(DOLLAR_TOPIC, DOLLAR_TOPIC.getBytes(), QoS.EXACTLY_ONCE, true);
 
-        Message message = connection.receive(10, TimeUnit.SECONDS);
+        Message message = connection.receive(3, TimeUnit.SECONDS);
         assertNull("Publish enabled for $ Topics by default", message);
+
         connection.disconnect();
 
         stopBroker();
@@ -1214,14 +1214,14 @@ public class MQTTTest extends MQTTTestSupport {
             public boolean isSatisified() throws Exception {
                 return connection1.isConnected();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         assertTrue("Old client still connected", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return !connection.isConnected();
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         connection1.publish(TOPICA, TOPICA.getBytes(), QoS.EXACTLY_ONCE, true);
         connection1.disconnect();
@@ -1273,16 +1273,15 @@ public class MQTTTest extends MQTTTestSupport {
                 public boolean isSatisified() throws Exception {
                     return connection.isConnected();
                 }
-            }));
+            }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(200)));
 
             if (oldConnection.get() != null) {
-
                 assertTrue("Old client still connected", Wait.waitFor(new Wait.Condition() {
                     @Override
                     public boolean isSatisified() throws Exception {
                         return !oldConnection.get().isConnected();
                     }
-                }));
+                }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(200)));
             }
 
             oldConnection.set(connection);
@@ -1513,13 +1512,13 @@ public class MQTTTest extends MQTTTestSupport {
             BlockingConnection connection = mqtt.blockingConnection();
             connection.connect();
             connection.disconnect();
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
         {
             BlockingConnection connection = mqtt.blockingConnection();
             connection.connect();
             connection.disconnect();
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
     }
 
@@ -1569,7 +1568,7 @@ public class MQTTTest extends MQTTTestSupport {
         }
 
         // these should not be received
-        assertNull(connectionSub.receive(5, TimeUnit.SECONDS));
+        assertNull(connectionSub.receive(2, TimeUnit.SECONDS));
 
         connectionSub.disconnect();
         connectionPub.disconnect();

@@ -16,39 +16,20 @@
  */
 package org.apache.activemq.broker.policy;
 
-import junit.framework.Test;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+
 import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.AbortSlowConsumerStrategyViewMBean;
-import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.region.policy.AbortSlowConsumerStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.util.MessageIdList;
 import org.junit.Before;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jms.Connection;
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.management.InstanceNotFoundException;
-import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.TabularData;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
-
 
 public class AbortSlowConsumerBase extends JmsMultipleClientsTestSupport implements ExceptionListener {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumerBase.class);
 
     protected AbortSlowConsumerStrategy underTest;
     protected boolean abortConnection = false;
@@ -92,5 +73,4 @@ public class AbortSlowConsumerBase extends JmsMultipleClientsTestSupport impleme
         exceptions.add(exception);
         exception.printStackTrace();
     }
-
 }

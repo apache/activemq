@@ -1048,12 +1048,13 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     @Override
-    public void doCommitAddOp(TransactionContext c, long sequence) throws SQLException, IOException {
+    public void doCommitAddOp(TransactionContext c, long preparedSequence, long sequence) throws SQLException, IOException {
         PreparedStatement s = null;
         cleanupExclusiveLock.readLock().lock();
         try {
             s = c.getConnection().prepareStatement(this.statements.getClearXidFlagStatement());
             s.setLong(1, sequence);
+            s.setLong(2, preparedSequence);
             if (s.executeUpdate() != 1) {
                 throw new IOException("Could not remove prepared transaction state from message add for sequenceId: " + sequence);
             }

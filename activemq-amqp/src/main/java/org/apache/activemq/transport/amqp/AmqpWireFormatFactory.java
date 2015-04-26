@@ -20,7 +20,7 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
- * Creates WireFormat objects that marshalls the <a href="http://stomp.codehaus.org/">Stomp</a> protocol.
+ * Creates the default AMQP WireFormat object used to configure the protocol support.
  */
 public class AmqpWireFormatFactory implements WireFormatFactory {
 

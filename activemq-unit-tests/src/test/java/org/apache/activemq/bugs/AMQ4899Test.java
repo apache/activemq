@@ -16,6 +16,22 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -31,21 +47,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
-
 public class AMQ4899Test {
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ4899Test.class);
     private static final String QUEUE_NAME="AMQ4899TestQueue";
@@ -55,9 +56,9 @@ public class AMQ4899Test {
     private static final Integer MESSAGE_LIMIT = 20;
     public static final String CONSUMER_A_SELECTOR = "Order < " + 10;
     public static  String CONSUMER_B_SELECTOR = "Order >= " + 10;
-    private CountDownLatch consumersStarted = new CountDownLatch(2);
-    private CountDownLatch consumerAtoConsumeCount= new CountDownLatch(10);
-    private CountDownLatch consumerBtoConsumeCount = new CountDownLatch(10);
+    private final CountDownLatch consumersStarted = new CountDownLatch(2);
+    private final CountDownLatch consumerAtoConsumeCount= new CountDownLatch(10);
+    private final CountDownLatch consumerBtoConsumeCount = new CountDownLatch(10);
 
     private BrokerService broker;
 
@@ -112,9 +113,7 @@ public class AMQ4899Test {
             message.setIntProperty("Order", i);
             LOG.debug("Sending message [{}]", messageText);
             producer.send(message);
-            Thread.sleep(100);
         }
-        Thread.sleep(1 * 1000);
 
         // restart consumerA
         LOG.debug("Restarting consumerA");
@@ -156,6 +155,7 @@ public class AMQ4899Test {
             BrokerPlugin[] updatedPlugins = {subQueueSelectorCacheBrokerPlugin};
             broker.setPlugins(updatedPlugins);
 
+            broker.setUseJmx(false);
             broker.start();
             broker.waitUntilStarted();
         } catch (Exception e) {

@@ -157,7 +157,7 @@
     <!-- =============================== -->
     <dependency>
       <groupId>org.apache.qpid</groupId>
-      <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+      <artifactId>qpid-jms-client</artifactId>
       <version>${qpid-jms-version}</version>
       <scope>test</scope>
     </dependency>
@@ -218,7 +218,7 @@
     </dependency>
     <dependency>
       <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring3</artifactId>
+      <artifactId>jasypt-spring31</artifactId>
       <version>${jasypt-version}</version>
       <optional>true</optional>
     </dependency>
@@ -244,9 +244,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
-      <version>1.4</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
+      <version>2.1</version>
       <optional>true</optional>
       <scope>test</scope>
     </dependency>
@@ -443,8 +443,9 @@
           </excludes>
           <systemPropertyVariables>
             <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
-            <org.apache.activemq.default.directory.prefix>target</org.apache.activemq.default.directory.prefix>
+            <org.apache.activemq.default.directory.prefix>target/</org.apache.activemq.default.directory.prefix>
             <org.apache.activemq.AutoFailTestSupport.disableSystemExit>true</org.apache.activemq.AutoFailTestSupport.disableSystemExit>
+            <org.apache.activemq.broker.jmx.createConnector>false</org.apache.activemq.broker.jmx.createConnector>
           </systemPropertyVariables>
           <includes>
             <include>**/*Test.*</include>

@@ -515,16 +515,15 @@ public class JMSMessageTest extends JmsTestSupport {
             message.setStringProperty("test", "value");
             long timeToLive = 10000L;
             long start = System.currentTimeMillis();
-            producer.send(message, Session.AUTO_ACKNOWLEDGE, 7, timeToLive);
+            producer.send(message, deliveryMode, 7, timeToLive);
             long end = System.currentTimeMillis();
-
 
             //validate jms spec 1.1 section 3.4.11 table 3.1
             // JMSDestination, JMSDeliveryMode,  JMSExpiration, JMSPriority, JMSMessageID, and JMSTimestamp
             //must be set by sending a message.
 
             assertNotNull(message.getJMSDestination());
-            assertEquals(Session.AUTO_ACKNOWLEDGE, message.getJMSDeliveryMode());
+            assertEquals(deliveryMode, message.getJMSDeliveryMode());
             assertTrue(start  + timeToLive <= message.getJMSExpiration());
             assertTrue(end + timeToLive >= message.getJMSExpiration());
             assertEquals(7, message.getJMSPriority());
@@ -543,5 +542,4 @@ public class JMSMessageTest extends JmsTestSupport {
 
         assertNull(consumer.receiveNoWait());
     }
-
 }

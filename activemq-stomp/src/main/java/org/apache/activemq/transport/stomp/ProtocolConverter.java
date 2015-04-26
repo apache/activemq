@@ -557,7 +557,7 @@ public class ProtocolConverter {
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
-        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+        if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("SUBSCRIBE received without a subscription id!");
         }
 
@@ -675,7 +675,7 @@ public class ProtocolConverter {
         }
 
         String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
-        if (this.version.equals(Stomp.V1_1) && subscriptionId == null) {
+        if (!this.version.equals(Stomp.V1_0) && subscriptionId == null) {
             throw new ProtocolException("UNSUBSCRIBE received without a subscription id!");
         }
 
@@ -686,7 +686,7 @@ public class ProtocolConverter {
         // check if it is a durable subscription
         String durable = command.getHeaders().get("activemq.subscriptionName");
         String clientId = durable;
-        if (this.version.equals(Stomp.V1_1)) {
+        if (!this.version.equals(Stomp.V1_0)) {
             clientId = connectionInfo.getClientId();
         }
 

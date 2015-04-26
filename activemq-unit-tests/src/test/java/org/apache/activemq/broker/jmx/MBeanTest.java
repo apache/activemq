@@ -818,13 +818,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         return answer;
     }
 
-    protected void useConnection(Connection connection) throws Exception {
+    protected void useConnection(Connection connection, int numToSend) throws Exception {
         connection.setClientID(clientID);
         connection.start();
         Session session = connection.createSession(transacted, authMode);
         destination = createDestination();
         MessageProducer producer = session.createProducer(destination);
-        for (int i = 0; i < MESSAGE_COUNT; i++) {
+        for (int i = 0; i < numToSend; i++) {
             Message message = session.createTextMessage("Message: " + i);
             message.setIntProperty("counter", i);
             message.setJMSCorrelationID("MyCorrelationID");
@@ -834,6 +834,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             producer.send(message);
         }
         Thread.sleep(1000);
+    }
+
+    protected void useConnection(Connection connection) throws Exception {
+        useConnection(connection, MESSAGE_COUNT);
     }
 
     protected void useConnectionWithBlobMessage(Connection connection) throws Exception {
@@ -1504,5 +1508,71 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
         assertEquals(mbeans.size(), 1);
         sub.close();
+    }
+
+    public void testQueuePauseResume() throws Exception {
+        connection = connectionFactory.createConnection();
+        final int numToSend = 20;
+        final int numToConsume = 5;
+        useConnection(connection, numToSend);
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        final QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        assertEquals("expected", numToSend, initialQueueSize);
+
+
+        echo("Attempting to consume 5 bytes messages from: " + destination);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(destination);
+        for (int i=0; i<numToConsume; i++) {
+            assertNotNull("Message: " + i, consumer.receive(5000));
+        }
+        consumer.close();
+        session.close();
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return  numToSend - numToConsume == queue.browse().length;
+            }
+        });
+        compdatalist = queue.browse();
+        assertEquals("expected", numToSend - numToConsume, compdatalist.length);
+
+        echo("pause");
+        queue.pause();
+
+        assertTrue("queue is paused", queue.isPaused());
+
+        // verify no consume  while paused
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createConsumer(destination);
+        assertNull("cannot get message while paused", consumer.receive(2000));
+        consumer.close();
+        session.close();
+        connection.close();
+
+        // verify send while paused
+        connection = connectionFactory.createConnection();
+        useConnection(connection, numToSend);
+
+        // verify browse
+        compdatalist = queue.browse();
+        assertEquals("expected browse", (2*numToSend)-numToConsume, compdatalist.length);
+        assertEquals("expected message count", compdatalist.length, queue.getQueueSize());
+
+        echo("resume");
+        queue.resume();
+
+        assertFalse("queue is not paused", queue.isPaused());
+
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumer = session.createConsumer(destination);
+        for (int i = 0; i < compdatalist.length; i++) {
+            assertNotNull("Message: " + i, consumer.receive(5000));
+        }
     }
 }

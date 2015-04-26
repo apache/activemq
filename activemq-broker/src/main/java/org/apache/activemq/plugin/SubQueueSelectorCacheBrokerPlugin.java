@@ -21,6 +21,8 @@ import java.io.File;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
 
+import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MAX_PERSIST_INTERVAL;
+
 /**
  * A plugin which allows the caching of the selector from a subscription queue.
  * <p/>
@@ -36,10 +38,17 @@ public class SubQueueSelectorCacheBrokerPlugin implements BrokerPlugin {
 
 
     private File persistFile;
+    private boolean singleSelectorPerDestination = false;
+    private boolean ignoreWildcardSelectors = false;
+    private long persistInterval = MAX_PERSIST_INTERVAL;
 
     @Override
     public Broker installPlugin(Broker broker) throws Exception {
-        return new SubQueueSelectorCacheBroker(broker, persistFile);
+        SubQueueSelectorCacheBroker rc = new SubQueueSelectorCacheBroker(broker, persistFile);
+        rc.setSingleSelectorPerDestination(singleSelectorPerDestination);
+        rc.setPersistInterval(persistInterval);
+        rc.setIgnoreWildcardSelectors(ignoreWildcardSelectors);
+        return rc;
     }
 
     /**
@@ -51,5 +60,29 @@ public class SubQueueSelectorCacheBrokerPlugin implements BrokerPlugin {
 
     public File getPersistFile() {
         return persistFile;
+    }
+
+    public boolean isSingleSelectorPerDestination() {
+        return singleSelectorPerDestination;
+    }
+
+    public void setSingleSelectorPerDestination(boolean singleSelectorPerDestination) {
+        this.singleSelectorPerDestination = singleSelectorPerDestination;
+    }
+
+    public long getPersistInterval() {
+        return persistInterval;
+    }
+
+    public void setPersistInterval(long persistInterval) {
+        this.persistInterval = persistInterval;
+    }
+
+    public boolean isIgnoreWildcardSelectors() {
+        return ignoreWildcardSelectors;
+    }
+
+    public void setIgnoreWildcardSelectors(boolean ignoreWildcardSelectors) {
+        this.ignoreWildcardSelectors = ignoreWildcardSelectors;
     }
 }

@@ -16,8 +16,13 @@
  */
 package org.apache.activemq.command;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -28,49 +33,24 @@ import javax.jms.MessageFormatException;
 import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ * Test the MapMessage implementation for spec compliance.
  */
-public class ActiveMQMapMessageTest extends TestCase {
+public class ActiveMQMapMessageTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMapMessageTest.class);
 
-    private String name = "testName";
+    private final String name = "testName";
 
-    /**
-     * Constructor for ActiveMQMapMessageTest.
-     * 
-     * @param name
-     */
-    public ActiveMQMapMessageTest(String name) {
-        super(name);
-    }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(ActiveMQMapMessageTest.class);
-    }
-
-    /*
-     * @see TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test(timeout = 10000)
     public void testBytesConversion() throws JMSException, IOException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setBoolean("boolean", true);
-        msg.setByte("byte", (byte)1);
+        msg.setByte("byte", (byte) 1);
         msg.setBytes("bytes", new byte[1]);
         msg.setChar("char", 'a');
         msg.setDouble("double", 1.5);
@@ -78,22 +58,22 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
-        msg.setShort("short", (short)1);
+        msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
         // Test with a 1Meg String
         StringBuffer bigSB = new StringBuffer(1024 * 1024);
         for (int i = 0; i < 1024 * 1024; i++) {
-            bigSB.append((char)'a' + i % 26);
+            bigSB.append('a' + i % 26);
         }
         String bigString = bigSB.toString();
 
         msg.setString("bigString", bigString);
 
-        msg = (ActiveMQMapMessage)msg.copy();
+        msg = (ActiveMQMapMessage) msg.copy();
 
         assertEquals(msg.getBoolean("boolean"), true);
-        assertEquals(msg.getByte("byte"), (byte)1);
+        assertEquals(msg.getByte("byte"), (byte) 1);
         assertEquals(msg.getBytes("bytes").length, 1);
         assertEquals(msg.getChar("char"), 'a');
         assertEquals(msg.getDouble("double"), 1.5, 0);
@@ -101,11 +81,12 @@ public class ActiveMQMapMessageTest extends TestCase {
         assertEquals(msg.getInt("int"), 1);
         assertEquals(msg.getLong("long"), 1);
         assertEquals(msg.getObject("object"), "stringObj");
-        assertEquals(msg.getShort("short"), (short)1);
+        assertEquals(msg.getShort("short"), (short) 1);
         assertEquals(msg.getString("string"), "string");
         assertEquals(msg.getString("bigString"), bigString);
     }
 
+    @Test(timeout = 10000)
     public void testGetBoolean() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setBoolean(name, true);
@@ -114,120 +95,114 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.clearBody();
         msg.setString(name, "true");
 
-        msg = (ActiveMQMapMessage)msg.copy();
+        msg = (ActiveMQMapMessage) msg.copy();
 
         assertTrue(msg.getBoolean(name));
     }
 
+    @Test(timeout = 10000)
     public void testGetByte() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        msg.setByte(this.name, (byte)1);
-        msg = (ActiveMQMapMessage)msg.copy();
-        assertTrue(msg.getByte(this.name) == (byte)1);
+        msg.setByte(this.name, (byte) 1);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getByte(this.name) == (byte) 1);
     }
 
-    public void testGetShort() {
+    @Test(timeout = 10000)
+    public void testGetShort() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            msg.setShort(this.name, (short)1);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(msg.getShort(this.name) == (short)1);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setShort(this.name, (short) 1);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getShort(this.name) == (short) 1);
     }
 
-    public void testGetChar() {
+    @Test(timeout = 10000)
+    public void testGetChar() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            msg.setChar(this.name, 'a');
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(msg.getChar(this.name) == 'a');
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setChar(this.name, 'a');
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getChar(this.name) == 'a');
     }
 
-    public void testGetInt() {
+    @Test(timeout = 10000)
+    public void testGetInt() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            msg.setInt(this.name, 1);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(msg.getInt(this.name) == 1);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setInt(this.name, 1);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getInt(this.name) == 1);
     }
 
-    public void testGetLong() {
+    @Test(timeout = 10000)
+    public void testGetLong() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            msg.setLong(this.name, 1);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(msg.getLong(this.name) == 1);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setLong(this.name, 1);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getLong(this.name) == 1);
     }
 
-    public void testGetFloat() {
+    @Test(timeout = 10000)
+    public void testGetFloat() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            msg.setFloat(this.name, 1.5f);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(msg.getFloat(this.name) == 1.5f);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setFloat(this.name, 1.5f);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getFloat(this.name) == 1.5f);
     }
 
-    public void testGetDouble() {
+    @Test(timeout = 10000)
+    public void testGetDouble() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            msg.setDouble(this.name, 1.5);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(msg.getDouble(this.name) == 1.5);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setDouble(this.name, 1.5);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertTrue(msg.getDouble(this.name) == 1.5);
     }
 
-    public void testGetString() {
+    @Test(timeout = 10000)
+    public void testGetDoubleWithMaxValue() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            String str = "test";
-            msg.setString(this.name, str);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertEquals(msg.getString(this.name), str);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setDouble(this.name, Double.MAX_VALUE);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertEquals(Double.MAX_VALUE, msg.getDouble(this.name), 1.0);
     }
 
-    public void testGetBytes() {
+    @Test(timeout = 10000)
+    public void testGetDoubleWithMaxValueAsString() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
-        try {
-            byte[] bytes1 = new byte[3];
-            byte[] bytes2 = new byte[2];
-            System.arraycopy(bytes1, 0, bytes2, 0, 2);
-            msg.setBytes(this.name, bytes1);
-            msg.setBytes(this.name + "2", bytes1, 0, 2);
-            msg = (ActiveMQMapMessage)msg.copy();
-            assertTrue(Arrays.equals(msg.getBytes(this.name), bytes1));
-            assertEquals(msg.getBytes(this.name + "2").length, bytes2.length);
-        } catch (JMSException jmsEx) {
-            jmsEx.printStackTrace();
-            assertTrue(false);
-        }
+        msg.setString(this.name, String.valueOf(Double.MAX_VALUE));
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertEquals(Double.MAX_VALUE, msg.getDouble(this.name), 1.0);
     }
 
+    @Test(timeout = 10000)
+    public void testGetString() throws JMSException {
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        String str = "test";
+        msg.setString(this.name, str);
+        msg = (ActiveMQMapMessage) msg.copy();
+        assertEquals(msg.getString(this.name), str);
+    }
+
+    @Test(timeout = 10000)
+    public void testGetBytes() throws JMSException {
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        byte[] bytes1 = new byte[3];
+        byte[] bytes2 = new byte[2];
+
+        System.arraycopy(bytes1, 0, bytes2, 0, 2);
+        msg.setBytes(this.name, bytes1);
+        msg.setBytes(this.name + "2", bytes1, 0, 2);
+        msg = (ActiveMQMapMessage) msg.copy();
+
+        assertTrue(Arrays.equals(msg.getBytes(this.name), bytes1));
+        assertEquals(msg.getBytes(this.name + "2").length, bytes2.length);
+    }
+
+    @Test(timeout = 10000)
+    public void testGetBytesWithNullValue() throws JMSException {
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        assertNull(msg.getBytes(this.name));
+    }
+
+    @Test(timeout = 10000)
     public void testGetObject() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         Boolean booleanValue = Boolean.TRUE;
@@ -258,7 +233,7 @@ public class ActiveMQMapMessageTest extends TestCase {
             fail("object formats should be correct");
         }
 
-        msg = (ActiveMQMapMessage)msg.copy();
+        msg = (ActiveMQMapMessage) msg.copy();
 
         assertTrue(msg.getObject("boolean") instanceof Boolean);
         assertEquals(msg.getObject("boolean"), booleanValue);
@@ -267,7 +242,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         assertEquals(msg.getObject("byte"), byteValue);
         assertEquals(msg.getByte("byte"), byteValue.byteValue());
         assertTrue(msg.getObject("bytes") instanceof byte[]);
-        assertEquals(((byte[])msg.getObject("bytes")).length, bytesValue.length);
+        assertEquals(((byte[]) msg.getObject("bytes")).length, bytesValue.length);
         assertEquals(msg.getBytes("bytes").length, bytesValue.length);
         assertTrue(msg.getObject("char") instanceof Character);
         assertEquals(msg.getObject("char"), charValue);
@@ -300,10 +275,11 @@ public class ActiveMQMapMessageTest extends TestCase {
 
     }
 
+    @Test(timeout = 10000)
     public void testGetMapNames() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setBoolean("boolean", true);
-        msg.setByte("byte", (byte)1);
+        msg.setByte("byte", (byte) 1);
         msg.setBytes("bytes1", new byte[1]);
         msg.setBytes("bytes2", new byte[3], 0, 2);
         msg.setChar("char", 'a');
@@ -312,10 +288,10 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
-        msg.setShort("short", (short)1);
+        msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
-        msg = (ActiveMQMapMessage)msg.copy();
+        msg = (ActiveMQMapMessage) msg.copy();
 
         Enumeration<String> mapNamesEnum = msg.getMapNames();
         List<String> mapNamesList = Collections.list(mapNamesEnum);
@@ -335,17 +311,19 @@ public class ActiveMQMapMessageTest extends TestCase {
         assertTrue(mapNamesList.contains("string"));
     }
 
+    @Test(timeout = 10000)
     public void testItemExists() throws JMSException {
         ActiveMQMapMessage mapMessage = new ActiveMQMapMessage();
 
         mapMessage.setString("exists", "test");
 
-        mapMessage = (ActiveMQMapMessage)mapMessage.copy();
+        mapMessage = (ActiveMQMapMessage) mapMessage.copy();
 
         assertTrue(mapMessage.itemExists("exists"));
         assertFalse(mapMessage.itemExists("doesntExist"));
     }
 
+    @Test(timeout = 10000)
     public void testClearBody() throws JMSException {
         ActiveMQMapMessage mapMessage = new ActiveMQMapMessage();
         mapMessage.setString("String", "String");
@@ -358,15 +336,16 @@ public class ActiveMQMapMessageTest extends TestCase {
         mapMessage.clearBody();
         mapMessage.setString("String", "String");
 
-        mapMessage = (ActiveMQMapMessage)mapMessage.copy();
+        mapMessage = (ActiveMQMapMessage) mapMessage.copy();
 
         mapMessage.getString("String");
     }
 
+    @Test(timeout = 10000)
     public void testReadOnlyBody() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setBoolean("boolean", true);
-        msg.setByte("byte", (byte)1);
+        msg.setByte("byte", (byte) 1);
         msg.setBytes("bytes", new byte[1]);
         msg.setBytes("bytes2", new byte[3], 0, 2);
         msg.setChar("char", 'a');
@@ -375,7 +354,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
-        msg.setShort("short", (short)1);
+        msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
         msg.setReadOnlyBody(true);
@@ -401,7 +380,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         } catch (MessageNotWriteableException mnwe) {
         }
         try {
-            msg.setByte("byte", (byte)1);
+            msg.setByte("byte", (byte) 1);
             fail("should throw exception");
         } catch (MessageNotWriteableException mnwe) {
         }
@@ -446,7 +425,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         } catch (MessageNotWriteableException mnwe) {
         }
         try {
-            msg.setShort("short", (short)1);
+            msg.setShort("short", (short) 1);
             fail("should throw exception");
         } catch (MessageNotWriteableException mnwe) {
         }
@@ -457,12 +436,13 @@ public class ActiveMQMapMessageTest extends TestCase {
         }
     }
 
+    @Test(timeout = 10000)
     public void testWriteOnlyBody() throws JMSException {
         ActiveMQMapMessage msg = new ActiveMQMapMessage();
         msg.setReadOnlyBody(false);
 
         msg.setBoolean("boolean", true);
-        msg.setByte("byte", (byte)1);
+        msg.setByte("byte", (byte) 1);
         msg.setBytes("bytes", new byte[1]);
         msg.setBytes("bytes2", new byte[3], 0, 2);
         msg.setChar("char", 'a');
@@ -471,7 +451,7 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.setInt("int", 1);
         msg.setLong("long", 1);
         msg.setObject("object", "stringObj");
-        msg.setShort("short", (short)1);
+        msg.setShort("short", (short) 1);
         msg.setString("string", "string");
 
         msg.setReadOnlyBody(true);
@@ -488,5 +468,4 @@ public class ActiveMQMapMessageTest extends TestCase {
         msg.getShort("short");
         msg.getString("string");
     }
-
 }

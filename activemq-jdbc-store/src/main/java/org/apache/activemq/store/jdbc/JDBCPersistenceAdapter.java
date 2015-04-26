@@ -336,6 +336,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
             cleanupTicket.cancel(true);
             cleanupTicket = null;
         }
+        closeDataSource(getDataSource());
     }
 
     public void cleanup() {
@@ -408,15 +409,14 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
                 throw new IllegalArgumentException(
                         "No dataSource property has been configured");
             }
-        } else {
-            LOG.info("Using a separate dataSource for locking: "
-                    + lockDataSource);
         }
         return lockDataSource;
     }
 
     public void setLockDataSource(DataSource dataSource) {
         this.lockDataSource = dataSource;
+        LOG.info("Using a separate dataSource for locking: "
+                            + lockDataSource);
     }
 
     @Override
@@ -766,11 +766,11 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         }
     }
 
-    public void commitAdd(ConnectionContext context, MessageId messageId) throws IOException {
+    public void commitAdd(ConnectionContext context, MessageId messageId, long preparedSequenceId) throws IOException {
         TransactionContext c = getTransactionContext(context);
         try {
-            long sequence = (Long)messageId.getFutureOrSequenceLong();
-            getAdapter().doCommitAddOp(c, sequence);
+            long sequence = (Long)messageId.getEntryLocator();
+            getAdapter().doCommitAddOp(c, preparedSequenceId, sequence);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to commit add: " + messageId + ". Reason: " + e, e);

@@ -112,10 +112,6 @@ public class JDBCTablePrefixAssignedTest {
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-
         DefaultJDBCAdapter adapter = new DefaultJDBCAdapter();
         jdbc.setAdapter(adapter);
 
@@ -124,7 +120,6 @@ public class JDBCTablePrefixAssignedTest {
         jdbc.setStatements(statements);
 
         jdbc.setUseLock(false);
-        jdbc.setDataSource(dataSource);
         jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         return broker;

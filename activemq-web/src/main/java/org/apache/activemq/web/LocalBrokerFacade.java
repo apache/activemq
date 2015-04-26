@@ -29,53 +29,69 @@ import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * An implementation of {@link BrokerFacade} which uses a local in JVM broker
- * 
- * 
  */
 public class LocalBrokerFacade extends BrokerFacadeSupport {
-	private BrokerService brokerService;
 
-	public LocalBrokerFacade(BrokerService brokerService) {
-		this.brokerService = brokerService;
-	}
+    private final BrokerService brokerService;
 
-	public BrokerService getBrokerService() {
-		return brokerService;
-	}
-	public String getBrokerName() throws Exception {
-		return brokerService.getBrokerName();
-	}
-	public Broker getBroker() throws Exception {
-		return brokerService.getBroker();
-	}
-	public ManagementContext getManagementContext() {
-		return brokerService.getManagementContext();
-	}
-	public BrokerViewMBean getBrokerAdmin() throws Exception {
-		return brokerService.getAdminView();
-	}
-	public ManagedRegionBroker getManagedBroker() throws Exception {
-		BrokerView adminView = brokerService.getAdminView();
-		if (adminView == null) {
-			return null;
-		}
-		return adminView.getBroker();
-	}
+    public LocalBrokerFacade(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
 
+    public BrokerService getBrokerService() {
+        return brokerService;
+    }
+
+    @Override
+    public String getBrokerName() throws Exception {
+        return brokerService.getBrokerName();
+    }
+
+    public Broker getBroker() throws Exception {
+        return brokerService.getBroker();
+    }
+
+    @Override
+    public ManagementContext getManagementContext() {
+        return brokerService.getManagementContext();
+    }
+
+    @Override
+    public BrokerViewMBean getBrokerAdmin() throws Exception {
+        return brokerService.getAdminView();
+    }
+
+    public ManagedRegionBroker getManagedBroker() throws Exception {
+        BrokerView adminView = brokerService.getAdminView();
+        if (adminView == null) {
+            return null;
+        }
+        return adminView.getBroker();
+    }
+
+    @Override
     public void purgeQueue(ActiveMQDestination destination) throws Exception {
-        Set destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
-        for (Iterator i = destinations.iterator(); i.hasNext();) {
-            Destination dest = (Destination) i.next();
+        Set<Destination> destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
+        for (Iterator<Destination> i = destinations.iterator(); i.hasNext();) {
+            Destination dest = unwrap(i.next());
             if (dest instanceof Queue) {
                 Queue regionQueue = (Queue) dest;
                 regionQueue.purge();
             }
         }
+    }
+
+    private Destination unwrap(Destination dest) {
+        if (dest instanceof DestinationFilter) {
+            return unwrap(((DestinationFilter) dest).getNext());
+        }
+        return dest;
     }
 
     @Override
@@ -87,5 +103,4 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
     public Object newProxyInstance(ObjectName objectName, Class interfaceClass, boolean notificationBroadcaster) {
         return getManagementContext().newProxyInstance(objectName, interfaceClass, notificationBroadcaster);
     }
-    
 }

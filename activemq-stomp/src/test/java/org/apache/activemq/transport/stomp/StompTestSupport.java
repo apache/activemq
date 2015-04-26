@@ -50,8 +50,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StompTestSupport {
+
+    protected static final Logger LOG = LoggerFactory.getLogger(StompTestSupport.class);
 
     protected final AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
     protected BrokerService brokerService;
@@ -90,6 +94,7 @@ public class StompTestSupport {
 
     @Before
     public void setUp() throws Exception {
+        LOG.info("========== start " + getName() + " ==========");
         autoFailTestSupport.startAutoFailThread();
         startBroker();
         stompConnect();
@@ -97,6 +102,7 @@ public class StompTestSupport {
 
     @After
     public void tearDown() throws Exception {
+        LOG.info("========== finished " + getName() + " ==========");
         autoFailTestSupport.stopAutoFailThread();
         try {
             stompDisconnect();
@@ -167,6 +173,8 @@ public class StompTestSupport {
         brokerService.setSchedulerSupport(true);
         brokerService.setPopulateJMSXUserID(true);
         brokerService.setSchedulerSupport(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.getManagementContext().setCreateMBeanServer(false);
 
         JobSchedulerStoreImpl jobStore = new JobSchedulerStoreImpl();
         jobStore.setDirectory(new File("activemq-data"));

@@ -71,6 +71,7 @@ ACTIVEMQ_SUNJMX_CONTROL=""
 ACTIVEMQ_QUEUEMANAGERURL="--amqurl tcp://localhost:61616"
 
 # Set additional JSE arguments
+#ACTIVEMQ_SSL_OPTS="-Dcom.sun.security.enableCRLDP=true -Docsp.enable=true -Docsp.responderURL=http://ocsp.example.net:80"
 ACTIVEMQ_SSL_OPTS=""
 
 # Uncomment to enable remote debugging

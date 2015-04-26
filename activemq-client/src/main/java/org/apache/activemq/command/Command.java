@@ -21,8 +21,6 @@ import org.apache.activemq.state.CommandVisitor;
 /**
  * The Command Pattern so that we can send and receive commands on the different
  * transports
- * 
- * 
  */
 public interface Command extends DataStructure {
 
@@ -52,8 +50,10 @@ public interface Command extends DataStructure {
     boolean isMessageDispatchNotification();
 
     boolean isShutdownInfo();
-    
+
     boolean isConnectionControl();
+
+    boolean isConsumerControl();
 
     Response visit(CommandVisitor visitor) throws Exception;
 

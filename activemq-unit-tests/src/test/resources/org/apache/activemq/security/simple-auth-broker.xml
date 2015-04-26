@@ -43,7 +43,7 @@
 
     <!-- Use a non-default port in case the default port is in use -->
     <managementContext>
-      <managementContext connectorPort="1199"/>
+      <managementContext connectorPort="1199" createConnector="true"/>
     </managementContext>
 
     <destinationPolicy>

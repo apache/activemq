@@ -52,12 +52,7 @@ public class JDBCStoreOrderTest extends StoreOrderTest {
      @Override
      protected void setPersistentAdapter(BrokerService brokerService)
              throws Exception {
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource dataSource = new EmbeddedDataSource();
-        dataSource.setDatabaseName("derbyDb");
-        dataSource.setCreateDatabase("create");
-        jdbc.setDataSource(dataSource);
-        brokerService.setPersistenceAdapter(jdbc);
+        brokerService.setPersistenceAdapter(new JDBCPersistenceAdapter());
     }
 
 }

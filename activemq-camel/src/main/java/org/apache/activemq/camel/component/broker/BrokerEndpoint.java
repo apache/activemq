@@ -38,7 +38,7 @@ import org.apache.camel.spi.UriPath;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
 
 @ManagedResource(description = "Managed Camel Broker Endpoint")
-@UriEndpoint(scheme = "broker", consumerClass = BrokerConsumer.class, syntax = "broker:destination", label = "messaging")
+@UriEndpoint(scheme = "broker", syntax = "broker:destination", consumerClass = BrokerConsumer.class, title = "Broker", label = "messaging")
 public class BrokerEndpoint extends DefaultEndpoint implements MultipleConsumersSupport, Service {
 
     static final String PRODUCER_BROKER_EXCHANGE = "producerBrokerExchange";

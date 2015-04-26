@@ -73,6 +73,7 @@ public class TopicSubscription extends AbstractSubscription {
     protected boolean enableAudit = false;
     protected ActiveMQMessageAudit audit;
     protected boolean active = false;
+    protected boolean discarding = false;
 
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
@@ -107,6 +108,11 @@ public class TopicSubscription extends AbstractSubscription {
         node = new IndirectMessageReference(node.getMessage());
         enqueueCounter.incrementAndGet();
         synchronized (matchedListMutex) {
+            // if this subscriber is already discarding a message, we don't want to add
+            // any more messages to it as those messages can only be advisories generated in the process,
+            // which can trigger the recursive call loop
+            if (discarding) return;
+
             if (!isFull() && matched.isEmpty()) {
                 // if maximumPendingMessages is set we will only discard messages which
                 // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
@@ -326,23 +332,23 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     @Override
-    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+    public Response pullMessage(ConnectionContext context, final MessagePull pull) throws Exception {
 
         // The slave should not deliver pull messages.
-        if (getPrefetchSize() == 0 ) {
+        if (getPrefetchSize() == 0) {
 
             final long currentDispatchedCount = dispatchedCounter.get();
-            prefetchExtension.incrementAndGet();
+            prefetchExtension.set(pull.getQuantity());
             dispatchMatched();
 
             // If there was nothing dispatched.. we may need to setup a timeout.
-            if (currentDispatchedCount == dispatchedCounter.get()) {
+            if (currentDispatchedCount == dispatchedCounter.get() || pull.isAlwaysSignalDone()) {
 
                 // immediate timeout used by receiveNoWait()
                 if (pull.getTimeout() == -1) {
-                    prefetchExtension.decrementAndGet();
                     // Send a NULL message to signal nothing pending.
                     dispatch(null);
+                    prefetchExtension.set(0);
                 }
 
                 if (pull.getTimeout() > 0) {
@@ -350,7 +356,7 @@ public class TopicSubscription extends AbstractSubscription {
 
                         @Override
                         public void run() {
-                            pullTimeout(currentDispatchedCount);
+                            pullTimeout(currentDispatchedCount, pull.isAlwaysSignalDone());
                         }
                     }, pull.getTimeout());
                 }
@@ -363,15 +369,15 @@ public class TopicSubscription extends AbstractSubscription {
      * Occurs when a pull times out. If nothing has been dispatched since the
      * timeout was setup, then send the NULL message.
      */
-    private final void pullTimeout(long currentDispatchedCount) {
+    private final void pullTimeout(long currentDispatchedCount, boolean alwaysSendDone) {
         synchronized (matchedListMutex) {
-            if (currentDispatchedCount == dispatchedCounter.get()) {
+            if (currentDispatchedCount == dispatchedCounter.get() || alwaysSendDone) {
                 try {
                     dispatch(null);
                 } catch (Exception e) {
                     context.getConnection().serviceException(e);
                 } finally {
-                    prefetchExtension.decrementAndGet();
+                    prefetchExtension.set(0);
                 }
             }
         }
@@ -583,7 +589,7 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void dispatch(final MessageReference node) throws IOException {
-        Message message = node.getMessage();
+        Message message = node != null ? node.getMessage() : null;
         if (node != null) {
             node.incrementReferenceCount();
         }
@@ -639,18 +645,23 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     private void discard(MessageReference message) {
-        message.decrementReferenceCount();
-        matched.remove(message);
-        discarded++;
-        if(destination != null) {
-            destination.getDestinationStatistics().getDequeues().increment();
+        discarding = true;
+        try {
+            message.decrementReferenceCount();
+            matched.remove(message);
+            discarded++;
+            if (destination != null) {
+                destination.getDestinationStatistics().getDequeues().increment();
+            }
+            LOG.debug("{}, discarding message {}", this, message);
+            Destination dest = (Destination) message.getRegionDestination();
+            if (dest != null) {
+                dest.messageDiscarded(getContext(), this, message);
+            }
+            broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
+        } finally {
+            discarding = false;
         }
-        LOG.debug("{}, discarding message {}", this, message);
-        Destination dest = (Destination) message.getRegionDestination();
-        if (dest != null) {
-            dest.messageDiscarded(getContext(), this, message);
-        }
-        broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
     }
 
     @Override

@@ -75,6 +75,7 @@ public class AMQ5421Test {
         policy.setTopicPrefetch(10);
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
+        brokerService.setUseJmx(false);
         brokerService.setDestinationPolicy(pMap);
         brokerService.addConnector("tcp://0.0.0.0:0");
         brokerService.start();

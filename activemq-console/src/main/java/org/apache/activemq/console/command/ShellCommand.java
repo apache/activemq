@@ -109,6 +109,10 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
+    public static void main(String[] args) {
+        main(args, System.in, System.out);
+    }
+
     public boolean isInteractive() {
         return interactive;
     }

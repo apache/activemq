@@ -316,6 +316,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         LOG.trace(this + ", completion for: " + getSubscriptionKey(clientId, subscriptionName));
     }
 
+    @Override
     protected void onAdd(Message message, long sequenceId, byte priority) {
         // update last recovered state
         for (LastRecovered last : subscriberLastRecoveredMap.values()) {
@@ -328,7 +329,6 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             sequenceIdCacheSizeLock.writeLock().unlock();
         }
     }
-
 
     public void addSubscription(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();

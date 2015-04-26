@@ -335,12 +335,12 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     @Override
-    public String sendTextMessage(String body, String user, String password) throws Exception {
+    public String sendTextMessage(String body, String user, @Sensitive String password) throws Exception {
         return sendTextMessage(Collections.EMPTY_MAP, body, user, password);
     }
 
     @Override
-    public String sendTextMessage(Map<String, String> headers, String body, String userName, String password) throws Exception {
+    public String sendTextMessage(Map<String, String> headers, String body, String userName, @Sensitive String password) throws Exception {
 
         String brokerUrl = "vm://" + broker.getBrokerName();
         ActiveMQDestination dest = destination.getActiveMQDestination();
@@ -524,7 +524,7 @@ public class DestinationView implements DestinationViewMBean {
 
     @Override
     public boolean isDLQ() {
-        return destination.isDLQ();
+        return destination.getActiveMQDestination().isDLQ();
     }
 
     @Override

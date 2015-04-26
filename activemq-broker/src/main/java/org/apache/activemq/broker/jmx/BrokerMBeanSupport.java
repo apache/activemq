@@ -161,6 +161,13 @@ public class BrokerMBeanSupport {
         return createNetworkConnectorName(brokerObjectName.toString(), type, name);
     }
 
+    public static ObjectName createVirtualDestinationSelectorCacheName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
+        String objectNameStr = brokerObjectName.toString();
+        objectNameStr += ",service=" + type + ",virtualDestinationSelectoCache="+ JMXSupport.encodeObjectNamePart(name);
+        ObjectName objectName = new ObjectName(objectNameStr);
+        return objectName;
+    }
+
     public static ObjectName createNetworkConnectorName(String brokerObjectName, String type, String name) throws MalformedObjectNameException {
         String objectNameStr = brokerObjectName;
         objectNameStr += ",connector=" + type + ",networkConnectorName="+ JMXSupport.encodeObjectNamePart(name);

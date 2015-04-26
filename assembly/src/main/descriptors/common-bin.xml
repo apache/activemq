@@ -172,8 +172,8 @@
         <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
-        <include>commons-dbcp:commons-dbcp</include>
-        <include>commons-pool:commons-pool</include>
+        <include>org.apache.commons:commons-dbcp2</include>
+        <include>org.apache.commons:commons-pool2</include>
         <include>commons-codec:commons-codec</include>
         <include>commons-net:commons-net</include>
         <include>commons-lang:commons-lang</include>
@@ -197,7 +197,7 @@
         <include>org.apache.velocity:velocity</include>
         <include>org.apache.servicemix.bundles:org.apache.servicemix.bundles.josql</include>
         <include>org.jasypt:jasypt</include>
-        <include>org.jasypt:jasypt-spring3</include>
+        <include>org.jasypt:jasypt-spring31</include>
         <include>javax.jmdns:jmdns</include>
         <include>org.apache.qpid:proton-jms</include>
         <include>org.apache.qpid:proton-j</include>

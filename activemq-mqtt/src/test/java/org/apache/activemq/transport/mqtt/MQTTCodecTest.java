@@ -52,7 +52,7 @@ public class MQTTCodecTest {
     private MQTTCodec codec;
 
     private final int MESSAGE_SIZE = 5 * 1024 * 1024;
-    private final int ITERATIONS = 1000;
+    private final int ITERATIONS = 500;
 
     @Before
     public void setUp() throws Exception {

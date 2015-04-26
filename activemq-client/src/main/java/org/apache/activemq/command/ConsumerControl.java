@@ -20,9 +20,9 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * Used to start and stop transports as well as terminating clients.
- * 
+ *
  * @openwire:marshaller code="17"
- * 
+ *
  */
 public class ConsumerControl extends BaseCommand {
 
@@ -48,12 +48,19 @@ public class ConsumerControl extends BaseCommand {
         this.destination = destination;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processConsumerControl(this);
+    }
+
+    @Override
+    public boolean isConsumerControl() {
+        return true;
     }
 
     /**
@@ -65,7 +72,8 @@ public class ConsumerControl extends BaseCommand {
     }
 
     /**
-     * @param close The close to set.
+     * @param close
+     *        The new value to assign the close state flag.
      */
     public void setClose(boolean close) {
         this.close = close;
@@ -80,7 +88,8 @@ public class ConsumerControl extends BaseCommand {
     }
 
     /**
-     * @param consumerId The consumerId to set.
+     * @param consumerId
+     *        The consumerId to set.
      */
     public void setConsumerId(ConsumerId consumerId) {
         this.consumerId = consumerId;
@@ -95,7 +104,8 @@ public class ConsumerControl extends BaseCommand {
     }
 
     /**
-     * @param prefetch The prefetch to set.
+     * @param prefetch
+     *        The prefetch to set.
      */
     public void setPrefetch(int prefetch) {
         this.prefetch = prefetch;
@@ -110,7 +120,8 @@ public class ConsumerControl extends BaseCommand {
     }
 
     /**
-     * @param flush the flush to set
+     * @param flush
+     *        The flush value to set on this command.
      */
     public void setFlush(boolean flush) {
         this.flush = flush;
@@ -125,7 +136,8 @@ public class ConsumerControl extends BaseCommand {
     }
 
     /**
-     * @param start the start to set
+     * @param start
+     *        The start value to set on this command.
      */
     public void setStart(boolean start) {
         this.start = start;
@@ -140,7 +152,8 @@ public class ConsumerControl extends BaseCommand {
     }
 
     /**
-     * @param stop the stop to set
+     * @param stop
+     *        the stop value to set on this Command.
      */
     public void setStop(boolean stop) {
         this.stop = stop;

@@ -208,7 +208,6 @@ public class BrokerService implements Service {
     private boolean useLocalHostBrokerName;
     private final CountDownLatch stoppedLatch = new CountDownLatch(1);
     private final CountDownLatch startedLatch = new CountDownLatch(1);
-    private boolean supportFailOver;
     private Broker regionBroker;
     private int producerSystemUsagePortion = 60;
     private int consumerSystemUsagePortion = 40;
@@ -249,6 +248,7 @@ public class BrokerService implements Service {
 
     private boolean restartAllowed = true;
     private boolean restartRequested = false;
+    private boolean rejectDurableConsumers = false;
 
     private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
 
@@ -1764,21 +1764,6 @@ public class BrokerService implements Service {
     }
 
     /**
-     * @return the supportFailOver
-     */
-    public boolean isSupportFailOver() {
-        return this.supportFailOver;
-    }
-
-    /**
-     * @param supportFailOver
-     *            the supportFailOver to set
-     */
-    public void setSupportFailOver(boolean supportFailOver) {
-        this.supportFailOver = supportFailOver;
-    }
-
-    /**
      * Looks up and lazily creates if necessary the destination for the given
      * JMS name
      */
@@ -3052,5 +3037,13 @@ public class BrokerService implements Service {
 
     public void incrementTotalConnections() {
         this.totalConnections.incrementAndGet();
+    }
+
+    public boolean isRejectDurableConsumers() {
+        return rejectDurableConsumers;
+    }
+
+    public void setRejectDurableConsumers(boolean rejectDurableConsumers) {
+        this.rejectDurableConsumers = rejectDurableConsumers;
     }
 }

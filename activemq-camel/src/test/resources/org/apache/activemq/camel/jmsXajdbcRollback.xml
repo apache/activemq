@@ -78,16 +78,12 @@
         <property name="cacheLevel" value="0"/>
     </bean>
 
-    <!-- openejb provides geronimo NamedXAResources wrapper around commons dbcp such that they have an identity in the howl log -->
-    <bean id="geronimoXAResourceWrapper"
-          class="org.apache.openejb.resource.GeronimoTransactionManagerFactory.GeronimoXAResourceWrapper"/>
-    <bean id="managedDataSourceWithRecovery" class="org.apache.openejb.resource.jdbc.ManagedDataSourceWithRecovery">
-        <constructor-arg>
-            <ref bean="geronimoXAResourceWrapper"></ref>
-        </constructor-arg>
-        <property name="jdbcDriver" value="org.apache.derby.jdbc.EmbeddedDriver"/>
-        <property name="jdbcUrl" value="jdbc:derby:target/XatestDs;create=true"/>
-        <property name="transactionManager" ref="jenckTransactionManager"/>
+    <bean id="managedDataSourceWithRecovery" class="org.apache.commons.dbcp2.managed.BasicManagedDataSource" destroy-method="close">
+        <property name="driverClassName" value="org.apache.derby.jdbc.EmbeddedDriver" />
+        <property name="url" value="jdbc:derby:target/XatestDs;create=true" />
+        <property name="username" value="user" />
+        <property name="password" value="secret" />
+        <property name="transactionManager" ref="jenckTransactionManager" />
     </bean>
 
     <bean id="required" class="org.apache.camel.spring.spi.SpringTransactionPolicy">

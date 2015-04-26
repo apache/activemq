@@ -16,6 +16,11 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -24,76 +29,67 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-/**
- * 
- */
-public class JmsCreateConsumerInOnMessageTest extends TestSupport implements MessageListener {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
+public class JmsCreateConsumerInOnMessageTest {
 
     private Connection connection;
-    private Session publisherSession;
-    private Session consumerSession;
-    private MessageConsumer consumer;
-    private MessageConsumer testConsumer;
-    private MessageProducer producer;
-    private Topic topic;
-    private Object lock = new Object();
+    private ActiveMQConnectionFactory factory;
 
-    /*
-     * @see junit.framework.TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-        super.topic = true;
-        connection = createConnection();
-        connection.setClientID("connection:" + getSubject());
-        publisherSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        topic = (Topic)super.createDestination("Test.Topic");
-        consumer = consumerSession.createConsumer(topic);
-        consumer.setMessageListener(this);
-        producer = publisherSession.createProducer(topic);
-        connection.start();
+    @Rule
+    public final TestName name = new TestName();
+
+    @Before
+    public void setUp() throws Exception {
+        factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&broker.useJmx=false");
+        connection = factory.createConnection();
     }
 
-    /*
-     * @see junit.framework.TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        connection.close();
+    @After
+    public void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
     /**
      * Tests if a consumer can be created asynchronusly
-     * 
+     *
      * @throws Exception
      */
+    @Test(timeout = 60000)
     public void testCreateConsumer() throws Exception {
-        Message msg = super.createMessage();
-        producer.send(msg);
-        if (testConsumer == null) {
-            synchronized (lock) {
-                lock.wait(3000);
-            }
-        }
-        assertTrue(testConsumer != null);
-    }
+        final CountDownLatch done = new CountDownLatch(1);
 
-    /**
-     * Use the asynchronous subscription mechanism
-     * 
-     * @param message
-     */
-    public void onMessage(Message message) {
-        try {
-            testConsumer = consumerSession.createConsumer(topic);
-            consumerSession.createProducer(topic);
-            synchronized (lock) {
-                lock.notify();
+        final Session publisherSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Session consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Topic topic = publisherSession.createTopic("Test.Topic");
+
+        MessageConsumer consumer = consumerSession.createConsumer(topic);
+        consumer.setMessageListener(new MessageListener() {
+
+            @Override
+            public void onMessage(Message message) {
+                try {
+                    consumerSession.createConsumer(topic);
+                    consumerSession.createProducer(topic);
+                    done.countDown();
+                } catch (Exception ex) {
+                    assertTrue(false);
+                }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            assertTrue(false);
-        }
+        });
+
+        MessageProducer producer = publisherSession.createProducer(topic);
+        connection.start();
+
+        producer.send(publisherSession.createTextMessage("test"));
+
+        assertTrue("Should have finished onMessage", done.await(5, TimeUnit.SECONDS));
     }
 }

@@ -81,7 +81,7 @@ public class BrokerRedeliveryTest extends org.apache.activemq.TestSupport {
             LOG.info("got: " + brokerRedeliveryMessage);
             assertNotNull("got message via broker redelivery after delay", brokerRedeliveryMessage);
             assertEquals("message matches", message.getStringProperty("data"), brokerRedeliveryMessage.getStringProperty("data"));
-            assertEquals("has expiryDelay specified", i == 0 ? initialRedeliveryDelayMillis : redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
+            assertEquals("has expiryDelay specified - iteration:" + i, i == 0 ? initialRedeliveryDelayMillis : redeliveryDelayMillis, brokerRedeliveryMessage.getLongProperty(RedeliveryPlugin.REDELIVERY_DELAY));
 
             consumerSession.rollback();
         }

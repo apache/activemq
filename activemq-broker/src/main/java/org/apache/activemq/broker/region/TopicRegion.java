@@ -109,6 +109,9 @@ public class TopicRegion extends AbstractRegion {
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         if (info.isDurable()) {
+            if (broker.getBrokerService().isRejectDurableConsumers()) {
+                throw new JMSException("Durable Consumers are not allowed");
+            }
             ActiveMQDestination destination = info.getDestination();
             if (!destination.isPattern()) {
                 // Make sure the destination is created.
@@ -197,7 +200,9 @@ public class TopicRegion extends AbstractRegion {
         SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
-            throw new InvalidDestinationException("No durable subscription exists for: " + info.getSubscriptionName());
+            throw new InvalidDestinationException("No durable subscription exists for clientID: " +
+                                                  info.getClientId() + " and subscriptionName: " +
+                                                  info.getSubscriptionName());
         }
         if (sub.isActive()) {
             throw new JMSException("Durable consumer is in use");
@@ -333,7 +338,9 @@ public class TopicRegion extends AbstractRegion {
                 }
                 durableSubscriptions.put(key, sub);
             } else {
-                throw new JMSException("That durable subscription is already active.");
+                throw new JMSException("Durable subscription is already active for clientID: " +
+                                       context.getClientId() + " and subscriptionName: " +
+                                       info.getSubscriptionName());
             }
             return sub;
         }
@@ -376,6 +383,15 @@ public class TopicRegion extends AbstractRegion {
             }
         }
         return inactiveDestinations;
+    }
+
+    public DurableTopicSubscription lookupSubscription(String subscriptionName, String clientId) {
+        SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+        if (durableSubscriptions.containsKey(key)) {
+            return durableSubscriptions.get(key);
+        }
+
+        return null;
     }
 
     public boolean isKeepDurableSubsActive() {

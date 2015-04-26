@@ -25,8 +25,12 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
+import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.DestinationStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -38,6 +42,7 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.leveldb.LevelDBPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.activemq.util.JMXSupport;
 
 /**
  * Useful base class for unit test cases
@@ -173,7 +178,15 @@ public abstract class TestSupport extends CombinationTestSupport {
                         regionBroker.getTopicRegion().getDestinationMap();
     }
 
-    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, AMQ, JDBC, MEM };
+    protected QueueViewMBean getProxyToQueue(String name) throws MalformedObjectNameException, JMSException {
+        BrokerService brokerService = BrokerRegistry.getInstance().lookup("localhost");
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+ JMXSupport.encodeObjectNamePart(name));
+        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        return proxy;
+    }
+
+    public static enum PersistenceAdapterChoice {LevelDB, KahaDB, JDBC, MEM };
 
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return setPersistenceAdapter(broker, defaultPersistenceAdapter);
@@ -183,7 +196,9 @@ public abstract class TestSupport extends CombinationTestSupport {
         PersistenceAdapter adapter = null;
         switch (choice) {
         case JDBC:
-            adapter = new JDBCPersistenceAdapter();
+            JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
+            jdbcPersistenceAdapter.setUseLock(false); // rollback (at shutdown) on derby can take a long time with file io etc
+            adapter = jdbcPersistenceAdapter;
             break;
         case KahaDB:
             adapter = new KahaDBPersistenceAdapter();
@@ -196,6 +211,7 @@ public abstract class TestSupport extends CombinationTestSupport {
             break;
         }
         broker.setPersistenceAdapter(adapter);
+        adapter.setDirectory(new File(broker.getBrokerDataDirectory(), choice.name()));
         return adapter;
     }
 
@@ -222,4 +238,11 @@ public abstract class TestSupport extends CombinationTestSupport {
         assertFalse("Base directory cannot contain spaces.", new File(System.getProperty("basedir", ".")).getAbsoluteFile().toString().contains(" "));
     }
 
+    public void safeCloseConnection(Connection c) {
+        if (c != null) {
+            try {
+                c.close();
+            } catch (JMSException ignored) {}
+        }
+    }
 }

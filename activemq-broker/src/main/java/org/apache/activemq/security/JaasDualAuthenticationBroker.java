@@ -17,6 +17,8 @@
 
 package org.apache.activemq.security;
 
+import java.security.cert.X509Certificate;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -56,7 +58,7 @@ import org.apache.activemq.transport.tcp.SslTransportServer;
  * };
  * </pre>
  */
-public class JaasDualAuthenticationBroker extends BrokerFilter {
+public class JaasDualAuthenticationBroker extends BrokerFilter implements AuthenticationBroker {
     private final JaasCertificateAuthenticationBroker sslBroker;
     private final JaasAuthenticationBroker nonSslBroker;
 
@@ -87,13 +89,11 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         if (context.getSecurityContext() == null) {
-            boolean isSSL;
+            boolean isSSL = false;
             Connector connector = context.getConnector();
             if (connector instanceof TransportConnector) {
                 TransportConnector transportConnector = (TransportConnector) connector;
                 isSSL = transportConnector.getServer().isSslServer();
-            } else {
-                isSSL = false;
             }
 
             if (isSSL) {
@@ -133,5 +133,14 @@ public class JaasDualAuthenticationBroker extends BrokerFilter {
         this.nonSslBroker.removeDestination(context, destination, timeout);
 
         super.removeDestination(context, destination, timeout);
+    }
+
+    @Override
+    public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+        if (peerCertificates != null) {
+            return this.sslBroker.authenticate(username, password, peerCertificates);
+        } else {
+            return this.nonSslBroker.authenticate(username, password, peerCertificates);
+        }
     }
 }

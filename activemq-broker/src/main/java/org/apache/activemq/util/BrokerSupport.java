@@ -55,6 +55,7 @@ public final class BrokerSupport {
         message.setDestination(deadLetterDestination);
         message.setTransactionId(null);
         message.setMemoryUsage(null);
+        message.getMessageId().setFutureOrSequenceLong(null);
         message.setRedeliveryCounter(0);
         boolean originalFlowControl = context.isProducerFlowControl();
         try {

@@ -20,6 +20,7 @@ package org.apache.activemq.transport.stomp;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Destination;
 
@@ -50,9 +51,11 @@ public class StompPrefetchTest extends StompTestSupport {
 
         brokerService.setDestinationPolicy(pMap);
         brokerService.setAdvisorySupport(true);
+        brokerService.setUseJmx(false);
+        brokerService.setPersistent(false);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testTopicSubPrefetch() throws Exception {
 
         stompConnection.connect("system", "manager");
@@ -61,7 +64,7 @@ public class StompPrefetchTest extends StompTestSupport {
         verifyPrefetch(10, new ActiveMQTopic("T"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testDurableSubPrefetch() throws Exception {
         stompConnection.connect("system", "manager");
         HashMap<String,String> headers = new HashMap<String, String>();
@@ -71,7 +74,7 @@ public class StompPrefetchTest extends StompTestSupport {
         verifyPrefetch(10, new ActiveMQTopic("T"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQBrowserSubPrefetch() throws Exception {
         HashMap<String,String> headers = new HashMap<String, String>();
         headers.put("login","system");
@@ -86,7 +89,7 @@ public class StompPrefetchTest extends StompTestSupport {
         verifyPrefetch(10, new ActiveMQQueue("Q"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testQueueSubPrefetch() throws Exception {
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO);
@@ -107,7 +110,6 @@ public class StompPrefetchTest extends StompTestSupport {
                 }
                 return false;
             }
-        }));
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
     }
-
 }

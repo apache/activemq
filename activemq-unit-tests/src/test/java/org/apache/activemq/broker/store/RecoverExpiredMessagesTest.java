@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.store;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import junit.framework.Test;
@@ -53,9 +54,14 @@ public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
 
     public void initCombosForTestRecovery() throws Exception {
         addCombinationValues("queuePendingPolicy", new PendingQueueMessageStoragePolicy[] {new FilePendingQueueMessageStoragePolicy(), new VMPendingQueueMessageStoragePolicy()});
-        addCombinationValues("persistenceAdapter", new PersistenceAdapter[] {new KahaDBPersistenceAdapter(),
-                // need to supply the dataSource as it is used in parameter matching via the toString
-                new JDBCPersistenceAdapter(JDBCPersistenceAdapter.createDataSource(IOHelper.getDefaultDataDirectory()), new OpenWireFormat())});
+        PersistenceAdapter[] persistenceAdapters = new PersistenceAdapter[] {
+                new KahaDBPersistenceAdapter(),
+                new JDBCPersistenceAdapter(JDBCPersistenceAdapter.createDataSource(IOHelper.getDefaultDataDirectory()), new OpenWireFormat())
+        };
+        for (PersistenceAdapter adapter : persistenceAdapters) {
+            adapter.setDirectory(new File(IOHelper.getDefaultDataDirectory()));
+        }
+        addCombinationValues("persistenceAdapter", persistenceAdapters);
     }
 
     public void testRecovery() throws Exception {

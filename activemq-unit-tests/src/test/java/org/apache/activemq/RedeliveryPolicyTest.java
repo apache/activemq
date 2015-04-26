@@ -37,8 +37,11 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RedeliveryPolicyTest extends JmsTestSupport {
+    static final Logger LOG = LoggerFactory.getLogger(RedeliveryPolicyTest.class);
 
     public static Test suite() {
         return suite(RedeliveryPolicyTest.class);
@@ -67,6 +70,20 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         policy.setUseExponentialBackOff(false);
         delay = policy.getNextRedeliveryDelay(delay);
         assertEquals(500, delay);
+    }
+
+    public void testGetNextWithInitialDelay() throws Exception {
+
+        RedeliveryPolicy policy = new RedeliveryPolicy();
+        policy.setInitialRedeliveryDelay(500);
+
+        long delay = policy.getNextRedeliveryDelay(500);
+        assertEquals(1000, delay);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(1000, delay);
+        delay = policy.getNextRedeliveryDelay(delay);
+        assertEquals(1000, delay);
+
     }
 
     /**
@@ -521,7 +538,6 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         final AtomicInteger receivedCount = new AtomicInteger(0);
 
         for (int i=0;i<=maxRedeliveries+1;i++) {
-
             connection = (ActiveMQConnection)factory.createConnection(userName, password);
             connections.add(connection);
 
@@ -539,6 +555,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
                 public void onMessage(Message message) {
                     try {
                         ActiveMQTextMessage m = (ActiveMQTextMessage) message;
+                        LOG.info("Got: " + ((ActiveMQTextMessage) message).getMessageId() + ", seq:" + ((ActiveMQTextMessage) message).getMessageId().getBrokerSequenceId());
                         assertEquals("1st", m.getText());
                         assertEquals(receivedCount.get(), m.getRedeliveryCounter());
                         receivedCount.incrementAndGet();
@@ -576,7 +593,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
                     session.run();
                     return done.await(10, TimeUnit.MILLISECONDS);
                 }
-            });
+            }, 5000);
 
             if (i<=maxRedeliveries) {
                 assertTrue("listener done @" + i, done.await(5, TimeUnit.SECONDS));

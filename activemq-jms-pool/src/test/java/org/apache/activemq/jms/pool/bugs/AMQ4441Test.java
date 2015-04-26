@@ -26,36 +26,34 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.jms.pool.JmsPoolTestSupport;
 import org.apache.activemq.jms.pool.PooledConnection;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AMQ4441Test {
+public class AMQ4441Test extends JmsPoolTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4441Test.class);
-    private BrokerService broker;
 
+    @Override
     @Before
     public void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setDeleteAllMessagesOnStartup(true);
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        broker.start();
-        broker.waitUntilStarted();
+        super.setUp();
+
+        brokerService = new BrokerService();
+        brokerService.setDeleteAllMessagesOnStartup(true);
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(false);
+        brokerService.setAdvisorySupport(false);
+        brokerService.setSchedulerSupport(false);
+        brokerService.start();
+        brokerService.waitUntilStarted();
     }
 
-    @After
-    public void stopBroker() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
-    }
-
-    @Test(timeout=120000)
+    @Test(timeout = 120000)
     public void demo() throws JMSException, InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean done = new AtomicBoolean(false);
@@ -85,11 +83,12 @@ public class AMQ4441Test {
                 }
             });
         }
+
         for (Thread thread : threads) {
             thread.start();
         }
 
-        if (latch.await(1, TimeUnit.MINUTES)) {
+        if (latch.await(20, TimeUnit.SECONDS)) {
             fail("A thread obtained broken connection");
         }
 
@@ -98,5 +97,4 @@ public class AMQ4441Test {
             thread.join();
         }
     }
-
 }

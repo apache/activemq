@@ -135,7 +135,10 @@ public class MessageIdList extends Assert implements MessageListener {
         }
     }
 
-    public void waitForMessagesToArrive(int messageCount) {
+    public void waitForMessagesToArrive(int messageCount){
+        waitForMessagesToArrive(messageCount, maximumDuration);
+    }
+    public void waitForMessagesToArrive(int messageCount, long maximumDuration) {
         LOG.info("Waiting for " + messageCount + " message(s) to arrive");
 
         long start = System.currentTimeMillis();

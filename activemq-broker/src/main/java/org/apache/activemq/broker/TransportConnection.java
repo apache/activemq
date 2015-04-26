@@ -67,6 +67,7 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
@@ -602,7 +603,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // Avoid replaying dup commands
         if (!ss.getProducerIds().contains(info.getProducerId())) {
             ActiveMQDestination destination = info.getDestination();
-            if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination)) {
+            // Do not check for null here as it would cause the count of max producers to exclude
+            // anonymous producers.  The isAdvisoryTopic method checks for null so it is safe to
+            // call it from here with a null Destination value.
+            if (!AdvisorySupport.isAdvisoryTopic(destination)) {
                 if (getProducerCount(connectionId) >= connector.getMaximumProducersAllowedPerConnection()){
                     throw new IllegalStateException("Can't add producer on connection " + connectionId + ": at maximum limit: " + connector.getMaximumProducersAllowedPerConnection());
                 }
@@ -812,7 +816,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 brokerConnectionStates.remove(info.getConnectionId());
             }
             unregisterConnectionState(info.getConnectionId());
-            LOG.warn("Failed to add Connection {}", info.getConnectionId(), e);
+            LOG.warn("Failed to add Connection {} due to {}", info.getConnectionId(), e);
             if (e instanceof SecurityException) {
                 // close this down - in case the peer of this transport doesn't play nice
                 delayedStop(2000, "Failed with SecurityException: " + e.getLocalizedMessage(), e);
@@ -1184,7 +1188,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
                 try {
                     LOG.debug("Cleaning up connection resources: {}", getRemoteAddress());
-                    processRemoveConnection(cs.getInfo().getConnectionId(), -1);
+                    processRemoveConnection(cs.getInfo().getConnectionId(), RemoveInfo.LAST_DELIVERED_UNKNOWN);
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }

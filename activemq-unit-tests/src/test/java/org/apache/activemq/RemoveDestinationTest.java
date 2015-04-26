@@ -16,15 +16,13 @@
  */
 package org.apache.activemq;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -34,11 +32,11 @@ import javax.jms.Topic;
 import javax.management.ObjectName;
 
 import org.apache.activemq.advisory.DestinationSource;
-import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,13 +44,16 @@ import org.junit.Test;
 public class RemoveDestinationTest {
 
     private static final String VM_BROKER_URL = "vm://localhost?create=false";
-    private static final String BROKER_URL = "broker:vm://localhost?broker.persistent=false&broker.useJmx=true";
 
     BrokerService broker;
 
     @Before
     public void setUp() throws Exception {
-        broker = BrokerFactory.createBroker(new URI(BROKER_URL));
+        broker = new BrokerService();
+        broker.setPersistent(false);
+        broker.setUseJmx(true);
+        broker.getManagementContext().setCreateConnector(false);
+        broker.setSchedulerSupport(false);
         broker.start();
         broker.waitUntilStarted();
     }
@@ -65,7 +66,7 @@ public class RemoveDestinationTest {
     }
 
     private Connection createConnection(final boolean start) throws JMSException {
-        ConnectionFactory cf = new ActiveMQConnectionFactory(VM_BROKER_URL);
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(VM_BROKER_URL);
         Connection conn = cf.createConnection();
         if (start) {
             conn.start();
@@ -73,53 +74,94 @@ public class RemoveDestinationTest {
         return conn;
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testRemoveDestinationWithoutSubscriber() throws Exception {
 
         ActiveMQConnection amqConnection = (ActiveMQConnection) createConnection(true);
-        DestinationSource destinationSource = amqConnection.getDestinationSource();
+
+        final DestinationSource destinationSource = amqConnection.getDestinationSource();
         Session session = amqConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TEST.FOO");
         MessageProducer producer = session.createProducer(topic);
+        final int consumerCount = broker.getAdminView().getTopicSubscribers().length;
         MessageConsumer consumer = session.createConsumer(topic);
 
         TextMessage msg = session.createTextMessage("Hellow World");
         producer.send(msg);
         assertNotNull(consumer.receive(5000));
-        Thread.sleep(1000);
+        final ActiveMQTopic amqTopic = (ActiveMQTopic) topic;
 
-        ActiveMQTopic amqTopic = (ActiveMQTopic) topic;
-        assertTrue(destinationSource.getTopics().contains(amqTopic));
+        assertTrue("Destination never discovered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return destinationSource.getTopics().contains(amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         consumer.close();
         producer.close();
         session.close();
 
-        Thread.sleep(3000);
+        assertTrue("Subscriber still active", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getAdminView().getTopicSubscribers().length == consumerCount;
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+
         amqConnection.destroyDestination((ActiveMQDestination) topic);
-        Thread.sleep(3000);
-        assertFalse(destinationSource.getTopics().contains(amqTopic));
+
+        assertTrue("Destination still active", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !destinationSource.getTopics().contains(amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+
+        assertTrue("Destination never unregistered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !destinationPresentInAdminView(broker, amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testRemoveDestinationWithSubscriber() throws Exception {
         ActiveMQConnection amqConnection = (ActiveMQConnection) createConnection(true);
-        DestinationSource destinationSource = amqConnection.getDestinationSource();
+        final DestinationSource destinationSource = amqConnection.getDestinationSource();
 
         Session session = amqConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TEST.FOO");
         MessageProducer producer = session.createProducer(topic);
+        final int consumerCount = broker.getAdminView().getTopicSubscribers().length;
         MessageConsumer consumer = session.createConsumer(topic);
 
         TextMessage msg = session.createTextMessage("Hellow World");
         producer.send(msg);
         assertNotNull(consumer.receive(5000));
-        Thread.sleep(1000);
 
-        ActiveMQTopic amqTopic = (ActiveMQTopic) topic;
+        final ActiveMQTopic amqTopic = (ActiveMQTopic) topic;
 
-        assertTrue(destinationPresentInAdminView(broker, amqTopic));
-        assertTrue(destinationSource.getTopics().contains(amqTopic));
+        assertTrue("Destination never registered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return destinationPresentInAdminView(broker, amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+
+        assertTrue("Destination never discovered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return destinationSource.getTopics().contains(amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         // This line generates a broker error since the consumer is still active.
         try {
@@ -129,23 +171,53 @@ public class RemoveDestinationTest {
             assertTrue(expected.getMessage().indexOf(amqTopic.getTopicName()) != -1);
         }
 
-        Thread.sleep(3000);
+        assertTrue("Destination never registered", Wait.waitFor(new Wait.Condition() {
 
-        assertTrue(destinationSource.getTopics().contains(amqTopic));
-        assertTrue(destinationPresentInAdminView(broker, amqTopic));
+            @Override
+            public boolean isSatisified() throws Exception {
+                return destinationPresentInAdminView(broker, amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+
+        assertTrue("Destination never discovered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return destinationSource.getTopics().contains(amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         consumer.close();
         producer.close();
         session.close();
 
-        Thread.sleep(3000);
+        assertTrue("Subscriber still active", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return broker.getAdminView().getTopicSubscribers().length == consumerCount;
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
         // The destination will not be removed with this call, but if you remove
         // the call above that generates the error it will.
         amqConnection.destroyDestination(amqTopic);
-        Thread.sleep(3000);
-        assertFalse(destinationSource.getTopics().contains(amqTopic));
-        assertFalse(destinationPresentInAdminView(broker, amqTopic));
+
+        assertTrue("Destination still active", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !destinationSource.getTopics().contains(amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
+
+        assertTrue("Destination never unregistered", Wait.waitFor(new Wait.Condition() {
+
+            @Override
+            public boolean isSatisified() throws Exception {
+                return !destinationPresentInAdminView(broker, amqTopic);
+            }
+        }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
     }
 
     private boolean destinationPresentInAdminView(BrokerService broker2, ActiveMQTopic amqTopic) throws Exception {

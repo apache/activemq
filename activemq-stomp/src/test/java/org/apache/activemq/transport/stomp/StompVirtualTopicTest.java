@@ -52,6 +52,8 @@ public class StompVirtualTopicTest extends StompTestSupport {
     protected void createBroker() throws Exception {
         brokerService = BrokerFactory.createBroker(new URI("broker://()/localhost"));
         brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.getManagementContext().setCreateMBeanServer(false);
         brokerService.setDeleteAllMessagesOnStartup(true);
 
         File testDataDir = new File("target/activemq-data/StompVirtualTopicTest");
@@ -82,7 +84,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
         brokerService.setDestinationPolicy(policyMap);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testStompOnVirtualTopics() throws Exception {
         LOG.info("Running Stomp Producer");
 
@@ -97,7 +99,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
         StompFrame frame = stompConnection.receive();
         assertTrue(frame.toString().startsWith("CONNECTED"));
 
-        for (int i=0; i<NUM_MSGS-1; i++) {
+        for (int i = 0; i < NUM_MSGS - 1; i++) {
             stompConnection.send("/topic/VirtualTopic.FOO", "Hello World {" + (i + 1) + "}");
         }
 
@@ -112,19 +114,13 @@ public class StompVirtualTopicTest extends StompTestSupport {
         msg = stompConnection.receiveFrame();
         assertTrue(msg.contains("RECEIPT"));
 
-        // Does the sleep resolve the problem?
-        try {
-            Thread.sleep(6000);
-        } catch (java.lang.InterruptedException e) {
-            LOG.error(e.getMessage());
-        }
         stompConnection.disconnect();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         stompConnection.close();
         LOG.info("Stomp Producer finished. Waiting for consumer to join.");
 
-        //wait for consumer to shut down
-        consumer.join();
+        // Wait for consumer to shut down
+        consumer.join(45000);
         LOG.info("Test finished.");
 
         // check if consumer set failMsg, then let the test fail.
@@ -173,9 +169,15 @@ public class StompVirtualTopicTest extends StompTestSupport {
                 stompConnection.sendFrame("CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL);
                 StompFrame frame = stompConnection.receive();
                 assertTrue(frame.toString().startsWith("CONNECTED"));
-                stompConnection.subscribe("/queue/Consumer.A.VirtualTopic.FOO", "auto");
 
-                Thread.sleep(2000);
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("receipt", "sub-1");
+                stompConnection.subscribe("/queue/Consumer.A.VirtualTopic.FOO", "auto", headers);
+
+                String receipt = stompConnection.receiveFrame();
+                assertTrue("Should have read a receipt for subscribe", receipt.contains("RECEIPT"));
+                assertTrue("Receipt contains receipt-id", receipt.indexOf(Stomp.Headers.Response.RECEIPT_ID) >= 0);
+
                 latch.countDown();
 
                 for (counter=0; counter<StompVirtualTopicTest.NUM_MSGS; counter++) {
@@ -228,7 +230,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
             } finally {
                 try {
                     stompConnection.disconnect();
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                     stompConnection.close();
                 } catch (Exception e) {
                     log.error("unexpected exception on sleep", e);

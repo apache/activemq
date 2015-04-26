@@ -330,6 +330,22 @@ public class DestinationMapTest extends TestCase {
         assertMapValue("FOO.>", v2);
     }
 
+    public void testRemoveWildcard() throws Exception {
+        put("FOO.A", v1);
+        put("FOO.>", v2);
+
+        map.removeAll(createDestination("FOO.>"));
+
+        assertMapValue("FOO.A", null);
+
+        put("FOO.A", v1);
+        put("FOO.>", v2);
+
+        map.remove(createDestination("FOO.>"), v2);
+
+        assertMapValue("FOO.A", v1);
+    }
+
     protected void loadSample2() {
         put("TEST.FOO", v1);
         put("TEST.*", v2);

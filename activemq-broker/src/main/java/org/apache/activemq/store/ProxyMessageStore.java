@@ -17,7 +17,6 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
-import java.util.concurrent.Future;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -138,7 +137,7 @@ public class ProxyMessageStore implements MessageStore {
 
     @Override
     public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimizeHint) throws IOException {
-        return asyncAddTopicMessage(context,message,canOptimizeHint);
+        return delegate.asyncAddTopicMessage(context,message,canOptimizeHint);
     }
 
     @Override

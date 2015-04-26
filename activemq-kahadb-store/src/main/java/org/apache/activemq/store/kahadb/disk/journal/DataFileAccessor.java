@@ -38,7 +38,6 @@ final class DataFileAccessor {
     /**
      * Construct a Store reader
      *
-     * @param fileId
      * @throws IOException
      */
     public DataFileAccessor(Journal dataManager, DataFile dataFile) throws IOException {

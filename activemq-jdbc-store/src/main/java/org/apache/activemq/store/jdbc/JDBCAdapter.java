@@ -105,7 +105,7 @@ public interface JDBCAdapter {
 
     void doRecoverPreparedOps(TransactionContext c, JdbcMemoryTransactionStore jdbcMemoryTransactionStore) throws SQLException, IOException;
 
-    void doCommitAddOp(TransactionContext c, long storeSequenceIdForMessageId) throws SQLException, IOException;
+    void doCommitAddOp(TransactionContext c, long preparedSequence, long sequence) throws SQLException, IOException;
 
     void doClearLastAck(TransactionContext c, ActiveMQDestination destination, byte priority, String subId, String subName) throws SQLException, IOException;
 

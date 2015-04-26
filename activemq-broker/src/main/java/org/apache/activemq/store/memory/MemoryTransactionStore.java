@@ -140,23 +140,23 @@ public class MemoryTransactionStore implements TransactionStore {
         ProxyMessageStore proxyMessageStore = new ProxyMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
             @Override
             public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
             @Override
             public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), message);
                 return new InlineListenableFuture();
              }
 
             @Override
             public ListenableFuture<Object> asyncAddQueueMessage(ConnectionContext context, Message message, boolean canoptimize) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), message);
                 return new InlineListenableFuture();
              }
 
@@ -181,23 +181,23 @@ public class MemoryTransactionStore implements TransactionStore {
         ProxyTopicMessageStore proxyTopicMessageStore = new ProxyTopicMessageStore(messageStore) {
             @Override
             public void addMessage(ConnectionContext context, final Message send) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
             @Override
             public void addMessage(ConnectionContext context, final Message send, boolean canOptimize) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), send);
             }
 
             @Override
             public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), message);
                 return new InlineListenableFuture();
              }
 
             @Override
             public ListenableFuture<Object> asyncAddTopicMessage(ConnectionContext context, Message message, boolean canOptimize) throws IOException {
-                MemoryTransactionStore.this.addMessage(getDelegate(), message);
+                MemoryTransactionStore.this.addMessage(context, getDelegate(), message);
                 return new InlineListenableFuture();
              }
 
@@ -310,7 +310,7 @@ public class MemoryTransactionStore implements TransactionStore {
      * @param message
      * @throws IOException
      */
-    void addMessage(final MessageStore destination, final Message message) throws IOException {
+    void addMessage(final ConnectionContext context, final MessageStore destination, final Message message) throws IOException {
 
         if (doingRecover) {
             return;
@@ -340,7 +340,7 @@ public class MemoryTransactionStore implements TransactionStore {
 
             });
         } else {
-            destination.addMessage(null, message);
+            destination.addMessage(context, message);
         }
     }
 
