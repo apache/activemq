@@ -107,6 +107,8 @@ public class Krb5TransportConnectionTest extends BrokerTestSupport {
 
     @Test
     public void testDefault() throws Exception {
+        System.setProperty("javax.net.debug", "all");
+
         Principal peerPrincipal = makeSSLConnection("User1", Krb5OverSslTransport.KRB5_CIPHERS, connectorDefault);
 
         Assert.assertNotNull("No peer principal", peerPrincipal);
@@ -168,11 +170,9 @@ public class Krb5TransportConnectionTest extends BrokerTestSupport {
                     SSLSocket sslSocket = (SSLSocket) context.getSocketFactory().createSocket("localhost", connector.getUri().getPort());
 
                     sslSocket.setEnabledCipherSuites(enabledCipherSuites.split(","));
-
                     sslSocket.setSoTimeout(20000);
 
                     SSLSession session = sslSocket.getSession();
-                    sslSocket.startHandshake();
                     sslSocket.startHandshake();
                     LOG.info("CipherSuite: " + session.getCipherSuite());
                     LOG.info("PeerPort: " + session.getPeerPort());

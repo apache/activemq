@@ -88,18 +88,4 @@ public class Krb5OverSslTransportServer extends SslTransportServer {
             throw IOExceptionSupport.create(e);
         }
     }
-
-    /**
-     * Adds enabledCipherSuites default values to default Transport Options map.
-     *
-     * @return default transport options map for this transport
-     */
-    @Override
-    protected HashMap<String, Object> getDefaultTransportOptions() {
-        HashMap<String, Object> defaultOptions = super.getDefaultTransportOptions();
-
-        defaultOptions.put("enabledCipherSuites", Krb5OverSslTransport.KRB5_CIPHERS);
-
-        return defaultOptions;
-    }
 }

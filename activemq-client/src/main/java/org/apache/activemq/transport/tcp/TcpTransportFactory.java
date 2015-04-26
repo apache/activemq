@@ -45,7 +45,8 @@ public class TcpTransportFactory extends TransportFactory {
 
     public TransportServer doBind(final URI location) throws IOException {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            Map<String, String> options = getDefaultTransportOptions();
+            options.putAll(URISupport.parseParameters(location));
             TcpTransportServer server = createTransportServer(location);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
@@ -79,8 +80,7 @@ public class TcpTransportFactory extends TransportFactory {
         TcpTransport tcpTransport = (TcpTransport)transport.narrow(TcpTransport.class);
         IntrospectionSupport.setProperties(tcpTransport, options);
 
-        Map<String, Object> socketOptions = getDefaultSocketOptions();
-        socketOptions.putAll(IntrospectionSupport.extractProperties(options, "socket."));
+        Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
         tcpTransport.setSocketOptions(socketOptions);
 
         if (tcpTransport.isTrace()) {
@@ -158,7 +158,7 @@ public class TcpTransportFactory extends TransportFactory {
         return new InactivityMonitor(transport, format);
     }
 
-    protected Map<String,Object> getDefaultSocketOptions() {
-        return new HashMap<String,Object>();
+    protected Map<String, String> getDefaultTransportOptions() {
+        return new HashMap<String, String>();
     }
 }

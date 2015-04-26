@@ -52,6 +52,14 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
         SSLServerSocketFactory sslServerSocketFactory = createServerSocketFactory();
         return new Krb5OverSslTransportServer(this, location, sslServerSocketFactory);
     }
+
+
+    public Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
+        Map<String, Object> mergeOptions = getDefaultSocketOptions();
+        mergeOptions.putAll(options);
+        return super.configure(transport, wf, mergeOptions);
+    }
+
     /**
      * Overriding to use {@link Krb5OverSslTransport} additionally performing
      * login if necesseray.
@@ -66,7 +74,7 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
         return Subject.doAs(subject, new PrivilegedAction<Transport>() {
             public Transport run() {
                 try {
-                    return new Krb5OverSslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation);
+                    return new Krb5OverSslTransport(wf, (SSLSocketFactory) socketFactory, location, localLocation);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -80,12 +88,17 @@ public class Krb5OverSslTransportFactory extends SslTransportFactory {
      *
      * @return Default list of socket.* options for this transport
      */
-    @Override
-    protected Map<String,Object> getDefaultSocketOptions() {
-        Map<String,Object> defaultSocketOptions =  super.getDefaultSocketOptions();
+    private Map<String,Object> getDefaultSocketOptions() {
+        Map<String,Object> defaultSocketOptions = new HashMap<String,Object>();
 
         defaultSocketOptions.put("enabledCipherSuites", Krb5OverSslTransport.KRB5_CIPHERS);
 
         return defaultSocketOptions;
+    }
+
+    protected Map<String, String> getDefaultTransportOptions() {
+        Map<String, String> defaultOptions = super.getDefaultTransportOptions();
+        defaultOptions.put("transport.enabledCipherSuites", Krb5OverSslTransport.KRB5_CIPHERS);
+        return defaultOptions;
     }
 }
