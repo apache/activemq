@@ -16,10 +16,26 @@
  */
 package org.apache.activemq.security;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.util.Wait;
+import org.apache.directory.api.ldap.model.ldif.LdifEntry;
+import org.apache.directory.api.ldap.model.ldif.LdifReader;
+import org.apache.directory.api.ldap.model.message.ModifyRequest;
+import org.apache.directory.api.ldap.model.message.ModifyRequestImpl;
+import org.apache.directory.api.ldap.model.name.Dn;
+import org.apache.directory.api.ldap.model.name.Rdn;
+import org.apache.directory.ldap.client.api.LdapConnection;
+import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
+import javax.naming.Context;
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
+import javax.naming.directory.DirContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,26 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.naming.Context;
-import javax.naming.NameClassPair;
-import javax.naming.NamingEnumeration;
-import javax.naming.directory.DirContext;
-
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.activemq.util.Wait;
-import org.apache.directory.ldap.client.api.LdapConnection;
-import org.apache.directory.server.core.integ.AbstractLdapTestUnit;
-import org.apache.directory.shared.ldap.model.ldif.LdifEntry;
-import org.apache.directory.shared.ldap.model.ldif.LdifReader;
-import org.apache.directory.shared.ldap.model.message.ModifyRequest;
-import org.apache.directory.shared.ldap.model.message.ModifyRequestImpl;
-import org.apache.directory.shared.ldap.model.name.Dn;
-import org.apache.directory.shared.ldap.model.name.Rdn;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends AbstractLdapTestUnit {
 
