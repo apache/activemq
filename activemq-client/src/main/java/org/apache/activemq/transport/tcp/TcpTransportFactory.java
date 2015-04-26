@@ -16,16 +16,6 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.net.ServerSocketFactory;
-import javax.net.SocketFactory;
-
 import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.*;
@@ -36,6 +26,15 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
  *
@@ -45,10 +44,9 @@ public class TcpTransportFactory extends TransportFactory {
 
     public TransportServer doBind(final URI location) throws IOException {
         try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory);
+            Map<String, String> options = getDefaultTransportOptions();
+            options.putAll(URISupport.parseParameters(location));
+            TcpTransportServer server = createTransportServer(location);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -66,12 +64,12 @@ public class TcpTransportFactory extends TransportFactory {
      * TcpTransportServer.
      *
      * @param location
-     * @param serverSocketFactory
      * @return
      * @throws IOException
      * @throws URISyntaxException
      */
-    protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+    protected TcpTransportServer createTransportServer(final URI location) throws IOException, URISyntaxException {
+        ServerSocketFactory serverSocketFactory = ServerSocketFactory.getDefault();
         return new TcpTransportServer(this, location, serverSocketFactory);
     }
 
@@ -151,15 +149,15 @@ public class TcpTransportFactory extends TransportFactory {
         return new TcpTransport(wf, socketFactory, location, localLocation);
     }
 
-    protected ServerSocketFactory createServerSocketFactory() throws IOException {
-        return ServerSocketFactory.getDefault();
-    }
-
     protected SocketFactory createSocketFactory() throws IOException {
         return SocketFactory.getDefault();
     }
 
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {
         return new InactivityMonitor(transport, format);
+    }
+
+    protected Map<String, String> getDefaultTransportOptions() {
+        return new HashMap<String, String>();
     }
 }

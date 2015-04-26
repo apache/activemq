@@ -46,8 +46,8 @@ public class MQTTTransportFactory extends TcpTransportFactory implements BrokerS
     }
 
     @Override
-    protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        TcpTransportServer result = new TcpTransportServer(this, location, serverSocketFactory);
+    protected TcpTransportServer createTransportServer(URI location) throws IOException, URISyntaxException {
+        TcpTransportServer result = super.createTransportServer(location);
         result.setAllowLinkStealing(true);
         return result;
     }

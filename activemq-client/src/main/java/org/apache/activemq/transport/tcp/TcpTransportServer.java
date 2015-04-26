@@ -16,28 +16,6 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.net.ServerSocketFactory;
-import javax.net.ssl.SSLServerSocket;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.TransportLoggerSupport;
@@ -48,16 +26,24 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.transport.nio.SelectorSelection;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.InetAddressUtil;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.ServiceListener;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.*;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLServerSocket;
+import java.io.IOException;
+import java.net.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A TCP based implementation of {@link TransportServer}
@@ -167,9 +153,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             //
             //  see: https://issues.apache.org/jira/browse/AMQ-4582
             //
+            Object cipherSuites = null;
             if (socket instanceof SSLServerSocket) {
                 if (transportOptions.containsKey("enabledCipherSuites")) {
-                    Object cipherSuites = transportOptions.remove("enabledCipherSuites");
+                    cipherSuites = transportOptions.remove("enabledCipherSuites");
 
                     if (!IntrospectionSupport.setProperty(socket, "enabledCipherSuites", cipherSuites)) {
                         throw new SocketException(String.format(
@@ -179,6 +166,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             }
 
             IntrospectionSupport.setProperties(socket, transportOptions);
+
+            //Be sure that "socket." defaults will not be applied if enabledCipherSuites is defined on "transport."
+            if (cipherSuites != null) {
+                transportOptions.put("socket.enabledCipherSuites", cipherSuites);
+            }
         }
     }
 

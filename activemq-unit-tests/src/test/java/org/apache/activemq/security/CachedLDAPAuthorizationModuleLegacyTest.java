@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.security;
 
+import org.apache.directory.api.ldap.model.exception.LdapException;
+import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapNetworkConnection;
 import org.apache.directory.server.annotations.CreateLdapServer;
 import org.apache.directory.server.annotations.CreateTransport;
 import org.apache.directory.server.core.annotations.ApplyLdifFiles;
 import org.apache.directory.server.core.integ.FrameworkRunner;
-import org.apache.directory.shared.ldap.model.exception.LdapException;
-import org.apache.directory.shared.ldap.model.name.Dn;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
@@ -43,19 +43,19 @@ public class CachedLDAPAuthorizationModuleLegacyTest extends AbstractCachedLDAPA
         map.setConnectionURL("ldap://localhost:" + getLdapServer().getPort());
         return map;
     }
-    
+
     protected InputStream getAddLdif() {
         return getClass().getClassLoader().getResourceAsStream("org/apache/activemq/security/activemq-apacheds-legacy-add.ldif");
     }
-    
+
     protected InputStream getRemoveLdif() {
         return getClass().getClassLoader().getResourceAsStream("org/apache/activemq/security/activemq-apacheds-legacy-delete.ldif");
     }
-    
+
     protected String getQueueBaseDn() {
         return "ou=Queue,ou=Destination,ou=ActiveMQ,ou=system";
     }
-    
+
     protected LdapConnection getLdapConnection() throws LdapException, IOException {
         LdapConnection connection = new LdapNetworkConnection("localhost", getLdapServer().getPort());
         connection.bind(new Dn("uid=admin,ou=system"), "secret");

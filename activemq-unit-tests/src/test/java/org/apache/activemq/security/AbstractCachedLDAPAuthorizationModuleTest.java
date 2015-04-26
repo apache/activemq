@@ -18,7 +18,7 @@ package org.apache.activemq.security;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.jaas.UserPrincipal;
-import org.apache.directory.shared.ldap.model.message.ModifyRequest;
+import org.apache.directory.api.ldap.model.message.ModifyRequest;
 import org.junit.Test;
 
 import java.util.Set;
@@ -26,7 +26,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public abstract class AbstractCachedLDAPAuthorizationModuleTest 
+public abstract class AbstractCachedLDAPAuthorizationModuleTest
     extends AbstractCachedLDAPAuthorizationMapLegacyTest {
 
     static final UserPrincipal JDOE = new UserPrincipal("jdoe");
@@ -42,7 +42,7 @@ public abstract class AbstractCachedLDAPAuthorizationModuleTest
 
         Set<?> failedACLs = map.getReadACLs(new ActiveMQQueue("FAILED"));
         assertEquals("set size: " + failedACLs, 0, failedACLs.size());
-        
+
         super.testQuery();
     }
 
@@ -50,7 +50,7 @@ public abstract class AbstractCachedLDAPAuthorizationModuleTest
     protected final void setupModifyRequest(ModifyRequest request) {
         request.remove("member", getMemberAttributeValueForModifyRequest());
     }
-    
+
     protected abstract String getMemberAttributeValueForModifyRequest();
 
     @Override
