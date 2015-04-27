@@ -68,6 +68,23 @@ public class SizeStatisticImpl extends StatisticImpl {
     }
 
     /**
+     * Reset the total size to the new value
+     *
+     * @param size
+     */
+    public synchronized void setTotalSize(long size) {
+        count++;
+        totalSize = size;
+        if (size > maxSize) {
+            maxSize = size;
+        }
+        if (size < minSize || minSize == 0) {
+            minSize = size;
+        }
+        updateSampleTime();
+    }
+
+    /**
      * @return the maximum size of any step
      */
     public long getMaxSize() {

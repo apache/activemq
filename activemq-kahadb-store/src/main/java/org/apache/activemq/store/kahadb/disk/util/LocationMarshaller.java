@@ -22,7 +22,12 @@ import java.io.IOException;
 import org.apache.activemq.store.kahadb.disk.journal.Location;
 
 public class LocationMarshaller implements Marshaller<Location> {
+
     public final static LocationMarshaller INSTANCE = new LocationMarshaller();
+
+    public LocationMarshaller () {
+
+    }
 
     public Location readPayload(DataInput dataIn) throws IOException {
         Location rc = new Location();

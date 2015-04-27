@@ -61,6 +61,7 @@ import org.apache.activemq.store.IndexListener;
 import org.apache.activemq.store.ListenableFuture;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.MessageStoreStatistics;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionIdTransformer;
@@ -504,34 +505,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         }
 
         @Override
-        public int getMessageCount() throws IOException {
-            try {
-                lockAsyncJobQueue();
-                indexLock.writeLock().lock();
-                try {
-                    return pageFile.tx().execute(new Transaction.CallableClosure<Integer, IOException>() {
-                        @Override
-                        public Integer execute(Transaction tx) throws IOException {
-                            // Iterate through all index entries to get a count
-                            // of messages in the destination.
-                            StoredDestination sd = getStoredDestination(dest, tx);
-                            int rc = 0;
-                            for (Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx); iterator.hasNext();) {
-                                iterator.next();
-                                rc++;
-                            }
-                            return rc;
-                        }
-                    });
-                } finally {
-                    indexLock.writeLock().unlock();
-                }
-            } finally {
-                unlockAsyncJobQueue();
-            }
-        }
-
-        @Override
         public boolean isEmpty() throws IOException {
             indexLock.writeLock().lock();
             try {
@@ -715,6 +688,38 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         @Override
         public String toString(){
             return "permits:" + this.localDestinationSemaphore.availablePermits() + ",sd=" + storedDestinations.get(key(dest));
+        }
+
+        @Override
+        protected void recoverMessageStoreStatistics() throws IOException {
+            try {
+                MessageStoreStatistics recoveredStatistics;
+                lockAsyncJobQueue();
+                indexLock.writeLock().lock();
+                try {
+                    recoveredStatistics = pageFile.tx().execute(new Transaction.CallableClosure<MessageStoreStatistics, IOException>() {
+                        @Override
+                        public MessageStoreStatistics execute(Transaction tx) throws IOException {
+                            MessageStoreStatistics statistics = new MessageStoreStatistics();
+
+                            // Iterate through all index entries to get the size of each message
+                            StoredDestination sd = getStoredDestination(dest, tx);
+                            for (Iterator<Entry<Location, Long>> iterator = sd.locationIndex.iterator(tx); iterator.hasNext();) {
+                                int locationSize = iterator.next().getKey().getSize();
+                                statistics.getMessageCount().increment();
+                                statistics.getMessageSize().addSize(locationSize > 0 ? locationSize : 0);
+                            }
+                           return statistics;
+                        }
+                    });
+                    getMessageStoreStatistics().getMessageCount().setCount(recoveredStatistics.getMessageCount().getCount());
+                    getMessageStoreStatistics().getMessageSize().setTotalSize(recoveredStatistics.getMessageSize().getTotalSize());
+                } finally {
+                    indexLock.writeLock().unlock();
+                }
+            } finally {
+                unlockAsyncJobQueue();
+            }
         }
     }
 
@@ -993,12 +998,16 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
     @Override
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        return this.transactionStore.proxy(new KahaDBMessageStore(destination));
+        MessageStore store = this.transactionStore.proxy(new KahaDBMessageStore(destination));
+        storeCache.put(key(convert(destination)), store);
+        return store;
     }
 
     @Override
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        return this.transactionStore.proxy(new KahaDBTopicMessageStore(destination));
+        TopicMessageStore store = this.transactionStore.proxy(new KahaDBTopicMessageStore(destination));
+        storeCache.put(key(convert(destination)), store);
+        return store;
     }
 
     /**

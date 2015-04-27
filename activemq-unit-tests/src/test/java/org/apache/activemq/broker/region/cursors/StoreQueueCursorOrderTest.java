@@ -491,11 +491,6 @@ public class StoreQueueCursorOrderTest {
         }
 
         @Override
-        public int getMessageCount() throws IOException {
-            return 0;
-        }
-
-        @Override
         public void resetBatching() {
 
         }
@@ -511,6 +506,11 @@ public class StoreQueueCursorOrderTest {
         public void setBatch(MessageId message) {
             batch.set((Long)message.getFutureOrSequenceLong());
             batch.incrementAndGet();
+        }
+
+        @Override
+        public void recoverMessageStoreStatistics() throws IOException {
+            this.getMessageStoreStatistics().reset();
         }
 
     }

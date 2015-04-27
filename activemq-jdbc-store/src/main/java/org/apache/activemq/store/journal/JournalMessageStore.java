@@ -48,8 +48,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A MessageStore that uses a Journal to store it's messages.
- * 
- * 
+ *
+ *
  */
 public class JournalMessageStore extends AbstractMessageStore {
 
@@ -79,7 +79,7 @@ public class JournalMessageStore extends AbstractMessageStore {
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext(new NonCachedMessageEvaluationContext()));
     }
 
-    
+
     public void setMemoryUsage(MemoryUsage memoryUsage) {
         this.memoryUsage=memoryUsage;
         longTermStore.setMemoryUsage(memoryUsage);
@@ -323,7 +323,7 @@ public class JournalMessageStore extends AbstractMessageStore {
     }
 
     /**
-     * 
+     *
      */
     public Message getMessage(MessageId identity) throws IOException {
         Message answer = null;
@@ -348,7 +348,7 @@ public class JournalMessageStore extends AbstractMessageStore {
      * Replays the checkpointStore first as those messages are the oldest ones,
      * then messages are replayed from the transaction log and then the cache is
      * updated.
-     * 
+     *
      * @param listener
      * @throws Exception
      */
@@ -402,6 +402,11 @@ public class JournalMessageStore extends AbstractMessageStore {
     public int getMessageCount() throws IOException {
         peristenceAdapter.checkpoint(true, true);
         return longTermStore.getMessageCount();
+    }
+
+    public long getMessageSize() throws IOException {
+        peristenceAdapter.checkpoint(true, true);
+        return longTermStore.getMessageSize();
     }
 
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {

@@ -834,7 +834,7 @@ class LevelDBStore extends LockableServiceSupport with BrokerServiceAware with P
       cursorPosition = cursorResetPosition
     }
 
-    def getMessageCount: Int = {
+    override def getMessageCount: Int = {
       return db.collectionSize(key).toInt
     }
 
