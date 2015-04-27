@@ -649,6 +649,18 @@ public class BrokerService implements Service {
             deleteAllMessages();
         }
         getPersistenceAdapter().start();
+
+        getJobSchedulerStore();
+        if (jobSchedulerStore != null) {
+            try {
+                jobSchedulerStore.start();
+            } catch (Exception e) {
+                RuntimeException exception = new RuntimeException(
+                        "Failed to start job scheduler store: " + jobSchedulerStore, e);
+                LOG.error(exception.getLocalizedMessage(), e);
+                throw exception;
+            }
+        }
     }
 
     private void startBroker(boolean async) throws Exception {
@@ -1861,11 +1873,6 @@ public class BrokerService implements Service {
             if (!isPersistent()) {
                 this.jobSchedulerStore = new InMemoryJobSchedulerStore();
                 configureService(jobSchedulerStore);
-                try {
-                    jobSchedulerStore.start();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
                 return this.jobSchedulerStore;
             }
 
@@ -1875,7 +1882,6 @@ public class BrokerService implements Service {
                     this.jobSchedulerStore = pa.createJobSchedulerStore();
                     jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                     configureService(jobSchedulerStore);
-                    jobSchedulerStore.start();
                     return this.jobSchedulerStore;
                 }
             } catch (IOException e) {
@@ -1906,7 +1912,6 @@ public class BrokerService implements Service {
                 jobSchedulerStore = adaptor.createJobSchedulerStore();
                 jobSchedulerStore.setDirectory(getSchedulerDirectoryFile());
                 configureService(jobSchedulerStore);
-                jobSchedulerStore.start();
                 LOG.info("JobScheduler using directory: {}", getSchedulerDirectoryFile());
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -1918,14 +1923,6 @@ public class BrokerService implements Service {
     public void setJobSchedulerStore(JobSchedulerStore jobSchedulerStore) {
         this.jobSchedulerStore = jobSchedulerStore;
         configureService(jobSchedulerStore);
-        try {
-            jobSchedulerStore.start();
-        } catch (Exception e) {
-            RuntimeException exception = new RuntimeException(
-                    "Failed to start provided job scheduler store: " + jobSchedulerStore, e);
-            LOG.error(exception.getLocalizedMessage(), e);
-            throw exception;
-        }
     }
 
     //

@@ -119,6 +119,7 @@ public class KahaDBSchedulerMissingJournalLogsTest {
 
         try {
             createBroker();
+            broker.start();
             fail("Should not start when logs are missing.");
         } catch (Exception e) {
         }
