@@ -68,7 +68,12 @@ public class XBeanBrokerService extends BrokerService {
      * @org.apache.xbean.InitMethod
      */
     public void afterPropertiesSet() throws Exception {
+        if (shouldAutostart() && isUseJmx() && !getManagementContext().isStarted()) {
+           startManagementContext();
+        }
+
         ensureSystemUsageHasStore();
+
         if (shouldAutostart()) {
             start();
         }

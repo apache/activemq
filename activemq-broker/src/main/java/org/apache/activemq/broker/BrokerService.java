@@ -2471,11 +2471,14 @@ public class BrokerService implements Service {
     }
 
     protected void startManagementContext() throws Exception {
-        getManagementContext().setBrokerName(brokerName);
-        getManagementContext().start();
-        adminView = new BrokerView(this, null);
-        ObjectName objectName = getBrokerObjectName();
-        AnnotatedMBean.registerMBean(getManagementContext(), adminView, objectName);
+        if (!getManagementContext().isStarted())
+        {
+           getManagementContext().setBrokerName(brokerName);
+           getManagementContext().start();
+           adminView = new BrokerView(this, null);
+           ObjectName objectName = getBrokerObjectName();
+           AnnotatedMBean.registerMBean(getManagementContext(), adminView, objectName);
+        }
     }
 
     /**
