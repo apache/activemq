@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.Command;
@@ -48,8 +49,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A Transport that fans out a connection to multiple brokers.
- * 
- * 
+ *
+ *
  */
 public class FanoutTransport implements CompositeTransport {
 
@@ -61,7 +62,7 @@ public class FanoutTransport implements CompositeTransport {
 
     private final Object reconnectMutex = new Object();
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
-    private final ConcurrentHashMap<Integer, RequestCounter> requestMap = new ConcurrentHashMap<Integer, RequestCounter>();
+    private final ConcurrentMap<Integer, RequestCounter> requestMap = new ConcurrentHashMap<Integer, RequestCounter>();
 
     private final TaskRunnerFactory reconnectTaskFactory;
     private final TaskRunner reconnectTask;
@@ -161,6 +162,7 @@ public class FanoutTransport implements CompositeTransport {
         reconnectTaskFactory = new TaskRunnerFactory();
         reconnectTaskFactory.init();
         reconnectTask = reconnectTaskFactory.createTaskRunner(new Task() {
+            @Override
             public boolean iterate() {
                 return doConnect();
             }
@@ -230,7 +232,7 @@ public class FanoutTransport implements CompositeTransport {
                                 ServiceSupport.dispose(fanoutHandler.transport);
                                 fanoutHandler.transport=null;
                             }
-                            
+
                             if (maxReconnectAttempts > 0 && ++fanoutHandler.connectFailures >= maxReconnectAttempts) {
                                 LOG.error("Failed to connect to transport after: " + fanoutHandler.connectFailures + " attempt(s)");
                                 connectionFailure = e;
@@ -276,6 +278,7 @@ public class FanoutTransport implements CompositeTransport {
         return true;
     }
 
+    @Override
     public void start() throws Exception {
         synchronized (reconnectMutex) {
             LOG.debug("Started.");
@@ -293,6 +296,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         try {
             synchronized (reconnectMutex) {
@@ -321,14 +325,14 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
-	public int getMinAckCount() {
-		return minAckCount;
-	}
+    public int getMinAckCount() {
+        return minAckCount;
+    }
 
-	public void setMinAckCount(int minAckCount) {
-		this.minAckCount = minAckCount;
-	}    
-    
+    public void setMinAckCount(int minAckCount) {
+        this.minAckCount = minAckCount;
+    }
+
     public long getInitialReconnectDelay() {
         return initialReconnectDelay;
     }
@@ -361,6 +365,7 @@ public class FanoutTransport implements CompositeTransport {
         this.maxReconnectAttempts = maxReconnectAttempts;
     }
 
+    @Override
     public void oneway(Object o) throws IOException {
         final Command command = (Command)o;
         try {
@@ -401,7 +406,7 @@ public class FanoutTransport implements CompositeTransport {
                     int size = fanout ? minAckCount : 1;
                     requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
                 }
-                
+
                 // Send the message.
                 if (fanout) {
                     for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
@@ -450,14 +455,17 @@ public class FanoutTransport implements CompositeTransport {
         return true;
     }
 
+    @Override
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
+    @Override
     public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
+    @Override
     public Object request(Object command, int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
@@ -471,14 +479,17 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
+    @Override
     public TransportListener getTransportListener() {
         return transportListener;
     }
 
+    @Override
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
     }
 
+    @Override
     public <T> T narrow(Class<T> target) {
 
         if (target.isAssignableFrom(getClass())) {
@@ -511,6 +522,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
+    @Override
     public void add(boolean reblance,URI uris[]) {
 
         synchronized (reconnectMutex) {
@@ -535,6 +547,7 @@ public class FanoutTransport implements CompositeTransport {
 
     }
 
+    @Override
     public void remove(boolean rebalance,URI uris[]) {
 
         synchronized (reconnectMutex) {
@@ -556,24 +569,29 @@ public class FanoutTransport implements CompositeTransport {
         }
 
     }
-    
+
+    @Override
     public void reconnect(URI uri) throws IOException {
-		add(true,new URI[]{uri});
-		
-	}
-    
+        add(true,new URI[]{uri});
+
+    }
+
+    @Override
     public boolean isReconnectSupported() {
         return true;
     }
 
+    @Override
     public boolean isUpdateURIsSupported() {
         return true;
     }
+    @Override
     public void updateURIs(boolean reblance,URI[] uris) throws IOException {
         add(reblance,uris);
     }
 
 
+    @Override
     public String getRemoteAddress() {
         if (primary != null) {
             if (primary.transport != null) {
@@ -589,6 +607,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
+    @Override
     public boolean isFaultTolerant() {
         return true;
     }
@@ -601,15 +620,18 @@ public class FanoutTransport implements CompositeTransport {
         this.fanOutQueues = fanOutQueues;
     }
 
-	public boolean isDisposed() {
-		return disposed;
-	}
-	
+    @Override
+    public boolean isDisposed() {
+        return disposed;
+    }
 
+
+    @Override
     public boolean isConnected() {
         return connected;
     }
 
+    @Override
     public int getReceiveCounter() {
         int rc = 0;
         synchronized (reconnectMutex) {

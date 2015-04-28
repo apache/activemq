@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 import javax.jms.Destination;
@@ -98,7 +99,7 @@ public class AMQ2364Test {
         ConnectionStateTracker stateTracker = (ConnectionStateTracker) stateTrackerField.get(failoverTrans);
         Field statesField = ConnectionStateTracker.class.getDeclaredField("connectionStates");
         statesField.setAccessible(true);
-        ConcurrentHashMap<ConnectionId, ConnectionState> states =
+        ConcurrentMap<ConnectionId, ConnectionState> states =
                 (ConcurrentHashMap<ConnectionId, ConnectionState>) statesField.get(stateTracker);
 
         ConnectionState state = states.get(connection.getConnectionInfo().getConnectionId());

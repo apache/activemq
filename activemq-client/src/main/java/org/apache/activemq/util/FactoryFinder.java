@@ -21,9 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * 
+ *
  */
 public class FactoryFinder {
 
@@ -39,7 +40,7 @@ public class FactoryFinder {
      */
     public interface ObjectFactory {
         /**
-         * @param path the full service path 
+         * @param path the full service path
          * @return
          */
         public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException;
@@ -50,8 +51,9 @@ public class FactoryFinder {
      * The default implementation of Object factory which works well in standalone applications.
      */
     protected static class StandaloneObjectFactory implements ObjectFactory {
-        final ConcurrentHashMap<String, Class> classMap = new ConcurrentHashMap<String, Class>();
+        final ConcurrentMap<String, Class> classMap = new ConcurrentHashMap<String, Class>();
 
+        @Override
         public Object create(final String path) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
             Class clazz = classMap.get(path);
             if (clazz == null) {
@@ -146,5 +148,5 @@ public class FactoryFinder {
         return objectFactory.create(path+key);
     }
 
-    
+
 }

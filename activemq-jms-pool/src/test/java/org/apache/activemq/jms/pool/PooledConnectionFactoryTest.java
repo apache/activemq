@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -233,7 +234,7 @@ public class PooledConnectionFactoryTest extends JmsPoolTestSupport {
             cf.setCreateConnectionOnStartup(createOnStart);
             cf.start();
 
-            final ConcurrentHashMap<ConnectionId, Connection> connections = new ConcurrentHashMap<ConnectionId, Connection>();
+            final ConcurrentMap<ConnectionId, Connection> connections = new ConcurrentHashMap<ConnectionId, Connection>();
             final ExecutorService executor = Executors.newFixedThreadPool(numConnections);
 
             for (int i = 0; i < numConnections; ++i) {

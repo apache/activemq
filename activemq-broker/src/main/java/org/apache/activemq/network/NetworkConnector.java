@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -50,7 +51,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     private static final Logger LOG = LoggerFactory.getLogger(NetworkConnector.class);
     protected URI localURI;
     protected ConnectionFilter connectionFilter;
-    protected ConcurrentHashMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
+    protected ConcurrentMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
 
     protected ServiceSupport serviceSupport = new ServiceSupport() {
 

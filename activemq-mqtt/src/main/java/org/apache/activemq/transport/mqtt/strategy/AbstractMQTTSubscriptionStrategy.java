@@ -19,6 +19,7 @@ package org.apache.activemq.transport.mqtt.strategy;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -58,8 +59,8 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
     protected MQTTProtocolConverter protocol;
     protected BrokerService brokerService;
 
-    protected final ConcurrentHashMap<ConsumerId, MQTTSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, MQTTSubscription>();
-    protected final ConcurrentHashMap<String, MQTTSubscription> mqttSubscriptionByTopic = new ConcurrentHashMap<String, MQTTSubscription>();
+    protected final ConcurrentMap<ConsumerId, MQTTSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, MQTTSubscription>();
+    protected final ConcurrentMap<String, MQTTSubscription> mqttSubscriptionByTopic = new ConcurrentHashMap<String, MQTTSubscription>();
 
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
 

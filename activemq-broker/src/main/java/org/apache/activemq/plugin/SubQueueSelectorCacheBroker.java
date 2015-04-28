@@ -16,6 +16,21 @@
  */
 package org.apache.activemq.plugin;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.management.JMException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -29,19 +44,6 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.JMException;
-import javax.management.ObjectName;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * A plugin which allows the caching of the selector from a subscription queue.
  * <p/>
@@ -50,7 +52,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p/>
  * This is influenced by code snippets developed by Maciej Rakowicz
  *
- * @author Roelof Naude roelof(dot)naude(at)gmail.com
  * @see https://issues.apache.org/activemq/browse/AMQ-3004
  * @see http://mail-archives.apache.org/mod_mbox/activemq-users/201011.mbox/%3C8A013711-2613-450A-A487-379E784AF1D6@homeaway.co.uk%3E
  */
@@ -62,7 +63,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
      * The subscription's selector cache. We cache compiled expressions keyed
      * by the target destination.
      */
-    private ConcurrentHashMap<String, Set<String>> subSelectorCache = new ConcurrentHashMap<String, Set<String>>();
+    private ConcurrentMap<String, Set<String>> subSelectorCache = new ConcurrentHashMap<String, Set<String>>();
 
     private final File persistFile;
     private boolean singleSelectorPerDestination = false;
@@ -70,7 +71,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
     private ObjectName objectName;
 
     private boolean running = true;
-    private Thread persistThread;
+    private final Thread persistThread;
     private long persistInterval = MAX_PERSIST_INTERVAL;
     public static final long MAX_PERSIST_INTERVAL = 600000;
     private static final String SELECTOR_CACHE_PERSIST_THREAD_NAME = "SelectorCachePersistThread";
@@ -244,6 +245,7 @@ public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnabl
      *
      * @see java.lang.Runnable#run()
      */
+    @Override
     public void run() {
         while (running) {
             try {

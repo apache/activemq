@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.util.osgi;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.net.URL;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -33,14 +33,13 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.FactoryFinder.ObjectFactory;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An OSGi bundle activator for ActiveMQ which adapts the {@link org.apache.activemq.util.FactoryFinder}
@@ -51,7 +50,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
-    private final ConcurrentHashMap<String, Class> serviceCache = new ConcurrentHashMap<String, Class>();
+    private final ConcurrentMap<String, Class> serviceCache = new ConcurrentHashMap<String, Class>();
     private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
     private BundleContext bundleContext;
 
@@ -59,6 +58,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // BundleActivator interface impl
     // ================================================================
 
+    @Override
     public synchronized void start(BundleContext bundleContext) throws Exception {
 
         // This is how we replace the default FactoryFinder strategy
@@ -79,6 +79,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     }
 
 
+    @Override
     public synchronized void stop(BundleContext bundleContext) throws Exception {
         debug("deactivating");
         bundleContext.removeBundleListener(this);
@@ -93,6 +94,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // SynchronousBundleListener interface impl
     // ================================================================
 
+    @Override
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.RESOLVED) {
             register(event.getBundle());
@@ -133,6 +135,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // ObjectFactory interface impl
     // ================================================================
 
+    @Override
     public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
         Class clazz = serviceCache.get(path);
         if (clazz == null) {

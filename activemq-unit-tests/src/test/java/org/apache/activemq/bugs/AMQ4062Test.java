@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 import javax.jms.DeliveryMode;
@@ -57,7 +57,7 @@ public class AMQ4062Test {
 
     private BrokerService service;
     private PolicyEntry policy;
-    private ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions;
+    private ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions;
 
     private static final int PREFETCH_SIZE_5=5;
     private String connectionUri;
@@ -174,17 +174,17 @@ public class AMQ4062Test {
     }
 
     @SuppressWarnings("unchecked")
-    private ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> getDurableSubscriptions() throws NoSuchFieldException, IllegalAccessException {
+    private ConcurrentMap<SubscriptionKey, DurableTopicSubscription> getDurableSubscriptions() throws NoSuchFieldException, IllegalAccessException {
         if(durableSubscriptions!=null) return durableSubscriptions;
         RegionBroker regionBroker=(RegionBroker)service.getRegionBroker();
         TopicRegion region=(TopicRegion)regionBroker.getTopicRegion();
         Field field=TopicRegion.class.getDeclaredField("durableSubscriptions");
         field.setAccessible(true);
-        durableSubscriptions=(ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>)field.get(region);
+        durableSubscriptions=(ConcurrentMap<SubscriptionKey, DurableTopicSubscription>)field.get(region);
         return durableSubscriptions;
     }
 
-    private ConsumerInfo getConsumerInfo(ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions) {
+    private ConsumerInfo getConsumerInfo(ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscriptions) {
         ConsumerInfo info=null;
         for(Iterator<DurableTopicSubscription> it=durableSubscriptions.values().iterator();it.hasNext();){
             Subscription sub = it.next();

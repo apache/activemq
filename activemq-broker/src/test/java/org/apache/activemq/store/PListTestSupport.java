@@ -22,14 +22,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -500,7 +506,7 @@ public abstract class PListTestSupport {
     abstract protected PListStore createConcurrentAddIteratePListStore();
 
     enum TaskType {CREATE, DELETE, ADD, REMOVE, ITERATE, ITERATE_REMOVE}
-    ConcurrentHashMap<String, Object> entries = new ConcurrentHashMap<String, Object>();
+    ConcurrentMap<String, Object> entries = new ConcurrentHashMap<String, Object>();
 
     class Job implements Runnable {
 

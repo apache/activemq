@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -43,7 +44,7 @@ public class PooledConnectionFactoryMaximumActiveTest extends JmsPoolTestSupport
     public static Connection conn = null;
     public static int sleepTimeout = 5000;
 
-    private static ConcurrentHashMap<Integer, Session> sessions = new ConcurrentHashMap<Integer, Session>();
+    private static ConcurrentMap<Integer, Session> sessions = new ConcurrentHashMap<Integer, Session>();
 
     public static void addSession(Session s) {
         sessions.put(s.hashCode(), s);
