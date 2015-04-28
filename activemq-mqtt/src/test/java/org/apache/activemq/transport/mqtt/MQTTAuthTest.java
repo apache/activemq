@@ -167,6 +167,13 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         //delete retained message
         connection.publish(ANONYMOUS, "".getBytes(), QoS.AT_MOST_ONCE, true);
 
+        // that delete retained message gets dispatched! Wonder if that is expected?
+        // guess it is simpler if it is - it shows up on the assertNull:196 below on occasion
+        msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        assertNotNull(msg);
+        assertEquals(ANONYMOUS, new String(msg.getTopic()));
+        msg.ack();
+
         connection.disconnect();
 
         // Test 3.1 functionality
@@ -185,6 +192,7 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         connectionPub.publish(NAMED, NAMED.getBytes(), QoS.AT_MOST_ONCE, true);
 
         msg = connection.receive(1000, TimeUnit.MILLISECONDS);
+        LOG.info("got msg: " + msg + ", " + (msg != null ? new String(msg.getTopic()) : ""));
         assertNull(msg);
     }
 
