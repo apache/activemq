@@ -80,6 +80,7 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
     public void closeDataSource(DataSource dataSource) {
         if (createdDefaultDataSource != null && createdDefaultDataSource.equals(dataSource)) {
             shutdownDefaultDataSource(dataSource);
+            createdDefaultDataSource = this.dataSource = null;
         }
     }
 

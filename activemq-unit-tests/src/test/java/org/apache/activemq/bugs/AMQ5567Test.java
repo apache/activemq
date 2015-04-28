@@ -37,7 +37,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -66,7 +65,7 @@ public class AMQ5567Test extends BrokerRestartTestSupport {
         PersistenceAdapter[] persistenceAdapters = new PersistenceAdapter[]{
                 new KahaDBPersistenceAdapter(),
                 new LevelDBPersistenceAdapter(),
-                new JDBCPersistenceAdapter(JDBCPersistenceAdapter.createDataSource(IOHelper.getDefaultDataDirectory()), new OpenWireFormat())
+                new JDBCPersistenceAdapter()
         };
         for (PersistenceAdapter adapter : persistenceAdapters) {
             adapter.setDirectory(new File(IOHelper.getDefaultDataDirectory()));
@@ -134,7 +133,7 @@ public class AMQ5567Test extends BrokerRestartTestSupport {
         PersistenceAdapter[] persistenceAdapters = new PersistenceAdapter[]{
                 new KahaDBPersistenceAdapter(),
                 new LevelDBPersistenceAdapter(),
-                new JDBCPersistenceAdapter(JDBCPersistenceAdapter.createDataSource(IOHelper.getDefaultDataDirectory()), new OpenWireFormat())
+                new JDBCPersistenceAdapter()
         };
         for (PersistenceAdapter adapter : persistenceAdapters) {
             adapter.setDirectory(new File(IOHelper.getDefaultDataDirectory()));
