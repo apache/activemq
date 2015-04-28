@@ -176,7 +176,13 @@ public class TaskRunnerFactory implements Executor {
                 if (threadClassLoader != null) {
                     thread.setContextClassLoader(threadClassLoader);
                 }
-
+                thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                    @Override
+                    public void uncaughtException(final Thread t, final Throwable e) {
+                        LOG.error("Error in thread '{}'", t.getName(), e);
+                    }
+                });
+                
                 LOG.trace("Created thread[{}]: {}", threadName, thread);
                 return thread;
             }
