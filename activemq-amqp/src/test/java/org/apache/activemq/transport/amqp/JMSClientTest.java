@@ -466,7 +466,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             session.createConsumer(queue);
             fail("Should have thrown an IllegalStateException");
         } catch (Exception ex) {
-            LOG.info("Caught exception on receive: {}", ex);
+            LOG.info("Caught exception on consumer create: {}", ex);
         }
     }
 
@@ -563,7 +563,7 @@ public class JMSClientTest extends JMSClientTestSupport {
                         msg = "Should have returned null";
                     }
                 } catch (Exception ex) {
-                    LOG.info("Caught exception on receive(1000): {}", ex);
+                    LOG.info("Caught exception on receive(): {}", ex);
                 }
             }
         };
