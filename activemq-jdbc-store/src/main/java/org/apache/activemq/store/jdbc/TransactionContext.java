@@ -69,7 +69,9 @@ public class TransactionContext {
                 inTx = false;
                 close();
                 IOException ioe = IOExceptionSupport.create(e);
-                persistenceAdapter.getBrokerService().handleIOException(ioe);
+                if (persistenceAdapter.getBrokerService() != null) {
+                    persistenceAdapter.getBrokerService().handleIOException(ioe);
+                }
                 throw ioe;
             }
 
