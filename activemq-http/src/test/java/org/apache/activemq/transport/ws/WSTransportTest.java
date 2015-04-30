@@ -21,29 +21,22 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
-import javax.net.ServerSocketFactory;
-
-import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.SocketConnectorFactory;
 import org.apache.activemq.transport.stomp.StompConnection;
 import org.apache.activemq.util.Wait;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -54,43 +47,25 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WSTransportTest {
+public class WSTransportTest extends WSTransportTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(WSTransportTest.class);
     private static final int MESSAGE_COUNT = 1000;
 
-    private BrokerService broker;
     private Server server;
     private WebDriver driver;
     private File profileDir;
 
     private String stompUri;
-    private int proxyPort = 0;
-    protected String wsUri;
 
     private StompConnection stompConnection = new StompConnection();
 
-    protected BrokerService createBroker(boolean deleteMessages) throws Exception {
-        BrokerService broker = BrokerFactory.createBroker(
-                new URI("broker:()/localhost?persistent=false&useJmx=false"));
-
-        SpringSslContext context = new SpringSslContext();
-        context.setKeyStore("src/test/resources/server.keystore");
-        context.setKeyStoreKeyPassword("password");
-        context.setTrustStore("src/test/resources/client.keystore");
-        context.setTrustStorePassword("password");
-        context.afterPropertiesSet();
-        broker.setSslContext(context);
-
-        stompUri = broker.addConnector("stomp://localhost:0").getPublishableConnectString();
-        wsUri = broker.addConnector(getWSConnectorURI()).getPublishableConnectString();
-        broker.setDeleteAllMessagesOnStartup(deleteMessages);
-        broker.start();
-        broker.waitUntilStarted();
-
-        return broker;
+    @Override
+    protected void addAdditionalConnectors(BrokerService service) throws Exception {
+        stompUri = service.addConnector("stomp://localhost:0").getPublishableConnectString();
     }
 
+    @Override
     protected String getWSConnectorURI() {
         return "ws://127.0.0.1:61623?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
     }
@@ -114,31 +89,13 @@ public class WSTransportTest {
         return server;
     }
 
-    protected int getProxyPort() {
-        if (proxyPort == 0) {
-            ServerSocket ss = null;
-            try {
-                ss = ServerSocketFactory.getDefault().createServerSocket(0);
-                proxyPort = ss.getLocalPort();
-            } catch (IOException e) { // ignore
-            } finally {
-                try {
-                    if (ss != null ) {
-                        ss.close();
-                    }
-                } catch (IOException e) { // ignore
-                }
-            }
-        }
-        return proxyPort;
-    }
-
     protected Connector createJettyConnector(Server server) throws Exception {
         Connector c = new SocketConnectorFactory().createConnector(server);
         c.getClass().getMethod("setPort", Integer.TYPE).invoke(c, getProxyPort());
         return c;
     }
 
+    @Override
     protected void stopBroker() throws Exception {
         if (broker != null) {
             broker.stop();
@@ -147,14 +104,16 @@ public class WSTransportTest {
         }
     }
 
+    @Override
     @Before
     public void setUp() throws Exception {
+        super.setUp();
         profileDir = new File("activemq-data/profiles");
-        broker = createBroker(true);
         stompConnect();
         server = createWebServer();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         try {
@@ -163,10 +122,11 @@ public class WSTransportTest {
             // Some tests explicitly disconnect from stomp so can ignore
         } finally {
             try {
-                stopBroker();
-            } catch (Exception e) {
-                LOG.warn("Error on Broker stop.");
+                super.tearDown();
+            } catch (Exception ex) {
+                LOG.warn("Error on super tearDown()");
             }
+
             if (driver != null) {
                 try {
                     driver.quit();
@@ -234,7 +194,7 @@ public class WSTransportTest {
 
     protected String getTestURI() {
         int port = getProxyPort();
-        return "http://localhost:" + port + "/websocket.html#" + wsUri;
+        return "http://localhost:" + port + "/websocket.html#" + wsConnectUri;
     }
 
     public void doTestWebSockets(WebDriver driver) throws Exception {

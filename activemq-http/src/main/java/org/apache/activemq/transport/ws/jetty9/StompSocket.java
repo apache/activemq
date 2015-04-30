@@ -41,6 +41,15 @@ class StompSocket extends AbstractStompSocket implements WebSocketListener {
     }
 
     @Override
+    public void handleStopped() throws IOException {
+        if (session != null && session.isOpen()) {
+            session.close();
+        }
+    }
+
+    //----- WebSocketListener event callbacks --------------------------------//
+
+    @Override
     public void onWebSocketBinary(byte[] arg0, int arg1, int arg2) {
     }
 

@@ -35,6 +35,20 @@ class StompSocket extends AbstractStompSocket implements WebSocket.OnTextMessage
     private Connection outbound;
 
     @Override
+    public void handleStopped() throws IOException {
+        if (outbound != null && outbound.isOpen()) {
+            outbound.close();
+        }
+    }
+
+    @Override
+    public void sendToStomp(StompFrame command) throws IOException {
+        outbound.sendMessage(command.format());
+    }
+
+    //----- WebSocket.OnTextMessage callback handlers ------------------------//
+
+    @Override
     public void onOpen(Connection connection) {
         this.outbound = connection;
     }
@@ -51,10 +65,5 @@ class StompSocket extends AbstractStompSocket implements WebSocket.OnTextMessage
     @Override
     public void onMessage(String data) {
         processStompFrame(data);
-    }
-
-    @Override
-    public void sendToStomp(StompFrame command) throws IOException {
-        outbound.sendMessage(command.format());
     }
 }

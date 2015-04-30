@@ -61,11 +61,9 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     }
 
     @Override
-    public abstract void sendToStomp(StompFrame command) throws IOException;
-
-    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         stompInactivityMonitor.stop();
+        handleStopped();
     }
 
     @Override
@@ -73,6 +71,19 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
         socketTransportStarted.countDown();
         stompInactivityMonitor.setTransportListener(getTransportListener());
     }
+
+    //----- Abstract methods for subclasses to implement ---------------------//
+
+    @Override
+    public abstract void sendToStomp(StompFrame command) throws IOException;
+
+    /**
+     * Called when the transport is stopping to allow the dervied classes
+     * a chance to close WebSocket resources.
+     *
+     * @throws IOException if an error occurs during the stop.
+     */
+    public abstract void handleStopped() throws IOException;
 
     //----- Accessor methods -------------------------------------------------//
 
