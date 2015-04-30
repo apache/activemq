@@ -62,6 +62,7 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.Wait;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,6 +175,51 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("use cache", queueNew.isUseCache());
         assertTrue("cache enabled", queueNew.isCacheEnabled());
         assertEquals("no forwards", 0, queueNew.getForwardCount());
+    }
+
+    //Show broken behaviour https://issues.apache.org/jira/browse/AMQ-5752"
+    // points to the need to except on a duplicate or have store.addMessage return bool
+    // need some thought on how best to resolve this
+    public void Broken_testMoveDuplicateDoesNotDelete() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + getDestinationString());
+
+        QueueViewMBean queue = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        CompositeData cdata = compdatalist[0];
+        String messageID = (String) cdata.get("JMSMessageID");
+
+        String newDestination = getSecondDestinationString();
+        queue.copyMessageTo(messageID, newDestination);
+
+        compdatalist = queue.browse();
+        int actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        assertEquals("no change", initialQueueSize, actualCount);
+
+        echo("Now browsing the second queue");
+
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost,destinationType=Queue,destinationName=" + newDestination );
+        QueueViewMBean queueNew = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        long newQueuesize = queueNew.getQueueSize();
+        assertEquals("Expect one", 1, newQueuesize);
+
+        // try move of same message - should fail on duplicate send
+        boolean moveResult = queue.moveMessageTo(messageID, newDestination);
+        assertFalse("move of duplicate should fail", moveResult);
+
+        newQueuesize = queueNew.getQueueSize();
+        assertEquals("Expect one", 1, newQueuesize);
+
+        compdatalist = queue.browse();
+        actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        assertEquals("no change", initialQueueSize, actualCount);
     }
 
     public void testRemoveMessages() throws Exception {
