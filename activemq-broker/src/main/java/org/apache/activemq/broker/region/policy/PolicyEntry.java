@@ -99,6 +99,8 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean reduceMemoryFootprint;
     private NetworkBridgeFilterFactory networkBridgeFilterFactory;
     private boolean doOptimzeMessageStorage = true;
+    private int maxDestinations = -1;
+
     /*
      * percentage of in-flight messages above which optimize message store is disabled
      */
@@ -962,4 +964,19 @@ public class PolicyEntry extends DestinationMapEntry {
     public boolean isPersistJMSRedelivered() {
         return persistJMSRedelivered;
     }
+
+    public int getMaxDestinations() {
+        return maxDestinations;
+    }
+
+    /**
+     * Sets the maximum number of destinations that can be created
+     *
+     * @param maxDestinations
+     *            maximum number of destinations
+     */
+    public void setMaxDestinations(int maxDestinations) {
+        this.maxDestinations = maxDestinations;
+    }
+
 }
