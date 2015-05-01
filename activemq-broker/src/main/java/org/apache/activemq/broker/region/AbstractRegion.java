@@ -25,7 +25,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
+
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.DestinationDoesNotExistException;
@@ -64,6 +67,7 @@ public abstract class AbstractRegion implements Region {
     protected final SystemUsage usageManager;
     protected final DestinationFactory destinationFactory;
     protected final DestinationStatistics destinationStatistics;
+    protected final RegionStatistics regionStatistics = new RegionStatistics();
     protected final RegionBroker broker;
     protected boolean autoCreateDestinations = true;
     protected final TaskRunnerFactory taskRunnerFactory;
@@ -120,7 +124,16 @@ public abstract class AbstractRegion implements Region {
         } finally {
             destinationsLock.readLock().unlock();
         }
-        destinations.clear();
+
+        destinationsLock.writeLock().lock();
+        try {
+            destinations.clear();
+            regionStatistics.getAdvisoryDestinations().reset();
+            regionStatistics.getDestinations().reset();
+            regionStatistics.getAllDestinations().reset();
+        } finally {
+            destinationsLock.writeLock().unlock();
+        }
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
@@ -131,6 +144,10 @@ public abstract class AbstractRegion implements Region {
             Destination dest = destinations.get(destination);
             if (dest == null) {
                 if (destination.isTemporary() == false || createIfTemporary) {
+                    // Limit the number of destinations that can be created if
+                    // maxDestinations has been set on a policy
+                    validateMaxDestinations(destination);
+
                     LOG.debug("{} adding destination: {}", broker.getBrokerName(), destination);
                     dest = createDestination(context, destination);
                     // intercept if there is a valid interceptor defined
@@ -140,6 +157,7 @@ public abstract class AbstractRegion implements Region {
                     }
                     dest.start();
                     destinations.put(destination, dest);
+                    updateRegionDestCounts(destination, 1);
                     destinationMap.put(destination, dest);
                     addSubscriptionsForDestination(context, dest);
                 }
@@ -155,6 +173,61 @@ public abstract class AbstractRegion implements Region {
 
     public Map<ConsumerId, Subscription> getSubscriptions() {
         return subscriptions;
+    }
+
+
+    /**
+     * Updates the counts in RegionStatistics based on whether or not the destination
+     * is an Advisory Destination or not
+     *
+     * @param destination the destination being used to determine which counters to update
+     * @param count the count to add to the counters
+     */
+    protected void updateRegionDestCounts(ActiveMQDestination destination, int count) {
+        if (destination != null) {
+            if (AdvisorySupport.isAdvisoryTopic(destination)) {
+                regionStatistics.getAdvisoryDestinations().add(count);
+            } else {
+                regionStatistics.getDestinations().add(count);
+            }
+            regionStatistics.getAllDestinations().add(count);
+        }
+    }
+
+    /**
+     * This method checks whether or not the destination can be created based on
+     * {@link PolicyEntry#getMaxDestinations}, if it has been set. Advisory
+     * topics are ignored.
+     *
+     * @param destination
+     * @throws Exception
+     */
+    protected void validateMaxDestinations(ActiveMQDestination destination)
+            throws Exception {
+        if (broker.getDestinationPolicy() != null) {
+            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+            // Make sure the destination is not an advisory topic
+            if (entry != null && entry.getMaxDestinations() >= 0
+                    && !AdvisorySupport.isAdvisoryTopic(destination)) {
+                // If there is an entry for this destination, look up the set of
+                // destinations associated with this policy
+                // If a destination isn't specified, then just count up
+                // non-advisory destinations (ie count all destinations)
+                int destinationSize = (int) (entry.getDestination() != null ?
+                        destinationMap.get(entry.getDestination()).size() : regionStatistics.getDestinations().getCount());
+                if (destinationSize >= entry.getMaxDestinations()) {
+                    if (entry.getDestination() != null) {
+                        throw new IllegalStateException(
+                                "The maxmimum number of destinations allowed ("+ entry.getMaxDestinations() +
+                                ") for the policy " + entry.getDestination() + " has already been reached.");
+                    // No destination has been set (default policy)
+                    } else {
+                        throw new IllegalStateException("The maxmimum number of destinations allowed ("
+                                        + entry.getMaxDestinations() + ") has already been reached.");
+                    }
+                }
+            }
+        }
     }
 
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest)
@@ -210,6 +283,8 @@ public abstract class AbstractRegion implements Region {
         try {
             Destination dest = destinations.remove(destination);
             if (dest != null) {
+                updateRegionDestCounts(destination, -1);
+
                 // timeout<0 or we timed out, we now force any remaining
                 // subscriptions to un-subscribe.
                 for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
@@ -620,7 +695,10 @@ public abstract class AbstractRegion implements Region {
                     destination = destinationInterceptor.intercept(destination);
                 }
                 getDestinationMap().put(key, destination);
-                destinations.put(key, destination);
+                Destination prev = destinations.put(key, destination);
+                if (prev == null) {
+                    updateRegionDestCounts(key, 1);
+                }
             }
         } finally {
             destinationsLock.writeLock().unlock();
