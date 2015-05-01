@@ -25,9 +25,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
@@ -50,6 +50,7 @@ import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.DestinationDoesNotExistException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +67,7 @@ public abstract class AbstractRegion implements Region {
     protected final SystemUsage usageManager;
     protected final DestinationFactory destinationFactory;
     protected final DestinationStatistics destinationStatistics;
+    protected final RegionStatistics regionStatistics = new RegionStatistics();
     protected final RegionBroker broker;
     protected boolean autoCreateDestinations = true;
     protected final TaskRunnerFactory taskRunnerFactory;
@@ -124,7 +126,16 @@ public abstract class AbstractRegion implements Region {
         } finally {
             destinationsLock.readLock().unlock();
         }
-        destinations.clear();
+
+        destinationsLock.writeLock().lock();
+        try {
+            destinations.clear();
+            regionStatistics.getAdvisoryDestinations().reset();
+            regionStatistics.getDestinations().reset();
+            regionStatistics.getAllDestinations().reset();
+        } finally {
+            destinationsLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -136,6 +147,10 @@ public abstract class AbstractRegion implements Region {
             Destination dest = destinations.get(destination);
             if (dest == null) {
                 if (destination.isTemporary() == false || createIfTemporary) {
+                    // Limit the number of destinations that can be created if
+                    // maxDestinations has been set on a policy
+                    validateMaxDestinations(destination);
+
                     LOG.debug("{} adding destination: {}", broker.getBrokerName(), destination);
                     dest = createDestination(context, destination);
                     // intercept if there is a valid interceptor defined
@@ -145,6 +160,7 @@ public abstract class AbstractRegion implements Region {
                     }
                     dest.start();
                     destinations.put(destination, dest);
+                    updateRegionDestCounts(destination, 1);
                     destinationMap.put(destination, dest);
                     addSubscriptionsForDestination(context, dest);
                 }
@@ -269,6 +285,8 @@ public abstract class AbstractRegion implements Region {
         try {
             Destination dest = destinations.remove(destination);
             if (dest != null) {
+                updateRegionDestCounts(destination, -1);
+
                 // timeout<0 or we timed out, we now force any remaining
                 // subscriptions to un-subscribe.
                 for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
@@ -693,7 +711,10 @@ public abstract class AbstractRegion implements Region {
                     destination = destinationInterceptor.intercept(destination);
                 }
                 getDestinationMap().put(key, destination);
-                destinations.put(key, destination);
+                Destination prev = destinations.put(key, destination);
+                if (prev == null) {
+                    updateRegionDestCounts(key, 1);
+                }
             }
         } finally {
             destinationsLock.writeLock().unlock();
