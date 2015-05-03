@@ -27,6 +27,7 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.Transport;
 
 /**
  * Unmodifiable Connection wrapper used to prevent test code from accidentally
@@ -175,5 +176,16 @@ public class UnmodifiableConnection implements Connection {
     @Override
     public void collect(Collector collector) {
         throw new UnsupportedOperationException("Cannot alter the Connection");
+    }
+
+    @Override
+    public Transport getTransport() {
+        return connection.getTransport();
+    }
+
+    @Override
+    public String getContainer()
+    {
+        return connection.getContainer();
     }
 }
