@@ -52,6 +52,7 @@ public class WebConsoleStarter implements ServletContextListener {
             String host = System.getProperty("jetty.host");
             if (host != null && port != null) {
                 LOG.info("ActiveMQ WebConsole available at http://{}:{}/", host, port);
+                LOG.info("ActiveMQ Jolokia REST API available at http://{}:{}/api/jolokia/", host, port);
             }
         }
 
