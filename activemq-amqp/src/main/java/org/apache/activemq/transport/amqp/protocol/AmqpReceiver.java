@@ -64,7 +64,6 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpReceiver.class);
 
     private final ProducerInfo producerInfo;
-    private final int configuredCredit;
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
 
     private InboundTransformer inboundTransformer;
@@ -83,7 +82,6 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
         super(session, endpoint);
 
         this.producerInfo = producerInfo;
-        this.configuredCredit = session.getConnection().getConfiguredReceiverCredit();
     }
 
     @Override
@@ -123,17 +121,6 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
      */
     public boolean isAnonymous() {
         return producerInfo.getDestination() == null;
-    }
-
-    /**
-     * Returns the amount of receiver credit that has been configured for this AMQP
-     * transport.  If no value was configured on the TransportConnector URI then a
-     * sensible default is used.
-     *
-     * @return the configured receiver credit to grant.
-     */
-    public int getConfiguredReceiverCredit() {
-        return configuredCredit;
     }
 
     //----- Internal Implementation ------------------------------------------//

@@ -26,7 +26,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,6 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
 
     private final int MSG_COUNT = 1000;
 
-    @Ignore("Fails currently")
     @Test(timeout = 60000)
     public void testSingleConsumedMessagePerTxCase() throws Exception {
         connection = createConnection();

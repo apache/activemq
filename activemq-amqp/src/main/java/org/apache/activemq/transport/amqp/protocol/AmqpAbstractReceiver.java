@@ -32,6 +32,7 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
 
     protected ByteArrayOutputStream current = new ByteArrayOutputStream();
     protected final byte[] recvBuffer = new byte[1024 * 8];
+    protected final int configuredCredit;
 
     /**
      * Handle create of new AMQP Receiver instance.
@@ -43,6 +44,7 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
      */
     public AmqpAbstractReceiver(AmqpSession session, Receiver endpoint) {
         super(session, endpoint);
+        this.configuredCredit = session.getConnection().getConfiguredReceiverCredit();
     }
 
     @Override
@@ -51,6 +53,17 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
 
     @Override
     public void flow() throws Exception {
+    }
+
+    /**
+     * Returns the amount of receiver credit that has been configured for this AMQP
+     * transport.  If no value was configured on the TransportConnector URI then a
+     * sensible default is used.
+     *
+     * @return the configured receiver credit to grant.
+     */
+    public int getConfiguredReceiverCredit() {
+        return configuredCredit;
     }
 
     /**

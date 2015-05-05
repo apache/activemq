@@ -145,6 +145,16 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
         } else {
             throw new Exception("Expected coordinator message type: " + action.getClass());
         }
+
+        replenishCredit();
+    }
+
+    private void replenishCredit() {
+        if (getEndpoint().getCredit() <= (getConfiguredReceiverCredit() * .2)) {
+            LOG.debug("Sending more credit ({}) to transaction coordinator on session {}", getConfiguredReceiverCredit() - getEndpoint().getCredit(), session.getSessionId());
+            getEndpoint().flow(getConfiguredReceiverCredit() - getEndpoint().getCredit());
+            session.pumpProtonToSocket();
+        }
     }
 
     private long getNextTransactionId() {
