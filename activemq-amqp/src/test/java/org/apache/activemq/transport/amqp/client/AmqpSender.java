@@ -52,9 +52,6 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpSender.class);
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[] {};
-    //TODO: Use constants available from Proton 0.9
-    private static final Symbol ACCEPTED_DESCRIPTOR_SYMBOL = Symbol.valueOf("amqp:accepted:list");
-    private static final Symbol REJECTED_DESCRIPTOR_SYMBOL = Symbol.valueOf("amqp:rejected:list");
 
     public static final long DEFAULT_SEND_TIMEOUT = 15000;
 
@@ -240,7 +237,7 @@ public class AmqpSender extends AmqpAbstractResource<Sender> {
     @Override
     protected void doOpen() {
 
-        Symbol[] outcomes = new Symbol[]{ACCEPTED_DESCRIPTOR_SYMBOL, REJECTED_DESCRIPTOR_SYMBOL};
+        Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL };
         Source source = new Source();
         source.setAddress(senderId);
         source.setOutcomes(outcomes);

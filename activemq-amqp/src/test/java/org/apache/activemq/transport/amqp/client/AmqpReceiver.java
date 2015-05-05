@@ -38,6 +38,7 @@ import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Released;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -58,14 +59,7 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpReceiver.class);
 
-    // TODO: Use constants available from Proton 0.9
-    private static final Symbol ACCEPTED_DESCRIPTOR_SYMBOL = Symbol.valueOf("amqp:accepted:list");
-    private static final Symbol REJECTED_DESCRIPTOR_SYMBOL = Symbol.valueOf("amqp:rejected:list");
-    private static final Symbol MODIFIED_DESCRIPTOR_SYMBOL = Symbol.valueOf("amqp:modified:list");
-    private static final Symbol RELEASED_DESCRIPTOR_SYMBOL = Symbol.valueOf("amqp:released:list");
-
     private final AtomicBoolean closed = new AtomicBoolean();
-
     private final BlockingQueue<AmqpMessage> prefetch = new LinkedBlockingDeque<AmqpMessage>();
 
     private final AmqpSession session;
@@ -534,8 +528,8 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
 
     protected void configureSource(Source source) {
         Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
-        Symbol[] outcomes = new Symbol[]{ACCEPTED_DESCRIPTOR_SYMBOL, REJECTED_DESCRIPTOR_SYMBOL,
-                                         RELEASED_DESCRIPTOR_SYMBOL, MODIFIED_DESCRIPTOR_SYMBOL};
+        Symbol[] outcomes = new Symbol[]{Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL,
+                                         Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
 
         if (getSubscriptionName() != null && !getSubscriptionName().isEmpty()) {
             source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
