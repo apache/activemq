@@ -65,4 +65,15 @@ public interface AmqpProtocolConverter {
      */
     void updateTracer();
 
+    /**
+     * Perform any keep alive processing for the connection such as sending
+     * empty frames or closing connections due to remote end being inactive
+     * for to long.
+     *
+     * @returns the amount of milliseconds to wait before performaing another check.
+     *
+     * @throws IOException if an error occurs on writing heatbeats to the wire.
+     */
+    long keepAlive() throws IOException;
+
 }

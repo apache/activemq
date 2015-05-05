@@ -54,4 +54,8 @@ public interface AmqpTransport {
 
     public AmqpInactivityMonitor getInactivityMonitor();
 
+    public boolean isUseInactivityMonitor();
+
+    public long keepAlive();
+
 }

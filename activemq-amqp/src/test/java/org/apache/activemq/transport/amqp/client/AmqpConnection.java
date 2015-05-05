@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.amqp.client.sasl.SaslAuthenticator;
 import org.apache.activemq.transport.amqp.client.util.ClientFuture;
 import org.apache.activemq.transport.amqp.client.util.ClientTcpTransport;
@@ -40,6 +41,7 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Sasl;
@@ -77,9 +79,11 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private List<Symbol> offeredCapabilities = Collections.emptyList();
     private Map<Symbol, Object> offeredProperties = Collections.emptyMap();
 
-    private AmqpClientListener listener;
+    private AmqpConnectionListener listener;
     private SaslAuthenticator authenticator;
 
+    private int idleTimeout = 0;
+    private boolean idleProcessingDisabled;
     private String containerId;
     private boolean authenticated;
     private int channelMax = DEFAULT_CHANNEL_MAX;
@@ -127,6 +131,9 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                         getEndpoint().setProperties(getOfferedProperties());
                     }
 
+                    if (getIdleTimeout() > 0) {
+                        protonTransport.setIdleTimeout(getIdleTimeout());
+                    }
                     protonTransport.setMaxFrameSize(getMaxFrameSize());
                     protonTransport.setChannelMax(getChannelMax());
                     protonTransport.bind(getEndpoint());
@@ -359,6 +366,30 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
         return new UnmodifiableConnection(getEndpoint());
     }
 
+    public AmqpConnectionListener getListener() {
+        return listener;
+    }
+
+    public void setListener(AmqpConnectionListener listener) {
+        this.listener = listener;
+    }
+
+    public int getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    public void setIdleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+
+    public void setIdleProcessingDisabled(boolean value) {
+        this.idleProcessingDisabled = value;
+    }
+
+    public boolean isIdleProcessingDisabled() {
+        return idleProcessingDisabled;
+    }
+
     //----- Internal getters used from the child AmqpResource classes --------//
 
     ScheduledExecutorService getScheduler() {
@@ -397,6 +428,11 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                 ByteBuffer source = input.toByteBuffer();
                 LOG.trace("Received from Broker {} bytes:", source.remaining());
 
+                if (protonTransport.isClosed()) {
+                    LOG.debug("Ignoring incoming data because transport is closed");
+                    return;
+                }
+
                 do {
                     ByteBuffer buffer = protonTransport.getInputBuffer();
                     int limit = Math.min(buffer.remaining(), source.remaining());
@@ -431,6 +467,37 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     protected void doOpenCompletion() {
         // If the remote indicates that a close is pending, don't open.
         if (!getEndpoint().getRemoteProperties().containsKey(CONNECTION_OPEN_FAILED)) {
+
+            if (!isIdleProcessingDisabled()) {
+                long nextKeepAliveTime = protonTransport.tick(System.currentTimeMillis());
+                if (nextKeepAliveTime > 0) {
+
+                    getScheduler().schedule(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            try {
+                                if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
+                                    LOG.debug("Client performing next idle check");
+                                    long rescheduleAt = protonTransport.tick(System.currentTimeMillis()) - System.currentTimeMillis();
+                                    pumpToProtonTransport();
+                                    if (protonTransport.isClosed()) {
+                                        LOG.debug("Transport closed after inactivity check.");
+                                        throw new InactivityIOException("Channel was inactive for to long");
+                                    }
+
+                                    if (rescheduleAt > 0) {
+                                        getScheduler().schedule(this, rescheduleAt, TimeUnit.MILLISECONDS);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                transport.close();
+                                fireClientException(e);
+                            }
+                        }
+                    }, nextKeepAliveTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                }
+            }
             super.doOpenCompletion();
         }
     }
@@ -446,9 +513,9 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     }
 
     protected void fireClientException(Throwable ex) {
-        AmqpClientListener listener = this.listener;
+        AmqpConnectionListener listener = this.listener;
         if (listener != null) {
-            listener.onClientException(ex);
+            listener.onException(ex);
         }
     }
 

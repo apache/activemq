@@ -37,7 +37,8 @@ public class AmqpWireFormat implements WireFormat {
 
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final int NO_AMQP_MAX_FRAME_SIZE = -1;
-    public static final long DEFAULT_CONNECTION_TIMEOUT = 30000L;
+    public static final int DEFAULT_CONNECTION_TIMEOUT = 30000;
+    public static final int DEFAULT_IDLE_TIMEOUT = 30000;
     public static final int DEFAULT_PRODUCER_CREDIT = 1000;
 
     private static final int SASL_PROTOCOL = 3;
@@ -45,7 +46,8 @@ public class AmqpWireFormat implements WireFormat {
     private int version = 1;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private int maxAmqpFrameSize = NO_AMQP_MAX_FRAME_SIZE;
-    private long connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private int connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    private int idelTimeout = DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = DEFAULT_PRODUCER_CREDIT;
     private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
 
@@ -206,11 +208,11 @@ public class AmqpWireFormat implements WireFormat {
         this.allowNonSaslConnections = allowNonSaslConnections;
     }
 
-    public long getConnectAttemptTimeout() {
+    public int getConnectAttemptTimeout() {
         return connectAttemptTimeout;
     }
 
-    public void setConnectAttemptTimeout(long connectAttemptTimeout) {
+    public void setConnectAttemptTimeout(int connectAttemptTimeout) {
         this.connectAttemptTimeout = connectAttemptTimeout;
     }
 
@@ -228,5 +230,13 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setTransformer(String transformer) {
         this.transformer = transformer;
+    }
+
+    public int getIdleTimeout() {
+        return idelTimeout;
+    }
+
+    public void setIdleTimeout(int idelTimeout) {
+        this.idelTimeout = idelTimeout;
     }
 }

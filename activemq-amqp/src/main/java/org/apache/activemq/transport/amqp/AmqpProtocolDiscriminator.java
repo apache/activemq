@@ -111,4 +111,9 @@ public class AmqpProtocolDiscriminator implements AmqpProtocolConverter {
     @Override
     public void updateTracer() {
     }
+
+    @Override
+    public long keepAlive() {
+        return 0;
+    }
 }

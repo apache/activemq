@@ -59,8 +59,8 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     @Override
     public void start() throws Exception {
         if (monitor != null) {
-            monitor.setProtocolConverter(protocolConverter);
-            monitor.startConnectChecker(getConnectAttemptTimeout());
+            monitor.setAmqpTransport(this);
+            monitor.startConnectionTimeoutChecker(getConnectAttemptTimeout());
         }
         super.start();
     }
@@ -133,6 +133,26 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         if (n != null) {
             n.oneway(command);
         }
+    }
+
+    @Override
+    public long keepAlive() {
+        long nextKeepAliveDelay = 0l;
+
+        try {
+            lock.lock();
+            try {
+                nextKeepAliveDelay = protocolConverter.keepAlive();
+            } finally {
+                lock.unlock();
+            }
+        } catch (IOException e) {
+            handleException(e);
+        } catch (Exception e) {
+            onException(IOExceptionSupport.create(e));
+        }
+
+        return nextKeepAliveDelay;
     }
 
     @Override
@@ -210,11 +230,16 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
         return monitor;
     }
 
-    public long getConnectAttemptTimeout() {
+    @Override
+    public boolean isUseInactivityMonitor() {
+        return monitor != null;
+    }
+
+    public int getConnectAttemptTimeout() {
         return wireFormat.getConnectAttemptTimeout();
     }
 
-    public void setConnectAttemptTimeout(long connectAttemptTimeout) {
+    public void setConnectAttemptTimeout(int connectAttemptTimeout) {
         wireFormat.setConnectAttemptTimeout(connectAttemptTimeout);
     }
 }

@@ -17,16 +17,12 @@
 package org.apache.activemq.transport.amqp.client;
 
 /**
- * Events points exposed by the AmqpClient object.
+ * Default listener implementation that stubs out all the event methods.
  */
-public interface AmqpClientListener {
+public class AmqpDefaultConnectionListener implements AmqpConnectionListener {
 
-    /**
-     * Indicates some error has occurred during client operations.
-     *
-     * @param ex
-     *        The error that triggered this event.
-     */
-    void onClientException(Throwable ex);
+    @Override
+    public void onException(Throwable ex) {
 
+    }
 }

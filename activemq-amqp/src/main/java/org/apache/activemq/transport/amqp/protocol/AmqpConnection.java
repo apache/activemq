@@ -26,6 +26,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,6 +56,7 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpInactivityMonitor;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
@@ -74,6 +76,7 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
@@ -123,7 +126,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         AmqpInactivityMonitor monitor = transport.getInactivityMonitor();
         if (monitor != null) {
-            monitor.setProtocolConverter(this);
+            monitor.setAmqpTransport(amqpTransport);
         }
 
         this.amqpWireFormat = transport.getWireFormat();
@@ -198,6 +201,28 @@ public class AmqpConnection implements AmqpProtocolConverter {
                 }
             });
         }
+    }
+
+    @Override
+    public long keepAlive() throws IOException {
+        long rescheduleAt = 0l;
+
+        LOG.trace("Performing connection:{} keep-alive processing", amqpTransport.getRemoteAddress());
+
+        if (protonConnection.getLocalState() != EndpointState.CLOSED) {
+            rescheduleAt = protonTransport.tick(System.currentTimeMillis()) - System.currentTimeMillis();
+            pumpProtonToSocket();
+            if (protonTransport.isClosed()) {
+                rescheduleAt = 0;
+                LOG.debug("Transport closed after inactivity check.");
+                throw new InactivityIOException("Channel was inactive for to long");
+            }
+        }
+
+        LOG.trace("Connection:{} keep alive processing done, next update in {} milliseconds.",
+                  amqpTransport.getRemoteAddress(), rescheduleAt);
+
+        return rescheduleAt;
     }
 
     //----- Connection Properties Accessors ----------------------------------//
@@ -281,6 +306,11 @@ public class AmqpConnection implements AmqpProtocolConverter {
             frame = (Buffer) command;
         }
 
+        if (protonTransport.isClosed()) {
+            LOG.debug("Ignoring incoming AMQP data, transport is closed.");
+            return;
+        }
+
         while (frame.length > 0) {
             try {
                 int count = protonTransport.input(frame.data, frame.offset, frame.length);
@@ -357,10 +387,10 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     protected void processConnectionOpen(Connection connection) throws Exception {
 
+        stopConnectionTimeoutChecker();
+
         connectionInfo.setResponseRequired(true);
         connectionInfo.setConnectionId(connectionId);
-
-        configureInactivityMonitor();
 
         String clientId = protonConnection.getRemoteContainer();
         if (clientId != null && !clientId.isEmpty()) {
@@ -368,6 +398,20 @@ public class AmqpConnection implements AmqpProtocolConverter {
         }
 
         connectionInfo.setTransportContext(amqpTransport.getPeerCertificates());
+
+        if (connection.getTransport().getRemoteIdleTimeout() > 0 && !amqpTransport.isUseInactivityMonitor()) {
+            // We cannot meet the requested Idle processing because the inactivity monitor is
+            // disabled so we won't send idle frames to match the request.
+            protonConnection.setProperties(getFailedConnetionProperties());
+            protonConnection.open();
+            protonConnection.setCondition(new ErrorCondition(AmqpError.PRECONDITION_FAILED, "Cannot send idle frames"));
+            protonConnection.close();
+            pumpProtonToSocket();
+
+            amqpTransport.onException(new IOException(
+                "Connection failed, remote requested idle processing but inactivity monitoring is disbaled."));
+            return;
+        }
 
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             @Override
@@ -389,9 +433,17 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
                         protonConnection.close();
                     } else {
+
+                        if (amqpTransport.isUseInactivityMonitor() && amqpWireFormat.getIdleTimeout() > 0) {
+                            LOG.trace("Connection requesting Idle timeout of: {} mills", amqpWireFormat.getIdleTimeout());
+                            protonTransport.setIdleTimeout(amqpWireFormat.getIdleTimeout());
+                        }
+
                         protonConnection.setOfferedCapabilities(getConnectionCapabilitiesOffered());
                         protonConnection.setProperties(getConnetionProperties());
                         protonConnection.open();
+
+                        configureInactivityMonitor();
                     }
                 } finally {
                     pumpProtonToSocket();
@@ -678,12 +730,28 @@ public class AmqpConnection implements AmqpProtocolConverter {
         return new SessionId(connectionId, nextSessionId++);
     }
 
+    private void stopConnectionTimeoutChecker() {
+        AmqpInactivityMonitor monitor = amqpTransport.getInactivityMonitor();
+        if (monitor != null) {
+            monitor.stopConnectionTimeoutChecker();
+        }
+    }
+
     private void configureInactivityMonitor() {
         AmqpInactivityMonitor monitor = amqpTransport.getInactivityMonitor();
         if (monitor == null) {
             return;
         }
 
-        monitor.stopConnectChecker();
+        // If either end has idle timeout requirements then the tick method
+        // will give us a deadline on the next time we need to tick() in order
+        // to meet those obligations.
+        long nextIdleCheck = protonTransport.tick(System.currentTimeMillis());
+        if (nextIdleCheck > 0) {
+            LOG.trace("Connection keep-alive processing starts at: {}", new Date(nextIdleCheck));
+            monitor.startKeepAliveTask(nextIdleCheck - System.currentTimeMillis());
+        } else {
+            LOG.trace("Connection does not require keep-alive processing");
+        }
     }
 }

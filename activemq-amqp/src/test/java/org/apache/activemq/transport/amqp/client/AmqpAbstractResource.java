@@ -99,24 +99,6 @@ public abstract class AmqpAbstractResource<E extends Endpoint> implements AmqpRe
             this.closeRequest = request;
             doClose();
         }
-//        // If already closed signal success or else the caller might never get notified.
-//        if (getEndpoint().getLocalState() == EndpointState.CLOSED ||
-//            getEndpoint().getRemoteState() == EndpointState.CLOSED) {
-//
-//            if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
-//                // Remote already closed this resource, close locally and free.
-//                if (getEndpoint().getLocalState() != EndpointState.CLOSED) {
-//                    doClose();
-//                    getEndpoint().free();
-//                }
-//            }
-//
-//            request.onSuccess();
-//            return;
-//        }
-//
-//        this.closeRequest = request;
-//        doClose();
     }
 
     @Override

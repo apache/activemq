@@ -179,13 +179,12 @@ public class UnmodifiableConnection implements Connection {
     }
 
     @Override
-    public Transport getTransport() {
-        return connection.getTransport();
+    public String getContainer() {
+        return connection.getContainer();
     }
 
     @Override
-    public String getContainer()
-    {
-        return connection.getContainer();
+    public Transport getTransport() {
+        return new UnmodifiableTransport(connection.getTransport());
     }
 }
