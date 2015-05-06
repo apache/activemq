@@ -46,8 +46,9 @@ import org.slf4j.LoggerFactory;
     private String noSpaceMessage = "space";
     private String sqlExceptionMessage = ""; // match all
     private long resumeCheckSleepPeriod = 5*1000;
-    private AtomicBoolean handlingException = new AtomicBoolean(false);
+    private final AtomicBoolean handlingException = new AtomicBoolean(false);
 
+    @Override
     public void handle(IOException exception) {
         if (ignoreAllErrors) {
             LOG.info("Ignoring IO exception, " + exception, exception);
@@ -69,10 +70,17 @@ import org.slf4j.LoggerFactory;
         if (ignoreSQLExceptions) {
             Throwable cause = exception;
             while (cause != null) {
-                String message = cause.getMessage();
-                if (cause instanceof SQLException && message.contains(sqlExceptionMessage)) {
-                    LOG.info("Ignoring SQLException, " + exception, cause);
-                    return;
+                if (cause instanceof SQLException) {
+                    String message = cause.getMessage();
+
+                    if (message == null) {
+                        message = "";
+                    }
+
+                    if (message.contains(sqlExceptionMessage)) {
+                        LOG.info("Ignoring SQLException, " + exception, cause);
+                        return;
+                    }
                 }
                 cause = cause.getCause();
             }
@@ -83,6 +91,7 @@ import org.slf4j.LoggerFactory;
                 LOG.info("Initiating stop/restart of transports on " + broker + " due to IO exception, " + exception, exception);
 
                 new Thread("IOExceptionHandler: stop transports") {
+                    @Override
                     public void run() {
                         try {
                             ServiceStopper stopper = new ServiceStopper();
@@ -93,6 +102,7 @@ import org.slf4j.LoggerFactory;
                         } finally {
                             // resume again
                             new Thread("IOExceptionHandler: restart transports") {
+                                @Override
                                 public void run() {
                                     try {
                                         while (hasLockOwnership() && isPersistenceAdapterDown()) {
@@ -154,6 +164,7 @@ import org.slf4j.LoggerFactory;
     private void stopBroker(Exception exception) {
         LOG.info("Stopping " + broker + " due to exception, " + exception, exception);
         new Thread("IOExceptionHandler: stopping " + broker) {
+            @Override
             public void run() {
                 try {
                     if( broker.isRestartAllowed() ) {
@@ -171,6 +182,7 @@ import org.slf4j.LoggerFactory;
         return true;
     }
 
+    @Override
     public void setBrokerService(BrokerService broker) {
         this.broker = broker;
     }
