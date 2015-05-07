@@ -229,7 +229,7 @@ public class AdvisoryTests {
     }
 
     @After
-    protected void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         connection.close();
         if (broker != null) {
             broker.stop();
