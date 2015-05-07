@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.advisory;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,8 +35,6 @@ import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.Topic;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -41,16 +43,21 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class AdvisoryTempDestinationTests extends TestCase {
+public class AdvisoryTempDestinationTests {
 
     protected static final int MESSAGE_COUNT = 2000;
+    protected static final int EXPIRE_MESSAGE_PERIOD = 10000;
+
     protected BrokerService broker;
     protected Connection connection;
     protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
     protected int topicCount;
 
-
+    @Test(timeout = 60000)
     public void testNoSlowConsumerAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = s.createTemporaryQueue();
@@ -60,8 +67,8 @@ public class AdvisoryTempDestinationTests extends TestCase {
             public void onMessage(Message message) {
             }
         });
-        Topic advisoryTopic = AdvisorySupport
-                .getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
+
+        Topic advisoryTopic = AdvisorySupport.getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
         s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         // start throwing messages at the consumer
@@ -75,14 +82,14 @@ public class AdvisoryTempDestinationTests extends TestCase {
         assertNull(msg);
     }
 
+    @Test(timeout = 60000)
     public void testSlowConsumerAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = s.createTemporaryQueue();
         MessageConsumer consumer = s.createConsumer(queue);
         assertNotNull(consumer);
 
-        Topic advisoryTopic = AdvisorySupport
-                .getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
+        Topic advisoryTopic = AdvisorySupport.getSlowConsumerAdvisoryTopic((ActiveMQDestination) queue);
         s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
         // start throwing messages at the consumer
@@ -96,6 +103,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
         assertNotNull(msg);
     }
 
+    @Test(timeout = 60000)
     public void testMessageDeliveryAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = s.createTemporaryQueue();
@@ -104,7 +112,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
 
         Topic advisoryTopic = AdvisorySupport.getMessageDeliveredAdvisoryTopic((ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
-        //start throwing messages at the consumer
+        // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
 
         BytesMessage m = s.createBytesMessage();
@@ -115,6 +123,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
         assertNotNull(msg);
     }
 
+    @Test(timeout = 60000)
     public void testTempMessageConsumedAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = s.createTemporaryQueue();
@@ -122,7 +131,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
 
         Topic advisoryTopic = AdvisorySupport.getMessageConsumedAdvisoryTopic((ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
-        //start throwing messages at the consumer
+        // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
 
         BytesMessage m = s.createBytesMessage();
@@ -141,6 +150,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
         assertEquals(originalId, id);
     }
 
+    @Test(timeout = 60000)
     public void testMessageExpiredAdvisory() throws Exception {
         Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = s.createQueue(getClass().getName());
@@ -149,7 +159,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
 
         Topic advisoryTopic = AdvisorySupport.getExpiredMessageTopic((ActiveMQDestination) queue);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
-        //start throwing messages at the consumer
+        // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(queue);
         producer.setTimeToLive(1);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
@@ -158,34 +168,30 @@ public class AdvisoryTempDestinationTests extends TestCase {
             producer.send(m);
         }
 
-        Message msg = advisoryConsumer.receive(5000);
+        Message msg = advisoryConsumer.receive(EXPIRE_MESSAGE_PERIOD);
         assertNotNull(msg);
     }
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
         }
         ConnectionFactory factory = createConnectionFactory();
         connection = factory.createConnection();
         connection.start();
-        super.setUp();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         connection.close();
         if (broker != null) {
             broker.stop();
         }
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory()
-            throws Exception {
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(
-                ActiveMQConnection.DEFAULT_BROKER_URL);
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
         return cf;
     }
 
@@ -218,6 +224,7 @@ public class AdvisoryTempDestinationTests extends TestCase {
 
     private PolicyEntry createPolicyEntry(ConstantPendingMessageLimitStrategy strategy) {
         PolicyEntry policy = new PolicyEntry();
+        policy.setExpireMessagesPeriod(EXPIRE_MESSAGE_PERIOD);
         policy.setAdvisoryForFastProducers(true);
         policy.setAdvisoryForConsumed(true);
         policy.setAdvisoryForDelivery(true);
