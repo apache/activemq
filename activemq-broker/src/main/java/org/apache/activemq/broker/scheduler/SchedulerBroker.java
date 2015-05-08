@@ -155,6 +155,32 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
         } else if ((cronValue != null || periodValue != null || delayValue != null) && jobId == null) {
 
+            // Check for room in the job scheduler store
+            if (systemUsage.getJobSchedulerUsage() != null) {
+                JobSchedulerUsage usage = systemUsage.getJobSchedulerUsage();
+                if (usage.isFull()) {
+                    final String logMessage = "Job Scheduler Store is Full (" +
+                        usage.getPercentUsage() + "% of " + usage.getLimit() +
+                        "). Stopping producer (" + messageSend.getProducerId() +
+                        ") to prevent flooding of the job scheduler store." +
+                        " See http://activemq.apache.org/producer-flow-control.html for more info";
+
+                    long start = System.currentTimeMillis();
+                    long nextWarn = start;
+                    while (!usage.waitForSpace(1000)) {
+                        if (context.getStopping().get()) {
+                            throw new IOException("Connection closed, send aborted.");
+                        }
+
+                        long now = System.currentTimeMillis();
+                        if (now >= nextWarn) {
+                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
+                            nextWarn = now + 30000l;
+                        }
+                    }
+                }
+            }
+
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
@@ -210,32 +236,6 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             int repeat = 0;
             if (repeatValue != null) {
                 repeat = (Integer) TypeConversionSupport.convert(repeatValue, Integer.class);
-            }
-
-            // Check for room in the job scheduler store
-            if (systemUsage.getJobSchedulerUsage() != null) {
-                JobSchedulerUsage usage = systemUsage.getJobSchedulerUsage();
-                if (usage.isFull()) {
-                    final String logMessage = "Job Scheduler Store is Full (" +
-                        usage.getPercentUsage() + "% of " + usage.getLimit() +
-                        "). Stopping producer (" + messageSend.getProducerId() +
-                        ") to prevent flooding of the job scheduler store." +
-                        " See http://activemq.apache.org/producer-flow-control.html for more info";
-
-                    long start = System.currentTimeMillis();
-                    long nextWarn = start;
-                    while (!usage.waitForSpace(1000)) {
-                        if (context.getStopping().get()) {
-                            throw new IOException("Connection closed, send aborted.");
-                        }
-
-                        long now = System.currentTimeMillis();
-                        if (now >= nextWarn) {
-                            LOG.info("" + usage + ": " + logMessage + " (blocking for: " + (now - start) / 1000 + "s)");
-                            nextWarn = now + 30000l;
-                        }
-                    }
-                }
             }
 
             if (repeat != 0 || cronStr != null && cronStr.length() > 0) {

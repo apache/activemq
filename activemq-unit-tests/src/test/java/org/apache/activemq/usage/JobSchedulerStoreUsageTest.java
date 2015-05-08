@@ -34,6 +34,8 @@ import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertNotEquals;
+
 public class JobSchedulerStoreUsageTest extends EmbeddedBrokerTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStoreUsageTest.class);
@@ -60,7 +62,7 @@ public class JobSchedulerStoreUsageTest extends EmbeddedBrokerTestSupport {
         return true;
     }
 
-    public void testJmx() throws Exception {
+    public void testBlockAndChangeViaJmxReleases() throws Exception {
 
         LOG.info("Initial scheduler usage: {}", broker.getAdminView().getJobSchedulerStorePercentUsage());
 
@@ -82,25 +84,30 @@ public class JobSchedulerStoreUsageTest extends EmbeddedBrokerTestSupport {
 
         assertEquals(7 * 1024, broker.getAdminView().getJobSchedulerStoreLimit());
 
-        // wait for the producer to block
-        Thread.sleep(WAIT_TIME_MILLS / 2);
+        assertTrue("Usage exhausted", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("scheduler store usage %" + broker.getAdminView().getJobSchedulerStorePercentUsage() + " producerSent count:" +  producer.getSentCount());
+                return broker.getAdminView().getJobSchedulerStorePercentUsage() > 100;
+            }
+        }));
 
-        assertTrue(broker.getAdminView().getJobSchedulerStorePercentUsage() > 100);
+        LOG.info("scheduler store usage %" + broker.getAdminView().getJobSchedulerStorePercentUsage() + " producerSent count:" +  producer.getSentCount());
+
+        assertNotEquals("Producer has not sent all messages", producer.getMessageCount(), producer.getSentCount());
 
         broker.getAdminView().setJobSchedulerStoreLimit(1024 * 1024 * 33);
 
-        Thread.sleep(WAIT_TIME_MILLS);
+        LOG.info("scheduler store usage %" + broker.getAdminView().getJobSchedulerStorePercentUsage() + " producerSent count:" +  producer.getSentCount());
 
         Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
                 return producer.getSentCount() == producer.getMessageCount();
             }
-        }, WAIT_TIME_MILLS * 2);
+        });
 
-        assertEquals("Producer didn't send all messages", producer.getMessageCount(), producer.getSentCount());
-
-        LOG.info("Final scheduler usage: {}", broker.getAdminView().getJobSchedulerStorePercentUsage());
+        assertEquals("Producer sent all messages", producer.getMessageCount(), producer.getSentCount());
 
         assertTrue(broker.getAdminView().getJobSchedulerStorePercentUsage() < 100);
     }
