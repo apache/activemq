@@ -152,6 +152,9 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
                 future.sync();
             } else {
                 future.sync(connectTimeout, TimeUnit.MILLISECONDS);
+                if (getEndpoint().getRemoteState() != EndpointState.ACTIVE) {
+                    throw new IOException("Failed to connect after configured timeout.");
+                }
             }
         }
     }

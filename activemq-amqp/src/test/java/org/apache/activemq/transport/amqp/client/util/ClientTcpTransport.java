@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.transport.tcp.TcpBufferedInputStream;
 import org.apache.activemq.transport.tcp.TcpBufferedOutputStream;
@@ -326,7 +327,11 @@ public class ClientTcpTransport implements Runnable {
     }
 
     protected SocketFactory createSocketFactory() throws IOException {
-        return SocketFactory.getDefault();
+        if (remoteLocation.getScheme().equalsIgnoreCase("ssl")) {
+            return SSLSocketFactory.getDefault();
+        } else {
+            return SocketFactory.getDefault();
+        }
     }
 
     protected void initialiseSocket(Socket sock) throws SocketException, IllegalArgumentException {

@@ -91,14 +91,7 @@ public class AmqpClient {
             throw new IllegalArgumentException("Password must be null if user name value is null");
         }
 
-        ClientTcpTransport transport = null;
-
-        if (remoteURI.getScheme().equals("tcp")) {
-            transport = new ClientTcpTransport(remoteURI);
-        } else {
-            throw new IllegalArgumentException("Client only support TCP currently.");
-        }
-
+        ClientTcpTransport transport = new ClientTcpTransport(remoteURI);
         AmqpConnection connection = new AmqpConnection(transport, username, password);
 
         connection.setOfferedCapabilities(getOfferedCapabilities());

@@ -73,7 +73,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
 
     @Override
     protected boolean isUseSslConnector() {
-        return true;
+        return isUseSSL();
     }
 
     @Override
@@ -83,7 +83,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
 
     @Override
     protected boolean isUseNioPlusSslConnector() {
-        return true;
+        return isUseSSL();
     }
 
     @Override
