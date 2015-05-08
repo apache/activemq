@@ -560,7 +560,7 @@ public class Topic extends BaseDestination implements Task {
             memoryUsage.start();
         }
 
-        if (getExpireMessagesPeriod() > 0) {
+        if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
             scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
         }
     }
