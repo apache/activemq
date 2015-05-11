@@ -41,6 +41,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
@@ -346,7 +347,7 @@ public class FailoverStaticNetworkTest {
                     while (!done.get()) {
                         brokerA = createBroker("tcp", "61610", null);
                         brokerA.setBrokerName("Pair");
-                        brokerA.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "BrokerName="
+                        brokerA.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "brokerName="
                                 + JMXSupport.encodeObjectNamePart("A") + "," + "Type=Broker"));
                         ((KahaDBPersistenceAdapter)brokerA.getPersistenceAdapter()).getLocker().setLockAcquireSleepInterval(1000);
                         brokerA.start();
@@ -377,7 +378,7 @@ public class FailoverStaticNetworkTest {
                         brokerA1 = createBroker("tcp", "61611", null);
                         brokerA1.setBrokerName("Pair");
                         // so they can coexist in local jmx we set the object name b/c the brokername identifies the shared store
-                        brokerA1.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "BrokerName="
+                        brokerA1.setBrokerObjectName(new ObjectName(brokerA.getManagementContext().getJmxDomainName() + ":" + "brokerName="
                             + JMXSupport.encodeObjectNamePart("A1") + "," + "Type=Broker"));
                         ((KahaDBPersistenceAdapter)brokerA1.getPersistenceAdapter()).getLocker().setLockAcquireSleepInterval(1000);
                         brokerA1.start();
@@ -394,12 +395,12 @@ public class FailoverStaticNetworkTest {
 
         for (int i=0; i<4; i++) {
             BrokerService currentMaster =  (i%2 == 0 ? brokerA : brokerA1);
-            LOG.info("iteration: " + i + ", using: " + currentMaster.getBrokerObjectName().getKeyProperty("BrokerName"));
+            LOG.info("iteration: " + i + ", using: " + currentMaster.getBrokerObjectName().getKeyProperty("brokerName"));
             currentMaster.waitUntilStarted();
 
             doTestNetworkSendReceive(brokerB, currentMaster);
 
-            LOG.info("Stopping " + currentMaster.getBrokerObjectName().getKeyProperty("BrokerName"));
+            LOG.info("Stopping " + currentMaster.getBrokerObjectName().getKeyProperty("brokerName"));
             currentMaster.stop();
             currentMaster.waitUntilStopped();
         }
@@ -434,10 +435,13 @@ public class FailoverStaticNetworkTest {
             @Override
             public boolean isSatisified() throws Exception {
                 Message message = consumer.receive(5000);
-                LOG.info("from:  " + from.getBrokerObjectName().getKeyProperty("BrokerName") +  ", received: " + message);
+                LOG.info("from:  " + from.getBrokerObjectName().getKeyProperty("brokerName") +  ", received: " + message);
                 return message != null;
             }
         });
+        if (!gotMessage) {
+            AutoFailTestSupport.dumpAllThreads("noMessage");
+        }
         try {
             consConn.close();
         } catch (JMSException ignored) {
