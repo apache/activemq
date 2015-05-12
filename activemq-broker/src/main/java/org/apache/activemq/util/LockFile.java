@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -32,12 +36,15 @@ public class LockFile {
 
     private static final boolean DISABLE_FILE_LOCK = Boolean.getBoolean("java.nio.channels.FileLock.broken");
     final private File file;
+    private long lastModified;
 
     private FileLock lock;
     private RandomAccessFile readFile;
     private int lockCounter;
     private final boolean deleteOnUnlock;
     private volatile boolean locked;
+
+    private static final Logger LOG = LoggerFactory.getLogger(LockFile.class);
 
     public LockFile(File file, boolean deleteOnUnlock) {
         this.file = file;
@@ -75,6 +82,8 @@ public class LockFile {
                     reason = ioe;
                 }
                 if (lock != null) {
+                    //Set lastModified only if we are able to successfully obtain the lock.
+                    lastModified = file.lastModified();
                     lockCounter++;
                     System.setProperty(getVmLockKey(), new Date().toString());
                     locked = true;
@@ -138,11 +147,34 @@ public class LockFile {
             }
             readFile = null;
         }
+    }
 
+    /**
+     * @return true if the lock file's last modified does not match the locally cached lastModified, false otherwise
+     */
+    private boolean hasBeenModified() {
+        boolean modified = false;
+
+        //Create a new instance of the File object so we can get the most up to date information on the file.
+        File localFile = new File(file.getAbsolutePath());
+
+        if (localFile.exists()) {
+            if(localFile.lastModified() != lastModified) {
+                LOG.info("Lock file " + file.getAbsolutePath() + ", locked at " + new Date(lastModified) + ", has been modified at " + new Date(localFile.lastModified()));
+                modified = true;
+            }
+        }
+        else {
+            //The lock file is missing
+            LOG.info("Lock file " + file.getAbsolutePath() + ", does not exist");
+            modified = true;
+        }
+
+        return modified;
     }
 
     public boolean keepAlive() {
-        locked = locked && lock != null && lock.isValid() && file.exists();
+        locked = locked && lock != null && lock.isValid() && !hasBeenModified();
         return locked;
     }
 
