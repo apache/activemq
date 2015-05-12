@@ -287,6 +287,7 @@ fi
 #   user
 invokeJar(){
    PIDFILE="$1"
+   TASK_TODO="$2"
    RET="1"
 
    if [ ! -f "${ACTIVEMQ_HOME}/bin/activemq.jar" ];then
@@ -305,7 +306,7 @@ invokeJar(){
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
    # Execute java binary
-   if [ -n "$PIDFILE" ] && [ "$PIDFILE" != "stop" ];then
+   if [ -n "$TASK_TODO" ] && [ "$TASK_TODO" != "stop" ];then
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -315,11 +316,11 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > "$PIDFILE";
-              echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
+              echo \$APID > "${PIDFILE}";
+              echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
-   elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
-          PID="`cat "${ACTIVEMQ_PIDFILE}"`"
+   elif [ -n "$TASK_TODO" ] && [ "$TASK_TODO" = "stop" ];then
+          SPID="`cat "${PIDFILE}"`"
           $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -327,7 +328,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
       RET="$?"
@@ -374,7 +375,7 @@ checkRunning(){
 }
 
 checkStopRunning(){
-    PID_STOP="${PIDFILE}.stop"
+    PID_STOP="${ACTIVEMQ_PIDFILE}.stop"
     if [ -f "$PID_STOP" ]; then
        if  [ -z "`cat $PID_STOP`" ];then
         echo "ERROR: Pidfile os stop process '$PID_STOP' exists but contains no pid"
@@ -432,7 +433,7 @@ invoke_start(){
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS -Djava.awt.headless=true -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\""
 
     echo "INFO: Starting - inspect logfiles specified in logging.properties and log4j.properties to get details"
-    invokeJar $ACTIVEMQ_PIDFILE
+    invokeJar "$ACTIVEMQ_PIDFILE" start
     exit "$?"
 }
 
@@ -460,8 +461,8 @@ invoke_console(){
     EXEC_OPTION="exec"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
     echo "INFO: Creating pidfile $ACTIVEMQ_PIDFILE"
-    echo "$$" > $ACTIVEMQ_PIDFILE
-    invokeJar
+    echo "$$" > "$ACTIVEMQ_PIDFILE"
+    invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
     echo "INFO: removing pidfile $ACTIVEMQ_PIDFILE"
     exit "$RET"
@@ -505,7 +506,7 @@ invoke_stop(){
 
        ACTIVEMQ_PID="`cat $ACTIVEMQ_PIDFILE`"
 
-       invokeJar "stop"
+       invokeJar "$ACTIVEMQ_PIDFILE" "stop"
        RET="$?"
 
        FOUND="0"
@@ -582,7 +583,7 @@ invoke_task(){
     else
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
     fi
-    invokeJar
+    invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
     if [ "$RET" != "0" ];then
        echo "ERROR: task failed"
@@ -591,7 +592,7 @@ invoke_task(){
 }
 
 show_help() {
-  invokeJar|sed "s,Usage: Main,Usage: $0,"
+  invokeJar "$ACTIVEMQ_PIDFILE"|sed "s,Usage: Main,Usage: $0,"
   cat << EOF
 Tasks provided by the sysv init script:
     kill            - terminate instance in a drastic way by sending SIGKILL
