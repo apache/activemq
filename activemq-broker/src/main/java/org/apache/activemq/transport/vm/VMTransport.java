@@ -92,12 +92,24 @@ public class VMTransport implements Transport, Task {
                 throw new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed.");
             }
 
-            if (peer.async || !peer.started.get()) {
+            if (peer.async) {
                 peer.getMessageQueue().put(command);
                 peer.wakeup();
                 return;
             }
 
+            if (!peer.started.get()) {
+                LinkedBlockingQueue<Object> pending = peer.getMessageQueue();
+                boolean accepted = false;
+                do {
+                    synchronized (peer.started) {
+                        accepted = pending.offer(command);
+                    }
+                } while (!accepted && !peer.started.get());
+                if (accepted) {
+                    return;
+                }
+            }
         } catch (InterruptedException e) {
             InterruptedIOException iioe = new InterruptedIOException(e.getMessage());
             iioe.initCause(e);
@@ -257,14 +269,6 @@ public class VMTransport implements Transport, Task {
     @Override
     public void setTransportListener(TransportListener commandListener) {
         this.transportListener = commandListener;
-    }
-
-    public void setMessageQueue(LinkedBlockingQueue<Object> asyncQueue) {
-        synchronized (this) {
-            if (messageQueue == null) {
-                messageQueue = asyncQueue;
-            }
-        }
     }
 
     public LinkedBlockingQueue<Object> getMessageQueue() throws TransportDisposedIOException {

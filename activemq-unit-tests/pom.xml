@@ -583,7 +583,6 @@
                 <exclude>**/amq1490/*</exclude>
                 <exclude>**/archive/*</exclude>
                 <exclude>**/NetworkFailoverTest.*/**</exclude>
-                <exclude>**/vm/VMTransportBrokerTest.*</exclude>
                 <exclude>**/broker/MarshallingBrokerTest.*</exclude>
                 <exclude>**/AMQDeadlockTest3.*</exclude>
                 <!-- https://issues.apache.org/activemq/browse/AMQ-2050 -->

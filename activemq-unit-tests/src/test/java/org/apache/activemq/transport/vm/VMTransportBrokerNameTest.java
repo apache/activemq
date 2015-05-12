@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.transport.vm;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 
@@ -25,6 +28,10 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportListener;
 
 public class VMTransportBrokerNameTest extends TestCase {
 
@@ -46,5 +53,46 @@ public class VMTransportBrokerNameTest extends TestCase {
         
         c1.close();
         c2.close();
+    }
+
+    public void testBrokerInfoClientAsync() throws Exception {
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(new URI(vmUrl));
+        ActiveMQConnection c1 = (ActiveMQConnection) cf.createConnection();
+        assertTrue("Transport has name in it: " + c1.getTransport(), c1.getTransport().toString().contains(MY_BROKER));
+
+        for (int i=0;i<20; i++) {
+            final CountDownLatch gotBrokerInfo = new CountDownLatch(1);
+            Transport transport = TransportFactory.connect(new URI("vm://" + MY_BROKER + "?async=false"));
+            transport.setTransportListener(new TransportListener() {
+                @Override
+                public void onCommand(Object command) {
+                    if (command instanceof BrokerInfo) {
+                        gotBrokerInfo.countDown();
+                    }
+                }
+
+                @Override
+                public void onException(IOException error) {
+
+                }
+
+                @Override
+                public void transportInterupted() {
+
+                }
+
+                @Override
+                public void transportResumed() {
+
+                }
+            });
+            transport.start();
+
+            assertTrue("got broker info on iteration:" + i, gotBrokerInfo.await(5, TimeUnit.SECONDS));
+
+            transport.stop();
+        }
+        c1.close();
     }
 }
