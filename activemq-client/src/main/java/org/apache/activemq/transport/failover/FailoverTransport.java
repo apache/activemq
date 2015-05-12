@@ -74,7 +74,6 @@ public class FailoverTransport implements CompositeTransport {
     private static final int INFINITE = -1;
     private TransportListener transportListener;
     private boolean disposed;
-    private boolean connected;
     private final CopyOnWriteArrayList<URI> uris = new CopyOnWriteArrayList<URI>();
     private final CopyOnWriteArrayList<URI> updated = new CopyOnWriteArrayList<URI>();
 
@@ -91,7 +90,6 @@ public class FailoverTransport implements CompositeTransport {
     private final TaskRunnerFactory reconnectTaskFactory;
     private final TaskRunner reconnectTask;
     private boolean started;
-    private boolean initialized;
     private long initialReconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private long maxReconnectDelay = 1000 * 30;
     private double backOffMultiplier = 2d;
@@ -198,9 +196,6 @@ public class FailoverTransport implements CompositeTransport {
                         ((Tracked) object).onResponses(command);
                     }
                 }
-                if (!initialized) {
-                    initialized = true;
-                }
 
                 if (command.isConnectionControl()) {
                     handleConnectionControl((ConnectionControl) command);
@@ -242,35 +237,35 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public final void handleTransportFailure(IOException e) throws InterruptedException {
+        if (shuttingDown) {
+            // shutdown info sent and remote socket closed and we see that before a local close
+            // let the close do the work
+            return;
+        }
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(this + " handleTransportFailure: " + e, e);
+        }
+
+        // could be blocked in write with the reconnectMutex held, but still needs to be whacked
+        Transport transport = connectedTransport.getAndSet(null);
+        if (transport != null) {
+            disposeTransport(transport);
+        }
+
         synchronized (reconnectMutex) {
-            if (shuttingDown) {
-                // shutdown info sent and remote socket closed and we see that before a local close
-                // let the close do the work
-                return;
-            }
-
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " handleTransportFailure: " + e, e);
-            }
-
-            Transport transport = connectedTransport.getAndSet(null);
-
-            if (transport != null) {
-
-                disposeTransport(transport);
+            if (transport != null && connectedTransport.get() == null) {
 
                 boolean reconnectOk = false;
 
                 if (canReconnect()) {
                     reconnectOk = true;
                 }
-                LOG.warn("Transport (" + transport + ") failed"
+                 LOG.warn("Transport (" + connectedTransportURI + ") failed"
                         + (reconnectOk ? "," : ", not") + " attempting to automatically reconnect", e);
 
-                initialized = false;
                 failedConnectTransportURI = connectedTransportURI;
                 connectedTransportURI = null;
-                connected = false;
                 connectedToPriority = false;
 
                 if (reconnectOk) {
@@ -377,7 +372,6 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 started = false;
                 disposed = true;
-                connected = false;
 
                 if (connectedTransport.get() != null) {
                     transportToStop = connectedTransport.getAndSet(null);
@@ -1067,7 +1061,6 @@ public class FailoverTransport implements CompositeTransport {
                                 LOG.info("Successfully reconnected to " + uri);
                             }
 
-                            connected = true;
                             return false;
                         } catch (Exception e) {
                             failure = e;
@@ -1262,7 +1255,7 @@ public class FailoverTransport implements CompositeTransport {
 
     @Override
     public boolean isConnected() {
-        return connected;
+        return connectedTransport.get() != null;
     }
 
     @Override
