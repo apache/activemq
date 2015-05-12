@@ -18,20 +18,32 @@ package org.apache.activemq.broker;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ConnectionInfo;
 
 import javax.jms.Connection;
 import javax.jms.InvalidClientIDException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class LinkStealingTest extends TestCase {
     protected BrokerService brokerService;
     protected int timeOutInSeconds = 10;
+    protected final AtomicReference<Throwable> removeException = new AtomicReference<Throwable>();
 
 
     @Override
     protected void setUp() throws Exception {
         brokerService = new BrokerService();
         brokerService.setPersistent(false);
+        brokerService.setPlugins(new BrokerPlugin[]{
+                new BrokerPluginSupport() {
+                    @Override
+                    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+                        removeException.set(error);
+                        super.removeConnection(context, info, error);
+                    }
+                }
+        });
     }
 
     @Override
@@ -86,6 +98,7 @@ public class LinkStealingTest extends TestCase {
             exceptionFlag.set(true);
         }
         assertFalse(exceptionFlag.get());
+        assertNotNull(removeException.get());
 
     }
 }

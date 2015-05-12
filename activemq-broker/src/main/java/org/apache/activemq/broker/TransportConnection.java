@@ -117,7 +117,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     protected BrokerInfo brokerInfo;
     protected final List<Command> dispatchQueue = new LinkedList<Command>();
     protected TaskRunner taskRunner;
-    protected final AtomicReference<IOException> transportException = new AtomicReference<IOException>();
+    protected final AtomicReference<Throwable> transportException = new AtomicReference<Throwable>();
     protected AtomicBoolean dispatchStopped = new AtomicBoolean(false);
     private final Transport transport;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
@@ -152,7 +152,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
     private final ReentrantReadWriteLock serviceLock = new ReentrantReadWriteLock();
     private String duplexNetworkConnectorId;
-    private Throwable stopError = null;
 
     /**
      * @param taskRunnerFactory - can be null if you want direct dispatch to the transport
@@ -245,7 +244,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             } else if (TRANSPORTLOG.isWarnEnabled() && !expected(e)) {
                 TRANSPORTLOG.warn(this + " failed: " + e);
             }
-            stopAsync();
+            stopAsync(e);
         }
     }
 
@@ -295,7 +294,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 ce.setException(e);
                 dispatchSync(ce);
                 // Record the error that caused the transport to stop
-                this.stopError = e;
+                transportException.set(e);
                 // Wait a little bit to try to get the output buffer to flush
                 // the exception notification to the client.
                 try {
@@ -334,7 +333,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             if (!pendingStop) {
                 response = command.visit(this);
             } else {
-                response = new ExceptionResponse(this.stopError);
+                response = new ExceptionResponse(transportException.get());
             }
         } catch (Throwable e) {
             if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
@@ -863,7 +862,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 iter.remove();
             }
             try {
-                broker.removeConnection(cs.getContext(), cs.getInfo(), null);
+                broker.removeConnection(cs.getContext(), cs.getInfo(), transportException.get());
             } catch (Throwable e) {
                 SERVICELOG.warn("Failed to remove connection {}", cs.getInfo(), e);
             }
@@ -1073,7 +1072,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (waitTime > 0) {
             synchronized (this) {
                 pendingStop = true;
-                stopError = cause;
+                transportException.set(cause);
             }
             try {
                 stopTaskRunnerFactory.execute(new Runnable() {
@@ -1091,6 +1090,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 LOG.warn("Cannot create stopAsync. This exception will be ignored.", t);
             }
         }
+    }
+
+    public void stopAsync(Throwable cause) {
+        transportException.set(cause);
+        stopAsync();
     }
 
     public void stopAsync() {

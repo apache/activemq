@@ -266,7 +266,7 @@ public class RegionBroker extends EmptyBroker {
                 LOG.warn("Stealing link for clientId {} From Connection {}", clientId, oldContext.getConnection());
                 if (connection instanceof TransportConnection) {
                     TransportConnection transportConnection = (TransportConnection) connection;
-                    transportConnection.stopAsync();
+                    transportConnection.stopAsync(new IOException("Stealing link for clientId " + clientId + " From Connection " + oldContext.getConnection().getConnectionId()));
                 } else {
                     connection.stop();
                 }
