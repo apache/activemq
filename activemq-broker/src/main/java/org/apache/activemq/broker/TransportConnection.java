@@ -98,6 +98,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
+import org.apache.activemq.util.SizeFormatterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -538,6 +539,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         ProducerId producerId = messageSend.getProducerId();
         ProducerBrokerExchange producerExchange = getProducerBrokerExchange(producerId);
         if (producerExchange.canDispatch(messageSend)) {
+            if (messageSend.getSize() > connector.getMaximumMessageSize()){
+                throw new IllegalStateException("Can't send message using producer " + 
+                        messageSend.getProducerId() + ": message exceeds maximum message size limit of: " + 
+                        SizeFormatterUtils.humanReadableBytes(connector.getMaximumMessageSize()));
+            }
             broker.send(producerExchange, messageSend);
         }
         return null;
