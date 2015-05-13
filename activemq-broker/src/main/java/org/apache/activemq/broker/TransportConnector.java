@@ -73,6 +73,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean auditNetworkProducers = false;
     private int maximumProducersAllowedPerConnection = Integer.MAX_VALUE;
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
+    private int maximumMessageSize = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
     private boolean allowLinkStealing;
 
@@ -122,6 +123,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setAuditNetworkProducers(isAuditNetworkProducers());
         rc.setMaximumConsumersAllowedPerConnection(getMaximumConsumersAllowedPerConnection());
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
+        rc.setMaximumMessageSize(getMaximumMessageSize());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
         rc.setAllowLinkStealing(isAllowLinkStealing());
         return rc;
@@ -611,8 +613,26 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return maximumConsumersAllowedPerConnection;
     }
 
+    
     public void setMaximumConsumersAllowedPerConnection(int maximumConsumersAllowedPerConnection) {
         this.maximumConsumersAllowedPerConnection = maximumConsumersAllowedPerConnection;
+    }
+    
+    public int getMaximumMessageSize() {
+        return maximumMessageSize;
+    }
+
+    /**
+     * The maximum size of messages that can be sent through this transport.  The default is
+     * Integer.MAX_VALUE
+     * 
+     * When set using Xbean, values of the form "20 Mb", "1024kb", and "1g" can be used
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     *
+     * @param the maximumMessageSize
+     */
+    public void setMaximumMessageSize(int maximumMessageSize) {
+        this.maximumMessageSize = maximumMessageSize;
     }
 
     /**
