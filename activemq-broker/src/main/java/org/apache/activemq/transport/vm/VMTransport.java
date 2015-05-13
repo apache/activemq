@@ -100,11 +100,23 @@ public class VMTransport implements Transport, Task {
 
             if (!peer.started.get()) {
                 LinkedBlockingQueue<Object> pending = peer.getMessageQueue();
+                int sleepTimeMillis;
                 boolean accepted = false;
                 do {
+                    sleepTimeMillis = 0;
+                    // the pending queue is drained on start so we need to ensure we add before
+                    // the drain commences, otherwise we never get the command dispatched!
                     synchronized (peer.started) {
-                        accepted = pending.offer(command);
+                        if (!peer.started.get()) {
+                            accepted = pending.offer(command);
+                            if (!accepted) {
+                                sleepTimeMillis = 500;
+                            }
+                        }
                     }
+                    // give start thread a chance if we will loop
+                    TimeUnit.MILLISECONDS.sleep(sleepTimeMillis);
+
                 } while (!accepted && !peer.started.get());
                 if (accepted) {
                     return;
