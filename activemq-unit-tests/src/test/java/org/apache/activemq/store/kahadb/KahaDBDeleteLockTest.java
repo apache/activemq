@@ -41,6 +41,7 @@ public class KahaDBDeleteLockTest {
     @Before
     public void createMaster() throws Exception{
         master = new BrokerService();
+        master.setDeleteAllMessagesOnStartup(true);
         master.setBrokerName("Master");
         master.setDataDirectoryFile(testDataDir);
 
@@ -56,6 +57,7 @@ public class KahaDBDeleteLockTest {
     public void stopBrokerJustInCase() throws Exception {
         if (master != null) {
             master.stop();
+            master.waitUntilStopped();
         }
     }
 
@@ -91,10 +93,19 @@ public class KahaDBDeleteLockTest {
     public void testModifyLockFile() throws Exception {
         assertTrue(master.isStarted());
 
+        final File lockFile = new File(kahaDataDir, "lock");
+        assertTrue("lock file exists via modification time", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return lockFile.lastModified() > 0;
+            }
+        }));
+
         // ensure modification will be seen, milisecond granularity
-        TimeUnit.MILLISECONDS.sleep(1);
-        RandomAccessFile file = new RandomAccessFile(new File(kahaDataDir, "lock"), "rw");
+        TimeUnit.MILLISECONDS.sleep(10);
+        RandomAccessFile file = new RandomAccessFile(lockFile, "rw");
         file.write(4);
+        file.getChannel().force(true);
         file.close();
 
         assertTrue("Master stops on lock file modification", Wait.waitFor(new Wait.Condition() {
@@ -102,7 +113,7 @@ public class KahaDBDeleteLockTest {
             public boolean isSatisified() throws Exception {
                 return master.isStopped();
             }
-        }, 5000));
+        }, 10000));
 
     }
 }
