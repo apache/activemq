@@ -38,7 +38,7 @@ var options = {
    "padding": {left: 0, right: 0, top: 10, bottom: 30},
    "xTicks": [<c:forEach items="${requestContext.brokerQuery.queues}" var="row" varStatus="status"
          ><c:if 
-         test="${status.count > 1}">, </c:if>{v:${status.count}, label:"${row.name}"}</c:forEach>]
+         test="${status.count > 1}">, </c:if>{v:${status.count}, label:"<c:out value="${row.name}"/>"}</c:forEach>]
 };
 
 function drawGraph() {
