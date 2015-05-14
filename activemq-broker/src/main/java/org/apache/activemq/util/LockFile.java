@@ -83,6 +83,7 @@ public class LockFile {
                 }
                 if (lock != null) {
                     //Set lastModified only if we are able to successfully obtain the lock.
+                    readFile.getChannel().force(true);
                     lastModified = file.lastModified();
                     lockCounter++;
                     System.setProperty(getVmLockKey(), new Date().toString());
