@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -430,6 +429,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                     // sync add? (for async, future present from getFutureOrSequenceLong)
                     Object possibleFuture = message.getMessageId().getFutureOrSequenceLong();
 
+                    @Override
                     public void sequenceAssignedWithIndexLocked(final long sequence) {
                         message.getMessageId().setFutureOrSequenceLong(sequence);
                         if (indexListener != null) {
@@ -724,7 +724,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         public KahaDBTopicMessageStore(ActiveMQTopic destination) throws IOException {
             super(destination);
             this.subscriptionCount.set(getAllSubscriptions().length);
-            asyncTopicMaps.add(asyncTaskMap);
+            if (isConcurrentStoreAndDispatchTopics()) {
+                asyncTopicMaps.add(asyncTaskMap);
+            }
         }
 
         @Override
