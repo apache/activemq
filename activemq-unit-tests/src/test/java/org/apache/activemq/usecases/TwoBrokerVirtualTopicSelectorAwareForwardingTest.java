@@ -427,6 +427,15 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         // assert broker A stats
         assertEquals(30, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
+
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
+                        .getDestinationStatistics().getEnqueues().getCount() == 30;
+            }
+        }, 5000);
+
         assertEquals(30, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getDequeues().getCount());
         assertEquals(0, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
