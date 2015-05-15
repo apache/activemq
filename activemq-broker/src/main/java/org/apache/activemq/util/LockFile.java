@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
-import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -39,7 +38,7 @@ public class LockFile {
     private long lastModified;
 
     private FileLock lock;
-    private RandomAccessFile readFile;
+    private RandomAccessFile randomAccessLockFile;
     private int lockCounter;
     private final boolean deleteOnUnlock;
     private volatile boolean locked;
@@ -72,18 +71,19 @@ public class LockFile {
         }
         try {
             if (lock == null) {
-                readFile = new RandomAccessFile(file, "rw");
+                randomAccessLockFile = new RandomAccessFile(file, "rw");
                 IOException reason = null;
                 try {
-                    lock = readFile.getChannel().tryLock(0, Math.max(1, readFile.getChannel().size()), false);
+                    lock = randomAccessLockFile.getChannel().tryLock(0, Math.max(1, randomAccessLockFile.getChannel().size()), false);
                 } catch (OverlappingFileLockException e) {
                     reason = IOExceptionSupport.create("File '" + file + "' could not be locked.", e);
                 } catch (IOException ioe) {
                     reason = ioe;
                 }
                 if (lock != null) {
-                    //Set lastModified only if we are able to successfully obtain the lock.
-                    readFile.getChannel().force(true);
+                    //track lastModified only if we are able to successfully obtain the lock.
+                    randomAccessLockFile.writeLong(System.currentTimeMillis());
+                    randomAccessLockFile.getChannel().force(true);
                     lastModified = file.lastModified();
                     lockCounter++;
                     System.setProperty(getVmLockKey(), new Date().toString());
@@ -141,12 +141,12 @@ public class LockFile {
 
     private void closeReadFile() {
         // close the file.
-        if (readFile != null) {
+        if (randomAccessLockFile != null) {
             try {
-                readFile.close();
+                randomAccessLockFile.close();
             } catch (Throwable ignore) {
             }
-            readFile = null;
+            randomAccessLockFile = null;
         }
     }
 

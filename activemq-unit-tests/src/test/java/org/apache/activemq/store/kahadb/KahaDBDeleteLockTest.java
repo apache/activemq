@@ -21,15 +21,19 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 
 import static org.junit.Assert.assertTrue;
 
 public class KahaDBDeleteLockTest {
+    static final Logger LOG = LoggerFactory.getLogger(KahaDBDeleteLockTest.class);
 
     protected BrokerService master;
 
@@ -47,6 +51,12 @@ public class KahaDBDeleteLockTest {
 
         masterPersistenceAdapter.setDirectory(kahaDataDir);
         masterPersistenceAdapter.setLockKeepAlivePeriod(500);
+
+        // ensure broker creates the file
+        File lockFile = new File(kahaDataDir, "lock");
+        if (lockFile.exists()) {
+            lockFile.delete();
+        }
 
         master.setPersistenceAdapter(masterPersistenceAdapter);
         master.start();
@@ -97,12 +107,13 @@ public class KahaDBDeleteLockTest {
         assertTrue("lock file exists via modification time", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
+                LOG.info("Lock file " + lockFile.getAbsolutePath() + ", last mod at: " + new Date(lockFile.lastModified()));
                 return lockFile.lastModified() > 0;
             }
         }));
 
-        // ensure modification will be seen, milisecond granularity
-        TimeUnit.MILLISECONDS.sleep(10);
+        // ensure modification will be seen, second granularity on some nix
+        TimeUnit.SECONDS.sleep(2);
         RandomAccessFile file = new RandomAccessFile(lockFile, "rw");
         file.write(4);
         file.getChannel().force(true);
