@@ -26,7 +26,6 @@ public class JDBCNetworkBrokerDetachTest extends NetworkBrokerDetachTest {
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
         EmbeddedDataSource dataSource = (EmbeddedDataSource) jdbc.getDataSource();
         dataSource.setDatabaseName(broker.getBrokerName());
-        jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
         broker.setUseVirtualTopics(false);
     }

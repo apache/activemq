@@ -299,16 +299,6 @@ public class BrokerTestSupport extends CombinationTestSupport {
         return info;
     }
 
-    public static void recursiveDelete(File f) {
-        if (f.isDirectory()) {
-            File[] files = f.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                recursiveDelete(files[i]);
-            }
-        }
-        f.delete();
-    }
-
     protected StubConnection createConnection() throws Exception {
         return new StubConnection(broker);
     }
