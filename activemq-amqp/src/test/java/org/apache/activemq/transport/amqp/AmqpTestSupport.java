@@ -104,7 +104,7 @@ public class AmqpTestSupport {
         }
         brokerService.setSchedulerSupport(false);
         brokerService.setAdvisorySupport(false);
-        brokerService.setUseJmx(true);
+        brokerService.setUseJmx(isUseJmx());
         brokerService.getManagementContext().setCreateConnector(false);
 
         performAdditionalConfiguration(brokerService);
@@ -180,6 +180,10 @@ public class AmqpTestSupport {
 
     protected boolean isPersistent() {
         return false;
+    }
+
+    protected boolean isUseJmx() {
+        return true;
     }
 
     protected int getstoreOpenWireVersion() {
