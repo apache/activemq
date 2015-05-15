@@ -27,6 +27,7 @@ import javax.jms.Connection;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ft.SyncCreateDataSource;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.apache.activemq.util.Wait;
@@ -77,7 +78,7 @@ public class JDBCIOExceptionHandlerTest {
         EmbeddedDataSource embeddedDataSource = (EmbeddedDataSource) jdbc.getDataSource();
         // create a wrapper to EmbeddedDataSource to allow the connection be
         // reestablished to derby db
-        dataSource = new ReconnectingEmbeddedDataSource(embeddedDataSource);
+        dataSource = new ReconnectingEmbeddedDataSource(new SyncCreateDataSource(embeddedDataSource));
         jdbc.setDataSource(dataSource);
 
         jdbc.setLockKeepAlivePeriod(1000l);
@@ -251,13 +252,12 @@ public class JDBCIOExceptionHandlerTest {
      * Wrapped the derby datasource object to get DB reconnect functionality as I not
      * manage to get that working directly on the EmbeddedDataSource
      *
-     * NOTE: Not a thread Safe but for this unit test it should be fine
      */
     public class ReconnectingEmbeddedDataSource implements javax.sql.DataSource {
 
-        private EmbeddedDataSource realDatasource;
+        private SyncCreateDataSource realDatasource;
 
-        public ReconnectingEmbeddedDataSource(EmbeddedDataSource datasource) {
+        public ReconnectingEmbeddedDataSource(SyncCreateDataSource datasource) {
             this.realDatasource = datasource;
         }
 
@@ -313,12 +313,17 @@ public class JDBCIOExceptionHandlerTest {
                     (EmbeddedDataSource) DataSourceServiceSupport.createDataSource(broker.getDataDirectoryFile().getCanonicalPath());
             newDatasource.getConnection();
             LOG.info("*** DB restarted now...");
-            this.realDatasource = newDatasource;
+            Object existingDataSource = realDatasource;
+            synchronized (existingDataSource) {
+                this.realDatasource = new SyncCreateDataSource(newDatasource);
+            }
         }
 
         public void stopDB() {
             LOG.info("***DB is being shutdown...");
-            DataSourceServiceSupport.shutdownDefaultDataSource(realDatasource);
+            synchronized (realDatasource) {
+                DataSourceServiceSupport.shutdownDefaultDataSource(realDatasource.getDelegate());
+            }
         }
 
         public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
