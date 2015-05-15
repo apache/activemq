@@ -17,19 +17,22 @@
 package org.apache.activemq.transport.mqtt.strategy;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SubscriptionInfo;
-import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
 import org.apache.activemq.transport.mqtt.MQTTProtocolException;
 import org.apache.activemq.transport.mqtt.MQTTProtocolSupport;
@@ -52,12 +55,8 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
 
     @Override
     public void onConnect(CONNECT connect) throws MQTTProtocolException {
-        List<SubscriptionInfo> subs;
-        try {
-            subs = PersistenceAdapterSupport.listSubscriptions(brokerService.getPersistenceAdapter(), protocol.getClientId());
-        } catch (IOException e) {
-            throw new MQTTProtocolException("Error loading store subscriptions", true, e);
-        }
+        List<SubscriptionInfo> subs = lookupSubscription(protocol.getClientId());
+
         if (connect.cleanSession()) {
             deleteDurableSubs(subs);
         } else {
@@ -158,5 +157,34 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
         } catch (IOException e) {
             LOG.warn("Could not restore the MQTT durable subs.", e);
         }
+    }
+
+    List<SubscriptionInfo> lookupSubscription(String clientId) throws MQTTProtocolException {
+        List<SubscriptionInfo> result = new ArrayList<SubscriptionInfo>();
+        RegionBroker regionBroker;
+
+        try {
+            regionBroker = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
+        } catch (Exception e) {
+            throw new MQTTProtocolException("Error recovering durable subscriptions: " + e.getMessage(), false, e);
+        }
+
+        final TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
+        List<DurableTopicSubscription> subscriptions = topicRegion.lookupSubscriptions(clientId);
+        if (subscriptions != null) {
+            for (DurableTopicSubscription subscription : subscriptions) {
+                LOG.debug("Recovered durable sub:{} on connect", subscription);
+
+                SubscriptionInfo info = new SubscriptionInfo();
+
+                info.setDestination(subscription.getActiveMQDestination());
+                info.setSubcriptionName(subscription.getSubscriptionKey().getSubscriptionName());
+                info.setClientId(clientId);
+
+                result.add(info);
+            }
+        }
+
+        return result;
     }
 }

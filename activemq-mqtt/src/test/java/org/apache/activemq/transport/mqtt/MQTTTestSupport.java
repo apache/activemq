@@ -115,11 +115,47 @@ public class MQTTTestSupport {
     }
 
     public void startBroker() throws Exception {
+        brokerService = createBroker(true);
 
-        createBroker();
+        configureBroker(brokerService);
 
-        applyBrokerPolicies();
-        applyMemoryLimitPolicy();
+        brokerService.start();
+        brokerService.waitUntilStarted();
+        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
+        jmsUri = brokerService.getTransportConnectorByName("openwire").getPublishableConnectString();
+        cf = new ActiveMQConnectionFactory(jmsUri);
+    }
+
+    public void restartBroker() throws Exception {
+        stopBroker();
+
+        brokerService = createBroker(false);
+
+        configureBroker(brokerService);
+
+        brokerService.start();
+        brokerService.waitUntilStarted();
+        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
+        jmsUri = brokerService.getTransportConnectorByName("openwire").getPublishableConnectString();
+        cf = new ActiveMQConnectionFactory(jmsUri);
+    }
+
+    protected BrokerService createBroker(boolean deleteAllMessages) throws Exception {
+        BrokerService brokerService = new BrokerService();
+        brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
+        brokerService.setPersistent(isPersistent());
+        brokerService.setAdvisorySupport(false);
+        brokerService.setUseJmx(true);
+        brokerService.getManagementContext().setCreateConnector(false);
+        brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
+        brokerService.setPopulateJMSXUserID(true);
+
+        return brokerService;
+    }
+
+    protected void configureBroker(BrokerService brokerService) throws Exception {
+        applyBrokerPolicies(brokerService);
+        applyMemoryLimitPolicy(brokerService);
 
         // Setup SSL context...
         File keyStore = new File(basedir(), "src/test/resources/server.keystore");
@@ -133,10 +169,8 @@ public class MQTTTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
-        addMQTTConnector();
-        addOpenWireConnector();
-
-        cf = new ActiveMQConnectionFactory(jmsUri);
+        addMQTTConnector(brokerService);
+        addOpenWireConnector(brokerService);
 
         ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
         createPlugins(plugins);
@@ -155,23 +189,6 @@ public class MQTTTestSupport {
             BrokerPlugin[] array = new BrokerPlugin[plugins.size()];
             brokerService.setPlugins(plugins.toArray(array));
         }
-
-        brokerService.start();
-        brokerService.waitUntilStarted();
-        port = brokerService.getTransportConnectorByName("mqtt").getConnectUri().getPort();
-    }
-
-    protected void applyMemoryLimitPolicy() throws Exception {
-    }
-
-    protected void createBroker() throws Exception {
-        brokerService = new BrokerService();
-        brokerService.setPersistent(isPersistent());
-        brokerService.setAdvisorySupport(false);
-        brokerService.setUseJmx(true);
-        brokerService.getManagementContext().setCreateConnector(false);
-        brokerService.setSchedulerSupport(isSchedulerSupportEnabled());
-        brokerService.setPopulateJMSXUserID(true);
     }
 
     /**
@@ -197,16 +214,21 @@ public class MQTTTestSupport {
         return null;
     }
 
-    protected void applyBrokerPolicies() throws Exception {
+    protected void applyBrokerPolicies(BrokerService brokerService) throws Exception {
         // NOOP here
     }
 
-    protected void addOpenWireConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("tcp://0.0.0.0:0");
-        jmsUri = connector.getPublishableConnectString();
+    protected void applyMemoryLimitPolicy(BrokerService brokerService) throws Exception {
     }
 
-    protected void addMQTTConnector() throws Exception {
+    protected void addOpenWireConnector(BrokerService brokerService) throws Exception {
+        TransportConnector connector = new TransportConnector();
+        connector.setUri(new URI("tcp://0.0.0.0:0"));
+        connector.setName("openwire");
+        brokerService.addConnector(connector);
+    }
+
+    protected void addMQTTConnector(BrokerService brokerService) throws Exception {
         // Overrides of this method can add additional configuration options or add multiple
         // MQTT transport connectors as needed, the port variable is always supposed to be
         // assigned the primary MQTT connector's port.

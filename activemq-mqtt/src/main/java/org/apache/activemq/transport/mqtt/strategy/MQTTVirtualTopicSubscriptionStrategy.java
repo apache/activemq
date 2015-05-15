@@ -20,6 +20,7 @@ import static org.apache.activemq.transport.mqtt.MQTTProtocolSupport.convertActi
 import static org.apache.activemq.transport.mqtt.MQTTProtocolSupport.convertMQTTToActiveMQ;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -27,13 +28,14 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.broker.region.QueueRegion;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Response;
-import org.apache.activemq.store.PersistenceAdapterSupport;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
 import org.apache.activemq.transport.mqtt.MQTTProtocolException;
 import org.apache.activemq.transport.mqtt.MQTTSubscription;
@@ -59,22 +61,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
     @Override
     public void onConnect(CONNECT connect) throws MQTTProtocolException {
-        List<ActiveMQQueue> queues;
-        try {
-            queues = PersistenceAdapterSupport.listQueues(brokerService.getPersistenceAdapter(), new PersistenceAdapterSupport.DestinationMatcher() {
-
-                @Override
-                public boolean matches(ActiveMQDestination destination) {
-                    if (destination.getPhysicalName().startsWith("Consumer." + protocol.getClientId())) {
-                        LOG.debug("Recovered client sub: {}", destination.getPhysicalName());
-                        return true;
-                    }
-                    return false;
-                }
-            });
-        } catch (IOException e) {
-            throw new MQTTProtocolException("Error restoring durable subscriptions", true, e);
-        }
+        List<ActiveMQQueue> queues = lookupQueues(protocol.getClientId());
 
         if (connect.cleanSession()) {
             deleteDurableQueues(queues);
@@ -231,5 +218,28 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         } catch (IOException e) {
             LOG.warn("Could not restore the MQTT durable subs.", e);
         }
+    }
+
+    List<ActiveMQQueue> lookupQueues(String clientId) throws MQTTProtocolException {
+        List<ActiveMQQueue> result = new ArrayList<ActiveMQQueue>();
+        RegionBroker regionBroker;
+
+        try {
+            regionBroker = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
+        } catch (Exception e) {
+            throw new MQTTProtocolException("Error recovering queues: " + e.getMessage(), false, e);
+        }
+
+        final QueueRegion queueRegion = (QueueRegion) regionBroker.getQueueRegion();
+        for (ActiveMQDestination destination : queueRegion.getDestinationMap().keySet()) {
+            if (destination.isQueue() && !destination.isTemporary()) {
+                if (destination.getPhysicalName().startsWith("Consumer." + clientId)) {
+                    LOG.debug("Recovered client sub: {} on connect", destination.getPhysicalName());
+                    result.add((ActiveMQQueue) destination);
+                }
+            }
+        }
+
+        return result;
     }
 }

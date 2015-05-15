@@ -1465,8 +1465,7 @@ public class MQTTTest extends MQTTTestSupport {
 
         connectionPub.disconnect();
 
-        stopBroker();
-        startBroker();
+        restartBroker();
 
         MQTT mqttSub = createMQTTConnection("MQTT-Sub-Client", false);
         BlockingConnection connectionSub = mqttSub.blockingConnection();

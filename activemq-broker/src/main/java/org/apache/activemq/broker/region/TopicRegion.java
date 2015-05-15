@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -393,6 +394,18 @@ public class TopicRegion extends AbstractRegion {
         }
 
         return null;
+    }
+
+    public List<DurableTopicSubscription> lookupSubscriptions(String clientId) {
+        List<DurableTopicSubscription> result = new ArrayList<DurableTopicSubscription>();
+
+        for (Map.Entry<SubscriptionKey, DurableTopicSubscription> subscriptionEntry : durableSubscriptions.entrySet()) {
+            if (subscriptionEntry.getKey().getClientId().equals(clientId)) {
+                result.add(subscriptionEntry.getValue());
+            }
+        }
+
+        return result;
     }
 
     public boolean isKeepDurableSubsActive() {
