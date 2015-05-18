@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -33,6 +34,7 @@ public class StompCodec {
     TcpTransport transport;
     StompWireFormat wireFormat;
 
+    AtomicLong frameSize = new AtomicLong(); 
     ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
     boolean processedHeaders = false;
     String action;
@@ -71,12 +73,14 @@ public class StompCodec {
                // end of headers section, parse action and header
                if (b == '\n' && (previousByte == '\n' || currentCommand.endsWith(crlfcrlf))) {
                    DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
-                   action = wireFormat.parseAction(data);
-                   headers = wireFormat.parseHeaders(data);
+
                    try {
+                       action = wireFormat.parseAction(data, frameSize);
+                       headers = wireFormat.parseHeaders(data, frameSize);
+                       
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
                        if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
-                           contentLength = wireFormat.parseContentLength(contentLengthHeader);
+                           contentLength = wireFormat.parseContentLength(contentLengthHeader, frameSize);
                        } else {
                            contentLength = -1;
                        }
@@ -98,6 +102,10 @@ public class StompCodec {
                        currentCommand.write(b);
                        if (currentCommand.size() > wireFormat.getMaxDataLength()) {
                            transport.doConsume(new StompFrameError(new ProtocolException("The maximum data length was exceeded", true)));
+                           return;
+                       }
+                       if (frameSize.incrementAndGet() > wireFormat.getMaxFrameSize()) {
+                           transport.doConsume(new StompFrameError(new ProtocolException("The maximum frame size was exceeded", true)));
                            return;
                        }
                    }
@@ -123,6 +131,7 @@ public class StompCodec {
         awaitingCommandStart = true;
         currentCommand.reset();
         contentLength = -1;
+        frameSize.set(0);
     }
 
     public static String detectVersion(Map<String, String> headers) throws ProtocolException {
