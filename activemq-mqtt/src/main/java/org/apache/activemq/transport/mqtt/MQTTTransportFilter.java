@@ -258,4 +258,22 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
     public void setActiveMQSubscriptionPrefetch(int activeMQSubscriptionPrefetch) {
         protocolConverter.setActiveMQSubscriptionPrefetch(activeMQSubscriptionPrefetch);
     }
+
+    /**
+     * @return the maximum number of bytes a single MQTT message frame is allowed to be.
+     */
+    public int getMaxFrameSize() {
+        return wireFormat.getMaxFrameSize();
+    }
+
+    /**
+     * Sets the maximum frame size for an incoming MQTT frame.  The protocl limit is
+     * 256 megabytes and this value cannot be set higher.
+     *
+     * @param maxFrameSize
+     *        the maximum allowed frame size for a single MQTT frame.
+     */
+    public void setMaxFrameSize(int maxFrameSize) {
+        wireFormat.setMaxFrameSize(maxFrameSize);
+    }
 }

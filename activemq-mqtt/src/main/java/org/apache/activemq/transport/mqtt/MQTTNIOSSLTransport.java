@@ -42,7 +42,7 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
 
     @Override
     protected void initializeStreams() throws IOException {
-        codec = new MQTTCodec(this);
+        codec = new MQTTCodec(this, (MQTTWireFormat) getWireFormat());
         super.initializeStreams();
         if (inputBuffer.position() != 0 && inputBuffer.hasRemaining()) {
             serviceRead();

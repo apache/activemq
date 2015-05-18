@@ -40,6 +40,8 @@ public class MQTTWireFormat implements WireFormat {
 
     private int version = 1;
 
+    private int maxFrameSize = MAX_MESSAGE_LENGTH;
+
     @Override
     public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -93,7 +95,7 @@ public class MQTTWireFormat implements WireFormat {
         while ((digit & 0x80) != 0);
 
         if (length >= 0) {
-            if (length > MAX_MESSAGE_LENGTH) {
+            if (length > getMaxFrameSize()) {
                 throw new IOException("The maximum message length was exceeded");
             }
 
@@ -123,5 +125,23 @@ public class MQTTWireFormat implements WireFormat {
     @Override
     public int getVersion() {
         return this.version;
+    }
+
+    /**
+     * @return the maximum number of bytes a single MQTT message frame is allowed to be.
+     */
+    public int getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    /**
+     * Sets the maximum frame size for an incoming MQTT frame.  The protocl limit is
+     * 256 megabytes and this value cannot be set higher.
+     *
+     * @param maxFrameSize
+     *        the maximum allowed frame size for a single MQTT frame.
+     */
+    public void setMaxFrameSize(int maxFrameSize) {
+        this.maxFrameSize = Math.min(MAX_MESSAGE_LENGTH, maxFrameSize);
     }
 }

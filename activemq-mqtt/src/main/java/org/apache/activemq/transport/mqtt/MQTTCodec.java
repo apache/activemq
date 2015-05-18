@@ -26,6 +26,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 public class MQTTCodec {
 
     private final MQTTFrameSink frameSink;
+    private final MQTTWireFormat wireFormat;
 
     private byte header;
     private int contentLength = -1;
@@ -43,10 +44,20 @@ public class MQTTCodec {
     }
 
     public MQTTCodec(MQTTFrameSink sink) {
+        this(sink, null);
+    }
+
+    public MQTTCodec(MQTTFrameSink sink, MQTTWireFormat wireFormat) {
         this.frameSink = sink;
+        this.wireFormat = wireFormat;
     }
 
     public MQTTCodec(final TcpTransport transport) {
+        this(transport, null);
+    }
+
+    public MQTTCodec(final TcpTransport transport, MQTTWireFormat wireFormat) {
+        this.wireFormat = wireFormat;
         this.frameSink = new MQTTFrameSink() {
 
             @Override
@@ -77,6 +88,10 @@ public class MQTTCodec {
 
         MQTTFrame frame = new MQTTFrame(frameContents).header(header);
         frameSink.onFrame(frame);
+    }
+
+    private int getMaxFrameSize() {
+        return wireFormat != null ? wireFormat.getMaxFrameSize() : MQTTWireFormat.MAX_MESSAGE_LENGTH;
     }
 
     //----- Prepare the current frame parser for use -------------------------//
@@ -151,6 +166,10 @@ public class MQTTCodec {
                         processCommand();
                         currentParser = initializeHeaderParser();
                     } else {
+                        if (length > getMaxFrameSize()) {
+                            throw new IOException("The maximum message length was exceeded");
+                        }
+
                         currentParser = initializeContentParser();
                         contentLength = length;
                     }

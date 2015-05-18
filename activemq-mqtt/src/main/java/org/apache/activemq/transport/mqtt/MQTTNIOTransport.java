@@ -56,17 +56,20 @@ public class MQTTNIOTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
         channel.configureBlocking(false);
         // listen for events telling us when the socket is readable.
         selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+            @Override
             public void onSelect(SelectorSelection selection) {
                 if (!isStopped()) {
                     serviceRead();
                 }
             }
 
+            @Override
             public void onError(SelectorSelection selection, Throwable error) {
                 if (error instanceof IOException) {
                     onException((IOException) error);
@@ -78,9 +81,9 @@ public class MQTTNIOTransport extends TcpTransport {
 
         inputBuffer = ByteBuffer.allocate(8 * 1024);
         NIOOutputStream outPutStream = new NIOOutputStream(channel, 8 * 1024);
-        this.dataOut = new DataOutputStream(outPutStream);
-        this.buffOut = outPutStream;
-        codec = new MQTTCodec(this);
+        dataOut = new DataOutputStream(outPutStream);
+        buffOut = outPutStream;
+        codec = new MQTTCodec(this, (MQTTWireFormat) getWireFormat());
     }
 
     private void serviceRead() {
@@ -116,12 +119,14 @@ public class MQTTNIOTransport extends TcpTransport {
         }
     }
 
+    @Override
     protected void doStart() throws Exception {
         connect();
         selection.setInterestOps(SelectionKey.OP_READ);
         selection.enable();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         try {
             if (selection != null) {
