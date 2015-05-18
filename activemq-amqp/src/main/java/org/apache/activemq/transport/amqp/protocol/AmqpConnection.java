@@ -256,6 +256,13 @@ public class AmqpConnection implements AmqpProtocolConverter {
         return connectionInfo.getClientId();
     }
 
+    /**
+     * @return the configured max frame size allowed for incoming messages.
+     */
+    public long getMaxFrameSize() {
+        return amqpWireFormat.getMaxFrameSize();
+    }
+
     //----- Proton Event handling and IO support -----------------------------//
 
     void pumpProtonToSocket() {
@@ -713,14 +720,17 @@ public class AmqpConnection implements AmqpProtocolConverter {
     }
 
     void handleException(Throwable exception) {
-        exception.printStackTrace();
         LOG.debug("Exception detail", exception);
-        try {
-            // Must ensure that the broker removes Connection resources.
-            sendToActiveMQ(new ShutdownInfo());
-            amqpTransport.stop();
-        } catch (Throwable e) {
-            LOG.error("Failed to stop AMQP Transport ", e);
+        if (exception instanceof AmqpProtocolException) {
+            onAMQPException((IOException) exception);
+        } else {
+            try {
+                // Must ensure that the broker removes Connection resources.
+                sendToActiveMQ(new ShutdownInfo());
+                amqpTransport.stop();
+            } catch (Throwable e) {
+                LOG.error("Failed to stop AMQP Transport ", e);
+            }
         }
     }
 

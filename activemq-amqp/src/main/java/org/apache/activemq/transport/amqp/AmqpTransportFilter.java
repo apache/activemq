@@ -242,4 +242,12 @@ public class AmqpTransportFilter extends TransportFilter implements AmqpTranspor
     public void setConnectAttemptTimeout(int connectAttemptTimeout) {
         wireFormat.setConnectAttemptTimeout(connectAttemptTimeout);
     }
+
+    public long getMaxFrameSize() {
+        return wireFormat.getMaxFrameSize();
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        wireFormat.setMaxFrameSize(maxFrameSize);
+    }
 }

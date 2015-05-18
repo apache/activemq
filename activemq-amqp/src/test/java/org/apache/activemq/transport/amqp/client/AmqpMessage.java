@@ -21,9 +21,11 @@ import java.util.Map;
 
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableDelivery;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Properties;
 import org.apache.qpid.proton.engine.Delivery;
@@ -312,6 +314,21 @@ public class AmqpMessage {
     public void setText(String value) throws IllegalStateException {
         checkReadOnly();
         AmqpValue body = new AmqpValue(value);
+        getWrappedMessage().setBody(body);
+    }
+
+    /**
+     * Sets a byte array value into the body of an outgoing Message, throws
+     * an exception if this is an incoming message instance.
+     *
+     * @param value
+     *        the byte array value to store in the Message body.
+     *
+     * @throws IllegalStateException if the message is read only.
+     */
+    public void setBytes(byte[] bytes) throws IllegalStateException {
+        checkReadOnly();
+        Data body = new Data(new Binary(bytes));
         getWrappedMessage().setBody(body);
     }
 

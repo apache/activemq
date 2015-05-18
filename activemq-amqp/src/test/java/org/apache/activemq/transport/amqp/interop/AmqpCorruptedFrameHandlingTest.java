@@ -35,7 +35,7 @@ public class AmqpCorruptedFrameHandlingTest extends AmqpClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
-        return "?transport.wireFormat.maxFrameSize=65535";
+        return "?transport.maxFrameSize=65535&transport.wireFormat.idleTimeout=5000";
     }
 
     @Test(timeout = 60000)

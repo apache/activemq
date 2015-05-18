@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.protocol;
 
+import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.fusesource.hawtbuf.Buffer;
@@ -99,6 +100,10 @@ public abstract class AmqpAbstractReceiver extends AmqpAbstractLink<Receiver> {
         int count;
         while ((count = getEndpoint().recv(recvBuffer, 0, recvBuffer.length)) > 0) {
             current.write(recvBuffer, 0, count);
+
+            if (current.size() > session.getMaxFrameSize()) {
+                throw new AmqpProtocolException("Frame size of " + current.size() + " larger than max allowed " + session.getMaxFrameSize());
+            }
         }
 
         // Expecting more deliveries..

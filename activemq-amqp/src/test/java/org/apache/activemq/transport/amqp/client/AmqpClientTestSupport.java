@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.apache.activemq.transport.amqp.AmqpTestSupport;
@@ -25,13 +26,76 @@ import org.apache.activemq.transport.amqp.AmqpTestSupport;
  */
 public class AmqpClientTestSupport extends AmqpTestSupport {
 
+    private String connectorScheme = "amqp";
+    private boolean useSSL;
+
+    public AmqpClientTestSupport() {
+    }
+
+    public AmqpClientTestSupport(String connectorScheme, boolean useSSL) {
+        this.connectorScheme = connectorScheme;
+        this.useSSL = useSSL;
+    }
+
+    public String getConnectorScheme() {
+        return connectorScheme;
+    }
+
+    public boolean isUseSSL() {
+        return useSSL;
+    }
+
     public String getAmqpConnectionURIOptions() {
         return "";
     }
 
+    @Override
+    protected boolean isUseTcpConnector() {
+        return !isUseSSL() && !connectorScheme.contains("nio");
+    }
+
+    @Override
+    protected boolean isUseSslConnector() {
+        return isUseSSL() && !connectorScheme.contains("nio");
+    }
+
+    @Override
+    protected boolean isUseNioConnector() {
+        return !isUseSSL() && connectorScheme.contains("nio");
+    }
+
+    @Override
+    protected boolean isUseNioPlusSslConnector() {
+        return isUseSSL() && connectorScheme.contains("nio");
+    }
+
     public URI getBrokerAmqpConnectionURI() {
         try {
-            String uri = "tcp://127.0.0.1:" + amqpPort;
+            int port = 0;
+            switch (connectorScheme) {
+                case "amqp":
+                    port = this.amqpPort;
+                    break;
+                case "amqp+ssl":
+                    port = this.amqpSslPort;
+                    break;
+                case "amqp+nio":
+                    port = this.amqpNioPort;
+                    break;
+                case "amqp+nio+ssl":
+                    port = this.amqpNioPlusSslPort;
+                    break;
+                default:
+                    throw new IOException("Invalid AMQP connector scheme passed to test.");
+            }
+
+            String uri = null;
+
+            if (isUseSSL()) {
+                uri = "ssl://127.0.0.1:" + port;
+            } else {
+                uri = "tcp://127.0.0.1:" + port;
+            }
 
             if (!getAmqpConnectionURIOptions().isEmpty()) {
                 uri = uri + "?" + getAmqpConnectionURIOptions();

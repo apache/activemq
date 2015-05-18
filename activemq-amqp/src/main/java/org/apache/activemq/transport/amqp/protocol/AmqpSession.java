@@ -369,6 +369,10 @@ public class AmqpSession implements AmqpResource {
         return protonSession;
     }
 
+    public long getMaxFrameSize() {
+        return connection.getMaxFrameSize();
+    }
+
     //----- Internal Implementation ------------------------------------------//
 
     private ConsumerId getNextConsumerId() {
