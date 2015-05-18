@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -44,10 +45,15 @@ public class StompWireFormat implements WireFormat {
     private static final int MAX_HEADER_LENGTH = 1024 * 10;
     private static final int MAX_HEADERS = 1000;
     private static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
+    public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
 
     private int version = 1;
     private int maxDataLength = MAX_DATA_LENGTH;
+    private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private String stompVersion = Stomp.DEFAULT_VERSION;
+    
+    //The current frame size as it is unmarshalled from the stream
+    private AtomicLong frameSize = new AtomicLong();
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -98,12 +104,12 @@ public class StompWireFormat implements WireFormat {
     public Object unmarshal(DataInput in) throws IOException {
 
         try {
-
+            
             // parse action
-            String action = parseAction(in);
+            String action = parseAction(in, frameSize);
 
             // Parse the headers
-            HashMap<String, String> headers = parseHeaders(in);
+            HashMap<String, String> headers = parseHeaders(in, frameSize);
 
             // Read in the data part.
             byte[] data = NO_DATA;
@@ -111,7 +117,7 @@ public class StompWireFormat implements WireFormat {
             if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLength != null) {
 
                 // Bless the client, he's telling us how much data to read in.
-                int length = parseContentLength(contentLength);
+                int length = parseContentLength(contentLength, frameSize);
 
                 data = new byte[length];
                 in.readFully(data);
@@ -125,14 +131,17 @@ public class StompWireFormat implements WireFormat {
                 // We don't know how much to read.. data ends when we hit a 0
                 byte b;
                 ByteArrayOutputStream baos = null;
-                while ((b = in.readByte()) != 0) {
-
+                while ((b = in.readByte()) != 0) {                    
                     if (baos == null) {
                         baos = new ByteArrayOutputStream();
                     } else if (baos.size() > getMaxDataLength()) {
                         throw new ProtocolException("The maximum data length was exceeded", true);
+                    } else {
+                        if (frameSize.incrementAndGet() > getMaxFrameSize()) {
+                            throw new ProtocolException("The maximum frame size was exceeded", true);
+                        }
                     }
-
+                    
                     baos.write(b);
                 }
 
@@ -146,6 +155,8 @@ public class StompWireFormat implements WireFormat {
 
         } catch (ProtocolException e) {
             return new StompFrameError(e);
+        } finally {
+            frameSize.set(0);
         }
     }
 
@@ -178,9 +189,9 @@ public class StompWireFormat implements WireFormat {
         return line;
     }
 
-    protected String parseAction(DataInput in) throws IOException {
+    protected String parseAction(DataInput in, AtomicLong frameSize) throws IOException {
         String action = null;
-
+        
         // skip white space to next real action line
         while (true) {
             action = readLine(in, MAX_COMMAND_LENGTH, "The maximum command length was exceeded");
@@ -193,19 +204,20 @@ public class StompWireFormat implements WireFormat {
                 }
             }
         }
-
+        frameSize.addAndGet(action.length());
         return action;
     }
 
-    protected HashMap<String, String> parseHeaders(DataInput in) throws IOException {
-        HashMap<String, String> headers = new HashMap<String, String>(25);
+    protected HashMap<String, String> parseHeaders(DataInput in, AtomicLong frameSize) throws IOException {
+        HashMap<String, String> headers = new HashMap<String, String>(25); 
         while (true) {
             ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
             if (line != null && line.length > 1) {
-
+                
                 if (headers.size() > MAX_HEADERS) {
                     throw new ProtocolException("The maximum number of headers was exceeded", true);
                 }
+                frameSize.addAndGet(line.length);
 
                 try {
 
@@ -245,8 +257,8 @@ public class StompWireFormat implements WireFormat {
         }
         return headers;
     }
-
-    protected int parseContentLength(String contentLength) throws ProtocolException {
+    
+    protected int parseContentLength(String contentLength, AtomicLong frameSize) throws ProtocolException {
         int length;
         try {
             length = Integer.parseInt(contentLength.trim());
@@ -256,6 +268,10 @@ public class StompWireFormat implements WireFormat {
 
         if (length > getMaxDataLength()) {
             throw new ProtocolException("The maximum data length was exceeded", true);
+        }
+        
+        if (frameSize.addAndGet(length) > getMaxFrameSize()) {
+            throw new ProtocolException("The maximum frame size was exceeded", true);
         }
 
         return length;
@@ -325,7 +341,7 @@ public class StompWireFormat implements WireFormat {
 
         return new String(decoded.toByteArray(), "UTF-8");
     }
-
+    
     @Override
     public int getVersion() {
         return version;
@@ -350,5 +366,13 @@ public class StompWireFormat implements WireFormat {
 
     public int getMaxDataLength() {
         return maxDataLength;
+    }
+
+    public long getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
     }
 }

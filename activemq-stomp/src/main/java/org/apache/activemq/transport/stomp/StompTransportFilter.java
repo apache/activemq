@@ -168,4 +168,12 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     public int getMaxDataLength() {
         return wireFormat.getMaxDataLength();
     }
+    
+    public void setMaxFrameSize(int maxFrameSize) {
+        wireFormat.setMaxFrameSize(maxFrameSize);
+    }
+    
+    public long getMaxFrameSize() {
+        return wireFormat.getMaxFrameSize();
+    }
 }
