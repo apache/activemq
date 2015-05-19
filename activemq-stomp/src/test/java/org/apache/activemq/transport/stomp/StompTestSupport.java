@@ -43,7 +43,6 @@ import org.apache.activemq.security.AuthorizationPlugin;
 import org.apache.activemq.security.DefaultAuthorizationMap;
 import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.security.TempDestinationAuthorizationEntry;
-import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.transport.stomp.util.ResourceLoadingSslContext;
 import org.apache.activemq.transport.stomp.util.XStreamBrokerContext;
 import org.junit.After;
@@ -175,11 +174,6 @@ public class StompTestSupport {
         brokerService.setSchedulerSupport(true);
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.getManagementContext().setCreateMBeanServer(false);
-
-        JobSchedulerStoreImpl jobStore = new JobSchedulerStoreImpl();
-        jobStore.setDirectory(new File("activemq-data"));
-
-        brokerService.setJobSchedulerStore(jobStore);
     }
 
     protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
