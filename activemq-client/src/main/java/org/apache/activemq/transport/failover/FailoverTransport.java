@@ -1284,20 +1284,21 @@ public class FailoverTransport implements CompositeTransport {
     @Override
     public void updateURIs(boolean rebalance, URI[] updatedURIs) throws IOException {
         if (isUpdateURIsSupported()) {
-            HashSet<URI> copy = new HashSet<URI>(this.updated);
-            updated.clear();
-            if (updatedURIs != null && updatedURIs.length > 0) {
-                for (URI uri : updatedURIs) {
-                    if (uri != null && !updated.contains(uri)) {
-                        updated.add(uri);
+            HashSet<URI> copy = new HashSet<URI>();
+            synchronized (reconnectMutex) {
+                copy.addAll(this.updated);
+                updated.clear();
+                if (updatedURIs != null && updatedURIs.length > 0) {
+                    for (URI uri : updatedURIs) {
+                        if (uri != null && !updated.contains(uri)) {
+                            updated.add(uri);
+                        }
                     }
                 }
-                if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet<URI>(updated))) {
-                    buildBackups();
-                    synchronized (reconnectMutex) {
-                        reconnect(rebalance);
-                    }
-                }
+            }
+            if (!(copy.isEmpty() && updated.isEmpty()) && !copy.equals(new HashSet<URI>(updated))) {
+                buildBackups();
+                reconnect(rebalance);
             }
         }
     }

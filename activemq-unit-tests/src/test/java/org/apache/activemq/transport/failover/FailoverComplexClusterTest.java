@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
  * broker is removed and then show 3 after the 3rd broker is reintroduced.
  */
 public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
+    protected final Logger LOG = LoggerFactory.getLogger(FailoverComplexClusterTest.class);
 
     private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61616";
     private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61617";
@@ -258,6 +259,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     private void runTests(boolean multi, String tcParams, String clusterFilter, String destinationFilter) throws Exception, InterruptedException {
         assertClientsConnectedToThreeBrokers();
 
+        LOG.info("Stopping BrokerC in prep for restart");
         getBroker(BROKER_C_NAME).stop();
         getBroker(BROKER_C_NAME).waitUntilStopped();
         removeBroker(BROKER_C_NAME);
@@ -266,6 +268,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         assertClientsConnectedToTwoBrokers();
 
+        LOG.info("Recreating BrokerC after stop");
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
         Thread.sleep(5000);
