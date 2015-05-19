@@ -40,27 +40,26 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
     enum TestType {FRAME_MAX_GREATER_THAN_HEADER_MAX, FRAME_MAX_LESS_THAN_HEADER_MAX, FRAME_MAX_LESS_THAN_ACTION_MAX};
 
-    //set max data size higher than max frame size so that max frame size gets tested
+    // set max data size higher than max frame size so that max frame size gets tested
     private static final int MAX_DATA_SIZE = 100 * 1024;
-    private StompConnection connection;
-    private TestType testType;
-    private int maxFrameSize;
-    
+    private final TestType testType;
+    private final int maxFrameSize;
+
     /**
      * This defines the different possible max header sizes for this test.
      */
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                //The maximum size exceeds the default max header size of 10 * 1024
+                // The maximum size exceeds the default max header size of 10 * 1024
                 {TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX, 64 * 1024},
-                //The maximum size is less than the default max header size of 10 * 1024
+                // The maximum size is less than the default max header size of 10 * 1024
                 {TestType.FRAME_MAX_LESS_THAN_HEADER_MAX, 5 * 1024},
-                //The maximum size is less than the default max action size of 1024
+                // The maximum size is less than the default max action size of 1024
                 {TestType.FRAME_MAX_LESS_THAN_ACTION_MAX, 512}
         });
     }
-    
+
     public StompMaxFrameSizeTest(TestType testType, int maxFrameSize) {
         this.testType = testType;
         this.maxFrameSize = maxFrameSize;
@@ -75,16 +74,6 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
         super.setUp();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (Throwable ex) {}
-        }
-        super.tearDown();
     }
 
     @Override
@@ -109,7 +98,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
      * These tests should cause a Stomp error because the body size is greater than the
      * max allowed frame size
      */
-    
+
     @Test(timeout = 60000)
     public void testOversizedBodyOnPlainSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
@@ -133,7 +122,6 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
         doOversizedTestMessage(nioSslPort, true, maxFrameSize + 100);
     }
-    
 
     /**
      * These tests should cause a Stomp error because even though the body size is less than max frame size,
@@ -144,7 +132,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
         doOversizedTestMessage(port, false, maxFrameSize - 50);
     }
-    
+
     @Test(timeout = 60000)
     public void testOversizedTotalFrameOnNioSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
@@ -162,8 +150,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
         doOversizedTestMessage(nioSslPort, true, maxFrameSize - 50);
     }
-    
-    
+
     /**
      * These tests will test a successful Stomp message when the total size is than max frame size
      */
@@ -172,7 +159,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
         doUndersizedTestMessage(port, false);
     }
-    
+
     @Test(timeout = 60000)
     public void testUndersizedTotalFrameOnNioSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
@@ -190,18 +177,18 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_GREATER_THAN_HEADER_MAX);
         doUndersizedTestMessage(nioSslPort, true);
     }
-    
+
     /**
      *  These tests test that a Stomp error occurs if the action size exceeds maxFrameSize
      *  when the maxFrameSize length is less than the default max action length
      */
-    
+
     @Test(timeout = 60000)
     public void testOversizedActionOnPlainSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_ACTION_MAX);
         doTestOversizedAction(port, false);
     }
-    
+
     @Test(timeout = 60000)
     public void testOversizedActionOnNioSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_ACTION_MAX);
@@ -219,8 +206,8 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_ACTION_MAX);
         doTestOversizedAction(nioSslPort, true);
     }
-    
-    
+
+
     /**
      *  These tests will test that a Stomp error occurs if the header size exceeds maxFrameSize
      *  when the maxFrameSize length is less than the default max header length
@@ -230,7 +217,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
         doTestOversizedHeaders(port, false);
     }
-    
+
     @Test(timeout = 60000)
     public void testOversizedHeadersOnNioSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
@@ -248,15 +235,14 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
         doTestOversizedHeaders(nioSslPort, true);
     }
-    
-    
+
     protected void doTestOversizedAction(int port, boolean useSsl) throws Exception {
         initializeStomp(port, useSsl);
 
         char[] actionArray = new char[maxFrameSize + 100];
         Arrays.fill(actionArray, 'A');
         String action = new String(actionArray);
-        
+
         String frame = action + "\n" + "destination:/queue/" + getQueueName() + "\n\n" + "body" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -265,16 +251,16 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         assertEquals("ERROR", received.getAction());
         assertTrue(received.getBody().contains("maximum frame size"));
     }
-    
+
     protected void doTestOversizedHeaders(int port, boolean useSsl) throws Exception {
         initializeStomp(port, useSsl);
-        
+
         StringBuilder headers = new StringBuilder(maxFrameSize + 100);
         int i = 0;
         while (headers.length() < maxFrameSize + 1) {
             headers.append("key" + i++ + ":value\n");
         }
-        
+
         String frame = "SEND\n" + headers.toString() + "\n" + "destination:/queue/" + getQueueName() +
                 headers.toString() + "\n\n" + "body" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -320,7 +306,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         assertEquals("MESSAGE", received.getAction());
         assertEquals(bigBody, received.getBody());
     }
-    
+
     protected StompConnection stompConnect(int port, boolean ssl) throws Exception {
         if (stompConnection == null) {
             stompConnection = new StompConnection();
@@ -340,7 +326,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
     protected void initializeStomp(int port, boolean useSsl) throws Exception{
         stompConnect(port, useSsl);
-        
+
         String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
@@ -350,7 +336,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
-    
+
     protected Socket createSocket(int port) throws IOException {
         return new Socket("127.0.0.1", port);
     }
