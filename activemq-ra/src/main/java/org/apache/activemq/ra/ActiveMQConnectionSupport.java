@@ -19,6 +19,7 @@ package org.apache.activemq.ra;
 import javax.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,13 +39,15 @@ public class ActiveMQConnectionSupport {
      * broker. The factory is configured with the given configuration information.
      * 
      * @param connectionRequestInfo the configuration request information
+     * @param activationSpec
      * @return the connection factory
      * @throws java.lang.IllegalArgumentException if the server URL given in the
      * configuration information is not a valid URL
      */
-    protected ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo connectionRequestInfo) {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory();
-        connectionRequestInfo.configure(factory);
+    protected ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo connectionRequestInfo, MessageActivationSpec activationSpec) {
+        //ActiveMQSslConnectionFactory defaults to TCP anyway
+        ActiveMQConnectionFactory factory = new ActiveMQSslConnectionFactory();
+        connectionRequestInfo.configure(factory, activationSpec);
         return factory;
     }
 
@@ -57,8 +60,8 @@ public class ActiveMQConnectionSupport {
      * @return the physical connection
      * @throws JMSException if the connection could not be established
      */
-    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException{
-        return makeConnection(connectionRequestInfo, createConnectionFactory(connectionRequestInfo));
+    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException {
+        return makeConnection(connectionRequestInfo, createConnectionFactory(connectionRequestInfo, null));
     }
 
     /**
@@ -185,6 +188,41 @@ public class ActiveMQConnectionSupport {
             log.debug(this + ", setting [serverUrl] to: " + url);
         }
         info.setServerUrl(url);
+    }
+
+    public void setTrustStore(String trustStore) {
+        if ( log.isDebugEnabled() ) {
+                    log.debug(this + ", setting [trustStore] to: " + trustStore);
+                }
+        info.setTrustStore(trustStore);
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        if ( log.isDebugEnabled() ) {
+                    log.debug(this + ", setting [trustStorePassword] to: " + trustStorePassword);
+                }
+        info.setTrustStorePassword(trustStorePassword);
+    }
+
+    public void setKeyStore(String keyStore) {
+        if ( log.isDebugEnabled() ) {
+                    log.debug(this + ", setting [keyStore] to: " + keyStore);
+                }
+        info.setKeyStore(keyStore);
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        if ( log.isDebugEnabled() ) {
+                    log.debug(this + ", setting [keyStorePassword] to: " + keyStorePassword);
+                }
+        info.setKeyStorePassword(keyStorePassword);
+    }
+
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        if ( log.isDebugEnabled() ) {
+                    log.debug(this + ", setting [keyStoreKeyPassword] to: " + keyStoreKeyPassword);
+                }
+        info.setKeyStoreKeyPassword(keyStoreKeyPassword);
     }
 
     /**

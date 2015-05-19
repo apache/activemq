@@ -121,7 +121,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     public ActiveMQConnection makeConnection(MessageActivationSpec activationSpec) throws JMSException {
         ActiveMQConnectionFactory cf = getConnectionFactory();
         if (cf == null) {
-            cf = createConnectionFactory(getInfo());
+            cf = createConnectionFactory(getInfo(), activationSpec);
         }
         String userName = defaultValue(activationSpec.getUserName(), getInfo().getUserName());
         String password = defaultValue(activationSpec.getPassword(), getInfo().getPassword());

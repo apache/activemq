@@ -22,7 +22,10 @@ import javax.resource.spi.ConnectionRequestInfo;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *  Must override equals and hashCode (JCA spec 16.4)
@@ -30,6 +33,7 @@ import org.apache.activemq.RedeliveryPolicy;
 public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Serializable, Cloneable {
 
     private static final long serialVersionUID = -5754338187296859149L;
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private String userName;
     private String password;
@@ -39,6 +43,11 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     private RedeliveryPolicy redeliveryPolicy;
     private ActiveMQPrefetchPolicy prefetchPolicy;
     private Boolean useSessionArgs;
+    private String trustStore;
+    private String trustStorePassword;
+    private String keyStore;
+    private String keyStorePassword;
+    private String keyStoreKeyPassword;
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
@@ -63,7 +72,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     /**
      * Configures the given connection factory
      */
-    public void configure(ActiveMQConnectionFactory factory) {
+    public void configure(ActiveMQConnectionFactory factory, MessageActivationSpec activationSpec) {
         if (serverUrl != null) {
             factory.setBrokerURL(serverUrl);
         }
@@ -75,6 +84,37 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         }
         if (prefetchPolicy != null) {
             factory.setPrefetchPolicy(prefetchPolicy);
+        }
+        if (factory instanceof ActiveMQSslConnectionFactory) {
+            String trustStore = defaultValue(activationSpec == null ? null : activationSpec.getTrustStore(), getTrustStore());
+            String trustStorePassword = defaultValue(activationSpec == null ? null : activationSpec.getTrustStorePassword(), getTrustStorePassword());
+            String keyStore = defaultValue(activationSpec == null ? null : activationSpec.getKeyStore(), getKeyStore());
+            String keyStorePassword = defaultValue(activationSpec == null ? null : activationSpec.getKeyStorePassword(), getKeyStorePassword());
+            String keyStoreKeyPassword = defaultValue(activationSpec == null ? null : activationSpec.getKeyStoreKeyPassword(), getKeyStoreKeyPassword());
+            ActiveMQSslConnectionFactory sslFactory = (ActiveMQSslConnectionFactory) factory;
+            if (trustStore != null) {
+                try {
+                    sslFactory.setTrustStore(trustStore);
+                } catch (Exception e) {
+                    log.warn("Unable to set TrustStore", e);
+                }
+            }
+            if (trustStorePassword != null) {
+                sslFactory.setTrustStorePassword(trustStorePassword);
+            }
+            if (keyStore != null) {
+                try {
+                    sslFactory.setKeyStore(keyStore);
+                } catch (Exception e) {
+                    log.warn("Unable to set KeyStore", e);
+                }
+            }
+            if (keyStorePassword != null) {
+                sslFactory.setKeyStorePassword(keyStorePassword);
+            }
+            if (keyStoreKeyPassword != null) {
+                sslFactory.setKeyStoreKeyPassword(keyStoreKeyPassword);
+            }
         }
     }
 
@@ -180,6 +220,46 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
      */
     public void setClientid(String clientid) {
         this.clientid = clientid;
+    }
+
+    public String getTrustStore() {
+        return trustStore;
+    }
+
+    public void setTrustStore(String trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    public String getKeyStore() {
+        return keyStore;
+    }
+
+    public void setKeyStore(String keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
+
+    public String getKeyStoreKeyPassword() {
+        return keyStoreKeyPassword;
+    }
+
+    public void setKeyStoreKeyPassword(String keyStoreKeyPassword) {
+        this.keyStoreKeyPassword = keyStoreKeyPassword;
     }
 
     @Override
@@ -353,5 +433,12 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public void setUseSessionArgs(Boolean useSessionArgs) {
         this.useSessionArgs = useSessionArgs;
+    }
+
+    protected String defaultValue(String value, String defaultValue) {
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
     }
 }
