@@ -1040,7 +1040,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else if (command.isBrokerInfo()) {
                     futureLocalBrokerInfo.set((BrokerInfo) command);
                 } else if (command.isShutdownInfo()) {
-                    LOG.info("{} Shutting down", configuration.getBrokerName());
+                    LOG.info("{} Shutting down {}", configuration.getBrokerName(), configuration.getName());
                     stop();
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;

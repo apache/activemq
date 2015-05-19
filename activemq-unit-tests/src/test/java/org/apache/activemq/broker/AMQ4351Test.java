@@ -60,11 +60,9 @@ public class AMQ4351Test extends BrokerTestSupport {
         broker.setOfflineDurableSubscriberTaskSchedule(500);
         broker.setOfflineDurableSubscriberTimeout(2000); // lets delete durable subs much faster.
 
-        System.setProperty("derby.system.home", new File(IOHelper.getDefaultDataDirectory()).getCanonicalPath());
-
         JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        jdbc.deleteAllMessages();
         broker.setPersistenceAdapter(jdbc);
+        broker.setDeleteAllMessagesOnStartup(true);
         return broker;
     }
 

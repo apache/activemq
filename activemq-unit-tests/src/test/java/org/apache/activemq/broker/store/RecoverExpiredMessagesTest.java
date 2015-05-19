@@ -56,7 +56,7 @@ public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
         addCombinationValues("queuePendingPolicy", new PendingQueueMessageStoragePolicy[] {new FilePendingQueueMessageStoragePolicy(), new VMPendingQueueMessageStoragePolicy()});
         PersistenceAdapter[] persistenceAdapters = new PersistenceAdapter[] {
                 new KahaDBPersistenceAdapter(),
-                new JDBCPersistenceAdapter(JDBCPersistenceAdapter.createDataSource(IOHelper.getDefaultDataDirectory()), new OpenWireFormat())
+                new JDBCPersistenceAdapter()
         };
         for (PersistenceAdapter adapter : persistenceAdapters) {
             adapter.setDirectory(new File(IOHelper.getDefaultDataDirectory()));
@@ -134,6 +134,9 @@ public class RecoverExpiredMessagesTest extends BrokerRestartTestSupport {
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
         super.configureBroker(broker);
+        if (persistenceAdapter instanceof JDBCPersistenceAdapter) {
+           ((JDBCPersistenceAdapter) persistenceAdapter).setLockDataSource(null);
+        }
         broker.setPersistenceAdapter(persistenceAdapter);
     }
 

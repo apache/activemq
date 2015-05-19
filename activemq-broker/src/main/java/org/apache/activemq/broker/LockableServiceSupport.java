@@ -112,6 +112,7 @@ public abstract class LockableServiceSupport extends ServiceSupport implements L
             }
             if (locker != null) {
                 getLocker().stop();
+                locker = null;
             }
         }
         ThreadPoolUtils.shutdown(clockDaemon);
