@@ -283,7 +283,7 @@ public class BTreeIndexTest extends IndexTestSupport {
         tx.commit();
 
         Random rand = new Random(System.currentTimeMillis());
-        final int count = 50000;
+        final int count = 1000;
 
         String payload = new String(new byte[200]);
         for (int i = 0; i < count; i++) {
