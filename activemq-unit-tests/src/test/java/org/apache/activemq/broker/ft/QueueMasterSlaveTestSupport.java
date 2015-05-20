@@ -31,6 +31,7 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,28 +135,38 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
         assertTrue(!slave.get().isSlave());
 
+        LOG.info("Sending post failover message to VT");
+
         final String text = "ForUWhenSlaveKicksIn";
         producer.send(new ActiveMQTopic("VirtualTopic.TA1"), session.createTextMessage(text));
 
+        // dest must survive failover - consumer created after send
         qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
 
-        javax.jms.Message message = qConsumer.receive(20000);
+        javax.jms.Message message = qConsumer.receive(10000);
         assertNotNull("Get message after failover", message);
         assertEquals("correct message", text, ((TextMessage)message).getText());
     }
 
     public void testAdvisory() throws Exception {
-        MessageConsumer advConsumer = session.createConsumer(AdvisorySupport.getMasterBrokerAdvisoryTopic());
-        Message advisoryMessage = advConsumer.receive(5000);
-        LOG.info("received " + advisoryMessage);
-        assertNotNull("Didn't received advisory", advisoryMessage);
+        final MessageConsumer advConsumer = session.createConsumer(AdvisorySupport.getMasterBrokerAdvisoryTopic());
+        final Message[] advisoryMessage = new Message[1];
+        advisoryMessage[0] = advConsumer.receive(5000);
+        LOG.info("received " + advisoryMessage[0]);
+        assertNotNull("Didn't received advisory", advisoryMessage[0]);
 
         master.stop();
         assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
         LOG.info("slave started");
-        advisoryMessage = advConsumer.receive(20000);
-        LOG.info("received " + advisoryMessage);
-        assertNotNull("Didn't received advisory", advisoryMessage);
+        Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                advisoryMessage[0] = advConsumer.receive(500);
+                return advisoryMessage[0] != null;
+            }
+        });
+        LOG.info("received " + advisoryMessage[0]);
+        assertNotNull("Didn't received advisory", advisoryMessage[0]);
 
     }
 }
