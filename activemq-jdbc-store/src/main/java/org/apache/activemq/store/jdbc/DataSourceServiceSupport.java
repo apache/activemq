@@ -98,10 +98,6 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
         final EmbeddedDataSource ds = new EmbeddedDataSource();
         ds.setDatabaseName("derbydb");
         ds.setCreateDatabase("create");
-        try {
-            ds.getConnection().close();
-        } catch (SQLException ignored) {
-        }
         return ds;
     }
 
