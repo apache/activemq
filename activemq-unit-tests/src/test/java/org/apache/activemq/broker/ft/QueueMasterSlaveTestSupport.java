@@ -44,13 +44,15 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
 
     protected BrokerService master;
     protected AtomicReference<BrokerService> slave = new AtomicReference<BrokerService>();
-    protected CountDownLatch slaveStarted = new CountDownLatch(1);
+    protected CountDownLatch slaveStarted;
     protected int inflightMessageCount;
     protected int failureCount = 50;
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false&useExponentialBackOff=false";
 
     @Override
     protected void setUp() throws Exception {
+        slaveStarted = new CountDownLatch(1);
+        slave.set(null);
         setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
         setAutoFail(true);
         if (System.getProperty("basedir") == null) {
@@ -137,18 +139,21 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
 
         qConsumer = session.createConsumer(new ActiveMQQueue("Consumer.A.VirtualTopic.TA1"));
 
-        javax.jms.Message message = qConsumer.receive(4000);
+        javax.jms.Message message = qConsumer.receive(20000);
         assertNotNull("Get message after failover", message);
         assertEquals("correct message", text, ((TextMessage)message).getText());
     }
 
     public void testAdvisory() throws Exception {
         MessageConsumer advConsumer = session.createConsumer(AdvisorySupport.getMasterBrokerAdvisoryTopic());
+        Message advisoryMessage = advConsumer.receive(5000);
+        LOG.info("received " + advisoryMessage);
+        assertNotNull("Didn't received advisory", advisoryMessage);
 
         master.stop();
         assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
         LOG.info("slave started");
-        Message advisoryMessage = advConsumer.receive(5000);
+        advisoryMessage = advConsumer.receive(20000);
         LOG.info("received " + advisoryMessage);
         assertNotNull("Didn't received advisory", advisoryMessage);
 

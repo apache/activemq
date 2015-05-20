@@ -87,19 +87,18 @@ public class Topic extends BaseDestination implements Task {
             DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
         this.topicStore = store;
-        // set default subscription recovery policy
-        if (AdvisorySupport.isMasterBrokerAdvisoryTopic(destination)) {
-            subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
-            setAlwaysRetroactive(true);
-        } else {
-            subscriptionRecoveryPolicy = new RetainedMessageSubscriptionRecoveryPolicy(null);
-        }
+        subscriptionRecoveryPolicy = new RetainedMessageSubscriptionRecoveryPolicy(null);
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
     }
 
     @Override
     public void initialize() throws Exception {
         super.initialize();
+        // set non default subscription recovery policy (override policyEntries)
+        if (AdvisorySupport.isMasterBrokerAdvisoryTopic(destination)) {
+            subscriptionRecoveryPolicy = new LastImageSubscriptionRecoveryPolicy();
+            setAlwaysRetroactive(true);
+        }
         if (store != null) {
             // AMQ-2586: Better to leave this stat at zero than to give the user
             // misleading metrics.

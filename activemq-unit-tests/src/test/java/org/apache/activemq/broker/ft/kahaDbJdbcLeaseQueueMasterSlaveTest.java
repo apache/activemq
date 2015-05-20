@@ -34,10 +34,17 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
     protected String MASTER_URL = "tcp://localhost:62001";
     protected String SLAVE_URL  = "tcp://localhost:62002";
 
+    @Override
     protected void setUp() throws Exception {
         // startup db
         sharedDs = new SyncCreateDataSource((EmbeddedDataSource) DataSourceServiceSupport.createDataSource(IOHelper.getDefaultDataDirectory()));
         super.setUp();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        DataSourceServiceSupport.shutdownDefaultDataSource(((SyncCreateDataSource)sharedDs).getDelegate());
     }
 
     protected void createMaster() throws Exception {
@@ -100,11 +107,6 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
     protected void configureLocker(KahaDBPersistenceAdapter kahaDBPersistenceAdapter) throws IOException {
         kahaDBPersistenceAdapter.setLockKeepAlivePeriod(500);
         kahaDBPersistenceAdapter.getLocker().setLockAcquireSleepInterval(500);
-    }
-
-    @Override
-    public void testVirtualTopicFailover() throws Exception {
-        // Ignoring for now, see AMQ-4842
     }
 
     protected DataSource getExistingDataSource() throws Exception {
