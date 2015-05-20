@@ -20,7 +20,9 @@ package org.apache.activemq.transport.stomp;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,11 +30,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.Connection;
-import javax.jms.Session;
-
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -45,20 +42,10 @@ public class StompLoadTest extends StompTestSupport {
     private static final int TASK_COUNT = 100;
     private static final int MSG_COUNT = 250;  // AMQ-3819: Above 250 or so and the CPU goes bonkers with NOI+SSL.
 
-    protected Connection connection;
-    protected Session session;
-    protected ActiveMQQueue queue;
-
     private ExecutorService executor;
     private CountDownLatch started;
     private CountDownLatch ready;
     private AtomicInteger receiveCount;
-
-    @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
-        port = connector.getConnectUri().getPort();
-    }
 
     @Override
     public void setUp() throws Exception {
@@ -67,11 +54,6 @@ public class StompLoadTest extends StompTestSupport {
 
         stompConnect();
         stompConnection.connect("system", "manager");
-
-        connection = cf.createConnection("system", "manager");
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        queue = new ActiveMQQueue(getTopicName());
-        connection.start();
 
         executor = Executors.newFixedThreadPool(TASK_COUNT, new ThreadFactory() {
 
@@ -94,7 +76,6 @@ public class StompLoadTest extends StompTestSupport {
     public void tearDown() throws Exception {
         try {
             executor.shutdownNow();
-            connection.close();
         } catch (Exception e) {
         } finally {
             super.tearDown();
@@ -103,6 +84,8 @@ public class StompLoadTest extends StompTestSupport {
 
     @Test(timeout=5*60*1000)
     public void testStompUnloadLoad() throws Exception {
+
+        final List<StompConnection> taskConnections = new ArrayList<>();
 
         for (int i = 0; i < TASK_COUNT; ++i) {
             executor.execute(new Runnable() {
@@ -122,6 +105,8 @@ public class StompLoadTest extends StompTestSupport {
                         LOG.error("Caught Exception while connecting: " + e.getMessage());
                     }
 
+                    taskConnections.add(connection);
+
                     try {
 
                         for (int i = 0; i < 10; i++) {
@@ -139,7 +124,7 @@ public class StompLoadTest extends StompTestSupport {
                         TimeUnit.SECONDS.sleep(3);
                         started.countDown();
 
-                        while (true) {
+                        while (receiveCount.get() != TASK_COUNT * MSG_COUNT) {
                             // Read Timeout ends this task, we override the default here since there
                             // are so many threads running and we don't know how slow the test box is.
                             StompFrame frame = connection.receive(TimeUnit.SECONDS.toMillis(60));
@@ -190,10 +175,17 @@ public class StompLoadTest extends StompTestSupport {
 
         LOG.info("Test Completed and all messages received, shutting down.");
 
+        for (StompConnection taskConnection : taskConnections) {
+            try {
+                taskConnection.disconnect();
+                taskConnection.close();
+            } catch (Exception ex) {
+            }
+        }
+
         executor.shutdown();
         executor.awaitTermination(2, TimeUnit.MINUTES);
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
-        LOG.info("Test Finished.");
+
+        stompDisconnect();
     }
 }

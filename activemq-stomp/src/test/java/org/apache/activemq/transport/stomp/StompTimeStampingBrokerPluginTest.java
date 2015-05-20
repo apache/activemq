@@ -20,9 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.URI;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
@@ -31,49 +29,30 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.util.TimeStampingBrokerPlugin;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StompTimeStampingBrokerPluginTest {
+public class StompTimeStampingBrokerPluginTest extends StompTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompTimeStampingBrokerPluginTest.class);
 
-    private BrokerService broker;
-    private String connectionUri;
-    private int port;
-    private StompConnection stompConnection = new StompConnection();
     private Connection connection;
     private Session session;
 
-    @Rule public TestName name = new TestName();
+    @Override
+    protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+        plugins.add(new TimeStampingBrokerPlugin());
+    }
 
-    @Before
-    public void setUp() throws Exception {
-        TimeStampingBrokerPlugin tsbp = new TimeStampingBrokerPlugin();
-
-        broker = new BrokerService();
-        broker.setPersistent(false);
-        broker.setUseJmx(false);
-        broker.setPlugins(new BrokerPlugin[] {tsbp});
-        connectionUri = broker.addConnector("tcp://0.0.0.0:0").getPublishableConnectString();
-        String stompConnectionUri = broker.addConnector("stomp://0.0.0.0:0").getPublishableConnectString();
-
-        URI uri = new URI(stompConnectionUri);
-        this.port = uri.getPort();
-
+    @Override
+    protected void applyBrokerPolicies() throws Exception {
         // Add policy and individual DLQ strategy
         PolicyEntry policy = new PolicyEntry();
         DeadLetterStrategy strategy = new IndividualDeadLetterStrategy();
@@ -86,39 +65,21 @@ public class StompTimeStampingBrokerPluginTest {
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
 
-        broker.setDestinationPolicy(pMap);
-        broker.start();
+        brokerService.setDestinationPolicy(pMap);
+    }
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
 
         stompConnect();
 
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectionUri);
-        connection = cf.createConnection();
+        connection = cf.createConnection("system", "manager");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         connection.start();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        broker.stop();
-    }
-
-    protected StompConnection stompConnect() throws Exception {
-        if (stompConnection == null) {
-            stompConnection = new StompConnection();
-        }
-        stompConnection.open(createSocket());
-        return stompConnection;
-    }
-
-    protected Socket createSocket() throws IOException {
-        return new Socket("127.0.0.1", this.port);
-    }
-
-    protected String getQueueName() {
-        return getClass().getName() + "." + name.getMethodName();
-    }
-
-    @Test
+    @Test(timeout = 60000)
     public void testSendMessage() throws Exception {
 
         Destination destination = session.createQueue(getQueueName());

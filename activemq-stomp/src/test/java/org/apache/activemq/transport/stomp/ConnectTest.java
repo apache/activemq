@@ -39,9 +39,11 @@ import org.slf4j.LoggerFactory;
 
 // https://issues.apache.org/jira/browse/AMQ-3393
 public class ConnectTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(ConnectTest.class);
-    BrokerService brokerService;
-    Vector<Throwable> exceptions = new Vector<Throwable>();
+
+    private BrokerService brokerService;
+    private final Vector<Throwable> exceptions = new Vector<Throwable>();
 
     @Before
     public void startBroker() throws Exception {

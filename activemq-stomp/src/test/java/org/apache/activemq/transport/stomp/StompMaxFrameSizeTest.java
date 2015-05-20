@@ -28,7 +28,6 @@ import java.util.Collection;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.activemq.broker.TransportConnector;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,32 +65,23 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
     }
 
     @Override
-    public void setUp() throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        super.setUp();
+    protected boolean isUseSslConnector() {
+        return true;
     }
 
     @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = null;
+    protected boolean isUseNioConnector() {
+        return true;
+    }
 
-        connector = brokerService.addConnector("stomp+ssl://0.0.0.0:"+ sslPort +
-            "?transport.maxDataLength=" + MAX_DATA_SIZE + "&transport.maxFrameSize=" + maxFrameSize);
-        sslPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp://0.0.0.0:" + port +
-            "?transport.maxDataLength=" + MAX_DATA_SIZE + "&transport.maxFrameSize=" + maxFrameSize);
-        port = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio://0.0.0.0:" + nioPort +
-            "?transport.maxDataLength=" + MAX_DATA_SIZE + "&transport.maxFrameSize=" + maxFrameSize);
-        nioPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio+ssl://0.0.0.0:" + nioSslPort +
-            "?transport.maxDataLength=" + MAX_DATA_SIZE + "&transport.maxFrameSize=" + maxFrameSize);
-        nioSslPort = connector.getConnectUri().getPort();
+    @Override
+    protected boolean isUseNioPlusSslConnector() {
+        return true;
+    }
+
+    @Override
+    protected String getAdditionalConfig() {
+        return "?transport.maxDataLength=" + MAX_DATA_SIZE + "&transport.maxFrameSize=" + maxFrameSize;
     }
 
     /**

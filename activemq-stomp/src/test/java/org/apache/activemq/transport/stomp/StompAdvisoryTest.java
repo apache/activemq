@@ -52,6 +52,15 @@ public class StompAdvisoryTest extends StompTestSupport {
     protected ActiveMQConnection connection;
 
     @Override
+    public void tearDown() throws Exception {
+        try {
+            connection.close();
+        } catch (Exception ex) {}
+
+        super.tearDown();
+    }
+
+    @Override
     protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
         plugins.add(new StatisticsBrokerPlugin());
     }
@@ -78,9 +87,10 @@ public class StompAdvisoryTest extends StompTestSupport {
         brokerService.setAdvisorySupport(true);
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectionAdvisory() throws Exception {
 
+        stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/ActiveMQ.Advisory.Connection", Stomp.Headers.Subscribe.AckModeValues.AUTO);
 
@@ -105,8 +115,9 @@ public class StompAdvisoryTest extends StompTestSupport {
         assertTrue(f.getBody().startsWith("{\"ConnectionInfo\":"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectionAdvisoryJSON() throws Exception {
+        stompConnect();
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_JSON.toString());
@@ -136,8 +147,9 @@ public class StompAdvisoryTest extends StompTestSupport {
         assertTrue(f.getBody().startsWith("{\"ConnectionInfo\":"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConnectionAdvisoryXML() throws Exception {
+        stompConnect();
 
         HashMap<String, String> subheaders = new HashMap<String, String>(1);
         subheaders.put("transformation", Stomp.Transformations.JMS_XML.toString());
@@ -167,8 +179,9 @@ public class StompAdvisoryTest extends StompTestSupport {
         assertTrue(f.getBody().startsWith("<ConnectionInfo>"));
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testConsumerAdvisory() throws Exception {
+        stompConnect();
 
         Destination dest = new ActiveMQQueue("testConsumerAdvisory");
 
@@ -193,8 +206,9 @@ public class StompAdvisoryTest extends StompTestSupport {
         c.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testProducerAdvisory() throws Exception {
+        stompConnect();
 
         Destination dest = new ActiveMQQueue("testProducerAdvisory");
 
@@ -220,8 +234,9 @@ public class StompAdvisoryTest extends StompTestSupport {
         c.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testProducerAdvisoryXML() throws Exception {
+        stompConnect();
 
         Destination dest = new ActiveMQQueue("testProducerAdvisoryXML");
 
@@ -251,8 +266,9 @@ public class StompAdvisoryTest extends StompTestSupport {
         c.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testProducerAdvisoryJSON() throws Exception {
+        stompConnect();
 
         Destination dest = new ActiveMQQueue("testProducerAdvisoryJSON");
 
@@ -282,7 +298,7 @@ public class StompAdvisoryTest extends StompTestSupport {
         c.close();
     }
 
-    @Test
+    @Test(timeout = 60000)
     public void testStatisticsAdvisory() throws Exception {
         Connection c = cf.createConnection("system", "manager");
         c.start();
@@ -312,6 +328,7 @@ public class StompAdvisoryTest extends StompTestSupport {
         });
         child.start();
 
+        stompConnect();
         // Attempt to gather the statistics response from the previous request.
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/" + replyTo.getTopicName(), Stomp.Headers.Subscribe.AckModeValues.AUTO);

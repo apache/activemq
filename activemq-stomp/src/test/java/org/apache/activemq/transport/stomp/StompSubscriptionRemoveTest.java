@@ -40,9 +40,9 @@ public class StompSubscriptionRemoveTest extends StompTestSupport {
     private static final String COMMAND_MESSAGE = "MESSAGE";
     private static final String HEADER_MESSAGE_ID = "message-id";
 
-    @Test
+    @Test(timeout = 60000)
     public void testRemoveSubscriber() throws Exception {
-
+        stompConnect();
         Connection connection = cf.createConnection("system", "manager");
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(new ActiveMQQueue(getQueueName()));
@@ -76,11 +76,8 @@ public class StompSubscriptionRemoveTest extends StompTestSupport {
             ++count;
         }
 
-        stompConnection.sendFrame("DISCONNECT\n\n");
-        Thread.sleep(1000);
-        stompConnection.close();
-
         stompDisconnect();
+        Thread.sleep(1000);
         stompConnect();
 
         connectFrame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;

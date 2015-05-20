@@ -20,8 +20,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,12 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
 
-import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.policy.FilePendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.usage.SystemUsage;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,21 +44,6 @@ public class StompVirtualTopicTest extends StompTestSupport {
     private static final int NUM_MSGS = 30000;
 
     private String failMsg = null;
-
-    @Override
-    protected void createBroker() throws Exception {
-        brokerService = BrokerFactory.createBroker(new URI("broker://()/localhost"));
-        brokerService.setUseJmx(true);
-        brokerService.getManagementContext().setCreateConnector(false);
-        brokerService.getManagementContext().setCreateMBeanServer(false);
-        brokerService.setDeleteAllMessagesOnStartup(true);
-
-        File testDataDir = new File("target/activemq-data/StompVirtualTopicTest");
-        brokerService.setDataDirectoryFile(testDataDir);
-        KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
-        persistenceAdapter.setDirectory(new File(testDataDir, "kahadb"));
-        brokerService.setPersistenceAdapter(persistenceAdapter);
-    }
 
     @Override
     protected void applyMemoryLimitPolicy() throws Exception {
@@ -88,6 +69,7 @@ public class StompVirtualTopicTest extends StompTestSupport {
     @Test(timeout = 90000)
     public void testStompOnVirtualTopics() throws Exception {
         LOG.info("Running Stomp Producer");
+        stompConnect();
 
         StompConsumer consumerWorker = new StompConsumer(this);
         Thread consumer = new Thread(consumerWorker);
@@ -244,7 +226,6 @@ public class StompVirtualTopicTest extends StompTestSupport {
         }
 
         private long reportQueueStatistics() throws Exception {
-
             ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:destinationType=Queue" + ",destinationName=Consumer.A.VirtualTopic.FOO"
                 + ",type=Broker,brokerName=localhost");
             QueueViewMBean queue = (QueueViewMBean) brokerService.getManagementContext().newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);

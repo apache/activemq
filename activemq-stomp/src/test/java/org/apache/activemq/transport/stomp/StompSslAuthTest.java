@@ -22,6 +22,7 @@ import java.net.Socket;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.security.JaasCertificateAuthenticationPlugin;
@@ -29,16 +30,13 @@ import org.apache.activemq.security.JaasCertificateAuthenticationPlugin;
 public class StompSslAuthTest extends StompTest {
 
     @Override
-    public void setUp() throws Exception {
+    protected boolean isUseTcpConnector() {
+        return false;
+    }
 
-        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        //System.setProperty("javax.net.debug","ssl,handshake");
-        super.setUp();
+    @Override
+    protected boolean isUseSslConnector() {
+        return true;
     }
 
     @Override
@@ -55,17 +53,14 @@ public class StompSslAuthTest extends StompTest {
     }
 
     @Override
-    protected void addOpenWireConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector(
-                "ssl://0.0.0.0:0?needClientAuth=true");
-        jmsUri = connector.getPublishableConnectString();
+    public void addOpenWireConnector() throws Exception {
+        TransportConnector connector = brokerService.addConnector("ssl://0.0.0.0:0?needClientAuth=true");
+        cf = new ActiveMQConnectionFactory(connector.getPublishableConnectString());
     }
 
     @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector(
-                "stomp+ssl://0.0.0.0:"+port+"?needClientAuth=true");
-        sslPort = connector.getConnectUri().getPort();
+    protected String getAdditionalConfig() {
+        return "?needClientAuth=true";
     }
 
     // NOOP - These operations handled by jaas cert login module

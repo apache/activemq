@@ -23,13 +23,13 @@ import java.net.Socket;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import javax.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -56,15 +56,16 @@ public class StompTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(StompTestSupport.class);
 
-    protected final AutoFailTestSupport autoFailTestSupport = new AutoFailTestSupport() {};
     protected BrokerService brokerService;
+    protected int openwirePort;
     protected int port;
     protected int sslPort;
     protected int nioPort;
     protected int nioSslPort;
     protected String jmsUri = "vm://localhost";
-    protected StompConnection stompConnection = new StompConnection();
+    protected StompConnection stompConnection;
     protected ActiveMQConnectionFactory cf;
+    protected Vector<Throwable> exceptions = new Vector<Throwable>();
 
     @Rule public TestName name = new TestName();
 
@@ -94,15 +95,11 @@ public class StompTestSupport {
     @Before
     public void setUp() throws Exception {
         LOG.info("========== start " + getName() + " ==========");
-        autoFailTestSupport.startAutoFailThread();
         startBroker();
-        stompConnect();
     }
 
     @After
     public void tearDown() throws Exception {
-        LOG.info("========== finished " + getName() + " ==========");
-        autoFailTestSupport.stopAutoFailThread();
         try {
             stompDisconnect();
         } catch (Exception ex) {
@@ -110,11 +107,12 @@ public class StompTestSupport {
         } finally {
             stopBroker();
         }
+        LOG.info("========== finished " + getName() + " ==========");
     }
 
     public void startBroker() throws Exception {
 
-        createBroker();
+        createBroker(true);
 
         XStreamBrokerContext context = new XStreamBrokerContext();
         brokerService.setBrokerContext(context);
@@ -134,12 +132,17 @@ public class StompTestSupport {
         sslContext.afterPropertiesSet();
         brokerService.setSslContext(sslContext);
 
+        System.setProperty("javax.net.ssl.trustStore", keyStore.getCanonicalPath());
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", trustStore.getCanonicalPath());
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");
+
         ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
 
-        addStompConnector();
+        addTranportConnectors();
         addOpenWireConnector();
-
-        cf = new ActiveMQConnectionFactory(jmsUri);
 
         BrokerPlugin authenticationPlugin = configureAuthentication();
         if (authenticationPlugin != null) {
@@ -162,21 +165,42 @@ public class StompTestSupport {
         brokerService.waitUntilStarted();
     }
 
-    protected void applyMemoryLimitPolicy() throws Exception {
+    public void stopBroker() throws Exception {
+        if (brokerService != null) {
+            brokerService.stop();
+            brokerService.waitUntilStopped();
+            brokerService = null;
+        }
     }
 
-    protected void createBroker() throws Exception {
+    public void restartBroker() throws Exception {
+        restartBroker(false);
+    }
+
+    public void restartBroker(boolean deleteAllOnStartup) throws Exception {
+        stopBroker();
+        createBroker(deleteAllOnStartup);
+        brokerService.start();
+        brokerService.waitUntilStarted();
+    }
+
+    protected void createBroker(boolean deleteAllOnStartup) throws Exception {
         brokerService = new BrokerService();
-        brokerService.setPersistent(false);
+        brokerService.setPersistent(isPersistent());
+        brokerService.setDeleteAllMessagesOnStartup(deleteAllOnStartup);
         brokerService.setAdvisorySupport(false);
         brokerService.setSchedulerSupport(true);
         brokerService.setPopulateJMSXUserID(true);
         brokerService.setSchedulerSupport(true);
+        brokerService.setUseJmx(isUseJmx());
         brokerService.getManagementContext().setCreateConnector(false);
         brokerService.getManagementContext().setCreateMBeanServer(false);
     }
 
     protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+    }
+
+    protected void applyMemoryLimitPolicy() throws Exception {
     }
 
     protected BrokerPlugin configureAuthentication() throws Exception {
@@ -253,29 +277,65 @@ public class StompTestSupport {
         // NOOP here
     }
 
-    protected void addOpenWireConnector() throws Exception {
+    public void addOpenWireConnector() throws Exception {
+        cf = new ActiveMQConnectionFactory(jmsUri);
     }
 
-    protected void addStompConnector() throws Exception {
+    protected void addTranportConnectors() throws Exception {
         TransportConnector connector = null;
 
-        // Subclasses can tailor this list to speed up the test startup / shutdown
-        connector = brokerService.addConnector("stomp+ssl://0.0.0.0:"+sslPort);
-        sslPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
-        port = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio://0.0.0.0:"+nioPort);
-        nioPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio+ssl://0.0.0.0:"+nioSslPort);
-        nioSslPort = connector.getConnectUri().getPort();
+        if (isUseTcpConnector()) {
+            connector = brokerService.addConnector(
+                "stomp://0.0.0.0:" + port + getAdditionalConfig());
+            port = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp port " + port);
+        }
+        if (isUseSslConnector()) {
+            connector = brokerService.addConnector(
+                "stomp+ssl://0.0.0.0:" + sslPort + getAdditionalConfig());
+            sslPort = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp+ssl port " + sslPort);
+        }
+        if (isUseNioConnector()) {
+            connector = brokerService.addConnector(
+                "stomp+nio://0.0.0.0:" + nioPort + getAdditionalConfig());
+            nioPort = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp+nio port " + nioPort);
+        }
+        if (isUseNioPlusSslConnector()) {
+            connector = brokerService.addConnector(
+                "stomp+nio+ssl://0.0.0.0:" + nioSslPort + getAdditionalConfig());
+            nioSslPort = connector.getConnectUri().getPort();
+            LOG.debug("Using amqp+nio+ssl port " + nioSslPort);
+        }
     }
 
-    public void stopBroker() throws Exception {
-        if (brokerService != null) {
-            brokerService.stop();
-            brokerService.waitUntilStopped();
-            brokerService = null;
-        }
+    protected boolean isPersistent() {
+        return false;
+    }
+
+    protected boolean isUseJmx() {
+        return true;
+    }
+
+    protected boolean isUseTcpConnector() {
+        return true;
+    }
+
+    protected boolean isUseSslConnector() {
+        return false;
+    }
+
+    protected boolean isUseNioConnector() {
+        return false;
+    }
+
+    protected boolean isUseNioPlusSslConnector() {
+        return false;
+    }
+
+    protected String getAdditionalConfig() {
+        return "";
     }
 
     protected StompConnection stompConnect() throws Exception {
@@ -303,8 +363,9 @@ public class StompTestSupport {
         return getClass().getName() + "." + name.getMethodName();
     }
 
-    protected void stompDisconnect() throws IOException {
+    protected void stompDisconnect() throws Exception {
         if (stompConnection != null) {
+            stompConnection.disconnect();
             stompConnection.close();
             stompConnection = null;
         }

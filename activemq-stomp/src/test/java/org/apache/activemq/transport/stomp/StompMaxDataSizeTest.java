@@ -27,7 +27,6 @@ import java.util.Arrays;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.activemq.broker.TransportConnector;
 import org.junit.Test;
 
 public class StompMaxDataSizeTest extends StompTestSupport {
@@ -35,17 +34,6 @@ public class StompMaxDataSizeTest extends StompTestSupport {
     private static final int TEST_MAX_DATA_SIZE = 64 * 1024;
 
     private StompConnection connection;
-
-    @Override
-    public void setUp() throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        super.setUp();
-    }
 
     @Override
     public void tearDown() throws Exception {
@@ -58,21 +46,23 @@ public class StompMaxDataSizeTest extends StompTestSupport {
     }
 
     @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = null;
+    protected boolean isUseSslConnector() {
+        return true;
+    }
 
-        connector = brokerService.addConnector("stomp+ssl://0.0.0.0:"+ sslPort +
-            "?transport.maxDataLength=" + TEST_MAX_DATA_SIZE);
-        sslPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp://0.0.0.0:" + port +
-            "?transport.maxDataLength=" + TEST_MAX_DATA_SIZE);
-        port = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio://0.0.0.0:" + nioPort +
-            "?transport.maxDataLength=" + TEST_MAX_DATA_SIZE);
-        nioPort = connector.getConnectUri().getPort();
-        connector = brokerService.addConnector("stomp+nio+ssl://0.0.0.0:" + nioSslPort +
-            "?transport.maxDataLength=" + TEST_MAX_DATA_SIZE);
-        nioSslPort = connector.getConnectUri().getPort();
+    @Override
+    protected boolean isUseNioConnector() {
+        return true;
+    }
+
+    @Override
+    protected boolean isUseNioPlusSslConnector() {
+        return true;
+    }
+
+    @Override
+    protected String getAdditionalConfig() {
+        return "?transport.maxDataLength=" + TEST_MAX_DATA_SIZE;
     }
 
     @Test(timeout = 60000)

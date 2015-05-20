@@ -34,7 +34,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.management.ObjectName;
 
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -64,12 +63,6 @@ public class Stomp11Test extends StompTestSupport {
         connection.start();
     }
 
-    @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp://0.0.0.0:"+port);
-        port = connector.getConnectUri().getPort();
-    }
-
     @Test(timeout = 60000)
     public void testConnect() throws Exception {
 
@@ -89,9 +82,6 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.indexOf("response-id:1") >= 0);
         assertTrue(f.indexOf("version:1.1") >= 0);
         assertTrue(f.indexOf("session:") >= 0);
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -119,9 +109,6 @@ public class Stomp11Test extends StompTestSupport {
 
         LOG.info("session header follows: " + f);
         assertTrue(f.startsWith("ID:"));
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -141,9 +128,6 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.startsWith("CONNECTED"));
         assertTrue(f.indexOf("version:1.1") >= 0);
         assertTrue(f.indexOf("session:") >= 0);
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -163,9 +147,6 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(f.startsWith("CONNECTED"));
         assertTrue(f.indexOf("version:1.0") >= 0);
         assertTrue(f.indexOf("session:") >= 0);
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -226,9 +207,6 @@ public class Stomp11Test extends StompTestSupport {
             long endTime = System.currentTimeMillis();
             assertTrue("Broker did not send KeepAlive in time", (endTime - startTime) >= 900);
         }
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -308,9 +286,6 @@ public class Stomp11Test extends StompTestSupport {
         assertTrue(stompFrame.getAction().equals("MESSAGE"));
 
         service.shutdownNow();
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -452,9 +427,6 @@ public class Stomp11Test extends StompTestSupport {
             fail("No message should have been received since subscription was removed");
         } catch (SocketTimeoutException e) {
         }
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -479,9 +451,6 @@ public class Stomp11Test extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("ERROR"));
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -512,9 +481,6 @@ public class Stomp11Test extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("ERROR"));
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -550,9 +516,6 @@ public class Stomp11Test extends StompTestSupport {
 
         frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
                 "id:12345\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
 
@@ -596,9 +559,6 @@ public class Stomp11Test extends StompTestSupport {
         String unsub = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
                        "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(unsub);
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -634,9 +594,6 @@ public class Stomp11Test extends StompTestSupport {
 
         received = stompConnection.receive();
         assertNotNull(received);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -702,9 +659,6 @@ public class Stomp11Test extends StompTestSupport {
         }
 
         stompConnection.sendFrame(unsub);
-
-        String frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -736,9 +690,6 @@ public class Stomp11Test extends StompTestSupport {
         assertEquals("JMSXGroupID", "abc", message.getStringProperty("JMSXGroupID"));
         ActiveMQTextMessage amqMessage = (ActiveMQTextMessage)message;
         assertEquals("GroupID", "abc", amqMessage.getGroupID());
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -766,9 +717,6 @@ public class Stomp11Test extends StompTestSupport {
         assertNotNull(message);
         assertEquals("Hello World", message.getText());
         assertEquals("newest", message.getStringProperty("value"));
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -795,9 +743,6 @@ public class Stomp11Test extends StompTestSupport {
         final String expectedEncoded = "\\\\value\\c";
         final String headerVal = frame.substring(start, start + expectedEncoded.length());
         assertEquals("" + frame, expectedEncoded, headerVal);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -851,9 +796,6 @@ public class Stomp11Test extends StompTestSupport {
         frame = "UNSUBSCRIBE\n" + "destination:/queue/ActiveMQ.DLQ\n" +
                 "id:12345\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -893,9 +835,6 @@ public class Stomp11Test extends StompTestSupport {
 
         frame = "UNSUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
                 "id:12345\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
 
@@ -988,9 +927,6 @@ public class Stomp11Test extends StompTestSupport {
         assertEquals("4", receipt.getHeaders().get("receipt-id"));
 
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -1064,9 +1000,6 @@ public class Stomp11Test extends StompTestSupport {
 
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
         assertEquals(view.getDurableTopicSubscribers().length, 0);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 
     @Test(timeout = 60000)
@@ -1182,8 +1115,5 @@ public class Stomp11Test extends StompTestSupport {
 
         assertEquals(view.getDurableTopicSubscribers().length, 2);
         assertEquals(view.getInactiveDurableTopicSubscribers().length, 0);
-
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
     }
 }

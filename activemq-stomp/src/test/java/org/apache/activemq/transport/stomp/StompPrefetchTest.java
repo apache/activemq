@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StompPrefetchTest extends StompTestSupport {
+
     private static final Logger LOG = LoggerFactory.getLogger(StompPrefetchTest.class);
 
     @Override
@@ -57,7 +58,7 @@ public class StompPrefetchTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testTopicSubPrefetch() throws Exception {
-
+        stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/topic/T", Stomp.Headers.Subscribe.AckModeValues.AUTO);
 
@@ -66,6 +67,7 @@ public class StompPrefetchTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testDurableSubPrefetch() throws Exception {
+        stompConnect();
         stompConnection.connect("system", "manager");
         HashMap<String,String> headers = new HashMap<String, String>();
         headers.put("id", "durablesub");
@@ -83,6 +85,7 @@ public class StompPrefetchTest extends StompTestSupport {
         headers.put("browser", "true");
         headers.put("accept-version","1.1");
 
+        stompConnect();
         stompConnection.connect(headers);
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO, headers);
 
@@ -91,6 +94,7 @@ public class StompPrefetchTest extends StompTestSupport {
 
     @Test(timeout = 60000)
     public void testQueueSubPrefetch() throws Exception {
+        stompConnect();
         stompConnection.connect("system", "manager");
         stompConnection.subscribe("/queue/Q", Stomp.Headers.Subscribe.AckModeValues.AUTO);
 

@@ -23,25 +23,16 @@ import java.net.Socket;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.activemq.broker.TransportConnector;
-
 public class StompNIOSSLLoadTest extends StompLoadTest {
 
     @Override
-    public void setUp() throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        super.setUp();
+    protected boolean isUseTcpConnector() {
+        return false;
     }
 
     @Override
-	protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector("stomp+nio+ssl://0.0.0.0:"+nioSslPort);
-        nioSslPort = connector.getConnectUri().getPort();
+    protected boolean isUseNioPlusSslConnector() {
+        return true;
     }
 
     @Override

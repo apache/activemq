@@ -22,34 +22,21 @@ import java.net.Socket;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.activemq.broker.TransportConnector;
-
 public class Stomp11SslAuthTest extends Stomp11Test {
 
     @Override
-    public void setUp() throws Exception {
-        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "password");
-        System.setProperty("javax.net.ssl.trustStoreType", "jks");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "password");
-        System.setProperty("javax.net.ssl.keyStoreType", "jks");
-        //System.setProperty("javax.net.debug","ssl,handshake");
-        super.setUp();
+    protected boolean isUseTcpConnector() {
+        return false;
     }
 
     @Override
-    protected void addOpenWireConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector(
-                "ssl://0.0.0.0:0?needClientAuth=true");
-        jmsUri = connector.getPublishableConnectString();
+    protected boolean isUseSslConnector() {
+        return true;
     }
 
     @Override
-    protected void addStompConnector() throws Exception {
-        TransportConnector connector = brokerService.addConnector(
-                "stomp+ssl://0.0.0.0:"+port+"?needClientAuth=true");
-        sslPort = connector.getConnectUri().getPort();
+    protected String getAdditionalConfig() {
+        return "?needClientAuth=true";
     }
 
     @Override
