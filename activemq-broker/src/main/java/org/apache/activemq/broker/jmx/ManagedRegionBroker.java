@@ -302,7 +302,7 @@ public class ManagedRegionBroker extends RegionBroker {
         if (name != null) {
             try {
                 SubscriptionKey subscriptionKey = new SubscriptionKey(sub.getContext().getClientId(), sub.getConsumerInfo().getSubscriptionName());
-                ObjectName inactiveName = subscriptionKeys.get(subscriptionKey);
+                ObjectName inactiveName = subscriptionKeys.remove(subscriptionKey);
                 if (inactiveName != null) {
                     inactiveDurableTopicSubscribers.remove(inactiveName);
                     managementContext.unregisterMBean(inactiveName);

@@ -1494,9 +1494,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             removeAckLocationsForSub(tx, sd, subscriptionKey);
 
             if (sd.subscriptions.isEmpty(tx)) {
-                sd.messageIdIndex.clear(tx);
-                sd.locationIndex.clear(tx);
-                sd.orderIndex.clear(tx);
+                // remove the stored destination
+                KahaRemoveDestinationCommand removeDestinationCommand = new KahaRemoveDestinationCommand();
+                removeDestinationCommand.setDestination(command.getDestination());
+                updateIndex(tx, removeDestinationCommand, null);
             }
         }
     }
