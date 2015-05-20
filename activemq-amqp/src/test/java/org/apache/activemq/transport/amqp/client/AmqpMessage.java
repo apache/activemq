@@ -26,6 +26,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.amqp.messaging.DeliveryAnnotations;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Properties;
 import org.apache.qpid.proton.engine.Delivery;
@@ -37,6 +38,7 @@ public class AmqpMessage {
     private final Message message;
     private final Delivery delivery;
 
+    private Map<Symbol, Object> deliveryAnnotationsMap;
     private Map<Symbol, Object> messageAnnotationsMap;
     private Map<String, Object> applicationPropertiesMap;
 
@@ -86,6 +88,10 @@ public class AmqpMessage {
 
         if (message.getApplicationProperties() != null) {
             applicationPropertiesMap = message.getApplicationProperties().getValue();
+        }
+
+        if (message.getDeliveryAnnotations() != null) {
+            deliveryAnnotationsMap = message.getDeliveryAnnotations().getValue();
         }
     }
 
@@ -303,6 +309,39 @@ public class AmqpMessage {
     }
 
     /**
+     * Perform a proper delivery annotation set on the AMQP Message based on a Symbol
+     * key and the target value to append to the current delivery annotations.
+     *
+     * @param key
+     *        The name of the Symbol whose value is being set.
+     * @param value
+     *        The new value to set in the delivery annotations of this message.
+     */
+    public void setDeliveryAnnotation(String key, Object value) {
+        checkReadOnly();
+        lazyCreateDeliveryAnnotations();
+        deliveryAnnotationsMap.put(Symbol.valueOf(key), value);
+    }
+
+    /**
+     * Given a message annotation name, lookup and return the value associated with
+     * that annotation name.  If the message annotations have not been created yet
+     * then this method will always return null.
+     *
+     * @param key
+     *        the Symbol name that should be looked up in the message annotations.
+     *
+     * @return the value of the annotation if it exists, or null if not set or not accessible.
+     */
+    public Object getDeliveryAnnotation(String key) {
+        if (deliveryAnnotationsMap == null) {
+            return null;
+        }
+
+        return deliveryAnnotationsMap.get(Symbol.valueOf(key));
+    }
+
+    /**
      * Sets a String value into the body of an outgoing Message, throws
      * an exception if this is an incoming message instance.
      *
@@ -344,6 +383,13 @@ public class AmqpMessage {
         if (messageAnnotationsMap == null) {
             messageAnnotationsMap = new HashMap<Symbol,Object>();
             message.setMessageAnnotations(new MessageAnnotations(messageAnnotationsMap));
+        }
+    }
+
+    private void lazyCreateDeliveryAnnotations() {
+        if (deliveryAnnotationsMap == null) {
+            deliveryAnnotationsMap = new HashMap<Symbol,Object>();
+            message.setDeliveryAnnotations(new DeliveryAnnotations(deliveryAnnotationsMap));
         }
     }
 

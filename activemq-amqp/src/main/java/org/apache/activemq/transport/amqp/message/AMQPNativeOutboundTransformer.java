@@ -38,10 +38,7 @@ public class AMQPNativeOutboundTransformer extends OutboundTransformer {
 
     @Override
     public EncodedMessage transform(Message msg) throws Exception {
-        if (msg == null) {
-            return null;
-        }
-        if (!(msg instanceof BytesMessage)) {
+        if (msg == null || !(msg instanceof BytesMessage)) {
             return null;
         }
 

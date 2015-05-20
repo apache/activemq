@@ -33,7 +33,6 @@ import org.apache.qpid.proton.amqp.UnsignedInteger;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.UnsignedShort;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.amqp.messaging.DeliveryAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Footer;
 import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
@@ -124,14 +123,6 @@ public abstract class InboundTransformer {
         }
         if (header.getDeliveryCount() != null) {
             vendor.setJMSXDeliveryCount(jms, header.getDeliveryCount().longValue());
-        }
-
-        final DeliveryAnnotations da = amqp.getDeliveryAnnotations();
-        if (da != null) {
-            for (Map.Entry<?, ?> entry : da.getValue().entrySet()) {
-                String key = entry.getKey().toString();
-                setProperty(jms, prefixVendor + prefixDeliveryAnnotations + key, entry.getValue());
-            }
         }
 
         final MessageAnnotations ma = amqp.getMessageAnnotations();
