@@ -56,9 +56,9 @@ public class VMTransport implements Transport, Task {
     protected final long id;
 
     // Implementation
-    private LinkedBlockingQueue<Object> messageQueue;
-    private TaskRunnerFactory taskRunnerFactory;
-    private TaskRunner taskRunner;
+    private volatile LinkedBlockingQueue<Object> messageQueue;
+    private volatile TaskRunnerFactory taskRunnerFactory;
+    private volatile TaskRunner taskRunner;
 
     // Transport State
     protected final AtomicBoolean started = new AtomicBoolean();
