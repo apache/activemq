@@ -121,11 +121,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (active.get() || keepDurableSubsActive) {
             Topic topic = (Topic) destination;
             topic.activate(context, this);
-            this.enqueueCounter += pending.size();
+            getSubscriptionStatistics().getEnqueues().add(pending.size());
         } else if (destination.getMessageStore() != null) {
             TopicMessageStore store = (TopicMessageStore) destination.getMessageStore();
             try {
-                this.enqueueCounter += store.getMessageCount(subscriptionKey.getClientId(), subscriptionKey.getSubscriptionName());
+                getSubscriptionStatistics().getEnqueues().add(store.getMessageCount(subscriptionKey.getClientId(), subscriptionKey.getSubscriptionName()));
             } catch (IOException e) {
                 JMSException jmsEx = new JMSException("Failed to retrieve enqueueCount from store " + e);
                 jmsEx.setLinkedException(e);
@@ -325,7 +325,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     @Override
     public synchronized String toString() {
         return "DurableTopicSubscription-" + getSubscriptionKey() + ", id=" + info.getConsumerId() + ", active=" + isActive() + ", destinations="
-                + durableDestinations.size() + ", total=" + enqueueCounter + ", pending=" + getPendingQueueSize() + ", dispatched=" + dispatchCounter
+                + durableDestinations.size() + ", total=" + getSubscriptionStatistics().getEnqueues().getCount() + ", pending=" + getPendingQueueSize() + ", dispatched=" + getSubscriptionStatistics().getDispatched().getCount()
                 + ", inflight=" + dispatched.size() + ", prefetchExtension=" + getPrefetchExtension();
     }
 
