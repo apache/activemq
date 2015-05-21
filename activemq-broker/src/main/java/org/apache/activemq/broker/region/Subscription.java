@@ -137,6 +137,8 @@ public interface Subscription extends SubscriptionRecovery {
      */
     long getDequeueCounter();
 
+    SubscriptionStatistics getSubscriptionStatistics();
+
     /**
      * @return the JMS selector on the current subscription
      */

@@ -173,8 +173,9 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
 
     public class SimpleImmediateDispatchSubscription implements Subscription, LockOwner {
 
+        private SubscriptionStatistics subscriptionStatistics = new SubscriptionStatistics();
         List<MessageReference> dispatched =
-            Collections.synchronizedList(new ArrayList<MessageReference>());
+                Collections.synchronizedList(new ArrayList<MessageReference>());
 
         public void acknowledge(ConnectionContext context, MessageAck ack)
                 throws Exception {
@@ -368,6 +369,11 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
 
         public int countBeforeFull() {
             return 10;
+        }
+
+        @Override
+        public SubscriptionStatistics getSubscriptionStatistics() {
+            return subscriptionStatistics;
         }
 
     }
