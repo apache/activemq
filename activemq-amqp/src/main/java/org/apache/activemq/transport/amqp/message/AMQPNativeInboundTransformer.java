@@ -25,6 +25,16 @@ public class AMQPNativeInboundTransformer extends AMQPRawInboundTransformer {
     }
 
     @Override
+    public String getTransformerName() {
+        return TRANSFORMER_NATIVE;
+    }
+
+    @Override
+    public InboundTransformer getFallbackTransformer() {
+        return new AMQPRawInboundTransformer(getVendor());
+    }
+
+    @Override
     public Message transform(EncodedMessage amqpMessage) throws Exception {
         org.apache.qpid.proton.message.Message amqp = amqpMessage.decode();
 

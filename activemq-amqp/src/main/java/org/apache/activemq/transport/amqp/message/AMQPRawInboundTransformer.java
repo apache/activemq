@@ -26,6 +26,16 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
     }
 
     @Override
+    public String getTransformerName() {
+        return TRANSFORMER_RAW;
+    }
+
+    @Override
+    public InboundTransformer getFallbackTransformer() {
+        return null;  // No fallback from full raw transform
+    }
+
+    @Override
     public Message transform(EncodedMessage amqpMessage) throws Exception {
         BytesMessage rc = vendor.createBytesMessage();
         rc.writeBytes(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());

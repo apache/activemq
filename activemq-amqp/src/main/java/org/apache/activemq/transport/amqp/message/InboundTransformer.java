@@ -59,7 +59,11 @@ public abstract class InboundTransformer {
         this.vendor = vendor;
     }
 
-    abstract public Message transform(EncodedMessage amqpMessage) throws Exception;
+    public abstract Message transform(EncodedMessage amqpMessage) throws Exception;
+
+    public abstract String getTransformerName();
+
+    public abstract InboundTransformer getFallbackTransformer();
 
     public int getDefaultDeliveryMode() {
         return defaultDeliveryMode;

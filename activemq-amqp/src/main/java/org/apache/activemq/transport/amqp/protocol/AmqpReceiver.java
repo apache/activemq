@@ -125,7 +125,7 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
 
     //----- Internal Implementation ------------------------------------------//
 
-    protected InboundTransformer getInboundTransformer() {
+    protected InboundTransformer getTransformer() {
         if (inboundTransformer == null) {
             String transformer = session.getConnection().getConfiguredTransformer();
             if (transformer.equalsIgnoreCase(InboundTransformer.TRANSFORMER_JMS)) {
@@ -146,7 +146,26 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
     protected void processDelivery(final Delivery delivery, Buffer deliveryBytes) throws Exception {
         if (!isClosed()) {
             EncodedMessage em = new EncodedMessage(delivery.getMessageFormat(), deliveryBytes.data, deliveryBytes.offset, deliveryBytes.length);
-            final ActiveMQMessage message = (ActiveMQMessage) getInboundTransformer().transform(em);
+
+            InboundTransformer transformer = getTransformer();
+            ActiveMQMessage message = null;
+
+            while (transformer != null) {
+                try {
+                    message = (ActiveMQMessage) transformer.transform(em);
+                    break;
+                } catch (Exception e) {
+                    LOG.debug("Transform of message using [{}] transformer, failed", getTransformer().getTransformerName());
+                    LOG.trace("Transformation error:", e);
+
+                    transformer = transformer.getFallbackTransformer();
+                }
+            }
+
+            if (message == null) {
+                throw new IOException("Failed to transform incoming delivery, skipping.");
+            }
+
             current = null;
 
             if (isAnonymous()) {

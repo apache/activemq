@@ -18,10 +18,12 @@ package org.apache.activemq.transport.amqp.client;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.apache.activemq.transport.amqp.client.util.UnmodifiableDelivery;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
+import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
@@ -341,6 +343,8 @@ public class AmqpMessage {
         return deliveryAnnotationsMap.get(Symbol.valueOf(key));
     }
 
+    //----- Methods for manipulating the Message body ------------------------//
+
     /**
      * Sets a String value into the body of an outgoing Message, throws
      * an exception if this is an incoming message instance.
@@ -369,6 +373,50 @@ public class AmqpMessage {
         checkReadOnly();
         Data body = new Data(new Binary(bytes));
         getWrappedMessage().setBody(body);
+    }
+
+    /**
+     * Sets a byte array value into the body of an outgoing Message, throws
+     * an exception if this is an incoming message instance.
+     *
+     * @param value
+     *        the byte array value to store in the Message body.
+     *
+     * @throws IllegalStateException if the message is read only.
+     */
+    public void setDescribedType(DescribedType described) throws IllegalStateException {
+        checkReadOnly();
+        AmqpValue body = new AmqpValue(described);
+        getWrappedMessage().setBody(body);
+    }
+
+    /**
+     * Attempts to retrieve the message body as an DescribedType instance.
+     *
+     * @return an DescribedType instance if one is stored in the message body.
+     *
+     * @throws NoSuchElementException if the body does not contain a DescribedType.
+     */
+    public DescribedType getDescribedType() throws NoSuchElementException {
+        DescribedType result = null;
+
+        if (getWrappedMessage().getBody() == null) {
+            return null;
+        } else {
+            if (getWrappedMessage().getBody() instanceof AmqpValue) {
+                AmqpValue value = (AmqpValue) getWrappedMessage().getBody();
+
+                if (value.getValue() == null) {
+                    result = null;
+                } else if (value.getValue() instanceof DescribedType) {
+                    result = (DescribedType) value.getValue();
+                } else {
+                    throw new NoSuchElementException("Message does not contain a DescribedType body");
+                }
+            }
+        }
+
+        return result;
     }
 
     //----- Internal implementation ------------------------------------------//

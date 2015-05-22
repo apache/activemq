@@ -398,7 +398,7 @@ public class AmqpSession extends AmqpAbstractResource<Session> {
     }
 
     private void checkClosed() {
-        if (isClosed()) {
+        if (isClosed() || connection.isClosed()) {
             throw new IllegalStateException("Session is already closed");
         }
     }

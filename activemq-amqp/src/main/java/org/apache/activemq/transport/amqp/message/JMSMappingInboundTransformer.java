@@ -40,6 +40,16 @@ public class JMSMappingInboundTransformer extends InboundTransformer {
         super(vendor);
     }
 
+    @Override
+    public String getTransformerName() {
+        return TRANSFORMER_JMS;
+    }
+
+    @Override
+    public InboundTransformer getFallbackTransformer() {
+        return new AMQPNativeInboundTransformer(getVendor());
+    }
+
     @SuppressWarnings({ "unchecked" })
     @Override
     public Message transform(EncodedMessage amqpMessage) throws Exception {
