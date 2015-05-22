@@ -18,6 +18,7 @@ package org.apache.activemq.store;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.util.LockFile;
@@ -54,6 +55,13 @@ public class SharedFileLocker extends AbstractLocker {
                 while ((!isStopped()) && (!isStopping())) {
                     try {
                         lockFile.lock();
+                        if (warned) {
+                            // ensure lockHolder has released; wait for one keepAlive iteration
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(lockable != null ? lockable.getLockKeepAlivePeriod() : 0l);
+                            } catch (InterruptedException e1) {
+                            }
+                        }
                         locked = keepAlive();
                         break;
                     } catch (IOException e) {
@@ -72,7 +80,7 @@ public class SharedFileLocker extends AbstractLocker {
                                     + " seconds for the database to be unlocked. Reason: "
                                     + e);
                         try {
-                            Thread.sleep(lockAcquireSleepInterval);
+                            TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
                         } catch (InterruptedException e1) {
                         }
                     }
