@@ -348,7 +348,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
             if (responseRequired) {
                 if (e instanceof SecurityException || e.getCause() instanceof SecurityException) {
-                    SERVICELOG.warn("Security Error occurred: {}", e.getMessage());
+                    SERVICELOG.warn("Security Error occurred on connection to: {}, {}",
+                            transport.getRemoteAddress(), e.getMessage());
                 }
                 response = new ExceptionResponse(e);
             } else {
