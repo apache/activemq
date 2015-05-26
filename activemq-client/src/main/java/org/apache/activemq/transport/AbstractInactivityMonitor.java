@@ -404,7 +404,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             return;
         }
 
-        LOG.info("Starting connection check task for: {}", this);
+        LOG.trace("Starting connection check task for: {}", this);
 
         this.connectAttemptTimeout = connectionTimeout;
 
@@ -428,7 +428,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     public synchronized void stopConnectCheckTask() {
         if (connectCheckerTask != null) {
-            LOG.info("Stopping connection check task for: {}", this);
+            LOG.trace("Stopping connection check task for: {}", this);
             connectCheckerTask.cancel();
             connectCheckerTask = null;
 
