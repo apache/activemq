@@ -70,6 +70,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected void doStart() throws Exception {
         socketTransportStarted.countDown();
         stompInactivityMonitor.setTransportListener(getTransportListener());
+        stompInactivityMonitor.startConnectCheckTask();
     }
 
     //----- Abstract methods for subclasses to implement ---------------------//

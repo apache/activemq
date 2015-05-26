@@ -41,7 +41,9 @@ public class StompInactivityMonitor extends AbstractInactivityMonitor {
 
     public void startMonitoring() throws IOException {
         this.isConfigured = true;
-        this.startMonitorThreads();
+
+        stopConnectCheckTask();
+        startMonitorThreads();
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.apache.activemq.transport.mqtt;
 
 import java.io.IOException;
 import java.util.Timer;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -32,7 +33,6 @@ import org.apache.activemq.transport.AbstractInactivityMonitor;
 import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
-import org.apache.activemq.util.ThreadPoolUtils;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,17 +69,25 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
             long now = System.currentTimeMillis();
 
-            if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isTerminating()) {
+            if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No CONNECT frame received in time for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
                 }
-                ASYNC_TASKS.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime + readGraceTime) + ") long: "
-                            + next.getRemoteAddress()));
+
+                try {
+                    ASYNC_TASKS.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            onException(new InactivityIOException("Channel was inactive for too (>" + (readKeepAliveTime + readGraceTime) + ") long: "
+                                + next.getRemoteAddress()));
+                        }
+                    });
+                } catch (RejectedExecutionException ex) {
+                    if (!ASYNC_TASKS.isShutdown()) {
+                        LOG.error("Async connection timeout task was rejected from the executor: ", ex);
+                        throw ex;
                     }
-                });
+                }
             }
         }
     };
@@ -109,17 +117,24 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 return;
             }
 
-            if ((now - lastReceiveTime) >= readKeepAliveTime + readGraceTime && readCheckerTask != null && !ASYNC_TASKS.isTerminating()) {
+            if ((now - lastReceiveTime) >= readKeepAliveTime + readGraceTime && readCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + MQTTInactivityMonitor.this.toString() + "! Throwing InactivityIOException.");
                 }
-                ASYNC_TASKS.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        onException(new InactivityIOException("Channel was inactive for too (>" +
-                                    (connectionTimeout) + ") long: " + next.getRemoteAddress()));
+                try {
+                    ASYNC_TASKS.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            onException(new InactivityIOException("Channel was inactive for too (>" +
+                                        (connectionTimeout) + ") long: " + next.getRemoteAddress()));
+                        }
+                    });
+                } catch (RejectedExecutionException ex) {
+                    if (!ASYNC_TASKS.isShutdown()) {
+                        LOG.error("Async connection timeout task was rejected from the executor: ", ex);
+                        throw ex;
                     }
-                });
+                }
             }
         }
     };
@@ -215,7 +230,9 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
             synchronized (AbstractInactivityMonitor.class) {
                 if (CHECKER_COUNTER == 0) {
-                    ASYNC_TASKS = createExecutor();
+                    if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
+                        ASYNC_TASKS = createExecutor();
+                    }
                     READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck", true);
                 }
                 CHECKER_COUNTER++;
@@ -230,7 +247,9 @@ public class MQTTInactivityMonitor extends TransportFilter {
 
             synchronized (AbstractInactivityMonitor.class) {
                 if (CHECKER_COUNTER == 0) {
-                    ASYNC_TASKS = createExecutor();
+                    if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
+                        ASYNC_TASKS = createExecutor();
+                    }
                     READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck", true);
                 }
                 CHECKER_COUNTER++;
@@ -250,8 +269,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 if (CHECKER_COUNTER == 0) {
                     READ_CHECK_TIMER.cancel();
                     READ_CHECK_TIMER = null;
-                    ThreadPoolUtils.shutdown(ASYNC_TASKS);
-                    ASYNC_TASKS = null;
                 }
             }
         }
@@ -268,8 +285,6 @@ public class MQTTInactivityMonitor extends TransportFilter {
                 if (CHECKER_COUNTER == 0) {
                     READ_CHECK_TIMER.cancel();
                     READ_CHECK_TIMER = null;
-                    ThreadPoolUtils.shutdown(ASYNC_TASKS);
-                    ASYNC_TASKS = null;
                 }
             }
         }

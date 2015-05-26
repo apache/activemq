@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp;
 
 import java.io.IOException;
 import java.util.Timer;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -58,15 +59,22 @@ public class AmqpInactivityMonitor extends TransportFilter {
         public void run() {
             long now = System.currentTimeMillis();
 
-            if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isTerminating()) {
+            if ((now - startTime) >= connectionTimeout && connectCheckerTask != null && !ASYNC_TASKS.isShutdown()) {
                 LOG.debug("No connection attempt made in time for {}! Throwing InactivityIOException.", AmqpInactivityMonitor.this.toString());
-                ASYNC_TASKS.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        onException(new InactivityIOException(
-                            "Channel was inactive for too (>" + (connectionTimeout) + ") long: " + next.getRemoteAddress()));
+                try {
+                    ASYNC_TASKS.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            onException(new InactivityIOException(
+                                "Channel was inactive for too (>" + (connectionTimeout) + ") long: " + next.getRemoteAddress()));
+                        }
+                    });
+                } catch (RejectedExecutionException ex) {
+                    if (!ASYNC_TASKS.isShutdown()) {
+                        LOG.error("Async connection timeout task was rejected from the executor: ", ex);
+                        throw ex;
                     }
-                });
+                }
             }
         }
     };
@@ -76,26 +84,33 @@ public class AmqpInactivityMonitor extends TransportFilter {
 
         @Override
         public void run() {
-            if (keepAliveTask != null && !ASYNC_TASKS.isTerminating() && !ASYNC_TASKS.isTerminated()) {
-                ASYNC_TASKS.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            long nextIdleUpdate = amqpTransport.keepAlive();
-                            if (nextIdleUpdate > 0) {
-                                synchronized (AmqpInactivityMonitor.this) {
-                                    if (keepAliveTask != null) {
-                                        keepAliveTask = new SchedulerTimerTask(keepAlive);
-                                        KEEPALIVE_TASK_TIMER.schedule(keepAliveTask, nextIdleUpdate);
+            if (keepAliveTask != null && !ASYNC_TASKS.isShutdown()) {
+                try {
+                    ASYNC_TASKS.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                long nextIdleUpdate = amqpTransport.keepAlive();
+                                if (nextIdleUpdate > 0) {
+                                    synchronized (AmqpInactivityMonitor.this) {
+                                        if (keepAliveTask != null) {
+                                            keepAliveTask = new SchedulerTimerTask(keepAlive);
+                                            KEEPALIVE_TASK_TIMER.schedule(keepAliveTask, nextIdleUpdate);
+                                        }
                                     }
                                 }
+                            } catch (Exception ex) {
+                                onException(new InactivityIOException(
+                                    "Exception while performing idle checks for connection: " + next.getRemoteAddress()));
                             }
-                        } catch (Exception ex) {
-                            onException(new InactivityIOException(
-                                "Exception while performing idle checks for connection: " + next.getRemoteAddress()));
                         }
+                    });
+                } catch (RejectedExecutionException ex) {
+                    if (!ASYNC_TASKS.isShutdown()) {
+                        LOG.error("Async connection timeout task was rejected from the executor: ", ex);
+                        throw ex;
                     }
-                });
+                }
             }
         }
     };
@@ -144,7 +159,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
 
             synchronized (AbstractInactivityMonitor.class) {
                 if (CONNECTION_CHECK_TASK_COUNTER == 0) {
-                    if (ASYNC_TASKS == null) {
+                    if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                         ASYNC_TASKS = createExecutor();
                     }
                     CONNECTION_CHECK_TASK_TIMER = new Timer("AMQP InactivityMonitor State Check", true);
@@ -167,7 +182,7 @@ public class AmqpInactivityMonitor extends TransportFilter {
 
             synchronized (AbstractInactivityMonitor.class) {
                 if (KEEPALIVE_TASK_COUNTER == 0) {
-                    if (ASYNC_TASKS == null) {
+                    if (ASYNC_TASKS == null || ASYNC_TASKS.isShutdown()) {
                         ASYNC_TASKS = createExecutor();
                     }
                     KEEPALIVE_TASK_TIMER = new Timer("AMQP InactivityMonitor Idle Update", true);

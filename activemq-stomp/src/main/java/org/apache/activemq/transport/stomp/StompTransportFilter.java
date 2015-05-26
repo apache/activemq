@@ -39,7 +39,9 @@ import org.slf4j.LoggerFactory;
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter implements StompTransport {
+
     private static final Logger TRACE = LoggerFactory.getLogger(StompTransportFilter.class.getPackage().getName() + ".StompIO");
+
     private final ProtocolConverter protocolConverter;
     private StompInactivityMonitor monitor;
     private StompWireFormat wireFormat;
@@ -53,6 +55,14 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
         if (wireFormat instanceof StompWireFormat) {
             this.wireFormat = (StompWireFormat) wireFormat;
         }
+    }
+
+    @Override
+    public void start() throws Exception {
+        if (monitor != null) {
+            monitor.startConnectCheckTask(getConnectAttemptTimeout());
+        }
+        super.start();
     }
 
     @Override
@@ -168,12 +178,20 @@ public class StompTransportFilter extends TransportFilter implements StompTransp
     public int getMaxDataLength() {
         return wireFormat.getMaxDataLength();
     }
-    
+
     public void setMaxFrameSize(int maxFrameSize) {
         wireFormat.setMaxFrameSize(maxFrameSize);
     }
-    
+
     public long getMaxFrameSize() {
         return wireFormat.getMaxFrameSize();
+    }
+
+    public long getConnectAttemptTimeout() {
+        return wireFormat.getConnectionAttemptTimeout();
+    }
+
+    public void setConnectAttemptTimeout(long timeout) {
+        wireFormat.setConnectionAttemptTimeout(timeout);
     }
 }

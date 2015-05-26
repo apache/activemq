@@ -54,6 +54,7 @@ public class WSTransportTestSupport {
 
     @Before
     public void setUp() throws Exception {
+        LOG.info("========== Starting test: {} ==========", name.getMethodName());
         broker = createBroker(true);
     }
 
@@ -64,6 +65,8 @@ public class WSTransportTestSupport {
         } catch(Exception e) {
             LOG.warn("Error on Broker stop.");
         }
+
+        LOG.info("========== Finished test: {} ==========", name.getMethodName());
     }
 
     protected String getWSConnectorURI() {

@@ -45,15 +45,18 @@ public class StompWireFormat implements WireFormat {
     private static final int MAX_HEADER_LENGTH = 1024 * 10;
     private static final int MAX_HEADERS = 1000;
     private static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
+
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 30000;
 
     private int version = 1;
     private int maxDataLength = MAX_DATA_LENGTH;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private String stompVersion = Stomp.DEFAULT_VERSION;
-    
+    private long connectionAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
+
     //The current frame size as it is unmarshalled from the stream
-    private AtomicLong frameSize = new AtomicLong();
+    private final AtomicLong frameSize = new AtomicLong();
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -104,7 +107,7 @@ public class StompWireFormat implements WireFormat {
     public Object unmarshal(DataInput in) throws IOException {
 
         try {
-            
+
             // parse action
             String action = parseAction(in, frameSize);
 
@@ -131,7 +134,7 @@ public class StompWireFormat implements WireFormat {
                 // We don't know how much to read.. data ends when we hit a 0
                 byte b;
                 ByteArrayOutputStream baos = null;
-                while ((b = in.readByte()) != 0) {                    
+                while ((b = in.readByte()) != 0) {
                     if (baos == null) {
                         baos = new ByteArrayOutputStream();
                     } else if (baos.size() > getMaxDataLength()) {
@@ -141,7 +144,7 @@ public class StompWireFormat implements WireFormat {
                             throw new ProtocolException("The maximum frame size was exceeded", true);
                         }
                     }
-                    
+
                     baos.write(b);
                 }
 
@@ -191,7 +194,7 @@ public class StompWireFormat implements WireFormat {
 
     protected String parseAction(DataInput in, AtomicLong frameSize) throws IOException {
         String action = null;
-        
+
         // skip white space to next real action line
         while (true) {
             action = readLine(in, MAX_COMMAND_LENGTH, "The maximum command length was exceeded");
@@ -209,11 +212,11 @@ public class StompWireFormat implements WireFormat {
     }
 
     protected HashMap<String, String> parseHeaders(DataInput in, AtomicLong frameSize) throws IOException {
-        HashMap<String, String> headers = new HashMap<String, String>(25); 
+        HashMap<String, String> headers = new HashMap<String, String>(25);
         while (true) {
             ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
             if (line != null && line.length > 1) {
-                
+
                 if (headers.size() > MAX_HEADERS) {
                     throw new ProtocolException("The maximum number of headers was exceeded", true);
                 }
@@ -257,7 +260,7 @@ public class StompWireFormat implements WireFormat {
         }
         return headers;
     }
-    
+
     protected int parseContentLength(String contentLength, AtomicLong frameSize) throws ProtocolException {
         int length;
         try {
@@ -269,7 +272,7 @@ public class StompWireFormat implements WireFormat {
         if (length > getMaxDataLength()) {
             throw new ProtocolException("The maximum data length was exceeded", true);
         }
-        
+
         if (frameSize.addAndGet(length) > getMaxFrameSize()) {
             throw new ProtocolException("The maximum frame size was exceeded", true);
         }
@@ -341,7 +344,7 @@ public class StompWireFormat implements WireFormat {
 
         return new String(decoded.toByteArray(), "UTF-8");
     }
-    
+
     @Override
     public int getVersion() {
         return version;
@@ -374,5 +377,13 @@ public class StompWireFormat implements WireFormat {
 
     public void setMaxFrameSize(long maxFrameSize) {
         this.maxFrameSize = maxFrameSize;
+    }
+
+    public long getConnectionAttemptTimeout() {
+        return connectionAttemptTimeout;
+    }
+
+    public void setConnectionAttemptTimeout(long connectionAttemptTimeout) {
+        this.connectionAttemptTimeout = connectionAttemptTimeout;
     }
 }
