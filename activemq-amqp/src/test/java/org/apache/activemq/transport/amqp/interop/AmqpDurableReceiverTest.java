@@ -17,8 +17,12 @@
 package org.apache.activemq.transport.amqp.interop;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_NAME;
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_NAME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
@@ -219,6 +223,11 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         assertNotNull(protonReceiver.getRemoteSource());
         Source remoteSource = (Source) protonReceiver.getRemoteSource();
 
+        if (remoteSource.getFilter() != null) {
+            assertFalse(remoteSource.getFilter().containsKey(NO_LOCAL_NAME));
+            assertFalse(remoteSource.getFilter().containsKey(JMS_SELECTOR_NAME));
+        }
+
         assertEquals(TerminusExpiryPolicy.NEVER, remoteSource.getExpiryPolicy());
         assertEquals(TerminusDurability.UNSETTLED_STATE, remoteSource.getDurable());
         assertEquals(COPY, remoteSource.getDistributionMode());
@@ -235,7 +244,7 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
     }
 
     @Test(timeout = 60000)
-    public void testLookupExistingSubscriptionAfterRestart() throws Exception {
+    public void testLookupExistingSubscriptionWithSelectorAndNoLocal() throws Exception {
 
         final BrokerViewMBean brokerView = getProxyToBroker();
 
@@ -245,7 +254,56 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         connection.connect();
 
         AmqpSession session = connection.createSession();
-        AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName());
+        AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName(), "color = red", true);
+
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver.detach();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(1, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver = session.lookupSubscription(getTestName());
+
+        assertNotNull(receiver);
+
+        Receiver protonReceiver = receiver.getReceiver();
+        assertNotNull(protonReceiver.getRemoteSource());
+        Source remoteSource = (Source) protonReceiver.getRemoteSource();
+
+        if (remoteSource.getFilter() != null) {
+            assertTrue(remoteSource.getFilter().containsKey(NO_LOCAL_NAME));
+            assertTrue(remoteSource.getFilter().containsKey(JMS_SELECTOR_NAME));
+        }
+
+        assertEquals(TerminusExpiryPolicy.NEVER, remoteSource.getExpiryPolicy());
+        assertEquals(TerminusDurability.UNSETTLED_STATE, remoteSource.getDurable());
+        assertEquals(COPY, remoteSource.getDistributionMode());
+
+        assertEquals(1, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        receiver.close();
+
+        assertEquals(0, brokerView.getDurableTopicSubscribers().length);
+        assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
+
+        connection.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testLookupExistingSubscriptionAfterRestartWithSelectorAndNoLocal() throws Exception {
+
+        final BrokerViewMBean brokerView = getProxyToBroker();
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.createConnection();
+        connection.setContainerId(getTestName());
+        connection.connect();
+
+        AmqpSession session = connection.createSession();
+        AmqpReceiver receiver = session.createDurableReceiver("topic://" + getTestName(), getTestName(), "color = red", true);
 
         assertEquals(1, brokerView.getDurableTopicSubscribers().length);
         assertEquals(0, brokerView.getInactiveDurableTopicSubscribers().length);
@@ -269,6 +327,11 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         Receiver protonReceiver = receiver.getReceiver();
         assertNotNull(protonReceiver.getRemoteSource());
         Source remoteSource = (Source) protonReceiver.getRemoteSource();
+
+        if (remoteSource.getFilter() != null) {
+            assertTrue(remoteSource.getFilter().containsKey(NO_LOCAL_NAME));
+            assertTrue(remoteSource.getFilter().containsKey(JMS_SELECTOR_NAME));
+        }
 
         assertEquals(TerminusExpiryPolicy.NEVER, remoteSource.getExpiryPolicy());
         assertEquals(TerminusDurability.UNSETTLED_STATE, remoteSource.getDurable());

@@ -18,7 +18,9 @@ package org.apache.activemq.transport.amqp.protocol;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.COPY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.JMS_SELECTOR_NAME;
 import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS;
+import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_NAME;
 import static org.apache.activemq.transport.amqp.AmqpSupport.createDestination;
 import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
 
@@ -43,6 +45,8 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.activemq.transport.amqp.ResponseHandler;
+import org.apache.qpid.jms.provider.amqp.AmqpJmsNoLocalType;
+import org.apache.qpid.jms.provider.amqp.AmqpJmsSelectorType;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -255,14 +259,29 @@ public class AmqpSession implements AmqpResource {
             ActiveMQDestination destination;
             if (source == null) {
                 // Attempt to recover previous subscription
-                destination = connection.lookupSubscription(protonSender.getName());
+                ConsumerInfo storedInfo = connection.lookupSubscription(protonSender.getName());
 
-                if (destination != null) {
+                if (storedInfo != null) {
+                    destination = storedInfo.getDestination();
+
                     source = new org.apache.qpid.proton.amqp.messaging.Source();
                     source.setAddress(destination.getQualifiedName());
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
                     source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
                     source.setDistributionMode(COPY);
+
+                    Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
+                    if (storedInfo.isNoLocal()) {
+                        filters.put(NO_LOCAL_NAME, AmqpJmsNoLocalType.NO_LOCAL);
+                    }
+
+                    if (storedInfo.getSelector() != null && !storedInfo.getSelector().trim().equals("")) {
+                        filters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorType(storedInfo.getSelector()));
+                    }
+
+                    if (!filters.isEmpty()) {
+                        source.setFilter(filters);
+                    }
                 } else {
                     sender.close(new ErrorCondition(AmqpError.NOT_FOUND, "Unknown subscription link: " + protonSender.getName()));
                     return;

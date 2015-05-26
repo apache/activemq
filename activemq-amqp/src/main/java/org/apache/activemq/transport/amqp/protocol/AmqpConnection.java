@@ -49,6 +49,7 @@ import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.MessageDispatch;
@@ -630,8 +631,8 @@ public class AmqpConnection implements AmqpProtocolConverter {
         subscriptionsByConsumerId.remove(consumerId);
     }
 
-    ActiveMQDestination lookupSubscription(String subscriptionName) throws AmqpProtocolException {
-        ActiveMQDestination result = null;
+    ConsumerInfo lookupSubscription(String subscriptionName) throws AmqpProtocolException {
+        ConsumerInfo result = null;
         RegionBroker regionBroker;
 
         try {
@@ -643,7 +644,7 @@ public class AmqpConnection implements AmqpProtocolConverter {
         final TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
         DurableTopicSubscription subscription = topicRegion.lookupSubscription(subscriptionName, connectionInfo.getClientId());
         if (subscription != null) {
-            result = subscription.getActiveMQDestination();
+            result = subscription.getConsumerInfo();
         }
 
         return result;
