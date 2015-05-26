@@ -270,17 +270,12 @@ public class AmqpSession implements AmqpResource {
                     source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
                     source.setDistributionMode(COPY);
 
-                    Map<Symbol, DescribedType> filters = new HashMap<Symbol, DescribedType>();
                     if (storedInfo.isNoLocal()) {
-                        filters.put(NO_LOCAL_NAME, AmqpJmsNoLocalType.NO_LOCAL);
+                        supportedFilters.put(NO_LOCAL_NAME, AmqpJmsNoLocalType.NO_LOCAL);
                     }
 
                     if (storedInfo.getSelector() != null && !storedInfo.getSelector().trim().equals("")) {
-                        filters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorType(storedInfo.getSelector()));
-                    }
-
-                    if (!filters.isEmpty()) {
-                        source.setFilter(filters);
+                        supportedFilters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorType(storedInfo.getSelector()));
                     }
                 } else {
                     sender.close(new ErrorCondition(AmqpError.NOT_FOUND, "Unknown subscription link: " + protonSender.getName()));
