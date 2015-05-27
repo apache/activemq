@@ -614,7 +614,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                             // track this dud location
                             journal.corruptRecoveryLocation(recoveryPosition);
                         } else {
-                            throw failedRecovery;
+                            throw new IOException("Failed to recover data at position:" + recoveryPosition, failedRecovery);
                         }
                     }
                     recoveryPosition = journal.getNextLocation(recoveryPosition);

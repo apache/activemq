@@ -753,12 +753,22 @@ public class JobSchedulerStoreImpl extends AbstractKahaDBStore implements JobSch
 
             if (recoveryPosition != null) {
                 int redoCounter = 0;
-                LOG.info("Recovering from the journal ...");
+                LOG.info("Recovering from the scheduled job journal @" + recoveryPosition);
                 while (recoveryPosition != null) {
-                    JournalCommand<?> message = load(recoveryPosition);
-                    metaData.setLastUpdateLocation(recoveryPosition);
-                    doRecover(message, recoveryPosition, lastIndoubtPosition);
-                    redoCounter++;
+                    try {
+                        JournalCommand<?> message = load(recoveryPosition);
+                        metaData.setLastUpdateLocation(recoveryPosition);
+                        doRecover(message, recoveryPosition, lastIndoubtPosition);
+                        redoCounter++;
+                    } catch (IOException failedRecovery) {
+                        if (isIgnoreMissingJournalfiles()) {
+                            LOG.debug("Failed to recover data at position:" + recoveryPosition, failedRecovery);
+                            // track this dud location
+                            journal.corruptRecoveryLocation(recoveryPosition);
+                        } else {
+                            throw new IOException("Failed to recover data at position:" + recoveryPosition, failedRecovery);
+                        }
+                    }
                     recoveryPosition = journal.getNextLocation(recoveryPosition);
                      if (LOG.isInfoEnabled() && redoCounter % 100000 == 0) {
                          LOG.info("@ {}, {} entries recovered ..", recoveryPosition, redoCounter);
