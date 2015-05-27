@@ -45,8 +45,6 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
 import org.apache.activemq.transport.amqp.ResponseHandler;
-import org.apache.qpid.jms.provider.amqp.AmqpJmsNoLocalType;
-import org.apache.qpid.jms.provider.amqp.AmqpJmsSelectorType;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -271,11 +269,11 @@ public class AmqpSession implements AmqpResource {
                     source.setDistributionMode(COPY);
 
                     if (storedInfo.isNoLocal()) {
-                        supportedFilters.put(NO_LOCAL_NAME, AmqpJmsNoLocalType.NO_LOCAL);
+                        supportedFilters.put(NO_LOCAL_NAME, AmqpNoLocalFilter.NO_LOCAL);
                     }
 
                     if (storedInfo.getSelector() != null && !storedInfo.getSelector().trim().equals("")) {
-                        supportedFilters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorType(storedInfo.getSelector()));
+                        supportedFilters.put(JMS_SELECTOR_NAME, new AmqpJmsSelectorFilter(storedInfo.getSelector()));
                     }
                 } else {
                     sender.close(new ErrorCondition(AmqpError.NOT_FOUND, "Unknown subscription link: " + protonSender.getName()));
