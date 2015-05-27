@@ -400,6 +400,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     // It's the end of browse signal in response to a MessagePull
                     getEndpoint().drained();
                     draining = false;
+                    currentCredit = 0;
                 } else {
                     jms.setRedeliveryCounter(md.getRedeliveryCounter());
                     jms.setReadOnlyBody(true);

@@ -17,15 +17,19 @@
 package org.apache.activemq.transport.amqp;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,5 +116,51 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
         assertEquals(0, queueView.getQueueSize());
 
         session.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testQueueTXRollbackAndCommit() throws Exception {
+        final int MSG_COUNT = 3;
+
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        Queue destination = session.createQueue(getDestinationName());
+
+        MessageProducer producer = session.createProducer(destination);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        for (int i = 1; i <= MSG_COUNT; i++) {
+            LOG.info("Sending message: {} to rollback", i);
+            TextMessage message = session.createTextMessage("Rolled back Message: " + i);
+            message.setIntProperty("MessageSequence", i);
+            producer.send(message);
+        }
+
+        session.rollback();
+
+        assertEquals(0, getProxyToQueue(getDestinationName()).getQueueSize());
+
+        for (int i = 1; i <= MSG_COUNT; i++) {
+            LOG.info("Sending message: {} to commit", i);
+            TextMessage message = session.createTextMessage("Commit Message: " + i);
+            message.setIntProperty("MessageSequence", i);
+            producer.send(message);
+        }
+
+        session.commit();
+
+        assertEquals(MSG_COUNT, getProxyToQueue(getDestinationName()).getQueueSize());
+        SubscriptionViewMBean subscription = getProxyToQueueSubscriber(getDestinationName());
+        assertNotNull(subscription);
+        assertTrue(subscription.getPrefetchSize() > 0);
+
+        for (int i = 1; i <= MSG_COUNT; i++) {
+            LOG.info("Trying to receive message: {}", i);
+            TextMessage message = (TextMessage) consumer.receive(1000);
+            assertNotNull("Message " + i + "should be available", message);
+            assertEquals("Should get message: " + i, i , message.getIntProperty("MessageSequence"));
+        }
     }
 }

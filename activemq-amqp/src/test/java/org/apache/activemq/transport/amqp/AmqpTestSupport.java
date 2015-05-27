@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.Set;
@@ -42,6 +43,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.spring.SpringSslContext;
@@ -330,6 +332,19 @@ public class AmqpTestSupport {
         QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
                 .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
         return proxy;
+    }
+
+    protected SubscriptionViewMBean getProxyToQueueSubscriber(String name) throws MalformedObjectNameException, JMSException, IOException {
+        ObjectName queueViewMBeanName = new ObjectName("org.apache.activemq:type=Broker,brokerName=localhost,destinationType=Queue,destinationName="+name);
+        QueueViewMBean proxy = (QueueViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(queueViewMBeanName, QueueViewMBean.class, true);
+        SubscriptionViewMBean subscription = null;
+        for (ObjectName subscriber : proxy.getSubscriptions()) {
+            subscription = (SubscriptionViewMBean) brokerService.getManagementContext()
+                .newProxyInstance(subscriber, SubscriptionViewMBean.class, true);
+        }
+
+        return subscription;
     }
 
     protected TopicViewMBean getProxyToTopic(String name) throws MalformedObjectNameException, JMSException {
