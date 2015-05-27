@@ -46,6 +46,10 @@ public class AmqpSupport {
     public static final Symbol TEMP_TOPIC_CAPABILITY = Symbol.valueOf("temporary-topic");
 
     // Symbols used to announce connection information to remote peer.
+    public static final Symbol INVALID_FIELD = Symbol.valueOf("invalid-field");
+    public static final Symbol CONTAINER_ID = Symbol.valueOf("container-id");
+
+    // Symbols used to announce connection information to remote peer.
     public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
     public static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
     public static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");

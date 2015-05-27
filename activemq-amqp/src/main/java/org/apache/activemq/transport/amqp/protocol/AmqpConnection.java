@@ -18,6 +18,8 @@ package org.apache.activemq.transport.amqp.protocol;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
+import static org.apache.activemq.transport.amqp.AmqpSupport.CONTAINER_ID;
+import static org.apache.activemq.transport.amqp.AmqpSupport.INVALID_FIELD;
 import static org.apache.activemq.transport.amqp.AmqpSupport.QUEUE_PREFIX;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILITY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
@@ -434,7 +436,13 @@ public class AmqpConnection implements AmqpProtocolConverter {
                         if (exception instanceof SecurityException) {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.UNAUTHORIZED_ACCESS, exception.getMessage()));
                         } else if (exception instanceof InvalidClientIDException) {
-                            protonConnection.setCondition(new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage()));
+                            ErrorCondition condition = new ErrorCondition(AmqpError.INVALID_FIELD, exception.getMessage());
+
+                            Map<Symbol, Object> infoMap = new HashMap<Symbol, Object> ();
+                            infoMap.put(INVALID_FIELD, CONTAINER_ID);
+                            condition.setInfo(infoMap);
+
+                            protonConnection.setCondition(condition);
                         } else {
                             protonConnection.setCondition(new ErrorCondition(AmqpError.ILLEGAL_STATE, exception.getMessage()));
                         }
