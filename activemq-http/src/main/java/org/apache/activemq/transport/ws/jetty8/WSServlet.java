@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.transport.ws.jetty8;
 
 import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,21 +31,23 @@ import org.eclipse.jetty.websocket.WebSocketServlet;
  * Handle connection upgrade requests and creates web sockets
  */
 public class WSServlet extends WebSocketServlet {
+
     private static final long serialVersionUID = -4716657876092884139L;
 
     private TransportAcceptListener listener;
 
+    @Override
     public void init() throws ServletException {
         super.init();
-        listener = (TransportAcceptListener)getServletContext().getAttribute("acceptListener");
+        listener = (TransportAcceptListener) getServletContext().getAttribute("acceptListener");
         if (listener == null) {
             throw new ServletException("No such attribute 'acceptListener' available in the ServletContext");
         }
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException ,IOException  {
-        getServletContext().getNamedDispatcher("default").forward(request,response);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        getServletContext().getNamedDispatcher("default").forward(request, response);
     }
 
     @Override
@@ -56,7 +58,7 @@ public class WSServlet extends WebSocketServlet {
         } else {
             socket = new StompSocket();
         }
-        listener.onAccept((Transport)socket);
+        listener.onAccept((Transport) socket);
         return socket;
     }
 }

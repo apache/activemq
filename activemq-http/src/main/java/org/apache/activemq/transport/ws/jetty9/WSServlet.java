@@ -23,36 +23,39 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
+import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
 /**
  * Handle connection upgrade requests and creates web sockets
  */
 public class WSServlet extends WebSocketServlet {
+
     private static final long serialVersionUID = -4716657876092884139L;
 
     private TransportAcceptListener listener;
 
+    @Override
     public void init() throws ServletException {
         super.init();
-        listener = (TransportAcceptListener)getServletContext().getAttribute("acceptListener");
+        listener = (TransportAcceptListener) getServletContext().getAttribute("acceptListener");
         if (listener == null) {
             throw new ServletException("No such attribute 'acceptListener' available in the ServletContext");
         }
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException ,IOException  {
-        getServletContext().getNamedDispatcher("default").forward(request,response);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        getServletContext().getNamedDispatcher("default").forward(request, response);
     }
 
-    
+    @Override
     public void configure(WebSocketServletFactory factory) {
         factory.setCreator(new WebSocketCreator() {
             @Override
@@ -60,13 +63,14 @@ public class WSServlet extends WebSocketServlet {
                 WebSocketListener socket;
                 if (req.getSubProtocols().contains("mqtt")) {
                     socket = new MQTTSocket();
+                    resp.setAcceptedSubProtocol("mqtt");
                 } else {
                     socket = new StompSocket();
+                    resp.setAcceptedSubProtocol("stomp");
                 }
+                listener.onAccept((Transport) socket);
                 return socket;
             }
         });
-        
     }
 }
-
