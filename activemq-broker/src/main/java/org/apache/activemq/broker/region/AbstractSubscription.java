@@ -53,7 +53,7 @@ public abstract class AbstractSubscription implements Subscription {
     private int cursorMemoryHighWaterMark = 70;
     private boolean slowConsumer;
     private long lastAckTime;
-    private AtomicLong consumedCount = new AtomicLong();
+    private final SubscriptionStatistics subscriptionStatistics = new SubscriptionStatistics();
 
     public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -89,7 +89,7 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         this.lastAckTime = System.currentTimeMillis();
-        this.consumedCount.incrementAndGet();
+        subscriptionStatistics.getConsumedCount().increment();
     }
 
     @Override
@@ -230,7 +230,7 @@ public abstract class AbstractSubscription implements Subscription {
     @Override
     public int getInFlightUsage() {
         if (info.getPrefetchSize() > 0) {
-        return (getInFlightSize() * 100)/info.getPrefetchSize();
+            return (getInFlightSize() * 100)/info.getPrefetchSize();
         }
         return Integer.MAX_VALUE;
     }
@@ -285,14 +285,19 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public long getConsumedCount(){
-        return consumedCount.get();
+        return subscriptionStatistics.getConsumedCount().getCount();
     }
 
     public void incrementConsumedCount(){
-        consumedCount.incrementAndGet();
+        subscriptionStatistics.getConsumedCount().increment();
     }
 
     public void resetConsumedCount(){
-        consumedCount.set(0);
+        subscriptionStatistics.getConsumedCount().reset();
+    }
+
+    @Override
+    public SubscriptionStatistics getSubscriptionStatistics() {
+        return subscriptionStatistics;
     }
 }
