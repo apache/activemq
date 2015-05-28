@@ -263,7 +263,7 @@ public abstract class AbstractSubscription implements Subscription {
 
     @Override
     public int countBeforeFull() {
-        return getDispatchedQueueSize() - info.getPrefetchSize();
+        return info.getPrefetchSize() - getDispatchedQueueSize();
     }
 
     @Override
