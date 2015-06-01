@@ -244,4 +244,9 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     public void setPlistLocator(Object plistLocator) {
         this.plistLocator = plistLocator;
     }
+
+    private Object readResolve() {
+        dataLocator = new AtomicReference<Object>();
+        return this;
+    }
 }
