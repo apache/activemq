@@ -17,7 +17,11 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,6 +41,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
@@ -70,6 +75,20 @@ public class TopicSubscription extends AbstractSubscription {
     protected ActiveMQMessageAudit audit;
     protected boolean active = false;
     protected boolean discarding = false;
+
+
+    /**
+     * This Map is used to keep track of messages that have been dispatched in sorted order to
+     * optimize message acknowledgement
+     */
+    private NavigableMap<MessageId, MessageReference> dispatched = new ConcurrentSkipListMap<>(
+            new Comparator<MessageId>() {
+                @Override
+                public int compare(MessageId m1, MessageId m2) {
+                    return m1 == null ? (m2 == null ? 0 : -1) : (m2 == null ? 1
+                            : Long.compare(m1.getBrokerSequenceId(), m2.getBrokerSequenceId()));
+                }
+            });
 
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
@@ -250,6 +269,8 @@ public class TopicSubscription extends AbstractSubscription {
                     if (node.getMessageId().equals(mdn.getMessageId())) {
                         matched.remove();
                         getSubscriptionStatistics().getDispatched().increment();
+                        dispatched.put(node.getMessageId(), node);
+                        getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
                         node.decrementReferenceCount();
                         break;
                     }
@@ -277,6 +298,7 @@ public class TopicSubscription extends AbstractSubscription {
                             }
                         }
                         getSubscriptionStatistics().getDequeues().add(ack.getMessageCount());
+                        updateInflightMessageSizeOnAck(ack);
                         dispatchMatched();
                     }
                 });
@@ -289,6 +311,7 @@ public class TopicSubscription extends AbstractSubscription {
                     }
                 }
                 getSubscriptionStatistics().getDequeues().add(ack.getMessageCount());
+                updateInflightMessageSizeOnAck(ack);
             }
             while (true) {
                 int currentExtension = prefetchExtension.get();
@@ -376,6 +399,27 @@ public class TopicSubscription extends AbstractSubscription {
                     prefetchExtension.set(0);
                 }
             }
+        }
+    }
+
+    /**
+     * Update the inflight statistics on message ack.  Since a message ack could be a range,
+     * we need to grab a subtree of the dispatched map to acknowledge messages.  Finding the
+     * subMap is an O(log n) operation.
+     * @param ack
+     */
+    private void updateInflightMessageSizeOnAck(final MessageAck ack) {
+        if (ack.getFirstMessageId() != null) {
+            NavigableMap<MessageId, MessageReference> acked = dispatched
+                    .subMap(ack.getFirstMessageId(), true, ack.getLastMessageId(), true);
+            Iterator<MessageId> i = acked.keySet().iterator();
+            while (i.hasNext()) {
+                getSubscriptionStatistics().getInflightMessageSize().addSize(-acked.get(i.next()).getSize());
+                i.remove();
+            }
+        } else {
+            getSubscriptionStatistics().getInflightMessageSize().addSize(-dispatched.get(ack.getLastMessageId()).getSize());
+            dispatched.remove(ack.getLastMessageId());
         }
     }
 
@@ -602,6 +646,8 @@ public class TopicSubscription extends AbstractSubscription {
         if (node != null) {
             md.setDestination(((Destination)node.getRegionDestination()).getActiveMQDestination());
             getSubscriptionStatistics().getDispatched().increment();
+            dispatched.put(node.getMessageId(), node);
+            getSubscriptionStatistics().getInflightMessageSize().addSize(node.getSize());
             // Keep track if this subscription is receiving messages from a single destination.
             if (singleDestination) {
                 if (destination == null) {
@@ -683,6 +729,7 @@ public class TopicSubscription extends AbstractSubscription {
             }
         }
         setSlowConsumer(false);
+        dispatched.clear();
     }
 
     @Override

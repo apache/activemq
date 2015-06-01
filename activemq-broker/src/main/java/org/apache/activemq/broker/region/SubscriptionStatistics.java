@@ -18,6 +18,7 @@
 package org.apache.activemq.broker.region;
 
 import org.apache.activemq.management.CountStatisticImpl;
+import org.apache.activemq.management.SizeStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
 /**
@@ -29,6 +30,7 @@ public class SubscriptionStatistics extends StatsImpl {
     protected CountStatisticImpl enqueues;
     protected CountStatisticImpl dequeues;
     protected CountStatisticImpl dispatched;
+    protected SizeStatisticImpl inflightMessageSize;
 
 
     public SubscriptionStatistics() {
@@ -41,11 +43,13 @@ public class SubscriptionStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the subscription");
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the subscription");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the subscription");
+        inflightMessageSize = new SizeStatisticImpl("inflightMessageSize", "The size in bytes of messages dispatched but awaiting acknowledgement");
 
         addStatistic("consumedCount", consumedCount);
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
+        addStatistic("inflightMessageSize", inflightMessageSize);
 
         this.setEnabled(enabled);
     }
@@ -66,6 +70,10 @@ public class SubscriptionStatistics extends StatsImpl {
         return dispatched;
     }
 
+    public SizeStatisticImpl getInflightMessageSize() {
+        return inflightMessageSize;
+    }
+
     public void reset() {
         if (this.isDoReset()) {
             super.reset();
@@ -73,6 +81,7 @@ public class SubscriptionStatistics extends StatsImpl {
             enqueues.reset();
             dequeues.reset();
             dispatched.reset();
+            inflightMessageSize.reset();
         }
     }
 
@@ -82,6 +91,7 @@ public class SubscriptionStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
+        inflightMessageSize.setEnabled(enabled);
     }
 
     public void setParent(SubscriptionStatistics parent) {
@@ -90,11 +100,13 @@ public class SubscriptionStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
+            inflightMessageSize.setParent(parent.inflightMessageSize);
         } else {
             consumedCount.setParent(null);
             enqueues.setParent(null);
             dispatched.setParent(null);
             dequeues.setParent(null);
+            inflightMessageSize.setParent(null);
         }
     }
 
