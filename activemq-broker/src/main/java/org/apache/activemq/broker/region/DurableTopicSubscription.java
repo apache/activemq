@@ -237,6 +237,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     savedDispateched = new ArrayList<MessageReference>(dispatched);
                 }
                 dispatched.clear();
+                getSubscriptionStatistics().getInflightMessageSize().reset();
             }
             if (!keepDurableSubsActive && pending.isTransient()) {
                 try {

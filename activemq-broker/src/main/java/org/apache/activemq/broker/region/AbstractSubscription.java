@@ -228,6 +228,11 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     @Override
+    public long getInFlightMessageSize() {
+        return subscriptionStatistics.getInflightMessageSize().getTotalSize();
+    }
+
+    @Override
     public int getInFlightUsage() {
         if (info.getPrefetchSize() > 0) {
             return (getInFlightSize() * 100)/info.getPrefetchSize();

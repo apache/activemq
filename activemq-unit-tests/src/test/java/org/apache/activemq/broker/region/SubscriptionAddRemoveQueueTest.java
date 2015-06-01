@@ -376,5 +376,10 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
             return subscriptionStatistics;
         }
 
+        @Override
+        public long getInFlightMessageSize() {
+            return subscriptionStatistics.getInflightMessageSize().getTotalSize();
+        }
+
     }
 }

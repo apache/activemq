@@ -197,6 +197,11 @@ public interface Subscription extends SubscriptionRecovery {
     int getInFlightSize();
 
     /**
+     * @return the size in bytes of the messages awaiting acknowledgement
+     */
+    long getInFlightMessageSize();
+
+    /**
      * @return the in flight messages as a percentage of the prefetch size
      */
     int getInFlightUsage();
