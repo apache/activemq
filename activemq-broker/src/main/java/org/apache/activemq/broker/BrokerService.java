@@ -240,7 +240,7 @@ public class BrokerService implements Service {
     private long offlineDurableSubscriberTaskSchedule = 300000;
     private DestinationFilter virtualConsumerDestinationFilter;
 
-    private final Object persistenceAdapterLock = new Object();
+    private final AtomicBoolean persistenceAdapterStarted = new AtomicBoolean(false);
     private Throwable startException = null;
     private boolean startAsync = false;
     private Date startDate;
@@ -630,8 +630,9 @@ public class BrokerService implements Service {
                     } catch (Throwable e) {
                         startException = e;
                     } finally {
-                        synchronized (persistenceAdapterLock) {
-                            persistenceAdapterLock.notifyAll();
+                        synchronized (persistenceAdapterStarted) {
+                            persistenceAdapterStarted.set(true);
+                            persistenceAdapterStarted.notifyAll();
                         }
                     }
                 }
@@ -669,8 +670,10 @@ public class BrokerService implements Service {
                 @Override
                 public void run() {
                     try {
-                        synchronized (persistenceAdapterLock) {
-                            persistenceAdapterLock.wait();
+                        synchronized (persistenceAdapterStarted) {
+                            if (!persistenceAdapterStarted.get()) {
+                                persistenceAdapterStarted.wait();
+                            }
                         }
                         doStartBroker();
                     } catch (Throwable t) {
