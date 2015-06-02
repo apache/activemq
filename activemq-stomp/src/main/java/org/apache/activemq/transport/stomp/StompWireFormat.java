@@ -44,8 +44,8 @@ public class StompWireFormat implements WireFormat {
     private static final int MAX_COMMAND_LENGTH = 1024;
     private static final int MAX_HEADER_LENGTH = 1024 * 10;
     private static final int MAX_HEADERS = 1000;
-    private static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
 
+    public static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final long DEFAULT_CONNECTION_TIMEOUT = 30000;
 

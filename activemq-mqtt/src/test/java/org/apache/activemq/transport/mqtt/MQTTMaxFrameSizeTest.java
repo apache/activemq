@@ -59,7 +59,7 @@ public class MQTTMaxFrameSizeTest extends MQTTTestSupport {
 
     @Override
     public String getProtocolConfig() {
-        return "?transport.maxFrameSize=" + maxFrameSize;
+        return "?wireFormat.maxFrameSize=" + maxFrameSize;
     }
 
     @Test(timeout = 30000)

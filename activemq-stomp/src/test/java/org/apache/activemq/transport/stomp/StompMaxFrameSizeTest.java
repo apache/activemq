@@ -81,7 +81,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
-        return "?transport.maxDataLength=" + MAX_DATA_SIZE + "&transport.maxFrameSize=" + maxFrameSize;
+        return "?wireFormat.maxDataLength=" + MAX_DATA_SIZE + "&wireFormat.maxFrameSize=" + maxFrameSize;
     }
 
     /**

@@ -67,8 +67,8 @@ public class AmqpMaxFrameSizeTest extends AmqpClientTestSupport {
 
     @Override
     protected String getAdditionalConfig() {
-        return "&transport.wireFormat.maxAmqpFrameSize=" + maxAmqpFrameSize +
-               "&transport.maxFrameSize=" + maxFrameSize;
+        return "&wireFormat.maxAmqpFrameSize=" + maxAmqpFrameSize +
+               "&wireFormat.maxFrameSize=" + maxFrameSize;
     }
 
     @Test(timeout = 600000)

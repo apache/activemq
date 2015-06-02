@@ -61,7 +61,7 @@ public class AmqpConnection extends AmqpAbstractResource<Connection> implements 
     private static final int DEFAULT_CHANNEL_MAX = 32767;
     private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
 
-    public static final long DEFAULT_CONNECT_TIMEOUT = 15000;
+    public static final long DEFAULT_CONNECT_TIMEOUT = 515000;
     public static final long DEFAULT_CLOSE_TIMEOUT = 30000;
 
     private final ScheduledExecutorService serializer;

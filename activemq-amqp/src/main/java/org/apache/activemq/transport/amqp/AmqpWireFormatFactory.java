@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 
@@ -24,8 +25,62 @@ import org.apache.activemq.wireformat.WireFormatFactory;
  */
 public class AmqpWireFormatFactory implements WireFormatFactory {
 
+    private long maxFrameSize = AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE;
+    private int maxAmqpFrameSize = AmqpWireFormat.NO_AMQP_MAX_FRAME_SIZE;
+    private int idelTimeout = AmqpWireFormat.DEFAULT_IDLE_TIMEOUT;
+    private int producerCredit = AmqpWireFormat.DEFAULT_PRODUCER_CREDIT;
+    private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
+
     @Override
     public WireFormat createWireFormat() {
-        return new AmqpWireFormat();
+        AmqpWireFormat wireFormat = new AmqpWireFormat();
+
+        wireFormat.setMaxFrameSize(getMaxFrameSize());
+        wireFormat.setMaxAmqpFrameSize(getMaxAmqpFrameSize());
+        wireFormat.setIdleTimeout(getIdelTimeout());
+        wireFormat.setProducerCredit(getProducerCredit());
+        wireFormat.setTransformer(getTransformer());
+
+        return wireFormat;
+    }
+
+    public int getMaxAmqpFrameSize() {
+        return maxAmqpFrameSize;
+    }
+
+    public void setMaxAmqpFrameSize(int maxAmqpFrameSize) {
+        this.maxAmqpFrameSize = maxAmqpFrameSize;
+    }
+
+    public long getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(long maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
+    }
+
+    public int getIdelTimeout() {
+        return idelTimeout;
+    }
+
+    public void setIdelTimeout(int idelTimeout) {
+        this.idelTimeout = idelTimeout;
+    }
+
+    public int getProducerCredit() {
+        return producerCredit;
+    }
+
+    public void setProducerCredit(int producerCredit) {
+        this.producerCredit = producerCredit;
+    }
+
+    public String getTransformer() {
+        return transformer;
+    }
+
+    public void setTransformer(String transformer) {
+        this.transformer = transformer;
     }
 }
