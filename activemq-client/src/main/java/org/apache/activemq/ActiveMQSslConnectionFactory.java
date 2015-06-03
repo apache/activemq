@@ -62,8 +62,10 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     protected KeyManager[] keyManager;
     protected TrustManager[] trustManager;
     protected SecureRandom secureRandom;
+    protected String trustStoreType = KeyStore.getDefaultType();
     protected String trustStore;
     protected String trustStorePassword;
+    protected String keyStoreType = KeyStore.getDefaultType();
     protected String keyStore;
     protected String keyStorePassword;
 
@@ -124,7 +126,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
     protected TrustManager[] createTrustManager() throws Exception {
         TrustManager[] trustStoreManagers = null;
-        KeyStore trustedCertStore = KeyStore.getInstance("jks");
+        KeyStore trustedCertStore = KeyStore.getInstance(getTrustStoreType());
 
         if (trustStore != null) {
             InputStream tsStream = getInputStream(trustStore);
@@ -140,7 +142,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
     protected KeyManager[] createKeyManager() throws Exception {
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        KeyStore ks = KeyStore.getInstance("jks");
+        KeyStore ks = KeyStore.getInstance(getKeyStoreType());
         KeyManager[] keystoreManagers = null;
         if (keyStore != null) {
             byte[] sslCert = loadClientCredential(keyStore);
@@ -204,6 +206,14 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         return ins;
     }
 
+    public String getTrustStoreType() {
+        return trustStoreType;
+    }
+
+    public void setTrustStoreType(String type) {
+        trustStoreType = type;
+    }
+
     public String getTrustStore() {
         return trustStore;
     }
@@ -234,6 +244,15 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     public void setTrustStorePassword(String trustStorePassword) {
         this.trustStorePassword = trustStorePassword;
     }
+
+    public String getKeyStoreType() {
+        return keyStoreType;
+    }
+
+    public void setKeyStoreType(String type) {
+        keyStoreType = type;
+    }
+
 
     public String getKeyStore() {
         return keyStore;

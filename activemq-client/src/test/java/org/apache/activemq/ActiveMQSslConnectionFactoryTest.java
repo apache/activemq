@@ -26,6 +26,7 @@ import org.junit.Test;
 public class ActiveMQSslConnectionFactoryTest {
 
     final String TRUST_STORE_FILE_NAME = "client.keystore";
+    final String TRUST_STORE_PKCS12_FILE_NAME = "client-pkcs12.keystore";
     final String TRUST_STORE_DIRECTORY_NAME = "src/test/resources/ssl/";
     final String TRUST_STORE_RESOURCE_PREFIX = "ssl/";
     final String TRUST_STORE_PASSWORD = "password";
@@ -92,9 +93,34 @@ public class ActiveMQSslConnectionFactoryTest {
         executeTest(FAILOVER_SSL_TRANSPORT, TRUST_STORE_RESOURCE_PREFIX + TRUST_STORE_FILE_NAME + ".dummy");
     }
 
+    @Test(expected = ConnectException.class)
+    public void validPkcs12TrustStoreFileTest() throws Throwable {
+        executeTest(SSL_TRANSPORT, TRUST_STORE_DIRECTORY_NAME + TRUST_STORE_PKCS12_FILE_NAME, "pkcs12");
+    }
+
+    @Test(expected = ConnectException.class)
+    public void validPkcs12TrustStoreURLTest() throws Throwable {
+        executeTest(SSL_TRANSPORT, new File(TRUST_STORE_DIRECTORY_NAME + TRUST_STORE_PKCS12_FILE_NAME).toURI().toString(), "pkcs12");
+    }
+
+    @Test(expected = ConnectException.class)
+    public void validPkcs12TrustStoreResourceTest() throws Throwable {
+        executeTest(SSL_TRANSPORT, TRUST_STORE_RESOURCE_PREFIX + TRUST_STORE_PKCS12_FILE_NAME, "pkcs12");
+    }
+
+    @Test(expected = IOException.class)	// Invalid keystore format
+    public void invalidTrustStoreTypeTest() throws Throwable {
+        executeTest(SSL_TRANSPORT, TRUST_STORE_RESOURCE_PREFIX + TRUST_STORE_PKCS12_FILE_NAME, "jks");
+    }
+
     protected void executeTest(String transport, String name) throws Throwable {
+    	executeTest(transport, name, null);    	
+    }
+
+    protected void executeTest(String transport, String name, String type) throws Throwable {
         try {
             ActiveMQSslConnectionFactory activeMQSslConnectionFactory = new ActiveMQSslConnectionFactory(transport);
+            activeMQSslConnectionFactory.setTrustStoreType(type != null ? type : activeMQSslConnectionFactory.getTrustStoreType());
             activeMQSslConnectionFactory.setTrustStore(name);
             activeMQSslConnectionFactory.setTrustStorePassword(TRUST_STORE_PASSWORD);
 
