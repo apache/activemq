@@ -16,14 +16,18 @@
  */
 package org.apache.activemq.util.osgi;
 
+import static org.osgi.framework.wiring.BundleRevision.PACKAGE_NAMESPACE;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -38,6 +42,8 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,18 +212,23 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     }
 
     private boolean isImportingUs(Bundle bundle) {
-        return isImportingClass(bundle, Service.class)
-                || isImportingClass(bundle, Transport.class)
-                || isImportingClass(bundle, DiscoveryAgent.class)
-                || isImportingClass(bundle, PersistenceAdapter.class);
+        return isImporting(bundle, Service.class, Transport.class, DiscoveryAgent.class, PersistenceAdapter.class);
     }
 
-    private boolean isImportingClass(Bundle bundle, Class clazz) {
-        try {
-            return bundle.loadClass(clazz.getName())==clazz;
-        } catch (ClassNotFoundException e) {
-            return false;
+    private boolean isImporting(Bundle bundle, Class<?>... classes) {
+        Set<String> packageNames = new HashSet<String>();
+        for (Class<?> clazz: classes) {
+            packageNames.add(clazz.getPackage().getName());
         }
+        BundleRevision revision = bundle.adapt(BundleRevision.class);
+        List<BundleRequirement> imports = revision.getDeclaredRequirements(PACKAGE_NAMESPACE);
+        for (BundleRequirement req : imports) {
+            String reqPkgName = (String) req.getAttributes().get(PACKAGE_NAMESPACE);
+            if (packageNames.contains(reqPkgName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class BundleWrapper {
