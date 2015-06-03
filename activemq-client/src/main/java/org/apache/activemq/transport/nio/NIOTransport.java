@@ -29,7 +29,6 @@ import java.nio.channels.SocketChannel;
 
 import javax.net.SocketFactory;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransport;
@@ -39,8 +38,8 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
- * 
- * 
+ *
+ *
  */
 public class NIOTransport extends TcpTransport {
 
@@ -59,16 +58,19 @@ public class NIOTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
         channel.configureBlocking(false);
 
         // listen for events telling us when the socket is readable.
         selection = SelectorManager.getInstance().register(channel, new SelectorManager.Listener() {
+            @Override
             public void onSelect(SelectorSelection selection) {
                 serviceRead();
             }
 
+            @Override
             public void onError(SelectorSelection selection, Throwable error) {
                 if (error instanceof IOException) {
                     onException((IOException)error);
@@ -103,6 +105,8 @@ public class NIOTransport extends TcpTransport {
                     break;
                 }
 
+                this.receiveCounter += readSize;
+
                 if (currentBuffer.hasRemaining()) {
                     continue;
                 }
@@ -135,7 +139,7 @@ public class NIOTransport extends TcpTransport {
                     currentBuffer.flip();
 
                     Object command = wireFormat.unmarshal(new DataInputStream(new NIOInputStream(currentBuffer)));
-                    doConsume((Command)command);
+                    doConsume(command);
 
                     nextFrameSize = -1;
                     inputBuffer.clear();
@@ -152,12 +156,14 @@ public class NIOTransport extends TcpTransport {
         }
     }
 
+    @Override
     protected void doStart() throws Exception {
         connect();
         selection.setInterestOps(SelectionKey.OP_READ);
         selection.enable();
     }
 
+    @Override
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (selection != null) {
             selection.close();
