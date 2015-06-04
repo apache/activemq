@@ -22,6 +22,7 @@ import java.rmi.NoSuchObjectException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,6 +94,8 @@ public class ManagementContext implements Service {
     private final Map<ObjectName, ObjectName> registeredMBeanNames = new ConcurrentHashMap<ObjectName, ObjectName>();
     private boolean allowRemoteAddressInMBeanNames = true;
     private String brokerName;
+    private String suppressMBean;
+    private List<Map.Entry<String,String>> suppressMBeanList;
 
     public ManagementContext() {
         this(null);
@@ -106,6 +109,8 @@ public class ManagementContext implements Service {
     public void start() throws IOException {
         // lets force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
+
+            populateMBeanSuppressionMap();
 
             // fallback and use localhost
             if (connectorHost == null) {
@@ -159,6 +164,31 @@ public class ManagementContext implements Service {
                 };
                 t.setDaemon(true);
                 t.start();
+            }
+        }
+    }
+
+    private void populateMBeanSuppressionMap() {
+        if (suppressMBean != null) {
+            suppressMBeanList = new LinkedList<>();
+            for (String pair : suppressMBean.split(",")) {
+                final String[] keyValue = pair.split("=");
+                suppressMBeanList.add(new Map.Entry<String, String>() {
+                    @Override
+                    public String getKey() {
+                        return keyValue[0];
+                    }
+
+                    @Override
+                    public String getValue() {
+                        return keyValue[1];
+                    }
+
+                    @Override
+                    public String setValue(String value) {
+                        return null;
+                    }
+                });
             }
         }
     }
@@ -389,8 +419,24 @@ public class ManagementContext implements Service {
     }
 
     public ObjectInstance registerMBean(Object bean, ObjectName name) throws Exception{
-        ObjectInstance result = getMBeanServer().registerMBean(bean, name);
-        this.registeredMBeanNames.put(name, result.getObjectName());
+        ObjectInstance result = null;
+        if (isAllowedToRegister(name)) {
+            result = getMBeanServer().registerMBean(bean, name);
+            this.registeredMBeanNames.put(name, result.getObjectName());
+        }
+        return result;
+    }
+
+    private boolean isAllowedToRegister(ObjectName name) {
+        boolean result = true;
+        if (suppressMBean != null && suppressMBeanList != null) {
+            for (Map.Entry<String,String> attr : suppressMBeanList) {
+                if (attr.getValue().equals(name.getKeyProperty(attr.getKey()))) {
+                    result = false;
+                    break;
+                }
+            }
+        }
         return result;
     }
 
@@ -617,5 +663,20 @@ public class ManagementContext implements Service {
 
     public void setAllowRemoteAddressInMBeanNames(boolean allowRemoteAddressInMBeanNames) {
         this.allowRemoteAddressInMBeanNames = allowRemoteAddressInMBeanNames;
+    }
+
+    /**
+     * Allow selective MBeans registration to be suppressed. Any Mbean ObjectName that matches any
+     * of the supplied attribute values will not be registered with the MBeanServer.
+     * eg: "endpoint=dynamicProducer,endpoint=Consumer" will suppress the registration of *all* dynamic producer and consumer mbeans.
+     *
+     * @param commaListOfAttributeKeyValuePairs  the comma separated list of attribute key=value pairs to match.
+     */
+    public void setSuppressMBean(String commaListOfAttributeKeyValuePairs) {
+        this.suppressMBean = commaListOfAttributeKeyValuePairs;
+    }
+
+    public String getSuppressMBean() {
+        return suppressMBean;
     }
 }
