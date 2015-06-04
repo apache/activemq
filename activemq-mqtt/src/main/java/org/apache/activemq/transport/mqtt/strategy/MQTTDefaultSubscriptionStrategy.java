@@ -152,7 +152,7 @@ public class MQTTDefaultSubscriptionStrategy extends AbstractMQTTSubscriptionStr
                 QoS qoS = QoS.valueOf(split[0]);
                 onSubscribe(new Topic(split[1], qoS));
                 // mark this durable subscription as restored by Broker
-                restoredSubs.add(split[1]);
+                restoredSubs.add(MQTTProtocolSupport.convertMQTTToActiveMQ(split[1]));
             }
         } catch (IOException e) {
             LOG.warn("Could not restore the MQTT durable subs.", e);
