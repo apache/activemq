@@ -35,9 +35,12 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
 import org.apache.activemq.transport.mqtt.MQTTProtocolException;
+import org.apache.activemq.transport.mqtt.MQTTProtocolSupport;
 import org.apache.activemq.transport.mqtt.MQTTSubscription;
 import org.apache.activemq.transport.mqtt.ResponseHandler;
 import org.fusesource.mqtt.client.QoS;
@@ -62,35 +65,53 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
     @Override
     public void onConnect(CONNECT connect) throws MQTTProtocolException {
         List<ActiveMQQueue> queues = lookupQueues(protocol.getClientId());
+        List<SubscriptionInfo> subs = lookupSubscription(protocol.getClientId());
+
+        // When clean session is true we must purge all of the client's old Queue subscriptions
+        // and any durable subscriptions created on the VirtualTopic instance as well.
 
         if (connect.cleanSession()) {
             deleteDurableQueues(queues);
+            deleteDurableSubs(subs);
         } else {
             restoreDurableQueue(queues);
+            restoreDurableSubs(subs);
         }
     }
 
     @Override
     public byte onSubscribe(String topicName, QoS requestedQoS) throws MQTTProtocolException {
         ActiveMQDestination destination = null;
+        int prefetch = ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
         ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
+
         if (!protocol.isCleanSession() && protocol.getClientId() != null && requestedQoS.ordinal() >= QoS.AT_LEAST_ONCE.ordinal()) {
-            String converted = VIRTUALTOPIC_CONSUMER_PREFIX + protocol.getClientId() + ":" + requestedQoS + "." +
-                               VIRTUALTOPIC_PREFIX + convertMQTTToActiveMQ(topicName);
-            destination = new ActiveMQQueue(converted);
-            consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH);
+            String converted = convertMQTTToActiveMQ(topicName);
+            if (converted.startsWith(VIRTUALTOPIC_PREFIX)) {
+                destination = new ActiveMQTopic(converted);
+                prefetch = ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
+                consumerInfo.setSubscriptionName(requestedQoS + ":" + topicName);
+            } else {
+                converted = VIRTUALTOPIC_CONSUMER_PREFIX +
+                            protocol.getClientId() + ":" + requestedQoS + "." +
+                            VIRTUALTOPIC_PREFIX + converted;
+                destination = new ActiveMQQueue(converted);
+                prefetch = ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
+            }
         } else {
             String converted = convertMQTTToActiveMQ(topicName);
             if (!converted.startsWith(VIRTUALTOPIC_PREFIX)) {
-                converted = VIRTUALTOPIC_PREFIX + convertMQTTToActiveMQ(topicName);
+                converted = VIRTUALTOPIC_PREFIX + converted;
             }
             destination = new ActiveMQTopic(converted);
-            consumerInfo.setPrefetchSize(ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH);
+            prefetch = ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH;
         }
 
         consumerInfo.setDestination(destination);
         if (protocol.getActiveMQSubscriptionPrefetch() > 0) {
             consumerInfo.setPrefetchSize(protocol.getActiveMQSubscriptionPrefetch());
+        } else {
+            consumerInfo.setPrefetchSize(prefetch);
         }
         consumerInfo.setRetroactive(true);
         consumerInfo.setDispatchAsync(true);
@@ -103,9 +124,15 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
 
         ActiveMQDestination destination = mqttSubscription.getDestination();
 
+        // check whether the Queue has been recovered in restoreDurableQueue
+        // mark subscription available for recovery for duplicate subscription
+        if (destination.isQueue() && restoredQueues.remove(destination)) {
+            return;
+        }
+
         // check whether the Topic has been recovered in restoreDurableSubs
         // mark subscription available for recovery for duplicate subscription
-        if (restoredQueues.remove(destination)) {
+        if (destination.isTopic() && restoredDurableSubs.remove(destination.getPhysicalName())) {
             return;
         }
 
@@ -136,6 +163,20 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                         // ignore failures..
                     }
                 });
+            } else if (subscription.getConsumerInfo().getSubscriptionName() != null) {
+                // also remove it from restored durable subscriptions set
+                restoredDurableSubs.remove(MQTTProtocolSupport.convertMQTTToActiveMQ(subscription.getTopicName()));
+
+                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                rsi.setConnectionId(protocol.getConnectionId());
+                rsi.setSubscriptionName(subscription.getConsumerInfo().getSubscriptionName());
+                rsi.setClientId(protocol.getClientId());
+                protocol.sendToActiveMQ(rsi, new ResponseHandler() {
+                    @Override
+                    public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                        // ignore failures..
+                    }
+                });
             }
         }
     }
@@ -154,7 +195,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
         String destinationName = destination.getPhysicalName();
         int position = destinationName.indexOf(VIRTUALTOPIC_PREFIX);
         if (position >= 0) {
-            destinationName = destinationName.substring(position+VIRTUALTOPIC_PREFIX.length()).substring(0);
+            destinationName = destinationName.substring(position + VIRTUALTOPIC_PREFIX.length()).substring(0);
         }
         return destinationName;
     }
@@ -171,7 +212,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
     private void deleteDurableQueues(List<ActiveMQQueue> queues) {
         try {
             for (ActiveMQQueue queue : queues) {
-                LOG.debug("Removing subscription for {} ",queue.getPhysicalName());
+                LOG.debug("Removing queue subscription for {} ",queue.getPhysicalName());
                 DestinationInfo removeAction = new DestinationInfo();
                 removeAction.setConnectionId(protocol.getConnectionId());
                 removeAction.setDestination(queue);
@@ -185,7 +226,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                 });
             }
         } catch (Throwable e) {
-            LOG.warn("Could not delete the MQTT durable subs.", e);
+            LOG.warn("Could not delete the MQTT queue subsscriptions.", e);
         }
     }
 
@@ -199,7 +240,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                 tokenizer.nextToken();
                 String topicName = convertActiveMQToMQTT(tokenizer.nextToken("").substring(1));
                 QoS qoS = QoS.valueOf(qosString);
-                LOG.trace("Restoring subscription: {}:{}", topicName, qoS);
+                LOG.trace("Restoring queue subscription: {}:{}", topicName, qoS);
 
                 ConsumerInfo consumerInfo = new ConsumerInfo(getNextConsumerId());
                 consumerInfo.setDestination(queue);
@@ -216,7 +257,7 @@ public class MQTTVirtualTopicSubscriptionStrategy extends AbstractMQTTSubscripti
                 restoredQueues.add(queue);
             }
         } catch (IOException e) {
-            LOG.warn("Could not restore the MQTT durable subs.", e);
+            LOG.warn("Could not restore the MQTT queue subscriptions.", e);
         }
     }
 

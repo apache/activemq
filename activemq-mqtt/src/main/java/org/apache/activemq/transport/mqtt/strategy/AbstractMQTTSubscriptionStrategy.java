@@ -17,6 +17,10 @@
 package org.apache.activemq.transport.mqtt.strategy;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -24,6 +28,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.PrefetchSubscription;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
@@ -35,9 +40,12 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
 import org.apache.activemq.transport.mqtt.MQTTProtocolException;
+import org.apache.activemq.transport.mqtt.MQTTProtocolSupport;
 import org.apache.activemq.transport.mqtt.MQTTSubscription;
 import org.apache.activemq.transport.mqtt.ResponseHandler;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -61,6 +69,7 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
 
     protected final ConcurrentMap<ConsumerId, MQTTSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, MQTTSubscription>();
     protected final ConcurrentMap<String, MQTTSubscription> mqttSubscriptionByTopic = new ConcurrentHashMap<String, MQTTSubscription>();
+    protected final Set<String> restoredDurableSubs = Collections.synchronizedSet(new HashSet<String>());
 
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
 
@@ -241,5 +250,70 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
                 }
             });
         }
+    }
+
+    //----- Durable Subscription management methods --------------------------//
+
+    protected void deleteDurableSubs(List<SubscriptionInfo> subs) {
+        try {
+            for (SubscriptionInfo sub : subs) {
+                RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
+                rsi.setConnectionId(protocol.getConnectionId());
+                rsi.setSubscriptionName(sub.getSubcriptionName());
+                rsi.setClientId(sub.getClientId());
+                protocol.sendToActiveMQ(rsi, new ResponseHandler() {
+                    @Override
+                    public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                        // ignore failures..
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            LOG.warn("Could not delete the MQTT durable subs.", e);
+        }
+    }
+
+    protected void restoreDurableSubs(List<SubscriptionInfo> subs) {
+        try {
+            for (SubscriptionInfo sub : subs) {
+                String name = sub.getSubcriptionName();
+                String[] split = name.split(":", 2);
+                QoS qoS = QoS.valueOf(split[0]);
+                onSubscribe(new Topic(split[1], qoS));
+                // mark this durable subscription as restored by Broker
+                restoredDurableSubs.add(MQTTProtocolSupport.convertMQTTToActiveMQ(split[1]));
+            }
+        } catch (IOException e) {
+            LOG.warn("Could not restore the MQTT durable subs.", e);
+        }
+    }
+
+    protected List<SubscriptionInfo> lookupSubscription(String clientId) throws MQTTProtocolException {
+        List<SubscriptionInfo> result = new ArrayList<SubscriptionInfo>();
+        RegionBroker regionBroker;
+
+        try {
+            regionBroker = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
+        } catch (Exception e) {
+            throw new MQTTProtocolException("Error recovering durable subscriptions: " + e.getMessage(), false, e);
+        }
+
+        final TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
+        List<DurableTopicSubscription> subscriptions = topicRegion.lookupSubscriptions(clientId);
+        if (subscriptions != null) {
+            for (DurableTopicSubscription subscription : subscriptions) {
+                LOG.debug("Recovered durable sub:{} on connect", subscription);
+
+                SubscriptionInfo info = new SubscriptionInfo();
+
+                info.setDestination(subscription.getActiveMQDestination());
+                info.setSubcriptionName(subscription.getSubscriptionKey().getSubscriptionName());
+                info.setClientId(clientId);
+
+                result.add(info);
+            }
+        }
+
+        return result;
     }
 }
