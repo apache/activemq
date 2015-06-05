@@ -16,48 +16,37 @@
  */
 package org.apache.activemq.console.command;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import javax.jms.Destination;
-import javax.jms.Message;
-import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.openmbean.CompositeData;
-import javax.management.remote.JMXConnector;
-
 import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.console.util.AmqMessagesUtil;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class PurgeCommand extends AbstractJmxCommand {
 
     protected String[] helpFile = new String[] {
         "Task Usage: Main purge [browse-options] <destinations>",
-        "Description: Delete selected destination's messages that matches the message selector.", 
-        "", 
+        "Description: Delete selected destination's messages that matches the message selector.",
+        "",
         "Purge Options:",
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
-        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",            
+        "    --pid <pid>                   Set the pid to connect to (only on Sun JVM).",
         "    --jmxuser <user>              Set the JMX user used for authenticating.",
         "    --jmxpassword <password>      Set the JMX password used for authenticating.",
         "    --jmxlocal                    Use the local JMX server instead of a remote one.",
         "    --version                     Display the version information.",
-        "    -h,-?,--help                  Display the browse broker help information.", 
-        "", 
+        "    -h,-?,--help                  Display the browse broker help information.",
+        "",
         "Examples:",
-        "    Main purge FOO.BAR", 
+        "    Main purge FOO.BAR",
         "        - Delete all the messages in queue FOO.BAR",
-
-        "    Main purge --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.*", 
+        "    Main purge --msgsel \"JMSMessageID='*:10',JMSPriority>5\" FOO.*",
         "        - Delete all the messages in the destinations that matches FOO.* and has a JMSMessageID in",
         "          the header field that matches the wildcard *:10, and has a JMSPriority field > 5 in the",
         "          queue FOO.BAR.",
@@ -83,7 +72,7 @@ public class PurgeCommand extends AbstractJmxCommand {
     /**
      * Execute the purge command, which allows you to purge the messages in a
      * given JMS destination
-     * 
+     *
      * @param tokens - command arguments
      * @throws Exception
      */
@@ -103,14 +92,14 @@ public class PurgeCommand extends AbstractJmxCommand {
                     if (queryAddObjects.isEmpty()) {
                         purgeQueue(queueName);
                     } else {
-                        
-                    	QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.
-                    			newProxyInstance(createJmxConnection(), 
-                    					queueName, 
-                    					QueueViewMBean.class, 
-                    					true);
+
+                        QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.
+                                newProxyInstance(createJmxConnection(),
+                                        queueName,
+                                        QueueViewMBean.class,
+                                        true);
                         int removed = 0;
-                        
+
                         // AMQ-3404: We support two syntaxes for the message 
                         // selector query:
                         // 1) AMQ specific: 
@@ -123,16 +112,10 @@ public class PurgeCommand extends AbstractJmxCommand {
                         // criterias are broken into List<String> elements. 
                         // We then need to construct the SQL-92 query out of 
                         // this list.
-                        
-                        String sqlQuery = null;
-                        if (queryAddObjects.size() > 1) {
-                        	 sqlQuery = convertToSQL92(queryAddObjects);
-                        } else {
-                        	sqlQuery = queryAddObjects.get(0);
-                        }
+                        String sqlQuery = convertToSQL92(queryAddObjects);
                         removed = proxy.removeMatchingMessages(sqlQuery);
                         context.printInfo("Removed: " + removed
-                                + " messages for message selector " + sqlQuery.toString());
+                                + " messages for message selector " + sqlQuery);
                     }
                 }
             }
@@ -141,11 +124,10 @@ public class PurgeCommand extends AbstractJmxCommand {
             throw new Exception(e);
         }
     }
-    
-    
+
     /**
      * Purge all the messages in the queue
-     * 
+     *
      * @param queue - ObjectName of the queue to purge
      * @throws Exception
      */
@@ -156,7 +138,7 @@ public class PurgeCommand extends AbstractJmxCommand {
 
     /**
      * Handle the --msgsel, --xmsgsel.
-     * 
+     *
      * @param token - option token to handle
      * @param tokens - succeeding command arguments
      * @throws Exception
@@ -196,7 +178,7 @@ public class PurgeCommand extends AbstractJmxCommand {
             super.handleOption(token, tokens);
         }
     }
-    
+
     /**
      * Converts the message selector as provided on command line
      * argument to activem-admin into an SQL-92 conform string. 
@@ -204,26 +186,33 @@ public class PurgeCommand extends AbstractJmxCommand {
      *   "JMSMessageID='*:10',JMSPriority>5"
      * gets converted into 
      *   "(JMSMessageID='%:10') AND (JMSPriority>5)"
-     * 
-     * @param tokens - List of message selector query parameters 
-     * @return SQL-92 string of that query. 
+     *
+     * @param tokens - List of message selector query parameters
+     * @return SQL-92 string of that query.
      */
     public String convertToSQL92(List<String> tokens) {
-    	String selector = "";
+        StringBuilder selector = new StringBuilder();
 
-        // Convert to message selector
-        for (Iterator i = tokens.iterator(); i.hasNext(); ) {
-            selector = selector + "(" + i.next().toString() + ") AND ";
+        boolean isFirstToken = true;
+        for (Iterator i = tokens.iterator(); i.hasNext();) {
+            String token = i.next().toString();
+            if (token.matches("^[^=]*='.*[\\*\\?].*'$")) {
+                token = token.replace('?', '_')
+                        .replace('*', '%')
+                        .replaceFirst("=", " LIKE ");
+            }
+            if (isFirstToken) {
+                isFirstToken = false;
+            } else {
+                selector.append(" AND ");
+            }
+            selector.append('(')
+                    .append(token)
+                    .append(')');
         }
 
-        // Remove last AND and replace '*' with '%'
-        if (!selector.equals("")) {
-            selector = selector.substring(0, selector.length() - 5);
-            selector = selector.replace('*', '%');
-        }
-        return selector;
+        return selector.toString();
     }
-    
 
     /**
      * Print the help messages for the browse command
