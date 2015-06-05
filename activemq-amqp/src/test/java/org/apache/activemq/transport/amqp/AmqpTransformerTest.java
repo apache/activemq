@@ -25,6 +25,7 @@ import java.net.URI;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -89,7 +90,7 @@ public class AmqpTransformerTest {
         Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
         assertEquals(0L, messageFormat.longValue());
         assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
-        assertEquals(2, message.getJMSDeliveryMode());
+        assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
         assertEquals(7, message.getJMSPriority());
 
         c.close();
@@ -138,10 +139,9 @@ public class AmqpTransformerTest {
         Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
         assertEquals(0L, messageFormat.longValue());
         assertTrue("Didn't use the correct transformation, expected NATIVE", nativeTransformationUsed);
-        assertEquals(2, message.getJMSDeliveryMode());
+        assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
 
-        // should not equal 7 (should equal the default) because "raw" does not map
-        // headers
+        // should not equal 7 (should equal the default) because "raw" does not map headers
         assertEquals(4, message.getJMSPriority());
 
         c.close();
@@ -187,7 +187,7 @@ public class AmqpTransformerTest {
         Long messageFormat = message.getLongProperty("JMS_AMQP_MESSAGE_FORMAT");
         assertEquals(0L, messageFormat.longValue());
         assertFalse("Didn't use the correct transformation, expected NOT to be NATIVE", nativeTransformationUsed);
-        assertEquals(2, message.getJMSDeliveryMode());
+        assertEquals(DeliveryMode.PERSISTENT, message.getJMSDeliveryMode());
 
         c.close();
         session.close();

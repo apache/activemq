@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.amqp.message;
 
 import javax.jms.BytesMessage;
+import javax.jms.DeliveryMode;
 import javax.jms.Message;
 
 public class AMQPRawInboundTransformer extends InboundTransformer {
@@ -40,7 +41,9 @@ public class AMQPRawInboundTransformer extends InboundTransformer {
         BytesMessage rc = vendor.createBytesMessage();
         rc.writeBytes(amqpMessage.getArray(), amqpMessage.getArrayOffset(), amqpMessage.getLength());
 
-        rc.setJMSDeliveryMode(defaultDeliveryMode);
+        // We cannot decode the message headers to check so err on the side of caution
+        // and mark all messages as persistent.
+        rc.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
         rc.setJMSPriority(defaultPriority);
 
         final long now = System.currentTimeMillis();

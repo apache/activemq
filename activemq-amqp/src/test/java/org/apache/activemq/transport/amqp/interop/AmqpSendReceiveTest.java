@@ -17,7 +17,9 @@
 package org.apache.activemq.transport.amqp.interop;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 
@@ -153,5 +155,46 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
 
         receiver1.close();
         receiver2.close();
+    }
+
+    @Test(timeout = 60000)
+    public void testMessageDurabliltyFollowsSpec() throws Exception {
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpSender sender = session.createSender("queue://" + getTestName());
+        AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
+
+        QueueViewMBean queue = getProxyToQueue(getTestName());
+
+        // Create default message that should be sent as non-durable
+        AmqpMessage message1 = new AmqpMessage();
+        message1.setText("Test-Message -> non-durable");
+        message1.setDurable(false);
+        message1.setMessageId("ID:Message:1");
+        sender.send(message1);
+
+        assertEquals(1, queue.getQueueSize());
+        receiver1.flow(1);
+        message1 = receiver1.receive(50, TimeUnit.SECONDS);
+        assertFalse("First message sent should not be durable", message1.isDurable());
+        message1.accept();
+
+        // Create default message that should be sent as non-durable
+        AmqpMessage message2 = new AmqpMessage();
+        message2.setText("Test-Message -> durable");
+        message2.setDurable(true);
+        message2.setMessageId("ID:Message:2");
+        sender.send(message2);
+
+        assertEquals(1, queue.getQueueSize());
+        receiver1.flow(1);
+        message2 = receiver1.receive(50, TimeUnit.SECONDS);
+        assertTrue("Second message sent should be durable", message2.isDurable());
+        message2.accept();
+
+        sender.close();
+        connection.close();
     }
 }

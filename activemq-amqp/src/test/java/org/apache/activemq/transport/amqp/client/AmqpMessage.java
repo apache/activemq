@@ -29,6 +29,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.DeliveryAnnotations;
+import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Properties;
 import org.apache.qpid.proton.engine.Delivery;
@@ -53,7 +54,6 @@ public class AmqpMessage {
         delivery = null;
 
         message = Proton.message();
-        message.setDurable(true);
     }
 
     /**
@@ -244,6 +244,32 @@ public class AmqpMessage {
         }
 
         return message.getProperties().getGroupId();
+    }
+
+    /**
+     * Sets the durable header on the outgoing message.
+     *
+     * @param durable
+     *        the boolean durable value to set.
+     */
+    public void setDurable(boolean durable) {
+        checkReadOnly();
+        lazyCreateHeader();
+        getWrappedMessage().setDurable(durable);
+    }
+
+    /**
+     * Checks the durable value in the Message Headers to determine if
+     * the message was sent as a durable Message.
+     *
+     * @return true if the message is marked as being durable.
+     */
+    public boolean isDurable() {
+        if (message.getHeader() == null) {
+            return false;
+        }
+
+        return message.getHeader().getDurable();
     }
 
     /**
@@ -448,6 +474,11 @@ public class AmqpMessage {
         }
     }
 
+    private void lazyCreateHeader() {
+        if (message.getHeader() == null) {
+            message.setHeader(new Header());
+        }
+    }
     private void lazyCreateProperties() {
         if (message.getProperties() == null) {
             message.setProperties(new Properties());

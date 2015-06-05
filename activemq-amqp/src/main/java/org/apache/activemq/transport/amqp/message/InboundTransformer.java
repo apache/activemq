@@ -51,7 +51,7 @@ public abstract class InboundTransformer {
     String prefixMessageAnnotations = "MA_";
     String prefixFooter = "FT_";
 
-    int defaultDeliveryMode = javax.jms.Message.DEFAULT_DELIVERY_MODE;
+    int defaultDeliveryMode = javax.jms.DeliveryMode.NON_PERSISTENT;
     int defaultPriority = javax.jms.Message.DEFAULT_PRIORITY;
     long defaultTtl = javax.jms.Message.DEFAULT_TIME_TO_LIVE;
 
