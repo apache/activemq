@@ -34,7 +34,9 @@
 # Marc Schoechlin <ms@256bit.org>
 
 # ------------------------------------------------------------------------
-
+# IMPROVED DEBUGGING (execute with bash -x)
+# export PS4=' ${BASH_SOURCE}:${LINENO}(${FUNCNAME[0]}) '
+#
 # Backup invocation parameters
 COMMANDLINE_ARGS="$@"
 EXEC_OPTION=""
@@ -44,10 +46,10 @@ EXEC_OPTION=""
 
 # a simple helper to get the current user
 setCurrentUser(){
-   CUSER=`whoami 2>/dev/null`
+   CUSER="`whoami 2>/dev/null`"
    # Solaris hack
    if [ ! $? -eq 0 ]; then
-      CUSER=`/usr/ucb/whoami 2>/dev/null`
+      CUSER="`/usr/ucb/whoami 2>/dev/null`"
    fi
 }
 
@@ -63,12 +65,12 @@ pathCanonical() {
             dst="`dirname "${dst}"`/$link"
         fi
     done
-    local bas=`basename "${dst}"`
-    local dir=`dirname "${dst}"`
+    local bas="`basename "${dst}"`"
+    local dir="`dirname "${dst}"`"
     if [ "$bas" != "$dir" ]; then
       dst="`pathCanonical "$dir"`/$bas"
     fi
-    echo "${dst}" | sed -e 's#//#/#g' -e 's#/./#/#g' -e 's#/[^/]*/../#/#g'
+    echo "${dst}" | sed -e 's#//#/#g' -e 's#/\./#/#g' -e 's#/[^/]*/\.\./#/#g'
 }
 
 
@@ -246,15 +248,15 @@ fi
 
 # For Cygwin, switch paths to Windows format before running java if [ "$OSTYPE" = "cygwin" ]; then
 if [ "$OSTYPE" = "cygwin" ];then
-  ACTIVEMQ_HOME=`cygpath --windows "$ACTIVEMQ_HOME"`
-  ACTIVEMQ_BASE=`cygpath --windows "$ACTIVEMQ_BASE"`
-  ACTIVEMQ_CONF=`cygpath --windows "$ACTIVEMQ_CONF"`
-  ACTIVEMQ_DATA=`cygpath --windows "$ACTIVEMQ_DATA"`
+  ACTIVEMQ_HOME="`cygpath --windows "$ACTIVEMQ_HOME"`"
+  ACTIVEMQ_BASE="`cygpath --windows "$ACTIVEMQ_BASE"`"
+  ACTIVEMQ_CONF="`cygpath --windows "$ACTIVEMQ_CONF"`"
+  ACTIVEMQ_DATA="`cygpath --windows "$ACTIVEMQ_DATA"`"
   ACTIVEMQ_CLASSPATH=`cygpath --path --windows "$ACTIVEMQ_CLASSPATH"`
   [ -n "$JAVA_HOME" ] &&
-    JAVA_HOME=`cygpath --windows "$JAVA_HOME"`
-  CYGHOME=`cygpath --windows "$HOME"`
-  ACTIVEMQ_TMP=`cygpath --windows "$ACTIVEMQ_TMP"`
+    JAVA_HOME="`cygpath --windows "$JAVA_HOME"`"
+  CYGHOME="`cygpath --windows "$HOME"`"
+  ACTIVEMQ_TMP="`cygpath --windows "$ACTIVEMQ_TMP"`"
   if [ -n "$CYGHOME" ]; then
       ACTIVEMQ_CYGWIN="-Dcygwin.user.home=\"$CYGHOME\""
   fi
@@ -287,6 +289,7 @@ fi
 #   user
 invokeJar(){
    PIDFILE="$1"
+   TASK_TODO="$2"
    RET="1"
 
    if [ ! -f "${ACTIVEMQ_HOME}/bin/activemq.jar" ];then
@@ -305,7 +308,7 @@ invokeJar(){
       echo "INFO: changing to user '$ACTIVEMQ_USER' to invoke java"
    fi
    # Execute java binary
-   if [ -n "$PIDFILE" ] && [ "$PIDFILE" != "stop" ];then
+   if [ -n "$TASK_TODO" ] && [ "$TASK_TODO" != "stop" ];then
       $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -315,11 +318,11 @@ invokeJar(){
               $ACTIVEMQ_CYGWIN \
               -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS >/dev/null 2>&1 &
               RET=\"\$?\"; APID=\"\$!\";
-              echo \$APID > "$PIDFILE";
-              echo \"INFO: pidfile created : '$PIDFILE' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
+              echo \$APID > "${PIDFILE}";
+              echo \"INFO: pidfile created : '${PIDFILE}' (pid '\$APID')\";exit \$RET" $DOIT_POSTFIX
       RET="$?"
-   elif [ -n "$PIDFILE" ] && [ "$PIDFILE" = "stop" ];then
-          PID="`cat "${ACTIVEMQ_PIDFILE}"`"
+   elif [ -n "$TASK_TODO" ] && [ "$TASK_TODO" = "stop" ];then
+          SPID="`cat "${PIDFILE}"`"
           $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
               -Dactivemq.classpath=\"${ACTIVEMQ_CLASSPATH}\" \
               -Dactivemq.home=\"${ACTIVEMQ_HOME}\" \
@@ -327,7 +330,7 @@ invokeJar(){
               -Dactivemq.conf=\"${ACTIVEMQ_CONF}\" \
               -Dactivemq.data=\"${ACTIVEMQ_DATA}\" \
               $ACTIVEMQ_CYGWIN \
-              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $PID &
+              -jar \"${ACTIVEMQ_HOME}/bin/activemq.jar\" $COMMANDLINE_ARGS --pid $SPID &
               RET=\"\$?\"; APID=\"\$!\";
               echo \$APID > "${PIDFILE}.stop"; exit \$RET" $DOIT_POSTFIX
       RET="$?"
@@ -361,8 +364,8 @@ checkRunning(){
         echo "ERROR: Pidfile '$ACTIVEMQ_PIDFILE' exists but contains no pid"
         return 2
        fi
-       PID="`cat $ACTIVEMQ_PIDFILE`"
-       RET="`ps -p "$PID"|grep java`"
+       ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
+       RET="`ps -p "${ACTIVEMQ_PID}"|grep java`"
        if [ -n "$RET" ];then
          return 0;
        else
@@ -374,13 +377,13 @@ checkRunning(){
 }
 
 checkStopRunning(){
-    PID="${PIDFILE}.stop"
-    if [ -f "$PID" ]; then
-       if  [ -z "`cat $PID`" ];then
-        echo "ERROR: Pidfile '$PID' exists but contains no pid"
+    PID_STOP="${ACTIVEMQ_PIDFILE}.stop"
+    if [ -f "$PID_STOP" ]; then
+       if  [ -z "`cat $PID_STOP`" ];then
+        echo "ERROR: Pidfile os stop process '$PID_STOP' exists but contains no pid"
         return 2
        fi
-       THEPID=`cat $PID`
+       THEPID=`cat ${PID_STOP}`
        RET=`ps -p $THEPID|grep java`
        if [ -n "$RET" ];then
          return 0;
@@ -403,7 +406,7 @@ checkStopRunning(){
 
 invoke_status(){
     if ( checkRunning );then
-         PID=`cat $ACTIVEMQ_PIDFILE`
+         PID="`cat $ACTIVEMQ_PIDFILE`"
          echo "ActiveMQ is running (pid '$PID')"
          exit 0
     fi
@@ -424,7 +427,7 @@ invoke_status(){
 
 invoke_start(){
     if ( checkRunning );then
-      PID=`cat $ACTIVEMQ_PIDFILE`
+      PID="`cat $ACTIVEMQ_PIDFILE`"
       echo "INFO: Process with pid '$PID' is already running"
       exit 0
     fi
@@ -432,7 +435,7 @@ invoke_start(){
     ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START $ACTIVEMQ_SSL_OPTS -Djava.awt.headless=true -Djava.io.tmpdir=\"${ACTIVEMQ_TMP}\""
 
     echo "INFO: Starting - inspect logfiles specified in logging.properties and log4j.properties to get details"
-    invokeJar $ACTIVEMQ_PIDFILE
+    invokeJar "$ACTIVEMQ_PIDFILE" start
     exit "$?"
 }
 
@@ -460,17 +463,39 @@ invoke_console(){
     EXEC_OPTION="exec"
     echo "INFO: Starting in foreground, this is just for debugging purposes (stop process by pressing CTRL+C)"
     echo "INFO: Creating pidfile $ACTIVEMQ_PIDFILE"
-    echo "$$" > $ACTIVEMQ_PIDFILE
-    invokeJar
+    echo "$$" > "$ACTIVEMQ_PIDFILE"
+    invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
     echo "INFO: removing pidfile $ACTIVEMQ_PIDFILE"
     exit "$RET"
 }
 
-# Stop ActiveMQ
+
+# Kill ActiveMQ
+# @RET    : 0 => stop was successful
+#          !0 => something went wrong
 #
-# @RET  : 0 => stop was successful
-#         !0 => something went wrong
+# Note: This function uses globally defined variables
+# - $ACTIVEMQ_PIDFILE         : the name of the pid file
+
+
+invoke_kill(){
+    if ( checkRunning ); then
+       ACTIVEMQ_PID="`cat ${ACTIVEMQ_PIDFILE}`"
+       echo "INFO: sending SIGKILL to pid '$ACTIVEMQ_PID'"
+       kill -KILL $ACTIVEMQ_PID
+       RET="$?"
+       rm -f "${ACTIVEMQ_PIDFILE}"
+       return $RET
+    fi
+    echo "INFO: not running, nothing to do"
+    return 0
+}
+
+
+# Stop ActiveMQ
+# @RET    : 0 => stop was successful
+#          !0 => something went wrong
 #
 # Note: This function uses globally defined variables
 # - $ACTIVEMQ_PIDFILE         : the name of the pid file
@@ -482,14 +507,16 @@ invoke_stop(){
     if ( checkRunning );then
        ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
-       invokeJar "stop"
-       RET="$?"
-       PID=`cat $ACTIVEMQ_PIDFILE`
-       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$PID' : "
-       FOUND="0"
-       i=1
-       while [ "$i" != "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
 
+       ACTIVEMQ_PID="`cat $ACTIVEMQ_PIDFILE`"
+
+       invokeJar "$ACTIVEMQ_PIDFILE" "stop"
+       RET="$?"
+
+       FOUND="0"
+       i=0
+       echo "INFO: Waiting at least $ACTIVEMQ_KILL_MAXSECONDS seconds for regular process termination of pid '$ACTIVEMQ_PID' : "
+       while [ "$i" -le "$ACTIVEMQ_KILL_MAXSECONDS" ]; do
          if [ ! checkStopRunning ];then
             if [ ! checkRunning ]; then
                echo " FINISHED"
@@ -502,16 +529,16 @@ invoke_stop(){
             sleep 1
             printf  "."
          else
-            echo " FINISHED"
+            echo " TERMINATED"
             FOUND="1"
             break
          fi
-         i=`expr $i + 1`
+         i="`expr $i + 1`"
        done
        if [ "$FOUND" -ne "1" ];then
          echo
-         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process with pid '$PID'"
-         kill -KILL $PID
+         echo "INFO: Regular shutdown not successful,  sending SIGKILL to process"
+         invoke_kill
          RET="$?"
        fi
     elif [ -f "$ACTIVEMQ_PIDFILE" ];then
@@ -523,7 +550,7 @@ invoke_stop(){
        exit 0
     fi
     rm -f "$ACTIVEMQ_PIDFILE" >/dev/null 2>&1
-    rm -f "${PIDFILE}.stop" >/dev/null 2>&1
+    rm -f "$ACTIVEMQ_DATA/stop.pid" >/dev/null 2>&1
     exit $RET
 }
 
@@ -560,7 +587,7 @@ invoke_task(){
     else
        COMMANDLINE_ARGS="$COMMANDLINE_ARGS $ACTIVEMQ_SUNJMX_CONTROL"
     fi
-    invokeJar
+    invokeJar "$ACTIVEMQ_PIDFILE"
     RET="$?"
     if [ "$RET" != "0" ];then
        echo "ERROR: task failed"
@@ -569,9 +596,10 @@ invoke_task(){
 }
 
 show_help() {
-  invokeJar|sed "s,Usage: Main,Usage: $0,"
+  invokeJar "$ACTIVEMQ_PIDFILE"|sed "s,Usage: Main,Usage: $0,"
   cat << EOF
 Tasks provided by the sysv init script:
+    kill            - terminate instance in a drastic way by sending SIGKILL
     restart         - stop running instance (if there is one), start new instance
     console         - start broker in foreground, useful for debugging purposes
     status          - check if activemq process is running
@@ -604,8 +632,8 @@ case "$1" in
   restart)
     if ( checkRunning );then
       $0 stop
+      echo
     fi
-    $0 status
     $0 start
     $0 status
     ;;
@@ -617,7 +645,11 @@ case "$1" in
     exit $?
     ;;
   stop)
-    invoke_stop
+    invoke_stop 
+    exit $?
+    ;;
+  kill)
+    invoke_kill
     exit $?
     ;;
   decrypt|encrypt|create)

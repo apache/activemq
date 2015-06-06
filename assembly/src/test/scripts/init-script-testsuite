@@ -116,11 +116,11 @@ trap "finalize;exit 1" INT TERM
 echo "****************************************************************************"
 STRATEGY="stop"
 
-set -x
 sed 's,ACTIVEMQ_KILL_MAXSECONDS=.*,ACTIVEMQ_KILL_MAXSECONDS=15,' env | \
-sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' |tee $CONFIG
-set +x
+sed 's,ACTIVEMQ_USER=.*$,ACTIVEMQ_USER=$USER,' > $CONFIG
 
+${SCRIPT} kill >/dev/null 2>&1
+sleep 2
 assert ${STRATEGY} successful "${SCRIPT} stop"
 assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY}     failed "${SCRIPT} status"
@@ -136,7 +136,7 @@ assert ${STRATEGY} successful "${SCRIPT} dstat --jmxurl service:jmx:rmi:///jndi/
 assert ${STRATEGY} successful "${SCRIPT} query 2>&1|grep -q 'Activemq is not running.'"
 assert ${STRATEGY} successful "${SCRIPT} query --jmxurl service:jmx:rmi:///jndi/rmi://127.0.0.1:11098/jmxrmi --jmxuser controlRole --jmxpassword abcd1234 2>&1|grep -q 'java.net.ConnectException'"
 assert ${STRATEGY} successful "${SCRIPT} restart"
-assert ${STRATEGY}     failed "${SCRIPT} stop"
+assert ${STRATEGY} successful "${SCRIPT} stop"
 
 # ActiveMQ is started
 assert ${STRATEGY} successful "${SCRIPT} start"
