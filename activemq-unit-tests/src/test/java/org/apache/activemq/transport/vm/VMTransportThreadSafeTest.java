@@ -523,18 +523,32 @@ public class VMTransportThreadSafeTest {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                 }
                 ((GatedVMTestTransportListener) remote.getTransportListener()).gate.countDown();
             }
         });
+
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return remoteReceived.size() == 1;
+            }
+        }));
+
         gateman.start();
 
         remote.stop();
         local.stop();
 
-        assertEquals(1, remoteReceived.size());
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return remoteReceived.size() == 1;
+            }
+        }));
+
         assertMessageAreOrdered(remoteReceived);
     }
 
