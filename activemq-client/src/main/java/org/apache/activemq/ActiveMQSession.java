@@ -717,7 +717,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (!closed) {
 
             try {
-                executor.stop();
+                executor.close();
 
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
                     ActiveMQMessageConsumer consumer = iter.next();
@@ -978,11 +978,24 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 for (int i = 0; i < redeliveryCounter; i++) {
                                     redeliveryDelay = redeliveryPolicy.getNextRedeliveryDelay(redeliveryDelay);
                                 }
+                                
+                                if ( connection.isNonBlockingRedelivery() == false) {
+                                    LOG.debug("Blocking session until re-delivery...");
+                                    executor.stop();
+                                }
+                                
                                 connection.getScheduler().executeAfterDelay(new Runnable() {
 
                                     @Override
                                     public void run() {
-                                        ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
+                                        
+                                        if (connection.isNonBlockingRedelivery()) {
+                                            ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
+                                        } else {
+                                            LOG.debug("Session released, issuing re-delivery...");
+                                            executor.executeFirst(md);
+                                            executor.start();
+                                        }
                                     }
                                 }, redeliveryDelay);
                             }
@@ -1016,6 +1029,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             if (deliveryListener != null) {
                 deliveryListener.afterDelivery(this, message);
             }
+            
+            try {
+                executor.waitForQueueRestart();
+            } catch (InterruptedException ex) {
+                connection.onClientInternalException(ex);
+            }            
         }
     }
 
