@@ -475,6 +475,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     if (configuration.isDuplex()) {
                         // separate in-bound channel for forwards so we don't
                         // contend with out-bound dispatch on same connection
+                        remoteBrokerInfo.setNetworkConnection(true);
+                        duplexInboundLocalBroker.oneway(remoteBrokerInfo);
+
                         ConnectionInfo duplexLocalConnectionInfo = new ConnectionInfo();
                         duplexLocalConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
                         duplexLocalConnectionInfo.setClientId(configuration.getName() + "_" + remoteBrokerName + "_inbound_duplex_"

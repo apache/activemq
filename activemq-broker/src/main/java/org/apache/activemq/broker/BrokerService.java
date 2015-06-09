@@ -404,11 +404,7 @@ public class BrokerService implements Service {
      */
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
         connector.setBrokerService(this);
-        URI uri = getVmConnectorURI();
-        Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("network", "true");
-        uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-        connector.setLocalUri(uri);
+        connector.setLocalUri(getVmConnectorURI());
         // Set a connection filter so that the connector does not establish loop
         // back connections.
         connector.setConnectionFilter(new ConnectionFilter() {
@@ -2499,7 +2495,6 @@ public class BrokerService implements Service {
         this.slave = false;
         URI uri = getVmConnectorURI();
         Map<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("network", "true");
         map.put("async", "false");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
 
