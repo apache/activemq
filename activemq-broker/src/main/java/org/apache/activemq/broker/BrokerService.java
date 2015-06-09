@@ -229,6 +229,7 @@ public class BrokerService implements Service {
     private ThreadPoolExecutor executor;
     private int schedulePeriodForDestinationPurge= 0;
     private int maxPurgedDestinationsPerSweep = 0;
+    private int schedulePeriodForDiskUsageCheck = 0;
     private BrokerContext brokerContext;
     private boolean networkConnectorStartAsync = false;
     private boolean allowTempAutoCreationOnSend;
@@ -1953,17 +1954,12 @@ public class BrokerService implements Service {
         }
     }
 
-    protected void checkSystemUsageLimits() throws IOException {
-        SystemUsage usage = getSystemUsage();
-        long memLimit = usage.getMemoryUsage().getLimit();
-        long jvmLimit = Runtime.getRuntime().maxMemory();
-
-        if (memLimit > jvmLimit) {
-            usage.getMemoryUsage().setPercentOfJvmHeap(70);
-            LOG.warn("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
-                    " mb) is more than the maximum available for the JVM: " +
-                    jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
-        }
+    /**
+     * Check that the store usage limit is not greater than max usable
+     * space and adjust if it is
+     */
+    protected void checkStoreUsageLimits() throws IOException {
+        final SystemUsage usage = getSystemUsage();
 
         if (getPersistenceAdapter() != null) {
             PersistenceAdapter adapter = getPersistenceAdapter();
@@ -2007,6 +2003,14 @@ public class BrokerService implements Service {
 
             }
         }
+    }
+
+    /**
+     * Check that temporary usage limit is not greater than max usable
+     * space and adjust if it is
+     */
+    protected void checkTmpStoreUsageLimits() throws IOException {
+        final SystemUsage usage = getSystemUsage();
 
         File tmpDir = getTmpDataDirectory();
         if (tmpDir != null) {
@@ -2047,6 +2051,54 @@ public class BrokerService implements Service {
                 }
             }
         }
+    }
+
+    /**
+     * Schedules a periodic task based on schedulePeriodForDiskLimitCheck to
+     * update store and temporary store limits if the amount of available space
+     * plus current store size is less than the existin configured limit
+     */
+    protected void scheduleDiskUsageLimitsCheck() throws IOException {
+        if (schedulePeriodForDiskUsageCheck > 0 &&
+                (getPersistenceAdapter() != null || getTmpDataDirectory() != null)) {
+            Runnable diskLimitCheckTask = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        checkStoreUsageLimits();
+                    } catch (IOException e) {
+                        LOG.error("Failed to check persistent disk usage limits", e);
+                    }
+
+                    try {
+                        checkTmpStoreUsageLimits();
+                    } catch (IOException e) {
+                        LOG.error("Failed to check temporary store usage limits", e);
+                    }
+                }
+            };
+            scheduler.executePeriodically(diskLimitCheckTask, schedulePeriodForDiskUsageCheck);
+        }
+    }
+
+    protected void checkSystemUsageLimits() throws IOException {
+        final SystemUsage usage = getSystemUsage();
+        long memLimit = usage.getMemoryUsage().getLimit();
+        long jvmLimit = Runtime.getRuntime().maxMemory();
+
+        if (memLimit > jvmLimit) {
+            usage.getMemoryUsage().setPercentOfJvmHeap(70);
+            LOG.warn("Memory Usage for the Broker (" + memLimit / (1024 * 1024) +
+                    " mb) is more than the maximum available for the JVM: " +
+                    jvmLimit / (1024 * 1024) + " mb - resetting to 70% of maximum available: " + (usage.getMemoryUsage().getLimit() / (1024 * 1024)) + " mb");
+        }
+
+        //Check the persistent store and temp store limits if they exist
+        //and schedule a periodic check to update disk limits if
+        //schedulePeriodForDiskLimitCheck is set
+        checkStoreUsageLimits();
+        checkTmpStoreUsageLimits();
+        scheduleDiskUsageLimitsCheck();
 
         if (getJobSchedulerStore() != null) {
             JobSchedulerStore scheduler = getJobSchedulerStore();
@@ -2835,6 +2887,11 @@ public class BrokerService implements Service {
 
     public void setSchedulePeriodForDestinationPurge(int schedulePeriodForDestinationPurge) {
         this.schedulePeriodForDestinationPurge = schedulePeriodForDestinationPurge;
+    }
+
+    public void setSchedulePeriodForDiskUsageCheck(
+            int schedulePeriodForDiskUsageCheck) {
+        this.schedulePeriodForDiskUsageCheck = schedulePeriodForDiskUsageCheck;
     }
 
     public int getMaxPurgedDestinationsPerSweep() {
