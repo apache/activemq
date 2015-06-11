@@ -42,8 +42,9 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
-import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleWire;
+import org.osgi.framework.wiring.BundleWiring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +57,10 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
-    private final ConcurrentMap<String, Class> serviceCache = new ConcurrentHashMap<String, Class>();
+    private final ConcurrentMap<String, Class<?>> serviceCache = new ConcurrentHashMap<String, Class<?>>();
     private final ConcurrentMap<Long, BundleWrapper> bundleWrappers = new ConcurrentHashMap<Long, BundleWrapper>();
     private BundleContext bundleContext;
+    private Set<BundleCapability> packageCapabilities = new HashSet<BundleCapability>();
 
     // ================================================================
     // BundleActivator interface impl
@@ -73,6 +75,9 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
         debug("activating");
         this.bundleContext = bundleContext;
+        
+        cachePackageCapabilities(Service.class, Transport.class, DiscoveryAgent.class, PersistenceAdapter.class);
+        
         debug("checking existing bundles");
         bundleContext.addBundleListener(this);
         for (Bundle bundle : bundleContext.getBundles()) {
@@ -82,6 +87,27 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
             }
         }
         debug("activated");
+    }
+
+    /**
+     * Caches the package capabilities that are needed for a set of interface classes
+     *  
+     * @param classes interfaces we want to track
+     */
+    private void cachePackageCapabilities(Class<?> ... classes) {
+        BundleWiring ourWiring = bundleContext.getBundle().adapt(BundleWiring.class);
+        Set<String> packageNames = new HashSet<String>();
+        for (Class<?> clazz: classes) {
+            packageNames.add(clazz.getPackage().getName());
+        }
+        
+        List<BundleWire> ourImports = ourWiring.getRequiredWires(PACKAGE_NAMESPACE);
+        for (BundleWire ourImport : ourImports) {
+            String ourPkgName = (String) ourImport.getCapability().getAttributes().get(PACKAGE_NAMESPACE);
+            if (packageNames.contains(ourPkgName)) {
+                packageCapabilities.add(ourImport.getCapability());
+            }
+        }
     }
 
 
@@ -143,7 +169,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     @Override
     public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
-        Class clazz = serviceCache.get(path);
+        Class<?> clazz = serviceCache.get(path);
         if (clazz == null) {
             StringBuffer warnings = new StringBuffer();
             // We need to look for a bundle that has that class.
@@ -211,20 +237,18 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
         }
     }
 
+    /**
+     * We consider a bundle to be a candidate for objects if it imports at least
+     * one of the packages of our interfaces
+     * 
+     * @param bundle
+     * @return
+     */
     private boolean isImportingUs(Bundle bundle) {
-        return isImporting(bundle, Service.class, Transport.class, DiscoveryAgent.class, PersistenceAdapter.class);
-    }
-
-    private boolean isImporting(Bundle bundle, Class<?>... classes) {
-        Set<String> packageNames = new HashSet<String>();
-        for (Class<?> clazz: classes) {
-            packageNames.add(clazz.getPackage().getName());
-        }
-        BundleRevision revision = bundle.adapt(BundleRevision.class);
-        List<BundleRequirement> imports = revision.getDeclaredRequirements(PACKAGE_NAMESPACE);
-        for (BundleRequirement req : imports) {
-            String reqPkgName = (String) req.getAttributes().get(PACKAGE_NAMESPACE);
-            if (packageNames.contains(reqPkgName)) {
+        BundleWiring wiring = bundle.adapt(BundleWiring.class);
+        List<BundleWire> imports = wiring.getRequiredWires(PACKAGE_NAMESPACE);
+        for (BundleWire importWire : imports) {
+            if (packageCapabilities.contains(importWire.getCapability())) {
                 return true;
             }
         }
