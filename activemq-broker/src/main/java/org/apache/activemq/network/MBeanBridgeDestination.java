@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.network;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,7 +40,7 @@ public class MBeanBridgeDestination {
     private final NetworkBridgeConfiguration networkBridgeConfiguration;
     private final Scheduler scheduler;
     private final Runnable purgeInactiveDestinationViewTask;
-    private Map<ActiveMQDestination, ObjectName> destinationObjectNameMap = new ConcurrentHashMap<ActiveMQDestination, ObjectName>();
+    private Map<NetworkDestinationView, ObjectName> destinationViewObjectNameMap = new ConcurrentHashMap<NetworkDestinationView, ObjectName>();
     private Map<ActiveMQDestination, NetworkDestinationView> outboundDestinationViewMap = new ConcurrentHashMap<ActiveMQDestination, NetworkDestinationView>();
     private Map<ActiveMQDestination, NetworkDestinationView> inboundDestinationViewMap = new ConcurrentHashMap<ActiveMQDestination, NetworkDestinationView>();
 
@@ -63,14 +62,14 @@ public class MBeanBridgeDestination {
         ActiveMQDestination destination = message.getDestination();
         NetworkDestinationView networkDestinationView = outboundDestinationViewMap.get(destination);
         if (networkDestinationView == null) {
-            synchronized (destinationObjectNameMap) {
+            synchronized (destinationViewObjectNameMap) {
                 if ((networkDestinationView = outboundDestinationViewMap.get(destination)) == null) {
                     ObjectName bridgeObjectName = bridge.getMbeanObjectName();
                     try {
                         ObjectName objectName = BrokerMBeanSupport.createNetworkOutBoundDestinationObjectName(bridgeObjectName, destination);
                         networkDestinationView = new NetworkDestinationView(networkBridgeView, destination.getPhysicalName());
                         AnnotatedMBean.registerMBean(brokerService.getManagementContext(), networkDestinationView, objectName);
-                        destinationObjectNameMap.put(destination, objectName);
+                        destinationViewObjectNameMap.put(networkDestinationView, objectName);
                         outboundDestinationViewMap.put(destination, networkDestinationView);
 
                     } catch (Exception e) {
@@ -87,7 +86,7 @@ public class MBeanBridgeDestination {
         ActiveMQDestination destination = message.getDestination();
         NetworkDestinationView networkDestinationView = inboundDestinationViewMap.get(destination);
         if (networkDestinationView == null) {
-            synchronized (destinationObjectNameMap) {
+            synchronized (destinationViewObjectNameMap) {
                 if ((networkDestinationView = inboundDestinationViewMap.get(destination)) == null) {
                     ObjectName bridgeObjectName = bridge.getMbeanObjectName();
                     try {
@@ -95,7 +94,7 @@ public class MBeanBridgeDestination {
                         networkDestinationView = new NetworkDestinationView(networkBridgeView, destination.getPhysicalName());
                         networkBridgeView.addNetworkDestinationView(networkDestinationView);
                         AnnotatedMBean.registerMBean(brokerService.getManagementContext(), networkDestinationView, objectName);
-                        destinationObjectNameMap.put(destination, objectName);
+                        destinationViewObjectNameMap.put(networkDestinationView, objectName);
                         inboundDestinationViewMap.put(destination, networkDestinationView);
                     } catch (Exception e) {
                         LOG.warn("Failed to register " + destination, e);
@@ -121,7 +120,7 @@ public class MBeanBridgeDestination {
         }
 
         scheduler.cancel(purgeInactiveDestinationViewTask);
-        for (ObjectName objectName : destinationObjectNameMap.values()) {
+        for (ObjectName objectName : destinationViewObjectNameMap.values()) {
             try {
                 if (objectName != null) {
                     brokerService.getManagementContext().unregisterMBean(objectName);
@@ -130,7 +129,7 @@ public class MBeanBridgeDestination {
                 LOG.debug("Network bridge could not be unregistered in JMX: {}", e.getMessage(), e);
             }
         }
-        destinationObjectNameMap.clear();
+        destinationViewObjectNameMap.clear();
         outboundDestinationViewMap.clear();
         inboundDestinationViewMap.clear();
     }
@@ -147,9 +146,9 @@ public class MBeanBridgeDestination {
         long time = System.currentTimeMillis() - networkBridgeConfiguration.getGcSweepTime();
         for (Map.Entry<ActiveMQDestination, NetworkDestinationView> entry : map.entrySet()) {
             if (entry.getValue().getLastAccessTime() <= time) {
-                synchronized (destinationObjectNameMap) {
+                synchronized (destinationViewObjectNameMap) {
                     map.remove(entry.getKey());
-                    ObjectName objectName = destinationObjectNameMap.remove(entry.getKey());
+                    ObjectName objectName = destinationViewObjectNameMap.remove(entry.getValue());
                     if (objectName != null) {
                         try {
                             if (objectName != null) {
@@ -165,3 +164,4 @@ public class MBeanBridgeDestination {
         }
     }
 }
+
