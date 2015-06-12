@@ -48,7 +48,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
         if (lockAcquireSleepInterval < lockable.getLockKeepAlivePeriod()) {
             LOG.warn("LockableService keep alive period: " + lockable.getLockKeepAlivePeriod()
-                    + ", which renews the lease, is less than lockAcquireSleepInterval: " + lockAcquireSleepInterval
+                    + ", which renews the lease, is greater than lockAcquireSleepInterval: " + lockAcquireSleepInterval
                     + ", the lease duration. These values will allow the lease to expire.");
         }
 
