@@ -147,9 +147,11 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      * @see javax.resource.spi.ResourceAdapter#stop()
      */
     public void stop() {
-        while (endpointWorkers.size() > 0) {
-            ActiveMQEndpointActivationKey key = endpointWorkers.keySet().iterator().next();
-            endpointDeactivation(key.getMessageEndpointFactory(), key.getActivationSpec());
+        synchronized (endpointWorkers) {
+            while (endpointWorkers.size() > 0) {
+                ActiveMQEndpointActivationKey key = endpointWorkers.keySet().iterator().next();
+                endpointDeactivation(key.getMessageEndpointFactory(), key.getActivationSpec());
+            }
         }
         
         synchronized( this ) {
@@ -205,10 +207,12 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      *      javax.resource.spi.ActivationSpec)
      */
     public void endpointDeactivation(MessageEndpointFactory endpointFactory, ActivationSpec activationSpec) {
-
         if (activationSpec instanceof MessageActivationSpec) {
             ActiveMQEndpointActivationKey key = new ActiveMQEndpointActivationKey(endpointFactory, (MessageActivationSpec)activationSpec);
-            ActiveMQEndpointWorker worker = endpointWorkers.remove(key);
+            ActiveMQEndpointWorker worker = null;
+            synchronized (endpointWorkers) {
+                worker = endpointWorkers.remove(key);
+            }
             if (worker == null) {
                 // This is weird.. that endpoint was not activated.. oh well..
                 // this method
