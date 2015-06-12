@@ -274,6 +274,78 @@ public class MDBTest extends TestCase {
 
     }
 
+    //https://issues.apache.org/jira/browse/AMQ-5811
+    public void testAsyncStop() throws Exception {
+        for (int repeat = 0; repeat < 10; repeat++) {
+            ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+            adapter.setServerUrl("vm://localhost?broker.persistent=false");
+            adapter.setQueuePrefetch(1);
+            adapter.start(new StubBootstrapContext());
+
+            final int num = 20;
+            MessageEndpointFactory[] endpointFactories = new MessageEndpointFactory[num];
+            ActiveMQActivationSpec[] activationSpecs = new ActiveMQActivationSpec[num];
+
+            for (int i = 0; i < num; i++) {
+
+                final StubMessageEndpoint endpoint = new StubMessageEndpoint()
+                {
+                    public void onMessage(Message message)
+                    {
+                        super.onMessage(message);
+                    }
+                };
+
+                activationSpecs[i] = new ActiveMQActivationSpec();
+                activationSpecs[i].setDestinationType(Queue.class.getName());
+                activationSpecs[i].setDestination("TEST" + i);
+                activationSpecs[i].setResourceAdapter(adapter);
+                activationSpecs[i].validate();
+
+                endpointFactories[i] = new MessageEndpointFactory() {
+                    public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
+                        endpoint.xaresource = resource;
+                        return endpoint;
+                    }
+
+                    public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
+                        return true;
+                    }
+                };
+
+                // Activate an Endpoint
+                adapter.endpointActivation(endpointFactories[i], activationSpecs[i]);
+            }
+
+            //spawn num threads to deactivate
+            Thread[] threads = asyncDeactivate(adapter, endpointFactories, activationSpecs);
+            for (int i = 0; i < threads.length; i++) {
+                threads[i].start();
+            }
+            adapter.stop();
+            for (int i = 0; i < threads.length; i++) {
+                threads[i].join();
+            }
+        }
+    }
+
+    private Thread[] asyncDeactivate(final ActiveMQResourceAdapter adapter,
+                                     final MessageEndpointFactory[] endpointFactories,
+                                     final ActiveMQActivationSpec[] activationSpecs) {
+        Thread[] threads = new Thread[endpointFactories.length];
+        for (int i = 0; i < threads.length; i++) {
+            final MessageEndpointFactory endpointFactory = endpointFactories[i];
+            final ActiveMQActivationSpec activationSpec = activationSpecs[i];
+
+            threads[i] = new Thread() {
+                public void run() {
+                    adapter.endpointDeactivation(endpointFactory, activationSpec);
+                }
+            };
+        }
+        return threads;
+    }
+
     public void testErrorOnNoMessageDeliveryBrokerZeroPrefetchConfig() throws Exception {
 
         final BrokerService brokerService = new BrokerService();
