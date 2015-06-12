@@ -151,15 +151,15 @@ if [ ""$1 = "start" ] ; then
         ACTIVEMQ_OPTS="-Xmx1G -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
     fi
 
-    if [ -z "$SUNJMX" ] ; then
-        #SUNJMX="-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
-        SUNJMX="-Dcom.sun.management.jmxremote"
+    if [ -z "$ACTIVEMQ_SUNJMX_START" ] ; then
+        #ACTIVEMQ_SUNJMX_START="-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+        ACTIVEMQ_SUNJMX_START="-Dcom.sun.management.jmxremote"
     fi
 
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX -Djava.io.tmpdir="${ACTIVEMQ_TMP}""
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SUNJMX_START -Djava.io.tmpdir="${ACTIVEMQ_TMP}""
 fi
 
-ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SSL_OPTS"
+ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $ACTIVEMQ_SSL_OPTS"
 
 # Uncomment to enable YourKit profiling
 #ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
