@@ -28,6 +28,8 @@ public class IDERunner {
 
     private static final String AMQP_TRANSFORMER = "jms";
     private static final boolean TRANSPORT_TRACE = true;
+    private static final boolean PERSISTENT = true;
+    private static final boolean CLIENT_CONNECT = false;
 
     public static void main(String[]args) throws Exception {
         BrokerService brokerService = new BrokerService();
@@ -40,15 +42,23 @@ public class IDERunner {
         KahaDBStore store = new KahaDBStore();
         store.setDirectory(new File("target/activemq-data/kahadb"));
 
-        brokerService.setStoreOpenWireVersion(10);
-        brokerService.setPersistenceAdapter(store);
+        if (PERSISTENT) {
+            brokerService.setStoreOpenWireVersion(10);
+            brokerService.setPersistenceAdapter(store);
+            brokerService.deleteAllMessages();
+        } else {
+            brokerService.setPersistent(false);
+        }
+
         brokerService.setUseJmx(false);
-        brokerService.deleteAllMessages();
+        brokerService.setAdvisorySupport(false);
 
         brokerService.start();
 
-        Connection connection = JMSClientContext.INSTANCE.createConnection(connector.getPublishableConnectURI());
-        connection.start();
+        if (CLIENT_CONNECT) {
+            Connection connection = JMSClientContext.INSTANCE.createConnection(connector.getPublishableConnectURI());
+            connection.start();
+        }
 
         brokerService.waitUntilStopped();
     }
