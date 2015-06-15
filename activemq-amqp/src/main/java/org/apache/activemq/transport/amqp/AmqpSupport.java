@@ -54,6 +54,9 @@ public class AmqpSupport {
     public static final Symbol QUEUE_PREFIX = Symbol.valueOf("queue-prefix");
     public static final Symbol TOPIC_PREFIX = Symbol.valueOf("topic-prefix");
     public static final Symbol CONNECTION_OPEN_FAILED = Symbol.valueOf("amqp:connection-establishment-failed");
+    public static final Symbol PRODUCT = Symbol.valueOf("product");
+    public static final Symbol VERSION = Symbol.valueOf("version");
+    public static final Symbol PLATFORM = Symbol.valueOf("platform");
 
     // Symbols used in configuration of newly opened links.
     public static final Symbol COPY = Symbol.getSymbol("copy");

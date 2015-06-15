@@ -20,13 +20,19 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONTAINER_ID;
 import static org.apache.activemq.transport.amqp.AmqpSupport.INVALID_FIELD;
+import static org.apache.activemq.transport.amqp.AmqpSupport.PLATFORM;
+import static org.apache.activemq.transport.amqp.AmqpSupport.PRODUCT;
 import static org.apache.activemq.transport.amqp.AmqpSupport.QUEUE_PREFIX;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILITY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TOPIC_PREFIX;
+import static org.apache.activemq.transport.amqp.AmqpSupport.VERSION;
 import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.HashMap;
@@ -102,6 +108,25 @@ public class AmqpConnection implements AmqpProtocolConverter {
     private static final Logger TRACE_FRAMES = AmqpTransportFilter.TRACE_FRAMES;
     private static final Logger LOG = LoggerFactory.getLogger(AmqpConnection.class);
     private static final int CHANNEL_MAX = 32767;
+    private static final String BROKER_VERSION;
+    private static final String BROKER_PLATFORM;
+
+    static {
+        String javaVersion = System.getProperty("java.version");
+
+        BROKER_PLATFORM = "Java/" + (javaVersion == null ? "unknown" : javaVersion);
+
+        InputStream in = null;
+        String version = "5.12.0";
+        if ((in = AmqpConnection.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            try {
+                version = reader.readLine();
+            } catch(Exception e) {
+            }
+        }
+        BROKER_VERSION = version;
+    }
 
     private final Transport protonTransport = Proton.transport();
     private final Connection protonConnection = Proton.connection();
@@ -170,6 +195,9 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         properties.put(QUEUE_PREFIX, "queue://");
         properties.put(TOPIC_PREFIX, "topic://");
+        properties.put(PRODUCT, "ActiveMQ");
+        properties.put(VERSION, BROKER_VERSION);
+        properties.put(PLATFORM, BROKER_PLATFORM);
 
         return properties;
     }
