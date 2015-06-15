@@ -81,6 +81,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean advisoryWhenFull;
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
+    private boolean includeBodyForAdvisory;
     private long expireMessagesPeriod = BaseDestination.EXPIRE_MESSAGE_PERIOD;
     private int maxExpirePageSize = BaseDestination.MAX_BROWSE_PAGE_SIZE;
     private int queuePrefetch=ActiveMQPrefetchPolicy.DEFAULT_QUEUE_PREFETCH;
@@ -200,6 +201,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
         destination.setAdvisoryForFastProducers(isAdvisoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
+        destination.setIncludeBodyForAdvisory(isIncludeBodyForAdvisory());
         destination.setSendAdvisoryIfNoConsumers(isSendAdvisoryIfNoConsumers());
     }
 
@@ -738,6 +740,26 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setAdvisoryForFastProducers(boolean advisoryForFastProducers) {
         this.advisoryForFastProducers = advisoryForFastProducers;
+    }
+
+    /**
+     * Returns true if the original message body should be included when applicable
+     * for advisory messages
+     *
+     * @return
+     */
+    public boolean isIncludeBodyForAdvisory() {
+        return includeBodyForAdvisory;
+    }
+
+    /**
+     * Sets if the original message body should be included when applicable
+     * for advisory messages
+     *
+     * @param includeBodyForAdvisory
+     */
+    public void setIncludeBodyForAdvisory(boolean includeBodyForAdvisory) {
+        this.includeBodyForAdvisory = includeBodyForAdvisory;
     }
 
     public void setMaxExpirePageSize(int maxExpirePageSize) {

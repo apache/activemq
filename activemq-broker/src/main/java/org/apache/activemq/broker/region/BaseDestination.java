@@ -84,6 +84,7 @@ public abstract class BaseDestination implements Destination {
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
     private boolean sendAdvisoryIfNoConsumers;
+    private boolean includeBodyForAdvisory;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
@@ -464,6 +465,14 @@ public abstract class BaseDestination implements Destination {
 
     public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
+    }
+
+    public boolean isIncludeBodyForAdvisory() {
+        return includeBodyForAdvisory;
+    }
+
+    public void setIncludeBodyForAdvisory(boolean includeBodyForAdvisory) {
+        this.includeBodyForAdvisory = includeBodyForAdvisory;
     }
 
     /**
