@@ -538,7 +538,7 @@ invoke_task(){
       exit $?
     else
       invokeJar
-      exit 1
+      exit $?
     fi
 }
 

@@ -112,8 +112,8 @@ public class Main {
         app.addClassPathList(System.getProperty("activemq.classpath"));
 
         try {
-            app.runTaskClass(tokens);
-            System.exit(0);
+            int ret = app.runTaskClass(tokens);
+            System.exit(ret);
         } catch (ClassNotFoundException e) {
             System.out.println("Could not load class: " + e.getMessage());
             try {
@@ -216,7 +216,7 @@ public class Main {
 
     }
 
-    public void runTaskClass(List<String> tokens) throws Throwable {
+    public int runTaskClass(List<String> tokens) throws Throwable {
 
         StringBuilder buffer = new StringBuilder();
         buffer.append(System.getProperty("java.vendor"));
@@ -259,7 +259,7 @@ public class Main {
             Method runTask = task.getMethod("main", new Class[] {
                 String[].class, InputStream.class, PrintStream.class
             });
-            runTask.invoke(task.newInstance(), args, System.in, System.out);
+            return (int)runTask.invoke(task.newInstance(), args, System.in, System.out);
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }

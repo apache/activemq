@@ -105,7 +105,7 @@ public class ShellCommand extends AbstractCommand {
             return 0;
         } catch (Exception e) {
             context.printException(e);
-            return -1;
+            return 1;
         }
     }
 
