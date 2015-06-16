@@ -95,8 +95,8 @@ public class AMQ4677Test {
         assertNotNull(levelDBView);
         levelDBView.compact();
 
-        final int SIZE = 6 * 1024 * 5;
-        final int MSG_COUNT = 60000;
+        final int SIZE = 10 * 1024;
+        final int MSG_COUNT = 30000;    // very slow consuming 60k messages of size 30k
         final CountDownLatch done = new CountDownLatch(MSG_COUNT);
 
         byte buffer[] = new byte[SIZE];
