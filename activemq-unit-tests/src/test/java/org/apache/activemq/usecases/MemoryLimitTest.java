@@ -17,15 +17,17 @@
 package org.apache.activemq.usecases;
 
 import java.util.Arrays;
-import javax.jms.*;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
+
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Queue;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
-import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.QueueView;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -65,6 +67,7 @@ public class MemoryLimitTest extends TestSupport {
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setProducerFlowControl(false);
+        policyEntry.setExpireMessagesPeriod(0);
         policyMap.put(new ActiveMQQueue(">"), policyEntry);
         broker.setDestinationPolicy(policyMap);
 
