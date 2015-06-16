@@ -60,11 +60,13 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpInactivityMonitor;
@@ -142,10 +144,12 @@ public class AmqpConnection implements AmqpProtocolConverter {
     private final ConnectionInfo connectionInfo = new ConnectionInfo();
     private long nextSessionId;
     private long nextTempDestinationId;
+    private long nextTransactionId;
     private boolean closing;
     private boolean closedSocket;
     private AmqpAuthenticator authenticator;
 
+    private final Map<TransactionId, AmqpTransactionCoordinator> transactions = new HashMap<TransactionId, AmqpTransactionCoordinator>();
     private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
     private final ConcurrentMap<ConsumerId, AmqpSender> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, AmqpSender>();
 
@@ -665,6 +669,22 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     void unregisterSender(ConsumerId consumerId) {
         subscriptionsByConsumerId.remove(consumerId);
+    }
+
+    void registerTransaction(TransactionId txId, AmqpTransactionCoordinator coordinator) {
+        transactions.put(txId, coordinator);
+    }
+
+    void unregisterTransaction(TransactionId txId) {
+        transactions.remove(txId);
+    }
+
+    AmqpTransactionCoordinator getTxCoordinator(TransactionId txId) {
+        return transactions.get(txId);
+    }
+
+    LocalTransactionId getNextTransactionId() {
+        return new LocalTransactionId(getConnectionId(), ++nextTransactionId);
     }
 
     ConsumerInfo lookupSubscription(String subscriptionName) throws AmqpProtocolException {

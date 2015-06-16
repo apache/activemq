@@ -20,6 +20,8 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.toBytes;
 import static org.apache.activemq.transport.amqp.AmqpSupport.toLong;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionId;
@@ -54,7 +56,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpTransactionCoordinator.class);
 
-    private long nextTransactionId;
+    private final Set<AmqpSession> txSessions = new HashSet<AmqpSession>();
 
     /**
      * Creates a new Transaction coordinator used to manage AMQP transactions.
@@ -82,7 +84,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
         }
 
         final AmqpSession session = (AmqpSession) getEndpoint().getSession().getContext();
-        ConnectionId connectionId = session.getConnection().getConnectionId();
+        final ConnectionId connectionId = session.getConnection().getConnectionId();
         final Object action = ((AmqpValue) message.getBody()).getValue();
 
         LOG.debug("COORDINATOR received: {}, [{}]", action, deliveryBytes);
@@ -92,35 +94,41 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
                 throw new Exception("don't know how to handle a declare /w a set GlobalId");
             }
 
-            long txid = getNextTransactionId();
-            TransactionInfo txinfo = new TransactionInfo(connectionId, new LocalTransactionId(connectionId, txid), TransactionInfo.BEGIN);
-            sendToActiveMQ(txinfo, null);
-            LOG.trace("started transaction {}", txid);
+            LocalTransactionId txId = session.getConnection().getNextTransactionId();
+            TransactionInfo txInfo = new TransactionInfo(connectionId, txId, TransactionInfo.BEGIN);
+            session.getConnection().registerTransaction(txId, this);
+            sendToActiveMQ(txInfo, null);
+            LOG.trace("started transaction {}", txId.getValue());
 
             Declared declared = new Declared();
-            declared.setTxnId(new Binary(toBytes(txid)));
+            declared.setTxnId(new Binary(toBytes(txId.getValue())));
             delivery.disposition(declared);
             delivery.settle();
         } else if (action instanceof Discharge) {
-            Discharge discharge = (Discharge) action;
-            long txid = toLong(discharge.getTxnId());
-
+            final Discharge discharge = (Discharge) action;
+            final LocalTransactionId txId = new LocalTransactionId(connectionId, toLong(discharge.getTxnId()));
             final byte operation;
+
             if (discharge.getFail()) {
-                LOG.trace("rollback transaction {}", txid);
+                LOG.trace("rollback transaction {}", txId.getValue());
                 operation = TransactionInfo.ROLLBACK;
             } else {
-                LOG.trace("commit transaction {}", txid);
+                LOG.trace("commit transaction {}", txId.getValue());
                 operation = TransactionInfo.COMMIT_ONE_PHASE;
             }
 
-            if (operation == TransactionInfo.ROLLBACK) {
-                session.rollback();
-            } else {
-                session.commit();
+            for (AmqpSession txSession : txSessions) {
+                if (operation == TransactionInfo.ROLLBACK) {
+                    txSession.rollback();
+                } else {
+                    txSession.commit();
+                }
             }
 
-            TransactionInfo txinfo = new TransactionInfo(connectionId, new LocalTransactionId(connectionId, txid), operation);
+            txSessions.clear();
+            session.getConnection().unregisterTransaction(txId);
+
+            TransactionInfo txinfo = new TransactionInfo(connectionId, txId, operation);
             sendToActiveMQ(txinfo, new ResponseHandler() {
                 @Override
                 public void onResponse(AmqpProtocolConverter converter, Response response) throws IOException {
@@ -132,6 +140,7 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
                     } else {
                         delivery.disposition(Accepted.getInstance());
                     }
+
                     LOG.debug("TX: {} settling {}", operation, action);
                     delivery.settle();
                     session.pumpProtonToSocket();
@@ -157,10 +166,6 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
         }
     }
 
-    private long getNextTransactionId() {
-        return ++nextTransactionId;
-    }
-
     @Override
     public ActiveMQDestination getDestination() {
         return null;
@@ -168,5 +173,9 @@ public class AmqpTransactionCoordinator extends AmqpAbstractReceiver {
 
     @Override
     public void setDestination(ActiveMQDestination destination) {
+    }
+
+    public void enlist(AmqpSession session) {
+        txSessions.add(session);
     }
 }

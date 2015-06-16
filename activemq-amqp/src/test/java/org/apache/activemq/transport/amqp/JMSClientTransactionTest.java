@@ -44,6 +44,38 @@ public class JMSClientTransactionTest extends JMSClientTestSupport {
     private final int MSG_COUNT = 1000;
 
     @Test(timeout = 60000)
+    public void testProduceOneConsumeOneInTx() throws Exception {
+        connection = createConnection();
+        connection.start();
+
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        Destination queue = session.createQueue(getTestName());
+        MessageProducer messageProducer = session.createProducer(queue);
+
+        messageProducer.send(session.createMessage());
+        session.rollback();
+
+        QueueViewMBean queueView = getProxyToQueue(getTestName());
+        assertEquals(0, queueView.getQueueSize());
+
+        messageProducer.send(session.createMessage());
+        session.commit();
+
+        assertEquals(1, queueView.getQueueSize());
+
+        MessageConsumer messageConsumer = session.createConsumer(queue);
+        assertNotNull(messageConsumer.receive(5000));
+        session.rollback();
+
+        assertEquals(1, queueView.getQueueSize());
+
+        assertNotNull(messageConsumer.receive(5000));
+        session.commit();
+
+        assertEquals(0, queueView.getQueueSize());
+    }
+
+    @Test(timeout = 60000)
     public void testSingleConsumedMessagePerTxCase() throws Exception {
         connection = createConnection();
         connection.start();
