@@ -57,12 +57,12 @@ public final class JmxMBeansUtil {
         }
     }
 
-    public static Map<String, List> queryMBeansAsMap(MBeanServerConnection jmxConnection, List queryList, Set attributes) throws Exception {
-        Map answer = new HashMap<String, List>();
+    public static Map<Object, List> queryMBeansAsMap(MBeanServerConnection jmxConnection, List queryList, Set attributes) throws Exception {
+        Map<Object, List> answer = new HashMap<Object, List>();
         List<AttributeList> mbeans = queryMBeans(jmxConnection, queryList, attributes);
         for (AttributeList mbean : mbeans) {
             for(Attribute attr: mbean.asList()) {
-                if (attr.getName().equals("Name")) {
+                if (attr.getName().equals(MBeansAttributeQueryFilter.KEY_OBJECT_NAME_ATTRIBUTE)) {
                     answer.put(attr.getValue(), mbean);
                 }
             }
