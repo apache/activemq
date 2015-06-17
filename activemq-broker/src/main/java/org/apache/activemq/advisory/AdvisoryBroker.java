@@ -31,6 +31,7 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
@@ -627,7 +628,12 @@ public class AdvisoryBroker extends BrokerFilter {
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
 
             String url = getBrokerService().getVmConnectorURI().toString();
-            if (getBrokerService().getDefaultSocketURIString() != null) {
+            //try and find the URL on the transport connector and use if it exists else
+            //try and find a default URL
+            if (context.getConnector() instanceof TransportConnector
+                    && ((TransportConnector) context.getConnector()).getPublishableConnectString() != null) {
+                url = ((TransportConnector) context.getConnector()).getPublishableConnectString();
+            } else if (getBrokerService().getDefaultSocketURIString() != null) {
                 url = getBrokerService().getDefaultSocketURIString();
             }
             advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL, url);

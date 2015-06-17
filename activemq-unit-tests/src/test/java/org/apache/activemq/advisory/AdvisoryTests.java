@@ -19,6 +19,7 @@ package org.apache.activemq.advisory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -147,6 +148,11 @@ public class AdvisoryTests {
         assertNotNull(msg);
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should always be tcp:// because that is the transport that is used to connect even though
+        //the nio transport is the first one in the list
+        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
         assertIncludeBodyForAdvisory(payload);
@@ -177,6 +183,11 @@ public class AdvisoryTests {
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
         String originalId = payload.getJMSMessageID();
         assertEquals(originalId, id);
+
+        //This should always be tcp:// because that is the transport that is used to connect even though
+        //the nio transport is the first one in the list
+        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
         assertIncludeBodyForAdvisory(payload);
@@ -204,6 +215,10 @@ public class AdvisoryTests {
         assertNotNull(msg);
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should be set
+        assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
+
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
         assertIncludeBodyForAdvisory(payload);
@@ -235,6 +250,8 @@ public class AdvisoryTests {
         assertNotNull(msg);
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+        //This should be set
+        assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
         //Add assertion to make sure body is included for DLQ advisory topics
         //when includeBodyForAdvisory is true
         assertIncludeBodyForAdvisory(payload);
@@ -265,6 +282,10 @@ public class AdvisoryTests {
         assertNotNull(msg);
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should be set
+        assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
+
         //Add assertion to make sure body is included for advisory topics
         //when includeBodyForAdvisory is true
         assertIncludeBodyForAdvisory(payload);
@@ -319,6 +340,7 @@ public class AdvisoryTests {
         pMap.setDefaultEntry(policy);
 
         answer.setDestinationPolicy(pMap);
+        answer.addConnector("nio://localhost:0");
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }
