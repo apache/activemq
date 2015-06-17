@@ -89,6 +89,10 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
     }
 
     public static DataSource createDataSource(String homeDir) throws IOException {
+        return createDataSource(homeDir, "derbydb");
+    }
+
+    public static DataSource createDataSource(String homeDir, String dbName) throws IOException {
 
         // Setup the Derby datasource.
         System.setProperty("derby.system.home", homeDir);
@@ -96,7 +100,7 @@ abstract public class DataSourceServiceSupport extends LockableServiceSupport {
         System.setProperty("derby.storage.pageCacheSize", "100");
 
         final EmbeddedDataSource ds = new EmbeddedDataSource();
-        ds.setDatabaseName("derbydb");
+        ds.setDatabaseName(dbName);
         ds.setCreateDatabase("create");
         return ds;
     }

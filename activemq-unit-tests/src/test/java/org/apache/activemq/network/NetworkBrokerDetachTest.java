@@ -108,11 +108,15 @@ public class NetworkBrokerDetachTest {
 
     @After
     public void cleanup() throws Exception {
-        networkedBroker.stop();
-        networkedBroker.waitUntilStopped();
+        if (networkedBroker != null) {
+            networkedBroker.stop();
+            networkedBroker.waitUntilStopped();
+        }
 
-        broker.stop();
-        broker.waitUntilStopped();
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
     @Test
