@@ -66,8 +66,8 @@ public class MemoryLimitTest extends TestSupport {
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
+        policyEntry.setExpireMessagesPeriod(0); // when this fires it will consume 2*pageSize mem which will throw the test
         policyEntry.setProducerFlowControl(false);
-        policyEntry.setExpireMessagesPeriod(0);
         policyMap.put(new ActiveMQQueue(">"), policyEntry);
         broker.setDestinationPolicy(policyMap);
 
