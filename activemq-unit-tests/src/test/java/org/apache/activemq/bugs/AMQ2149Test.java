@@ -364,7 +364,7 @@ public class AMQ2149Test {
         verifyStats(false);
     }
 
-    @Test(timeout = 5 * 60 * 1000)
+    @Test(timeout = 10 * 60 * 1000)
     public void testOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -387,7 +387,7 @@ public class AMQ2149Test {
         verifyStats(true);
     }
 
-    @Test(timeout = 5 * 60 * 1000)
+    @Test(timeout = 10 * 60 * 1000)
     public void testTopicOrderWithRestart() throws Exception {
         createBroker(new Configurer() {
             public void configure(BrokerService broker) throws Exception {
@@ -407,18 +407,18 @@ public class AMQ2149Test {
         verifyStats(true);
     }
 
-    @Test(timeout = 5 * 60 * 1000)
+    @Test(timeout = 10 * 60 * 1000)
     public void testQueueTransactionalOrderWithRestart() throws Exception {
         doTestTransactionalOrderWithRestart(ActiveMQDestination.QUEUE_TYPE);
     }
 
-    @Test(timeout = 5 * 60 * 1000)
+    @Test(timeout = 10 * 60 * 1000)
     public void testTopicTransactionalOrderWithRestart() throws Exception {
         doTestTransactionalOrderWithRestart(ActiveMQDestination.TOPIC_TYPE);
     }
     
     public void doTestTransactionalOrderWithRestart(byte destinationType) throws Exception {
-        numtoSend = 10000;
+        numtoSend = 5000;
         sleepBetweenSend = 3;
         brokerStopPeriod = 10 * 1000;
               
@@ -519,10 +519,10 @@ public class AMQ2149Test {
             threads.add(thread);
         }
         
-        final long expiry = System.currentTimeMillis() + 1000 * 60 * 4;
+        final long expiry = System.currentTimeMillis() + 1000 * 60 * 10;
         while(!threads.isEmpty() && exceptions.isEmpty() && System.currentTimeMillis() < expiry) {
             Thread sendThread = threads.firstElement();
-            sendThread.join(1000*30);
+            sendThread.join(1000*60*10);
             if (!sendThread.isAlive()) {
                 threads.remove(sendThread);
             } else {
