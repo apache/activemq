@@ -18,11 +18,13 @@ package org.apache.activemq.broker.ft;
 
 import java.io.File;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.leveldb.LevelDBStore;
+import org.apache.activemq.util.Wait;
 import org.junit.Ignore;
 
 
@@ -81,4 +83,36 @@ public class QueueMasterSlaveSingleUrlTest extends QueueMasterSlaveTestSupport {
         }).start();
     }
 
+    public void testNetworkMasterSlave() throws Exception {
+
+        final BrokerService client = new BrokerService();
+        client.setBrokerName("client");
+        client.setPersistent(false);
+        client.getManagementContext().setCreateConnector(false);
+        client.addNetworkConnector("masterslave:(tcp://localhost:62001,tcp://localhost:62002)");
+        client.start();
+        try {
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return client.getRegionBroker().getPeerBrokerInfos().length == 1;
+                }
+            });
+
+            assertTrue(!master.isSlave());
+            master.stop();
+            assertTrue("slave started", slaveStarted.await(60, TimeUnit.SECONDS));
+            assertTrue(!slave.get().isSlave());
+
+            Wait.waitFor(new Wait.Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return client.getRegionBroker().getPeerBrokerInfos().length == 1;
+                }
+            });
+        } finally {
+            client.stop();
+        }
+
+    }
 }
