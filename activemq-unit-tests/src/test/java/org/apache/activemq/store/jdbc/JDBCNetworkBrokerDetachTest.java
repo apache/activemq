@@ -16,12 +16,15 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkBrokerDetachTest;
+import org.apache.activemq.util.IOHelper;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.After;
+import org.junit.BeforeClass;
 
 public class JDBCNetworkBrokerDetachTest extends NetworkBrokerDetachTest {
 
@@ -54,5 +57,10 @@ public class JDBCNetworkBrokerDetachTest extends NetworkBrokerDetachTest {
             DataSourceServiceSupport.shutdownDefaultDataSource(ds);
         }
         dataSources.clear();
+    }
+
+    @BeforeClass
+    public static void ensureDerbyHasCleanDirectory() throws Exception {
+        IOHelper.delete(new File(IOHelper.getDefaultDataDirectory()));
     }
 }
