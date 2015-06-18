@@ -35,7 +35,6 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.engine.Receiver;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -293,7 +292,6 @@ public class AmqpDurableReceiverTest extends AmqpClientTestSupport {
         connection.close();
     }
 
-    @Ignore("Broker doesn't currently recover noLocal state")
     @Test(timeout = 60000)
     public void testLookupExistingSubscriptionAfterRestartWithSelectorAndNoLocal() throws Exception {
 

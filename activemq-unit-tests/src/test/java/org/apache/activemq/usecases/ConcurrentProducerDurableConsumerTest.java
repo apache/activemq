@@ -59,6 +59,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,11 +75,11 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
     private final TestSupport.PersistenceAdapterChoice persistenceAdapterChoice;
 
-    @Parameterized.Parameters
+    @Parameters(name="{0}")
     public static Collection<TestSupport.PersistenceAdapterChoice[]> getTestParameters() {
-        TestSupport.PersistenceAdapterChoice[] kahaDb = {TestSupport.PersistenceAdapterChoice.KahaDB};
-        TestSupport.PersistenceAdapterChoice[] levelDb = {TestSupport.PersistenceAdapterChoice.LevelDB};
-        TestSupport.PersistenceAdapterChoice[] mem = {TestSupport.PersistenceAdapterChoice.MEM};
+        TestSupport.PersistenceAdapterChoice[] kahaDb = { TestSupport.PersistenceAdapterChoice.KahaDB };
+        TestSupport.PersistenceAdapterChoice[] levelDb = { TestSupport.PersistenceAdapterChoice.LevelDB };
+        TestSupport.PersistenceAdapterChoice[] mem = { TestSupport.PersistenceAdapterChoice.MEM };
         List<TestSupport.PersistenceAdapterChoice[]> choices = new ArrayList<TestSupport.PersistenceAdapterChoice[]>();
         choices.add(kahaDb);
         choices.add(levelDb);
@@ -102,8 +103,8 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         // preload the durable consumers
         double[] inactiveConsumerStats = produceMessages(destination, 500, 10, session, producer, null);
-        LOG.info("With inactive consumers: ave: " + inactiveConsumerStats[1]
-                + ", max: " + inactiveConsumerStats[0] + ", multiplier: " + (inactiveConsumerStats[0]/inactiveConsumerStats[1]));
+        LOG.info("With inactive consumers: ave: " + inactiveConsumerStats[1] + ", max: " + inactiveConsumerStats[0] + ", multiplier: "
+            + (inactiveConsumerStats[0] / inactiveConsumerStats[1]));
 
         // periodically start a durable sub that has a backlog
         final int consumersToActivate = 5;
@@ -137,9 +138,10 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         double[] statsWithActive = produceMessages(destination, 500, 10, session, producer, addConsumerSignal);
 
-        LOG.info(" with concurrent activate, ave: " + statsWithActive[1] + ", max: " + statsWithActive[0] + ", multiplier: " + (statsWithActive[0]/ statsWithActive[1]));
+        LOG.info(" with concurrent activate, ave: " + statsWithActive[1] + ", max: " + statsWithActive[0] + ", multiplier: "
+            + (statsWithActive[0] / statsWithActive[1]));
 
-        while(consumers.size() < consumersToActivate) {
+        while (consumers.size() < consumersToActivate) {
             TimeUnit.SECONDS.sleep(2);
         }
 
@@ -149,24 +151,18 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             timeToFirstAccumulator += time;
             LOG.info("Time to first " + time);
         }
-        LOG.info("Ave time to first message =" + timeToFirstAccumulator/consumers.size());
+        LOG.info("Ave time to first message =" + timeToFirstAccumulator / consumers.size());
 
         for (TimedMessageListener listener : consumers.values()) {
             LOG.info("Ave batch receipt time: " + listener.waitForReceivedLimit(10000) + " max receipt: " + listener.maxReceiptTime);
         }
 
-        //assertTrue("max (" + statsWithActive[0] + ") within reasonable multiplier of ave (" + statsWithActive[1] + ")",
-        //        statsWithActive[0] < 5 * statsWithActive[1]);
-
         // compare no active to active
-        LOG.info("Ave send time with active: " + statsWithActive[1]
-                + " as multiplier of ave with none active: " + inactiveConsumerStats[1]
-                + ", multiplier=" + (statsWithActive[1]/inactiveConsumerStats[1]));
+        LOG.info("Ave send time with active: " + statsWithActive[1] + " as multiplier of ave with none active: " + inactiveConsumerStats[1] + ", multiplier="
+            + (statsWithActive[1] / inactiveConsumerStats[1]));
 
-        assertTrue("Ave send time with active: " + statsWithActive[1]
-                + " within reasonable multpler of ave with none active: " + inactiveConsumerStats[1]
-                + ", multiplier " + (statsWithActive[1]/inactiveConsumerStats[1]),
-                statsWithActive[1] < 15 * inactiveConsumerStats[1]);
+        assertTrue("Ave send time with active: " + statsWithActive[1] + " within reasonable multpler of ave with none active: " + inactiveConsumerStats[1]
+            + ", multiplier " + (statsWithActive[1] / inactiveConsumerStats[1]), statsWithActive[1] < 15 * inactiveConsumerStats[1]);
     }
 
     public void x_testSendWithInactiveAndActiveConsumers() throws Exception {
@@ -189,12 +185,11 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
 
         double[] withConsumerStats = produceMessages(destination, toSend, numIterations, session, producer, null);
 
-        LOG.info("With consumer: " + withConsumerStats[1] + " , with noConsumer: " + noConsumerStats[1]
-                + ", multiplier: " + (withConsumerStats[1]/noConsumerStats[1]));
+        LOG.info("With consumer: " + withConsumerStats[1] + " , with noConsumer: " + noConsumerStats[1] + ", multiplier: "
+            + (withConsumerStats[1] / noConsumerStats[1]));
         final int reasonableMultiplier = 15; // not so reasonable but improving
-        assertTrue("max X times as slow with consumer: " + withConsumerStats[1] + ", with no Consumer: "
-                + noConsumerStats[1] + ", multiplier: " + (withConsumerStats[1]/noConsumerStats[1]),
-                withConsumerStats[1] < noConsumerStats[1] * reasonableMultiplier);
+        assertTrue("max X times as slow with consumer: " + withConsumerStats[1] + ", with no Consumer: " + noConsumerStats[1] + ", multiplier: "
+            + (withConsumerStats[1] / noConsumerStats[1]), withConsumerStats[1] < noConsumerStats[1] * reasonableMultiplier);
 
         final int toReceive = toSend * numIterations * consumerCount * 2;
         Wait.waitFor(new Wait.Condition() {
@@ -217,7 +212,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     private void startInactiveConsumers(ConnectionFactory factory, Destination destination) throws Exception {
         // create off line consumers
         startConsumers(factory, destination);
-        for (Connection connection: connections) {
+        for (Connection connection : connections) {
             connection.close();
         }
         connections.clear();
@@ -240,7 +235,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         conn.start();
 
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        final TopicSubscriber consumer = sess.createDurableSubscriber((javax.jms.Topic)dest, name);
+        final TopicSubscriber consumer = sess.createDurableSubscriber((javax.jms.Topic) dest, name);
 
         return consumer;
     }
@@ -249,22 +244,18 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
      * @return max and ave send time
      * @throws Exception
      */
-    private double[] produceMessages(Destination destination,
-                                     final int toSend,
-                                     final int numIterations,
-                                     Session session,
-                                     MessageProducer producer,
-                                     Object addConsumerSignal) throws Exception {
+    private double[] produceMessages(Destination destination, final int toSend, final int numIterations, Session session, MessageProducer producer,
+        Object addConsumerSignal) throws Exception {
         long start;
         long count = 0;
         double batchMax = 0, max = 0, sum = 0;
-        for (int i=0; i<numIterations; i++) {
+        for (int i = 0; i < numIterations; i++) {
             start = System.currentTimeMillis();
-            for (int j=0; j < toSend; j++) {
+            for (int j = 0; j < toSend; j++) {
                 long singleSendstart = System.currentTimeMillis();
                 TextMessage msg = createTextMessage(session, "" + j);
                 // rotate
-                int priority = ((int)count%10);
+                int priority = ((int) count % 10);
                 producer.send(msg, DeliveryMode.PERSISTENT, priority, 0);
                 max = Math.max(max, (System.currentTimeMillis() - singleSendstart));
                 if (++count % 500 == 0) {
@@ -274,7 +265,8 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                             LOG.info("Signalled add consumer");
                         }
                     }
-                };
+                }
+                ;
                 if (count % 5000 == 0) {
                     LOG.info("Sent " + count + ", singleSendMax:" + max);
                 }
@@ -283,12 +275,11 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             long duration = System.currentTimeMillis() - start;
             batchMax = Math.max(batchMax, duration);
             sum += duration;
-            LOG.info("Iteration " + i + ", sent " + toSend + ", time: "
-                    + duration + ", batchMax:" + batchMax + ", singleSendMax:" + max);
+            LOG.info("Iteration " + i + ", sent " + toSend + ", time: " + duration + ", batchMax:" + batchMax + ", singleSendMax:" + max);
         }
 
         LOG.info("Sent: " + toSend * numIterations + ", batchMax: " + batchMax + " singleSendMax: " + max);
-        return new double[]{batchMax, sum/numIterations};
+        return new double[] { batchMax, sum / numIterations };
     }
 
     protected TextMessage createTextMessage(Session session, String initText) throws Exception {
@@ -344,8 +335,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         policy.setPrioritizedMessages(true);
         policy.setMaxPageSize(500);
 
-        StorePendingDurableSubscriberMessageStoragePolicy durableSubPending =
-                new StorePendingDurableSubscriberMessageStoragePolicy();
+        StorePendingDurableSubscriberMessageStoragePolicy durableSubPending = new StorePendingDurableSubscriberMessageStoragePolicy();
         durableSubPending.setImmediatePriorityDispatch(true);
         durableSubPending.setUseCache(true);
         policy.setPendingDurableSubscriberPolicy(durableSubPending);
@@ -354,45 +344,14 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         policyMap.setDefaultEntry(policy);
         brokerService.setDestinationPolicy(policyMap);
 
-//        if (false) {
-//            // external mysql works a lot faster
-//            //
-//            JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-//            BasicDataSource ds = new BasicDataSource();
-//            com.mysql.jdbc.Driver d = new com.mysql.jdbc.Driver();
-//            ds.setDriverClassName("com.mysql.jdbc.Driver");
-//            ds.setUrl("jdbc:mysql://localhost/activemq?relaxAutoCommit=true");
-//            ds.setMaxActive(200);
-//            ds.setUsername("root");
-//            ds.setPassword("");
-//            ds.setPoolPreparedStatements(true);
-//            jdbc.setDataSource(ds);
-//            brokerService.setPersistenceAdapter(jdbc);
+        setPersistenceAdapter(brokerService, persistenceAdapterChoice);
 
-            /* add mysql bits to the pom in the testing dependencies
-                    <dependency>
-                        <groupId>mysql</groupId>
-                        <artifactId>mysql-connector-java</artifactId>
-                        <version>5.1.10</version>
-                        <scope>test</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>commons-dbcp</groupId>
-                        <artifactId>commons-dbcp</artifactId>
-                        <version>1.2.2</version>
-                        <scope>test</scope>
-                    </dependency>
-             */
-//        } else {
-            setPersistenceAdapter(brokerService, persistenceAdapterChoice);
-//        }
         return brokerService;
     }
 
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
-            broker.getTransportConnectors().get(0).getPublishableConnectString());
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getPublishableConnectString());
         ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
         prefetchPolicy.setAll(1);
         factory.setPrefetchPolicy(prefetchPolicy);
@@ -420,9 +379,10 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
             int priority = 0;
             try {
                 priority = message.getJMSPriority();
-            } catch (JMSException ignored) {}
+            } catch (JMSException ignored) {
+            }
             if (!messageLists.containsKey(priority)) {
-                MessageIdList perPriorityList =  new MessageIdList();
+                MessageIdList perPriorityList = new MessageIdList();
                 perPriorityList.setParent(allMessagesList);
                 messageLists.put(priority, perPriorityList);
             }
@@ -433,7 +393,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                 LOG.info("First receipt in " + firstReceipt + "ms");
             } else if (count.get() % batchSize == 0) {
                 LOG.info("Consumed " + count.get() + " in " + batchReceiptAccumulator + "ms" + ", priority:" + priority);
-                batchReceiptAccumulator=0;
+                batchReceiptAccumulator = 0;
             }
             maxReceiptTime = Math.max(maxReceiptTime, duration);
             receiptAccumulator += duration;
@@ -451,7 +411,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
         }
 
         public long waitForReceivedLimit(long limit) throws Exception {
-            final long expiry = System.currentTimeMillis() + 30*60*1000;
+            final long expiry = System.currentTimeMillis() + 30 * 60 * 1000;
             while (count.get() < limit) {
                 if (System.currentTimeMillis() > expiry) {
                     throw new RuntimeException("Expired waiting for X messages, " + limit);
@@ -464,7 +424,7 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                 }
 
             }
-            return receiptAccumulator/(limit/batchSize);
+            return receiptAccumulator / (limit / batchSize);
         }
 
         private String findFirstMissingMessage() {
@@ -476,9 +436,9 @@ public class ConcurrentProducerDurableConsumerTest extends TestSupport {
                     if (previous == null) {
                         previous = current.copy();
                     } else {
-                        if (current.getProducerSequenceId() - 1 != previous.getProducerSequenceId() &&
-                            current.getProducerSequenceId() - 10 !=  previous.getProducerSequenceId()) {
-                                return "Missing next after: " + previous + ", got: " + current;
+                        if (current.getProducerSequenceId() - 1 != previous.getProducerSequenceId()
+                            && current.getProducerSequenceId() - 10 != previous.getProducerSequenceId()) {
+                            return "Missing next after: " + previous + ", got: " + current;
                         } else {
                             previous = current.copy();
                         }

@@ -18,13 +18,13 @@ package org.apache.activemq.command;
 
 /**
  * Holds the command id constants used by the command objects.
- * 
- * 
+ *
+ *
  */
 public interface CommandTypes {
 
     // What is the latest version of the openwire protocol
-    byte PROTOCOL_VERSION = 10;
+    byte PROTOCOL_VERSION = 11;
 
     // What is the latest version of the openwire protocol used in the stores
     byte PROTOCOL_STORE_VERSION = 6;

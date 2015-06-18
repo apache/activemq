@@ -102,7 +102,7 @@ public class AmqpTestSupport {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
-            brokerService.setStoreOpenWireVersion(getstoreOpenWireVersion());
+            brokerService.setStoreOpenWireVersion(getStoreOpenWireVersion());
         }
         brokerService.setSchedulerSupport(false);
         brokerService.setAdvisorySupport(false);
@@ -188,8 +188,8 @@ public class AmqpTestSupport {
         return true;
     }
 
-    protected int getstoreOpenWireVersion() {
-        return OpenWireFormat.DEFAULT_VERSION;
+    protected int getStoreOpenWireVersion() {
+        return OpenWireFormat.DEFAULT_WIRE_VERSION;
     }
 
     protected boolean isUseOpenWireConnector() {

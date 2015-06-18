@@ -39,7 +39,7 @@ import org.junit.Test;
 
 public class AMQ4563Test extends AmqpTestSupport {
 
-    public static final String KAHADB_DIRECTORY = "target/activemq-data/kahadb-amq4563";
+    public static final String KAHADB_DIRECTORY = "./target/activemq-data/kahadb-amq4563";
 
     @Test(timeout = 60000)
     public void testMessagesAreAckedAMQProducer() throws Exception {
@@ -224,7 +224,7 @@ public class AMQ4563Test extends AmqpTestSupport {
     }
 
     @Override
-    protected int getstoreOpenWireVersion() {
+    protected int getStoreOpenWireVersion() {
         return 10;
     }
 }
