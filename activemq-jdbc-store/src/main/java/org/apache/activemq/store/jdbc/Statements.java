@@ -228,6 +228,10 @@ public class Statements {
         return findAllMessageIdsStatement;
     }
 
+    public void setFindAllMessageIdsStatement(String val) {
+        findAllMessageIdsStatement = val;
+    }
+
     public String getFindLastSequenceIdInMsgsStatement() {
         if (findLastSequenceIdInMsgsStatement == null) {
             findLastSequenceIdInMsgsStatement = "SELECT MAX(ID) FROM " + getFullMessageTableName();
@@ -330,17 +334,6 @@ public class Statements {
         }
         return findDurableSubMessagesByPriorityStatement;
     }    
-
-    public String findAllDurableSubMessagesStatement() {
-        if (findAllDurableSubMessagesStatement == null) {
-            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName()
-                                                 + " M, " + getFullAckTableName() + " D "
-                                                 + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                                                 + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
-                                                 + " ORDER BY M.ID";
-        }
-        return findAllDurableSubMessagesStatement;
-    }
 
     public String getNextDurableSubscriberMessageStatement() {
         if (nextDurableSubscriberMessageStatement == null) {
@@ -511,12 +504,16 @@ public class Statements {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
                                         + " AND XID IS NULL"
-                                        + " AND ((ID > ? AND ID < ? AND PRIORITY = ?) OR PRIORITY < ?)"
+                                        + " AND ((ID > ? AND ID < ? AND PRIORITY >= ?) OR PRIORITY < ?)"
                                         + " ORDER BY PRIORITY DESC, ID";
         }
         return findNextMessagesByPriorityStatement;
     }    
-    
+
+    public void setFindNextMessagesByPriorityStatement(String val) {
+        findNextMessagesByPriorityStatement = val;
+    }
+
     /**
      * @return the lastAckedDurableSubscriberMessageStatement
      */

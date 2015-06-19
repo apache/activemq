@@ -94,6 +94,11 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         ignoreExpired.setDeadLetterStrategy(ignoreExpiredStrategy);
         policyMap.put(new ActiveMQTopic("TEST_CLEANUP_NO_PRIORITY"), ignoreExpired);
 
+        PolicyEntry noCachePolicy = new PolicyEntry();
+        noCachePolicy.setUseCache(false);
+        noCachePolicy.setPrioritizedMessages(true);
+        policyMap.put(new ActiveMQQueue("TEST_LOW_THEN_HIGH_10"), noCachePolicy);
+
         broker.setDestinationPolicy(policyMap);
         broker.start();
         broker.waitUntilStarted();
@@ -583,5 +588,31 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < 10 ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
+    }
+
+    public void testLowThenHighBatch() throws Exception {
+        ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST_LOW_THEN_HIGH_10");
+
+        ProducerThread producerThread = new ProducerThread(queue, 10, LOW_PRI);
+        producerThread.run();
+
+        MessageConsumer queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", LOW_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+
+        producerThread.priority = HIGH_PRI;
+        producerThread.run();
+
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
     }
 }
