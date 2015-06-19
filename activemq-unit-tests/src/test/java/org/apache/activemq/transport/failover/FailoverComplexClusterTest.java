@@ -147,7 +147,6 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
         createClients();
-        Thread.sleep(2000);
 
         assertClientsConnectedToThreeBrokers();
 
@@ -155,13 +154,10 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_A_NAME).waitUntilStopped();
         removeBroker(BROKER_A_NAME);
 
-        Thread.sleep(5000);
-
         assertClientsConnectedToTwoBrokers();
 
         createBrokerA(false, null, null, null);
         getBroker(BROKER_A_NAME).waitUntilStarted();
-        Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
     }
@@ -264,14 +260,11 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_C_NAME).waitUntilStopped();
         removeBroker(BROKER_C_NAME);
 
-        Thread.sleep(5000);
-
         assertClientsConnectedToTwoBrokers();
 
         LOG.info("Recreating BrokerC after stop");
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
-        Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
     }
@@ -292,14 +285,11 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         getBroker(BROKER_C_NAME).waitUntilStopped();
         removeBroker(BROKER_C_NAME);
 
-        Thread.sleep(5000);
-
         assertClientsConnectedToTwoBrokers();
         assertClientsConnectionsEvenlyDistributed(.35);
 
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
-        Thread.sleep(5000);
 
         assertClientsConnectedToThreeBrokers();
         assertClientsConnectionsEvenlyDistributed(.20);
