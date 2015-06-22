@@ -35,18 +35,18 @@ import org.apache.activemq.util.ByteArrayOutputStream;
  * This JDBCAdapter inserts and extracts BLOB data using the getBlob()/setBlob()
  * operations. This is a little more involved since to insert a blob you have
  * to:
- * 
+ *
  * 1: insert empty blob. 2: select the blob 3: finally update the blob with data
  * value.
- * 
+ *
  * The databases/JDBC drivers that use this adapter are:
  * <ul>
  * <li></li>
  * </ul>
- * 
+ *
  * @org.apache.xbean.XBean element="blobJDBCAdapter"
- * 
- * 
+ *
+ *
  */
 public class BlobJDBCAdapter extends DefaultJDBCAdapter {
 
@@ -139,18 +139,15 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
                 return null;
             }
             Blob blob = rs.getBlob(1);
-            InputStream is = blob.getBinaryStream();
 
-            ByteArrayOutputStream os = new ByteArrayOutputStream((int)blob.length());
-            int ch;
-            while ((ch = is.read()) >= 0) {
-                os.write(ch);
+            try(InputStream is = blob.getBinaryStream();
+                ByteArrayOutputStream os = new ByteArrayOutputStream((int)blob.length())) {
+                int ch;
+                while ((ch = is.read()) >= 0) {
+                    os.write(ch);
+                }
+                return os.toByteArray();
             }
-            is.close();
-            os.close();
-
-            return os.toByteArray();
-
         } finally {
             cleanupExclusiveLock.readLock().unlock();
             close(rs);

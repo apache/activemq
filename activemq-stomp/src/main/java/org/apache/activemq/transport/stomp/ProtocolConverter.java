@@ -83,15 +83,17 @@ public class ProtocolConverter {
     private static final StompFrame ping = new StompFrame(Stomp.Commands.KEEPALIVE);
 
     static {
-        InputStream in = null;
         String version = "5.6.0";
-        if ((in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            try {
-                version = reader.readLine();
-            } catch(Exception e) {
+        try(InputStream in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
+            if (in != null) {
+                try(InputStreamReader isr = new InputStreamReader(in);
+                    BufferedReader reader = new BufferedReader(isr)) {
+                    version = reader.readLine();
+                }
             }
+        }catch(Exception e) {
         }
+
         BROKER_VERSION = version;
     }
 

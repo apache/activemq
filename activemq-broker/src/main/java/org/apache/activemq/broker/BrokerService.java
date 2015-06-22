@@ -272,14 +272,16 @@ public class BrokerService implements Service {
         }
         LOCAL_HOST_NAME = localHostName;
 
-        InputStream in = null;
         String version = null;
-        if ((in = BrokerService.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            try {
-                version = reader.readLine();
-            } catch(Exception e) {
+        try(InputStream in = BrokerService.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
+            if (in != null) {
+                try(InputStreamReader isr = new InputStreamReader(in);
+                    BufferedReader reader = new BufferedReader(isr)) {
+                    version = reader.readLine();
+                }
             }
+        } catch (IOException ie) {
+            LOG.warn("Error reading broker version ", ie);
         }
         BROKER_VERSION = version;
     }

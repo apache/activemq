@@ -39,7 +39,9 @@ public class FTPBlobUploadStrategy extends FTPStrategy implements BlobUploadStra
 
     @Override
     public URL uploadFile(ActiveMQBlobMessage message, File file) throws JMSException, IOException {
-        return uploadStream(message, new FileInputStream(file));
+        try(FileInputStream fis = new FileInputStream(file)) {
+            return uploadStream(message, fis);
+        }
     }
 
     @Override

@@ -130,13 +130,14 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         KeyStore trustedCertStore = KeyStore.getInstance(getTrustStoreType());
 
         if (trustStore != null) {
-            InputStream tsStream = getInputStream(trustStore);
+            try(InputStream tsStream = getInputStream(trustStore)) {
 
-            trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                trustedCertStore.load(tsStream, trustStorePassword.toCharArray());
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 
-            tmf.init(trustedCertStore);
-            trustStoreManagers = tmf.getTrustManagers();
+                tmf.init(trustedCertStore);
+                trustStoreManagers = tmf.getTrustManagers();
+            }
         }
         return trustStoreManagers;
     }
@@ -149,10 +150,11 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
             byte[] sslCert = loadClientCredential(keyStore);
 
             if (sslCert != null && sslCert.length > 0) {
-                ByteArrayInputStream bin = new ByteArrayInputStream(sslCert);
-                ks.load(bin, keyStorePassword.toCharArray());
-                kmf.init(ks, keyStoreKeyPassword !=null ? keyStoreKeyPassword.toCharArray() : keyStorePassword.toCharArray());
-                keystoreManagers = kmf.getKeyManagers();
+                try(ByteArrayInputStream bin = new ByteArrayInputStream(sslCert)) {
+                    ks.load(bin, keyStorePassword.toCharArray());
+                    kmf.init(ks, keyStoreKeyPassword !=null ? keyStoreKeyPassword.toCharArray() : keyStorePassword.toCharArray());
+                    keystoreManagers = kmf.getKeyManagers();
+                }
             }
         }
         return keystoreManagers;
@@ -162,16 +164,16 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         if (fileName == null) {
             return null;
         }
-        InputStream in = getInputStream(fileName);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[512];
-        int i = in.read(buf);
-        while (i > 0) {
-            out.write(buf, 0, i);
-            i = in.read(buf);
+        try(InputStream in = getInputStream(fileName);
+            ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buf = new byte[512];
+            int i = in.read(buf);
+            while (i > 0) {
+                out.write(buf, 0, i);
+                i = in.read(buf);
+            }
+            return out.toByteArray();
         }
-        in.close();
-        return out.toByteArray();
     }
 
     protected InputStream getInputStream(String urlOrResource) throws IOException {
