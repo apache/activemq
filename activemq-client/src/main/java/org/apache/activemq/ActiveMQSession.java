@@ -1062,7 +1062,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     } catch (Throwable t) {
                         LOG.debug("Unable to call after delivery", t);
                         afterDeliveryError.set(true);
-                        throw t;
+                        throw new RuntimeException(t);
                     }
                 }
             }
