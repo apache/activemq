@@ -294,8 +294,10 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         Properties fileProps = new Properties();
         try {
             if (configFile != null) {
-                LOG.info("Loading properties file: " + configFile.getAbsolutePath());
-                fileProps.load(new FileInputStream(configFile));
+                try(FileInputStream inputStream = new FileInputStream(configFile)) {
+                    LOG.info("Loading properties file: " + configFile.getAbsolutePath());
+                    fileProps.load(inputStream);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

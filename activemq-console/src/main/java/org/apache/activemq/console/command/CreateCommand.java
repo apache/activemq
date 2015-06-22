@@ -56,7 +56,7 @@ public class CreateCommand extends AbstractCommand {
 
     protected String amqConf = "conf/activemq.xml"; // default conf if no conf is specified via --amqconf
 
-    // default files to create 
+    // default files to create
     protected String[][] fileWriteMap = {
         { "winActivemq", "bin/${brokerName}.bat" },
         { "unixActivemq", "bin/${brokerName}" }
@@ -84,7 +84,7 @@ public class CreateCommand extends AbstractCommand {
 
             targetAmqBase = new File(token);
             brokerName = targetAmqBase.getName();
-            
+
 
             if (targetAmqBase.exists()) {
                 BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -191,9 +191,10 @@ public class CreateCommand extends AbstractCommand {
         buf.put(data.getBytes());
         buf.flip();
 
-        FileChannel destinationChannel = new FileOutputStream(dest).getChannel();
-        destinationChannel.write(buf);
-        destinationChannel.close();
+        try(FileOutputStream fos = new FileOutputStream(dest);
+            FileChannel destinationChannel = fos.getChannel()) {
+            destinationChannel.write(buf);
+        }
 
         // Set file permissions available for Java 6.0 only
         dest.setExecutable(true);
@@ -215,11 +216,13 @@ public class CreateCommand extends AbstractCommand {
         if (!from.exists()) {
             return;
         }
-        FileChannel sourceChannel = new FileInputStream(from).getChannel();
-        FileChannel destinationChannel = new FileOutputStream(dest).getChannel();
-        sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
-        sourceChannel.close();
-        destinationChannel.close();
+
+        try(FileInputStream fis = new FileInputStream(from);
+            FileChannel sourceChannel = fis.getChannel();
+            FileOutputStream fos = new FileOutputStream(dest);
+            FileChannel destinationChannel = fos.getChannel()) {
+            sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
+        }
     }
 
     private void copyConfDirectory(File from, File dest) throws IOException {
