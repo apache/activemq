@@ -505,7 +505,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * <CODE>BlobMessage</CODE> object is used to send a message containing
      * the <CODE>File</CODE> content. Before the message is sent the file
      * conent will be uploaded to the broker or some other remote repository
-     * depending on the {@link #getBlobTransferPolicy()}.
+     * depending on the {@link #getBlobTransferPolicy()}. <br/>
+     * <p>
+     * The caller of this method is responsible for closing the
+     * input stream that is used, however the stream can not be closed
+     * until <b>after</b> the message has been sent.  To have this class
+     * manage the stream and close it automatically, use the method
+     * {@link ActiveMQSession#createBlobMessage(File)}
      *
      * @param in the stream to be uploaded to some remote repo (or the broker)
      *                depending on the strategy

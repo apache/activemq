@@ -376,13 +376,14 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
             }
 
             // try to load file
-            BufferedReader br = new BufferedReader(new FileReader(f));
             StringBuffer payload = new StringBuffer();
-            String tmp = null;
-            while ((tmp = br.readLine()) != null) {
-                payload.append(tmp);
+            try(FileReader fr = new FileReader(f);
+                BufferedReader br = new BufferedReader(fr)) {
+                String tmp = null;
+                while ((tmp = br.readLine()) != null) {
+                    payload.append(tmp);
+                }
             }
-            br.close();
             jmsTextMessage = getSession().createTextMessage(payload.toString());
             return jmsTextMessage;
         } catch (FileNotFoundException ex) {

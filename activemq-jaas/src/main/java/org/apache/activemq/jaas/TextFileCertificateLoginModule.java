@@ -40,7 +40,7 @@ import javax.security.auth.login.LoginException;
  * org.apache.activemq.jaas.textfiledn.user properties respectively. NOTE: This
  * class will re-read user and group files for every authentication (i.e it does
  * live updates of allowed groups and users).
- * 
+ *
  * @author sepandm@gmail.com (Sepand)
  */
 public class TextFileCertificateLoginModule extends CertificateLoginModule {
@@ -71,7 +71,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
     /**
      * Overriding to allow DN authorization based on DNs specified in text
      * files.
-     * 
+     *
      * @param certs The certificate the incoming connection provided.
      * @return The user's authenticated name or null if unable to authenticate
      *         the user.
@@ -88,10 +88,8 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
 
         Properties users = new Properties();
 
-        try {
-            java.io.FileInputStream in = new java.io.FileInputStream(usersFile);
+        try(java.io.FileInputStream in = new java.io.FileInputStream(usersFile)) {
             users.load(in);
-            in.close();
         } catch (IOException ioe) {
             throw new LoginException("Unable to load user properties file " + usersFile);
         }
@@ -112,7 +110,7 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
 
     /**
      * Overriding to allow for group discovery based on text files.
-     * 
+     *
      * @param username The name of the user being examined. This is the same
      *                name returned by getUserNameForCertificates.
      * @return A Set of name Strings for groups this user belongs to.

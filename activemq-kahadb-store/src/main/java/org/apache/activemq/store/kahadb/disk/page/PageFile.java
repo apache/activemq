@@ -196,10 +196,10 @@ public class PageFile {
         public byte[] getDiskBound() throws IOException {
             if (diskBound == null && diskBoundLocation != -1) {
                 diskBound = new byte[length];
-                RandomAccessFile file = new RandomAccessFile(tmpFile, "r");
-                file.seek(diskBoundLocation);
-                file.read(diskBound);
-                file.close();
+                try(RandomAccessFile file = new RandomAccessFile(tmpFile, "r")) {
+                    file.seek(diskBoundLocation);
+                    file.read(diskBound);
+                }
                 diskBoundLocation = -1;
             }
             return diskBound;
