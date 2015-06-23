@@ -18,19 +18,23 @@ package org.apache.activemq.transport.vm;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
-import org.junit.Test;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.broker.PublishedAddressPolicy;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -57,6 +61,33 @@ public class VMTransportBrokerNameTest {
 
         c1.close();
         c2.close();
+    }
+
+    @Test
+    public void testPublishableAddressUri() throws Exception {
+
+        PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
+        final AtomicReference<URI> uriAtomicReference = new AtomicReference<>();
+
+        TransportConnector dummyTransportConnector = new TransportConnector() {
+            @Override
+            public URI getConnectUri() throws IOException, URISyntaxException {
+                return uriAtomicReference.get();
+            }
+        };
+        URI ok = new URI("vm://b1");
+        uriAtomicReference.set(ok);
+        assertEquals(uriAtomicReference.get(), publishedAddressPolicy.getPublishableConnectURI(dummyTransportConnector));
+
+        ok = new URI("vm://b1?async=false");
+        uriAtomicReference.set(ok);
+        assertEquals(uriAtomicReference.get(), publishedAddressPolicy.getPublishableConnectURI(dummyTransportConnector));
+
+
+        URI badHost = new URI("vm://b1_11");
+        uriAtomicReference.set(badHost);
+        assertEquals(uriAtomicReference.get(), publishedAddressPolicy.getPublishableConnectURI(dummyTransportConnector));
+
     }
 
     @Test
