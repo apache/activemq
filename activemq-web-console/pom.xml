@@ -131,6 +131,7 @@
             <Import-Package>
               org.xml.sax,
               org.xml.sax.helpers,
+              javax.xml.bind,
               javax.xml.parsers,
               javax.xml.stream,
               javax.xml.transform,
