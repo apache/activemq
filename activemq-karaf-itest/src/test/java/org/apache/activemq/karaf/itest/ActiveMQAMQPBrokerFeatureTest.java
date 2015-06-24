@@ -27,6 +27,10 @@ import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
+import java.util.concurrent.Callable;
+
+import static org.junit.Assert.assertTrue;
+
 @RunWith(PaxExam.class)
 public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
     private static final Integer AMQP_PORT = 61636;
@@ -48,6 +52,15 @@ public class ActiveMQAMQPBrokerFeatureTest extends ActiveMQBrokerFeatureTest {
 
     @Override
     protected Connection getConnection() throws Throwable {
+
+        withinReason(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                assertTrue("qpid jms client bundle installed", verifyBundleInstalled("qpid-jms-client"));
+                return true;
+            }
+        });
+
 
         String amqpURI = "amqp://localhost:" + AMQP_PORT;
         JmsConnectionFactory factory = new JmsConnectionFactory(amqpURI);
