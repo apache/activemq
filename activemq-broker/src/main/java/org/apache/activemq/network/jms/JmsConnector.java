@@ -625,7 +625,7 @@ public abstract class JmsConnector implements Service {
                 LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
             }
         }
-        while (maxRetries < ++attempt && !connectionSerivce.isTerminating());
+        while (maxRetries > ++attempt && !connectionSerivce.isTerminating());
 
         this.failed.set(true);
     }
