@@ -1183,6 +1183,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     void acknowledge(MessageDispatch md, byte ackType) throws JMSException {
         MessageAck ack = new MessageAck(md, ackType, 1);
+        if (ack.isExpiredAck()) {
+            ack.setFirstMessageId(ack.getLastMessageId());
+        }
         session.sendAck(ack);
         synchronized(deliveredMessages){
             deliveredMessages.remove(md);

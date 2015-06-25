@@ -278,21 +278,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         break;
                     }
                 }
-            }else if (ack.isDeliveredAck() || ack.isExpiredAck()) {
+            }else if (ack.isDeliveredAck()) {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
                 int index = 0;
                 for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();
                     Destination nodeDest = (Destination) node.getRegionDestination();
-                    if (node.isExpired()) {
-                        if (broker.isExpired(node)) {
-                            Destination regionDestination = nodeDest;
-                            regionDestination.messageExpired(context, this, node);
-                        }
-                        iter.remove();
-                        nodeDest.getDestinationStatistics().getInflight().decrement();
-                    }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
                         if (usePrefetchExtension && getPrefetchSize() != 0) {
                             // allow  batch to exceed prefetch
@@ -312,6 +304,50 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 if (!callDispatchMatched) {
                     throw new JMSException(
                             "Could not correlate acknowledgment with dispatched message: "
+                                    + ack);
+                }
+            } else if (ack.isExpiredAck()) {
+                // Message was expired
+                int index = 0;
+                boolean inAckRange = false;
+                for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
+                    final MessageReference node = iter.next();
+                    Destination nodeDest = (Destination) node.getRegionDestination();
+                    MessageId messageId = node.getMessageId();
+                    if (ack.getFirstMessageId() == null
+                            || ack.getFirstMessageId().equals(messageId)) {
+                        inAckRange = true;
+                    }
+                    if (inAckRange) {
+                        if (node.isExpired()) {
+                            if (broker.isExpired(node)) {
+                                Destination regionDestination = nodeDest;
+                                regionDestination.messageExpired(context, this, node);
+                            }
+                            iter.remove();
+                            nodeDest.getDestinationStatistics().getInflight().decrement();
+                        }
+                        if (ack.getLastMessageId().equals(messageId)) {
+                            if (usePrefetchExtension && getPrefetchSize() != 0) {
+                                // allow  batch to exceed prefetch
+                                while (true) {
+                                    int currentExtension = prefetchExtension.get();
+                                    int newExtension = Math.max(currentExtension, index + 1);
+                                    if (prefetchExtension.compareAndSet(currentExtension, newExtension)) {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            destination = (Destination) node.getRegionDestination();
+                            callDispatchMatched = true;
+                            break;
+                        }
+                    }
+                }
+                if (!callDispatchMatched) {
+                    throw new JMSException(
+                            "Could not correlate expiration acknowledgment with dispatched message: "
                                     + ack);
                 }
             } else if (ack.isRedeliveredAck()) {
