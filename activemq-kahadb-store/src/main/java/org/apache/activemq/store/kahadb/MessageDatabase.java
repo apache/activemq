@@ -1320,8 +1320,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 }
                 metadata.lastUpdate = location;
             } else {
-                // If the message ID is indexed, then the broker asked us to store a duplicate before the message was dispatched and acked, we ignore this add attempt
-                LOG.warn("Duplicate message add attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
+
+                MessageKeys messageKeys = sd.orderIndex.get(tx, previous);
+                if (messageKeys != null && messageKeys.location.compareTo(location) < 0) {
+                    // If the message ID is indexed, then the broker asked us to store a duplicate before the message was dispatched and acked, we ignore this add attempt
+                    LOG.warn("Duplicate message add attempt rejected. Destination: {}://{}, Message id: {}", command.getDestination().getType(), command.getDestination().getName(), command.getMessageId());
+                }
                 sd.messageIdIndex.put(tx, command.getMessageId(), previous);
                 sd.locationIndex.remove(tx, location);
                 id = -1;
@@ -1365,7 +1369,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                     new MessageKeys(command.getMessageId(), location)
             );
             sd.locationIndex.put(tx, location, id);
-            if(previousKeys != null) {
+            // on first update previous is original location, on recovery/replay it may be the updated location
+            if(previousKeys != null && !previousKeys.location.equals(location)) {
                 sd.locationIndex.remove(tx, previousKeys.location);
             }
             metadata.lastUpdate = location;
