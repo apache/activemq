@@ -60,17 +60,16 @@ public class ConsumerCommand extends AbstractCommand {
             }
             conn.start();
 
-            Session sess;
-            if (transacted) {
-                sess = conn.createSession(true, Session.SESSION_TRANSACTED);
-            } else {
-                sess = conn.createSession(false, ackMode);
-            }
-
 
             CountDownLatch active = new CountDownLatch(parallelThreads);
 
             for (int i = 1; i <= parallelThreads; i++) {
+                Session sess;
+                if (transacted) {
+                   sess = conn.createSession(true, Session.SESSION_TRANSACTED);
+                } else {
+                   sess = conn.createSession(false, ackMode);
+                }
                 ConsumerThread consumer = new ConsumerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
                 consumer.setName("consumer-" + i);
                 consumer.setDurable(durable);

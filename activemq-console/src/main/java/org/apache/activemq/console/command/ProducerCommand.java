@@ -60,16 +60,15 @@ public class ProducerCommand extends AbstractCommand {
             conn = factory.createConnection(user, password);
             conn.start();
 
-            Session sess;
-            if (transactionBatchSize != 0) {
-                sess = conn.createSession(true, Session.SESSION_TRANSACTED);
-            } else {
-                sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            }
-
             CountDownLatch active = new CountDownLatch(parallelThreads);
 
             for (int i = 1; i <= parallelThreads; i++) {
+                Session sess;
+                if (transactionBatchSize != 0) {
+                    sess = conn.createSession(true, Session.SESSION_TRANSACTED);
+                } else {
+                    sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                }
                 ProducerThread producer = new ProducerThread(sess, ActiveMQDestination.createDestination(destination, ActiveMQDestination.QUEUE_TYPE));
                 producer.setName("producer-" + i);
                 producer.setMessageCount(messageCount);
