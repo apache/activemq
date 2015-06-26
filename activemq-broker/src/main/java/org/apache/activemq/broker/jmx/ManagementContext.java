@@ -95,7 +95,7 @@ public class ManagementContext implements Service {
     private boolean allowRemoteAddressInMBeanNames = true;
     private String brokerName;
     private String suppressMBean;
-    private List<Map.Entry<String,String>> suppressMBeanList;
+    private List<ObjectName> suppressMBeanList;
 
     public ManagementContext() {
         this(null);
@@ -106,7 +106,7 @@ public class ManagementContext implements Service {
     }
 
     @Override
-    public void start() throws IOException {
+    public void start() throws Exception {
         // lets force the MBeanServer to be created if needed
         if (started.compareAndSet(false, true)) {
 
@@ -168,27 +168,11 @@ public class ManagementContext implements Service {
         }
     }
 
-    private void populateMBeanSuppressionMap() {
+    private void populateMBeanSuppressionMap() throws Exception {
         if (suppressMBean != null) {
             suppressMBeanList = new LinkedList<>();
             for (String pair : suppressMBean.split(",")) {
-                final String[] keyValue = pair.split("=");
-                suppressMBeanList.add(new Map.Entry<String, String>() {
-                    @Override
-                    public String getKey() {
-                        return keyValue[0];
-                    }
-
-                    @Override
-                    public String getValue() {
-                        return keyValue[1];
-                    }
-
-                    @Override
-                    public String setValue(String value) {
-                        return null;
-                    }
-                });
+                suppressMBeanList.add(new ObjectName(jmxDomainName + ":*," + pair));
             }
         }
     }
@@ -293,7 +277,7 @@ public class ManagementContext implements Service {
      *
      * @return the MBeanServer
      */
-    protected MBeanServer getMBeanServer() {
+    public MBeanServer getMBeanServer() {
         if (this.beanServer == null) {
             this.beanServer = findMBeanServer();
         }
@@ -430,8 +414,8 @@ public class ManagementContext implements Service {
     private boolean isAllowedToRegister(ObjectName name) {
         boolean result = true;
         if (suppressMBean != null && suppressMBeanList != null) {
-            for (Map.Entry<String,String> attr : suppressMBeanList) {
-                if (attr.getValue().equals(name.getKeyProperty(attr.getKey()))) {
+            for (ObjectName attr : suppressMBeanList) {
+                if (attr.apply(name)) {
                     result = false;
                     break;
                 }
