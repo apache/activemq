@@ -97,7 +97,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
 
         if (message.isAdvisory()) {
-            if (consumerInfo != null && consumerInfo.isNetworkSubscription() && advisoryIsInterpretedByNetworkBridge(message)) {
+            if (consumerInfo != null && consumerInfo.isNetworkSubscription() && isAdvisoryInterpretedByNetworkBridge(message)) {
                 // they will be interpreted by the bridge leading to dup commands
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("not propagating advisory to network sub: " + consumerInfo.getConsumerId() + ", message: "+ message);
@@ -124,7 +124,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         return true;
     }
 
-    private boolean advisoryIsInterpretedByNetworkBridge(Message message) {
+    public static boolean isAdvisoryInterpretedByNetworkBridge(Message message) {
         return AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination()) || AdvisorySupport.isTempDestinationAdvisoryTopic(message.getDestination());
     }
 

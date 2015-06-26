@@ -619,8 +619,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         LOG.trace("{} duplex command type: {}", configuration.getBrokerName(), command.getDataStructureType());
                         if (command.isMessage()) {
                             final ActiveMQMessage message = (ActiveMQMessage) command;
-                            if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())
-                                    || AdvisorySupport.isDestinationAdvisoryTopic(message.getDestination())) {
+                            if (NetworkBridgeFilter.isAdvisoryInterpretedByNetworkBridge(message)) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                                 ackAdvisory(message);
                             } else {
@@ -989,7 +988,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                                 configuration.getBrokerName(), remoteBrokerName, (LOG.isTraceEnabled() ? message : message.getMessageId()), md.getConsumerId(), message.getDestination(), Arrays.toString(message.getBrokerPath()), message
                         });
 
-                        if (isDuplex() && AdvisorySupport.ADIVSORY_MESSAGE_TYPE.equals(message.getType())) {
+                        if (isDuplex() && NetworkBridgeFilter.isAdvisoryInterpretedByNetworkBridge(message)) {
                             try {
                                 // never request b/c they are eventually acked async
                                 remoteBroker.oneway(message);
