@@ -18,7 +18,6 @@ package org.apache.activemq.transport.ws.jetty8;
 
 import java.io.IOException;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -31,22 +30,45 @@ import org.slf4j.LoggerFactory;
 public class MQTTSocket extends AbstractMQTTSocket implements WebSocket.OnBinaryMessage {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
-    Connection outbound;
+
+    private Connection outbound;
 
     public MQTTSocket(String remoteAddress) {
         super(remoteAddress);
     }
 
     @Override
+    public void sendToMQTT(MQTTFrame command) throws IOException {
+        ByteSequence bytes = wireFormat.marshal(command);
+        outbound.sendMessage(bytes.getData(), 0, bytes.getLength());
+    }
+
+    @Override
+    public void handleStopped() throws IOException {
+        if (outbound != null && outbound.isOpen()) {
+            outbound.close();
+        }
+    }
+
+    //----- WebSocket.OnTextMessage callback handlers ------------------------//
+
+    @Override
+    public void onOpen(Connection connection) {
+        this.outbound = connection;
+    }
+
+    @Override
     public void onMessage(byte[] bytes, int offset, int length) {
         if (!transportStartedAtLeastOnce()) {
-            LOG.debug("Waiting for StompSocket to be properly started...");
+            LOG.debug("Waiting for MQTTSocket to be properly started...");
             try {
                 socketTransportStarted.await();
             } catch (InterruptedException e) {
-                LOG.warn("While waiting for StompSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
+                LOG.warn("While waiting for MQTTSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
             }
         }
+
+        receiveCounter += length;
 
         try {
             MQTTFrame frame = (MQTTFrame)wireFormat.unmarshal(new ByteSequence(bytes, offset, length));
@@ -54,12 +76,6 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocket.OnBinary
         } catch (Exception e) {
             onException(IOExceptionSupport.create(e));
         }
-    }
-
-
-    @Override
-    public void onOpen(Connection connection) {
-        this.outbound = connection;
     }
 
     @Override
@@ -70,25 +86,4 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocket.OnBinary
             LOG.warn("Failed to close WebSocket", e);
         }
     }
-
-    @Override
-    public void oneway(Object command) throws IOException {
-        try {
-            getProtocolConverter().onActiveMQCommand((Command) command);
-        } catch (Exception e) {
-            onException(IOExceptionSupport.create(e));
-        }
-    }
-
-    @Override
-    public void sendToActiveMQ(Command command) {
-        doConsume(command);
-    }
-
-    @Override
-    public void sendToMQTT(MQTTFrame command) throws IOException {
-        ByteSequence bytes = wireFormat.marshal(command);
-        outbound.sendMessage(bytes.getData(), 0, bytes.getLength());
-    }
-
 }

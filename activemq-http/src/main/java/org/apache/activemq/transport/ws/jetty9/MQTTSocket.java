@@ -19,7 +19,6 @@ package org.apache.activemq.transport.ws.jetty9;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -33,24 +32,11 @@ import org.slf4j.LoggerFactory;
 public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
-    Session session;
+
+    private Session session;
 
     public MQTTSocket(String remoteAddress) {
         super(remoteAddress);
-    }
-
-    @Override
-    public void oneway(Object command) throws IOException {
-        try {
-            getProtocolConverter().onActiveMQCommand((Command) command);
-        } catch (Exception e) {
-            onException(IOExceptionSupport.create(e));
-        }
-    }
-
-    @Override
-    public void sendToActiveMQ(Command command) {
-        doConsume(command);
     }
 
     @Override
@@ -60,13 +46,22 @@ public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener 
     }
 
     @Override
+    public void handleStopped() throws IOException {
+        if (session != null && session.isOpen()) {
+            session.close();
+        }
+    }
+
+    //----- WebSocket.OnTextMessage callback handlers ------------------------//
+
+    @Override
     public void onWebSocketBinary(byte[] bytes, int offset, int length) {
         if (!transportStartedAtLeastOnce()) {
-            LOG.debug("Waiting for StompSocket to be properly started...");
+            LOG.debug("Waiting for MQTTSocket to be properly started...");
             try {
                 socketTransportStarted.await();
             } catch (InterruptedException e) {
-                LOG.warn("While waiting for StompSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
+                LOG.warn("While waiting for MQTTSocket to be properly started, we got interrupted!! Should be okay, but you could see race conditions...");
             }
         }
 

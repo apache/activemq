@@ -221,7 +221,7 @@ public class MQTTInactivityMonitor extends TransportFilter {
         return protocolConverter;
     }
 
-    synchronized void startConnectChecker(long connectionTimeout) {
+    public synchronized void startConnectChecker(long connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
         if (connectionTimeout > 0 && connectCheckerTask == null) {
             connectCheckerTask = new SchedulerTimerTask(connectChecker);

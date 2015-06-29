@@ -41,6 +41,7 @@ public class MQTTWireFormat implements WireFormat {
     private int version = 1;
 
     private int maxFrameSize = MAX_MESSAGE_LENGTH;
+    private long connectAttemptTimeout = MQTTWireFormat.DEFAULT_CONNECTION_TIMEOUT;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -143,5 +144,23 @@ public class MQTTWireFormat implements WireFormat {
      */
     public void setMaxFrameSize(int maxFrameSize) {
         this.maxFrameSize = Math.min(MAX_MESSAGE_LENGTH, maxFrameSize);
+    }
+
+    /**
+     * @return the timeout value used to fail a connection if no CONNECT frame read.
+     */
+    public long getConnectAttemptTimeout() {
+        return connectAttemptTimeout;
+    }
+
+    /**
+     * Sets the timeout value used to fail a connection if no CONNECT frame is read
+     * in the given interval.
+     *
+     * @param connectTimeout
+     *        the connection frame received timeout value.
+     */
+    public void setConnectAttemptTimeout(long connectTimeout) {
+        this.connectAttemptTimeout = connectTimeout;
     }
 }

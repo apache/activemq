@@ -54,6 +54,7 @@ public class WSServlet extends WebSocketServlet {
     @Override
     public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
         WebSocket socket;
+
         if (protocol != null && protocol.startsWith("mqtt")) {
             socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(request));
         } else {

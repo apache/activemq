@@ -70,7 +70,14 @@ public class WSTransportTestSupport {
     }
 
     protected String getWSConnectorURI() {
-        return "ws://127.0.0.1:" + getProxyPort() + "?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+        return "ws://127.0.0.1:" + getProxyPort() +
+            "?allowLinkStealing=" + isAllowLinkStealing() +
+            "&websocket.maxTextMessageSize=99999&" +
+            "transport.maxIdleTime=1001";
+    }
+
+    protected boolean isAllowLinkStealing() {
+        return false;
     }
 
     protected void addAdditionalConnectors(BrokerService service) throws Exception {
