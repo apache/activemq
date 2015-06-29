@@ -20,8 +20,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import junit.framework.TestCase;
@@ -31,6 +31,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.bugs.embedded.ThreadExplorer;
 import org.apache.activemq.network.NetworkConnector;
 
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +43,12 @@ public class VmTransportNetworkBrokerTest extends TestCase {
     private static final String VM_BROKER_URI = 
         "vm://localhost?create=false";
     
-    CountDownLatch started = new CountDownLatch(1);
-    CountDownLatch gotConnection = new CountDownLatch(1);
-
     public void testNoThreadLeak() throws Exception {
 
         // with VMConnection and simple discovery network connector
-        int originalThreadCount = Thread.activeCount();
+        Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
+        final int originalThreadCount = threads.length;
+
         LOG.debug(ThreadExplorer.show("threads at beginning"));
         
         BrokerService broker = new BrokerService();
@@ -67,11 +67,11 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         TimeUnit.SECONDS.sleep(5);
         
         int threadCountAfterStart = Thread.activeCount();
-        TimeUnit.SECONDS.sleep(30);
+        TimeUnit.SECONDS.sleep(20);
         int threadCountAfterSleep = Thread.activeCount();
         
         assertTrue("Threads are leaking: " + ThreadExplorer.show("active sleep") + ", threadCount=" +threadCountAfterStart + " threadCountAfterSleep=" + threadCountAfterSleep,
-                threadCountAfterSleep < threadCountAfterStart + 8);
+                threadCountAfterSleep < 2 * threadCountAfterStart);
 
         connection.close();
         broker.stop();
@@ -92,15 +92,18 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         broker.stop();
         broker.waitUntilStopped();
 
-        // let it settle
-        TimeUnit.SECONDS.sleep(5);        
+        final AtomicInteger threadCountAfterStop = new AtomicInteger();
+        boolean ok = Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info(ThreadExplorer.show("active after stop"));
+                // get final threads but filter out any daemon threads that the JVM may have created.
+                Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
+                threadCountAfterStop.set(threads.length);
+                return threadCountAfterStop.get() <= originalThreadCount;
+            }
+        });
 
-        // get final threads but filter out any daemon threads that the JVM may have created.
-        Thread[] threads = filterDaemonThreads(ThreadExplorer.listThreads());
-        int threadCountAfterStop = threads.length;
-
-        // lets see the thread counts at INFO level so they are always in the test log
-        LOG.info(ThreadExplorer.show("active after stop"));
         LOG.info("originalThreadCount=" + originalThreadCount + " threadCountAfterStop=" + threadCountAfterStop);
 
         assertTrue("Threads are leaking: " + 
@@ -108,8 +111,8 @@ public class VmTransportNetworkBrokerTest extends TestCase {
         		". originalThreadCount=" + 
         		originalThreadCount + 
         		" threadCountAfterStop=" + 
-        		threadCountAfterStop,
-            threadCountAfterStop <= originalThreadCount);
+        		threadCountAfterStop.get(),
+            ok);
     }
     
     
@@ -142,7 +145,7 @@ public class VmTransportNetworkBrokerTest extends TestCase {
     		
     		Thread thread = threadList.get(i);
     		LOG.debug("Inspecting thread " + thread.getName());
-    		if (thread.isDaemon()) {
+    		if (thread.isDaemon() && !thread.getName().contains("ActiveMQ")) {
     			LOG.debug("Removing deamon thread.");
     			threadList.remove(thread);
     			Thread.sleep(100);

@@ -700,43 +700,38 @@ public class MQTTProtocolConverter {
 
     ResponseHandler createResponseHandler(final PUBLISH command) {
         if (command != null) {
-            switch (command.qos()) {
-                case AT_LEAST_ONCE:
-                    return new ResponseHandler() {
-                        @Override
-                        public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
-                            if (response.isException()) {
-                                LOG.warn("Failed to send MQTT Publish: ", command, ((ExceptionResponse) response).getException());
-                            } else {
-                                PUBACK ack = new PUBACK();
-                                ack.messageId(command.messageId());
-                                LOG.trace("MQTT Snd PUBACK message:{} client:{} connection:{}",
-                                          command.messageId(), clientId, connectionInfo.getConnectionId());
-                                converter.getMQTTTransport().sendToMQTT(ack.encode());
+            return new ResponseHandler() {
+                @Override
+                public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
+                    if (response.isException()) {
+                        Throwable error = ((ExceptionResponse) response).getException();
+                        LOG.warn("Failed to send MQTT Publish: ", command, error.getMessage());
+                        LOG.trace("Error trace: {}", error);
+                    }
+
+                    switch (command.qos()) {
+                        case AT_LEAST_ONCE:
+                            PUBACK ack = new PUBACK();
+                            ack.messageId(command.messageId());
+                            LOG.trace("MQTT Snd PUBACK message:{} client:{} connection:{}",
+                                      command.messageId(), clientId, connectionInfo.getConnectionId());
+                            converter.getMQTTTransport().sendToMQTT(ack.encode());
+                            break;
+                        case EXACTLY_ONCE:
+                            PUBREC req = new PUBREC();
+                            req.messageId(command.messageId());
+                            synchronized (publisherRecs) {
+                                publisherRecs.put(command.messageId(), req);
                             }
-                        }
-                    };
-                case EXACTLY_ONCE:
-                    return new ResponseHandler() {
-                        @Override
-                        public void onResponse(MQTTProtocolConverter converter, Response response) throws IOException {
-                            if (response.isException()) {
-                                LOG.warn("Failed to send MQTT Publish: ", command, ((ExceptionResponse) response).getException());
-                            } else {
-                                PUBREC ack = new PUBREC();
-                                ack.messageId(command.messageId());
-                                synchronized (publisherRecs) {
-                                    publisherRecs.put(command.messageId(), ack);
-                                }
-                                LOG.trace("MQTT Snd PUBACK message:{} client:{} connection:{}",
-                                          command.messageId(), clientId, connectionInfo.getConnectionId());
-                                converter.getMQTTTransport().sendToMQTT(ack.encode());
-                            }
-                        }
-                    };
-                case AT_MOST_ONCE:
-                    break;
-            }
+                            LOG.trace("MQTT Snd PUBREC message:{} client:{} connection:{}",
+                                      command.messageId(), clientId, connectionInfo.getConnectionId());
+                            converter.getMQTTTransport().sendToMQTT(req.encode());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
         }
         return null;
     }

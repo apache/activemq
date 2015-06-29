@@ -47,6 +47,8 @@ import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -324,6 +326,11 @@ public class HttpClientTransport extends HttpTransportSupport {
         if (getProxyHost() != null) {
             HttpHost proxy = new HttpHost(getProxyHost(), getProxyPort());
             client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+
+            if (client.getConnectionManager().getSchemeRegistry().get("http") == null) {
+                client.getConnectionManager().getSchemeRegistry().register(
+                    new Scheme("http", getProxyPort(), PlainSocketFactory.getSocketFactory()));
+            }
 
             if(getProxyUser() != null && getProxyPassword() != null) {
                 client.getCredentialsProvider().setCredentials(

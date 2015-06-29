@@ -18,11 +18,14 @@ package org.apache.activemq.bugs;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
+
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
 import junit.framework.Test;
+
 import org.apache.activemq.broker.BrokerRestartTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.StubConnection;
@@ -46,8 +49,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AMQ5567Test extends BrokerRestartTestSupport {
+
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ5567Test.class);
-    ActiveMQQueue destination = new ActiveMQQueue("Q");
+
+    private final ActiveMQQueue destination = new ActiveMQQueue("Q");
+    private final String DATA_FOLDER = "./target/AMQ5567Test-data";
 
     @Override
     protected void configureBroker(BrokerService broker) throws Exception {
@@ -55,10 +61,17 @@ public class AMQ5567Test extends BrokerRestartTestSupport {
         broker.setPersistenceAdapter(persistenceAdapter);
     }
 
+    @Override
     protected PolicyEntry getDefaultPolicy() {
         PolicyEntry policy = new PolicyEntry();
         policy.setMemoryLimit(60*1024);
         return policy;
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        IOHelper.delete(new File(DATA_FOLDER));
     }
 
     public void initCombosForTestPreparedTransactionNotDispatched() throws Exception {
@@ -68,7 +81,7 @@ public class AMQ5567Test extends BrokerRestartTestSupport {
                 new JDBCPersistenceAdapter()
         };
         for (PersistenceAdapter adapter : persistenceAdapters) {
-            adapter.setDirectory(new File(IOHelper.getDefaultDataDirectory()));
+            adapter.setDirectory(new File(DATA_FOLDER));
         }
         addCombinationValues("persistenceAdapter", persistenceAdapters);
     }

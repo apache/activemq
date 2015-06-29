@@ -32,19 +32,6 @@ public final class NetworkBridgeFactory {
 
     private NetworkBridgeFactory() {
     }
-    
-    /**
-     * Create a network bridge
-     * 
-     * @param config
-     * @param localTransport
-     * @param remoteTransport
-     * @return the NetworkBridge
-     */
-    public static DemandForwardingBridge createBridge(NetworkBridgeConfiguration config,
-                                                      Transport localTransport, Transport remoteTransport) {
-        return createBridge(config, localTransport, remoteTransport, null);
-    }
 
     /**
      * create a network bridge
@@ -74,7 +61,6 @@ public final class NetworkBridgeFactory {
     public static Transport createLocalTransport(Broker broker) throws Exception {
         URI uri = broker.getVmConnectorURI();
         HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParameters(uri));
-        map.put("network", "true");
         map.put("async", "true");
         map.put("create", "false"); // we don't want a vm connect during shutdown to trigger a broker create
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));

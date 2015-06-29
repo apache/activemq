@@ -20,13 +20,19 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.ANONYMOUS_RELAY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONTAINER_ID;
 import static org.apache.activemq.transport.amqp.AmqpSupport.INVALID_FIELD;
+import static org.apache.activemq.transport.amqp.AmqpSupport.PLATFORM;
+import static org.apache.activemq.transport.amqp.AmqpSupport.PRODUCT;
 import static org.apache.activemq.transport.amqp.AmqpSupport.QUEUE_PREFIX;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_QUEUE_CAPABILITY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TEMP_TOPIC_CAPABILITY;
 import static org.apache.activemq.transport.amqp.AmqpSupport.TOPIC_PREFIX;
+import static org.apache.activemq.transport.amqp.AmqpSupport.VERSION;
 import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,11 +60,13 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.transport.InactivityIOException;
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpInactivityMonitor;
@@ -102,6 +110,25 @@ public class AmqpConnection implements AmqpProtocolConverter {
     private static final Logger TRACE_FRAMES = AmqpTransportFilter.TRACE_FRAMES;
     private static final Logger LOG = LoggerFactory.getLogger(AmqpConnection.class);
     private static final int CHANNEL_MAX = 32767;
+    private static final String BROKER_VERSION;
+    private static final String BROKER_PLATFORM;
+
+    static {
+        String javaVersion = System.getProperty("java.version");
+
+        BROKER_PLATFORM = "Java/" + (javaVersion == null ? "unknown" : javaVersion);
+
+        InputStream in = null;
+        String version = "5.12.0";
+        if ((in = AmqpConnection.class.getResourceAsStream("/org/apache/activemq/version.txt")) != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            try {
+                version = reader.readLine();
+            } catch(Exception e) {
+            }
+        }
+        BROKER_VERSION = version;
+    }
 
     private final Transport protonTransport = Proton.transport();
     private final Connection protonConnection = Proton.connection();
@@ -117,10 +144,12 @@ public class AmqpConnection implements AmqpProtocolConverter {
     private final ConnectionInfo connectionInfo = new ConnectionInfo();
     private long nextSessionId;
     private long nextTempDestinationId;
+    private long nextTransactionId;
     private boolean closing;
     private boolean closedSocket;
     private AmqpAuthenticator authenticator;
 
+    private final Map<TransactionId, AmqpTransactionCoordinator> transactions = new HashMap<TransactionId, AmqpTransactionCoordinator>();
     private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
     private final ConcurrentMap<ConsumerId, AmqpSender> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, AmqpSender>();
 
@@ -170,6 +199,9 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
         properties.put(QUEUE_PREFIX, "queue://");
         properties.put(TOPIC_PREFIX, "topic://");
+        properties.put(PRODUCT, "ActiveMQ");
+        properties.put(VERSION, BROKER_VERSION);
+        properties.put(PLATFORM, BROKER_PLATFORM);
 
         return properties;
     }
@@ -637,6 +669,22 @@ public class AmqpConnection implements AmqpProtocolConverter {
 
     void unregisterSender(ConsumerId consumerId) {
         subscriptionsByConsumerId.remove(consumerId);
+    }
+
+    void registerTransaction(TransactionId txId, AmqpTransactionCoordinator coordinator) {
+        transactions.put(txId, coordinator);
+    }
+
+    void unregisterTransaction(TransactionId txId) {
+        transactions.remove(txId);
+    }
+
+    AmqpTransactionCoordinator getTxCoordinator(TransactionId txId) {
+        return transactions.get(txId);
+    }
+
+    LocalTransactionId getNextTransactionId() {
+        return new LocalTransactionId(getConnectionId(), ++nextTransactionId);
     }
 
     ConsumerInfo lookupSubscription(String subscriptionName) throws AmqpProtocolException {

@@ -19,6 +19,7 @@ package org.apache.activemq.transport.amqp.interop;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.TimeUnit;
@@ -86,22 +87,28 @@ public class AmqpSendReceiveTest extends AmqpClientTestSupport {
         AmqpConnection connection = client.connect();
         AmqpSession session = connection.createSession();
 
-        AmqpMessage message = new AmqpMessage();
+        AmqpMessage message1 = new AmqpMessage();
+        message1.setGroupId("abcdefg");
+        message1.setApplicationProperty("sn", 100);
 
-        message.setGroupId("abcdefg");
-        message.setApplicationProperty("sn", 100);
+        AmqpMessage message2 = new AmqpMessage();
+        message2.setGroupId("hijklm");
+        message2.setApplicationProperty("sn", 200);
 
         AmqpSender sender = session.createSender("queue://" + getTestName());
-        sender.send(message);
+        sender.send(message1);
+        sender.send(message2);
         sender.close();
 
         AmqpReceiver receiver = session.createReceiver("queue://" + getTestName(), "sn = 100");
-        receiver.flow(1);
+        receiver.flow(2);
         AmqpMessage received = receiver.receive(5, TimeUnit.SECONDS);
         assertNotNull(received);
         assertEquals(100, received.getApplicationProperty("sn"));
         assertEquals("abcdefg", received.getGroupId());
         received.accept();
+
+        assertNull(receiver.receive(1, TimeUnit.SECONDS));
 
         receiver.close();
     }

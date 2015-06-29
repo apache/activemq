@@ -40,11 +40,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
+
 import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.state.Tracked;
 import org.apache.activemq.thread.Task;
@@ -199,6 +201,13 @@ public class FailoverTransport implements CompositeTransport {
 
                 if (command.isConnectionControl()) {
                     handleConnectionControl((ConnectionControl) command);
+                }
+                else if (command.isConsumerControl()) {
+                    ConsumerControl consumerControl = (ConsumerControl)command;
+                    if (consumerControl.isClose()) {
+                        stateTracker.processRemoveConsumer(consumerControl.getConsumerId(), RemoveInfo.LAST_DELIVERED_UNKNOWN);
+                    }
+
                 }
                 if (transportListener != null) {
                     transportListener.onCommand(command);

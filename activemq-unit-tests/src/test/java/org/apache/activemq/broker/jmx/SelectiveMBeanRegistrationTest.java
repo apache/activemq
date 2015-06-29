@@ -61,7 +61,7 @@ public class SelectiveMBeanRegistrationTest  {
 
         ManagementContext managementContext = new ManagementContext();
         managementContext.setCreateConnector(false);
-        managementContext.setSuppressMBean("endpoint=dynamicProducer,endpoint=Consumer");
+        managementContext.setSuppressMBean("endpoint=dynamicProducer,endpoint=Consumer,destinationName=ActiveMQ.Advisory.*");
         brokerService.setManagementContext(managementContext);
 
         brokerService.start();
@@ -111,6 +111,9 @@ public class SelectiveMBeanRegistrationTest  {
         Set<ObjectInstance> mbeans = mbeanServer.queryMBeans(query, null);
         assertEquals(0, mbeans.size());
 
+        query = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationName=ActiveMQ.Advisory.*,*");
+        mbeans = mbeanServer.queryMBeans(query, null);
+        assertEquals(0, mbeans.size());
     }
 
 

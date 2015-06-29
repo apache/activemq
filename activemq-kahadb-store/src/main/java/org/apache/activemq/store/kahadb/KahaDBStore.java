@@ -375,7 +375,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 result.aquireLocks();
                 addQueueTask(this, result);
                 if (indexListener != null) {
-                    // allow concurrent dispatch by setting entry locator,
                     indexListener.onAdd(new IndexListener.MessageContext(context, message, null));
                 }
                 return future;

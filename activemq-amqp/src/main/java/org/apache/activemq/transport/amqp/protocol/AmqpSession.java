@@ -41,6 +41,7 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.AmqpProtocolException;
@@ -72,6 +73,7 @@ public class AmqpSession implements AmqpResource {
     private final Session protonSession;
     private final SessionId sessionId;
 
+    private boolean enlisted;
     private long nextProducerId = 0;
     private long nextConsumerId = 0;
 
@@ -122,6 +124,8 @@ public class AmqpSession implements AmqpResource {
         for (AmqpSender consumer : consumers.values()) {
             consumer.commit();
         }
+
+        enlisted = false;
     }
 
     /**
@@ -133,6 +137,8 @@ public class AmqpSession implements AmqpResource {
         for (AmqpSender consumer : consumers.values()) {
             consumer.rollback();
         }
+
+        enlisted = false;
     }
 
     /**
@@ -365,6 +371,13 @@ public class AmqpSession implements AmqpResource {
     public void unregisterSender(ConsumerId consumerId) {
         consumers.remove(consumerId);
         connection.unregisterSender(consumerId);
+    }
+
+    public void enlist(TransactionId txId) {
+        if (!enlisted) {
+            connection.getTxCoordinator(txId).enlist(this);
+            enlisted = true;
+        }
     }
 
     //----- Configuration accessors ------------------------------------------//

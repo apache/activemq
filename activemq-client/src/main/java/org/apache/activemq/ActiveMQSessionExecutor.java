@@ -207,4 +207,15 @@ public class ActiveMQSessionExecutor implements Task {
     List<MessageDispatch> getUnconsumedMessages() {
         return messageQueue.removeAll();
     }
+    
+    void waitForQueueRestart() throws InterruptedException {
+        synchronized (messageQueue.getMutex()) {
+            while (messageQueue.isRunning() == false) {
+                if (messageQueue.isClosed()) {
+                    break;
+                }
+                messageQueue.getMutex().wait();
+            }
+        }
+    }
 }

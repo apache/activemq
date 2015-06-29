@@ -49,7 +49,6 @@ public class VMTransport implements Transport, Task {
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean marshal;
-    protected boolean network;
     protected boolean async = true;
     protected int asyncQueueDepth = 2000;
     protected final URI location;
@@ -356,14 +355,6 @@ public class VMTransport implements Transport, Task {
 
     public void setMarshal(boolean marshal) {
         this.marshal = marshal;
-    }
-
-    public boolean isNetwork() {
-        return network;
-    }
-
-    public void setNetwork(boolean network) {
-        this.network = network;
     }
 
     @Override

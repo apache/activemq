@@ -39,6 +39,7 @@ import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.util.InsertionCountList;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -209,6 +210,17 @@ public class Topic extends BaseDestination implements Task {
         }
     }
 
+    private boolean hasDurableSubChanged(SubscriptionInfo info1, ConsumerInfo info2) {
+        if (info1.getSelector() != null ^ info2.getSelector() != null) {
+            return true;
+        }
+        if (info1.getSelector() != null && !info1.getSelector().equals(info2.getSelector())) {
+            return true;
+        }
+
+        return false;
+    }
+
     public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Exception {
         // synchronize with dispatch method so that no new messages are sent
         // while we are recovering a subscription to avoid out of order messages.
@@ -222,12 +234,10 @@ public class Topic extends BaseDestination implements Task {
             // Recover the durable subscription.
             String clientId = subscription.getSubscriptionKey().getClientId();
             String subscriptionName = subscription.getSubscriptionKey().getSubscriptionName();
-            String selector = subscription.getConsumerInfo().getSelector();
             SubscriptionInfo info = topicStore.lookupSubscription(clientId, subscriptionName);
             if (info != null) {
                 // Check to see if selector changed.
-                String s1 = info.getSelector();
-                if (s1 == null ^ selector == null || (s1 != null && !s1.equals(selector))) {
+                if (hasDurableSubChanged(info, subscription.getConsumerInfo())) {
                     // Need to delete the subscription
                     topicStore.deleteSubscription(clientId, subscriptionName);
                     info = null;
@@ -247,9 +257,10 @@ public class Topic extends BaseDestination implements Task {
             if (info == null) {
                 info = new SubscriptionInfo();
                 info.setClientId(clientId);
-                info.setSelector(selector);
+                info.setSelector(subscription.getConsumerInfo().getSelector());
                 info.setSubscriptionName(subscriptionName);
                 info.setDestination(getActiveMQDestination());
+                info.setNoLocal(subscription.getConsumerInfo().isNoLocal());
                 // This destination is an actual destination id.
                 info.setSubscribedDestination(subscription.getConsumerInfo().getDestination());
                 // This destination might be a pattern
@@ -813,17 +824,6 @@ public class Topic extends BaseDestination implements Task {
                         destination,
                         durableTopicSubscription.pending }, exception);
             }
-        }
-    }
-
-    private void rollback(MessageId poisoned) {
-        dispatchLock.readLock().lock();
-        try {
-            for (DurableTopicSubscription durableTopicSubscription : durableSubscribers.values()) {
-                durableTopicSubscription.getPending().rollback(poisoned);
-            }
-        } finally {
-            dispatchLock.readLock().unlock();
         }
     }
 

@@ -196,6 +196,45 @@ public class MQTTAuthTest extends MQTTAuthTestSupport {
         assertNull(msg);
     }
 
+    @Test(timeout = 30 * 1000)
+    public void testPublishWhenNotAuthorizedDoesNotStall() throws Exception {
+
+        getProxyToBroker().addTopic("USERS.foo");
+
+        MQTT mqtt = null;
+        BlockingConnection connection = null;
+
+        // Test 3.1 functionality
+        mqtt = createMQTTConnection("pub", true);
+        mqtt.setUserName("guest");
+        mqtt.setPassword("password");
+        mqtt.setVersion("3.1");
+
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.publish("USERS.foo", "test-AT_MOST_ONCE".getBytes(), QoS.AT_MOST_ONCE, true);
+        connection.publish("USERS.foo", "test-AT_LEAST_ONCE".getBytes(), QoS.AT_LEAST_ONCE, true);
+        connection.publish("USERS.foo", "test-EXACTLY_ONCE".getBytes(), QoS.EXACTLY_ONCE, true);
+        connection.disconnect();
+
+        assertEquals(0, getProxyToTopic("USERS.foo").getEnqueueCount());
+
+        // Test 3.1.1 functionality
+        mqtt = createMQTTConnection("pub", true);
+        mqtt.setUserName("guest");
+        mqtt.setPassword("password");
+        mqtt.setVersion("3.1.1");
+
+        connection = mqtt.blockingConnection();
+        connection.connect();
+        connection.publish("USERS.foo", "test-AT_MOST_ONCE".getBytes(), QoS.AT_MOST_ONCE, true);
+        connection.publish("USERS.foo", "test-AT_LEAST_ONCE".getBytes(), QoS.AT_LEAST_ONCE, true);
+        connection.publish("USERS.foo", "test-EXACTLY_ONCE".getBytes(), QoS.EXACTLY_ONCE, true);
+        connection.disconnect();
+
+        assertEquals(0, getProxyToTopic("USERS.foo").getEnqueueCount());
+    }
+
     @Test(timeout = 60 * 1000)
     public void testWildcardRetainedSubscription() throws Exception {
         MQTT mqttPub = createMQTTConnection("pub", true);

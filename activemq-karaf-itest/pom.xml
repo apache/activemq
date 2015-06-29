@@ -236,9 +236,6 @@
                   on this information to PAX mvn url
               -->
               <argLine>-Dorg.ops4j.pax.url.mvn.localRepository=${maven.repo.local}</argLine>
-              <excludes>
-                <exclude>**/*Test.*</exclude>
-              </excludes>
               <systemPropertyVariables>
                 <activemqVersion>${project.version}</activemqVersion>
                 <karafVersion>${karaf-version}</karafVersion>

@@ -131,6 +131,7 @@
             <Import-Package>
               org.xml.sax,
               org.xml.sax.helpers,
+              javax.xml.bind,
               javax.xml.parsers,
               javax.xml.stream,
               javax.xml.transform,
@@ -142,7 +143,6 @@
               org.w3c.dom,
               javax.servlet;version="[2.5,4)",
               javax.servlet.http;version="[2.5,4)",
-              javax.servlet.resources;version="[2.5,4)",
               javax.servlet.jsp,
               javax.servlet.jsp.tagext,
               javax.servlet.jsp.el,

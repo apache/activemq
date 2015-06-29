@@ -56,14 +56,14 @@
       <activation>
         <property>
           <name>java.vendor</name>
-          <value>Sun Microsystems Inc.</value>
+          <value>Oracle Corporation</value>
         </property>
       </activation>
       <dependencies>
         <dependency>
           <groupId>com.sun</groupId>
           <artifactId>tools</artifactId>
-          <version>1.4.2</version>
+          <version>1.5</version>
           <scope>system</scope>
           <systemPath>${java.home}/../lib/tools.jar</systemPath>
         </dependency>

@@ -252,37 +252,37 @@
       </plugin>
     </plugins>
     <pluginManagement>
-    	<plugins>
-    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-    		<plugin>
-    			<groupId>org.eclipse.m2e</groupId>
-    			<artifactId>lifecycle-mapping</artifactId>
-    			<version>1.0.0</version>
-    			<configuration>
-    				<lifecycleMappingMetadata>
-    					<pluginExecutions>
-    						<pluginExecution>
-    							<pluginExecutionFilter>
-    								<groupId>org.codehaus.mojo</groupId>
-    								<artifactId>
-    									javacc-maven-plugin
-    								</artifactId>
-    								<versionRange>[2.6,)</versionRange>
-    								<goals>
-    									<goal>javacc</goal>
-    								</goals>
-    							</pluginExecutionFilter>
-    							<action>
+        <plugins>
+            <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+            <plugin>
+                <groupId>org.eclipse.m2e</groupId>
+                <artifactId>lifecycle-mapping</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <lifecycleMappingMetadata>
+                        <pluginExecutions>
+                            <pluginExecution>
+                                <pluginExecutionFilter>
+                                    <groupId>org.codehaus.mojo</groupId>
+                                    <artifactId>
+                                        javacc-maven-plugin
+                                    </artifactId>
+                                    <versionRange>[2.6,)</versionRange>
+                                    <goals>
+                                        <goal>javacc</goal>
+                                    </goals>
+                                </pluginExecutionFilter>
+                                <action>
                                     <execute>
                                       <runOnIncremental>true</runOnIncremental>
                                     </execute>
-    							</action>
-    						</pluginExecution>
-    					</pluginExecutions>
-    				</lifecycleMappingMetadata>
-    			</configuration>
-    		</plugin>
-    	</plugins>
+                                </action>
+                            </pluginExecution>
+                        </pluginExecutions>
+                    </lifecycleMappingMetadata>
+                </configuration>
+            </plugin>
+        </plugins>
     </pluginManagement>
   </build>
 
@@ -308,7 +308,7 @@
               <tasks>
                 <echo>Running OpenWire Generator</echo>
                 <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath" />
-                <generate version="10" basedir="${basedir}" generateTests="false" />
+                <generate version="11" basedir="${basedir}" generateTests="false" />
               </tasks>
             </configuration>
             <dependencies>

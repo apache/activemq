@@ -19,6 +19,10 @@ package org.apache.activemq.advisory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -44,10 +48,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Test for advisory messages sent under the right circumstances.
  */
+@RunWith(Parameterized.class)
 public class AdvisoryTests {
 
     protected static final int MESSAGE_COUNT = 2000;
@@ -55,8 +63,24 @@ public class AdvisoryTests {
     protected Connection connection;
     protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
     protected int topicCount;
-
+    protected final boolean includeBodyForAdvisory;
     protected final int EXPIRE_MESSAGE_PERIOD = 10000;
+
+
+    @Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                // Include the full body of the message
+                {true},
+                // Don't include the full body of the message
+                {false}
+        });
+    }
+
+    public AdvisoryTests(boolean includeBodyForAdvisory) {
+        super();
+        this.includeBodyForAdvisory = includeBodyForAdvisory;
+    }
 
     @Test(timeout = 60000)
     public void testNoSlowConsumerAdvisory() throws Exception {
@@ -122,6 +146,16 @@ public class AdvisoryTests {
 
         Message msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should always be tcp:// because that is the transport that is used to connect even though
+        //the nio transport is the first one in the list
+        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+
+        //Add assertion to make sure body is included for advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
     }
 
     @Test(timeout = 60000)
@@ -149,6 +183,14 @@ public class AdvisoryTests {
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
         String originalId = payload.getJMSMessageID();
         assertEquals(originalId, id);
+
+        //This should always be tcp:// because that is the transport that is used to connect even though
+        //the nio transport is the first one in the list
+        assertTrue(((String)message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL)).startsWith("tcp://"));
+
+        //Add assertion to make sure body is included for advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
     }
 
     @Test(timeout = 60000)
@@ -171,6 +213,15 @@ public class AdvisoryTests {
 
         Message msg = advisoryConsumer.receive(EXPIRE_MESSAGE_PERIOD);
         assertNotNull(msg);
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should be set
+        assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
+
+        //Add assertion to make sure body is included for advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
     }
 
     @Test(timeout = 60000)
@@ -185,13 +236,25 @@ public class AdvisoryTests {
         for (int i = 0; i < 100; i++) {
             s.createConsumer(advisoryTopic);
         }
+        MessageConsumer advisoryConsumer = s.createConsumer(AdvisorySupport.getMessageDLQdAdvisoryTopic((ActiveMQDestination) topic));
 
         MessageProducer producer = s.createProducer(topic);
         int count = 10;
         for (int i = 0; i < count; i++) {
             BytesMessage m = s.createBytesMessage();
+            m.writeBytes(new byte[1024]);
             producer.send(m);
         }
+
+        Message msg = advisoryConsumer.receive(1000);
+        assertNotNull(msg);
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+        //This should be set
+        assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
+        //Add assertion to make sure body is included for DLQ advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
 
         // we should get here without StackOverflow
     }
@@ -211,11 +274,21 @@ public class AdvisoryTests {
         int count = (new ActiveMQPrefetchPolicy().getTopicPrefetch() * 2);
         for (int i = 0; i < count; i++) {
             BytesMessage m = s.createBytesMessage();
+            m.writeBytes(new byte[1024]);
             producer.send(m);
         }
 
         Message msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        //This should be set
+        assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
+
+        //Add assertion to make sure body is included for advisory topics
+        //when includeBodyForAdvisory is true
+        assertIncludeBodyForAdvisory(payload);
     }
 
     @Before
@@ -258,6 +331,7 @@ public class AdvisoryTests {
         policy.setAdvisoryForDiscardingMessages(true);
         policy.setAdvisoryForSlowConsumers(true);
         policy.setAdvisoryWhenFull(true);
+        policy.setIncludeBodyForAdvisory(includeBodyForAdvisory);
         policy.setProducerFlowControl(false);
         ConstantPendingMessageLimitStrategy strategy = new ConstantPendingMessageLimitStrategy();
         strategy.setLimit(10);
@@ -266,7 +340,16 @@ public class AdvisoryTests {
         pMap.setDefaultEntry(policy);
 
         answer.setDestinationPolicy(pMap);
+        answer.addConnector("nio://localhost:0");
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+    }
+
+    protected void assertIncludeBodyForAdvisory(ActiveMQMessage payload) {
+        if (includeBodyForAdvisory) {
+            assertNotNull(payload.getContent());
+        } else {
+            assertNull(payload.getContent());
+        }
     }
 }

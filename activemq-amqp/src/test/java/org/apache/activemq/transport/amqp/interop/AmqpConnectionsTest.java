@@ -17,6 +17,9 @@
 package org.apache.activemq.transport.amqp.interop;
 
 import static org.apache.activemq.transport.amqp.AmqpSupport.CONNECTION_OPEN_FAILED;
+import static org.apache.activemq.transport.amqp.AmqpSupport.PLATFORM;
+import static org.apache.activemq.transport.amqp.AmqpSupport.PRODUCT;
+import static org.apache.activemq.transport.amqp.AmqpSupport.VERSION;
 import static org.apache.activemq.transport.amqp.AmqpSupport.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -80,6 +83,20 @@ public class AmqpConnectionsTest extends AmqpClientTestSupport {
 
                 if (!properties.containsKey(TOPIC_PREFIX)) {
                     markAsInvalid("Broker did not send a queue prefix value");
+                }
+
+                if (!properties.containsKey(PRODUCT)) {
+                    markAsInvalid("Broker did not send a queue product name value");
+                }
+
+                if (!properties.containsKey(VERSION)) {
+                    markAsInvalid("Broker did not send a queue version value");
+                }
+
+                if (!properties.containsKey(PLATFORM)) {
+                    markAsInvalid("Broker did not send a queue platform name value");
+                } else {
+                    LOG.info("Broker platform = {}", properties.get(PLATFORM));
                 }
             }
         });

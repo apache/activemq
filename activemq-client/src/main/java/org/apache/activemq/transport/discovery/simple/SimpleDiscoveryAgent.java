@@ -131,7 +131,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     public void serviceFailed(DiscoveryEvent devent) throws IOException {
 
         final SimpleDiscoveryEvent sevent = (SimpleDiscoveryEvent)devent;
-        if (sevent.failed.compareAndSet(false, true)) {
+        if (running.get() && sevent.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(sevent);
             taskRunner.execute(new Runnable() {

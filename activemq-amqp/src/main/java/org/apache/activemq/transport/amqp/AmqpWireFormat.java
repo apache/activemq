@@ -49,7 +49,7 @@ public class AmqpWireFormat implements WireFormat {
     private int connectAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
     private int idelTimeout = DEFAULT_IDLE_TIMEOUT;
     private int producerCredit = DEFAULT_PRODUCER_CREDIT;
-    private String transformer = InboundTransformer.TRANSFORMER_NATIVE;
+    private String transformer = InboundTransformer.TRANSFORMER_JMS;
 
     private boolean magicRead = false;
     private ResetListener resetListener;

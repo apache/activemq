@@ -22,6 +22,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
 
+import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.InetAddressUtil;
 
 /**
@@ -69,6 +70,10 @@ public class PublishedAddressPolicy {
         }
 
         String scheme = connectorURI.getScheme();
+        if ("vm".equals(scheme)) {
+            return connectorURI;
+        }
+
         String userInfo = getPublishedUserInfoValue(connectorURI.getUserInfo());
         String host = getPublishedHostValue(connectorURI.getHost());
         int port = connectorURI.getPort();
@@ -193,14 +198,14 @@ public class PublishedAddressPolicy {
     }
 
     /**
-     * @param publishedHostStrategy the publishedHostStrategy to set
+     * @param strategy the publishedHostStrategy to set
      */
     public void setPublishedHostStrategy(PublishedHostStrategy strategy) {
         this.publishedHostStrategy = strategy;
     }
 
     /**
-     * @param publishedHostStrategy the publishedHostStrategy to set
+     * @param strategy the publishedHostStrategy to set
      */
     public void setPublishedHostStrategy(String strategy) {
         this.publishedHostStrategy = PublishedHostStrategy.getValue(strategy);

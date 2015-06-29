@@ -136,7 +136,7 @@ public class TopicRegion extends AbstractRegion {
                     destinationsLock.readLock().lock();
                     try {
                         for (Destination dest : destinations.values()) {
-                            //Account for virtual destinations
+                            // Account for virtual destinations
                             if (dest instanceof Topic){
                                 Topic topic = (Topic)dest;
                                 topic.deleteSubscription(context, key);
@@ -301,6 +301,7 @@ public class TopicRegion extends AbstractRegion {
         rc.setSubscriptionName(info.getSubscriptionName());
         rc.setDestination(info.getSubscribedDestination());
         rc.setConsumerId(createConsumerId());
+        rc.setNoLocal(info.isNoLocal());
         return rc;
     }
 

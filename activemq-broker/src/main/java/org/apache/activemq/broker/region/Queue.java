@@ -824,6 +824,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         try {
             message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
             if (store != null && message.isPersistent()) {
+                message.getMessageId().setFutureOrSequenceLong(null);
                 try {
                     if (messages.isCacheEnabled()) {
                         result = store.asyncAddQueueMessage(context, message, isOptimizeStorage());

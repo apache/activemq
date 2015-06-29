@@ -58,15 +58,15 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             this.batchList = new OrderedPendingList();
         }
     }
-    
-    
+
+
     public final synchronized void start() throws Exception{
         if (!isStarted()) {
             super.start();
             resetBatch();
             resetSize();
             setCacheEnabled(size==0&&useCache);
-        } 
+        }
     }
 
     protected void resetSize() {
@@ -84,7 +84,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         gc();
     }
 
-    
+
     public final boolean recoverMessage(Message message) throws Exception {
         return recoverMessage(message,false);
     }
@@ -148,12 +148,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         clearIterator(true);
         size();
     }
-    
-    
+
+
     public synchronized void release() {
         clearIterator(false);
     }
-    
+
     private synchronized void clearIterator(boolean ensureIterator) {
         boolean haveIterator = this.iterator != null;
         this.iterator=null;
@@ -161,7 +161,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             ensureIterator();
         }
     }
-    
+
     private synchronized void ensureIterator() {
         if(this.iterator==null) {
             this.iterator=this.batchList.iterator();
@@ -171,8 +171,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     public final void finished() {
     }
-        
-    
+
+
     public final synchronized boolean hasNext() {
         if (batchList.isEmpty()) {
             try {
@@ -185,8 +185,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         ensureIterator();
         return this.iterator.hasNext();
     }
-    
-    
+
+
     public final synchronized MessageReference next() {
         MessageReference result = null;
         if (!this.batchList.isEmpty()&&this.iterator.hasNext()) {
@@ -198,7 +198,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
         return result;
     }
-    
+
     public synchronized boolean addMessageLast(MessageReference node) throws Exception {
         boolean disableCache = false;
         if (hasSpace()) {
@@ -314,23 +314,31 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     private void setLastCachedId(final int index, MessageId candidate) {
-        if (lastCachedIds[index] == null || lastCachedIds[index].getFutureOrSequenceLong() == null) {  // possibly null for topics
+        MessageId lastCacheId = lastCachedIds[index];
+        if (lastCacheId == null) {
             lastCachedIds[index] = candidate;
-        } else if (Long.compare(((Long) candidate.getFutureOrSequenceLong()), ((Long) lastCachedIds[index].getFutureOrSequenceLong())) > 0) {
-            lastCachedIds[index] = candidate;
+        } else {
+            Object lastCacheFutureOrSequenceLong = lastCacheId.getFutureOrSequenceLong();
+            Object candidateOrSequenceLong = candidate.getFutureOrSequenceLong();
+            if (lastCacheFutureOrSequenceLong == null) { // possibly null for topics
+                lastCachedIds[index] = candidate;
+            } else if (candidateOrSequenceLong != null &&
+                    Long.compare(((Long) candidateOrSequenceLong), ((Long) lastCacheFutureOrSequenceLong)) > 0) {
+                lastCachedIds[index] = candidate;
+            }
         }
     }
 
     protected void setBatch(MessageId messageId) throws Exception {
     }
 
-    
+
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         setCacheEnabled(false);
         size++;
     }
 
-    
+
     public final synchronized void remove() {
         size--;
         if (iterator!=null) {
@@ -341,20 +349,20 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         }
     }
 
-    
+
     public final synchronized void remove(MessageReference node) {
         if (batchList.remove(node) != null) {
             size--;
             setCacheEnabled(false);
         }
     }
-    
-    
+
+
     public final synchronized void clear() {
         gc();
     }
-    
-    
+
+
     public synchronized void gc() {
         for (MessageReference msg : batchList) {
             rollback(msg.getMessageId());
@@ -385,14 +393,14 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         }
     }
-    
-    
+
+
     public final synchronized boolean isEmpty() {
         // negative means more messages added to store through queue.send since last reset
         return size == 0;
     }
 
-    
+
     public final synchronized boolean hasMessagesBufferedToDeliver() {
         return !batchList.isEmpty();
     }
@@ -413,13 +421,13 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                     + ",lastSyncCachedId:" + lastCachedIds[SYNC_ADD] + ",lastSyncCachedId-seq:" + (lastCachedIds[SYNC_ADD] != null ? lastCachedIds[SYNC_ADD].getFutureOrSequenceLong() : "null")
                     + ",lastAsyncCachedId:" + lastCachedIds[ASYNC_ADD] + ",lastAsyncCachedId-seq:" + (lastCachedIds[ASYNC_ADD] != null ? lastCachedIds[ASYNC_ADD].getFutureOrSequenceLong() : "null");
     }
-    
+
     protected abstract void doFillBatch() throws Exception;
-    
+
     protected abstract void resetBatch();
 
     protected abstract int getStoreSize();
-    
+
     protected abstract boolean isStoreEmpty();
 
     public Subscription getSubscription() {

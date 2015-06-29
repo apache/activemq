@@ -31,6 +31,7 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.ResponseHandler;
 import org.apache.activemq.transport.amqp.message.AMQPNativeInboundTransformer;
@@ -205,9 +206,10 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
 
             final DeliveryState remoteState = delivery.getRemoteState();
             if (remoteState != null && remoteState instanceof TransactionalState) {
-                TransactionalState s = (TransactionalState) remoteState;
-                long txid = toLong(s.getTxnId());
-                message.setTransactionId(new LocalTransactionId(session.getConnection().getConnectionId(), txid));
+                TransactionalState txState = (TransactionalState) remoteState;
+                TransactionId txId = new LocalTransactionId(session.getConnection().getConnectionId(), toLong(txState.getTxnId()));
+                session.enlist(txId);
+                message.setTransactionId(txId);
             }
 
             message.onSend();
