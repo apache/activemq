@@ -28,11 +28,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements web socket and mediates between servlet and the broker
  */
-class StompSocket extends AbstractStompSocket implements WebSocket.OnTextMessage {
+public class StompSocket extends AbstractStompSocket implements WebSocket.OnTextMessage {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompSocket.class);
 
     private Connection outbound;
+
+    public StompSocket(String remoteAddress) {
+        super(remoteAddress);
+    }
 
     @Override
     public void handleStopped() throws IOException {

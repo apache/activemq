@@ -16,35 +16,26 @@
  */
 package org.apache.activemq.transport.ws.jetty8;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerServiceAware;
+import java.io.IOException;
+
 import org.apache.activemq.command.Command;
-import org.apache.activemq.transport.TransportSupport;
-import org.apache.activemq.transport.mqtt.MQTTInactivityMonitor;
-import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
-import org.apache.activemq.transport.mqtt.MQTTTransport;
-import org.apache.activemq.transport.mqtt.MQTTWireFormat;
+import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.fusesource.mqtt.codec.DISCONNECT;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.security.cert.X509Certificate;
-import java.util.concurrent.CountDownLatch;
-
-public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryMessage, MQTTTransport, BrokerServiceAware {
+public class MQTTSocket extends AbstractMQTTSocket implements WebSocket.OnBinaryMessage {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
     Connection outbound;
-    MQTTProtocolConverter protocolConverter = null;
-    MQTTWireFormat wireFormat = new MQTTWireFormat();
-    private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
-    private BrokerService brokerService;
+
+    public MQTTSocket(String remoteAddress) {
+        super(remoteAddress);
+    }
 
     @Override
     public void onMessage(byte[] bytes, int offset, int length) {
@@ -65,12 +56,6 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
         }
     }
 
-    private MQTTProtocolConverter getProtocolConverter() {
-        if( protocolConverter == null ) {
-            protocolConverter = new MQTTProtocolConverter(this, brokerService);
-        }
-        return protocolConverter;
-    }
 
     @Override
     public void onOpen(Connection connection) {
@@ -84,28 +69,6 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
         } catch (Exception e) {
             LOG.warn("Failed to close WebSocket", e);
         }
-    }
-
-    protected void doStart() throws Exception {
-        socketTransportStarted.countDown();
-    }
-
-    @Override
-    protected void doStop(ServiceStopper stopper) throws Exception {
-    }
-
-    private boolean transportStartedAtLeastOnce() {
-        return socketTransportStarted.getCount() == 0;
-    }
-
-    @Override
-    public int getReceiveCounter() {
-        return 0;
-    }
-
-    @Override
-    public String getRemoteAddress() {
-        return "MQTTSocket_" + this.hashCode();
     }
 
     @Override
@@ -128,23 +91,4 @@ public class MQTTSocket  extends TransportSupport implements WebSocket.OnBinaryM
         outbound.sendMessage(bytes.getData(), 0, bytes.getLength());
     }
 
-    @Override
-    public X509Certificate[] getPeerCertificates() {
-        return new X509Certificate[0];
-    }
-
-    @Override
-    public MQTTInactivityMonitor getInactivityMonitor() {
-        return null;
-    }
-
-    @Override
-    public MQTTWireFormat getWireFormat() {
-        return wireFormat;
-    }
-
-    @Override
-    public void setBrokerService(BrokerService brokerService) {
-        this.brokerService = brokerService;
-    }
 }

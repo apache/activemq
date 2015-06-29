@@ -16,17 +16,13 @@
  */
 package org.apache.activemq.transport.ws.jetty9;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerServiceAware;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.apache.activemq.command.Command;
-import org.apache.activemq.transport.TransportSupport;
-import org.apache.activemq.transport.mqtt.MQTTInactivityMonitor;
-import org.apache.activemq.transport.mqtt.MQTTProtocolConverter;
-import org.apache.activemq.transport.mqtt.MQTTTransport;
-import org.apache.activemq.transport.mqtt.MQTTWireFormat;
+import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.ServiceStopper;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.fusesource.mqtt.codec.DISCONNECT;
@@ -34,47 +30,13 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.security.cert.X509Certificate;
-import java.util.concurrent.CountDownLatch;
-
-public class MQTTSocket  extends TransportSupport implements WebSocketListener, MQTTTransport, BrokerServiceAware {
+public class MQTTSocket extends AbstractMQTTSocket implements WebSocketListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
     Session session;
-    MQTTProtocolConverter protocolConverter = null;
-    MQTTWireFormat wireFormat = new MQTTWireFormat();
-    private final CountDownLatch socketTransportStarted = new CountDownLatch(1);
-    private BrokerService brokerService;
 
-    private MQTTProtocolConverter getProtocolConverter() {
-        if( protocolConverter == null ) {
-            protocolConverter = new MQTTProtocolConverter(this, brokerService);
-        }
-        return protocolConverter;
-    }
-
-    protected void doStart() throws Exception {
-        socketTransportStarted.countDown();
-    }
-
-    @Override
-    protected void doStop(ServiceStopper stopper) throws Exception {
-    }
-
-    private boolean transportStartedAtLeastOnce() {
-        return socketTransportStarted.getCount() == 0;
-    }
-
-    @Override
-    public int getReceiveCounter() {
-        return 0;
-    }
-
-    @Override
-    public String getRemoteAddress() {
-        return "MQTTSocket_" + this.hashCode();
+    public MQTTSocket(String remoteAddress) {
+        super(remoteAddress);
     }
 
     @Override
@@ -95,26 +57,6 @@ public class MQTTSocket  extends TransportSupport implements WebSocketListener, 
     public void sendToMQTT(MQTTFrame command) throws IOException {
         ByteSequence bytes = wireFormat.marshal(command);
         session.getRemote().sendBytes(ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength()));
-    }
-
-    @Override
-    public X509Certificate[] getPeerCertificates() {
-        return new X509Certificate[0];
-    }
-
-    @Override
-    public MQTTInactivityMonitor getInactivityMonitor() {
-        return null;
-    }
-
-    @Override
-    public MQTTWireFormat getWireFormat() {
-        return wireFormat;
-    }
-
-    @Override
-    public void setBrokerService(BrokerService brokerService) {
-        this.brokerService = brokerService;
     }
 
     @Override
@@ -142,7 +84,7 @@ public class MQTTSocket  extends TransportSupport implements WebSocketListener, 
             getProtocolConverter().onMQTTCommand(new DISCONNECT().encode());
         } catch (Exception e) {
             LOG.warn("Failed to close WebSocket", e);
-        }        
+        }
     }
 
     @Override
@@ -152,10 +94,10 @@ public class MQTTSocket  extends TransportSupport implements WebSocketListener, 
 
     @Override
     public void onWebSocketError(Throwable arg0) {
-        
+
     }
 
     @Override
-    public void onWebSocketText(String arg0) {        
+    public void onWebSocketText(String arg0) {
     }
 }
