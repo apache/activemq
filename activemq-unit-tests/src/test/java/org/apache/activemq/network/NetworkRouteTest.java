@@ -232,6 +232,7 @@ public class NetworkRouteTest {
         msg.setDestination(new ActiveMQTopic("test"));
         msgDispatch = new MessageDispatch();
         msgDispatch.setMessage(msg);
+        msgDispatch.setDestination(msg.getDestination());
 
         ConsumerInfo path1 = new ConsumerInfo();
         path1.setDestination(msg.getDestination());
