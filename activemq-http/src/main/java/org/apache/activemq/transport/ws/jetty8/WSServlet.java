@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
+import org.apache.activemq.transport.util.HttpTransportUtils;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 
@@ -54,9 +55,9 @@ public class WSServlet extends WebSocketServlet {
     public WebSocket doWebSocketConnect(HttpServletRequest request, String protocol) {
         WebSocket socket;
         if (protocol != null && protocol.startsWith("mqtt")) {
-            socket = new MQTTSocket();
+            socket = new MQTTSocket(HttpTransportUtils.generateWsRemoteAddress(request));
         } else {
-            socket = new StompSocket();
+            socket = new StompSocket(HttpTransportUtils.generateWsRemoteAddress(request));
         }
         listener.onAccept((Transport) socket);
         return socket;

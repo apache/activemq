@@ -45,6 +45,13 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected final CountDownLatch socketTransportStarted = new CountDownLatch(1);
     protected final StompInactivityMonitor stompInactivityMonitor = new StompInactivityMonitor(this, wireFormat);
     protected volatile int receiveCounter;
+    protected final String remoteAddress;
+
+
+    public AbstractStompSocket(String remoteAddress) {
+        super();
+        this.remoteAddress = remoteAddress;
+    }
 
     @Override
     public void oneway(Object command) throws IOException {
@@ -100,7 +107,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
 
     @Override
     public String getRemoteAddress() {
-        return "StompSocket_" + this.hashCode();
+        return remoteAddress;
     }
 
     @Override
