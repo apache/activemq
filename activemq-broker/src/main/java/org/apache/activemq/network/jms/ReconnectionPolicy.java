@@ -25,11 +25,13 @@ package org.apache.activemq.network.jms;
  */
 public class ReconnectionPolicy {
 
+    public static final int INFINITE = -1;
+
     private int maxSendRetries = 10;
     private long sendRetryDelay = 1000L;
 
-    private int maxReconnectAttempts = -1;
-    private int maxInitialConnectAttempts = -1;
+    private int maxReconnectAttempts = INFINITE;
+    private int maxInitialConnectAttempts = INFINITE;
     private long maximumReconnectDelay = 30000;
     private long initialReconnectDelay = 1000L;
     private boolean useExponentialBackOff = false;

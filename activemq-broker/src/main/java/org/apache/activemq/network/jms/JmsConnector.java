@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.network.jms;
 
+import static org.apache.activemq.network.jms.ReconnectionPolicy.INFINITE;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +73,7 @@ public abstract class JmsConnector implements Service {
     protected LRUCache<Destination, DestinationBridge> replyToBridges = createLRUCache();
 
     private ReconnectionPolicy policy = new ReconnectionPolicy();
-    protected ThreadPoolExecutor connectionSerivce;
+    protected ThreadPoolExecutor connectionService;
     private final List<DestinationBridge> inboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
     private final List<DestinationBridge> outboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
     private String name;
@@ -116,7 +118,7 @@ public abstract class JmsConnector implements Service {
             }
             replyToBridges.setMaxCacheSize(getReplyToDestinationCacheSize());
 
-            connectionSerivce = createExecutor();
+            connectionService = createExecutor();
 
             // Subclasses can override this to customize their own it.
             result = doConnectorInit();
@@ -169,8 +171,8 @@ public abstract class JmsConnector implements Service {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
 
-            ThreadPoolUtils.shutdown(connectionSerivce);
-            connectionSerivce = null;
+            ThreadPoolUtils.shutdown(connectionService);
+            connectionService = null;
 
             if (foreignConnection.get() != null) {
                 try {
@@ -509,7 +511,7 @@ public abstract class JmsConnector implements Service {
             }
 
             // We got here first and cleared the connection, now we queue a reconnect.
-            this.connectionSerivce.execute(new Runnable() {
+            this.connectionService.execute(new Runnable() {
 
                 @Override
                 public void run() {
@@ -534,7 +536,7 @@ public abstract class JmsConnector implements Service {
             }
 
             // We got here first and cleared the connection, now we queue a reconnect.
-            this.connectionSerivce.execute(new Runnable() {
+            this.connectionService.execute(new Runnable() {
 
                 @Override
                 public void run() {
@@ -549,7 +551,7 @@ public abstract class JmsConnector implements Service {
     }
 
     private void scheduleAsyncLocalConnectionReconnect() {
-        this.connectionSerivce.execute(new Runnable() {
+        this.connectionService.execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -562,7 +564,7 @@ public abstract class JmsConnector implements Service {
     }
 
     private void scheduleAsyncForeignConnectionReconnect() {
-        this.connectionSerivce.execute(new Runnable() {
+        this.connectionService.execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -576,6 +578,7 @@ public abstract class JmsConnector implements Service {
 
     private void doInitializeConnection(boolean local) throws Exception {
 
+        ThreadPoolExecutor connectionService = this.connectionService;
         int attempt = 0;
 
         final int maxRetries;
@@ -587,8 +590,7 @@ public abstract class JmsConnector implements Service {
                                                          policy.getMaxReconnectAttempts();
         }
 
-        do
-        {
+        do {
             if (attempt > 0) {
                 try {
                     Thread.sleep(policy.getNextDelay(attempt));
@@ -596,7 +598,7 @@ public abstract class JmsConnector implements Service {
                 }
             }
 
-            if (connectionSerivce.isTerminating()) {
+            if (connectionService.isTerminating()) {
                 return;
             }
 
@@ -625,7 +627,7 @@ public abstract class JmsConnector implements Service {
                 LOG.debug("Failed to establish initial {} connection for JmsConnector [{}]", new Object[]{ (local ? "local" : "foreign"), attempt }, e);
             }
         }
-        while (maxRetries < ++attempt && !connectionSerivce.isTerminating());
+        while ((maxRetries == INFINITE || maxRetries > ++attempt) && !connectionService.isShutdown());
 
         this.failed.set(true);
     }
