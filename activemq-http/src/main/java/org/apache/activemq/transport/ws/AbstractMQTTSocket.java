@@ -34,7 +34,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 
 public abstract class AbstractMQTTSocket extends TransportSupport implements MQTTTransport, BrokerServiceAware {
 
-    protected MQTTProtocolConverter protocolConverter = null;
+    protected volatile MQTTProtocolConverter protocolConverter = null;
     protected MQTTWireFormat wireFormat = new MQTTWireFormat();
     protected final MQTTInactivityMonitor mqttInactivityMonitor = new MQTTInactivityMonitor(this, wireFormat);
     protected final CountDownLatch socketTransportStarted = new CountDownLatch(1);
@@ -123,7 +123,11 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     protected MQTTProtocolConverter getProtocolConverter() {
         if (protocolConverter == null) {
-            protocolConverter = new MQTTProtocolConverter(this, brokerService);
+            synchronized(this) {
+                if (protocolConverter == null) {
+                    protocolConverter = new MQTTProtocolConverter(this, brokerService);
+                }
+            }
         }
 
         return protocolConverter;

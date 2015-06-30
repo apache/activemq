@@ -73,6 +73,20 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testConnectCycles() throws Exception {
+        for (int i = 0; i < 10; ++i) {
+            testConnect();
+
+            wsMQTTConnection = new MQTTWSConnection();
+
+            wsClient.open(wsConnectUri, wsMQTTConnection);
+            if (!wsMQTTConnection.awaitConnection(30, TimeUnit.SECONDS)) {
+                throw new IOException("Could not connect to MQTT WS endpoint");
+            }
+        }
+    }
+
+    @Test(timeout = 60000)
     public void testConnect() throws Exception {
 
         wsMQTTConnection.connect();
