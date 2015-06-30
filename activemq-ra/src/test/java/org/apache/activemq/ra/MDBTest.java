@@ -20,10 +20,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -49,7 +52,7 @@ import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
@@ -58,6 +61,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.util.Wait;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
@@ -65,8 +69,15 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.spi.ErrorHandler;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class MDBTest extends TestCase {
+
+import static org.junit.Assert.*;
+
+public class MDBTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MDBTest.class);
 
     long txGenerator = System.currentTimeMillis();
 
@@ -122,6 +133,7 @@ public class MDBTest extends TestCase {
                 }
                 xaresource.start(xid, 0);
             } catch (Throwable e) {
+                LOG.info("beforeDelivery, messageCount: " + messageCount + " ex", e);
                 throw new ResourceException(e);
             }
         }
@@ -131,12 +143,15 @@ public class MDBTest extends TestCase {
                 xaresource.end(xid, 0);
                 xaresource.prepare(xid);
                 xaresource.commit(xid, false);
+                xid = null;
             } catch (Throwable e) {
+                LOG.info("afterDelivery, messageCount: " + messageCount + " ex", e);
                 throw new ResourceException(e);
             }
         }
 
         public void release() {
+            LOG.info("In release, messageCount: " + messageCount + ", xid:" + xid);
         }
 
         public void onMessage(Message message) {
@@ -145,6 +160,7 @@ public class MDBTest extends TestCase {
 
     }
 
+    @Test
     public void testDestinationInJndi() throws Exception{
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
@@ -209,6 +225,7 @@ public class MDBTest extends TestCase {
         adapter.stop();
     }
 
+    @Test
     public void testMessageDelivery() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
@@ -275,6 +292,7 @@ public class MDBTest extends TestCase {
     }
 
     //https://issues.apache.org/jira/browse/AMQ-5811
+    @Test
     public void testAsyncStop() throws Exception {
         for (int repeat = 0; repeat < 10; repeat++) {
             ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
@@ -346,6 +364,7 @@ public class MDBTest extends TestCase {
         return threads;
     }
 
+    @Test
     public void testErrorOnNoMessageDeliveryBrokerZeroPrefetchConfig() throws Exception {
 
         final BrokerService brokerService = new BrokerService();
@@ -489,6 +508,7 @@ public class MDBTest extends TestCase {
         brokerService.stop();
     }
 
+    @Test
     public void testMessageExceptionReDelivery() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
@@ -513,7 +533,7 @@ public class MDBTest extends TestCase {
                     }
                     messageDelivered.countDown();
                     if (!messageDelivered.await(1, TimeUnit.MILLISECONDS)) {
-                        throw new RuntimeException(getName() + " ex on first delivery");
+                        throw new RuntimeException("ex on first delivery");
                     } else {
                         try {
                             assertTrue(message.getJMSRedelivered());
@@ -584,7 +604,107 @@ public class MDBTest extends TestCase {
 
     }
 
+    @Test
+    public void testOrderOfMessageExceptionReDelivery() throws Exception {
 
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        Connection connection = factory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.start(new StubBootstrapContext());
+        final String ORDER_PROP = "Order";
+        final List<Integer> orderedReceipt = new ArrayList<Integer>();
+
+        final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
+            public void onMessage(Message message) {
+                super.onMessage(message);
+                if (messageCount == 2) {
+                    throw new RuntimeException("Throwing on two");
+                }
+                try {
+                    orderedReceipt.add(message.getIntProperty(ORDER_PROP));
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            public void afterDelivery() throws ResourceException {
+                try {
+                    if (messageCount == 2) {
+                        xaresource.end(xid, XAResource.TMFAIL);
+                        xaresource.rollback(xid);
+                    } else {
+                        xaresource.end(xid, XAResource.TMSUCCESS);
+                        xaresource.prepare(xid);
+                        xaresource.commit(xid, false);
+                    }
+                } catch (Throwable e) {
+                    LOG.info("afterDelivery messageCount: " + messageCount + " ex", e);
+                    throw new ResourceException(e);
+                } finally {
+                    xid = null;
+                }
+            }
+        };
+
+        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+        activationSpec.setDestinationType(Queue.class.getName());
+        activationSpec.setDestination("TEST");
+        activationSpec.setInitialRedeliveryDelay(100);
+        activationSpec.setMaxSessions("1");
+        activationSpec.setResourceAdapter(adapter);
+        activationSpec.validate();
+
+        MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
+            public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
+                endpoint.xaresource = resource;
+                return endpoint;
+            }
+
+            public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
+                return true;
+            }
+        };
+
+        // Activate an Endpoint
+        adapter.endpointActivation(messageEndpointFactory, activationSpec);
+
+        // Give endpoint a chance to setup and register its listeners
+        try {
+            Thread.sleep(1000);
+        } catch (Exception e) {
+
+        }
+        // Send the broker a message to that endpoint
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
+        for (int i=0; i<5; i++) {
+            Message message = session.createTextMessage("Hello!");
+            message.setIntProperty(ORDER_PROP, i);
+            producer.send(message);
+        }
+        connection.close();
+
+        assertTrue("Got 5", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Ordered size: " + orderedReceipt.size());
+                return orderedReceipt.size() == 5;
+            }
+        }));
+
+        for (int i=0; i<5; i++) {
+            assertEquals("in order", Integer.valueOf(i), orderedReceipt.remove(0));
+        }
+
+        // Shut the Endpoint down.
+        adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
+        adapter.stop();
+
+    }
+
+    @Test
     public void testXaTimeoutRedelivery() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
@@ -673,14 +793,17 @@ public class MDBTest extends TestCase {
 
     }
 
+    AtomicInteger id = new AtomicInteger(0);
     public Xid createXid() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(baos);
         os.writeLong(++txGenerator);
+        os.writeLong(id.getAndIncrement());
         os.close();
         final byte[] bs = baos.toByteArray();
 
         return new Xid() {
+            final int lid = id.get();
             public int getFormatId() {
                 return 86;
             }
@@ -691,6 +814,10 @@ public class MDBTest extends TestCase {
 
             public byte[] getBranchQualifier() {
                 return bs;
+            }
+
+            public String toString() {
+                return "DummyIdXID:" + lid;
             }
         };
 
