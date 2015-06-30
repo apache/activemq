@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * 
+ *
  */
 public final class IOHelper {
     protected static final int MAX_DIR_NAME_LENGTH;
@@ -53,7 +53,7 @@ public final class IOHelper {
             return "";
         }
     }
-    
+
     public static boolean deleteFile(File fileToDelete) {
         if (fileToDelete == null || !fileToDelete.exists()) {
             return true;
@@ -62,7 +62,7 @@ public final class IOHelper {
         result &= fileToDelete.delete();
         return result;
     }
-    
+
     public static boolean deleteChildren(File parent) {
         if (parent == null || !parent.exists()) {
             return false;
@@ -87,46 +87,49 @@ public final class IOHelper {
                 }
             }
         }
-       
+
         return result;
     }
-    
-    
+
+
     public static void moveFile(File src, File targetDirectory) throws IOException {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
             throw new IOException("Failed to move " + src + " to " + targetDirectory);
         }
     }
-    
+
     public static void copyFile(File src, File dest) throws IOException {
         FileInputStream fileSrc = new FileInputStream(src);
         FileOutputStream fileDest = new FileOutputStream(dest);
         copyInputStream(fileSrc, fileDest);
     }
-    
+
     public static void copyInputStream(InputStream in, OutputStream out) throws IOException {
-        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-        int len = in.read(buffer);
-        while (len >= 0) {
-            out.write(buffer, 0, len);
-            len = in.read(buffer);
+        try {
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            int len = in.read(buffer);
+            while (len >= 0) {
+                out.write(buffer, 0, len);
+                len = in.read(buffer);
+            }
+        } finally {
+            in.close();
+            out.close();
         }
-        in.close();
-        out.close();
-    }
-    
-    static {
-        MAX_DIR_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumDirNameLength","200")).intValue();  
-        MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","64")).intValue();             
     }
 
-    
+    static {
+        MAX_DIR_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumDirNameLength","200")).intValue();
+        MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","64")).intValue();
+    }
+
+
     public static void mkdirs(File dir) throws IOException {
         if (dir.exists()) {
             if (!dir.isDirectory()) {
                 throw new IOException("Failed to create directory '" + dir +"', regular file already existed with that name");
             }
-            
+
         } else {
             if (!dir.mkdirs()) {
                 throw new IOException("Failed to create directory '" + dir+"'");
