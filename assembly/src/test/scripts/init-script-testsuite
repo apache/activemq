@@ -143,6 +143,7 @@ assert ${STRATEGY} successful "${SCRIPT} start"
 assert ${STRATEGY}     failed "${SCRIPT}"
 assert ${STRATEGY} successful "${SCRIPT} status"
 echo "Sleeping 30 seconds to get activemq really started"; sleep 30
+assert ${STRATEGY}     failed "${SCRIPT} export"
 assert ${STRATEGY} successful "${SCRIPT} status"
 assert ${STRATEGY} successful "${SCRIPT} encrypt --password TESTPASSWORD --input FOOBAR|grep -q 'Encrypted text: '"
 assert ${STRATEGY} successful "${SCRIPT} decrypt --input 'BkiT42A0CZfL1SanJIgxvQ==' --password asdasdasdasd|grep -q 'Decrypted text:'"

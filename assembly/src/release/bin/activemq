@@ -577,6 +577,11 @@ invoke_task(){
          echo "Activemq is not running."
          exit 1
        fi
+    elif [ "$CHECKRUNNING" = "checkfornotrunning" ];then
+      if ( checkRunning );then
+         echo "Activemq is running."
+         exit 1
+       fi
     fi
 
     # call task in java binary
@@ -654,6 +659,10 @@ case "$1" in
     ;;
   decrypt|encrypt|create)
     invoke_task checknotforrunning
+    exit $?
+    ;;
+  export)
+    invoke_task checkfornotrunning
     exit $?
     ;;
   query|bstat|dstat|purge)
