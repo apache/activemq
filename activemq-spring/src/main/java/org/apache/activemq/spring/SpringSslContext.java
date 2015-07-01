@@ -98,6 +98,7 @@ public class SpringSslContext extends SslContext {
             return new ArrayList<TrustManager>(0);
         }
         TrustManagerFactory tmf  = TrustManagerFactory.getInstance(trustStoreAlgorithm);
+        boolean initialized = false;
         if (crlPath != null) {
             if (trustStoreAlgorithm.equalsIgnoreCase("PKIX")) {
                 Collection<? extends CRL> crlList = loadCRL();
@@ -107,13 +108,18 @@ public class SpringSslContext extends SslContext {
                     pkixParams.setRevocationEnabled(true);
                     pkixParams.addCertStore(CertStore.getInstance("Collection", new CollectionCertStoreParameters(crlList)));
                     tmf.init(new CertPathTrustManagerParameters(pkixParams));
+                    initialized = true;
                 }
+
             } else {
                 LOG.warn("Revocation checking is only supported with 'trustStoreAlgorithm=\"PKIX\"'. Ignoring CRL: " + crlPath);
             }
-        } else {
+        }
+
+        if (!initialized) {
             tmf.init(ks);
         }
+
         return Arrays.asList(tmf.getTrustManagers());
     }
 
