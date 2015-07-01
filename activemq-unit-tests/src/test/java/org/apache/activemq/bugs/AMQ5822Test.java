@@ -31,9 +31,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AMQ6000Test {
+public class AMQ5822Test {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AMQ6000Test.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AMQ5822Test.class);
 
     private BrokerService brokerService;
     private String connectionUri;
