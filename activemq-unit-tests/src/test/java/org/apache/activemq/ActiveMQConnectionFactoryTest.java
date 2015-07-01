@@ -18,14 +18,17 @@ package org.apache.activemq;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Session;
+import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
@@ -154,15 +157,15 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         broker.setUseJmx(false);
         broker.addConnector("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
         broker.start();
+        broker.waitUntilStarted();
+
+        int localPort = getFreePort(51610);
 
         // This should create the connection.
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61610/localhost:51610");
+        ActiveMQConnectionFactory cf =
+            new ActiveMQConnectionFactory("tcp://localhost:61610/localhost:" + localPort);
         connection = (ActiveMQConnection)cf.createConnection();
         assertNotNull(connection);
-
-        connection.close();
-
-        broker.stop();
     }
 
     public void testConnectionFailsToConnectToVMBrokerThatIsNotRunning() throws Exception {
@@ -212,9 +215,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 
         assertEquals(exListener, cf.getExceptionListener());
         connection.close();
-
     }
-
 
     public void testSetClientInternalExceptionListener() throws Exception {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
@@ -239,7 +240,6 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertEquals(listener, connection.getClientInternalExceptionListener());
         assertEquals(listener, cf.getClientInternalExceptionListener());
         connection.close();
-
     }
 
     protected void assertCreateConnection(String uri) throws Exception {
@@ -271,4 +271,22 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertNotNull(connection);
     }
 
+    private int getFreePort(final int fallback) {
+        int freePort = fallback;
+        ServerSocket ss = null;
+        try {
+            ss = ServerSocketFactory.getDefault().createServerSocket(0);
+            freePort = ss.getLocalPort();
+        } catch (IOException e) { // ignore
+        } finally {
+            try {
+                if (ss != null ) {
+                    ss.close();
+                }
+            } catch (IOException e) { // ignore
+            }
+        }
+
+        return freePort;
+    }
 }
