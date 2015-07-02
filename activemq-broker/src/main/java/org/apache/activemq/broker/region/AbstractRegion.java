@@ -28,10 +28,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
-import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.virtual.CompositeDestinationFilter;
@@ -90,6 +90,7 @@ public abstract class AbstractRegion implements Region {
         this.destinationFactory = destinationFactory;
     }
 
+    @Override
     public final void start() throws Exception {
         started = true;
 
@@ -113,6 +114,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         started = false;
         destinationsLock.readLock().lock();
@@ -136,6 +138,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
             boolean createIfTemporary) throws Exception {
 
@@ -230,16 +233,15 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
-    protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest)
-            throws Exception {
-
+    protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
         List<Subscription> rc = new ArrayList<Subscription>();
         // Add all consumers that are interested in the destination.
         for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
             Subscription sub = iter.next();
             if (sub.matches(dest.getActiveMQDestination())) {
                 try {
-                    dest.addSubscription(context, sub);
+                    ConnectionContext originalContext = sub.getContext() != null ? sub.getContext() : context;
+                    dest.addSubscription(originalContext, sub);
                     rc.add(sub);
                 } catch (SecurityException e) {
                     if (sub.isWildcard()) {
@@ -255,6 +257,7 @@ public abstract class AbstractRegion implements Region {
 
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
             throws Exception {
 
@@ -313,6 +316,7 @@ public abstract class AbstractRegion implements Region {
      *
      * @return a set of matching destination objects.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
         destinationsLock.readLock().lock();
@@ -323,10 +327,12 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return destinations;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("{} adding consumer: {} for destination: {}", new Object[]{ broker.getBrokerName(), info.getConsumerId(), info.getDestination() });
@@ -446,6 +452,7 @@ public abstract class AbstractRegion implements Region {
         return inactiveDests;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("{} removing consumer: {} for destination: {}", new Object[]{ broker.getBrokerName(), info.getConsumerId(), info.getDestination() });
@@ -479,10 +486,12 @@ public abstract class AbstractRegion implements Region {
         sub.destroy();
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         throw new JMSException("Invalid operation.");
     }
 
+    @Override
     public void send(final ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
 
@@ -498,6 +507,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         Subscription sub = consumerExchange.getSubscription();
         if (sub == null) {
@@ -516,6 +526,7 @@ public abstract class AbstractRegion implements Region {
         sub.acknowledge(consumerExchange.getConnectionContext(), ack);
     }
 
+    @Override
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         Subscription sub = subscriptions.get(pull.getConsumerId());
         if (sub == null) {
@@ -557,6 +568,7 @@ public abstract class AbstractRegion implements Region {
         return dest;
     }
 
+    @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         Subscription sub = subscriptions.get(messageDispatchNotification.getConsumerId());
         if (sub != null) {
@@ -594,6 +606,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void gc() {
         for (Subscription sub : subscriptions.values()) {
             sub.gc();
@@ -624,6 +637,7 @@ public abstract class AbstractRegion implements Region {
         this.autoCreateDestinations = autoCreateDestinations;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationsLock.readLock().lock();
@@ -644,6 +658,7 @@ public abstract class AbstractRegion implements Region {
      * @throws Exception
      *             TODO
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationsLock.readLock().lock();
@@ -662,6 +677,7 @@ public abstract class AbstractRegion implements Region {
         destinationFactory.removeDestination(dest);
     }
 
+    @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub != null && sub instanceof AbstractSubscription) {
@@ -681,6 +697,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void reapplyInterceptor() {
         destinationsLock.writeLock().lock();
         try {
