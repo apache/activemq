@@ -26,9 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.jms.JMSException;
+
+import org.apache.activemq.DestinationDoesNotExistException;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
-import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.virtual.CompositeDestinationFilter;
@@ -86,6 +88,7 @@ public abstract class AbstractRegion implements Region {
         this.destinationFactory = destinationFactory;
     }
 
+    @Override
     public final void start() throws Exception {
         started = true;
 
@@ -109,6 +112,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void stop() throws Exception {
         started = false;
         destinationsLock.readLock().lock();
@@ -123,6 +127,7 @@ public abstract class AbstractRegion implements Region {
         destinations.clear();
     }
 
+    @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,
             boolean createIfTemporary) throws Exception {
 
@@ -157,16 +162,76 @@ public abstract class AbstractRegion implements Region {
         return subscriptions;
     }
 
+<<<<<<< HEAD
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest)
             throws Exception {
 
+=======
+
+    /**
+     * Updates the counts in RegionStatistics based on whether or not the destination
+     * is an Advisory Destination or not
+     *
+     * @param destination the destination being used to determine which counters to update
+     * @param count the count to add to the counters
+     */
+    protected void updateRegionDestCounts(ActiveMQDestination destination, int count) {
+        if (destination != null) {
+            if (AdvisorySupport.isAdvisoryTopic(destination)) {
+                regionStatistics.getAdvisoryDestinations().add(count);
+            } else {
+                regionStatistics.getDestinations().add(count);
+            }
+            regionStatistics.getAllDestinations().add(count);
+        }
+    }
+
+    /**
+     * This method checks whether or not the destination can be created based on
+     * {@link PolicyEntry#getMaxDestinations}, if it has been set. Advisory
+     * topics are ignored.
+     *
+     * @param destination
+     * @throws Exception
+     */
+    protected void validateMaxDestinations(ActiveMQDestination destination)
+            throws Exception {
+        if (broker.getDestinationPolicy() != null) {
+            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+            // Make sure the destination is not an advisory topic
+            if (entry != null && entry.getMaxDestinations() >= 0
+                    && !AdvisorySupport.isAdvisoryTopic(destination)) {
+                // If there is an entry for this destination, look up the set of
+                // destinations associated with this policy
+                // If a destination isn't specified, then just count up
+                // non-advisory destinations (ie count all destinations)
+                int destinationSize = (int) (entry.getDestination() != null ?
+                        destinationMap.get(entry.getDestination()).size() : regionStatistics.getDestinations().getCount());
+                if (destinationSize >= entry.getMaxDestinations()) {
+                    if (entry.getDestination() != null) {
+                        throw new IllegalStateException(
+                                "The maxmimum number of destinations allowed ("+ entry.getMaxDestinations() +
+                                ") for the policy " + entry.getDestination() + " has already been reached.");
+                    // No destination has been set (default policy)
+                    } else {
+                        throw new IllegalStateException("The maxmimum number of destinations allowed ("
+                                        + entry.getMaxDestinations() + ") has already been reached.");
+                    }
+                }
+            }
+        }
+    }
+
+    protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
+>>>>>>> e4af2eb... https://issues.apache.org/jira/browse/AMQ-5814
         List<Subscription> rc = new ArrayList<Subscription>();
         // Add all consumers that are interested in the destination.
         for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
             Subscription sub = iter.next();
             if (sub.matches(dest.getActiveMQDestination())) {
                 try {
-                    dest.addSubscription(context, sub);
+                    ConnectionContext originalContext = sub.getContext() != null ? sub.getContext() : context;
+                    dest.addSubscription(originalContext, sub);
                     rc.add(sub);
                 } catch (SecurityException e) {
                     if (sub.isWildcard()) {
@@ -182,6 +247,7 @@ public abstract class AbstractRegion implements Region {
 
     }
 
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
             throws Exception {
 
@@ -238,6 +304,7 @@ public abstract class AbstractRegion implements Region {
      *
      * @return a set of matching destination objects.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<Destination> getDestinations(ActiveMQDestination destination) {
         destinationsLock.readLock().lock();
@@ -248,10 +315,12 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return destinations;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("{} adding consumer: {} for destination: {}", new Object[]{ broker.getBrokerName(), info.getConsumerId(), info.getDestination() });
@@ -371,6 +440,7 @@ public abstract class AbstractRegion implements Region {
         return inactiveDests;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("{} removing consumer: {} for destination: {}", new Object[]{ broker.getBrokerName(), info.getConsumerId(), info.getDestination() });
@@ -404,10 +474,12 @@ public abstract class AbstractRegion implements Region {
         sub.destroy();
     }
 
+    @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
         throw new JMSException("Invalid operation.");
     }
 
+    @Override
     public void send(final ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
 
@@ -423,6 +495,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         Subscription sub = consumerExchange.getSubscription();
         if (sub == null) {
@@ -441,6 +514,7 @@ public abstract class AbstractRegion implements Region {
         sub.acknowledge(consumerExchange.getConnectionContext(), ack);
     }
 
+    @Override
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         Subscription sub = subscriptions.get(pull.getConsumerId());
         if (sub == null) {
@@ -482,6 +556,7 @@ public abstract class AbstractRegion implements Region {
         return dest;
     }
 
+    @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         Subscription sub = subscriptions.get(messageDispatchNotification.getConsumerId());
         if (sub != null) {
@@ -519,6 +594,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void gc() {
         for (Subscription sub : subscriptions.values()) {
             sub.gc();
@@ -549,6 +625,7 @@ public abstract class AbstractRegion implements Region {
         this.autoCreateDestinations = autoCreateDestinations;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationsLock.readLock().lock();
@@ -569,6 +646,7 @@ public abstract class AbstractRegion implements Region {
      * @throws Exception
      *             TODO
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationsLock.readLock().lock();
@@ -587,6 +665,7 @@ public abstract class AbstractRegion implements Region {
         destinationFactory.removeDestination(dest);
     }
 
+    @Override
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub != null && sub instanceof AbstractSubscription) {
@@ -606,6 +685,7 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    @Override
     public void reapplyInterceptor() {
         destinationsLock.writeLock().lock();
         try {
