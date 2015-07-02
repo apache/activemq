@@ -248,7 +248,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean checksumJournalFiles = true;
     protected boolean forceRecoverIndex = false;
     private final Object checkpointThreadLock = new Object();
-    private boolean rewriteOnRedelivery = false;
     private boolean archiveCorruptedIndex = false;
     private boolean useIndexLFRUEviction = false;
     private float indexLFUEvictionFactor = 0.2f;
@@ -1161,7 +1160,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    @SuppressWarnings("rawtypes")
     protected void process(final KahaUpdateMessageCommand command, final Location location) throws IOException {
         this.indexLock.writeLock().lock();
         try {
@@ -2153,7 +2151,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 SequenceSet pendingAcks = subscription.getValue();
                 if (pendingAcks != null && !pendingAcks.isEmpty()) {
                     Long lastPendingAck = pendingAcks.getTail().getLast();
-                    for(Long sequenceId : pendingAcks) {
+                    for (Long sequenceId : pendingAcks) {
                         Long current = rc.messageReferences.get(sequenceId);
                         if (current == null) {
                             current = new Long(0);
@@ -2163,6 +2161,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         // so we need to ensure we don't count that as a message reference on reload.
                         if (!sequenceId.equals(lastPendingAck)) {
                             current = current.longValue() + 1;
+                        } else {
+                            current = Long.valueOf(0L);
                         }
 
                         rc.messageReferences.put(sequenceId, current);
@@ -2235,8 +2235,14 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         for (Long ackPosition : allOutstanding) {
             Long count = sd.messageReferences.get(ackPosition);
-            count = count.longValue() + 1;
-            sd.messageReferences.put(ackPosition, count);
+
+            // There might not be a reference if the ackLocation was the last
+            // one which is a placeholder for the next incoming message and
+            // no value was added to the message references table.
+            if (count != null) {
+                count = count.longValue() + 1;
+                sd.messageReferences.put(ackPosition, count);
+            }
         }
     }
 
@@ -2259,7 +2265,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             count = count.longValue() + 1;
             sd.messageReferences.put(messageSequence, count);
-            sd.messageReferences.put(messageSequence+1, Long.valueOf(0L));
+            sd.messageReferences.put(messageSequence + 1, Long.valueOf(0L));
         }
     }
 
@@ -2322,8 +2328,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
                 // Check if the message is reference by any other subscription.
                 Long count = sd.messageReferences.get(messageSequence);
-                if (count != null){
-                long references = count.longValue() - 1;
+                if (count != null) {
+                    long references = count.longValue() - 1;
                     if (references > 0) {
                         sd.messageReferences.put(messageSequence, Long.valueOf(references));
                         return;
@@ -3050,7 +3056,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
         }
 
-
         class MessageOrderIterator implements Iterator<Entry<Long, MessageKeys>>{
             Iterator<Entry<Long, MessageKeys>>currentIterator;
             final Iterator<Entry<Long, MessageKeys>>highIterator;
@@ -3145,7 +3150,6 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             public void remove() {
                 throw new UnsupportedOperationException();
             }
-
         }
     }
 
@@ -3209,5 +3213,4 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     public void setPreallocationStrategy(String preallocationStrategy) {
         this.preallocationStrategy = preallocationStrategy;
     }
-
 }

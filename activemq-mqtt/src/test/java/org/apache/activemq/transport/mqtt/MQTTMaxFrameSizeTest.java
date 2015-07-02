@@ -68,7 +68,7 @@ public class MQTTMaxFrameSizeTest extends MQTTTestSupport {
         LOG.debug("Starting test on connector {} for frame size: {}", getProtocolScheme(), maxFrameSize);
 
         MQTT mqtt = createMQTTConnection();
-        mqtt.setClientId(getName());
+        mqtt.setClientId(getTestName());
         mqtt.setKeepAlive((short) 10);
         mqtt.setVersion("3.1.1");
 
@@ -97,7 +97,7 @@ public class MQTTMaxFrameSizeTest extends MQTTTestSupport {
         LOG.debug("Starting test on connector {} for frame size: {}", getProtocolScheme(), maxFrameSize);
 
         MQTT mqtt = createMQTTConnection();
-        mqtt.setClientId(getName());
+        mqtt.setClientId(getTestName());
         mqtt.setKeepAlive((short) 10);
         mqtt.setVersion("3.1.1");
 

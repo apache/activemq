@@ -72,7 +72,7 @@ public class MQTTSubscriptionRecoveryTest extends MQTTTestSupport {
     @Test
     public void testDurableSubscriptionsAreRecovered() throws Exception {
 
-        MqttClient connection = createClient(getName());
+        MqttClient connection = createClient(getTestName());
 
         final String[] topics = { "TopicA/", "TopicB/", "TopicC/" };
         for (int i = 0; i < topics.length; i++) {
@@ -90,7 +90,7 @@ public class MQTTSubscriptionRecoveryTest extends MQTTTestSupport {
 
         assertStatsForDisconnectedClient(topics.length);
 
-        connection = createClient(getName());
+        connection = createClient(getTestName());
 
         assertStatsForConnectedClient(topics.length);
     }

@@ -44,6 +44,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.transport.mqtt.util.ResourceLoadingSslContext;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Tracer;
@@ -58,6 +59,8 @@ import org.slf4j.LoggerFactory;
 public class MQTTTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTTestSupport.class);
+
+    public static final String KAHADB_DIRECTORY = "target/activemq-data/";
 
     protected BrokerService brokerService;
     protected int port;
@@ -90,7 +93,7 @@ public class MQTTTestSupport {
         this.useSSL = useSSL;
     }
 
-    public String getName() {
+    public String getTestName() {
         return name.getMethodName();
     }
 
@@ -144,6 +147,11 @@ public class MQTTTestSupport {
         BrokerService brokerService = new BrokerService();
         brokerService.setDeleteAllMessagesOnStartup(deleteAllMessages);
         brokerService.setPersistent(isPersistent());
+        if (isPersistent()) {
+            KahaDBStore kaha = new KahaDBStore();
+            kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
+            brokerService.setPersistenceAdapter(kaha);
+        }
         brokerService.setAdvisorySupport(false);
         brokerService.setUseJmx(true);
         brokerService.getManagementContext().setCreateConnector(false);
