@@ -83,6 +83,8 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         long count = proxy.getQueueSize();
         assertEquals("Queue size", count, messageCount);
 
+        assertEquals("Browse size", messageCount, proxy.browseMessages().size());
+
         proxy.purge();
         count = proxy.getQueueSize();
         assertEquals("Queue size", count, 0);
