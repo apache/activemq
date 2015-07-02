@@ -239,7 +239,7 @@ public abstract class AbstractRegion implements Region {
             Subscription sub = iter.next();
             if (sub.matches(dest.getActiveMQDestination())) {
                 try {
-                    dest.addSubscription(context, sub);
+                    dest.addSubscription(sub.getContext(), sub);
                     rc.add(sub);
                 } catch (SecurityException e) {
                     if (sub.isWildcard()) {
