@@ -69,18 +69,7 @@ public class FactoryFinder {
             if (className == null) {
                 throw new IOException("Expected property is missing: class");
             }
-            Class clazz = null;
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            if (loader != null) {
-                try {
-                    clazz = loader.loadClass(className);
-                } catch (ClassNotFoundException e) {
-                    // ignore
-                }
-            }
-            if (clazz == null) {
-                clazz = FactoryFinder.class.getClassLoader().loadClass(className);
-            }
+            Class clazz = FactoryFinder.class.getClassLoader().loadClass(className);
 
             return clazz;
         }
