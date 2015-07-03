@@ -31,6 +31,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
@@ -64,6 +66,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     public int MSG_NUM = 600;
     public int HIGH_PRI = 7;
     public int LOW_PRI = 3;
+    public int MED_PRI = 4;
 
     abstract protected PersistenceAdapter createPersistenceAdapter(boolean delete) throws Exception;
 
@@ -568,7 +571,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
     }
 
     public void testQueueBacklog() throws Exception {
-        final int backlog = 18000;
+        final int backlog = 1800;
         ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
 
         ProducerThread lowPri = new ProducerThread(queue, backlog, LOW_PRI);
@@ -588,6 +591,23 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertNotNull("Message " + i + " was null", msg);
             assertEquals("Message " + i + " has wrong priority", i < 10 ? HIGH_PRI : LOW_PRI, msg.getJMSPriority());
         }
+
+        final DestinationStatistics destinationStatistics = ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics();
+        assertTrue(Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Enqueues: " + destinationStatistics.getEnqueues().getCount() + ", Dequeues: " + destinationStatistics.getDequeues().getCount());
+                return destinationStatistics.getEnqueues().getCount() == backlog + 10 && destinationStatistics.getDequeues().getCount() == 500;
+            }
+        }, 10000));
+    }
+
+    public void initCombosForTestLowThenHighBatc() {
+        // the cache limits the priority ordering to available memory
+        addCombinationValues("useCache", new Object[] {new Boolean(false)});
+        // expiry processing can fill the cursor with a snapshot of the producer
+        // priority, before producers are complete
+        addCombinationValues("expireMessagePeriod", new Object[] {new Integer(0)});
     }
 
     public void testLowThenHighBatch() throws Exception {
@@ -597,6 +617,35 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         producerThread.run();
 
         MessageConsumer queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", LOW_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+
+        producerThread.priority = HIGH_PRI;
+        producerThread.run();
+
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
+        }
+        queueConsumer.close();
+
+        producerThread.priority = LOW_PRI;
+        producerThread.run();
+        producerThread.priority = MED_PRI;
+        producerThread.run();
+
+        queueConsumer = sess.createConsumer(queue);
+        for (int i = 0; i < 10; i++) {
+            Message message = queueConsumer.receive(10000);
+            assertNotNull("expect #" + i, message);
+            assertEquals("correct priority", MED_PRI, message.getJMSPriority());
+        }
         for (int i = 0; i < 10; i++) {
             Message message = queueConsumer.receive(10000);
             assertNotNull("expect #" + i, message);

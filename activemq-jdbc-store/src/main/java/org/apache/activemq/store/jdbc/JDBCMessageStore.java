@@ -18,10 +18,7 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
@@ -167,6 +164,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
         if (xaXid == null) {
             onAdd(message, sequenceId, message.getPriority());
+        }
+        if (this.isPrioritizedMessages() && message.getPriority() > lastRecoveredPriority.get()) {
+            resetTrackedLastRecoveredPriority();
         }
     }
 
@@ -374,8 +374,12 @@ public class JDBCMessageStore extends AbstractMessageStore {
             LOG.trace(this + " resetBatching, existing last recovered seqId: " + lastRecoveredSequenceId.get());
         }
         lastRecoveredSequenceId.set(-1);
-        lastRecoveredPriority.set(Byte.MAX_VALUE - 1);
+        resetTrackedLastRecoveredPriority();
 
+    }
+
+    private final void resetTrackedLastRecoveredPriority() {
+        lastRecoveredPriority.set(Byte.MAX_VALUE - 1);
     }
 
     @Override
