@@ -602,7 +602,7 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
         }, 10000));
     }
 
-    public void initCombosForTestLowThenHighBatc() {
+    public void initCombosForTestLowThenHighBatch() {
         // the cache limits the priority ordering to available memory
         addCombinationValues("useCache", new Object[] {new Boolean(false)});
         // expiry processing can fill the cursor with a snapshot of the producer
