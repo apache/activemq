@@ -658,7 +658,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                     if (broker.isExpired(node)) {
                                         ((Destination)node.getRegionDestination()).messageExpired(context, this, node);
                                     }
-                                    continue;
+                                    //AMQ-5340
+                                    if (!isBrowser()) {
+                                        continue;
+                                    }
                                 }
                                 dispatch(node);
                                 count++;

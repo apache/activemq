@@ -492,7 +492,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 } else if (md.getMessage() == null) {
                     return null;
-                } else if (isConsumerExpiryCheckEnabled() && md.getMessage().isExpired()) {
+                //AMQ-5340 - only check for expired if not a browser
+                } else if (!isBrowser() && isConsumerExpiryCheckEnabled() && md.getMessage().isExpired()) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(getConsumerId() + " received expired message: " + md);
                     }
