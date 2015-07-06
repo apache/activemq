@@ -18,8 +18,8 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
@@ -66,11 +66,10 @@ public class JDBCMessageStore extends AbstractMessageStore {
     protected final WireFormat wireFormat;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
-    protected AtomicLong lastRecoveredSequenceId = new AtomicLong(-1);
-    protected AtomicLong lastRecoveredPriority = new AtomicLong(Byte.MAX_VALUE -1);
     protected ActiveMQMessageAudit audit;
     protected final LinkedList<Long> pendingAdditions = new LinkedList<Long>();
-    
+    final long[] perPriorityLastRecovered = new long[10];
+
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination, ActiveMQMessageAudit audit) throws IOException {
         super(destination);
         this.persistenceAdapter = persistenceAdapter;
@@ -81,6 +80,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         if (destination.isQueue() && persistenceAdapter.getBrokerService().shouldRecordVirtualDestination(destination)) {
             recordDestinationCreation(destination);
         }
+        resetBatching();
     }
 
     private void recordDestinationCreation(ActiveMQDestination destination) throws IOException {
@@ -164,9 +164,6 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
         if (xaXid == null) {
             onAdd(message, sequenceId, message.getPriority());
-        }
-        if (this.isPrioritizedMessages() && message.getPriority() > lastRecoveredPriority.get()) {
-            resetTrackedLastRecoveredPriority();
         }
     }
 
@@ -334,9 +331,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             if (LOG.isTraceEnabled()) {
-                LOG.trace(this + " recoverNext lastRecovered:" + lastRecoveredSequenceId.get() + ", minPending:" + minPendingSequeunceId());
+                LOG.trace(this + " recoverNext lastRecovered:" + Arrays.toString(perPriorityLastRecovered) + ", minPending:" + minPendingSequeunceId());
             }
-            adapter.doRecoverNextMessages(c, destination, minPendingSequeunceId(), lastRecoveredSequenceId.get(), lastRecoveredPriority.get(),
+            adapter.doRecoverNextMessages(c, destination, perPriorityLastRecovered, minPendingSequeunceId(),
                     maxReturned, isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
 
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
@@ -344,8 +341,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
                         msg.getMessageId().setBrokerSequenceId(sequenceId);
                         msg.getMessageId().setFutureOrSequenceLong(sequenceId);
                         listener.recoverMessage(msg);
-                        lastRecoveredSequenceId.set(sequenceId);
-                        lastRecoveredPriority.set(msg.getPriority());
+                        trackLastRecovered(sequenceId, msg.getPriority());
                         return true;
                 }
 
@@ -366,35 +362,33 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     }
 
+    private void trackLastRecovered(long sequenceId, int priority) {
+        perPriorityLastRecovered[isPrioritizedMessages() ? priority : 0] = sequenceId;
+    }
+
     /**
      * @see org.apache.activemq.store.MessageStore#resetBatching()
      */
     public void resetBatching() {
         if (LOG.isTraceEnabled()) {
-            LOG.trace(this + " resetBatching, existing last recovered seqId: " + lastRecoveredSequenceId.get());
+            LOG.trace(this + " resetBatching. last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
-        lastRecoveredSequenceId.set(-1);
-        resetTrackedLastRecoveredPriority();
-
+        for (int i=0;i<perPriorityLastRecovered.length;i++) {
+            perPriorityLastRecovered[i] = -1;
+        }
     }
 
-    private final void resetTrackedLastRecoveredPriority() {
-        lastRecoveredPriority.set(Byte.MAX_VALUE - 1);
-    }
 
     @Override
     public void setBatch(MessageId messageId) {
         try {
             long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(null, messageId, destination);
-            lastRecoveredSequenceId.set(storedValues[0]);
-            lastRecoveredPriority.set(storedValues[1]);
+            trackLastRecovered(storedValues[0], (int)storedValues[1]);
         } catch (IOException ignoredAsAlreadyLogged) {
-            lastRecoveredSequenceId.set(-1);
-            lastRecoveredPriority.set(Byte.MAX_VALUE -1);
+            resetBatching();
         }
         if (LOG.isTraceEnabled()) {
-            LOG.trace(this + " setBatch: new sequenceId: " + lastRecoveredSequenceId.get()
-                    + ", priority: " + lastRecoveredPriority.get());
+            LOG.trace(this + " setBatch: new last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
     }
 

@@ -491,7 +491,7 @@ public class Statements {
     public String getFindNextMessagesStatement() {
         if (findNextMessagesStatement == null) {
             findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                                        + " WHERE CONTAINER=? AND ID > ? AND ID < ? AND XID IS NULL ORDER BY ID";
+                                        + " WHERE CONTAINER=? AND ID < ? AND ID > ? AND XID IS NULL ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
@@ -504,7 +504,17 @@ public class Statements {
             findNextMessagesByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
                                         + " WHERE CONTAINER=?"
                                         + " AND XID IS NULL"
-                                        + " AND ((ID > ? AND ID < ? AND PRIORITY = ?) OR PRIORITY < ?)"
+                                        + " AND ID < ? "
+                                        + " AND ( (ID > ? AND PRIORITY = 9) "
+                                        + "    OR (ID > ? AND PRIORITY = 8) "
+                                        + "    OR (ID > ? AND PRIORITY = 7) "
+                                        + "    OR (ID > ? AND PRIORITY = 6) "
+                                        + "    OR (ID > ? AND PRIORITY = 5) "
+                                        + "    OR (ID > ? AND PRIORITY = 4) "
+                                        + "    OR (ID > ? AND PRIORITY = 3) "
+                                        + "    OR (ID > ? AND PRIORITY = 2) "
+                                        + "    OR (ID > ? AND PRIORITY = 1) "
+                                        + "    OR (ID > ? AND PRIORITY = 0) )"
                                         + " ORDER BY PRIORITY DESC, ID";
         }
         return findNextMessagesByPriorityStatement;

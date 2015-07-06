@@ -37,6 +37,7 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCMessageIdScanListener;
 import org.apache.activemq.store.jdbc.JDBCMessageRecoveryListener;
+import org.apache.activemq.store.jdbc.JDBCMessageStore;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.JdbcMemoryTransactionStore;
 import org.apache.activemq.store.jdbc.Statements;
@@ -1086,8 +1087,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return result;
     }
 
-    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long maxSeq, long lastRecoveredSeq,
-            long priority, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
+    public void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, long[] lastRecoveredEntries,
+            long maxSeq, int maxReturned, boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
         cleanupExclusiveLock.readLock().lock();
@@ -1099,11 +1100,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
             s.setMaxRows(Math.min(maxReturned, maxRows));
             s.setString(1, destination.getQualifiedName());
-            s.setLong(2, lastRecoveredSeq);
-            s.setLong(3, maxSeq);
+            s.setLong(2, maxSeq);
+            int paramId = 3;
             if (isPrioritizedMessages) {
-                s.setLong(4, priority);
-                s.setLong(5, priority);
+                for (int i=9;i>=0;i--) {
+                    s.setLong(paramId++, lastRecoveredEntries[i]);
+                }
+            } else {
+                s.setLong(paramId, lastRecoveredEntries[0]);
             }
             rs = s.executeQuery();
             int count = 0;

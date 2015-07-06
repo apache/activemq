@@ -17,10 +17,12 @@
 
 package org.apache.activemq.store;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
@@ -662,6 +664,58 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             assertNotNull("expect #" + i, message);
             assertEquals("correct priority", HIGH_PRI, message.getJMSPriority());
         }
+        queueConsumer.close();
+    }
+
+    public void initCombosForTestEveryXHi() {
+        // the cache limits the priority ordering to available memory
+        addCombinationValues("useCache", new Object[] {new Boolean(false)});
+        // expiry processing can fill the cursor with a snapshot of the producer
+        // priority, before producers are complete
+        addCombinationValues("expireMessagePeriod", new Object[] {new Integer(0)});
+    }
+
+    public void testEveryXHi() throws Exception {
+        final int numMessages = 50;
+        ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST_LOW_THEN_HIGH_10");
+
+        final AtomicInteger received = new AtomicInteger(0);
+        MessageConsumer queueConsumer = sess.createConsumer(queue);
+        queueConsumer.setMessageListener(new MessageListener() {
+            @Override
+            public void onMessage(Message message) {
+                received.incrementAndGet();
+            }
+        });
+
+        MessageProducer producer = sess.createProducer(queue);
+        for (int i = 0; i < numMessages; i++) {
+            Message message = sess.createMessage();
+            if (i % 5 == 0) {
+                message.setJMSPriority(9);
+            } else {
+                message.setJMSPriority(4);
+            }
+            producer.send(message, Message.DEFAULT_DELIVERY_MODE, message.getJMSPriority(), Message.DEFAULT_TIME_TO_LIVE);
+        }
+
+        assertTrue("Got all", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return numMessages == received.get();
+            }
+        }));
+
+
+        final DestinationStatistics destinationStatistics = ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics();
+        assertTrue("Nothing else Like dlq involved", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Enqueues: " + destinationStatistics.getEnqueues().getCount() + ", Dequeues: " + destinationStatistics.getDequeues().getCount());
+                return destinationStatistics.getEnqueues().getCount() == numMessages && destinationStatistics.getDequeues().getCount() == numMessages;
+            }
+        }, 10000));
+
         queueConsumer.close();
     }
 }
