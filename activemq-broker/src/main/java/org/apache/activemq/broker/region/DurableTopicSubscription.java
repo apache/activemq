@@ -54,7 +54,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final ConcurrentMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
     private final ConcurrentMap<ActiveMQDestination, Destination> durableDestinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
-    private final boolean keepDurableSubsActive;
+    private boolean keepDurableSubsActive;
     private final AtomicBoolean active = new AtomicBoolean();
     private final AtomicLong offlineTimestamp = new AtomicLong(-1);
 
@@ -189,8 +189,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void deactivate(boolean keepDurableSubsActive, long lastDeliveredSequenceId) throws Exception {
         LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
         active.set(false);
+        this.keepDurableSubsActive = keepDurableSubsActive;
         offlineTimestamp.set(System.currentTimeMillis());
-        this.usageManager.getMemoryUsage().removeUsageListener(this);
+        usageManager.getMemoryUsage().removeUsageListener(this);
 
         ArrayList<Topic> topicsToDeactivate = new ArrayList<Topic>();
         List<MessageReference> savedDispateched = null;

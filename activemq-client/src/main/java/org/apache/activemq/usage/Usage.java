@@ -138,6 +138,10 @@ public abstract class Usage<T extends Usage> implements Service {
         listeners.remove(listener);
     }
 
+    public int getNumUsageListeners() {
+        return listeners.size();
+    }
+
     public long getLimit() {
         usageLock.readLock().lock();
         try {
