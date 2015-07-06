@@ -58,8 +58,7 @@ public class JmsQueueBrowserExpirationTest {
     // Message expires after 1 second
     private static final long TTL = 1000;
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(JmsQueueBrowserExpirationTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JmsQueueBrowserExpirationTest.class);
 
     private BrokerService broker;
     private URI connectUri;
@@ -81,12 +80,13 @@ public class JmsQueueBrowserExpirationTest {
 
     @After
     public void stopBroker() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
 
-    //This should finish in under 3 seconds because the messages should be expired
-    @Test(timeout=3000)
+    @Test(timeout=10000)
     public void testBrowsingExpiration() throws JMSException, InterruptedException {
 
         sendTestMessages();
@@ -106,19 +106,14 @@ public class JmsQueueBrowserExpirationTest {
             // Give JMS threads more opportunity to do their work.
             Thread.sleep(100);
             browsed = browse(queue, browserConnection);
-            String time =
-                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - begin)
-                            + " ms";
-            System.out.println("[" + time + "] found " + browsed + " messages");
+            LOG.info("[{}ms] found {}", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - begin), browsed);
         }
-        System.out.println("Finished");
+        LOG.info("Finished");
         browserConnection.close();
     }
 
-    private int browse(ActiveMQQueue queue, Connection connection)
-            throws JMSException {
-        Session session =
-                connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    private int browse(ActiveMQQueue queue, Connection connection) throws JMSException {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         QueueBrowser browser = session.createBrowser(queue);
         Enumeration<?> enumeration = browser.getEnumeration();
         int browsed = 0;
@@ -146,8 +141,7 @@ public class JmsQueueBrowserExpirationTest {
             producer.send(prodSession.createTextMessage(msgStr));
             LOG.info("P&C: {}", msgStr);
         }
+
         prodSession.close();
     }
-
-
 }

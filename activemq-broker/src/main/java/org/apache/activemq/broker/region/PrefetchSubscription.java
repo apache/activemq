@@ -648,17 +648,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         synchronized(dispatchLock) {
                             pending.remove();
                             node.decrementReferenceCount();
-                            if( !isDropped(node) && canDispatch(node)) {
+                            if (!isDropped(node) && canDispatch(node)) {
 
                                 // Message may have been sitting in the pending
                                 // list a while waiting for the consumer to ak the message.
-                                if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
+                                if (node != QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
                                     //increment number to dispatch
                                     numberToDispatch++;
                                     if (broker.isExpired(node)) {
                                         ((Destination)node.getRegionDestination()).messageExpired(context, this, node);
                                     }
-                                    //AMQ-5340
+
                                     if (!isBrowser()) {
                                         continue;
                                     }
