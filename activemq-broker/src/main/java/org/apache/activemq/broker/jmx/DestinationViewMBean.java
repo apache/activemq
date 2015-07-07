@@ -122,6 +122,14 @@ public interface DestinationViewMBean {
     long getQueueSize();
 
     /**
+     * Returns the memory size of all messages in this destination's store 
+     *
+     * @return Returns the memory size of all messages in this destination's store 
+     */
+    @MBeanInfo("The memory size of all messages in this destination's store.")
+    long getStoreMessageSize();
+
+    /**
      * @return An array of all the messages in the destination's queue.
      */
     @MBeanInfo("An array of all messages in the destination. Not HTML friendly.")

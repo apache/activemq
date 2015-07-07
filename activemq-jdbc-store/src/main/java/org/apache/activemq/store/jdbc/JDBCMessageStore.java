@@ -304,6 +304,7 @@ public class JDBCMessageStore extends AbstractMessageStore {
         }
     }
 
+    @Override
     public int getMessageCount() throws IOException {
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
@@ -401,4 +402,5 @@ public class JDBCMessageStore extends AbstractMessageStore {
     public String toString() {
         return destination.getPhysicalName() + ",pendingSize:" + pendingAdditions.size();
     }
+
 }

@@ -101,6 +101,11 @@ public class ProxyMessageStore implements MessageStore {
     }
 
     @Override
+    public long getMessageSize() throws IOException {
+        return delegate.getMessageSize();
+    }
+
+    @Override
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         delegate.recoverNextMessages(maxReturned, listener);
     }
@@ -169,4 +174,10 @@ public class ProxyMessageStore implements MessageStore {
     public String toString() {
         return delegate.toString();
     }
+
+    @Override
+    public MessageStoreStatistics getMessageStoreStatistics() {
+        return delegate.getMessageStoreStatistics();
+    }
+
 }

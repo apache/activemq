@@ -35,8 +35,8 @@ import org.apache.activemq.store.AbstractMessageStore;
 /**
  * An implementation of {@link org.apache.activemq.store.MessageStore} which
  * uses a
- * 
- * 
+ *
+ *
  */
 public class MemoryMessageStore extends AbstractMessageStore {
 
@@ -56,6 +56,8 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
         synchronized (messageTable) {
             messageTable.put(message.getMessageId(), message);
+            getMessageStoreStatistics().getMessageCount().increment();
+            getMessageStoreStatistics().getMessageSize().addSize(message.getSize());
         }
         message.incrementReferenceCount();
         message.getMessageId().setFutureOrSequenceLong(sequenceId++);
@@ -93,6 +95,8 @@ public class MemoryMessageStore extends AbstractMessageStore {
             if ((lastBatchId != null && lastBatchId.equals(msgId)) || messageTable.isEmpty()) {
                 lastBatchId = null;
             }
+            getMessageStoreStatistics().getMessageCount().decrement();
+            getMessageStoreStatistics().getMessageSize().addSize(-removed.getSize());
         }
     }
 
@@ -114,18 +118,15 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public void removeAllMessages(ConnectionContext context) throws IOException {
         synchronized (messageTable) {
             messageTable.clear();
+            getMessageStoreStatistics().reset();
         }
     }
 
     public void delete() {
         synchronized (messageTable) {
             messageTable.clear();
+            getMessageStoreStatistics().reset();
         }
-    }
-
-    
-    public int getMessageCount() {
-        return messageTable.size();
     }
 
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
@@ -161,8 +162,34 @@ public class MemoryMessageStore extends AbstractMessageStore {
 
     public void updateMessage(Message message) {
         synchronized (messageTable) {
+            Message original = messageTable.get(message.getMessageId());
+
+            //if can't be found then increment count, else remove old size
+            if (original == null) {
+                getMessageStoreStatistics().getMessageCount().increment();
+            } else {
+                getMessageStoreStatistics().getMessageSize().addSize(-original.getSize());
+            }
             messageTable.put(message.getMessageId(), message);
+            getMessageStoreStatistics().getMessageSize().addSize(message.getSize());
         }
     }
-    
+
+    @Override
+    public void recoverMessageStoreStatistics() throws IOException {
+        synchronized (messageTable) {
+            long size = 0;
+            int count = 0;
+            for (Iterator<Message> iter = messageTable.values().iterator(); iter
+                    .hasNext();) {
+                Message msg = iter.next();
+                size += msg.getSize();
+            }
+
+            getMessageStoreStatistics().reset();
+            getMessageStoreStatistics().getMessageCount().setCount(count);
+            getMessageStoreStatistics().getMessageSize().setTotalSize(size);
+        }
+    }
+
 }

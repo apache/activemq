@@ -105,6 +105,7 @@ public class Topic extends BaseDestination implements Task {
             // misleading metrics.
             // int messageCount = store.getMessageCount();
             // destinationStatistics.getMessages().setCount(messageCount);
+            store.start();
         }
     }
 

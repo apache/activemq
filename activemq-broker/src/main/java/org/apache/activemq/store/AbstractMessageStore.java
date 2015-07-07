@@ -30,6 +30,7 @@ abstract public class AbstractMessageStore implements MessageStore {
     protected final ActiveMQDestination destination;
     protected boolean prioritizedMessages;
     protected IndexListener indexListener;
+    protected final MessageStoreStatistics messageStoreStatistics = new MessageStoreStatistics();
 
     public AbstractMessageStore(ActiveMQDestination destination) {
         this.destination = destination;
@@ -41,6 +42,7 @@ abstract public class AbstractMessageStore implements MessageStore {
 
     @Override
     public void start() throws Exception {
+        recoverMessageStoreStatistics();
     }
 
     @Override
@@ -131,5 +133,24 @@ abstract public class AbstractMessageStore implements MessageStore {
 
     static {
        FUTURE = new InlineListenableFuture();
+    }
+
+    @Override
+    public int getMessageCount() throws IOException {
+        return (int) getMessageStoreStatistics().getMessageCount().getCount();
+    }
+
+    @Override
+    public long getMessageSize() throws IOException {
+        return getMessageStoreStatistics().getMessageSize().getTotalSize();
+    }
+
+    @Override
+    public MessageStoreStatistics getMessageStoreStatistics() {
+        return messageStoreStatistics;
+    }
+
+    protected void recoverMessageStoreStatistics() throws IOException {
+
     }
 }
