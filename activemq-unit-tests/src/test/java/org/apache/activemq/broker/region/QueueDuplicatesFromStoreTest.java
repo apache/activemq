@@ -366,6 +366,11 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             public SubscriptionStatistics getSubscriptionStatistics() {
                 return subscriptionStatistics;
             }
+
+            @Override
+            public long getInFlightMessageSize() {
+                return subscriptionStatistics.getInflightMessageSize().getTotalSize();
+            }
         };
 
         queue.addSubscription(contextNotInTx, subscription);
