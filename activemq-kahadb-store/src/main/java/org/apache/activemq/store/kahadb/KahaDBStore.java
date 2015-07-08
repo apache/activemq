@@ -209,9 +209,15 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             // In case the recovered store used a different OpenWire version log a warning
             // to assist in determining why journal reads fail.
             if (metadata.openwireVersion != brokerService.getStoreOpenWireVersion()) {
-                LOG.warn("Recovered Store uses a different OpenWire version[{}] " +
-                         "than the version configured[{}].",
+                LOG.warn("Existing Store uses a different OpenWire version[{}] " +
+                         "than the version configured[{}] reverting to the version " +
+                         "used by this store, some newer broker features may not work" +
+                         "as expected.",
                          metadata.openwireVersion, brokerService.getStoreOpenWireVersion());
+
+                // Update the broker service instance to the actual version in use.
+                wireFormat.setVersion(metadata.openwireVersion);
+                brokerService.setStoreOpenWireVersion(metadata.openwireVersion);
             }
         }
 

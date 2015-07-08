@@ -27,8 +27,10 @@ public interface CommandTypes {
     byte PROTOCOL_VERSION = 11;
 
     // What is the latest version of the openwire protocol used in the stores
-    byte PROTOCOL_STORE_VERSION = 6;
+    byte PROTOCOL_STORE_VERSION = 11;
 
+    // What is the legacy version that old KahaDB store's most commonly used
+    byte PROTOCOL_LEGACY_STORE_VERSION = 6;
 
     // A marshaling layer can use this type to specify a null object.
     byte NULL = 0;

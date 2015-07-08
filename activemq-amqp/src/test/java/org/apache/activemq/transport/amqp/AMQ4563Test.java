@@ -222,9 +222,4 @@ public class AMQ4563Test extends AmqpTestSupport {
     protected boolean isPersistent() {
         return true;
     }
-
-    @Override
-    protected int getStoreOpenWireVersion() {
-        return 10;
-    }
 }

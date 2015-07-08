@@ -45,7 +45,6 @@ import org.apache.activemq.broker.jmx.ConnectorViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
-import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.activemq.transport.amqp.protocol.AmqpConnection;
@@ -102,7 +101,6 @@ public class AmqpTestSupport {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File(KAHADB_DIRECTORY + getTestName()));
             brokerService.setPersistenceAdapter(kaha);
-            brokerService.setStoreOpenWireVersion(getStoreOpenWireVersion());
         }
         brokerService.setSchedulerSupport(false);
         brokerService.setAdvisorySupport(false);
@@ -186,10 +184,6 @@ public class AmqpTestSupport {
 
     protected boolean isUseJmx() {
         return true;
-    }
-
-    protected int getStoreOpenWireVersion() {
-        return OpenWireFormat.DEFAULT_WIRE_VERSION;
     }
 
     protected boolean isUseOpenWireConnector() {

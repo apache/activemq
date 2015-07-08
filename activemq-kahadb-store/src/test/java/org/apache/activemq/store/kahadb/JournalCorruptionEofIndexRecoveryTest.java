@@ -16,16 +16,21 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -40,25 +45,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-
 public class JournalCorruptionEofIndexRecoveryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JournalCorruptionEofIndexRecoveryTest.class);
 
-    ActiveMQConnectionFactory cf = null;
-    BrokerService broker = null;
-    private final Destination destination = new ActiveMQQueue("Test");
+    private ActiveMQConnectionFactory cf = null;
+    private BrokerService broker = null;
     private String connectionUri;
     private KahaDBPersistenceAdapter adapter;
 
+    private final Destination destination = new ActiveMQQueue("Test");
+    private final String KAHADB_DIRECTORY = "target/activemq-data/";
+    private final String payload = new String(new byte[1024]);
 
     protected void startBroker() throws Exception {
         doStartBroker(true, false);
     }
-
 
     protected void restartBroker(boolean whackIndex) throws Exception {
         restartBroker(whackIndex, false);
@@ -83,6 +85,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
     private void doStartBroker(boolean delete, boolean forceRecoverIndex) throws Exception {
         broker = new BrokerService();
+        broker.setDataDirectory(KAHADB_DIRECTORY);
+
         if (delete) {
             IOHelper.deleteChildren(broker.getPersistenceAdapter().getDirectory());
             IOHelper.delete(broker.getPersistenceAdapter().getDirectory());
@@ -118,7 +122,6 @@ public class JournalCorruptionEofIndexRecoveryTest {
 
         adapter.setPreallocationStrategy("zeros");
         adapter.setPreallocationScope("entire_journal");
-
     }
 
     @After
@@ -128,7 +131,6 @@ public class JournalCorruptionEofIndexRecoveryTest {
             broker.waitUntilStopped();
         }
     }
-
 
     @Test
     public void testRecoveryAfterCorruptionEof() throws Exception {
@@ -145,9 +147,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         restartBroker(false);
 
         assertEquals("missing one message", 49, broker.getAdminView().getTotalMessageCount());
-
         assertEquals("Drain", 49, drainQueue(49));
-
     }
 
     @Test
@@ -161,9 +161,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         restartBroker(true);
 
         assertEquals("missing one message", 3, broker.getAdminView().getTotalMessageCount());
-
         assertEquals("Drain", 3, drainQueue(4));
-
     }
 
     @Test
@@ -177,16 +175,13 @@ public class JournalCorruptionEofIndexRecoveryTest {
         restartBroker(false);
 
         assertEquals("unnoticed", 4, broker.getAdminView().getTotalMessageCount());
-
         assertEquals("Drain", 0, drainQueue(4));
 
         // force recover index and loose one message
         restartBroker(false, true);
 
         assertEquals("missing one index recreation", 3, broker.getAdminView().getTotalMessageCount());
-
         assertEquals("Drain", 3, drainQueue(4));
-
     }
 
     @Test
@@ -200,7 +195,6 @@ public class JournalCorruptionEofIndexRecoveryTest {
         restartBroker(false, true);
 
         assertEquals("Drain", numToSend, drainQueue(numToSend));
-
     }
 
     private void corruptBatchCheckSumSplash(int id) throws Exception{
@@ -230,7 +224,6 @@ public class JournalCorruptionEofIndexRecoveryTest {
         randomAccessFile.writeInt(size);
 
         randomAccessFile.getChannel().force(true);
-
     }
 
     private void corruptBatchEndEof(int id) throws Exception{
@@ -246,7 +239,6 @@ public class JournalCorruptionEofIndexRecoveryTest {
         randomAccessFile.writeInt(31 * 1024 * 1024);
         randomAccessFile.writeLong(0l);
         randomAccessFile.getChannel().force(true);
-
     }
 
     private ArrayList<Integer> findBatch(RecoverableRandomAccessFile randomAccessFile, int where) throws IOException {
@@ -269,11 +261,8 @@ public class JournalCorruptionEofIndexRecoveryTest {
         return batchPositions;
     }
 
-
     private int getNumberOfJournalFiles() throws IOException {
-
-        Collection<DataFile> files =
-                ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+        Collection<DataFile> files = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         int reality = 0;
         for (DataFile file : files) {
             if (file != null) {
@@ -283,11 +272,9 @@ public class JournalCorruptionEofIndexRecoveryTest {
         return reality;
     }
 
-
     private int produceMessages(Destination destination, int numToSend) throws Exception {
         int sent = 0;
-        Connection connection = new ActiveMQConnectionFactory(
-                broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
+        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
         connection.start();
         try {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -306,8 +293,6 @@ public class JournalCorruptionEofIndexRecoveryTest {
     private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {
         return produceMessages(destination, numToSend);
     }
-
-    final String payload = new String(new byte[1024]);
 
     private Message createMessage(Session session, int i) throws Exception {
         return session.createTextMessage(payload + "::" + i);

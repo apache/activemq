@@ -132,7 +132,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         protected transient ActiveMQMessageAuditNoSync producerSequenceIdTracker = new ActiveMQMessageAuditNoSync();
         protected transient Map<Integer, Set<Integer>> ackMessageFileMap = new HashMap<Integer, Set<Integer>>();
         protected int version = VERSION;
-        protected int openwireVersion = OpenWireFormat.DEFAULT_VERSION;
+        protected int openwireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
 
         public void read(DataInput is) throws IOException {
             state = is.readInt();
@@ -168,7 +168,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             try {
                 openwireVersion = is.readInt();
             } catch (EOFException expectedOnUpgrade) {
-                openwireVersion = OpenWireFormat.DEFAULT_VERSION;
+                openwireVersion = OpenWireFormat.DEFAULT_LEGACY_VERSION;
             }
             LOG.info("KahaDB is version " + version);
         }

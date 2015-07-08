@@ -16,16 +16,21 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -40,18 +45,16 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-
 @RunWith(Parameterized.class)
 public class JournalCorruptionIndexRecoveryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JournalCorruptionIndexRecoveryTest.class);
 
-    ActiveMQConnectionFactory cf = null;
-    BrokerService broker = null;
+    private final String KAHADB_DIRECTORY = "target/activemq-data/";
+    private final String payload = new String(new byte[1024]);
+
+    private ActiveMQConnectionFactory cf = null;
+    private BrokerService broker = null;
     private final Destination destination = new ActiveMQQueue("Test");
     private String connectionUri;
     private KahaDBPersistenceAdapter adapter;
@@ -69,7 +72,6 @@ public class JournalCorruptionIndexRecoveryTest {
         doStartBroker(true);
     }
 
-
     protected void restartBroker() throws Exception {
         File dataDir = broker.getPersistenceAdapter().getDirectory();
 
@@ -83,12 +85,12 @@ public class JournalCorruptionIndexRecoveryTest {
         doStartBroker(false);
     }
 
-
     private void doStartBroker(boolean delete) throws Exception {
         broker = new BrokerService();
         broker.setDeleteAllMessagesOnStartup(delete);
         broker.setPersistent(true);
         broker.setUseJmx(true);
+        broker.setDataDirectory(KAHADB_DIRECTORY);
         broker.addConnector("tcp://localhost:0");
 
         configurePersistence(broker);
@@ -112,7 +114,6 @@ public class JournalCorruptionIndexRecoveryTest {
 
         adapter.setCheckForCorruptJournalFiles(true);
         adapter.setIgnoreMissingJournalfiles(true);
-
     }
 
     @After
@@ -138,10 +139,8 @@ public class JournalCorruptionIndexRecoveryTest {
         restartBroker();
 
         assertEquals("missing one message", 49, broker.getAdminView().getTotalMessageCount());
-
         assertEquals("Drain", 49, drainQueue(49));
     }
-
 
     @Test
     public void testRecoveryAfterCorruptionEnd() throws Exception {
@@ -158,9 +157,7 @@ public class JournalCorruptionIndexRecoveryTest {
         restartBroker();
 
         assertEquals("missing one message", 49, broker.getAdminView().getTotalMessageCount());
-
         assertEquals("Drain", 49, drainQueue(49));
-
     }
 
     @Test
@@ -180,15 +177,12 @@ public class JournalCorruptionIndexRecoveryTest {
 
         assertEquals("missing one message", 48, broker.getAdminView().getTotalMessageCount());
         assertEquals("Drain", 48, drainQueue(48));
-
     }
 
     private void whackIndex(File dataDir) {
-
         File indexToDelete = new File(dataDir, "db.data");
         LOG.info("Whacking index: " + indexToDelete);
         indexToDelete.delete();
-
     }
 
     private void corruptBatchMiddle(int i) throws IOException {
@@ -201,8 +195,7 @@ public class JournalCorruptionIndexRecoveryTest {
 
     private void corruptBatch(int id, boolean atEnd) throws IOException {
 
-        Collection<DataFile> files =
-                ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+        Collection<DataFile> files = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         DataFile dataFile = (DataFile) files.toArray()[id];
 
         RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
@@ -232,11 +225,8 @@ public class JournalCorruptionIndexRecoveryTest {
         randomAccessFile.write(bla, 0, bla.length);
     }
 
-
     private int getNumberOfJournalFiles() throws IOException {
-
-        Collection<DataFile> files =
-                ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
+        Collection<DataFile> files = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().values();
         int reality = 0;
         for (DataFile file : files) {
             if (file != null) {
@@ -246,11 +236,9 @@ public class JournalCorruptionIndexRecoveryTest {
         return reality;
     }
 
-
     private int produceMessages(Destination destination, int numToSend) throws Exception {
         int sent = 0;
-        Connection connection = new ActiveMQConnectionFactory(
-                broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
+        Connection connection = new ActiveMQConnectionFactory(broker.getTransportConnectors().get(0).getConnectUri()).createConnection();
         connection.start();
         try {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -269,8 +257,6 @@ public class JournalCorruptionIndexRecoveryTest {
     private int produceMessagesToConsumeMultipleDataFiles(int numToSend) throws Exception {
         return produceMessages(destination, numToSend);
     }
-
-    final String payload = new String(new byte[1024]);
 
     private Message createMessage(Session session, int i) throws Exception {
         return session.createTextMessage(payload + "::" + i);

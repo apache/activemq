@@ -33,13 +33,14 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
- * 
- * 
+ *
+ *
  */
 public final class OpenWireFormat implements WireFormat {
 
-    public static final int DEFAULT_VERSION = CommandTypes.PROTOCOL_STORE_VERSION;
+    public static final int DEFAULT_STORE_VERSION = CommandTypes.PROTOCOL_STORE_VERSION;
     public static final int DEFAULT_WIRE_VERSION = CommandTypes.PROTOCOL_VERSION;
+    public static final int DEFAULT_LEGACY_VERSION = CommandTypes.PROTOCOL_LEGACY_STORE_VERSION;
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
 
     static final byte NULL_TYPE = CommandTypes.NULL;
@@ -64,15 +65,16 @@ public final class OpenWireFormat implements WireFormat {
     private DataByteArrayOutputStream bytesOut = new DataByteArrayOutputStream();
     private DataByteArrayInputStream bytesIn = new DataByteArrayInputStream();
     private WireFormatInfo preferedWireFormatInfo;
-    
+
     public OpenWireFormat() {
-        this(DEFAULT_VERSION);
+        this(DEFAULT_STORE_VERSION);
     }
 
     public OpenWireFormat(int i) {
         setVersion(i);
     }
 
+    @Override
     public int hashCode() {
         return version ^ (cacheEnabled ? 0x10000000 : 0x20000000)
                ^ (stackTraceEnabled ? 0x01000000 : 0x02000000)
@@ -91,6 +93,7 @@ public final class OpenWireFormat implements WireFormat {
         return answer;
     }
 
+    @Override
     public boolean equals(Object object) {
         if (object == null) {
             return false;
@@ -102,6 +105,7 @@ public final class OpenWireFormat implements WireFormat {
     }
 
 
+    @Override
     public String toString() {
         return "OpenWireFormat{version=" + version + ", cacheEnabled=" + cacheEnabled + ", stackTraceEnabled=" + stackTraceEnabled + ", tightEncodingEnabled="
                + tightEncodingEnabled + ", sizePrefixDisabled=" + sizePrefixDisabled +  ", maxFrameSize=" + maxFrameSize + "}";
@@ -109,10 +113,12 @@ public final class OpenWireFormat implements WireFormat {
         // tightEncodingEnabled="+tightEncodingEnabled+"}";
     }
 
+    @Override
     public int getVersion() {
         return version;
     }
 
+    @Override
     public synchronized ByteSequence marshal(Object command) throws IOException {
 
         if (cacheEnabled) {
@@ -125,7 +131,7 @@ public final class OpenWireFormat implements WireFormat {
 
             DataStructure c = (DataStructure)command;
             byte type = c.getDataStructureType();
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
             }
@@ -173,6 +179,7 @@ public final class OpenWireFormat implements WireFormat {
         return sequence;
     }
 
+    @Override
     public synchronized Object unmarshal(ByteSequence sequence) throws IOException {
         bytesIn.restart(sequence);
         // DataInputStream dis = new DataInputStream(new
@@ -197,6 +204,7 @@ public final class OpenWireFormat implements WireFormat {
         return command;
     }
 
+    @Override
     public synchronized void marshal(Object o, DataOutput dataOut) throws IOException {
 
         if (cacheEnabled) {
@@ -208,7 +216,7 @@ public final class OpenWireFormat implements WireFormat {
 
             DataStructure c = (DataStructure)o;
             byte type = c.getDataStructureType();
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
             }
@@ -246,12 +254,13 @@ public final class OpenWireFormat implements WireFormat {
 
         } else {
             if (!sizePrefixDisabled) {
-            	dataOut.writeInt(size);
+                dataOut.writeInt(size);
             }
             dataOut.writeByte(NULL_TYPE);
         }
     }
 
+    @Override
     public Object unmarshal(DataInput dis) throws IOException {
         DataInput dataIn = dis;
         if (!sizePrefixDisabled) {
@@ -276,7 +285,7 @@ public final class OpenWireFormat implements WireFormat {
         if (o != null) {
             DataStructure c = (DataStructure)o;
             byte type = c.getDataStructureType();
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
             }
@@ -299,7 +308,7 @@ public final class OpenWireFormat implements WireFormat {
         if (o != null) {
             DataStructure c = (DataStructure)o;
             byte type = c.getDataStructureType();
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
             }
@@ -312,9 +321,10 @@ public final class OpenWireFormat implements WireFormat {
     /**
      * Allows you to dynamically switch the version of the openwire protocol
      * being used.
-     * 
+     *
      * @param version
      */
+    @Override
     public void setVersion(int version) {
         String mfName = "org.apache.activemq.openwire.v" + version + ".MarshallerFactory";
         Class mfClass;
@@ -343,7 +353,7 @@ public final class OpenWireFormat implements WireFormat {
     public Object doUnmarshal(DataInput dis) throws IOException {
         byte dataType = dis.readByte();
         if (dataType != NULL_TYPE) {
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[dataType & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[dataType & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + dataType);
             }
@@ -382,7 +392,7 @@ public final class OpenWireFormat implements WireFormat {
         }
 
         byte type = o.getDataStructureType();
-        DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+        DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
         if (dsm == null) {
             throw new IOException("Unknown data type: " + type);
         }
@@ -409,7 +419,7 @@ public final class OpenWireFormat implements WireFormat {
 
         } else {
 
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
             }
@@ -422,7 +432,7 @@ public final class OpenWireFormat implements WireFormat {
         if (bs.readBoolean()) {
 
             byte dataType = dis.readByte();
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[dataType & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[dataType & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + dataType);
             }
@@ -455,7 +465,7 @@ public final class OpenWireFormat implements WireFormat {
         if (dis.readBoolean()) {
 
             byte dataType = dis.readByte();
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[dataType & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[dataType & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + dataType);
             }
@@ -473,7 +483,7 @@ public final class OpenWireFormat implements WireFormat {
         if (o != null) {
             byte type = o.getDataStructureType();
             dataOut.writeByte(type);
-            DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[type & 0xFF];
+            DataStreamMarshaller dsm = dataMarshallers[type & 0xFF];
             if (dsm == null) {
                 throw new IOException("Unknown data type: " + type);
             }

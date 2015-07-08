@@ -251,7 +251,7 @@ public class BrokerService implements Service {
     private boolean restartRequested = false;
     private boolean rejectDurableConsumers = false;
 
-    private int storeOpenWireVersion = OpenWireFormat.DEFAULT_VERSION;
+    private int storeOpenWireVersion = OpenWireFormat.DEFAULT_STORE_VERSION;
 
     static {
 
