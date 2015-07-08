@@ -277,7 +277,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (adapter instanceof PersistenceAdapter) {
+        if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeQueueMessageStore(destination);
             removeMessageStore(adapter, destination);
             destinationMap.removeAll(destination);
@@ -292,7 +292,7 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (adapter instanceof PersistenceAdapter) {
+        if (adapter instanceof PersistenceAdapter && adapter.getDestinations().isEmpty()) {
             adapter.removeTopicMessageStore(destination);
             removeMessageStore(adapter, destination);
             destinationMap.removeAll(destination);
@@ -300,18 +300,16 @@ public class MultiKahaDBPersistenceAdapter extends LockableServiceSupport implem
     }
 
     private void removeMessageStore(PersistenceAdapter adapter, ActiveMQDestination destination) {
-        if (adapter.getDestinations().isEmpty()) {
-            stopAdapter(adapter, destination.toString());
-            File adapterDir = adapter.getDirectory();
-            if (adapterDir != null) {
-                if (IOHelper.deleteFile(adapterDir)) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.info("deleted per destination adapter directory for: " + destination);
-                    }
-                } else {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.info("failed to deleted per destination adapter directory for: " + destination);
-                    }
+        stopAdapter(adapter, destination.toString());
+        File adapterDir = adapter.getDirectory();
+        if (adapterDir != null) {
+            if (IOHelper.deleteFile(adapterDir)) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.info("deleted per destination adapter directory for: " + destination);
+                }
+            } else {
+                if (LOG.isTraceEnabled()) {
+                    LOG.info("failed to deleted per destination adapter directory for: " + destination);
                 }
             }
         }

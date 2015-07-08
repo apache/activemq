@@ -1049,23 +1049,9 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                         for (Iterator<Entry<String, StoredDestination>> iterator = metadata.destinations.iterator(tx); iterator
                                 .hasNext();) {
                             Entry<String, StoredDestination> entry = iterator.next();
-                            if (!isEmptyTopic(entry, tx)) {
-                                rc.add(convert(entry.getKey()));
-                            }
+                            //Removing isEmpty topic check - see AMQ-5875
+                            rc.add(convert(entry.getKey()));
                         }
-                    }
-
-                    private boolean isEmptyTopic(Entry<String, StoredDestination> entry, Transaction tx)
-                            throws IOException {
-                        boolean isEmptyTopic = false;
-                        ActiveMQDestination dest = convert(entry.getKey());
-                        if (dest.isTopic()) {
-                            StoredDestination loadedStore = getStoredDestination(convert(dest), tx);
-                            if (loadedStore.subscriptionAcks.isEmpty(tx)) {
-                                isEmptyTopic = true;
-                            }
-                        }
-                        return isEmptyTopic;
                     }
                 });
             }finally {
