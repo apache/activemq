@@ -121,7 +121,7 @@ public class PropertiesLoginModuleRaceConditionTest {
     public void after() throws InterruptedException {
         pool.shutdown();
         assertTrue(pool.awaitTermination(500, TimeUnit.SECONDS));
-        PropertiesLoginModule.resetUsersAndGroupsCache();
+        PropertiesLoader.resetUsersAndGroupsCache();
     }
 
     @Test

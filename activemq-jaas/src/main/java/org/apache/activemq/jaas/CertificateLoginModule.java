@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author sepandm@gmail.com (Sepand)
  */
-public abstract class CertificateLoginModule implements LoginModule {
+public abstract class CertificateLoginModule extends PropertiesLoader implements LoginModule {
 
     private static final Logger LOG = LoggerFactory.getLogger(CertificateLoginModule.class);
 
@@ -54,7 +54,6 @@ public abstract class CertificateLoginModule implements LoginModule {
     private String username;
     private Set<String> groups;
     private Set<Principal> principals = new HashSet<Principal>();
-    private boolean debug;
 
     /**
      * Overriding to allow for proper initialization. Standard JAAS.
@@ -63,12 +62,7 @@ public abstract class CertificateLoginModule implements LoginModule {
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-
-        debug = "true".equalsIgnoreCase((String)options.get("debug"));
-
-        if (debug) {
-            LOG.debug("Initialized debug");
-        }
+        init(options);
     }
 
     /**
