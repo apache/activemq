@@ -1930,7 +1930,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected class StoredDestinationMarshaller extends VariableMarshaller<StoredDestination> {
 
-    	final MessageKeysMarshaller messageKeysMarshaller = new MessageKeysMarshaller();
+        final MessageKeysMarshaller messageKeysMarshaller = new MessageKeysMarshaller();
 
         @Override
         public StoredDestination readPayload(final DataInput dataIn) throws IOException {
@@ -2128,6 +2128,15 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         rc.messageIdIndex.setValueMarshaller(LongMarshaller.INSTANCE);
         rc.messageIdIndex.load(tx);
 
+        //go through an upgrade old index if older than version 6
+        if (metadata.version < 6) {
+            for (Iterator<Entry<Location, Long>> iterator = rc.locationIndex.iterator(tx); iterator.hasNext(); ) {
+                Entry<Location, Long> entry = iterator.next();
+                // modify so it is upgraded
+                rc.locationIndex.put(tx, entry.getKey(), entry.getValue());
+            }
+        }
+
         // If it was a topic...
         if (topic) {
 
@@ -2275,24 +2284,24 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     protected final Map<String, MessageStore> storeCache =
             new ConcurrentHashMap<String, MessageStore>();
 
-	/**
-	 * Locate the storeMessageSize counter for this KahaDestination
-	 * @param kahaDestination
-	 * @return
-	 */
-	protected MessageStoreStatistics getStoreStats(String kahaDestKey) {
-	    MessageStoreStatistics storeStats = null;
-		try {
-		    MessageStore messageStore = storeCache.get(kahaDestKey);
-		    if (messageStore != null) {
-		        storeStats = messageStore.getMessageStoreStatistics();
-		    }
-		} catch (Exception e1) {
-			 LOG.error("Getting size counter of destination failed", e1);
-		}
+    /**
+     * Locate the storeMessageSize counter for this KahaDestination
+     * @param kahaDestination
+     * @return
+     */
+    protected MessageStoreStatistics getStoreStats(String kahaDestKey) {
+        MessageStoreStatistics storeStats = null;
+        try {
+            MessageStore messageStore = storeCache.get(kahaDestKey);
+            if (messageStore != null) {
+                storeStats = messageStore.getMessageStoreStatistics();
+            }
+        } catch (Exception e1) {
+             LOG.error("Getting size counter of destination failed", e1);
+        }
 
-		return storeStats;
-	}
+        return storeStats;
+    }
 
     /**
      * Determine whether this Destination matches the DestinationType
@@ -2319,6 +2328,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
         }
 
+        @Override
         public Location readPayload(DataInput dataIn) throws IOException {
             Location rc = new Location();
             rc.setDataFileId(dataIn.readInt());
@@ -2329,6 +2339,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             return rc;
         }
 
+        @Override
         public void writePayload(Location object, DataOutput dataOut)
                 throws IOException {
             dataOut.writeInt(object.getDataFileId());
@@ -2336,14 +2347,17 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             dataOut.writeInt(object.getSize());
         }
 
+        @Override
         public int getFixedSize() {
             return 12;
         }
 
+        @Override
         public Location deepCopy(Location source) {
             return new Location(source);
         }
 
+        @Override
         public boolean isDeepCopySupported() {
             return true;
         }

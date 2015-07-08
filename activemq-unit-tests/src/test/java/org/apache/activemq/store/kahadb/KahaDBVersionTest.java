@@ -56,6 +56,8 @@ public class KahaDBVersionTest extends TestCase {
     final static File VERSION_2_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion2");
     final static File VERSION_3_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion3");
     final static File VERSION_4_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion4");
+    final static File VERSION_5_DB = new File(basedir + "/src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion5");
+
 
     BrokerService broker = null;
 
@@ -76,7 +78,7 @@ public class KahaDBVersionTest extends TestCase {
 
     public void XtestCreateStore() throws Exception {
         KahaDBPersistenceAdapter kaha = new KahaDBPersistenceAdapter();
-        File dir = new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion4");
+        File dir = new File("src/test/resources/org/apache/activemq/store/kahadb/KahaDBVersion5");
         IOHelper.deleteFile(dir);
         kaha.setDirectory(dir);
         kaha.setJournalMaxFileLength(1024 * 1024);
@@ -125,6 +127,10 @@ public class KahaDBVersionTest extends TestCase {
 
     public void testVersion4Conversion() throws Exception {
         doConvertRestartCycle(VERSION_4_DB);
+    }
+
+    public void testVersion5Conversion() throws Exception {
+        doConvertRestartCycle(VERSION_5_DB);
     }
 
     public void doConvertRestartCycle(File existingStore) throws Exception {
