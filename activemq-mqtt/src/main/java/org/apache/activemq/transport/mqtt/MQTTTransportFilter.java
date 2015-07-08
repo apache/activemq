@@ -226,7 +226,7 @@ public class MQTTTransportFilter extends TransportFilter implements MQTTTranspor
      *        the connection frame received timeout value.
      */
     public void setConnectAttemptTimeout(long connectTimeout) {
-        this.setConnectAttemptTimeout(connectTimeout);
+        wireFormat.setConnectAttemptTimeout(connectTimeout);
     }
 
     public boolean getPublishDollarTopics() {
