@@ -95,13 +95,11 @@ public class CHeadersGenerator extends SingleSourceGenerator {
     /**
      * Sort the class list so that base classes come up first.
      */
-    protected List<JClass> sort(List source) {
+    protected List<JClass> sort(List<JClass> source) {
         LinkedHashMap<JClass, JClass> rc = new LinkedHashMap<JClass, JClass>();
-        ArrayList classes = new ArrayList(source);
-        Collections.sort(classes, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                JClass c1 = (JClass)o1;
-                JClass c2 = (JClass)o2;
+        ArrayList<JClass> classes = new ArrayList<JClass>(source);
+        Collections.sort(classes, new Comparator<JClass>() {
+            public int compare(JClass c1, JClass c2) {
                 return c1.getSimpleName().compareTo(c2.getSimpleName());
             }
         });

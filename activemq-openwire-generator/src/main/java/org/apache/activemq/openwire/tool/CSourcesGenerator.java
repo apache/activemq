@@ -40,7 +40,7 @@ public class CSourcesGenerator extends CHeadersGenerator {
         return super.run();
     }
 
-    protected List sort(List source) {
+    protected List<JClass> sort(List<JClass> source) {
         return source;
     }
 

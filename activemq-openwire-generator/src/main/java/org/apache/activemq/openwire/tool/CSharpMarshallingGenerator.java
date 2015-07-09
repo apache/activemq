@@ -558,11 +558,9 @@ public class CSharpMarshallingGenerator extends JavaMarshallingGenerator {
         out.println("        {");
         out.println("            format.clearMarshallers();");
 
-        List list = new ArrayList(getConcreteClasses());
-        Collections.sort(list, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                JClass c1 = (JClass)o1;
-                JClass c2 = (JClass)o2;
+        List<JClass> list = new ArrayList<JClass>(getConcreteClasses());
+        Collections.sort(list, new Comparator<JClass>() {
+            public int compare(JClass c1, JClass c2) {
                 return c1.getSimpleName().compareTo(c2.getSimpleName());
             }
         });
