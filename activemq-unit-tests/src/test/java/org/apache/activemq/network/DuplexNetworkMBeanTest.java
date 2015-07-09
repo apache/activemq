@@ -20,12 +20,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeNotNull;
 
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.Set;
 
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.TestUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +38,22 @@ public class DuplexNetworkMBeanTest {
     protected static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkMBeanTest.class);
     protected final int numRestarts = 3;
 
+    private int primaryBrokerPort;
+    private int secondaryBrokerPort;
+
+    @Before
+    public void setUp() throws Exception {
+        List<Integer> ports = TestUtils.findOpenPorts(2);
+
+        primaryBrokerPort = ports.get(0);
+        secondaryBrokerPort = ports.get(1);
+    }
+
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("broker");
-        broker.addConnector("tcp://localhost:61617?transport.reuseAddress=true");
+        broker.getManagementContext().setCreateConnector(false);
+        broker.addConnector("tcp://localhost:" + primaryBrokerPort + "?transport.reuseAddress=true");
 
         return broker;
     }
@@ -46,8 +61,10 @@ public class DuplexNetworkMBeanTest {
     protected BrokerService createNetworkedBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("networkedBroker");
-        broker.addConnector("tcp://localhost:62617?transport.reuseAddress=true");
-        NetworkConnector networkConnector = broker.addNetworkConnector("static:(tcp://localhost:61617?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
+        broker.addConnector("tcp://localhost:" + secondaryBrokerPort + "?transport.reuseAddress=true");
+        broker.getManagementContext().setCreateConnector(false);
+        NetworkConnector networkConnector =
+            broker.addNetworkConnector("static:(tcp://localhost:" + primaryBrokerPort + "?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
         networkConnector.setDuplex(true);
         return broker;
     }
