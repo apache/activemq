@@ -103,6 +103,24 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
         return result;
     }
+    
+    @Override
+    public boolean tryAddMessageLast(MessageReference node, long maxWaitTime) throws Exception {
+        boolean result = true;
+        if (node != null) {
+            Message msg = node.getMessage();
+            if (started) {
+                pendingCount++;
+                if (!msg.isPersistent()) {
+                	result = nonPersistent.tryAddMessageLast(node, maxWaitTime);
+                }
+            }
+            if (msg.isPersistent()) {
+                result = persistent.tryAddMessageLast(node, maxWaitTime);
+            }
+        }
+        return result;
+    }
 
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         if (node != null) {
