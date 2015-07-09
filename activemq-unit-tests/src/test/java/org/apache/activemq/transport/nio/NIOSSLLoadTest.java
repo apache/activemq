@@ -23,12 +23,28 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.util.ConsumerThread;
 import org.apache.activemq.util.ProducerThread;
 import org.apache.activemq.util.Wait;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jms.Connection;
 import javax.jms.Queue;
 import javax.jms.Session;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class NIOSSLLoadTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+public class NIOSSLLoadTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(NIOSSLLoadTest.class);
 
     BrokerService broker;
     Connection connection;
@@ -44,9 +60,10 @@ public class NIOSSLLoadTest extends TestCase {
     public static final int MESSAGE_COUNT = 1000;
 
     final ConsumerThread[] consumers = new ConsumerThread[CONSUMER_COUNT];
+    TransportConnector connector;
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         System.setProperty("javax.net.ssl.trustStore", TRUST_KEYSTORE);
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
         System.setProperty("javax.net.ssl.trustStoreType", KEYSTORE_TYPE);
@@ -57,7 +74,7 @@ public class NIOSSLLoadTest extends TestCase {
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
+        connector = broker.addConnector("nio+ssl://localhost:0?transport.needClientAuth=true&transport.enabledCipherSuites=SSL_RSA_WITH_RC4_128_SHA,SSL_DH_anon_WITH_3DES_EDE_CBC_SHA");
         broker.start();
         broker.waitUntilStarted();
 
@@ -67,8 +84,8 @@ public class NIOSSLLoadTest extends TestCase {
         connection.start();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
         }
@@ -79,6 +96,7 @@ public class NIOSSLLoadTest extends TestCase {
         }
     }
 
+    @Test
     public void testLoad() throws Exception {
         Queue dest = session.createQueue("TEST");
         for (int i = 0; i < PRODUCER_COUNT; i++) {
@@ -101,6 +119,51 @@ public class NIOSSLLoadTest extends TestCase {
         }, 60000);
 
         assertEquals(PRODUCER_COUNT * MESSAGE_COUNT, getReceived());
+
+    }
+
+    @Test(timeout=360000)
+    @Ignore
+    public void testConnectionHandshakeLoad() throws Exception {
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("nio+ssl://localhost:" + connector.getConnectUri().getPort());
+        int threadNumber = 500;
+        final CountDownLatch latch = new CountDownLatch(threadNumber);
+        final AtomicInteger errors = new AtomicInteger(0);
+        final Random rand = new Random();
+        for (int i = 0; i < threadNumber; i++) {
+            Thread thread = new Thread("thread " + i) {
+                @Override
+                public void run() {
+                    for (int i = 0; i < 100; i++) {
+                        Connection conn = null;
+                        try {
+                            conn = factory.createConnection();
+                            conn.start();
+                            Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                            int sleepTime = rand.nextInt((3000 - 1000) + 1) + 1000;
+                            LOG.info(getName() + " sleeping " + sleepTime);
+                            Thread.sleep(sleepTime);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            errors.incrementAndGet();
+                        }  finally {
+                            try {
+                                conn.close();
+                            } catch (Exception e) {}
+                            LOG.info(getName() + " iteration " + i);
+                        }
+                    }
+
+                    LOG.info(getName() + " finished");
+                    latch.countDown();
+                }
+            };
+            thread.start();
+        }
+
+        latch.await(5, TimeUnit.MINUTES);
+
+        LOG.info("errors " + errors.get());
 
     }
 

@@ -22,15 +22,19 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.security.cert.X509Certificate;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 
@@ -298,7 +302,7 @@ public class NIOSSLTransport extends NIOTransport {
         if (!(inputBuffer.position() != 0 && inputBuffer.hasRemaining()) || status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             int bytesRead = channel.read(inputBuffer);
 
-            if (bytesRead == 0) {
+            if (bytesRead == 0 && !(sslEngine.getHandshakeStatus().equals(SSLEngineResult.HandshakeStatus.NEED_UNWRAP))) {
                 return 0;
             }
 
@@ -341,25 +345,51 @@ public class NIOSSLTransport extends NIOTransport {
 
     protected void doHandshake() throws Exception {
         handshakeInProgress = true;
-        while (true) {
-            switch (sslEngine.getHandshakeStatus()) {
-            case NEED_UNWRAP:
-                secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
-                break;
-            case NEED_TASK:
-                Runnable task;
-                while ((task = sslEngine.getDelegatedTask()) != null) {
-                    taskRunnerFactory.execute(task);
+        Selector selector = null;
+        SelectionKey key = null;
+        boolean readable = true;
+        int timeout = 100;
+        try {
+            while (true) {
+                HandshakeStatus handshakeStatus = sslEngine.getHandshakeStatus();
+                switch (handshakeStatus) {
+                    case NEED_UNWRAP:
+                        if (readable) {
+                            secureRead(ByteBuffer.allocate(sslSession.getApplicationBufferSize()));
+                        }
+                        if (this.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+                            long now = System.currentTimeMillis();
+                            if (selector == null) {
+                                selector = Selector.open();
+                                key = channel.register(selector, SelectionKey.OP_READ);
+                            } else {
+                                key.interestOps(SelectionKey.OP_READ);
+                            }
+                            int keyCount = selector.select(timeout);
+                            if (keyCount == 0 && ((System.currentTimeMillis() - now) >= timeout)) {
+                                throw new SocketTimeoutException("Timeout during handshake");
+                            }
+                            readable = key.isReadable();
+                        }
+                        break;
+                    case NEED_TASK:
+                        Runnable task;
+                        while ((task = sslEngine.getDelegatedTask()) != null) {
+                            task.run();
+                        }
+                        break;
+                    case NEED_WRAP:
+                        ((NIOOutputStream) buffOut).write(ByteBuffer.allocate(0));
+                        break;
+                    case FINISHED:
+                    case NOT_HANDSHAKING:
+                        finishHandshake();
+                        return;
                 }
-                break;
-            case NEED_WRAP:
-                ((NIOOutputStream) buffOut).write(ByteBuffer.allocate(0));
-                break;
-            case FINISHED:
-            case NOT_HANDSHAKING:
-                finishHandshake();
-                return;
             }
+        } finally {
+            if (key!=null) try {key.cancel();} catch (Exception ignore) {}
+            if (selector!=null) try {selector.close();} catch (Exception ignore) {}
         }
     }
 
