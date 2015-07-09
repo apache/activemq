@@ -184,12 +184,6 @@
               <name>org.apache.activemq.default.directory.prefix</name>
               <value>target/</value>
             </property>
-            <!-- Uncomment the following if you want to configure custom logging
-              (using src/test/resources/log4j.properties) while running mvn:test Note: if you want
-              to see log messages on the console window remove "redirectTestOutputToFile" from
-              the parent pom -->
-            <!-- <property> <name>log4j.configuration</name> <value>file:target/test-classes/log4j.properties</value>
-              </property> -->
           </systemProperties>
           <includes>
             <include>**/*Test.*</include>
@@ -221,5 +215,28 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/JmsQueueTransactionTest.*</exclude>
+                <exclude>**/MessageInterceptorTest.*</exclude>
+                <exclude>**/BrokerDestinationViewTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

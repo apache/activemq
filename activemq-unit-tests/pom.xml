@@ -539,6 +539,47 @@
       </build>
     </profile>
     <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/JMSConsumerTest.*</include>
+                <include>**/MBeanTest.*</include>
+                <include>**/BrokerTest.*</include>
+                <include>**/JmsQueueSendReceiveTest.*</include>
+                <include>**/JmsTopicRequestReplyTest.*</include>
+                <include>**/AdvisoryJmxTest.*</include>
+                <include>**/VirtualTopicPubSubTest.*</include>
+                <include>**/RedeliveryPluginTest.*</include>
+                <include>**/AMQ3014Test.*</include>
+                <include>**/AMQ3678Test.*</include>
+                <include>**/AMQ4222Test.*</include>
+                <include>**/AMQ4899Test.*</include>
+                <include>**/ActiveMQDestinationTest.*</include>
+                <include>**/XAConnectionFactoryTest.*</include>
+                <include>**/JDBCStoreOrderTest.*</include>
+                <include>**/KahaDBPersistenceAdapterTest.*</include>
+                <include>**/FailoverUriTest.*</include>
+                <include>**/TransactionRollbackOrderTest.*</include>
+                <include>**/StaticNetworkTest.*</include>
+                <include>**/QueueBrowsingLimitTest.*</include>
+                <include>**/DurableSubscriptionActivationTest.*</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>activemq.exclude-broken-tests</id>
       <activation>
         <activeByDefault>true</activeByDefault>

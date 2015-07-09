@@ -131,20 +131,43 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <!--forkMode>pertest</forkMode-->
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
           <includes>
-            <!--
-            <include>org.apache.activemq.ra.ServerSessionImplTest</include>
-            -->
             <include>**/*Test.*</include>
           </includes>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/FailoverManagedClusterTest.*</exclude>
+                <exclude>**/JmsXAQueueTransactionTest.*</exclude>
+                <exclude>**/JmsXARollback2CxTransactionTest.*</exclude>
+                <exclude>**/SSLMAnagedConnectionFactoryTest.*</exclude>
+                <exclude>**/SSLTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
 
+  </profiles>
 </project>

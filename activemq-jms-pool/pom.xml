@@ -106,4 +106,32 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>activemq.tests-sanity</id>
+      <activation>
+        <property>
+          <name>activemq.tests</name>
+          <value>smoke</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/AMQ4441Test.*</exclude>
+                <exclude>**/ConnectionExpiryEvictsFromPoolTest.*</exclude>
+                <exclude>**/PooledConnectionFactoryMaximumActiveTest.*</exclude>
+                <exclude>**/PooledConnectionTempQueueTest.*</exclude>
+                <exclude>**/PooledConnectionSessionCleanupTest.*</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
