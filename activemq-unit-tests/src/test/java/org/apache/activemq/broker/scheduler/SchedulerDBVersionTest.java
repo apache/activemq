@@ -37,6 +37,7 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.kahadb.scheduler.JobSchedulerStoreImpl;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
@@ -64,6 +65,7 @@ public class SchedulerDBVersionTest {
 
     protected BrokerService createBroker(JobSchedulerStoreImpl scheduler) throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setStoreOpenWireVersion(OpenWireFormat.DEFAULT_LEGACY_VERSION);
         answer.setJobSchedulerStore(scheduler);
         answer.setPersistent(true);
         answer.setDataDirectory("target");
@@ -121,10 +123,10 @@ public class SchedulerDBVersionTest {
         IOHelper.deleteFile(testDir);
         IOHelper.copyFile(existingStore, testDir);
 
-        final int NUMBER = 10;
+        final int NUMBER = 1;
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
 
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 1; ++i) {
             JobSchedulerStoreImpl scheduler = new JobSchedulerStoreImpl();
             scheduler.setDirectory(testDir);
             scheduler.setJournalMaxFileLength(1024 * 1024);
