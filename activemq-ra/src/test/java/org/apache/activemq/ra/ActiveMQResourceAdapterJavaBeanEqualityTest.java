@@ -16,86 +16,95 @@
  */
 package org.apache.activemq.ra;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-/**
- * 
- */
-public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
+import org.junit.Before;
+import org.junit.Test;
+
+public class ActiveMQResourceAdapterJavaBeanEqualityTest {
 
     private ActiveMQResourceAdapter raOne;
     private ActiveMQResourceAdapter raTwo;
 
-    public ActiveMQResourceAdapterJavaBeanEqualityTest(String name) {
-        super(name);
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         raOne = new ActiveMQResourceAdapter();
         raTwo = new ActiveMQResourceAdapter();
     }
 
+    @Test(timeout = 60000)
     public void testSelfEquality() {
         assertEquality(raOne, raOne);
     }
 
+    @Test(timeout = 60000)
     public void testEmptyEquality() {
         assertEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testNullEqualityFailure() {
         assertFalse(raOne.equals(null));
     }
 
+    @Test(timeout = 60000)
     public void testServerUrlEquality() {
         raOne.setServerUrl("one");
         raTwo.setServerUrl("one");
         assertEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testServerUrlInequality() {
         raOne.setServerUrl("one");
         raTwo.setServerUrl("two");
         assertNonEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testServerUrlInequalityDifferentCase() {
         raOne.setServerUrl("one");
         raTwo.setServerUrl("ONE");
         assertNonEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testNullServerUrlInequality() {
         raOne.setServerUrl("one");
         raTwo.setServerUrl(null);
         assertNonEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testBrokerXMLConfigEquality() {
         raOne.setBrokerXmlConfig("one");
         raTwo.setBrokerXmlConfig("one");
         assertEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testBrokerXMLConfigInequality() {
         raOne.setBrokerXmlConfig("one");
         raTwo.setBrokerXmlConfig("two");
         assertNonEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testBrokerXMLConfigInequalityDifferentCase() {
         raOne.setBrokerXmlConfig("one");
         raTwo.setBrokerXmlConfig("ONE");
         assertNonEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testNullBrokerXMLConfigInequality() {
         raOne.setBrokerXmlConfig("one");
         raTwo.setBrokerXmlConfig(null);
         assertNonEquality(raOne, raTwo);
     }
 
+    @Test(timeout = 60000)
     public void testPasswordNotPartOfEquality() {
         raOne.setClientid("one");
         raTwo.setClientid("one");
@@ -115,5 +124,4 @@ public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
         assertFalse("ActiveMQResourceAdapters are equal", rightRa.equals(leftRa));
         assertFalse("HashCodes are equal", leftRa.hashCode() == rightRa.hashCode());
     }
-
 }

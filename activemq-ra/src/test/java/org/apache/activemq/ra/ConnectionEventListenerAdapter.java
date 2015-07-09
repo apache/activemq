@@ -19,39 +19,40 @@ package org.apache.activemq.ra;
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
 
-
-/**
- * 
- */
 public class ConnectionEventListenerAdapter implements ConnectionEventListener {
 
     /**
      * @see javax.resource.spi.ConnectionEventListener#connectionClosed(javax.resource.spi.ConnectionEvent)
      */
+    @Override
     public void connectionClosed(ConnectionEvent arg0) {
     }
 
     /**
      * @see javax.resource.spi.ConnectionEventListener#localTransactionStarted(javax.resource.spi.ConnectionEvent)
      */
+    @Override
     public void localTransactionStarted(ConnectionEvent arg0) {
     }
 
     /**
      * @see javax.resource.spi.ConnectionEventListener#localTransactionCommitted(javax.resource.spi.ConnectionEvent)
      */
+    @Override
     public void localTransactionCommitted(ConnectionEvent arg0) {
     }
 
     /**
      * @see javax.resource.spi.ConnectionEventListener#localTransactionRolledback(javax.resource.spi.ConnectionEvent)
      */
+    @Override
     public void localTransactionRolledback(ConnectionEvent arg0) {
     }
 
     /**
      * @see javax.resource.spi.ConnectionEventListener#connectionErrorOccurred(javax.resource.spi.ConnectionEvent)
      */
+    @Override
     public void connectionErrorOccurred(ConnectionEvent arg0) {
     }
 }

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.ra;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -44,21 +46,24 @@ import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FailoverManagedClusterTest extends TestCase {
+public class FailoverManagedClusterTest {
+
     private static final Logger LOG = LoggerFactory.getLogger(FailoverManagedClusterTest.class);
 
     long txGenerator = System.currentTimeMillis();
 
-    private static final String MASTER_BIND_ADDRESS = "tcp://0.0.0.0:61616";
-    private static final String SLAVE_BIND_ADDRESS = "tcp://0.0.0.0:61617";
+    private static final String MASTER_BIND_ADDRESS = "tcp://localhost:0";
+    private static final String SLAVE_BIND_ADDRESS = "tcp://localhost:0";
+    private static final String KAHADB_DIRECTORY = "target/activemq-data/";
 
     private String masterConnectionUri;
     private String slaveConnectionUri;
@@ -69,16 +74,16 @@ public class FailoverManagedClusterTest extends TestCase {
     private BrokerService slave;
     private final CountDownLatch slaveThreadStarted = new CountDownLatch(1);
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         createAndStartMaster();
         createAndStartSlave();
 
         brokerUri = "failover://(" + masterConnectionUri + "," + slaveConnectionUri + ")?randomize=false";
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (slave != null) {
             slave.stop();
         }
@@ -92,6 +97,7 @@ public class FailoverManagedClusterTest extends TestCase {
         master = new BrokerService();
         master.setDeleteAllMessagesOnStartup(true);
         master.setUseJmx(false);
+        master.setDataDirectory(KAHADB_DIRECTORY);
         master.setBrokerName("BROKER");
         masterConnectionUri = master.addConnector(MASTER_BIND_ADDRESS).getPublishableConnectString();
         master.start();
@@ -101,6 +107,7 @@ public class FailoverManagedClusterTest extends TestCase {
     private void createAndStartSlave() throws Exception {
         slave = new BrokerService();
         slave.setUseJmx(false);
+        slave.setDataDirectory(KAHADB_DIRECTORY);
         slave.setBrokerName("BROKER");
         slaveConnectionUri = slave.addConnector(SLAVE_BIND_ADDRESS).getPublishableConnectString();
 
@@ -120,6 +127,7 @@ public class FailoverManagedClusterTest extends TestCase {
         }).start();
     }
 
+    @Test(timeout = 60000)
     public void testFailover() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUri);
@@ -183,7 +191,6 @@ public class FailoverManagedClusterTest extends TestCase {
         // Wait for the message to be delivered.
         assertTrue(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
     }
-
 
     private static final class StubBootstrapContext implements BootstrapContext {
         @Override
@@ -271,7 +278,6 @@ public class FailoverManagedClusterTest extends TestCase {
         public void onMessage(Message message) {
             messageCount++;
         }
-
     }
 
     public Xid createXid() throws IOException {
@@ -298,5 +304,4 @@ public class FailoverManagedClusterTest extends TestCase {
             }
         };
     }
-
 }

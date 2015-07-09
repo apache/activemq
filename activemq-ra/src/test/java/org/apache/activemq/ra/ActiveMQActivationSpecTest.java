@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.ra;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.util.Arrays;
@@ -26,13 +33,11 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.resource.spi.InvalidPropertyException;
 
-import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * 
- */
-public class ActiveMQActivationSpecTest extends TestCase {
+public class ActiveMQActivationSpecTest {
 
     private static final String DESTINATION = "defaultQueue";
     private static final String DESTINATION_TYPE = Queue.class.getName();
@@ -46,12 +51,8 @@ public class ActiveMQActivationSpecTest extends TestCase {
     private PropertyDescriptor clientIdProperty;
     private PropertyDescriptor subscriptionNameProperty;
 
-    public ActiveMQActivationSpecTest(String name) {
-        super(name);
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
 
         activationSpec = new ActiveMQActivationSpec();
         activationSpec.setDestination(DESTINATION);
@@ -65,39 +66,46 @@ public class ActiveMQActivationSpecTest extends TestCase {
         subscriptionNameProperty = new PropertyDescriptor("subscriptionName", ActiveMQActivationSpec.class);
     }
 
+    @Test(timeout = 60000)
     public void testDefaultContructionValidation() throws IntrospectionException {
         PropertyDescriptor[] expected = {destinationTypeProperty, destinationProperty};
         assertActivationSpecInvalid(new ActiveMQActivationSpec(), expected);
     }
 
+    @Test(timeout = 60000)
     public void testMinimalSettings() {
         assertEquals(DESTINATION, activationSpec.getDestination());
         assertEquals(DESTINATION_TYPE, activationSpec.getDestinationType());
         assertActivationSpecValid();
     }
 
+    @Test(timeout = 60000)
     public void testNoDestinationTypeFailure() {
         activationSpec.setDestinationType(null);
         PropertyDescriptor[] expected = {destinationTypeProperty};
         assertActivationSpecInvalid(expected);
     }
 
+    @Test(timeout = 60000)
     public void testInvalidDestinationTypeFailure() {
         activationSpec.setDestinationType("foobar");
         PropertyDescriptor[] expected = {destinationTypeProperty};
         assertActivationSpecInvalid(expected);
     }
 
+    @Test(timeout = 60000)
     public void testQueueDestinationType() {
         activationSpec.setDestinationType(Queue.class.getName());
         assertActivationSpecValid();
     }
 
+    @Test(timeout = 60000)
     public void testTopicDestinationType() {
         activationSpec.setDestinationType(Topic.class.getName());
         assertActivationSpecValid();
     }
 
+    @Test(timeout = 60000)
     public void testSuccessfulCreateQueueDestination() {
         activationSpec.setDestinationType(Queue.class.getName());
         activationSpec.setDestination(DESTINATION);
@@ -108,6 +116,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertTrue("Destination is not a Queue", destination instanceof Queue);
     }
 
+    @Test(timeout = 60000)
     public void testSuccessfulCreateTopicDestination() {
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setDestination(DESTINATION);
@@ -118,6 +127,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertTrue("Destination is not a Topic", destination instanceof Topic);
     }
 
+    @Test(timeout = 60000)
     public void testCreateDestinationIncorrectType() {
         activationSpec.setDestinationType(null);
         activationSpec.setDestination(DESTINATION);
@@ -125,6 +135,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertNull("ActiveMQDestination should not have been created", destination);
     }
 
+    @Test(timeout = 60000)
     public void testCreateDestinationIncorrectDestinationName() {
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setDestination(null);
@@ -132,7 +143,9 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertNull("ActiveMQDestination should not have been created", destination);
     }
 
-//----------- acknowledgeMode tests
+    //----------- acknowledgeMode tests
+
+    @Test(timeout = 60000)
     public void testDefaultAcknowledgeModeSetCorrectly() {
         assertEquals("Incorrect default value", ActiveMQActivationSpec.AUTO_ACKNOWLEDGE_MODE,
                 activationSpec.getAcknowledgeMode());
@@ -140,14 +153,16 @@ public class ActiveMQActivationSpecTest extends TestCase {
                 activationSpec.getAcknowledgeModeForSession());
     }
 
+    @Test(timeout = 60000)
     public void testInvalidAcknowledgeMode() {
         activationSpec.setAcknowledgeMode("foobar");
         PropertyDescriptor[] expected = {acknowledgeModeProperty};
         assertActivationSpecInvalid(expected);
-        assertEquals("Incorrect acknowledge mode", ActiveMQActivationSpec.INVALID_ACKNOWLEDGE_MODE, 
+        assertEquals("Incorrect acknowledge mode", ActiveMQActivationSpec.INVALID_ACKNOWLEDGE_MODE,
                 activationSpec.getAcknowledgeModeForSession());
     }
 
+    @Test(timeout = 60000)
     public void testNoAcknowledgeMode() {
         activationSpec.setAcknowledgeMode(null);
         PropertyDescriptor[] expected = {acknowledgeModeProperty};
@@ -156,6 +171,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
                 activationSpec.getAcknowledgeModeForSession());
     }
 
+    @Test(timeout = 60000)
     public void testSettingAutoAcknowledgeMode() {
         activationSpec.setAcknowledgeMode(ActiveMQActivationSpec.AUTO_ACKNOWLEDGE_MODE);
         assertActivationSpecValid();
@@ -163,6 +179,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
                 activationSpec.getAcknowledgeModeForSession());
     }
 
+    @Test(timeout = 60000)
     public void testSettingDupsOkAcknowledgeMode() {
         activationSpec.setAcknowledgeMode(ActiveMQActivationSpec.DUPS_OK_ACKNOWLEDGE_MODE);
         assertActivationSpecValid();
@@ -170,39 +187,46 @@ public class ActiveMQActivationSpecTest extends TestCase {
                 activationSpec.getAcknowledgeModeForSession());
     }
 
-//----------- subscriptionDurability tests
+    //----------- subscriptionDurability tests
+
+    @Test(timeout = 60000)
     public void testDefaultSubscriptionDurabilitySetCorrectly() {
-        assertEquals("Incorrect default value", ActiveMQActivationSpec.NON_DURABLE_SUBSCRIPTION,
-                activationSpec.getSubscriptionDurability());
+        assertEquals("Incorrect default value", ActiveMQActivationSpec.NON_DURABLE_SUBSCRIPTION, activationSpec.getSubscriptionDurability());
     }
-    
+
+    @Test(timeout = 60000)
     public void testInvalidSubscriptionDurability() {
         activationSpec.setSubscriptionDurability("foobar");
         PropertyDescriptor[] expected = {subscriptionDurabilityProperty};
         assertActivationSpecInvalid(expected);
     }
 
+    @Test(timeout = 60000)
     public void testNullSubscriptionDurability() {
         activationSpec.setSubscriptionDurability(null);
         PropertyDescriptor[] expected = {subscriptionDurabilityProperty};
         assertActivationSpecInvalid(expected);
     }
 
+    @Test(timeout = 60000)
     public void testSettingNonDurableSubscriptionDurability() {
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.NON_DURABLE_SUBSCRIPTION);
         assertActivationSpecValid();
     }
 
-//----------- durable subscriber tests    
+    //----------- durable subscriber tests
+
+    @Test(timeout = 60000)
     public void testValidDurableSubscriber() {
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
         activationSpec.setClientId("foobar");
         activationSpec.setSubscriptionName("foobar");
-        assertActivationSpecValid();        
+        assertActivationSpecValid();
         assertTrue(activationSpec.isDurableSubscription());
     }
 
+    @Test(timeout = 60000)
     public void testDurableSubscriberWithQueueDestinationTypeFailure() {
         activationSpec.setDestinationType(Queue.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
@@ -211,7 +235,8 @@ public class ActiveMQActivationSpecTest extends TestCase {
         PropertyDescriptor[] expected = {subscriptionDurabilityProperty};
         assertActivationSpecInvalid(expected);
     }
-    
+
+    @Test(timeout = 60000)
     public void testDurableSubscriberNoClientIdNoSubscriptionNameFailure() {
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
@@ -221,8 +246,9 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertNull(activationSpec.getSubscriptionName());
         PropertyDescriptor[] expected = {clientIdProperty, subscriptionNameProperty};
         assertActivationSpecInvalid(expected);
-    }    
-    
+    }
+
+    @Test(timeout = 60000)
     public void testDurableSubscriberEmptyClientIdEmptySubscriptionNameFailure() {
         activationSpec.setDestinationType(Topic.class.getName());
         activationSpec.setSubscriptionDurability(ActiveMQActivationSpec.DURABLE_SUBSCRIPTION);
@@ -232,34 +258,36 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertNull(activationSpec.getSubscriptionName());
         PropertyDescriptor[] expected = {clientIdProperty, subscriptionNameProperty};
         assertActivationSpecInvalid(expected);
-    }    
-    
-    public void testSetEmptyStringButGetNullValue() {
-        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
-        
-        activationSpec.setDestinationType(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getDestinationType());
-        
-        activationSpec.setMessageSelector(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getMessageSelector());
-        
-        activationSpec.setDestination(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getDestination());
-        
-        activationSpec.setUserName(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getUserName());
-        
-        activationSpec.setPassword(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getPassword());
-        
-        activationSpec.setClientId(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getClientId());
-        
-        activationSpec.setSubscriptionName(EMPTY_STRING);
-        assertNull("Property not null", activationSpec.getSubscriptionName());        
     }
 
-//----------- helper methods    
+    @Test(timeout = 60000)
+    public void testSetEmptyStringButGetNullValue() {
+        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+
+        activationSpec.setDestinationType(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getDestinationType());
+
+        activationSpec.setMessageSelector(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getMessageSelector());
+
+        activationSpec.setDestination(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getDestination());
+
+        activationSpec.setUserName(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getUserName());
+
+        activationSpec.setPassword(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getPassword());
+
+        activationSpec.setClientId(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getClientId());
+
+        activationSpec.setSubscriptionName(EMPTY_STRING);
+        assertNull("Property not null", activationSpec.getSubscriptionName());
+    }
+
+    //----------- helper methods
+
     private void assertActivationSpecValid() {
         try {
             activationSpec.validate();
@@ -267,7 +295,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
             fail("InvalidPropertyException should not be thrown");
         }
     }
-    
+
     private void assertActivationSpecInvalid(PropertyDescriptor[] expected) {
         assertActivationSpecInvalid(activationSpec, expected);
     }
@@ -278,14 +306,14 @@ public class ActiveMQActivationSpecTest extends TestCase {
             fail("InvalidPropertyException should have been thrown");
         } catch (InvalidPropertyException e) {
             PropertyDescriptor[] actual = e.getInvalidPropertyDescriptors();
-            assertEquals(expected, actual);
+            assertDescriptorsAreEqual(expected, actual);
         }
     }
 
-    private static void assertEquals(PropertyDescriptor[] expected, PropertyDescriptor[] actual) {
+    private static void assertDescriptorsAreEqual(PropertyDescriptor[] expected, PropertyDescriptor[] actual) {
         /*
-        * This is kind of ugly.  I originally created two HashSets and did an assertEquals(set1, set2) 
-        * but because of a bug in the PropertyDescriptor class, it incorrectly fails.  The problem is that the 
+        * This is kind of ugly.  I originally created two HashSets and did an assertEquals(set1, set2)
+        * but because of a bug in the PropertyDescriptor class, it incorrectly fails.  The problem is that the
         * PropertyDescriptor class implements the equals() method but not the hashCode() method and almost all
         * of the java collection classes use hashCode() for testing equality.  The one exception I found was
         * the ArrayList class which uses equals() for testing equality.  Since Arrays.asList(...) returns an
@@ -299,7 +327,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
         List<PropertyDescriptor> actualList = Arrays.asList(actual);
         assertTrue("Incorrect PropertyDescriptors returned", expectedList.containsAll(actualList));
     }
-    
+
     public void testSelfEquality() {
         assertEquality(activationSpec, activationSpec);
     }
@@ -313,11 +341,10 @@ public class ActiveMQActivationSpecTest extends TestCase {
         assertTrue("ActiveMQActivationSpecs are not equal", rightSpec.equals(leftSpec));
         assertTrue("HashCodes are not equal", leftSpec.hashCode() == rightSpec.hashCode());
     }
-    
+
     private void assertNonEquality(ActiveMQActivationSpec leftSpec, ActiveMQActivationSpec rightSpec) {
         assertFalse("ActiveMQActivationSpecs are equal", leftSpec.equals(rightSpec));
         assertFalse("ActiveMQActivationSpecs are equal", rightSpec.equals(leftSpec));
         assertFalse("HashCodes are equal", leftSpec.hashCode() == rightSpec.hashCode());
     }
-    
 }

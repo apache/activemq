@@ -16,13 +16,6 @@
  */
 package org.apache.activemq.ra;
 
-import junit.framework.TestCase;
-import org.apache.activemq.broker.SslBrokerService;
-import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
@@ -30,41 +23,50 @@ import javax.jms.Session;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
-/**
- * @author <a href="mailto:andy.taylor@jboss.org">Andy Taylor</a>
- */
-public class SSLMAnagedConnectionFactoryTest extends TestCase {
+import org.apache.activemq.broker.SslBrokerService;
+import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.tcp.SslTransportFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private static final String DEFAULT_HOST = "ssl://0.0.0.0:61616";
+public class SSLMAnagedConnectionFactoryTest {
+
+    private static final String KAHADB_DIRECTORY = "target/activemq-data/";
+    private static final String DEFAULT_HOST = "ssl://localhost:0";
+
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
     private ConnectionFactory connectionFactory;
     private ManagedConnectionProxy connection;
     private ActiveMQManagedConnection managedConnection;
     private SslBrokerService broker;
-    private TransportConnector connector;
+    private String connectionURI;
 
-    /**
-     * @see junit.framework.TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
+        createAndStartBroker();
+
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
-        managedConnectionFactory.setServerUrl(DEFAULT_HOST);
+        managedConnectionFactory.setServerUrl(connectionURI);
         managedConnectionFactory.setTrustStore("server.keystore");
         managedConnectionFactory.setTrustStorePassword("password");
         managedConnectionFactory.setKeyStore("client.keystore");
         managedConnectionFactory.setKeyStorePassword("password");
 
-        connectionFactory = (ConnectionFactory)managedConnectionFactory.createConnectionFactory(connectionManager);createAndStartBroker();
+        connectionFactory = (ConnectionFactory)managedConnectionFactory.createConnectionFactory(connectionManager);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (broker != null) {
             broker.stop();
         }
     }
 
+    @Test(timeout = 60000)
     public void testSSLManagedConnection() throws Exception {
         connection = (ManagedConnectionProxy)connectionFactory.createConnection();
         managedConnection = connection.getManagedConnection();
@@ -82,11 +84,15 @@ public class SSLMAnagedConnectionFactoryTest extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setUseJmx(false);
         broker.setBrokerName("BROKER");
+        broker.setDataDirectory(KAHADB_DIRECTORY);
         KeyManager[] km = SSLTest.getKeyManager();
         TrustManager[] tm = SSLTest.getTrustManager();
-        connector = broker.addSslConnector(DEFAULT_HOST, km, tm, null);
+        TransportConnector connector = broker.addSslConnector(DEFAULT_HOST, km, tm, null);
         broker.start();
-        broker.waitUntilStarted();     // for client side
+        broker.waitUntilStarted();
+
+        connectionURI = connector.getPublishableConnectString();
+
         SslTransportFactory sslFactory = new SslTransportFactory();
         SslContext ctx = new SslContext(km, tm, null);
         SslContext.setCurrentSslContext(ctx);

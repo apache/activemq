@@ -20,17 +20,18 @@ import java.util.HashSet;
 
 import javax.resource.spi.ManagedConnection;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-
-public class FailoverManagedConnectionTest extends TestCase {
+public class FailoverManagedConnectionTest {
 
     private static final String BROKER_TRANSPORT = "tcp://localhost:61616";
     private static final String BROKER_URL = "failover://" + BROKER_TRANSPORT;
-    
+    private static final String KAHADB_DIRECTORY = "target/activemq-data/";
+
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
     private ManagedConnection managedConnection;
     private ManagedConnectionProxy proxy;
@@ -38,10 +39,11 @@ public class FailoverManagedConnectionTest extends TestCase {
     private HashSet<ManagedConnection> connections;
     private ActiveMQConnectionRequestInfo connectionInfo;
 
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
         createAndStartBroker();
-    
+
         connectionInfo = new ActiveMQConnectionRequestInfo();
         connectionInfo.setServerUrl(BROKER_URL);
         connectionInfo.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
@@ -49,54 +51,56 @@ public class FailoverManagedConnectionTest extends TestCase {
 
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnection = managedConnectionFactory.createManagedConnection(null, connectionInfo);
-        
+
         connections = new HashSet<ManagedConnection>();
         connections.add(managedConnection);
     }
-    
+
+    @After
+    public void tearDown() throws Exception {
+        stopBroker();
+    }
 
     private void createAndStartBroker() throws Exception {
         broker = new BrokerService();
         broker.addConnector(BROKER_TRANSPORT);
+        broker.setDataDirectory(KAHADB_DIRECTORY);
         broker.start();
         broker.waitUntilStarted();
     }
 
-    public void testFailoverBeforeClose() throws Exception {  
-        
+    @Test(timeout = 60000)
+    public void testFailoverBeforeClose() throws Exception {
+
         createConnectionAndProxyAndSession();
-        
+
         stopBroker();
-        
+
         cleanupConnectionAndProxyAndSession();
-        
+
         createAndStartBroker();
-        
+
         for (int i=0; i<2; i++) {
             createConnectionAndProxyAndSession();
             cleanupConnectionAndProxyAndSession();
         }
     }
-    
 
     private void cleanupConnectionAndProxyAndSession() throws Exception {
         proxy.close();
         managedConnection.cleanup();
     }
 
-
     private void createConnectionAndProxyAndSession() throws Exception {
-        managedConnection = 
-            managedConnectionFactory.matchManagedConnections(connections, null, connectionInfo);
-        proxy = 
-            (ManagedConnectionProxy) managedConnection.getConnection(null, null);
+        managedConnection = managedConnectionFactory.matchManagedConnections(connections, null, connectionInfo);
+        proxy = (ManagedConnectionProxy) managedConnection.getConnection(null, null);
         proxy.createSession(false, 0);
     }
 
-
     private void stopBroker() throws Exception {
-        broker.stop();
-        broker.waitUntilStopped();
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
     }
-
 }
