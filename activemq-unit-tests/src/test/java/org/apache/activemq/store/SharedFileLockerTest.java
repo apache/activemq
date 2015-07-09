@@ -41,7 +41,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.LoggerFactory;
 
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 public class SharedFileLockerTest {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SharedFileLockerTest.class);
@@ -102,7 +102,7 @@ public class SharedFileLockerTest {
         try {
             locker1.doStart();
 
-            Assert.assertTrue(locker1.keepAlive());
+            assertTrue(locker1.keepAlive());
 
             thread = new Thread("Locker Thread") {
                 public void run() {
@@ -130,7 +130,7 @@ public class SharedFileLockerTest {
                 Thread.sleep(timewait);
             }
 
-            Assert.assertTrue(thread.isAlive());
+            assertTrue(thread.isAlive());
 
             locker1.stop();
 
@@ -145,7 +145,7 @@ public class SharedFileLockerTest {
                 Thread.sleep(1);
             }
 
-            Assert.assertTrue(locker2.keepAlive());
+            assertTrue(locker2.keepAlive());
 
             locker2.stop();
 
