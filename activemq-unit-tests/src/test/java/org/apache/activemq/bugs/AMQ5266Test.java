@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.bugs;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -32,6 +34,7 @@ import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
@@ -49,19 +52,16 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static org.junit.Assert.assertEquals;
-
 /**
- * Stuck messages test client.
- * <p/>
- * Will kick of publisher and consumer simultaneously, and will usually result in stuck messages on the queue.
+ * Will kick of publisher and consumer simultaneously, and will usually result in
+ * stuck messages on the queue.
  */
 @RunWith(Parameterized.class)
 public class AMQ5266Test {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266Test.class);
-    String activemqURL = "tcp://localhost:61617";
-    BrokerService brokerService;
+
+    private String activemqURL;
+    private BrokerService brokerService;
 
     public int messageSize = 1000;
 
@@ -167,7 +167,6 @@ public class AMQ5266Test {
 
         consumer = new ExportQueueConsumer(activemqURL, activemqQueues, consumerThreadsPerQueue, consumerBatchSize, publisherMessagesPerThread * publisherThreadCount);
 
-
         LOG.info("Starting Publisher...");
 
         publisher.start();
@@ -178,16 +177,14 @@ public class AMQ5266Test {
 
         int distinctPublishedCount = 0;
 
-
         LOG.info("Waiting For Publisher Completion...");
 
         publisher.waitForCompletion();
 
-        List publishedIds = publisher.getIDs();
-        distinctPublishedCount = new TreeSet(publishedIds).size();
+        List<String> publishedIds = publisher.getIDs();
+        distinctPublishedCount = new TreeSet<String>(publishedIds).size();
 
         LOG.info("Publisher Complete. Published: " + publishedIds.size() + ", Distinct IDs Published: " + distinctPublishedCount);
-
 
         long endWait = System.currentTimeMillis() + consumerWaitForConsumption;
         while (!consumer.completed() && System.currentTimeMillis() < endWait) {
@@ -221,7 +218,6 @@ public class AMQ5266Test {
             LOG.info(sb.toString());
 
             assertEquals("expect to get all messages!", 0, diff);
-
         }
     }
 
@@ -315,6 +311,7 @@ public class AMQ5266Test {
                 mp = session.createProducer(q);
             }
 
+            @Override
             public void run() {
 
                 try {
@@ -354,7 +351,6 @@ public class AMQ5266Test {
                 }
             }
         }
-
     }
 
     String messageText;
@@ -377,7 +373,6 @@ public class AMQ5266Test {
 
         return messageText;
     }
-
 
     public class ExportQueueConsumer {
 
@@ -428,11 +423,8 @@ public class AMQ5266Test {
 
         // Start the threads
         public void start() throws Exception {
-
             for (List<ConsumerThread> list : threads.values()) {
-
                 for (ConsumerThread ct : list) {
-
                     ct.start();
                 }
             }
@@ -441,19 +433,14 @@ public class AMQ5266Test {
         // Tell the threads to stop
         // Then wait for them to stop
         public void shutdown() throws Exception {
-
             for (List<ConsumerThread> list : threads.values()) {
-
                 for (ConsumerThread ct : list) {
-
                     ct.shutdown();
                 }
             }
 
             for (List<ConsumerThread> list : threads.values()) {
-
                 for (ConsumerThread ct : list) {
-
                     ct.join();
                 }
             }
@@ -517,6 +504,7 @@ public class AMQ5266Test {
                 idList = idsByQueue.get(queueName);
             }
 
+            @Override
             public void run() {
 
                 try {
@@ -554,13 +542,10 @@ public class AMQ5266Test {
                             session.commit();
                             count = 0;
 
-                            // Sleep a little before trying to read after not getting a message
-
                             try {
                                 if (idList.size() < totalToExpect) {
                                     LOG.info("did not receive on {}, current count: {}", qName, idList.size());
                                 }
-                                //sleep(3000);
                             } catch (Exception e) {
                             }
                         }
@@ -568,7 +553,6 @@ public class AMQ5266Test {
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-
                     // Once we exit, close everything
                     close();
                 }
@@ -593,7 +577,6 @@ public class AMQ5266Test {
                 try {
                     qc.close();
                 } catch (Exception e) {
-
                 }
             }
         }
