@@ -3080,19 +3080,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         void setBatch(Transaction tx, Long sequence) throws IOException {
             if (sequence != null) {
                 Long nextPosition = new Long(sequence.longValue() + 1);
-                if (defaultPriorityIndex.containsKey(tx, sequence)) {
-                    lastDefaultKey = sequence;
-                    cursor.defaultCursorPosition = nextPosition.longValue();
-                } else if (highPriorityIndex != null && highPriorityIndex.containsKey(tx, sequence)) {
-                    lastHighKey = sequence;
-                    cursor.highPriorityCursorPosition = nextPosition.longValue();
-                } else if (lowPriorityIndex.containsKey(tx, sequence)) {
-                    lastLowKey = sequence;
-                    cursor.lowPriorityCursorPosition = nextPosition.longValue();
-                } else {
-                    lastDefaultKey = sequence;
-                    cursor.defaultCursorPosition = nextPosition.longValue();
-                }
+                lastDefaultKey = sequence;
+                cursor.defaultCursorPosition = nextPosition.longValue();
+                lastHighKey = sequence;
+                cursor.highPriorityCursorPosition = nextPosition.longValue();
+                lastLowKey = sequence;
+                cursor.lowPriorityCursorPosition = nextPosition.longValue();
             }
         }
 

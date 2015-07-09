@@ -374,17 +374,24 @@ public class JDBCMessageStore extends AbstractMessageStore {
         if (LOG.isTraceEnabled()) {
             LOG.trace(this + " resetBatching. last recovered: " + Arrays.toString(perPriorityLastRecovered));
         }
+        setLastRecovered(-1);
+    }
+
+    private void setLastRecovered(long val) {
         for (int i=0;i<perPriorityLastRecovered.length;i++) {
-            perPriorityLastRecovered[i] = -1;
+            perPriorityLastRecovered[i] = val;
         }
     }
 
 
     @Override
     public void setBatch(MessageId messageId) {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(this + " setBatch: last recovered: " + Arrays.toString(perPriorityLastRecovered));
+        }
         try {
             long[] storedValues = persistenceAdapter.getStoreSequenceIdForMessageId(null, messageId, destination);
-            trackLastRecovered(storedValues[0], (int)storedValues[1]);
+            setLastRecovered(storedValues[0]);
         } catch (IOException ignoredAsAlreadyLogged) {
             resetBatching();
         }

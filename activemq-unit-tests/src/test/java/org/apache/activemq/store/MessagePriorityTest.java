@@ -17,6 +17,7 @@
 
 package org.apache.activemq.store;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -669,15 +670,20 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
     public void initCombosForTestEveryXHi() {
         // the cache limits the priority ordering to available memory
-        addCombinationValues("useCache", new Object[] {new Boolean(false)});
+        addCombinationValues("useCache", new Object[] {Boolean.FALSE, Boolean.TRUE});
         // expiry processing can fill the cursor with a snapshot of the producer
         // priority, before producers are complete
         addCombinationValues("expireMessagePeriod", new Object[] {new Integer(0)});
     }
 
     public void testEveryXHi() throws Exception {
-        final int numMessages = 50;
-        ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST_LOW_THEN_HIGH_10");
+
+        ActiveMQQueue queue = (ActiveMQQueue)sess.createQueue("TEST");
+
+        // ensure we hit the limit to disable the cache
+        broker.getDestinationPolicy().getEntryFor(queue).setMemoryLimit(50*1024);
+        final String payload = new String(new byte[1024]);
+        final int numMessages = 500;
 
         final AtomicInteger received = new AtomicInteger(0);
         MessageConsumer queueConsumer = sess.createConsumer(queue);
@@ -685,12 +691,21 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
             @Override
             public void onMessage(Message message) {
                 received.incrementAndGet();
+
+                if (received.get() < 20) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         });
 
         MessageProducer producer = sess.createProducer(queue);
         for (int i = 0; i < numMessages; i++) {
             Message message = sess.createMessage();
+            message.setStringProperty("payload", payload);
             if (i % 5 == 0) {
                 message.setJMSPriority(9);
             } else {
@@ -708,6 +723,36 @@ abstract public class MessagePriorityTest extends CombinationTestSupport {
 
 
         final DestinationStatistics destinationStatistics = ((RegionBroker)broker.getRegionBroker()).getDestinationStatistics();
+        assertTrue("Nothing else Like dlq involved", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                LOG.info("Enqueues: " + destinationStatistics.getEnqueues().getCount() + ", Dequeues: " + destinationStatistics.getDequeues().getCount());
+                return destinationStatistics.getEnqueues().getCount() == numMessages && destinationStatistics.getDequeues().getCount() == numMessages;
+            }
+        }, 10000));
+
+        // do it again!
+        received.set(0);
+        destinationStatistics.reset();
+        for (int i = 0; i < numMessages; i++) {
+            Message message = sess.createMessage();
+            message.setStringProperty("payload", payload);
+            if (i % 5 == 0) {
+                message.setJMSPriority(9);
+            } else {
+                message.setJMSPriority(4);
+            }
+            producer.send(message, Message.DEFAULT_DELIVERY_MODE, message.getJMSPriority(), Message.DEFAULT_TIME_TO_LIVE);
+        }
+
+        assertTrue("Got all", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return numMessages == received.get();
+            }
+        }));
+
+
         assertTrue("Nothing else Like dlq involved", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
