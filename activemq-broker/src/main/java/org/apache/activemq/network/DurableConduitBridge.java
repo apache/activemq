@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 public class DurableConduitBridge extends ConduitBridge {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConduitBridge.class);
 
+    @Override
     public String toString() {
         return "DurableConduitBridge:" + configuration.getBrokerName() + "->" + getRemoteBrokerName();
     }
@@ -52,6 +54,7 @@ public class DurableConduitBridge extends ConduitBridge {
      * Subscriptions for these destinations are always created
      *
      */
+    @Override
     protected void setupStaticDestinations() {
         super.setupStaticDestinations();
         ActiveMQDestination[] dests = configuration.isDynamicOnly() ? null : durableDestinations;
@@ -60,11 +63,22 @@ public class DurableConduitBridge extends ConduitBridge {
                 if (isPermissableDestination(dest) && !doesConsumerExist(dest)) {
                     DemandSubscription sub = createDemandSubscription(dest);
                     sub.setStaticallyIncluded(true);
-                    if (dest.isTopic()) {
-                        sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
-                    }
                     try {
-                        addSubscription(sub);
+                        //Filtering by non-empty subscriptions, see AMQ-5875
+                        if (dest.isTopic()) {
+                            sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
+                            for (Subscription subscription : this.getRegionSubscriptions(dest)) {
+                                String clientId = subscription.getContext().getClientId();
+                                String subName = subscription.getConsumerInfo().getSubscriptionName();
+                                if (clientId != null && clientId.equals(sub.getLocalInfo().getClientId())
+                                        && subName != null && subName.equals(sub.getLocalInfo().getSubscriptionName())) {
+                                    addSubscription(sub);
+                                    break;
+                                }
+                            }
+                        } else {
+                            addSubscription(sub);
+                        }
                     } catch (IOException e) {
                         LOG.error("Failed to add static destination {}", dest, e);
                     }
@@ -74,6 +88,7 @@ public class DurableConduitBridge extends ConduitBridge {
         }
     }
 
+    @Override
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
         if (addToAlreadyInterestedConsumers(info)) {
             return null; // don't want this subscription added
