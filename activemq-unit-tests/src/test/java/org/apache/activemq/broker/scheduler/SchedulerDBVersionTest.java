@@ -61,14 +61,14 @@ public class SchedulerDBVersionTest {
     final static File VERSION_LEGACY_JMS =
         new File(basedir + "/src/test/resources/org/apache/activemq/store/schedulerDB/legacy");
 
-    BrokerService broker = null;
+    private BrokerService broker = null;
 
     protected BrokerService createBroker(JobSchedulerStoreImpl scheduler) throws Exception {
         BrokerService answer = new BrokerService();
         answer.setStoreOpenWireVersion(OpenWireFormat.DEFAULT_LEGACY_VERSION);
         answer.setJobSchedulerStore(scheduler);
         answer.setPersistent(true);
-        answer.setDataDirectory("target");
+        answer.setDataDirectory("target/SchedulerDBVersionTest/");
         answer.setSchedulerSupport(true);
         answer.setUseJmx(false);
         return answer;
@@ -119,7 +119,7 @@ public class SchedulerDBVersionTest {
     }
 
     public void doTestScheduleRepeated(File existingStore) throws Exception {
-        File testDir = new File("target/activemq-data/store/scheduler/versionDB");
+        File testDir = new File("target/SchedulerDBVersionTest/store/scheduler/versionDB");
         IOHelper.deleteFile(testDir);
         IOHelper.copyFile(existingStore, testDir);
 
