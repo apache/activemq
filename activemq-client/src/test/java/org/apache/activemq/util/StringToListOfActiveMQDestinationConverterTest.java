@@ -23,19 +23,9 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import org.apache.activemq.command.ActiveMQDestination;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 public class StringToListOfActiveMQDestinationConverterTest {
-
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
 
     @Test
     public void testConvertToActiveMQDestination() {
@@ -62,5 +52,4 @@ public class StringToListOfActiveMQDestinationConverterTest {
         String result = StringToListOfActiveMQDestinationConverter.convertFromActiveMQDestination(null);
         assertNull(result);
     }
-
 }

@@ -16,18 +16,21 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
-public class DataByteArrayInputStreamTest extends TestCase {
+import org.junit.Test;
+
+public class DataByteArrayInputStreamTest {
 
     /**
      * https://issues.apache.org/activemq/browse/AMQ-1911
      */
+    @Test
     public void testNonAscii() throws Exception {
         doMarshallUnMarshallValidation("mei\u00DFen");
-        
+
         String accumulator = new String();
-        
+
         int test = 0; // int to get Supplementary chars
         while(Character.isDefined(test)) {
             String toTest = String.valueOf((char)test);
@@ -35,15 +38,15 @@ public class DataByteArrayInputStreamTest extends TestCase {
             doMarshallUnMarshallValidation(toTest);
             test++;
         }
-        
+
         int massiveThreeByteCharValue = 0x0FFF;
         String toTest = String.valueOf((char)massiveThreeByteCharValue);
         accumulator += toTest;
         doMarshallUnMarshallValidation(String.valueOf((char)massiveThreeByteCharValue));
-        
+
         // Altogether
         doMarshallUnMarshallValidation(accumulator);
-        
+
         // the three byte values
         char t = '\u0800';
         final char max =  '\uffff';
@@ -54,20 +57,20 @@ public class DataByteArrayInputStreamTest extends TestCase {
             doMarshallUnMarshallValidation(val);
             t++;
         }
-        
+
         // Altogether so long as it is not too big
         while (accumulator.length() > 20000) {
             accumulator = accumulator.substring(20000);
         }
         doMarshallUnMarshallValidation(accumulator);
     }
-    
+
     void doMarshallUnMarshallValidation(String value) throws Exception {
         DataByteArrayOutputStream out = new DataByteArrayOutputStream();
         out.writeBoolean(true);
         out.writeUTF(value);
         out.close();
-        
+
         DataByteArrayInputStream in = new DataByteArrayInputStream(out.getData());
         in.readBoolean();
         String readBack = in.readUTF();

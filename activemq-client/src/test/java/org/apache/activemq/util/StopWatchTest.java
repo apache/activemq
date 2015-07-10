@@ -16,13 +16,15 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
-/**
- *
- */
-public class StopWatchTest extends TestCase {
+import org.junit.Test;
 
+public class StopWatchTest {
+
+    @Test
     public void testStopWatch() throws Exception {
         StopWatch watch = new StopWatch();
         Thread.sleep(200);
@@ -32,6 +34,7 @@ public class StopWatchTest extends TestCase {
         assertTrue("Should take approx 200 millis, was: " + taken, taken > 150);
     }
 
+    @Test
     public void testStopWatchNotStarted() throws Exception {
         StopWatch watch = new StopWatch(false);
         long taken = watch.stop();
@@ -45,6 +48,7 @@ public class StopWatchTest extends TestCase {
         assertTrue("Should take approx 200 millis, was: " + taken, taken > 150);
     }
 
+    @Test
     public void testStopWatchRestart() throws Exception {
         StopWatch watch = new StopWatch();
         Thread.sleep(200);
@@ -61,6 +65,7 @@ public class StopWatchTest extends TestCase {
         assertTrue("Should take approx 100 millis, was: " + taken, taken > 50);
     }
 
+    @Test
     public void testStopWatchTaken() throws Exception {
         StopWatch watch = new StopWatch();
         Thread.sleep(100);

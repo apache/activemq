@@ -16,10 +16,13 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
-public class IdGeneratorTest extends TestCase {
+import org.junit.Test;
 
+public class IdGeneratorTest {
+
+    @Test
     public void testSanitizeHostName() throws Exception {
         assertEquals("somehost.lan", IdGenerator.sanitizeHostName("somehost.lan"));
         // include a UTF-8 char in the text \u0E08 is a Thai elephant

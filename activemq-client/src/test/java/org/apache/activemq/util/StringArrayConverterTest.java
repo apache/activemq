@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-/**
- *
- */
-public class StringArrayConverterTest extends TestCase {
+import org.junit.Test;
 
+public class StringArrayConverterTest {
+
+    @Test
     public void testConvertToStringArray() throws Exception {
-        assertEquals(null, StringArrayConverter.convertToStringArray(null));
-        assertEquals(null, StringArrayConverter.convertToStringArray(""));
+        assertNull(StringArrayConverter.convertToStringArray(null));
+        assertNull(StringArrayConverter.convertToStringArray(""));
 
         String[] array = StringArrayConverter.convertToStringArray("foo");
         assertEquals(1, array.length);
@@ -43,6 +44,7 @@ public class StringArrayConverterTest extends TestCase {
         assertEquals("baz", array[2]);
     }
 
+    @Test
     public void testConvertToString() throws Exception {
         assertEquals(null, StringArrayConverter.convertToString(null));
         assertEquals(null, StringArrayConverter.convertToString(new String[]{}));
@@ -51,5 +53,4 @@ public class StringArrayConverterTest extends TestCase {
         assertEquals("foo,bar", StringArrayConverter.convertToString(new String[]{"foo", "bar"}));
         assertEquals("foo,bar,baz", StringArrayConverter.convertToString(new String[]{"foo", "bar", "baz"}));
     }
-
 }
