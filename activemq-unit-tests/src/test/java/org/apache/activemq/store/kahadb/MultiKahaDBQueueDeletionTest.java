@@ -22,11 +22,10 @@ import java.util.Collection;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
-import javax.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -38,34 +37,37 @@ import org.slf4j.LoggerFactory;
  * AMQ-5875
  *
  * This test shows that when multiple destinations share a single KahaDB
- * instance when using mKahaDB, that the deletion of one Topic will no longer
- * cause an IllegalStateException and the store will be properly kept around
- * until all destinations associated with the store are gone.
+ * instance when using mKahaDB, that the deletion of one Queue will not cause
+ * the store to be deleted if another destination is still attached.  This
+ * issue was related to Topics but this test makes sure Queues work as well.
  *
  * */
 @RunWith(Parameterized.class)
-public class MultiKahaDBTopicDeletionTest extends AbstractMultiKahaDBDeletionTest {
+public class MultiKahaDBQueueDeletionTest extends AbstractMultiKahaDBDeletionTest {
+
     protected static final Logger LOG = LoggerFactory
             .getLogger(MultiKahaDBTopicDeletionTest.class);
 
-    protected static ActiveMQTopic TOPIC1 = new ActiveMQTopic("test.>");
-    protected static ActiveMQTopic TOPIC2 = new ActiveMQTopic("test.t.topic");
+    protected static ActiveMQQueue QUEUE1 = new ActiveMQQueue("test.>");
+    protected static ActiveMQQueue QUEUE2 = new ActiveMQQueue("test.t.queue");
 
     @Parameters
     public static Collection<Object[]> data() {
 
-        //Test with topics created in different orders
+        //Test with queues created in different orders
         return Arrays.asList(new Object[][] {
-                {TOPIC1, TOPIC2},
-                {TOPIC2, TOPIC1}
+                {QUEUE1, QUEUE2},
+                {QUEUE2, QUEUE1}
         });
     }
 
-    public MultiKahaDBTopicDeletionTest(ActiveMQTopic dest1,
-            ActiveMQTopic dest2) {
+    public MultiKahaDBQueueDeletionTest(ActiveMQQueue dest1, ActiveMQQueue dest2) {
         super(dest1, dest2);
     }
 
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.kahadb.AbstractMultiKahaDBDeletionTest#createConsumer(org.apache.activemq.command.ActiveMQDestination)
+     */
     @Override
     protected void createConsumer(ActiveMQDestination dest) throws JMSException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
@@ -75,12 +77,15 @@ public class MultiKahaDBTopicDeletionTest extends AbstractMultiKahaDBDeletionTes
         connection.start();
         Session session = connection.createSession(false,
                 Session.AUTO_ACKNOWLEDGE);
-        session.createDurableSubscriber((Topic) dest, "sub1");
+        session.createConsumer(dest);
     }
 
+    /* (non-Javadoc)
+     * @see org.apache.activemq.store.kahadb.AbstractMultiKahaDBDeletionTest#getStoreFileFilter()
+     */
     @Override
     protected WildcardFileFilter getStoreFileFilter() {
-        return new WildcardFileFilter("topic*");
+        return new WildcardFileFilter("queue*");
     }
 
 }
