@@ -23,11 +23,12 @@
 
     1. Give broker enough memory
     2. Disable dedicated task runner
+    3. Skip file metadata updates when saving files (can increase performance of KahaDB store)
 
-    e.g. ACTIVEMQ_OPTS="-Xmx1024M -Dorg.apache.activemq.UseDedicatedTaskRunner=false"
+    e.g. ACTIVEMQ_OPTS="-Xmx2G -Dorg.apache.activemq.UseDedicatedTaskRunner=false -Dorg.apache.activemq.kahaDB.files.skipMetadataUpdate=true"
 
-    To run ActiveMQ with this configuration add xbean:examples/conf/activemq-scalability.xml to your command
-    e.g. $ bin/activemq console xbean:examples/conf/activemq-scalability.xml
+    To run ActiveMQ with this configuration add xbean:examples/conf/activemq-mqtt.xml to your command
+    e.g. $ bin/activemq console xbean:examples/conf/activemq-mqtt.xml
  -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
@@ -55,21 +56,36 @@
         </destinationPolicy>
 
         <!--
-            Use KahaDB for persistence
+            In case you want to have some JMX statistics exposed,
+            you can filter MBeans you're not interested in
+
+            http://activemq.apache.org/jmx.html
+        -->
+        <managementContext>
+            <managementContext createConnector="false" suppressMBean="endpoint=dynamicProducer,endpoint=Consumer,connectionName=*,destinationName=ActiveMQ.Advisory.*"/>
+        </managementContext>
+
+        <!--
+            Use KahaDB for persistence. Try pre-allocating journal files for improved store performance
             For more information, see:
             http://activemq.apache.org/kahadb.html
         -->
         <persistenceAdapter>
-            <kahaDB directory="${activemq.data}/kahadb" enableIndexWriteAsync="true"/>
+            <kahaDB directory="${activemq.data}/kahadb" enableIndexWriteAsync="true" preallocationStrategy="zeros"/>
         </persistenceAdapter>
 
         <!--
             Use NIO transport
             For more information, see:
             http://activemq.apache.org/configuring-transports.html#ConfiguringTransports-TheNIOTransport
+
+            Additionally for better scalability, use virtual topics instead of durable subscribers for reliable messages
+            For more information, see:
+            http://activemq.apache.org/mqtt.html
+
         -->
         <transportConnectors>
-            <transportConnector name="nio" uri="nio://0.0.0.0:61616"/>
+            <transportConnector name="mqtt+nio" uri="mqtt+nio://0.0.0.0:1883?transport.subscriptionStrategy=mqtt-virtual-topic-subscriptions"/>
         </transportConnectors>
 
     </broker>
