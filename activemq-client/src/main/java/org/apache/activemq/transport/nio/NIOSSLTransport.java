@@ -348,7 +348,6 @@ public class NIOSSLTransport extends NIOTransport {
         Selector selector = null;
         SelectionKey key = null;
         boolean readable = true;
-        int timeout = 100;
         try {
             while (true) {
                 HandshakeStatus handshakeStatus = sslEngine.getHandshakeStatus();
@@ -365,8 +364,8 @@ public class NIOSSLTransport extends NIOTransport {
                             } else {
                                 key.interestOps(SelectionKey.OP_READ);
                             }
-                            int keyCount = selector.select(timeout);
-                            if (keyCount == 0 && ((System.currentTimeMillis() - now) >= timeout)) {
+                            int keyCount = selector.select(this.getSoTimeout());
+                            if (keyCount == 0 && this.getSoTimeout() > 0 && ((System.currentTimeMillis() - now) >= this.getSoTimeout())) {
                                 throw new SocketTimeoutException("Timeout during handshake");
                             }
                             readable = key.isReadable();
