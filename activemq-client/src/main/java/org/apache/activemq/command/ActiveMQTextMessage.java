@@ -47,6 +47,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     protected String text;
 
+    @Override
     public Message copy() {
         ActiveMQTextMessage copy = new ActiveMQTextMessage();
         copy(copy);
@@ -58,20 +59,24 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         copy.text = text;
     }
 
+    @Override
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
+    @Override
     public String getJMSXMimeType() {
         return "jms/text-message";
     }
 
+    @Override
     public void setText(String text) throws MessageNotWriteableException {
         checkReadOnlyBody();
         this.text = text;
         setContent(null);
     }
 
+    @Override
     public String getText() throws JMSException {
         if (text == null && getContent() != null) {
             text = decodeContent();
@@ -111,9 +116,10 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         return text;
     }
 
+    @Override
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
-        storeContent();
+        storeContentAndClear();
     }
 
     @Override
@@ -146,6 +152,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     // see https://issues.apache.org/activemq/browse/AMQ-2103
     // and https://issues.apache.org/activemq/browse/AMQ-2966
+    @Override
     public void clearMarshalledState() throws JMSException {
         super.clearMarshalledState();
         this.text = null;
@@ -162,11 +169,13 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
      * @throws JMSException if the JMS provider fails to clear the message body
      *                 due to some internal error.
      */
+    @Override
     public void clearBody() throws JMSException {
         super.clearBody();
         this.text = null;
     }
 
+    @Override
     public int getSize() {
         if (size == 0 && content == null && text != null) {
             size = getMinimumMessageSize();
@@ -178,6 +187,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         return super.getSize();
     }
 
+    @Override
     public String toString() {
         try {
             String text = this.text;
