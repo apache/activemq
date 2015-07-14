@@ -162,6 +162,7 @@
                 <exclude>**/JmsXARollback2CxTransactionTest.*</exclude>
                 <exclude>**/SSLMAnagedConnectionFactoryTest.*</exclude>
                 <exclude>**/SSLTest.*</exclude>
+                <exclude>**/MDBTest.*</exclude>
               </excludes>
             </configuration>
           </plugin>
