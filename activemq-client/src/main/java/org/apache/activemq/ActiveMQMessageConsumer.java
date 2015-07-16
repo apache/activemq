@@ -824,7 +824,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 optimizedAckTask = null;
             }
 
-            if (session.isClientAcknowledge()) {
+            if (session.isClientAcknowledge() || session.isIndividualAcknowledge()) {
                 if (!this.info.isBrowser()) {
                     // rollback duplicates that aren't acknowledged
                     List<MessageDispatch> tmp = null;
