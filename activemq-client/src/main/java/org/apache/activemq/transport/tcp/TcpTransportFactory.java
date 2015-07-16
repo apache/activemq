@@ -17,14 +17,17 @@
 package org.apache.activemq.transport.tcp;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -33,6 +36,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.WireFormatNegotiator;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -137,6 +141,15 @@ public class TcpTransportFactory extends TransportFactory {
         }
         SocketFactory socketFactory = createSocketFactory();
         return createTcpTransport(wf, socketFactory, location, localLocation);
+    }
+
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+        throw new IOException("createTransport() method not implemented!");
+    }
+
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+            SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer) throws IOException {
+        throw new IOException("createTransport() method not implemented!");
     }
 
     /**

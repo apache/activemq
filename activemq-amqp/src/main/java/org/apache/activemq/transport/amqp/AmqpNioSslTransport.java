@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -38,7 +39,14 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
     }
 
     public AmqpNioSslTransport(WireFormat wireFormat, Socket socket) throws IOException {
-        super(wireFormat, socket);
+        super(wireFormat, socket, null, null, null);
+
+        frameReader.setWireFormat((AmqpWireFormat) wireFormat);
+    }
+
+    public AmqpNioSslTransport(WireFormat wireFormat, Socket socket,
+            SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer) throws IOException {
+        super(wireFormat, socket, engine, initBuffer, inputBuffer);
 
         frameReader.setWireFormat((AmqpWireFormat) wireFormat);
     }
@@ -55,4 +63,37 @@ public class AmqpNioSslTransport extends NIOSSLTransport {
     protected void processCommand(ByteBuffer plain) throws Exception {
         frameReader.parse(plain);
     }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.transport.nio.NIOSSLTransport#secureRead(java.nio.ByteBuffer)
+     */
+
+    @Override
+    protected void doInit() {
+        if (initBuffer != null) {
+            nextFrameSize = -1;
+            serviceRead();
+
+        }
+    }
+
+    @Override
+    protected int secureRead(ByteBuffer plain) throws Exception {
+        if (initBuffer != null) {
+            initBuffer.buffer.flip();
+            if (initBuffer.buffer.hasRemaining()) {
+                plain.flip();
+                for (int i =0; i < 8; i++) {
+                    plain.put(initBuffer.buffer.get());
+                }
+                plain.flip();
+                processCommand(plain);
+                initBuffer.buffer.clear();
+                return 8;
+            }
+        }
+        return super.secureRead(plain);
+    }
+
+
 }

@@ -44,6 +44,7 @@ import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.transport.nio.SelectorManager;
@@ -474,7 +475,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return (InetSocketAddress) serverSocket.getLocalSocketAddress();
     }
 
-    protected final void handleSocket(Socket socket) {
+    protected void handleSocket(Socket socket) {
+        doHandleSocket(socket);
+    }
+
+    final protected void doHandleSocket(Socket socket) {
         boolean closeSocket = true;
         try {
             if (this.currentTransportCount.get() >= this.maximumConnections) {
@@ -483,6 +488,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     "maximumConnections' property on the TCP transport configuration URI " +
                     "in the ActiveMQ configuration file (e.g., activemq.xml)");
             } else {
+                currentTransportCount.incrementAndGet();
+
                 HashMap<String, Object> options = new HashMap<String, Object>();
                 options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
                 options.put("maxInactivityDurationInitalDelay", Long.valueOf(maxInactivityDurationInitalDelay));
@@ -496,22 +503,23 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 options.put("startLogging", Boolean.valueOf(startLogging));
                 options.putAll(transportOptions);
 
-                WireFormat format = wireFormatFactory.createWireFormat();
-                Transport transport = createTransport(socket, format);
+                TransportInfo transportInfo = configureTransport(this, socket);
                 closeSocket = false;
 
-                if (transport instanceof ServiceSupport) {
-                    ((ServiceSupport) transport).addServiceListener(this);
+                if (transportInfo.transport instanceof ServiceSupport) {
+                    ((ServiceSupport) transportInfo.transport).addServiceListener(this);
                 }
 
-                Transport configuredTransport = transportFactory.serverConfigure(transport, format, options);
+                Transport configuredTransport = transportInfo.transportFactory.serverConfigure(
+                        transportInfo.transport, transportInfo.format, options);
 
                 getAcceptListener().onAccept(configuredTransport);
-                currentTransportCount.incrementAndGet();
             }
         } catch (SocketTimeoutException ste) {
             // expect this to happen
+            currentTransportCount.decrementAndGet();
         } catch (Exception e) {
+            currentTransportCount.decrementAndGet();
             if (closeSocket) {
                 try {
                     socket.close();
@@ -525,6 +533,24 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 LOG.warn("run()", e);
                 onAcceptError(e);
             }
+        }
+    }
+
+    protected TransportInfo configureTransport(final TcpTransportServer server, final Socket socket) throws Exception {
+        WireFormat format = wireFormatFactory.createWireFormat();
+        Transport transport = createTransport(socket, format);
+        return new TransportInfo(format, transport, transportFactory);
+    }
+
+    protected class TransportInfo {
+        final WireFormat format;
+        final Transport transport;
+        final TransportFactory transportFactory;
+
+        public TransportInfo(WireFormat format, Transport transport, TransportFactory transportFactory) {
+            this.format = format;
+            this.transport = transport;
+            this.transportFactory = transportFactory;
         }
     }
 
@@ -565,6 +591,10 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      */
     public void setMaximumConnections(int maximumConnections) {
         this.maximumConnections = maximumConnections;
+    }
+
+    public AtomicInteger getCurrentTransportCount() {
+        return currentTransportCount;
     }
 
     @Override

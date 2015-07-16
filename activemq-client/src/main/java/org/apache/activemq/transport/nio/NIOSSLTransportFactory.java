@@ -18,20 +18,25 @@
 package org.apache.activemq.transport.nio;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransport;
+import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -44,6 +49,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
 
     protected SSLContext context;
 
+    @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new NIOSSLTransportServer(context, this, location, serverSocketFactory);
     }
@@ -64,6 +70,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
      * Overriding to allow for proper configuration through reflection but
      * delegate to get common configuration
      */
+    @Override
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         if (transport instanceof SslTransport) {
             SslTransport sslTransport = (SslTransport) transport.narrow(SslTransport.class);
@@ -79,6 +86,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
     /**
      * Overriding to use SslTransports.
      */
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
 
         URI localLocation = null;
@@ -98,6 +106,13 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
         return new SslTransport(wf, (SSLSocketFactory) socketFactory, location, localLocation, false);
     }
 
+    @Override
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+            SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
+            throws IOException {
+        return new NIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
+    }
+
     /**
      * Creates a new SSL SocketFactory. The given factory will use user-provided
      * key and trust managers (if the user provided them).
@@ -105,6 +120,7 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
      * @return Newly created (Ssl)SocketFactory.
      * @throws IOException
      */
+    @Override
     protected SocketFactory createSocketFactory() throws IOException {
         if (SslContext.getCurrentSslContext() != null) {
             SslContext ctx = SslContext.getCurrentSslContext();

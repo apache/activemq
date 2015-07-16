@@ -44,7 +44,7 @@ public class NIOSSLTransportServer extends TcpTransportServer {
 
     @Override
     protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
-        NIOSSLTransport transport = new NIOSSLTransport(format, socket);
+        NIOSSLTransport transport = new NIOSSLTransport(format, socket, null, null, null);
         if (context != null) {
             transport.setSslContext(context);
         }

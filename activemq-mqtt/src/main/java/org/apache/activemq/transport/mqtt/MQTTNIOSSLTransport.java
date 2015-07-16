@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -37,7 +38,12 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
     }
 
     public MQTTNIOSSLTransport(WireFormat wireFormat, Socket socket) throws IOException {
-        super(wireFormat, socket);
+        super(wireFormat, socket, null, null, null);
+    }
+
+    public MQTTNIOSSLTransport(WireFormat wireFormat, Socket socket,
+            SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer) throws IOException {
+        super(wireFormat, socket, engine, initBuffer, inputBuffer);
     }
 
     @Override
@@ -56,4 +62,19 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
         DataByteArrayInputStream dis = new DataByteArrayInputStream(fill);
         codec.parse(dis, fill.length);
     }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.transport.nio.NIOSSLTransport#doInit()
+     */
+    @Override
+    protected void doInit() throws Exception {
+        if (initBuffer != null) {
+            nextFrameSize = -1;
+            receiveCounter += initBuffer.readSize;
+            initBuffer.buffer.flip();
+            processCommand(initBuffer.buffer);
+        }
+    }
+
+
 }

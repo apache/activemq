@@ -57,6 +57,10 @@ public class StompNIOTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    public StompNIOTransport(WireFormat wireFormat, Socket socket, InitBuffer initBuffer) throws IOException {
+        super(wireFormat, socket, initBuffer);
+    }
+
     @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
@@ -84,14 +88,24 @@ public class StompNIOTransport extends TcpTransport {
         this.dataOut = new DataOutputStream(outPutStream);
         this.buffOut = outPutStream;
         codec = new StompCodec(this);
+
+        try {
+            if (initBuffer != null) {
+                processBuffer(initBuffer.buffer, initBuffer.readSize);
+            }
+        } catch (IOException e) {
+            onException(e);
+        } catch (Throwable e) {
+            onException(IOExceptionSupport.create(e));
+        }
     }
 
     private void serviceRead() {
         try {
-
            while (true) {
                // read channel
                int readSize = channel.read(inputBuffer);
+
                // channel is closed, cleanup
                if (readSize == -1) {
                    onException(new EOFException());
@@ -104,21 +118,25 @@ public class StompNIOTransport extends TcpTransport {
                    break;
                }
 
-               receiveCounter += readSize;
-
-               inputBuffer.flip();
-
-               ByteArrayInputStream input = new ByteArrayInputStream(inputBuffer.array());
-               codec.parse(input, readSize);
-
-               // clear the buffer
-               inputBuffer.clear();
+               processBuffer(inputBuffer, readSize);
            }
         } catch (IOException e) {
             onException(e);
         } catch (Throwable e) {
             onException(IOExceptionSupport.create(e));
         }
+    }
+
+    protected void processBuffer(ByteBuffer buffer, int readSize) throws Exception {
+        receiveCounter += readSize;
+
+        buffer.flip();
+
+        ByteArrayInputStream input = new ByteArrayInputStream(buffer.array());
+        codec.parse(input, readSize);
+
+        // clear the buffer
+        buffer.clear();
     }
 
     @Override

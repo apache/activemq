@@ -21,15 +21,18 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -59,6 +62,13 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
     @Override
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new AmqpNioSslTransport(wf, socketFactory, location, localLocation);
+    }
+
+    @Override
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+            SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
+            throws IOException {
+        return new AmqpNioSslTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
     }
 
     @Override

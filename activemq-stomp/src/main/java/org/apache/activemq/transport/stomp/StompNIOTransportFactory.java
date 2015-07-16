@@ -34,6 +34,7 @@ import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -47,20 +48,30 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
 
     private BrokerContext brokerContext = null;
 
+    @Override
     protected String getDefaultWireFormatType() {
         return "stomp";
     }
 
+    @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new TcpTransportServer(this, location, serverSocketFactory) {
+            @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
                 return new StompNIOTransport(format, socket);
             }
         };
     }
 
+    @Override
     protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new StompNIOTransport(wf, socketFactory, location, localLocation);
+    }
+
+    @Override
+    public TcpTransport createTransport(WireFormat wireFormat, Socket socket,
+            InitBuffer initBuffer) throws IOException {
+        return new StompNIOTransport(wireFormat, socket, initBuffer);
     }
 
     @SuppressWarnings("rawtypes")
@@ -76,6 +87,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
         return transport;
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         transport = new StompTransportFilter(transport, format, brokerContext);
@@ -83,6 +95,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
         return super.compositeConfigure(transport, format, options);
     }
 
+    @Override
     public void setBrokerService(BrokerService brokerService) {
         this.brokerContext = brokerService.getBrokerContext();
     }

@@ -58,6 +58,16 @@ public class NIOTransport extends TcpTransport {
         super(wireFormat, socket);
     }
 
+    /**
+     * @param format
+     * @param socket
+     * @param initBuffer
+     * @throws IOException
+     */
+    public NIOTransport(WireFormat format, Socket socket, InitBuffer initBuffer) throws IOException {
+        super(format, socket, initBuffer);
+    }
+
     @Override
     protected void initializeStreams() throws IOException {
         channel = socket.getChannel();
@@ -91,11 +101,15 @@ public class NIOTransport extends TcpTransport {
         this.buffOut = outPutStream;
     }
 
+    protected int readFromBuffer() throws IOException {
+        return channel.read(currentBuffer);
+    }
+
     protected void serviceRead() {
         try {
             while (true) {
 
-                int readSize = channel.read(currentBuffer);
+                int readSize = readFromBuffer();
                 if (readSize == -1) {
                     onException(new EOFException());
                     selection.close();
