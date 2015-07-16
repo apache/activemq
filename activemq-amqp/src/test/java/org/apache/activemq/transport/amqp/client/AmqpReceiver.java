@@ -316,18 +316,17 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
     }
 
     /**
-     * Reject a message that was dispatched under the given Delivery instance.
+     * Mark a message that was dispatched under the given Delivery instance as Modified.
      *
      * @param delivery
-     *        the Delivery instance to reject.
-     * @param undeliverableHere
-     *        marks the delivery as not being able to be process by link it was sent to.
+     *        the Delivery instance to mark modified.
      * @param deliveryFailed
      *        indicates that the delivery failed for some reason.
-     *
+     * @param undeliverableHere
+     *        marks the delivery as not being able to be process by link it was sent to.
      * @throws IOException if an error occurs while sending the reject.
      */
-    public void reject(final Delivery delivery, final boolean undeliverableHere, final boolean deliveryFailed) throws IOException {
+    public void modified(final Delivery delivery, final Boolean deliveryFailed, final Boolean undeliverableHere) throws IOException {
         checkClosed();
 
         if (delivery == null) {

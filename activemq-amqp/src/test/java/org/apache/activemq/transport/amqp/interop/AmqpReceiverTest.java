@@ -21,6 +21,7 @@ import static org.apache.activemq.transport.amqp.AmqpSupport.NO_LOCAL_FILTER_IDS
 import static org.apache.activemq.transport.amqp.AmqpSupport.findFilter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 /**
@@ -410,6 +412,69 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertEquals(1, brokerService.getAdminView().getQueueSubscribers().length);
 
         connection.getStateInspector().assertValid();
+        connection.close();
+    }
+
+    @Test(timeout = 30000)
+    public void testModifiedDispositionWithDeliveryFailedWithoutUndeliverableHereFieldsSet() throws Exception {
+        doModifiedDispositionTestImpl(Boolean.TRUE, null);
+    }
+
+    @Test(timeout = 30000)
+    public void testModifiedDispositionWithoutDeliveryFailedWithoutUndeliverableHereFieldsSet() throws Exception {
+        doModifiedDispositionTestImpl(null, null);
+    }
+
+    @Test(timeout = 30000)
+    public void testModifiedDispositionWithoutDeliveryFailedWithUndeliverableHereFieldsSet() throws Exception {
+        doModifiedDispositionTestImpl(null, Boolean.TRUE);
+    }
+
+    @Test(timeout = 30000)
+    public void testModifiedDispositionWithDeliveryFailedWithUndeliverableHereFieldsSet() throws Exception {
+        doModifiedDispositionTestImpl(Boolean.TRUE, Boolean.TRUE);
+    }
+
+    private void doModifiedDispositionTestImpl(Boolean deliveryFailed, Boolean undeliverableHere) throws Exception {
+        int msgCount = 1;
+        sendMessages(getTestName(), msgCount, false);
+
+        AmqpClient client = createAmqpClient();
+        AmqpConnection connection = client.connect();
+        AmqpSession session = connection.createSession();
+
+        AmqpReceiver receiver = session.createReceiver("queue://" + getTestName());
+        receiver.flow(2 * msgCount);
+
+        AmqpMessage message = receiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull("did not receive message first time", message);
+
+        Message protonMessage = message.getWrappedMessage();
+        assertNotNull(protonMessage);
+        assertEquals("Unexpected initial value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
+
+        message.modified(deliveryFailed, undeliverableHere);
+
+        if(Boolean.TRUE.equals(undeliverableHere)) {
+            message = receiver.receive(250, TimeUnit.MILLISECONDS);
+            assertNull("Should not receive message again", message);
+        } else {
+            message = receiver.receive(5, TimeUnit.SECONDS);
+            assertNotNull("did not receive message again", message);
+
+            int expectedDeliveryCount = 0;
+            if(Boolean.TRUE.equals(deliveryFailed)) {
+                expectedDeliveryCount = 1;
+            }
+
+            message.accept();
+
+            Message protonMessage2 = message.getWrappedMessage();
+            assertNotNull(protonMessage2);
+            assertEquals("Unexpected updated value for AMQP delivery-count", expectedDeliveryCount, protonMessage2.getDeliveryCount());
+        }
+
+        receiver.close();
         connection.close();
     }
 }

@@ -227,7 +227,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 settle(delivery, -1);
             } else if (state instanceof Modified) {
                 Modified modified = (Modified) state;
-                if (modified.getDeliveryFailed()) {
+                if (Boolean.TRUE.equals(modified.getDeliveryFailed())) {
                     // increment delivery counter..
                     md.setRedeliveryCounter(md.getRedeliveryCounter() + 1);
                 }

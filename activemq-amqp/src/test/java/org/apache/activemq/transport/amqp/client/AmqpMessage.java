@@ -140,43 +140,21 @@ public class AmqpMessage {
     }
 
     /**
-     * Rejects the message, marking it as not deliverable here and failed to deliver.
+     * Marks the message as Modified, indicating whether it failed to deliver and is not deliverable here.
      *
-     * @throws Exception if an error occurs during the reject.
-     */
-    public void reject() throws Exception {
-        reject(true, true);
-    }
-
-    /**
-     * Rejects the message, marking it as failed to deliver and applying the given value
-     * to the undeliverable here tag.
-     *
-     * @param undeliverableHere
-     *        marks the delivery as not being able to be process by link it was sent to.
-     *
-     * @throws Exception if an error occurs during the reject.
-     */
-    public void reject(boolean undeliverableHere) throws Exception {
-        reject(undeliverableHere, true);
-    }
-
-    /**
-     * Rejects the message, marking it as not deliverable here and failed to deliver.
-     *
-     * @param undeliverableHere
-     *        marks the delivery as not being able to be process by link it was sent to.
      * @param deliveryFailed
      *        indicates that the delivery failed for some reason.
+     * @param undeliverableHere
+     *        marks the delivery as not being able to be process by link it was sent to.
      *
-     * @throws Exception if an error occurs during the reject.
+     * @throws Exception if an error occurs during the process.
      */
-    public void reject(boolean undeliverableHere, boolean deliveryFailed) throws Exception {
+    public void modified(Boolean deliveryFailed, Boolean undeliverableHere) throws Exception {
         if (receiver == null) {
-            throw new IllegalStateException("Can't reject non-received message.");
+            throw new IllegalStateException("Can't modify non-received message.");
         }
 
-        receiver.reject(delivery, undeliverableHere, deliveryFailed);
+        receiver.modified(delivery, deliveryFailed, undeliverableHere);
     }
 
     /**
