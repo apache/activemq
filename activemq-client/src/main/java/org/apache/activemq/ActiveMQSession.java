@@ -200,7 +200,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQSession.class);
-    private static final Object REDELIVERY_GUARD = new Object();
     private final ThreadPoolExecutor connectionExecutor;
 
     protected int acknowledgementMode;
@@ -220,7 +219,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected boolean asyncDispatch;
     protected boolean sessionAsyncDispatch;
     protected final boolean debug;
-    protected Object sendMutex = new Object();
+    protected final Object sendMutex = new Object();
+    protected final Object redeliveryGuard = new Object();
+
     private final AtomicBoolean clearInProgress = new AtomicBoolean();
 
     private MessageListener messageListener;
@@ -930,7 +931,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             * The redelivery guard is to allow the endpoint lifecycle to complete before the messsage is dispatched.
             * We dont want the after deliver being called after the redeliver as it may cause some weird stuff.
             * */
-            synchronized (REDELIVERY_GUARD) {
+            synchronized (redeliveryGuard) {
                 try {
                     ack.setFirstMessageId(md.getMessage().getMessageId());
                     doStartTransaction();
@@ -1011,7 +1012,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                             /*
                                             * wait for the first delivery to be complete, i.e. after delivery has been called.
                                             * */
-                                            synchronized (REDELIVERY_GUARD) {
+                                            synchronized (redeliveryGuard) {
                                                 /*
                                                 * If its non blocking then we can just dispatch in a new session.
                                                 * */
