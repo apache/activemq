@@ -26,7 +26,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertFalse;
@@ -84,14 +83,11 @@ public class AMQ3625Test {
         Appender appender = new DefaultTestAppender() {
             @Override
             public void doAppend(LoggingEvent event) {
-                if (event.getThrowableInformation() != null) {
-                    Throwable t = event.getThrowableInformation().getThrowable();
-                    if (t instanceof SecurityException) {
-                        authenticationFailed.set(true);
-                    }
-                    if (t instanceof NullPointerException) {
-                        gotNPE.set(true);
-                    }
+                if (event.getMessage().toString().contains("java.lang.SecurityException")) {
+                    authenticationFailed.set(true);
+                }
+                if (event.getMessage().toString().contains("NullPointerException")) {
+                    gotNPE.set(true);
                 }
             }
         };
