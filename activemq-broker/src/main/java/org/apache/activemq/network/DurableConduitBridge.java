@@ -61,23 +61,19 @@ public class DurableConduitBridge extends ConduitBridge {
         if (dests != null) {
             for (ActiveMQDestination dest : dests) {
                 if (isPermissableDestination(dest) && !doesConsumerExist(dest)) {
-                    DemandSubscription sub = createDemandSubscription(dest);
-                    sub.setStaticallyIncluded(true);
                     try {
                         //Filtering by non-empty subscriptions, see AMQ-5875
                         if (dest.isTopic()) {
-                            sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
+                            String candidateSubName = getSubscriberName(dest);
                             for (Subscription subscription : this.getRegionSubscriptions(dest)) {
-                                String clientId = subscription.getContext().getClientId();
                                 String subName = subscription.getConsumerInfo().getSubscriptionName();
-                                if (clientId != null && clientId.equals(sub.getLocalInfo().getClientId())
-                                        && subName != null && subName.equals(sub.getLocalInfo().getSubscriptionName())) {
+                                if (subName != null && subName.equals(candidateSubName)) {
+                                    DemandSubscription sub = createDemandSubscription(dest);
+                                    sub.setStaticallyIncluded(true);
                                     addSubscription(sub);
                                     break;
                                 }
                             }
-                        } else {
-                            addSubscription(sub);
                         }
                     } catch (IOException e) {
                         LOG.error("Failed to add static destination {}", dest, e);
