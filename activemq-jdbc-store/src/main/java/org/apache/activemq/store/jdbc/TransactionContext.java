@@ -162,6 +162,7 @@ public class TransactionContext {
                 for (Runnable completion: completions) {
                     completion.run();
                 }
+                completions.clear();
             }
         }
     }
