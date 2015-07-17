@@ -66,7 +66,7 @@ public class AMQ2512Test {
     private Connection connection;
     private String connectionURI;
 
-    @Test(timeout = 60000)
+    @Test(timeout = 5*60000)
     public void testKahaDBFailure() throws Exception {
         final ConnectionFactory fac = new ActiveMQConnectionFactory(connectionURI);
         connection = fac.createConnection();
