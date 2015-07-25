@@ -96,7 +96,6 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/activemq</include>
-        <include>bin/env</include>
         <include>bin/diag</include>
         <include>bin/activemq-admin</include>
         <include>bin/macosx/activemq</include>
@@ -106,6 +105,19 @@
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
     </fileSet>
+
+    <!-- Copy over the unix-script configuration file that need unix line endings and also chmod to 644 -->
+    <fileSet>
+      <directory>src/release</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>bin/env</include>
+      </includes>
+      <directoryMode>0755</directoryMode>
+      <fileMode>0644</fileMode>
+      <lineEnding>unix</lineEnding>
+    </fileSet>
+
 
     <!-- Copy over example scripts that need unix line endings and also chmod to 755 -->
     <fileSet>
