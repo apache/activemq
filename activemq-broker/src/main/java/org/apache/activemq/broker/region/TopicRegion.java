@@ -424,4 +424,8 @@ public class TopicRegion extends AbstractRegion {
     public DurableTopicSubscription getDurableSubscription(SubscriptionKey key) {
         return durableSubscriptions.get(key);
     }
+
+    public Map<SubscriptionKey, DurableTopicSubscription> getDurableSubscriptions() {
+        return durableSubscriptions;
+    }
 }
