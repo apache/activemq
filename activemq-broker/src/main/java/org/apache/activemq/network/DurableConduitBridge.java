@@ -18,7 +18,9 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -64,11 +66,15 @@ public class DurableConduitBridge extends ConduitBridge {
                     try {
                         //Filtering by non-empty subscriptions, see AMQ-5875
                         if (dest.isTopic()) {
+                            RegionBroker regionBroker = (RegionBroker) brokerService.getRegionBroker();
+                            TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
+
                             String candidateSubName = getSubscriberName(dest);
-                            for (Subscription subscription : this.getRegionSubscriptions(dest)) {
+                            for (Subscription subscription : topicRegion.getDurableSubscriptions().values()) {
                                 String subName = subscription.getConsumerInfo().getSubscriptionName();
                                 if (subName != null && subName.equals(candidateSubName)) {
                                     DemandSubscription sub = createDemandSubscription(dest);
+                                    sub.getLocalInfo().setSubscriptionName(getSubscriberName(dest));
                                     sub.setStaticallyIncluded(true);
                                     addSubscription(sub);
                                     break;
