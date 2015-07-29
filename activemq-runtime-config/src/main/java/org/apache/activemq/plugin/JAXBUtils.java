@@ -17,14 +17,17 @@
 package org.apache.activemq.plugin;
 
 import javax.xml.bind.JAXBElement;
+
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.activemq.broker.region.virtual.FilteredDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.schema.core.DtoFilteredDestination;
 import org.apache.activemq.schema.core.DtoTopic;
 import org.apache.activemq.schema.core.DtoQueue;
 import org.apache.activemq.schema.core.DtoAuthenticationUser;
@@ -49,6 +52,8 @@ public class JAXBUtils {
             return new ActiveMQQueue();
         } else if (DtoAuthenticationUser.class.isAssignableFrom(elementContent.getClass())) {
             return new AuthenticationUser();
+        } else if (DtoFilteredDestination.class.isAssignableFrom(elementContent.getClass())) {
+            return new FilteredDestination();            
         } else {
             return new Object();
         }

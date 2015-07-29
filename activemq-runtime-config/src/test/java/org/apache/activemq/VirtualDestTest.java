@@ -16,6 +16,8 @@
  */
 package org.apache.activemq;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -233,7 +235,32 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
 
         assertEquals("still one interceptor", 1, brokerService.getDestinationInterceptors().length);
     }
+    
+    @Test
+    public void testNewFilteredComposite() throws Exception {
+        final String brokerConfig = configurationSeed + "-new-filtered-composite-vd-broker";
+        applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG);
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
 
+        applyNewConfig(brokerConfig, configurationSeed + "-add-filtered-composite-vd", SLEEP);
+
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "yes");
+    }  
+
+    @Test
+    public void testModFilteredComposite() throws Exception {
+        final String brokerConfig = configurationSeed + "-mod-filtered-composite-vd-broker";
+        applyNewConfig(brokerConfig, configurationSeed + "-add-filtered-composite-vd");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "yes");
+
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-filtered-composite-vd", SLEEP);
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "no");
+        exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "no");
+    }   
+    
     private void forceAddDestination(String dest) throws Exception {
         ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
         connection.start();
@@ -255,13 +282,7 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         LOG.info("new consumer for: " + consumer.getDestination());
         MessageProducer producer = session.createProducer(session.createTopic(topic));
         final String body = "To vt:" + topic;
-        producer.send(session.createTextMessage(body));
-        LOG.info("sent to: " + producer.getDestination());
-
-        Message message = null;
-        for (int i=0; i<10 && message == null; i++) {
-            message = consumer.receive(1000);
-        }
+        Message message = sendAndReceiveMessage(session, consumer, producer, body);
         assertNotNull("got message", message);
         assertEquals("got expected message", body, ((TextMessage) message).getText());
         connection.close();
@@ -276,16 +297,58 @@ public class VirtualDestTest extends RuntimeConfigTestSupport {
         LOG.info("new consumer for: " + consumer.getDestination());
         MessageProducer producer = session.createProducer(session.createQueue(dest));
         final String body = "To cq:" + dest;
-        producer.send(session.createTextMessage(body));
-        LOG.info("sent to: " + producer.getDestination());
-
-        Message message = null;
-        for (int i=0; i<10 && message == null; i++) {
-            message = consumer.receive(1000);
-        }
+        Message message = sendAndReceiveMessage(session, consumer, producer, body);
         assertNotNull("got message", message);
         assertEquals("got expected message", body, ((TextMessage) message).getText());
         connection.close();
     }
+    
+    private void exerciseFilteredCompositeQueue(String dest, String consumerDestination, String acceptedHeaderValue) throws Exception {
+        ActiveMQConnection connection = new ActiveMQConnectionFactory("vm://localhost").createActiveMQConnection();
+        connection.start();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        
+        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(session.createQueue(consumerDestination));
+        LOG.info("new consumer for: " + consumer.getDestination());
+        MessageProducer producer = session.createProducer(session.createQueue(dest));
 
+        // positive test
+        String body = "To filtered cq:" + dest;
+
+        Message message = sendAndReceiveMessage(session, consumer, producer, body, Collections.singletonMap("odd", acceptedHeaderValue));
+        assertNotNull("The message did not reach the destination even though it should pass through the filter.", message);
+        assertEquals("Did not get expected message", body, ((TextMessage) message).getText());
+
+        // negative test
+        message = sendAndReceiveMessage(session, consumer, producer, "Not to filtered cq:" + dest, Collections.singletonMap("odd", "somethingElse"));
+        assertNull("The message reached the destination, but it should have been removed by the filter.", message);
+
+        connection.close();
+    }
+
+    private Message sendAndReceiveMessage(Session session,
+                                          ActiveMQMessageConsumer consumer, MessageProducer producer,
+                                          final String messageBody) throws Exception {
+        return sendAndReceiveMessage(session, consumer, producer, messageBody, null);
+    }
+
+    private Message sendAndReceiveMessage(Session session,
+                                          ActiveMQMessageConsumer consumer, MessageProducer producer,
+                                          final String messageBody, Map<String, String> propertiesMap)
+            throws Exception {
+        TextMessage messageToSend = session.createTextMessage(messageBody);
+        if (propertiesMap != null) {
+            for (String headerKey : propertiesMap.keySet()) {
+                messageToSend.setStringProperty(headerKey, propertiesMap.get(headerKey));
+            }
+        }
+        producer.send(messageToSend);
+        LOG.info("sent to: " + producer.getDestination());
+
+        Message message = null;
+        for (int i = 0; i < 10 && message == null; i++) {
+            message = consumer.receive(1000);
+        }
+        return message;
+    }
 }
