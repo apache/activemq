@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
+import javax.management.openmbean.TabularData;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
@@ -133,6 +134,11 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         CompositeData[] data  = sub.browse();
         assertNotNull(data);
         assertEquals(10, data.length);
+
+        TabularData tabularData = sub.browseAsTable();
+        assertNotNull(tabularData);
+        assertEquals(10, tabularData.size());
+
     }
 
     @Test(timeout = 60 * 1000)
