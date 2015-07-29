@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.camel.component.broker;
 
-import java.util.Map;
-
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.jms.JmsMessage;
-import org.apache.camel.converter.ObjectConverter;
 import org.apache.camel.impl.DefaultAsyncProducer;
+
+import javax.jms.JMSException;
+import java.util.Map;
 
 public class BrokerProducer extends DefaultAsyncProducer {
     private final BrokerEndpoint brokerEndpoint;
@@ -53,6 +53,7 @@ public class BrokerProducer extends DefaultAsyncProducer {
     protected boolean processInOnly(final Exchange exchange, final AsyncCallback callback) {
         try {
             ActiveMQMessage message = getMessage(exchange);
+
             if (message != null) {
                 message.setDestination(brokerEndpoint.getDestination());
                 //if the ProducerBrokerExchange is null the broker will create it
@@ -67,76 +68,48 @@ public class BrokerProducer extends DefaultAsyncProducer {
         return true;
     }
 
-    private ActiveMQMessage getMessage(Exchange exchange) throws Exception {
-        ActiveMQMessage result;
-        Message camelMessage;
-        if (exchange.hasOut()) {
-            camelMessage = exchange.getOut();
-        } else {
-            camelMessage = exchange.getIn();
-        }
-
-        Map<String, Object> headers = camelMessage.getHeaders();
-
-        /**
-         * We purposely don't want to support injecting messages half-way through
-         * broker processing - use the activemq camel component for that - but
-         * we will support changing message headers and destinations
-         */
-        if (camelMessage instanceof JmsMessage) {
-            JmsMessage jmsMessage = (JmsMessage) camelMessage;
-            if (jmsMessage.getJmsMessage() instanceof ActiveMQMessage) {
-                result = (ActiveMQMessage) jmsMessage.getJmsMessage();
-                //lets apply any new message headers
-                setJmsHeaders(result, headers);
-            } else {
-                throw new IllegalStateException("Not the original message from the broker " + jmsMessage.getJmsMessage());
-            }
-        } else {
-            throw new IllegalStateException("Not the original message from the broker " + camelMessage);
-        }
-
+    private ActiveMQMessage getMessage(Exchange exchange) throws IllegalStateException, JMSException {
+        Message camelMessage = getMessageFromExchange(exchange);
+        checkOriginalMessage(camelMessage);
+        ActiveMQMessage result = (ActiveMQMessage) ((JmsMessage) camelMessage).getJmsMessage();
+        applyNewHeaders(result, camelMessage.getHeaders());
         return result;
     }
 
-    private void setJmsHeaders(ActiveMQMessage message, Map<String, Object> headers) {
-        message.setReadOnlyProperties(false);
-        for (Map.Entry<String, Object> entry : headers.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase("JMSDeliveryMode")) {
-                Object value = entry.getValue();
-                if (value instanceof Number) {
-                    Number number = (Number) value;
-                    message.setJMSDeliveryMode(number.intValue());
-                }
-            }
-            if (entry.getKey().equalsIgnoreCase("JmsPriority")) {
-                Integer value = ObjectConverter.toInteger(entry.getValue());
-                if (value != null) {
-                    message.setJMSPriority(value.intValue());
-                }
-            }
-            if (entry.getKey().equalsIgnoreCase("JMSTimestamp")) {
-                Long value = ObjectConverter.toLong(entry.getValue());
-                if (value != null) {
-                    message.setJMSTimestamp(value.longValue());
-                }
-            }
-            if (entry.getKey().equalsIgnoreCase("JMSExpiration")) {
-                Long value = ObjectConverter.toLong(entry.getValue());
-                if (value != null) {
-                    message.setJMSExpiration(value.longValue());
-                }
-            }
-            if (entry.getKey().equalsIgnoreCase("JMSRedelivered")) {
-                message.setJMSRedelivered(ObjectConverter.toBool(entry.getValue()));
-            }
-            if (entry.getKey().equalsIgnoreCase("JMSType")) {
-                Object value = entry.getValue();
-                if (value != null) {
-                    message.setJMSType(value.toString());
-                }
-            }
+    private Message getMessageFromExchange(Exchange exchange) {
+        if (exchange.hasOut()) {
+            return exchange.getOut();
+        }
+
+        return exchange.getIn();
+    }
+
+    private void checkOriginalMessage(Message camelMessage) throws IllegalStateException {
+        /**
+         * We purposely don't want to support injecting messages half-way through
+         * broker processing - use the activemq camel component for that - but
+         * we will support changing message headers and destinations.
+         */
+
+        if (!(camelMessage instanceof JmsMessage)) {
+            throw new IllegalStateException("Not the original message from the broker " + camelMessage);
+        }
+
+        javax.jms.Message message = ((JmsMessage) camelMessage).getJmsMessage();
+
+        if (!(message instanceof ActiveMQMessage)) {
+            throw new IllegalStateException("Not the original message from the broker " + message);
         }
     }
 
+    private void applyNewHeaders(ActiveMQMessage message, Map<String, Object> headers) throws JMSException {
+        for (Map.Entry<String, Object> entry : headers.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if(value == null) {
+                continue;
+            }
+            message.setObjectProperty(key, value.toString(), false);
+        }
+    }
 }
