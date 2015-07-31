@@ -173,6 +173,8 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             @Override
             public void onMessage(Message msg) {
                 incThroughput();
+                sleep();
+
                 recvCount.incrementAndGet();
                 synchronized (recvCount) {
                     recvCount.notify();
