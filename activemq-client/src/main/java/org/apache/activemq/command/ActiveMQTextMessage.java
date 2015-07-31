@@ -78,29 +78,28 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public String getText() throws JMSException {
-        if (text == null && getContent() != null) {
-            text = decodeContent();
+        ByteSequence content = getContent();
+
+        if (text == null && content != null) {
+            text = decodeContent(content);
             setContent(null);
             setCompressed(false);
         }
         return text;
     }
 
-    private String decodeContent() throws JMSException {
+    private String decodeContent(ByteSequence bodyAsBytes) throws JMSException {
         String text = null;
-        if (getContent() != null) {
+        if (bodyAsBytes != null) {
             InputStream is = null;
             try {
-                ByteSequence bodyAsBytes = getContent();
-                if (bodyAsBytes != null) {
-                    is = new ByteArrayInputStream(bodyAsBytes);
-                    if (isCompressed()) {
-                        is = new InflaterInputStream(is);
-                    }
-                    DataInputStream dataIn = new DataInputStream(is);
-                    text = MarshallingSupport.readUTF8(dataIn);
-                    dataIn.close();
+                is = new ByteArrayInputStream(bodyAsBytes);
+                if (isCompressed()) {
+                    is = new InflaterInputStream(is);
                 }
+                DataInputStream dataIn = new DataInputStream(is);
+                text = MarshallingSupport.readUTF8(dataIn);
+                dataIn.close();
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
             } finally {
@@ -132,6 +131,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     public void storeContent() {
         try {
             ByteSequence content = getContent();
+            String text = this.text;
             if (content == null && text != null) {
                 ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
                 OutputStream os = bytesOut;
@@ -141,7 +141,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                     os = new DeflaterOutputStream(os);
                 }
                 DataOutputStream dataOut = new DataOutputStream(os);
-                MarshallingSupport.writeUTF8(dataOut, this.text);
+                MarshallingSupport.writeUTF8(dataOut, text);
                 dataOut.close();
                 setContent(bytesOut.toByteSequence());
             }
@@ -177,6 +177,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public int getSize() {
+        String text = this.text;
         if (size == 0 && content == null && text != null) {
             size = getMinimumMessageSize();
             if (marshalledProperties != null) {
@@ -192,7 +193,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         try {
             String text = this.text;
             if( text == null ) {
-                text = decodeContent();
+                text = decodeContent(getContent());
             }
             if (text != null) {
                 text = MarshallingSupport.truncate64(text);
