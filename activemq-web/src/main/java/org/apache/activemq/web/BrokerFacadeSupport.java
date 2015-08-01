@@ -42,7 +42,7 @@ import org.apache.activemq.broker.jmx.ProducerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.activemq.web.util.ExceptionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -135,8 +135,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
                     return destinationViewMBean;
                 }
             } catch (Exception ex) {
-                Class<InstanceNotFoundException> infe = InstanceNotFoundException.class;
-                if (!infe.isInstance(ex) && !infe.isInstance(ExceptionUtils.getRootCause(ex))) {
+                if (!ExceptionUtils.isRootCause(ex, InstanceNotFoundException.class)) {
                     // Only throw if not an expected InstanceNotFoundException exception
                     throw ex;
                 }
