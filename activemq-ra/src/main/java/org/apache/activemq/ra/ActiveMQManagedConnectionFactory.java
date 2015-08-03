@@ -33,14 +33,14 @@ import javax.resource.spi.ManagedConnectionFactory;
 import javax.resource.spi.ResourceAdapter;
 import javax.resource.spi.ResourceAdapterAssociation;
 import javax.security.auth.Subject;
+
 import org.slf4j.LoggerFactory;
 
 /**
  * @version $Revisio n$ TODO: Must override equals and hashCode (JCA spec 16.4)
  * @org.apache.xbean.XBean element="managedConnectionFactory"
  */
-public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
-        implements ManagedConnectionFactory, ResourceAdapterAssociation {
+public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport implements ManagedConnectionFactory, ResourceAdapterAssociation {
 
     private static final long serialVersionUID = 6196921962230582875L;
     private PrintWriter logWriter;
@@ -48,13 +48,12 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
     /**
      * @see javax.resource.spi.ResourceAdapterAssociation#setResourceAdapter(javax.resource.spi.ResourceAdapter)
      */
+    @Override
     public void setResourceAdapter(ResourceAdapter adapter) throws ResourceException {
         if (!(adapter instanceof MessageResourceAdapter)) {
             throw new ResourceException("ResourceAdapter is not of type: " + MessageResourceAdapter.class.getName());
-        }
-        else
-        {
-            if ( log.isDebugEnabled() ) {
+        } else {
+            if (log.isDebugEnabled()) {
                 log.debug(this + ", copying standard ResourceAdapter configuration properties");
             }
 
@@ -92,15 +91,13 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
             if (getTopicPrefetch() != null) {
                 setTopicPrefetch(baseInfo.getTopicPrefetch());
             }
-            if (getInputStreamPrefetch() != null) {
-                setInputStreamPrefetch(baseInfo.getInputStreamPrefetch());
-            }
         }
     }
 
     /**
      * @see javax.resource.spi.ResourceAdapterAssociation#getResourceAdapter()
      */
+    @Override
     public ResourceAdapter getResourceAdapter() {
         return null;
     }
@@ -113,7 +110,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
         if (object == null || object.getClass() != ActiveMQManagedConnectionFactory.class) {
             return false;
         }
-        return ((ActiveMQManagedConnectionFactory)object).getInfo().equals(getInfo());
+        return ((ActiveMQManagedConnectionFactory) object).getInfo().equals(getInfo());
     }
 
     /**
@@ -125,41 +122,49 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
     }
 
     /**
-     * Writes this factory during serialization along with the superclass' <i>info</i> property.
-     * This needs to be done manually since the superclass is not serializable itself.
-     * 
-     * @param out the stream to write object state to
-     * @throws java.io.IOException if the object cannot be serialized
+     * Writes this factory during serialization along with the superclass'
+     * <i>info</i> property. This needs to be done manually since the superclass
+     * is not serializable itself.
+     *
+     * @param out
+     *        the stream to write object state to
+     * @throws java.io.IOException
+     *         if the object cannot be serialized
      */
     private void writeObject(ObjectOutputStream out) throws IOException {
-        if ( logWriter != null && !(logWriter instanceof Serializable) ) {
+        if (logWriter != null && !(logWriter instanceof Serializable)) {
             // if the PrintWriter injected by the application server is not
             // serializable we just drop the reference and let the application
             // server re-inject a PrintWriter later (after this factory has been
             // deserialized again) using the standard setLogWriter() method
             logWriter = null;
-    }
+        }
         out.defaultWriteObject();
         out.writeObject(getInfo());
     }
 
     /**
      * Restores this factory along with the superclass' <i>info</i> property.
-     * This needs to be done manually since the superclass is not serializable itself.
-     * 
-     * @param in the stream to read object state from
-     * @throws java.io.IOException if the object state could not be restored
-     * @throws java.lang.ClassNotFoundException if the object state could not be restored
+     * This needs to be done manually since the superclass is not serializable
+     * itself.
+     *
+     * @param in
+     *        the stream to read object state from
+     * @throws java.io.IOException
+     *         if the object state could not be restored
+     * @throws java.lang.ClassNotFoundException
+     *         if the object state could not be restored
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         setInfo((ActiveMQConnectionRequestInfo) in.readObject());
         log = LoggerFactory.getLogger(getClass());
     }
-    
+
     /**
      * @see javax.resource.spi.ManagedConnectionFactory#createConnectionFactory(javax.resource.spi.ConnectionManager)
      */
+    @Override
     public Object createConnectionFactory(ConnectionManager manager) throws ResourceException {
         return new ActiveMQConnectionFactory(this, manager, getInfo());
     }
@@ -169,9 +174,10 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
      * ConnectionFactory that has our SimpleConnectionManager implementation but
      * it may be a better idea to not support this. The JMS api will have many
      * quirks the user may not expect when running through the resource adapter.
-     * 
+     *
      * @see javax.resource.spi.ManagedConnectionFactory#createConnectionFactory()
      */
+    @Override
     public Object createConnectionFactory() throws ResourceException {
         return new ActiveMQConnectionFactory(this, new SimpleConnectionManager(), getInfo());
     }
@@ -180,13 +186,12 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
      * @see javax.resource.spi.ManagedConnectionFactory#createManagedConnection(javax.security.auth.Subject,
      *      javax.resource.spi.ConnectionRequestInfo)
      */
-    public ManagedConnection createManagedConnection(
-            Subject subject, 
-            ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
+    @Override
+    public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
         ActiveMQConnectionRequestInfo amqInfo = getInfo();
-        if ( connectionRequestInfo instanceof ActiveMQConnectionRequestInfo ) {
+        if (connectionRequestInfo instanceof ActiveMQConnectionRequestInfo) {
             amqInfo = (ActiveMQConnectionRequestInfo) connectionRequestInfo;
-            }
+        }
         try {
             return new ActiveMQManagedConnection(subject, makeConnection(amqInfo), amqInfo);
         } catch (JMSException e) {
@@ -199,13 +204,11 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
      *      javax.security.auth.Subject,
      *      javax.resource.spi.ConnectionRequestInfo)
      */
-    public ManagedConnection matchManagedConnections(
-            Set connections, 
-            Subject subject, 
-            ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
+    @Override
+    public ManagedConnection matchManagedConnections(Set connections, Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
         Iterator iterator = connections.iterator();
         while (iterator.hasNext()) {
-            ActiveMQManagedConnection c = (ActiveMQManagedConnection)iterator.next();
+            ActiveMQManagedConnection c = (ActiveMQManagedConnection) iterator.next();
             if (c.matches(subject, connectionRequestInfo)) {
                 try {
                     c.associate(subject, (ActiveMQConnectionRequestInfo) connectionRequestInfo);
@@ -221,21 +224,22 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport
     /**
      * @see javax.resource.spi.ManagedConnectionFactory#setLogWriter(java.io.PrintWriter)
      */
+    @Override
     public void setLogWriter(PrintWriter aLogWriter) throws ResourceException {
-        if ( log.isTraceEnabled() ) {
+        if (log.isTraceEnabled()) {
             log.trace("setting log writer [" + aLogWriter + "]");
-    }
+        }
         this.logWriter = aLogWriter;
     }
 
     /**
      * @see javax.resource.spi.ManagedConnectionFactory#getLogWriter()
      */
+    @Override
     public PrintWriter getLogWriter() throws ResourceException {
-        if ( log.isTraceEnabled() ) {
+        if (log.isTraceEnabled()) {
             log.trace("getting log writer [" + logWriter + "]");
         }
         return logWriter;
     }
-
-    }
+}

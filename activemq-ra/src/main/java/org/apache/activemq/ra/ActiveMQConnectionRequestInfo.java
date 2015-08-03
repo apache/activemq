@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *  Must override equals and hashCode (JCA spec 16.4)
+ * Must override equals and hashCode (JCA spec 16.4)
  */
 public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Serializable, Cloneable {
 
@@ -51,7 +51,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
-            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo)clone();
+            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo) clone();
             if (redeliveryPolicy != null) {
                 answer.redeliveryPolicy = redeliveryPolicy.copy();
             }
@@ -121,6 +121,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#hashCode()
      */
+    @Override
     public int hashCode() {
         int rc = 0;
         if (useInboundSession != null) {
@@ -138,6 +139,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(Object o) {
         if (o == null) {
             return false;
@@ -145,7 +147,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (!getClass().equals(o.getClass())) {
             return false;
         }
-        ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo)o;
+        ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo) o;
         if (notEqual(serverUrl, i.serverUrl)) {
             return false;
         }
@@ -174,7 +176,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param url The url to set.
+     * @param url
+     *        The url to set.
      */
     public void setServerUrl(String url) {
         this.serverUrl = url;
@@ -188,7 +191,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param password The password to set.
+     * @param password
+     *        The password to set.
      */
     public void setPassword(String password) {
         this.password = password;
@@ -202,7 +206,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param userid The userid to set.
+     * @param userid
+     *        The userid to set.
      */
     public void setUserName(String userid) {
         this.userName = userid;
@@ -216,7 +221,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param clientid The clientid to set.
+     * @param clientid
+     *        The clientid to set.
      */
     public void setClientid(String clientid) {
         this.clientid = clientid;
@@ -264,13 +270,10 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     @Override
     public String toString() {
-        return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ")
-                .append(", serverUrl = '").append(serverUrl).append("' ")
-                .append(", clientid = '").append(clientid).append("' ")
-                .append(", userName = '").append(userName).append("' ")
-                .append(", useSessionArgs = '").append(useSessionArgs).append("' ")
-                .append(", useInboundSession = '").append(useInboundSession).append("'  }")
-                .toString();
+        return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ").append(", serverUrl = '").append(serverUrl)
+            .append("' ").append(", clientid = '").append(clientid).append("' ").append(", userName = '").append(userName).append("' ")
+            .append(", useSessionArgs = '").append(useSessionArgs).append("' ").append(", useInboundSession = '").append(useInboundSession).append("'  }")
+            .toString();
     }
 
     public Boolean getUseInboundSession() {
@@ -343,8 +346,9 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         return Integer.valueOf(prefetchPolicy().getOptimizeDurableTopicPrefetch());
     }
 
+    @Deprecated
     public Integer getInputStreamPrefetch() {
-        return Integer.valueOf(prefetchPolicy().getInputStreamPrefetch());
+        return 0;
     }
 
     public Integer getQueueBrowserPrefetch() {
@@ -374,12 +378,6 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     public void setOptimizeDurableTopicPrefetch(Integer optimizeDurableTopicPrefetch) {
         if (optimizeDurableTopicPrefetch != null) {
             prefetchPolicy().setOptimizeDurableTopicPrefetch(optimizeDurableTopicPrefetch.intValue());
-        }
-    }
-
-    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
-        if (inputStreamPrefetch != null) {
-            prefetchPolicy().setInputStreamPrefetch(inputStreamPrefetch.intValue());
         }
     }
 

@@ -35,7 +35,6 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     public static final int DEFAULT_QUEUE_BROWSER_PREFETCH = 500;
     public static final int DEFAULT_DURABLE_TOPIC_PREFETCH = 100;
     public static final int DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH = 1000;
-    public static final int DEFAULT_INPUT_STREAM_PREFETCH = 100;
     public static final int DEFAULT_TOPIC_PREFETCH = MAX_PREFETCH_SIZE;
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQPrefetchPolicy.class);
@@ -45,7 +44,6 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
     private int topicPrefetch;
     private int durableTopicPrefetch;
     private int optimizeDurableTopicPrefetch;
-    private int inputStreamPrefetch;
     private int maximumPendingMessageLimit;
 
     /**
@@ -57,7 +55,6 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
         this.topicPrefetch = DEFAULT_TOPIC_PREFETCH;
         this.durableTopicPrefetch = DEFAULT_DURABLE_TOPIC_PREFETCH;
         this.optimizeDurableTopicPrefetch = DEFAULT_OPTIMIZE_DURABLE_TOPIC_PREFETCH;
-        this.inputStreamPrefetch = DEFAULT_INPUT_STREAM_PREFETCH;
     }
 
     /**
@@ -160,18 +157,7 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
         this.queueBrowserPrefetch = getMaxPrefetchLimit(i);
         this.queuePrefetch = getMaxPrefetchLimit(i);
         this.topicPrefetch = getMaxPrefetchLimit(i);
-        this.inputStreamPrefetch = getMaxPrefetchLimit(i);
         this.optimizeDurableTopicPrefetch = getMaxPrefetchLimit(i);
-    }
-
-    @Deprecated
-    public int getInputStreamPrefetch() {
-        return inputStreamPrefetch;
-    }
-
-    @Deprecated
-    public void setInputStreamPrefetch(int inputStreamPrefetch) {
-        this.inputStreamPrefetch = getMaxPrefetchLimit(inputStreamPrefetch);
     }
 
     @Override
@@ -182,8 +168,7 @@ public class ActiveMQPrefetchPolicy extends Object implements Serializable {
                    this.queueBrowserPrefetch == other.queueBrowserPrefetch &&
                    this.topicPrefetch == other.topicPrefetch &&
                    this.durableTopicPrefetch == other.durableTopicPrefetch &&
-                   this.optimizeDurableTopicPrefetch == other.optimizeDurableTopicPrefetch &&
-                   this.inputStreamPrefetch == other.inputStreamPrefetch;
+                   this.optimizeDurableTopicPrefetch == other.optimizeDurableTopicPrefetch;
         }
         return false;
     }
