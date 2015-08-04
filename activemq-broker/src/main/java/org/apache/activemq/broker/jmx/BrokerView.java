@@ -418,7 +418,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName,
                                               String selector) throws Exception {
-        ConnectionContext context = new ConnectionContext();
+        ConnectionContext context = getConnectionContext();
         context.setBroker(safeGetBroker());
         context.setClientId(clientId);
         ConsumerInfo info = new ConsumerInfo();
@@ -443,7 +443,7 @@ public class BrokerView implements BrokerViewMBean {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
         info.setSubscriptionName(subscriberName);
-        ConnectionContext context = new ConnectionContext();
+        ConnectionContext context = getConnectionContext();
         context.setBroker(safeGetBroker());
         context.setClientId(clientId);
         brokerService.getBroker().removeSubscription(context, info);
@@ -548,5 +548,22 @@ public class BrokerView implements BrokerViewMBean {
         }
 
         return broker;
+    }
+
+    private ConnectionContext getConnectionContext() {
+        ConnectionContext context;
+        if(broker == null) {
+            context = new ConnectionContext();
+
+        }
+        else {
+            ConnectionContext sharedContext = BrokerSupport.getConnectionContext(broker.getContextBroker());
+            //Make a local copy of the sharedContext. We do this because we do not want to set a clientId on the
+            //global sharedContext. Taking a copy of the sharedContext is a good way to make sure that we are not
+            //messing up the shared context
+            context = sharedContext.copy();
+        }
+
+        return context;
     }
 }
