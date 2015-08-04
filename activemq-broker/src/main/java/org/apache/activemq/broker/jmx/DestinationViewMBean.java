@@ -36,7 +36,7 @@ public interface DestinationViewMBean {
     String getName();
 
     /**
-     * Resets the managment counters.
+     * Resets the management counters.
      */
     @MBeanInfo("Resets statistics.")
     void resetStatistics();
@@ -122,9 +122,9 @@ public interface DestinationViewMBean {
     long getQueueSize();
 
     /**
-     * Returns the memory size of all messages in this destination's store 
+     * Returns the memory size of all messages in this destination's store
      *
-     * @return Returns the memory size of all messages in this destination's store 
+     * @return Returns the memory size of all messages in this destination's store
      */
     @MBeanInfo("The memory size of all messages in this destination's store.")
     long getStoreMessageSize();
@@ -193,7 +193,7 @@ public interface DestinationViewMBean {
      * @param body the text to send
      * @param user
      * @param password
-     * @return
+     * @return a string value
      * @throws Exception
      */
     @MBeanInfo("Sends a TextMessage to a password-protected destination.")
@@ -206,11 +206,14 @@ public interface DestinationViewMBean {
      * @param body the text to send
      * @param user
      * @param password
-     * @return
+     *
+     * @return a string value
+     *
      * @throws Exception
      */
     @MBeanInfo("Sends a TextMessage to a password-protected destination.")
     String sendTextMessage(@MBeanInfo("headers") Map<String,String> headers, @MBeanInfo("body") String body, @MBeanInfo("user") String user, @MBeanInfo("password") String password) throws Exception;
+
     /**
      * @return the percentage of amount of memory used
      */

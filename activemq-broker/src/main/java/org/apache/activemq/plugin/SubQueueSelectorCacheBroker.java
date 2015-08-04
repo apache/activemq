@@ -52,8 +52,9 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * This is influenced by code snippets developed by Maciej Rakowicz
  *
- * @see https://issues.apache.org/activemq/browse/AMQ-3004
- * @see http://mail-archives.apache.org/mod_mbox/activemq-users/201011.mbox/%3C8A013711-2613-450A-A487-379E784AF1D6@homeaway.co.uk%3E
+ * Refer to:
+ * https://issues.apache.org/activemq/browse/AMQ-3004
+ * http://mail-archives.apache.org/mod_mbox/activemq-users/201011.mbox/%3C8A013711-2613-450A-A487-379E784AF1D6@homeaway.co.uk%3E
  */
 public class SubQueueSelectorCacheBroker extends BrokerFilter implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(SubQueueSelectorCacheBroker.class);

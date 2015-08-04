@@ -22,7 +22,6 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
 
-import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.InetAddressUtil;
 
 /**
@@ -96,7 +95,9 @@ public class PublishedAddressPolicy {
      * logic for this method.
      *
      * @param uriHostEntry
-     * @return
+     *
+     * @return the value published for the given host.
+     *
      * @throws UnknownHostException
      */
     protected String getPublishedHostValue(String uriHostEntry) throws UnknownHostException {

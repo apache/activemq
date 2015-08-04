@@ -521,7 +521,7 @@ public class ManagementContext implements Service {
     }
 
     /**
-     * @return
+     * @return an MBeanServer instance
      * @throws NullPointerException
      * @throws MalformedObjectNameException
      * @throws IOException

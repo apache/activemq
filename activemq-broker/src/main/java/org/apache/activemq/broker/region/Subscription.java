@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -66,7 +67,7 @@ public interface Subscription extends SubscriptionRecovery {
      * Is the subscription interested in the message?
      * @param node
      * @param context
-     * @return
+     * @return true if matching
      * @throws IOException
      */
     boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException;
@@ -74,7 +75,7 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * Is the subscription interested in messages in the destination?
      * @param destination
-     * @return
+     * @return true if matching
      */
     boolean matches(ActiveMQDestination destination);
 

@@ -80,8 +80,8 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     /**
      * @param localTopicConnectionFactory The localTopicConnectionFactory to set.
      */
-    public void setLocalTopicConnectionFactory(TopicConnectionFactory localConnectionFactory) {
-        this.localTopicConnectionFactory = localConnectionFactory;
+    public void setLocalTopicConnectionFactory(TopicConnectionFactory localTopicConnectionFactory) {
+        this.localTopicConnectionFactory = localTopicConnectionFactory;
     }
 
     /**
@@ -99,7 +99,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     }
 
     /**
-     * @param outboundTopicConnectionFactoryName The outboundTopicConnectionFactoryName to set.
+     * @param foreignTopicConnectionFactoryName The foreignTopicConnectionFactoryName to set.
      */
     public void setOutboundTopicConnectionFactoryName(String foreignTopicConnectionFactoryName) {
         this.outboundTopicConnectionFactoryName = foreignTopicConnectionFactoryName;
@@ -141,14 +141,14 @@ public class SimpleJmsTopicConnector extends JmsConnector {
     }
 
     /**
-     * @param outboundTopicConnection The outboundTopicConnection to set.
+     * @param foreignTopicConnection The foreignTopicConnection to set.
      */
     public void setOutboundTopicConnection(TopicConnection foreignTopicConnection) {
         this.foreignConnection.set(foreignTopicConnection);
     }
 
     /**
-     * @param outboundTopicConnectionFactory The outboundTopicConnectionFactory to set.
+     * @param foreignTopicConnectionFactory The foreignTopicConnectionFactory to set.
      */
     public void setOutboundTopicConnectionFactory(TopicConnectionFactory foreignTopicConnectionFactory) {
         this.outboundTopicConnectionFactory = foreignTopicConnectionFactory;
@@ -164,7 +164,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
             if (outboundTopicConnectionFactory == null) {
                 // look it up from JNDI
                 if (outboundTopicConnectionFactoryName != null) {
-                    outboundTopicConnectionFactory = (TopicConnectionFactory)jndiOutboundTemplate
+                    outboundTopicConnectionFactory = jndiOutboundTemplate
                         .lookup(outboundTopicConnectionFactoryName, TopicConnectionFactory.class);
                     if (outboundUsername != null) {
                         newConnection = outboundTopicConnectionFactory
@@ -223,7 +223,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
                 if (embeddedConnectionFactory == null) {
                     // look it up from JNDI
                     if (localConnectionFactoryName != null) {
-                        localTopicConnectionFactory = (TopicConnectionFactory)jndiLocalTemplate
+                        localTopicConnectionFactory = jndiLocalTemplate
                             .lookup(localConnectionFactoryName, TopicConnectionFactory.class);
                         if (localUsername != null) {
                             newConnection = localTopicConnectionFactory
@@ -348,6 +348,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
         }
     }
 
+    @Override
     protected Destination createReplyToBridge(Destination destination, Connection replyToProducerConnection,
                                               Connection replyToConsumerConnection) {
         Topic replyToProducerTopic = (Topic)destination;
@@ -357,6 +358,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
             InboundTopicBridge bridge = (InboundTopicBridge)replyToBridges.get(replyToProducerTopic);
             if (bridge == null) {
                 bridge = new InboundTopicBridge() {
+                    @Override
                     protected Destination processReplyToDestination(Destination destination) {
                         return null;
                     }
@@ -388,6 +390,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
             OutboundTopicBridge bridge = (OutboundTopicBridge)replyToBridges.get(replyToProducerTopic);
             if (bridge == null) {
                 bridge = new OutboundTopicBridge() {
+                    @Override
                     protected Destination processReplyToDestination(Destination destination) {
                         return null;
                     }
@@ -428,7 +431,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
         if (preferJndiDestinationLookup) {
             try {
                 // look-up the Queue
-                result = (Topic)jndiOutboundTemplate.lookup(topicName, Topic.class);
+                result = jndiOutboundTemplate.lookup(topicName, Topic.class);
             } catch (NamingException e) {
                 try {
                     result = session.createTopic(topicName);
@@ -446,7 +449,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
             } catch (JMSException e) {
                 // look-up the Topic
                 try {
-                    result = (Topic)jndiOutboundTemplate.lookup(topicName, Topic.class);
+                    result = jndiOutboundTemplate.lookup(topicName, Topic.class);
                 } catch (NamingException e1) {
                     String errStr = "Failed to look-up Topic for name: " + topicName;
                     LOG.error(errStr, e);
@@ -456,7 +459,7 @@ public class SimpleJmsTopicConnector extends JmsConnector {
                 }
             }
         }
+
         return result;
     }
-
 }

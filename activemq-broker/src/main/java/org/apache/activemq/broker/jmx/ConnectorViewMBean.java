@@ -52,7 +52,7 @@ public interface ConnectorViewMBean extends Service {
     /**
      * Returns true if link stealing is enabled on this Connector
      *
-     * @returns true if link stealing is enabled.
+     * @return true if link stealing is enabled.
      */
     @MBeanInfo("Link Stealing enabled")
     boolean isAllowLinkStealingEnabled();

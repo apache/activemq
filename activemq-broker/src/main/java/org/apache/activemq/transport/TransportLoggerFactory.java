@@ -16,14 +16,16 @@
  */
 package org.apache.activemq.transport;
 
+import java.io.IOException;
+
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.LogWriterFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.IOException;
-import javax.management.ObjectName;
 
 /**
  * Singleton class to create TransportLogger objects.
@@ -31,9 +33,9 @@ import javax.management.ObjectName;
  * a TransportLoggerControlMBean is created and registered.
  * This MBean permits enabling and disabling the logging for
  * all TransportLogger objects at once.
- * 
+ *
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
- * 
+ *
  * @see TransportLoggerControlMBean
  */
 public class TransportLoggerFactory {
@@ -50,13 +52,13 @@ public class TransportLoggerFactory {
     public static String defaultLogWriterName = "default";
     /**
      * If transport logging is enabled, it will be possible to control
-     * the transport loggers or not based on this value 
+     * the transport loggers or not based on this value
      */
     private static boolean defaultDynamicManagement = false;
     /**
      * If transport logging is enabled, the transport loggers will initially
      * output or not depending on this value.
-     * This setting only has a meaning if 
+     * This setting only has a meaning if
      */
     private static boolean defaultInitialBehavior = true;
     /**
@@ -110,7 +112,7 @@ public class TransportLoggerFactory {
         int id = getNextId();
         return createTransportLogger(next, id, createLog(id), defaultLogWriterName, defaultDynamicManagement, defaultInitialBehavior, defaultJmxPort);
     }
-    
+
     /**
      * Creates a TransportLogger object, that will be inserted in the Transport Stack.
      * Uses the default initial behavior and the default log writer.
@@ -150,7 +152,7 @@ public class TransportLoggerFactory {
      * @param dynamicManagement Specifies if JMX will be used to switch on/off the TransportLogger to be created.
      * @param startLogging Specifies if this TransportLogger should be initially active or not. Only has a meaning if
      * dynamicManagement = true.
-     * @param jmxPort the port to be used by the JMX server. It should only be different from 1099 (broker's default JMX port)
+     * @param jmxport the port to be used by the JMX server. It should only be different from 1099 (broker's default JMX port)
      * when it's a client that is using Transport Logging. In a broker, if the port is different from 1099, 2 JMX servers will
      * be created, both identical, with all the MBeans.
      * @return A TransportLogger object.
@@ -183,7 +185,7 @@ public class TransportLoggerFactory {
     private static Logger createLog(int id) {
         return LoggerFactory.getLogger(TransportLogger.class.getName()+".Connection:" + id);
     }
-    
+
     /**
      * Starts the management context.
      * Creates and registers a TransportLoggerControl MBean which enables the user
@@ -201,7 +203,7 @@ public class TransportLoggerFactory {
          try {
              this.objectName = new ObjectName(this.managementContext.getJmxDomainName()+":"+ "Type=TransportLoggerControl");
              AnnotatedMBean.registerMBean(this.managementContext, new TransportLoggerControl(this.managementContext),this.objectName);
-             
+
              this.transportLoggerControlCreated = true;
 
          } catch (Exception e) {

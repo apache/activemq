@@ -51,7 +51,7 @@ public class ReconnectionPolicy {
      * Sets the maximum number of a times a Message send should be retried before
      * a JMSExeception is thrown indicating that the operation failed.
      *
-     * @param maxRetries
+     * @param maxSendRetries
      * 			number of send retries that will be performed.
      */
     public void setMaxSendRetries(int maxSendRetries) {

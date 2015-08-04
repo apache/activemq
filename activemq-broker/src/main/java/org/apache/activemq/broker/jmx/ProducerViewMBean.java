@@ -67,13 +67,13 @@ public interface ProducerViewMBean {
     boolean isDestinationTemporary();
 
     /**
-     * @returns the windows size configured for the producer
+     * @return the windows size configured for the producer
      */
     @MBeanInfo("Configured Window Size for the Producer")
     int getProducerWindowSize();
 
     /**
-     * @returns if the Producer is configured for Async dispatch
+     * @return if the Producer is configured for Async dispatch
      */
     @MBeanInfo("Is the producer configured for Async Dispatch")
     boolean isDispatchAsync();

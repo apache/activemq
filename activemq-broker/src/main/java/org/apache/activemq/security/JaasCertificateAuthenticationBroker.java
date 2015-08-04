@@ -45,7 +45,7 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter implements
      * Simple constructor. Leaves everything to superclass.
      *
      * @param next The Broker that does the actual work for this Filter.
-     * @param jassConfiguration The JAAS domain configuration name (refere to
+     * @param jaasConfiguration The JAAS domain configuration name (refere to
      *                JAAS documentation).
      */
     public JaasCertificateAuthenticationBroker(Broker next, String jaasConfiguration) {

@@ -31,8 +31,6 @@ public class CacheEntry {
     }
 
     /**
-     * 
-     * @param entry
      * @return false if you are trying to remove the tail pointer.
      */
     public boolean remove() {
@@ -53,5 +51,4 @@ public class CacheEntry {
 
         return true;
     }
-
 }

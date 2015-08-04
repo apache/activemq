@@ -18,11 +18,11 @@ package org.apache.activemq.util;
 
 /**
  * Used to convert to hex from byte arrays and back.
- * 
- * 
+ *
+ *
  */
 public final class HexSupport {
-    
+
     private static final String[] HEX_TABLE = new String[]{
         "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f",
         "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "1a", "1b", "1c", "1d", "1e", "1f",
@@ -42,15 +42,15 @@ public final class HexSupport {
         "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "fa", "fb", "fc", "fd", "fe", "ff",
     };
     private static final int[] INT_OFFSETS = new int[]{
-    	24,16,8,0
+        24,16,8,0
     };
-    
+
     private HexSupport() {
     }
-    
+
     /**
      * @param hex
-     * @return
+     * @return array of bytes
      */
     public static byte[] toBytesFromHex(String hex) {
         byte rc[] = new byte[hex.length() / 2];
@@ -64,7 +64,7 @@ public final class HexSupport {
 
     /**
      * @param bytes
-     * @return
+     * @return string hex value
      */
     public static String toHexFromBytes(byte[] bytes) {
         StringBuffer rc = new StringBuffer(bytes.length * 2);
@@ -75,21 +75,21 @@ public final class HexSupport {
     }
 
     /**
-     * 
-     * @param value 
+     *
+     * @param value
      * @param trim if the leading 0's should be trimmed off.
-     * @return
+     * @return string hex value
      */
     public static String toHexFromInt(int value, boolean trim) {
         StringBuffer rc = new StringBuffer(INT_OFFSETS.length*2);
         for (int i = 0; i < INT_OFFSETS.length; i++) {
-        	int b = 0xFF & (value>>INT_OFFSETS[i]);
-        	if( !(trim && b == 0) ) { 
-        		rc.append(HEX_TABLE[b]);
-        		trim=false;
-        	}
+            int b = 0xFF & (value>>INT_OFFSETS[i]);
+            if( !(trim && b == 0) ) {
+                rc.append(HEX_TABLE[b]);
+                trim=false;
+            }
         }
+
         return rc.toString();
     }
-
 }

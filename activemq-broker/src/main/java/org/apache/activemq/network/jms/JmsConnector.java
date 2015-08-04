@@ -260,7 +260,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param inboundMessageConvertor The inboundMessageConvertor to set.
+     * @param jmsMessageConvertor The jmsMessageConvertor to set.
      */
     public void setInboundMessageConvertor(JmsMesageConvertor jmsMessageConvertor) {
         this.inboundMessageConvertor = jmsMessageConvertor;

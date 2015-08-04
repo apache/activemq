@@ -16,58 +16,60 @@
  */
 package org.apache.activemq.plugin;
 
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * A Plugin which allows to force every incoming message to be PERSISTENT or NON-PERSISTENT. 
- * 
- * Useful, if you have set the broker usage policy to process ONLY persistent or ONLY non-persistent
- * messages. 
- *  @org.apache.xbean.XBean element="forcePersistencyModeBrokerPlugin"
+ * A Plugin which allows to force every incoming message to be PERSISTENT or
+ * NON-PERSISTENT.
+ *
+ * Useful, if you have set the broker usage policy to process ONLY persistent or
+ * ONLY non-persistent messages.
+ *
+ * @org.apache.xbean.XBean element="forcePersistencyModeBrokerPlugin"
  */
 public class ForcePersistencyModeBrokerPlugin implements BrokerPlugin {
-  private static Logger LOG = LoggerFactory.getLogger(ForcePersistencyModeBrokerPlugin.class);
-  private boolean persistenceFlag = false;
-  
-  /**
- * Constructor
- */
-public ForcePersistencyModeBrokerPlugin() {
-  }
+    private static Logger LOG = LoggerFactory.getLogger(ForcePersistencyModeBrokerPlugin.class);
+    private boolean persistenceFlag = false;
 
-  /** 
- * @param broker
- * @return the Broker
- * @throws Exception
- * @see org.apache.activemq.broker.BrokerPlugin#installPlugin(org.apache.activemq.broker.Broker)
- */
+    /**
+     * Constructor
+     */
+    public ForcePersistencyModeBrokerPlugin() {}
 
-  public Broker installPlugin(Broker broker) throws Exception{
-    ForcePersistencyModeBroker pB = new ForcePersistencyModeBroker(broker);
-    pB.setPersistenceFlag(isPersistenceForced());
-    LOG.info("Installing ForcePersistencyModeBroker plugin: persistency enforced={}", pB.isPersistent());
-    return pB;
-  }
+    /**
+     * @param broker
+     *
+     * @return the Broker
+     *
+     * @throws Exception
+     *
+     * @see org.apache.activemq.broker.BrokerPlugin#installPlugin(org.apache.activemq.broker.Broker)
+     */
+    @Override
+    public Broker installPlugin(Broker broker) throws Exception {
+        ForcePersistencyModeBroker pB = new ForcePersistencyModeBroker(broker);
+        pB.setPersistenceFlag(isPersistenceForced());
+        LOG.info("Installing ForcePersistencyModeBroker plugin: persistency enforced={}", pB.isPersistent());
+        return pB;
+    }
 
-  /** Sets the persistency mode.
-   *  
-   * @param persistenceFlag
-   */
-  public void setPersistenceFlag(final boolean persistenceFlag) {
-    this.persistenceFlag = persistenceFlag;
-  }
+    /**
+     * Sets the persistence mode.
+     *
+     * @param persistenceFlag
+     */
+    public void setPersistenceFlag(final boolean persistenceFlag) {
+        this.persistenceFlag = persistenceFlag;
+    }
 
-  /**
-   * @return the mode the (activated) plugin will set the message delivery mode 
-   */
-  public final boolean isPersistenceForced() {
-    return persistenceFlag;
-  }
-  
+    /**
+     * @return the mode the (activated) plugin will set the message delivery
+     *         mode
+     */
+    public final boolean isPersistenceForced() {
+        return persistenceFlag;
+    }
 }
-

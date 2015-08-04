@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.store.PersistenceAdapter;
-
-import java.io.IOException;
 
 /**
  * Represents a lock service to ensure that a broker is the only master

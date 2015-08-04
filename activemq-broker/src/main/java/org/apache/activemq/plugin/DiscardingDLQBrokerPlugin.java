@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
  * @version 1.0
  */
 public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
+
     public DiscardingDLQBrokerPlugin() {
     }
 
@@ -41,12 +42,16 @@ public class DiscardingDLQBrokerPlugin implements BrokerPlugin {
     private int reportInterval = 1000;
 
     /**
-     * Installs the plugin into the interceptor chain of the broker, returning the new intercepted broker to use.
+     * Installs the plugin into the intercepter chain of the broker, returning the new
+     * intercepted broker to use.
+     *
      * @param broker Broker
-     * @throws Exception
+     *
      * @return Broker
-     * @todo Implement this org.apache.activemq.broker.BrokerPlugin method
+     *
+     * @throws Exception
      */
+    @Override
     public Broker installPlugin(Broker broker) throws Exception {
         log.info("Installing Discarding Dead Letter Queue broker plugin[dropAll={}; dropTemporaryTopics={}; dropTemporaryQueues={}; dropOnly={}; reportInterval={}]", new Object[]{
                 isDropAll(), isDropTemporaryTopics(), isDropTemporaryQueues(), getDropOnly(), reportInterval

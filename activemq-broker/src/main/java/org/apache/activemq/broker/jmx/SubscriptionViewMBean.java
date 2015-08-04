@@ -113,9 +113,8 @@ public interface SubscriptionViewMBean {
     int getDispatchedQueueSize();
 
     /**
-     * The same as the number of messages dispatched -
-     * making it explicit
-     * @return
+     * The same as the number of messages dispatched - making it explicit
+     * @return number of messages waiting for an acknowledge.
      */
     @MBeanInfo("Number of messages dispatched awaiting acknowledgement.")
     int getMessageCountAwaitingAcknowledge();

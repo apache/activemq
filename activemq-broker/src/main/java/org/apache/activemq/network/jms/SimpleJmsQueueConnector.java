@@ -77,7 +77,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
     }
 
     /**
-     * @param localQueueConnectionFactory The localQueueConnectionFactory to
+     * @param localConnectionFactory The localQueueConnectionFactory to
      *                set.
      */
     public void setLocalQueueConnectionFactory(QueueConnectionFactory localConnectionFactory) {
@@ -99,8 +99,8 @@ public class SimpleJmsQueueConnector extends JmsConnector {
     }
 
     /**
-     * @param outboundQueueConnectionFactoryName The
-     *                outboundQueueConnectionFactoryName to set.
+     * @param foreignQueueConnectionFactoryName The
+     *                foreignQueueConnectionFactoryName to set.
      */
     public void setOutboundQueueConnectionFactoryName(String foreignQueueConnectionFactoryName) {
         this.outboundQueueConnectionFactoryName = foreignQueueConnectionFactoryName;
@@ -142,15 +142,14 @@ public class SimpleJmsQueueConnector extends JmsConnector {
     }
 
     /**
-     * @param outboundQueueConnection The outboundQueueConnection to set.
+     * @param foreignQueueConnection The foreignQueueConnection to set.
      */
     public void setOutboundQueueConnection(QueueConnection foreignQueueConnection) {
         this.foreignConnection.set(foreignQueueConnection);
     }
 
     /**
-     * @param outboundQueueConnectionFactory The outboundQueueConnectionFactory
-     *                to set.
+     * @param foreignQueueConnectionFactory The foreignQueueConnectionFactory to set.
      */
     public void setOutboundQueueConnectionFactory(QueueConnectionFactory foreignQueueConnectionFactory) {
         this.outboundQueueConnectionFactory = foreignQueueConnectionFactory;
@@ -166,7 +165,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
             if (outboundQueueConnectionFactory == null) {
                 // look it up from JNDI
                 if (outboundQueueConnectionFactoryName != null) {
-                    outboundQueueConnectionFactory = (QueueConnectionFactory)jndiOutboundTemplate
+                    outboundQueueConnectionFactory = jndiOutboundTemplate
                         .lookup(outboundQueueConnectionFactoryName, QueueConnectionFactory.class);
                     if (outboundUsername != null) {
                         newConnection = outboundQueueConnectionFactory
@@ -225,7 +224,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
                 if (embeddedConnectionFactory == null) {
                     // look it up from JNDI
                     if (localConnectionFactoryName != null) {
-                        localQueueConnectionFactory = (QueueConnectionFactory)jndiLocalTemplate
+                        localQueueConnectionFactory = jndiLocalTemplate
                             .lookup(localConnectionFactoryName, QueueConnectionFactory.class);
                         if (localUsername != null) {
                             newConnection = localQueueConnectionFactory
@@ -350,6 +349,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
         }
     }
 
+    @Override
     protected Destination createReplyToBridge(Destination destination, Connection replyToProducerConnection,
                                               Connection replyToConsumerConnection) {
         Queue replyToProducerQueue = (Queue)destination;
@@ -359,6 +359,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
             InboundQueueBridge bridge = (InboundQueueBridge)replyToBridges.get(replyToProducerQueue);
             if (bridge == null) {
                 bridge = new InboundQueueBridge() {
+                    @Override
                     protected Destination processReplyToDestination(Destination destination) {
                         return null;
                     }
@@ -390,6 +391,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
             OutboundQueueBridge bridge = (OutboundQueueBridge)replyToBridges.get(replyToProducerQueue);
             if (bridge == null) {
                 bridge = new OutboundQueueBridge() {
+                    @Override
                     protected Destination processReplyToDestination(Destination destination) {
                         return null;
                     }
@@ -430,7 +432,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
         if (preferJndiDestinationLookup) {
             try {
                 // look-up the Queue
-                result = (Queue)jndiOutboundTemplate.lookup(queueName, Queue.class);
+                result = jndiOutboundTemplate.lookup(queueName, Queue.class);
             } catch (NamingException e) {
                 try {
                     result = session.createQueue(queueName);
@@ -448,7 +450,7 @@ public class SimpleJmsQueueConnector extends JmsConnector {
             } catch (JMSException e) {
                 // look-up the Queue
                 try {
-                    result = (Queue)jndiOutboundTemplate.lookup(queueName, Queue.class);
+                    result = jndiOutboundTemplate.lookup(queueName, Queue.class);
                 } catch (NamingException e1) {
                     String errStr = "Failed to look-up Queue for name: " + queueName;
                     LOG.error(errStr, e);

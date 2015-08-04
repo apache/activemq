@@ -66,7 +66,7 @@ public final class IOHelper {
      * and "." characters.
      *
      * @param name
-     * @return
+     * @return safe name of the directory
      */
     public static String toFileSystemDirectorySafeName(String name) {
         return toFileSystemSafeName(name, true, MAX_DIR_NAME_LENGTH);
@@ -84,7 +84,7 @@ public final class IOHelper {
      * @param name
      * @param dirSeparators
      * @param maxFileLength
-     * @return
+     * @return file system safe name
      */
     public static String toFileSystemSafeName(String name, boolean dirSeparators, int maxFileLength) {
         int size = name.length();

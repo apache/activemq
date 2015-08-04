@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
-import org.apache.activemq.command.MessageId;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
+import org.apache.activemq.command.MessageId;
 
 /**
  * An abstraction that keeps the correct order of messages that need to be dispatched
@@ -60,7 +60,7 @@ public class QueueDispatchPendingList implements PendingList {
      * @param message
      *      The MessageReference that is to be added to this list.
      *
-     * @return
+     * @return the pending node.
      */
     @Override
     public PendingNode addMessageFirst(MessageReference message) {
@@ -74,7 +74,7 @@ public class QueueDispatchPendingList implements PendingList {
      * @param message
      *      The MessageReference that is to be added to this list.
      *
-     * @return
+     * @return the pending node.
      */
     @Override
     public PendingNode addMessageLast(MessageReference message) {

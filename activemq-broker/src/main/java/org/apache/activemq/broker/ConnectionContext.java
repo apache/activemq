@@ -186,7 +186,7 @@ public class ConnectionContext {
     }
 
     /**
-     * @return
+     * @return true if in recovery mode.
      */
     public boolean isInRecoveryMode() {
         return inRecoveryMode;

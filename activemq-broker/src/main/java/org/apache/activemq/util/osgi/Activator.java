@@ -75,9 +75,9 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
         debug("activating");
         this.bundleContext = bundleContext;
-        
+
         cachePackageCapabilities(Service.class, Transport.class, DiscoveryAgent.class, PersistenceAdapter.class);
-        
+
         debug("checking existing bundles");
         bundleContext.addBundleListener(this);
         for (Bundle bundle : bundleContext.getBundles()) {
@@ -91,7 +91,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
 
     /**
      * Caches the package capabilities that are needed for a set of interface classes
-     *  
+     *
      * @param classes interfaces we want to track
      */
     private void cachePackageCapabilities(Class<?> ... classes) {
@@ -100,7 +100,7 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
         for (Class<?> clazz: classes) {
             packageNames.add(clazz.getPackage().getName());
         }
-        
+
         List<BundleCapability> ourExports = ourWiring.getCapabilities(PACKAGE_NAMESPACE);
         for (BundleCapability ourExport : ourExports) {
             String ourPkgName = (String) ourExport.getAttributes().get(PACKAGE_NAMESPACE);
@@ -243,9 +243,9 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     /**
      * We consider a bundle to be a candidate for objects if it imports at least
      * one of the packages of our interfaces
-     * 
+     *
      * @param bundle
-     * @return
+     * @return true if the bundle is improting.
      */
     private boolean isImportingUs(Bundle bundle) {
         BundleWiring wiring = bundle.adapt(BundleWiring.class);

@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.Response;
 
-import java.io.IOException;
-
 /**
- * 
+ *
  */
 public interface Connection extends Service {
 
@@ -36,21 +36,21 @@ public interface Connection extends Service {
 
     /**
      * Sends a message to the client.
-     * 
+     *
      * @param message the message to send to the client.
      */
     void dispatchSync(Command message);
 
     /**
      * Sends a message to the client.
-     * 
+     *
      * @param command
      */
     void dispatchAsync(Command command);
 
     /**
      * Services a client command and submits it to the broker.
-     * 
+     *
      * @param command
      * @return Response
      */
@@ -58,7 +58,7 @@ public interface Connection extends Service {
 
     /**
      * Handles an unexpected error associated with a connection.
-     * 
+     *
      * @param error
      */
     void serviceException(Throwable error);
@@ -106,18 +106,19 @@ public interface Connection extends Service {
     void serviceExceptionAsync(IOException e);
 
     String getConnectionId();
-    
+
     /**
      * return true if a network connection
-     * @return
+     *
+     * @return if this is a network connection
      */
     boolean isNetworkConnection();
-    
+
     /**
      * @return true if a fault tolerant connection
      */
     boolean isFaultTolerantConnection();
-    
+
     void updateClient(ConnectionControl control);
 
 

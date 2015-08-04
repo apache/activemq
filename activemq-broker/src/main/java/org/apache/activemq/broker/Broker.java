@@ -42,8 +42,6 @@ import org.apache.activemq.usage.Usage;
 /**
  * The Message Broker which routes messages, maintains subscriptions and
  * connections, acknowledges messages and handles transactions.
- *
- *
  */
 public interface Broker extends Region, Service {
 
@@ -51,7 +49,7 @@ public interface Broker extends Region, Service {
      * Get a Broker from the Broker Stack that is a particular class
      *
      * @param type
-     * @return
+     * @return a Broker instance.
      */
     Broker getAdaptor(Class type);
 
@@ -117,7 +115,7 @@ public interface Broker extends Region, Service {
     /**
      * Adds a producer.
      *
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      * @throws Exception TODO
      */
     @Override
@@ -126,7 +124,7 @@ public interface Broker extends Region, Service {
     /**
      * Removes a producer.
      *
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      * @throws Exception TODO
      */
     @Override
@@ -146,8 +144,10 @@ public interface Broker extends Region, Service {
 
     /**
      * return a reference destination map of a region based on the destination type
+     *
      * @param destination
-     * @return
+     *
+     * @return destination Map
      */
     public Map<ActiveMQDestination, Destination> getDestinationMap(ActiveMQDestination destination);
 
@@ -155,7 +155,7 @@ public interface Broker extends Region, Service {
      * Gets a list of all the prepared xa transactions.
      *
      * @param context transaction ids
-     * @return
+     * @return array of TransactionId values
      * @throws Exception TODO
      */
     TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception;
@@ -186,7 +186,6 @@ public interface Broker extends Region, Service {
      * @param xid
      * @throws Exception TODO
      */
-
     void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
@@ -253,6 +252,7 @@ public interface Broker extends Region, Service {
      *
      * @param context
      * @param info
+     *
      * @throws Exception
      */
     void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
@@ -318,7 +318,7 @@ public interface Broker extends Region, Service {
      *
      * @param context
      * @param messageReference
-     * @param subscription, may be null
+     * @param subscription (may be null)
      */
     void messageExpired(ConnectionContext context, MessageReference messageReference, Subscription subscription);
 

@@ -138,7 +138,8 @@ public class AnnotatedMBean extends StandardMBean {
      * Extracts the Method from the MBeanOperationInfo
      *
      * @param op
-     * @return
+     *
+     * @return a Method
      */
     private Method getMethod(MBeanOperationInfo op) {
         final MBeanParameterInfo[] params = op.getSignature();
@@ -156,7 +157,8 @@ public class AnnotatedMBean extends StandardMBean {
      * @param mbean
      * @param method
      * @param params
-     * @return
+     *
+     * @return a Method
      */
     private static Method getMethod(Class<?> mbean, String method, String... params) {
         try {
@@ -216,13 +218,11 @@ public class AnnotatedMBean extends StandardMBean {
         return super.invoke(s, objects, strings);
     }
 
-    private Method getMBeanMethod(Class clazz, String methodName, String[] signature) throws ReflectiveOperationException
-    {
-       Class[] parameterTypes = new Class[signature.length];
-       for (int i = 0; i < signature.length; i++)
-       {
-          parameterTypes[i] = Class.forName(signature[i]);
-       }
-       return clazz.getMethod(methodName, parameterTypes);
+    private Method getMBeanMethod(Class clazz, String methodName, String[] signature) throws ReflectiveOperationException {
+        Class[] parameterTypes = new Class[signature.length];
+        for (int i = 0; i < signature.length; i++) {
+            parameterTypes[i] = Class.forName(signature[i]);
+        }
+        return clazz.getMethod(methodName, parameterTypes);
     }
 }

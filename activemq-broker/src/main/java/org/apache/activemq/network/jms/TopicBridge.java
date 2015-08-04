@@ -43,6 +43,7 @@ class TopicBridge extends DestinationBridge {
     protected TopicConnection consumerConnection;
     protected TopicConnection producerConnection;
 
+    @Override
     public void stop() throws Exception {
         super.stop();
         if (consumerSession != null) {
@@ -53,6 +54,7 @@ class TopicBridge extends DestinationBridge {
         }
     }
 
+    @Override
     protected MessageConsumer createConsumer() throws JMSException {
         // set up the consumer
         if (consumerConnection == null) return null;
@@ -78,6 +80,7 @@ class TopicBridge extends DestinationBridge {
         return consumer;
     }
 
+    @Override
     protected synchronized MessageProducer createProducer() throws JMSException {
         if (producerConnection == null) return null;
         producerSession = producerConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -85,6 +88,7 @@ class TopicBridge extends DestinationBridge {
         return producer;
     }
 
+    @Override
     protected synchronized void sendMessage(Message message) throws JMSException {
         if (producer == null && createProducer() == null) {
             throw new JMSException("Producer for remote queue not available.");
@@ -119,14 +123,14 @@ class TopicBridge extends DestinationBridge {
     }
 
     /**
-     * @return Returns the subscriptionName.
+     * @return Returns the consumerName.
      */
     public String getConsumerName() {
         return consumerName;
     }
 
     /**
-     * @param subscriptionName The subscriptionName to set.
+     * @param consumerName The consumerName to set.
      */
     public void setConsumerName(String consumerName) {
         this.consumerName = consumerName;
@@ -188,10 +192,12 @@ class TopicBridge extends DestinationBridge {
         this.selector = selector;
     }
 
+    @Override
     protected Connection getConnnectionForConsumer() {
         return getConsumerConnection();
     }
 
+    @Override
     protected Connection getConnectionForProducer() {
         return getProducerConnection();
     }

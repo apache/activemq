@@ -2242,8 +2242,6 @@ public class BrokerService implements Service {
      * Factory method to create a new broker
      *
      * @throws Exception
-     * @throws
-     * @throws
      */
     protected Broker createBroker() throws Exception {
         regionBroker = createRegionBroker();
@@ -3037,7 +3035,6 @@ public class BrokerService implements Service {
 
     /**
      * Sets if the broker allowed to restart on shutdown.
-     * @return
      */
     public void setRestartAllowed(boolean restartAllowed) {
         this.restartAllowed = restartAllowed;

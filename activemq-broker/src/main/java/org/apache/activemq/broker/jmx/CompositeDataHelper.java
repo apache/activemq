@@ -17,14 +17,15 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.TabularData;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
+
 /**
- * 
+ *
  */
 public class CompositeDataHelper {
 
@@ -56,7 +57,8 @@ public class CompositeDataHelper {
      * object
      *
      * @param cdata
-     * @return
+     *
+     * @return a Map of user properties
      */
     public static Map getMessageUserProperties(CompositeData cdata) {
         Map map = new HashMap();

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.plugin;
 
+import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MAX_PERSIST_INTERVAL;
+
 import java.io.File;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
-
-import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MAX_PERSIST_INTERVAL;
 
 /**
  * A plugin which allows the caching of the selector from a subscription queue.
@@ -31,8 +31,7 @@ import static org.apache.activemq.plugin.SubQueueSelectorCacheBroker.MAX_PERSIST
  * <p/>
  * This is influenced by code snippets developed by Maciej Rakowicz
  *
- * @author Roelof Naude roelof(dot)naude(at)gmail.com
- *@org.apache.xbean.XBean element="virtualSelectorCacheBrokerPlugin"
+ * @org.apache.xbean.XBean element="virtualSelectorCacheBrokerPlugin"
  */
 public class SubQueueSelectorCacheBrokerPlugin implements BrokerPlugin {
 

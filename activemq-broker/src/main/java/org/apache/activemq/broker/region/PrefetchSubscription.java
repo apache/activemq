@@ -548,7 +548,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     /**
      * Used to determine if the broker can dispatch to the consumer.
      *
-     * @return
+     * @return true if the subscription is full
      */
     @Override
     public boolean isFull() {

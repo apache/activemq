@@ -18,15 +18,13 @@ package org.apache.activemq.memory;
 
 /**
  * Defines the interface used to cache messages.
- * 
- * 
  */
 public interface Cache {
 
     /**
      * Gets an object that was previously <code>put</code> into this object.
-     * 
-     * @param msgid
+     *
+     * @param key
      * @return null if the object was not previously put or if the object has
      *         expired out of the cache.
      */
@@ -34,16 +32,16 @@ public interface Cache {
 
     /**
      * Puts an object into the cache.
-     * 
-     * @param messageID
-     * @param message
+     *
+     * @param key
+     * @param value
      */
     Object put(Object key, Object value);
 
     /**
      * Removes an object from the cache.
-     * 
-     * @param messageID
+     *
+     * @param key
      * @return the object associated with the key if it was still in the cache.
      */
     Object remove(Object key);
@@ -56,8 +54,8 @@ public interface Cache {
 
     /**
      * How big is the cache right now?
-     * 
-     * @return
+     *
+     * @return the size.
      */
     int size();
 
