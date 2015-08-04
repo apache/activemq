@@ -162,12 +162,6 @@ public abstract class AbstractRegion implements Region {
         return subscriptions;
     }
 
-<<<<<<< HEAD
-    protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest)
-            throws Exception {
-
-=======
-
     /**
      * Updates the counts in RegionStatistics based on whether or not the destination
      * is an Advisory Destination or not
@@ -223,7 +217,6 @@ public abstract class AbstractRegion implements Region {
     }
 
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
->>>>>>> e4af2eb... https://issues.apache.org/jira/browse/AMQ-5814
         List<Subscription> rc = new ArrayList<Subscription>();
         // Add all consumers that are interested in the destination.
         for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
