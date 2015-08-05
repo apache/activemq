@@ -19,10 +19,8 @@ package org.apache.activemq.transport.udp;
 import java.nio.ByteBuffer;
 
 /**
- * A simple implementation of {@link BufferPool} which does no pooling and just
+ * A simple implementation of {@link ByteBufferPool} which does no pooling and just
  * creates new buffers each time
- * 
- * 
  */
 public class SimpleBufferPool implements ByteBufferPool {
 
@@ -37,13 +35,16 @@ public class SimpleBufferPool implements ByteBufferPool {
         this.useDirect = useDirect;
     }
 
+    @Override
     public synchronized ByteBuffer borrowBuffer() {
         return createBuffer();
     }
 
+    @Override
     public void returnBuffer(ByteBuffer buffer) {
     }
 
+    @Override
     public void setDefaultSize(int defaultSize) {
         this.defaultSize = defaultSize;
     }
@@ -59,9 +60,11 @@ public class SimpleBufferPool implements ByteBufferPool {
         this.useDirect = useDirect;
     }
 
+    @Override
     public void start() throws Exception {
     }
 
+    @Override
     public void stop() throws Exception {
     }
 
@@ -72,5 +75,4 @@ public class SimpleBufferPool implements ByteBufferPool {
             return ByteBuffer.allocate(defaultSize);
         }
     }
-
 }

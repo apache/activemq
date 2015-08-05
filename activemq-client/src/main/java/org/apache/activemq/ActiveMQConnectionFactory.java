@@ -288,7 +288,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * @returns the StatsImpl associated with this ConnectionFactory.
+     * @return the StatsImpl associated with this ConnectionFactory.
      */
     @Override
     public StatsImpl getStats() {

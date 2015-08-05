@@ -30,8 +30,6 @@ import org.apache.activemq.util.LRUCache;
 
 /**
  * Provides basic audit functions for Messages without sync
- *
- *
  */
 public class ActiveMQMessageAuditNoSync implements Serializable {
 
@@ -219,8 +217,11 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * Check the message is in order
+     *
      * @param msg
-     * @return
+     *
+     * @return true if the id is in order
+     *
      * @throws JMSException
      */
     public boolean isInOrder(Message msg) throws JMSException {
@@ -229,8 +230,10 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * Check the message id is in order
+     *
      * @param id
-     * @return
+     *
+     * @return true if the id is in order
      */
     public boolean isInOrder(final String id) {
         boolean answer = true;
@@ -251,8 +254,10 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * Check the MessageId is in order
+     *
      * @param message
-     * @return
+     *
+     * @return true if the id is in order
      */
     public boolean isInOrder(final MessageReference message) {
         return isInOrder(message.getMessageId());
@@ -260,8 +265,10 @@ public class ActiveMQMessageAuditNoSync implements Serializable {
 
     /**
      * Check the MessageId is in order
+     *
      * @param id
-     * @return
+     *
+     * @return true if the id is in order
      */
     public boolean isInOrder(final MessageId id) {
         boolean answer = false;

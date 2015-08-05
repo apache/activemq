@@ -579,7 +579,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     /**
      * @param md
-     * @return
+     *      the MessageDispatch that arrived from the Broker.
+     *
+     * @return an ActiveMQMessage initialized from the Message in the dispatch.
      */
     private ActiveMQMessage createActiveMQMessage(final MessageDispatch md) throws JMSException {
         ActiveMQMessage m = (ActiveMQMessage)md.getMessage().copy();
@@ -1534,7 +1536,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     /**
      * Delivers a message to the message listener.
      *
-     * @return
+     * @return true if another execution is needed.
+     *
      * @throws JMSException
      */
     public boolean iterate() {

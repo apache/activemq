@@ -1246,7 +1246,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * @return
+     * @return a newly created ConsumedId unique to this connection session instance.
      */
     private ConsumerId createConsumerId() {
         return new ConsumerId(connectionSessionId, consumerIdGenerator.getNextSequenceId());
@@ -1316,7 +1316,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Send a packet through a Connection - for internal use only
      *
      * @param command
-     * @return
+     *
      * @throws JMSException
      */
     public void syncSendPacket(final Command command, final AsyncCallback onComplete) throws JMSException {
@@ -1418,7 +1418,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * Send a packet through a Connection - for internal use only
      *
      * @param command
-     * @return
+     *
+     * @return the broker Response for the given Command.
+     *
      * @throws JMSException
      */
     public Response syncSendPacket(Command command, int timeout) throws JMSException {

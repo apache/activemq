@@ -17,12 +17,10 @@
 package org.apache.activemq.transport.tcp;
 
 /**
- * Thrown to indicate that the {@link TcpTransportServer#maximumConnections} 
- * property has been exceeded. 
- * 
- * @see {@link TcpTransportServer#maximumConnections}
- * @author bsnyder
+ * Thrown to indicate that the {@link TcpTransportServer#maximumConnections}
+ * property has been exceeded.
  *
+ * @see TcpTransportServer#maximumConnections
  */
 public class ExceededMaximumConnectionsException extends Exception {
 
@@ -34,5 +32,4 @@ public class ExceededMaximumConnectionsException extends Exception {
     public ExceededMaximumConnectionsException(String message) {
         super(message);
     }
-
 }

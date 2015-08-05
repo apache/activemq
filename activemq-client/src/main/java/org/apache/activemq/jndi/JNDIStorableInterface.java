@@ -21,9 +21,8 @@ import java.util.Properties;
 import javax.naming.Referenceable;
 
 /**
- * Faciliates objects to be stored in JNDI as properties
+ * Facilitates objects to be stored in JNDI as properties
  */
-
 public interface JNDIStorableInterface extends Referenceable {
 
     /**
@@ -31,15 +30,13 @@ public interface JNDIStorableInterface extends Referenceable {
      *
      * @param properties
      */
-
     void setProperties(Properties properties);
 
     /**
      * Get the properties from this instance for storing in JNDI
      *
-     * @return
+     * @return the properties that should be stored in JNDI
      */
-
     Properties getProperties();
 
 }

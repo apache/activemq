@@ -22,9 +22,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 /**
- * Time utils.
- *
- * @version
+ * Time utilities.
  */
 public final class TimeUtils {
 
@@ -34,7 +32,8 @@ public final class TimeUtils {
     /**
      * Prints the duration in a human readable format as X days Y hours Z minutes etc.
      *
-     * @param uptime the uptime in millis
+     * @param uptime the up-time in milliseconds
+     *
      * @return the time used for displaying on screen or in logs
      */
     public static String printDuration(double uptime) {
@@ -71,7 +70,7 @@ public final class TimeUtils {
         if (hours != 0) {
             s += " " + fmtI.format(hours) + (hours > 1 ? " hours" : " hour");
         }
+
         return s;
     }
-
 }

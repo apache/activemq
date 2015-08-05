@@ -1552,7 +1552,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * the specified queue.
      *
      * @param queue the <CODE>Queue</CODE> to access
-     * @return
+     * @return a new QueueBrowser instance.
      * @throws JMSException if the session fails to create a receiver due to
      *                 some internal error.
      * @throws JMSException
@@ -1874,14 +1874,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * @return
+     * @return a unique ConsumerId instance.
      */
     protected ConsumerId getNextConsumerId() {
         return new ConsumerId(info.getSessionId(), consumerIdGenerator.getNextSequenceId());
     }
 
     /**
-     * @return
+     * @return a unique ProducerId instance.
      */
     protected ProducerId getNextProducerId() {
         return new ProducerId(info.getSessionId(), producerIdGenerator.getNextSequenceId());
@@ -1890,11 +1890,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Sends the message for dispatch by the broker.
      *
-     *
      * @param producer - message producer.
      * @param destination - message destination.
      * @param message - message to be sent.
-     * @param deliveryMode - JMS messsage delivery mode.
+     * @param deliveryMode - JMS message delivery mode.
      * @param priority - message priority.
      * @param timeToLive - message expiration.
      * @param producerWindow
@@ -2066,7 +2065,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Send the asynchronus command.
+     * Send the asynchronous command.
      *
      * @param command - command to be executed.
      * @throws JMSException
@@ -2076,7 +2075,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Send the synchronus command.
+     * Send the synchronous command.
      *
      * @param command - command to be executed.
      * @return Response

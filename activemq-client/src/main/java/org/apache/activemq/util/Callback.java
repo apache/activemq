@@ -17,12 +17,8 @@
 package org.apache.activemq.util;
 
 /**
- * A simple callback object used by the
- * {@link org.apache.activemq.util.TransactionTemplate}
- * and {@link org.apache.activemq.util.ExceptionTemplate}
-   objects to provide automatic transactional or exception handling blocks.
- *
- * 
+ * A simple callback object used by objects to provide automatic
+ * transactional or exception handling blocks.
  */
 public interface Callback {
 
@@ -30,6 +26,7 @@ public interface Callback {
      * Executes some piece of code within a transaction
      * performing a commit if there is no exception thrown
      * else a rollback is performed
+     *
      * @throws Exception TODO
      */
     void execute() throws Exception;
