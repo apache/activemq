@@ -21,10 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A default implementation of {@link BufferPool} which keeps a pool of direct
+ * A default implementation of {@link SimpleBufferPool} which keeps a pool of direct
  * byte buffers.
- * 
- * 
  */
 public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPool {
 
@@ -39,6 +37,7 @@ public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPoo
         super(useDirect);
     }
 
+    @Override
     public synchronized ByteBuffer borrowBuffer() {
         synchronized (lock) {
             int size = buffers.size();
@@ -49,15 +48,18 @@ public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPoo
         return createBuffer();
     }
 
+    @Override
     public void returnBuffer(ByteBuffer buffer) {
         synchronized (lock) {
             buffers.add(buffer);
         }
     }
 
+    @Override
     public void start() throws Exception {
     }
 
+    @Override
     public void stop() throws Exception {
         synchronized (lock) {
             /*
@@ -67,5 +69,4 @@ public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPoo
             buffers.clear();
         }
     }
-
 }

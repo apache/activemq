@@ -32,10 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ReliableTransportChannel} which uses a {@link DiscoveryAgent} to
+ * A {@link TransportFilter} which uses a {@link DiscoveryAgent} to
  * discover remote broker instances and dynamically connect to them.
- *
- *
  */
 public class DiscoveryTransport extends TransportFilter implements DiscoveryListener {
 

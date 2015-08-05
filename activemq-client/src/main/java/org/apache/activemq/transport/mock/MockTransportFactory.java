@@ -31,6 +31,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
 
 public class MockTransportFactory extends TransportFactory {
 
+    @Override
     public Transport doConnect(URI location) throws URISyntaxException, Exception {
         Transport transport = createTransport(URISupport.parseComposite(location));
         transport = new MutexTransport(transport);
@@ -38,13 +39,14 @@ public class MockTransportFactory extends TransportFactory {
         return transport;
     }
 
+    @Override
     public Transport doCompositeConnect(URI location) throws URISyntaxException, Exception {
         return createTransport(URISupport.parseComposite(location));
     }
 
     /**
      * @param location
-     * @return
+     * @return a new Transport instance.
      * @throws Exception
      */
     public Transport createTransport(CompositeData compositData) throws Exception {
@@ -53,8 +55,8 @@ public class MockTransportFactory extends TransportFactory {
         return transport;
     }
 
+    @Override
     public TransportServer doBind(URI location) throws IOException {
         throw new IOException("This protocol does not support being bound.");
     }
-
 }

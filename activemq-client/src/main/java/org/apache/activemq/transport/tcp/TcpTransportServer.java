@@ -378,7 +378,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      *
      * @param socket
      * @param format
-     * @return
+     *
+     * @return a new Transport instance.
+     *
      * @throws IOException
      */
     protected Transport createTransport(Socket socket, WireFormat format) throws IOException {

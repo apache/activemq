@@ -20,8 +20,6 @@ import org.apache.activemq.command.Response;
 
 /**
  * ResponseHolder utility
- * 
- * 
  */
 public class ResponseHolder {
     protected Response response;
@@ -36,8 +34,9 @@ public class ResponseHolder {
 
     /**
      * Set the Response for this holder
-     * 
-     * @param r
+     *
+     * @param response
+     *      the response returned from the remote peer.
      */
     public void setResponse(Response r) {
         synchronized (lock) {
@@ -49,7 +48,7 @@ public class ResponseHolder {
 
     /**
      * Get the Response
-     * 
+     *
      * @return the Response or null if it is closed
      */
     public Response getResponse() {
@@ -57,10 +56,10 @@ public class ResponseHolder {
     }
 
     /**
-     * wait upto <Code>timeout</Code> timeout ms to get a receipt
-     * 
+     * wait up to <Code>timeout</Code> timeout milliseconds to get a receipt
+     *
      * @param timeout
-     * @return
+     * @return the Response that was set or null if none set yet.
      */
     public Response getResponse(int timeout) {
         synchronized (lock) {

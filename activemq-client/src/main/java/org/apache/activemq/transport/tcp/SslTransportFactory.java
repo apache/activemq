@@ -45,11 +45,13 @@ import org.slf4j.LoggerFactory;
  * factory will have their needClientAuth option set to false.
  */
 public class SslTransportFactory extends TcpTransportFactory {
+
     private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
 
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.
      */
+    @Override
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
@@ -74,7 +76,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      *
      * @param location
      * @param serverSocketFactory
-     * @return
+     * @return a new SslTransportServer initialized from the given location and socket factory.
      * @throws IOException
      * @throws URISyntaxException
      */
@@ -86,9 +88,10 @@ public class SslTransportFactory extends TcpTransportFactory {
      * Overriding to allow for proper configuration through reflection but delegate to get common
      * configuration
      */
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
+        SslTransport sslTransport = transport.narrow(SslTransport.class);
         IntrospectionSupport.setProperties(sslTransport, options);
 
         return super.compositeConfigure(transport, format, options);
@@ -97,6 +100,7 @@ public class SslTransportFactory extends TcpTransportFactory {
     /**
      * Overriding to use SslTransports.
      */
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         URI localLocation = null;
         String path = location.getPath();
@@ -122,6 +126,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      * @return Newly created (Ssl)ServerSocketFactory.
      * @throws IOException
      */
+    @Override
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();
@@ -142,6 +147,7 @@ public class SslTransportFactory extends TcpTransportFactory {
      * @return Newly created (Ssl)SocketFactory.
      * @throws IOException
      */
+    @Override
     protected SocketFactory createSocketFactory() throws IOException {
         if( SslContext.getCurrentSslContext()!=null ) {
             SslContext ctx = SslContext.getCurrentSslContext();

@@ -28,7 +28,11 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.TransportLoggerSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.*;
+import org.apache.activemq.transport.InactivityMonitor;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
@@ -36,13 +40,11 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
- *
- */
 public class TcpTransportFactory extends TransportFactory {
+
     private static final Logger LOG = LoggerFactory.getLogger(TcpTransportFactory.class);
 
+    @Override
     public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
@@ -67,7 +69,7 @@ public class TcpTransportFactory extends TransportFactory {
      *
      * @param location
      * @param serverSocketFactory
-     * @return
+     * @return a new TcpTransportServer instance.
      * @throws IOException
      * @throws URISyntaxException
      */
@@ -75,10 +77,11 @@ public class TcpTransportFactory extends TransportFactory {
         return new TcpTransportServer(this, location, serverSocketFactory);
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
 
-        TcpTransport tcpTransport = (TcpTransport)transport.narrow(TcpTransport.class);
+        TcpTransport tcpTransport = transport.narrow(TcpTransport.class);
         IntrospectionSupport.setProperties(tcpTransport, options);
 
         Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
@@ -108,12 +111,13 @@ public class TcpTransportFactory extends TransportFactory {
 
 
     /**
-     * Returns true if the inactivity monitor should be used on the transport
+     * @return true if the inactivity monitor should be used on the transport
      */
     protected boolean isUseInactivityMonitor(Transport transport) {
         return true;
     }
 
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         URI localLocation = null;
         String path = location.getPath();
@@ -137,13 +141,15 @@ public class TcpTransportFactory extends TransportFactory {
 
     /**
      * Allows subclasses of TcpTransportFactory to provide a create custom
-     * TcpTransport intances.
+     * TcpTransport instances.
      *
-     * @param location
      * @param wf
      * @param socketFactory
+     * @param location
      * @param localLocation
-     * @return
+     *
+     * @return a new TcpTransport instance connected to the given location.
+     *
      * @throws UnknownHostException
      * @throws IOException
      */
